@@ -1,0 +1,14 @@
+exclude:
+  names:
+    - "\\..+"
+    - "vendor"
+  paths:
+    - "godel"
+plugins:
+  resolvers:
+    - "https://github.com/{{index GroupParts 1}}/{{index GroupParts 2}}/releases/download/v{{Version}}/{{Product}}-{{Version}}-{{OS}}-{{Arch}}.tgz"
+  plugins:
+    - locator:
+        id: "com.palantir.godel-conjure-plugin:conjure-plugin:6.84.0"
+        checksums:
+          darwin-arm64: "ad493a2ff5a997380d0d96428f1b8dc2bdf47706b1ba3277053f3e0689043da9"
