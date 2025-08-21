@@ -8,8 +8,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/scout/rids/api"
-	api1 "github.com/nominal-io/nominal-api/scout/run/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
 )
 
 type FavoriteResourceWithT[T any] FavoriteResource

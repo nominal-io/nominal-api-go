@@ -3,14 +3,14 @@
 package api
 
 import (
-	"github.com/nominal-io/nominal-api/api/rids"
-	api3 "github.com/nominal-io/nominal-api/io/nominal/api"
-	api4 "github.com/nominal-io/nominal-api/scout/api"
-	api1 "github.com/nominal-io/nominal-api/scout/checks/api"
-	api2 "github.com/nominal-io/nominal-api/scout/integrations/api"
-	"github.com/nominal-io/nominal-api/scout/rids/api"
-	api5 "github.com/nominal-io/nominal-api/scout/run/api"
-	api6 "github.com/nominal-io/nominal-api/scout/versioning/api"
+	"github.com/nominal-io/nominal-api-go/api/rids"
+	api3 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/checks/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/integrations/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api5 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	api6 "github.com/nominal-io/nominal-api-go/scout/versioning/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"

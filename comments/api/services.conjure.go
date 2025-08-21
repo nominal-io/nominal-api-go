@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/nominal-io/nominal-api/internal/conjureerrors"
+	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-client/httpclient"
 	"github.com/palantir/pkg/bearertoken"
 	"github.com/palantir/pkg/rid"

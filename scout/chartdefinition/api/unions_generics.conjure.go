@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/scout/api"
+	"github.com/nominal-io/nominal-api-go/scout/api"
 )
 
 type AxisThresholdGroupWithT[T any] AxisThresholdGroup

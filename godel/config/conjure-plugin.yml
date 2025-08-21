@@ -1,4 +1,4 @@
 version: 1
 projects:
   scout-service-api:
-    ir-locator: ../scout-service-api/build/conjure-ir/scout-service-api.conjure.json
+    ir-locator: ../scout/scout-service-api/build/conjure-ir/scout-service-api.conjure.json

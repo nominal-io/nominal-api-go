@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 )
 
 type ConnectionDetailsWithT[T any] ConnectionDetails

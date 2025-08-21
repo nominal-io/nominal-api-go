@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/scout/compute/api"
+	"github.com/nominal-io/nominal-api-go/scout/compute/api"
 )
 
 type ClientMessageWithT[T any] ClientMessage

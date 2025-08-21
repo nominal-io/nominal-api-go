@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/timeseries/logicalseries/api"
+	"github.com/nominal-io/nominal-api-go/timeseries/logicalseries/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )

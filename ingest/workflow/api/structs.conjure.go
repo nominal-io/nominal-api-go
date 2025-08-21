@@ -3,9 +3,9 @@
 package api
 
 import (
-	"github.com/nominal-io/nominal-api/api/rids"
-	"github.com/nominal-io/nominal-api/ingest/api"
-	"github.com/nominal-io/nominal-api/scout/catalog"
+	"github.com/nominal-io/nominal-api-go/api/rids"
+	"github.com/nominal-io/nominal-api-go/ingest/api"
+	"github.com/nominal-io/nominal-api-go/scout/catalog"
 	"github.com/palantir/pkg/bearertoken"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"

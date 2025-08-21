@@ -3,10 +3,10 @@
 package api
 
 import (
-	api2 "github.com/nominal-io/nominal-api/io/nominal/api"
-	api1 "github.com/nominal-io/nominal-api/scout/api"
-	api3 "github.com/nominal-io/nominal-api/scout/channelvariables/api"
-	"github.com/nominal-io/nominal-api/scout/run/api"
+	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
+	"github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safelong"
 	"github.com/palantir/pkg/safeyaml"

@@ -3,11 +3,11 @@
 package api
 
 import (
-	api4 "github.com/nominal-io/nominal-api/io/nominal/api"
-	api1 "github.com/nominal-io/nominal-api/scout/api"
-	"github.com/nominal-io/nominal-api/scout/chartdefinition/api"
-	api3 "github.com/nominal-io/nominal-api/scout/compute/api"
-	api2 "github.com/nominal-io/nominal-api/scout/rids/api"
+	api4 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/api"
+	"github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )

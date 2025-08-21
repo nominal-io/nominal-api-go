@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/scout/api"
+	"github.com/nominal-io/nominal-api-go/scout/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )

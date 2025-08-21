@@ -1,9 +1,11 @@
 ## Generate go files
 
+Clone this repo so that it has the same parent dir as the `scout` repo. Or just edit the paths below.
+
 First, you have to compile the conjure-ir json file. Then use gödel to generate the conjure.
 
 ```sh
-pushd ..; ./gradlew scout-service-api:compileIr; popd
+pushd ../scout; ./gradlew scout-service-api:compileIr; popd
 ./godelw conjure
 ```
 
@@ -26,9 +28,7 @@ go install github.com/palantir/godel/v2/godelinit@latest
 Now let's create the structure.
 
 ```sh
-mkdir scout-service-api-go
-cd scout-service-api-go
-go mod init github.com/nominal-io/nominal-api
+go mod init github.com/nominal-io/nominal-api-go
 ```
 
 Initialize the gödel crap
@@ -57,7 +57,7 @@ echo 'version: 1
 projects:
   scout-service-api:
     output-dir: generated
-    ir-locator: ../scout-service-api/build/conjure-ir/scout-service-api.conjure.json
+    ir-locator: ../scout/scout-service-api/build/conjure-ir/scout-service-api.conjure.json
 ' > ./godel/config/conjure-plugin.yml
 ```
 
@@ -76,7 +76,7 @@ go get github.com/palantir/witchcraft-go-error
 Now you can generate the golang code. You may need to compile the conjure IR first.
 
 ```sh
-pushd ..; ./gradlew scout-service-api:compileIr; popd
+pushd ../scout; ./gradlew scout-service-api:compileIr; popd
 ./godelw conjure
 ```
 

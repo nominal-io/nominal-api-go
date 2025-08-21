@@ -8,9 +8,9 @@ import (
 	"io"
 	"net/url"
 
-	"github.com/nominal-io/nominal-api/api/rids"
-	"github.com/nominal-io/nominal-api/internal/conjureerrors"
-	"github.com/nominal-io/nominal-api/scout/video/api"
+	"github.com/nominal-io/nominal-api-go/api/rids"
+	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
+	"github.com/nominal-io/nominal-api-go/scout/video/api"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-client/httpclient"
 	"github.com/palantir/pkg/bearertoken"
 	werror "github.com/palantir/witchcraft-go-error"

@@ -6,9 +6,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/api/rids"
-	"github.com/nominal-io/nominal-api/io/nominal/api"
-	api1 "github.com/nominal-io/nominal-api/scout/run/api"
+	"github.com/nominal-io/nominal-api-go/api/rids"
+	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"

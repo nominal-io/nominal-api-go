@@ -3,8 +3,8 @@
 package internal
 
 import (
-	"github.com/nominal-io/nominal-api/io/nominal/module"
-	"github.com/nominal-io/nominal-api/modules/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/module"
+	"github.com/nominal-io/nominal-api-go/modules/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )

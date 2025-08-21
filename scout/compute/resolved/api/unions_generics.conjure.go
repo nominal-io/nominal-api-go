@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/timeseries/logicalseries/api"
+	"github.com/nominal-io/nominal-api-go/timeseries/logicalseries/api"
 )
 
 type ArraySeriesNodeWithT[T any] ArraySeriesNode

@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/scout/checks/api"
+	"github.com/nominal-io/nominal-api-go/scout/checks/api"
 )
 
 type JobResultWithT[T any] JobResult

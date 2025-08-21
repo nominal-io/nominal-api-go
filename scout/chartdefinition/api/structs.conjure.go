@@ -3,13 +3,13 @@
 package api
 
 import (
-	"github.com/nominal-io/nominal-api/api/rids"
-	"github.com/nominal-io/nominal-api/scout/api"
-	api2 "github.com/nominal-io/nominal-api/scout/channelvariables/api"
-	api1 "github.com/nominal-io/nominal-api/scout/comparisonrun/api"
-	api3 "github.com/nominal-io/nominal-api/scout/compute/api"
-	api4 "github.com/nominal-io/nominal-api/scout/rids/api"
-	api5 "github.com/nominal-io/nominal-api/scout/run/api"
+	"github.com/nominal-io/nominal-api-go/api/rids"
+	"github.com/nominal-io/nominal-api-go/scout/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/comparisonrun/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api5 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 	"github.com/palantir/pkg/uuid"

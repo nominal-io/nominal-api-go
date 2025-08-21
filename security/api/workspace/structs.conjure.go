@@ -3,9 +3,9 @@
 package workspace
 
 import (
-	"github.com/nominal-io/nominal-api/api/ids"
-	"github.com/nominal-io/nominal-api/api/rids"
-	"github.com/nominal-io/nominal-api/authentication/api"
+	"github.com/nominal-io/nominal-api-go/api/ids"
+	"github.com/nominal-io/nominal-api-go/api/rids"
+	"github.com/nominal-io/nominal-api-go/authentication/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )

@@ -1,4 +1,4 @@
-module github.com/nominal-io/nominal-api
+module github.com/nominal-io/nominal-api-go
 
 go 1.25.0
 
@@ -11,6 +11,7 @@ require (
 	github.com/palantir/pkg/safelong v1.2.0
 	github.com/palantir/pkg/safeyaml v1.1.0
 	github.com/palantir/pkg/uuid v1.2.0
+	github.com/palantir/witchcraft-go-error v1.41.0
 )
 
 require (
@@ -25,7 +26,6 @@ require (
 	github.com/palantir/pkg/retry v1.2.0 // indirect
 	github.com/palantir/pkg/tlsconfig v1.3.0 // indirect
 	github.com/palantir/pkg/transform v1.1.0 // indirect
-	github.com/palantir/witchcraft-go-error v1.41.0 // indirect
 	github.com/palantir/witchcraft-go-logging v1.60.0 // indirect
 	github.com/palantir/witchcraft-go-params v1.38.0 // indirect
 	github.com/palantir/witchcraft-go-tracing v1.40.0 // indirect

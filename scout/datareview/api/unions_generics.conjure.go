@@ -8,8 +8,8 @@ import (
 	"context"
 	"fmt"
 
-	api1 "github.com/nominal-io/nominal-api/scout/rids/api"
-	"github.com/nominal-io/nominal-api/scout/run/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	"github.com/nominal-io/nominal-api-go/scout/run/api"
 )
 
 type AutomaticCheckEvaluationActionWithT[T any] AutomaticCheckEvaluationAction

@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/scout/comparisonnotebook/api"
+	"github.com/nominal-io/nominal-api-go/scout/comparisonnotebook/api"
 )
 
 type InputTypeWithT[T any] InputType

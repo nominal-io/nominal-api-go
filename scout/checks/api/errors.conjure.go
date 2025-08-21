@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/nominal-io/nominal-api/internal/conjureerrors"
-	"github.com/nominal-io/nominal-api/scout/rids/api"
+	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-contract/errors"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"

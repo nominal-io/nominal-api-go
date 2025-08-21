@@ -8,9 +8,9 @@ import (
 	"context"
 	"fmt"
 
-	api1 "github.com/nominal-io/nominal-api/io/nominal/api"
-	"github.com/nominal-io/nominal-api/scout/run/api"
-	api2 "github.com/nominal-io/nominal-api/scout/units/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/scout/run/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/units/api"
 )
 
 type ArraySeriesWithT[T any] ArraySeries

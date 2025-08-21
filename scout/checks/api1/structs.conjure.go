@@ -3,9 +3,9 @@
 package api1
 
 import (
-	"github.com/nominal-io/nominal-api/scout/checks/api"
-	api2 "github.com/nominal-io/nominal-api/scout/compute/api"
-	api1 "github.com/nominal-io/nominal-api/scout/datareview/api"
+	"github.com/nominal-io/nominal-api-go/scout/checks/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/datareview/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"

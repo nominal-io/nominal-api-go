@@ -8,10 +8,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api/api/rids"
-	api1 "github.com/nominal-io/nominal-api/io/nominal/api"
-	"github.com/nominal-io/nominal-api/scout/internal_/search/api"
-	"github.com/nominal-io/nominal-api/scout/metadata"
+	"github.com/nominal-io/nominal-api-go/api/rids"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/scout/internal_/search/api"
+	"github.com/nominal-io/nominal-api-go/scout/metadata"
 )
 
 type SearchQueryWithT[T any] SearchQuery

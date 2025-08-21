@@ -3,8 +3,8 @@
 package api
 
 import (
-	api1 "github.com/nominal-io/nominal-api/io/nominal/api"
-	"github.com/nominal-io/nominal-api/scout/rids/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"

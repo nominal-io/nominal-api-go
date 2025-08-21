@@ -3,9 +3,9 @@
 package api
 
 import (
-	api1 "github.com/nominal-io/nominal-api/io/nominal/api"
-	api2 "github.com/nominal-io/nominal-api/scout/compute/api"
-	"github.com/nominal-io/nominal-api/scout/run/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	"github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )

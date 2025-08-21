@@ -3,13 +3,13 @@
 package api
 
 import (
-	"github.com/nominal-io/nominal-api/api/rids"
-	api4 "github.com/nominal-io/nominal-api/io/nominal/api"
-	api5 "github.com/nominal-io/nominal-api/scout/api"
-	api1 "github.com/nominal-io/nominal-api/scout/layout/api"
-	"github.com/nominal-io/nominal-api/scout/rids/api"
-	api3 "github.com/nominal-io/nominal-api/scout/versioning/api"
-	api2 "github.com/nominal-io/nominal-api/scout/workbookcommon/api"
+	"github.com/nominal-io/nominal-api-go/api/rids"
+	api4 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api5 "github.com/nominal-io/nominal-api-go/scout/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/layout/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/versioning/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/workbookcommon/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
