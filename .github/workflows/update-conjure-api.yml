@@ -138,7 +138,8 @@ jobs:
               --title "chore: update generated Go code from Conjure IR" \
               --body "$pr_body" \
               --head "nombot/update-conjure-api" \
-              --base main
+              --base main \
+              --reviewer "leundai"
             echo "Created new PR"
           fi
 
