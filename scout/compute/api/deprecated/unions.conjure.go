@@ -6,9 +6,10 @@ import (
 	"context"
 	"fmt"
 
-	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/scout/compute/api"
-	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	"github.com/nominal-io/nominal-api-go/scout/compute/api1"
+	api3 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -2070,14 +2071,14 @@ func NewSeriesNodeFromNumeric(v NumericSeriesNode) SeriesNode {
 
 type VariableValue struct {
 	typ       string
-	series    *api.SeriesSpec
-	timestamp *api1.Timestamp
+	series    *api1.SeriesSpec
+	timestamp *api2.Timestamp
 }
 
 type variableValueDeserializer struct {
-	Type      string          `json:"type"`
-	Series    *api.SeriesSpec `json:"series"`
-	Timestamp *api1.Timestamp `json:"timestamp"`
+	Type      string           `json:"type"`
+	Series    *api1.SeriesSpec `json:"series"`
+	Timestamp *api2.Timestamp  `json:"timestamp"`
 }
 
 func (u *variableValueDeserializer) toStruct() VariableValue {
@@ -2093,8 +2094,8 @@ func (u *VariableValue) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"series\" is required")
 		}
 		return struct {
-			Type   string         `json:"type"`
-			Series api.SeriesSpec `json:"series"`
+			Type   string          `json:"type"`
+			Series api1.SeriesSpec `json:"series"`
 		}{Type: "series", Series: *u.series}, nil
 	case "timestamp":
 		if u.timestamp == nil {
@@ -2102,7 +2103,7 @@ func (u *VariableValue) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type      string         `json:"type"`
-			Timestamp api1.Timestamp `json:"timestamp"`
+			Timestamp api2.Timestamp `json:"timestamp"`
 		}{Type: "timestamp", Timestamp: *u.timestamp}, nil
 	}
 }
@@ -2150,7 +2151,7 @@ func (u *VariableValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *VariableValue) AcceptFuncs(seriesFunc func(api.SeriesSpec) error, timestampFunc func(api1.Timestamp) error, unknownFunc func(string) error) error {
+func (u *VariableValue) AcceptFuncs(seriesFunc func(api1.SeriesSpec) error, timestampFunc func(api2.Timestamp) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2170,11 +2171,11 @@ func (u *VariableValue) AcceptFuncs(seriesFunc func(api.SeriesSpec) error, times
 	}
 }
 
-func (u *VariableValue) SeriesNoopSuccess(api.SeriesSpec) error {
+func (u *VariableValue) SeriesNoopSuccess(api1.SeriesSpec) error {
 	return nil
 }
 
-func (u *VariableValue) TimestampNoopSuccess(api1.Timestamp) error {
+func (u *VariableValue) TimestampNoopSuccess(api2.Timestamp) error {
 	return nil
 }
 
@@ -2203,8 +2204,8 @@ func (u *VariableValue) Accept(v VariableValueVisitor) error {
 }
 
 type VariableValueVisitor interface {
-	VisitSeries(v api.SeriesSpec) error
-	VisitTimestamp(v api1.Timestamp) error
+	VisitSeries(v api1.SeriesSpec) error
+	VisitTimestamp(v api2.Timestamp) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2229,27 +2230,27 @@ func (u *VariableValue) AcceptWithContext(ctx context.Context, v VariableValueVi
 }
 
 type VariableValueVisitorWithContext interface {
-	VisitSeriesWithContext(ctx context.Context, v api.SeriesSpec) error
-	VisitTimestampWithContext(ctx context.Context, v api1.Timestamp) error
+	VisitSeriesWithContext(ctx context.Context, v api1.SeriesSpec) error
+	VisitTimestampWithContext(ctx context.Context, v api2.Timestamp) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewVariableValueFromSeries(v api.SeriesSpec) VariableValue {
+func NewVariableValueFromSeries(v api1.SeriesSpec) VariableValue {
 	return VariableValue{typ: "series", series: &v}
 }
 
-func NewVariableValueFromTimestamp(v api1.Timestamp) VariableValue {
+func NewVariableValueFromTimestamp(v api2.Timestamp) VariableValue {
 	return VariableValue{typ: "timestamp", timestamp: &v}
 }
 
 type Window struct {
 	typ      string
-	duration *api2.Duration
+	duration *api3.Duration
 }
 
 type windowDeserializer struct {
 	Type     string         `json:"type"`
-	Duration *api2.Duration `json:"duration"`
+	Duration *api3.Duration `json:"duration"`
 }
 
 func (u *windowDeserializer) toStruct() Window {
@@ -2266,7 +2267,7 @@ func (u *Window) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type     string        `json:"type"`
-			Duration api2.Duration `json:"duration"`
+			Duration api3.Duration `json:"duration"`
 		}{Type: "duration", Duration: *u.duration}, nil
 	}
 }
@@ -2310,7 +2311,7 @@ func (u *Window) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Window) AcceptFuncs(durationFunc func(api2.Duration) error, unknownFunc func(string) error) error {
+func (u *Window) AcceptFuncs(durationFunc func(api3.Duration) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2325,7 +2326,7 @@ func (u *Window) AcceptFuncs(durationFunc func(api2.Duration) error, unknownFunc
 	}
 }
 
-func (u *Window) DurationNoopSuccess(api2.Duration) error {
+func (u *Window) DurationNoopSuccess(api3.Duration) error {
 	return nil
 }
 
@@ -2349,7 +2350,7 @@ func (u *Window) Accept(v WindowVisitor) error {
 }
 
 type WindowVisitor interface {
-	VisitDuration(v api2.Duration) error
+	VisitDuration(v api3.Duration) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2369,10 +2370,10 @@ func (u *Window) AcceptWithContext(ctx context.Context, v WindowVisitorWithConte
 }
 
 type WindowVisitorWithContext interface {
-	VisitDurationWithContext(ctx context.Context, v api2.Duration) error
+	VisitDurationWithContext(ctx context.Context, v api3.Duration) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewWindowFromDuration(v api2.Duration) Window {
+func NewWindowFromDuration(v api3.Duration) Window {
 	return Window{typ: "duration", duration: &v}
 }

@@ -8,8 +8,8 @@ import (
 	"net/url"
 
 	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
-	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
-	"github.com/nominal-io/nominal-api-go/timeseries/seriescache/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/timeseries/seriescache/api"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-client/httpclient"
 	"github.com/palantir/pkg/bearertoken"
 	werror "github.com/palantir/witchcraft-go-error"
@@ -17,20 +17,16 @@ import (
 
 // The Series Cache service manages internal chunks of data cached by Nominal's backend.
 type SeriesCacheServiceClient interface {
-	// Fetches information about logical series that are cached in the Nominal time series database.
-	BatchGetCachedSeries(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetCachedSeriesRequest) (api.CachedSeriesResponse, error)
-	// Records a logical series as cached in the Nominal time series database.
-	CreateCachedSeries(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateCachedSeriesRequest) error
 	/*
 	   Fetches "chunks" of series that are stored as Arrow files in S3.
 	   This endpoint is being deprecated for new series in favor of batchGetCachedSeries
 	*/
-	GetChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api1.LogicalSeriesRid, getChunksParametersArg api.GetChunksParameters) (api.GetChunksResponse, error)
+	GetChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, getChunksParametersArg api1.GetChunksParameters) (api1.GetChunksResponse, error)
 	// Deprecated: Deprecated in favor of batchCreateChunks
-	CreateChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api1.LogicalSeriesRid, createChunksParametersArg api.CreateChunksParameters) (api.CreateChunksResponse, error)
-	BatchCreateChunks(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateChunksParameters) (api.CreateChunksResponse, error)
+	CreateChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, createChunksParametersArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error)
+	BatchCreateChunks(ctx context.Context, authHeader bearertoken.Token, requestArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error)
 	// Deletes the chunks that intersect the given time range. Does not delete the corresponding files from S3.
-	DeleteChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api1.LogicalSeriesRid, requestArg api.DeleteChunksParameters) (api.DeleteChunksResponse, error)
+	DeleteChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, requestArg api1.DeleteChunksParameters) (api1.DeleteChunksResponse, error)
 }
 
 type seriesCacheServiceClient struct {
@@ -41,43 +37,9 @@ func NewSeriesCacheServiceClient(client httpclient.Client) SeriesCacheServiceCli
 	return &seriesCacheServiceClient{client: client}
 }
 
-func (c *seriesCacheServiceClient) BatchGetCachedSeries(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetCachedSeriesRequest) (api.CachedSeriesResponse, error) {
-	var defaultReturnVal api.CachedSeriesResponse
-	var returnVal *api.CachedSeriesResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetCachedSeries"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/series-cache/v1/logical-series/get-cached-series"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGetCachedSeries failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGetCachedSeries response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *seriesCacheServiceClient) CreateCachedSeries(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateCachedSeriesRequest) error {
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateCachedSeries"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/series-cache/v1/logical-series/create-cached-series"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return werror.WrapWithContextParams(ctx, err, "createCachedSeries failed")
-	}
-	return nil
-}
-
-func (c *seriesCacheServiceClient) GetChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api1.LogicalSeriesRid, getChunksParametersArg api.GetChunksParameters) (api.GetChunksResponse, error) {
-	var defaultReturnVal api.GetChunksResponse
-	var returnVal *api.GetChunksResponse
+func (c *seriesCacheServiceClient) GetChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, getChunksParametersArg api1.GetChunksParameters) (api1.GetChunksResponse, error) {
+	var defaultReturnVal api1.GetChunksResponse
+	var returnVal *api1.GetChunksResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetChunks"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
@@ -95,9 +57,9 @@ func (c *seriesCacheServiceClient) GetChunks(ctx context.Context, authHeader bea
 	return *returnVal, nil
 }
 
-func (c *seriesCacheServiceClient) CreateChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api1.LogicalSeriesRid, createChunksParametersArg api.CreateChunksParameters) (api.CreateChunksResponse, error) {
-	var defaultReturnVal api.CreateChunksResponse
-	var returnVal *api.CreateChunksResponse
+func (c *seriesCacheServiceClient) CreateChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, createChunksParametersArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error) {
+	var defaultReturnVal api1.CreateChunksResponse
+	var returnVal *api1.CreateChunksResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateChunks"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
@@ -115,9 +77,9 @@ func (c *seriesCacheServiceClient) CreateChunks(ctx context.Context, authHeader 
 	return *returnVal, nil
 }
 
-func (c *seriesCacheServiceClient) BatchCreateChunks(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateChunksParameters) (api.CreateChunksResponse, error) {
-	var defaultReturnVal api.CreateChunksResponse
-	var returnVal *api.CreateChunksResponse
+func (c *seriesCacheServiceClient) BatchCreateChunks(ctx context.Context, authHeader bearertoken.Token, requestArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error) {
+	var defaultReturnVal api1.CreateChunksResponse
+	var returnVal *api1.CreateChunksResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchCreateChunks"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
@@ -135,9 +97,9 @@ func (c *seriesCacheServiceClient) BatchCreateChunks(ctx context.Context, authHe
 	return *returnVal, nil
 }
 
-func (c *seriesCacheServiceClient) DeleteChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api1.LogicalSeriesRid, requestArg api.DeleteChunksParameters) (api.DeleteChunksResponse, error) {
-	var defaultReturnVal api.DeleteChunksResponse
-	var returnVal *api.DeleteChunksResponse
+func (c *seriesCacheServiceClient) DeleteChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, requestArg api1.DeleteChunksParameters) (api1.DeleteChunksResponse, error) {
+	var defaultReturnVal api1.DeleteChunksResponse
+	var returnVal *api1.DeleteChunksResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteChunks"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
@@ -157,20 +119,16 @@ func (c *seriesCacheServiceClient) DeleteChunks(ctx context.Context, authHeader 
 
 // The Series Cache service manages internal chunks of data cached by Nominal's backend.
 type SeriesCacheServiceClientWithAuth interface {
-	// Fetches information about logical series that are cached in the Nominal time series database.
-	BatchGetCachedSeries(ctx context.Context, requestArg api.GetCachedSeriesRequest) (api.CachedSeriesResponse, error)
-	// Records a logical series as cached in the Nominal time series database.
-	CreateCachedSeries(ctx context.Context, requestArg api.CreateCachedSeriesRequest) error
 	/*
 	   Fetches "chunks" of series that are stored as Arrow files in S3.
 	   This endpoint is being deprecated for new series in favor of batchGetCachedSeries
 	*/
-	GetChunks(ctx context.Context, logicalSeriesRidArg api1.LogicalSeriesRid, getChunksParametersArg api.GetChunksParameters) (api.GetChunksResponse, error)
+	GetChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, getChunksParametersArg api1.GetChunksParameters) (api1.GetChunksResponse, error)
 	// Deprecated: Deprecated in favor of batchCreateChunks
-	CreateChunks(ctx context.Context, logicalSeriesRidArg api1.LogicalSeriesRid, createChunksParametersArg api.CreateChunksParameters) (api.CreateChunksResponse, error)
-	BatchCreateChunks(ctx context.Context, requestArg api.CreateChunksParameters) (api.CreateChunksResponse, error)
+	CreateChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, createChunksParametersArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error)
+	BatchCreateChunks(ctx context.Context, requestArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error)
 	// Deletes the chunks that intersect the given time range. Does not delete the corresponding files from S3.
-	DeleteChunks(ctx context.Context, logicalSeriesRidArg api1.LogicalSeriesRid, requestArg api.DeleteChunksParameters) (api.DeleteChunksResponse, error)
+	DeleteChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, requestArg api1.DeleteChunksParameters) (api1.DeleteChunksResponse, error)
 }
 
 func NewSeriesCacheServiceClientWithAuth(client SeriesCacheServiceClient, authHeader bearertoken.Token) SeriesCacheServiceClientWithAuth {
@@ -182,27 +140,19 @@ type seriesCacheServiceClientWithAuth struct {
 	authHeader bearertoken.Token
 }
 
-func (c *seriesCacheServiceClientWithAuth) BatchGetCachedSeries(ctx context.Context, requestArg api.GetCachedSeriesRequest) (api.CachedSeriesResponse, error) {
-	return c.client.BatchGetCachedSeries(ctx, c.authHeader, requestArg)
-}
-
-func (c *seriesCacheServiceClientWithAuth) CreateCachedSeries(ctx context.Context, requestArg api.CreateCachedSeriesRequest) error {
-	return c.client.CreateCachedSeries(ctx, c.authHeader, requestArg)
-}
-
-func (c *seriesCacheServiceClientWithAuth) GetChunks(ctx context.Context, logicalSeriesRidArg api1.LogicalSeriesRid, getChunksParametersArg api.GetChunksParameters) (api.GetChunksResponse, error) {
+func (c *seriesCacheServiceClientWithAuth) GetChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, getChunksParametersArg api1.GetChunksParameters) (api1.GetChunksResponse, error) {
 	return c.client.GetChunks(ctx, c.authHeader, logicalSeriesRidArg, getChunksParametersArg)
 }
 
-func (c *seriesCacheServiceClientWithAuth) CreateChunks(ctx context.Context, logicalSeriesRidArg api1.LogicalSeriesRid, createChunksParametersArg api.CreateChunksParameters) (api.CreateChunksResponse, error) {
+func (c *seriesCacheServiceClientWithAuth) CreateChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, createChunksParametersArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error) {
 	return c.client.CreateChunks(ctx, c.authHeader, logicalSeriesRidArg, createChunksParametersArg)
 }
 
-func (c *seriesCacheServiceClientWithAuth) BatchCreateChunks(ctx context.Context, requestArg api.CreateChunksParameters) (api.CreateChunksResponse, error) {
+func (c *seriesCacheServiceClientWithAuth) BatchCreateChunks(ctx context.Context, requestArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error) {
 	return c.client.BatchCreateChunks(ctx, c.authHeader, requestArg)
 }
 
-func (c *seriesCacheServiceClientWithAuth) DeleteChunks(ctx context.Context, logicalSeriesRidArg api1.LogicalSeriesRid, requestArg api.DeleteChunksParameters) (api.DeleteChunksResponse, error) {
+func (c *seriesCacheServiceClientWithAuth) DeleteChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, requestArg api1.DeleteChunksParameters) (api1.DeleteChunksResponse, error) {
 	return c.client.DeleteChunks(ctx, c.authHeader, logicalSeriesRidArg, requestArg)
 }
 
@@ -215,25 +165,8 @@ type seriesCacheServiceClientWithTokenProvider struct {
 	tokenProvider httpclient.TokenProvider
 }
 
-func (c *seriesCacheServiceClientWithTokenProvider) BatchGetCachedSeries(ctx context.Context, requestArg api.GetCachedSeriesRequest) (api.CachedSeriesResponse, error) {
-	var defaultReturnVal api.CachedSeriesResponse
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.BatchGetCachedSeries(ctx, bearertoken.Token(token), requestArg)
-}
-
-func (c *seriesCacheServiceClientWithTokenProvider) CreateCachedSeries(ctx context.Context, requestArg api.CreateCachedSeriesRequest) error {
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return err
-	}
-	return c.client.CreateCachedSeries(ctx, bearertoken.Token(token), requestArg)
-}
-
-func (c *seriesCacheServiceClientWithTokenProvider) GetChunks(ctx context.Context, logicalSeriesRidArg api1.LogicalSeriesRid, getChunksParametersArg api.GetChunksParameters) (api.GetChunksResponse, error) {
-	var defaultReturnVal api.GetChunksResponse
+func (c *seriesCacheServiceClientWithTokenProvider) GetChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, getChunksParametersArg api1.GetChunksParameters) (api1.GetChunksResponse, error) {
+	var defaultReturnVal api1.GetChunksResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return defaultReturnVal, err
@@ -241,8 +174,8 @@ func (c *seriesCacheServiceClientWithTokenProvider) GetChunks(ctx context.Contex
 	return c.client.GetChunks(ctx, bearertoken.Token(token), logicalSeriesRidArg, getChunksParametersArg)
 }
 
-func (c *seriesCacheServiceClientWithTokenProvider) CreateChunks(ctx context.Context, logicalSeriesRidArg api1.LogicalSeriesRid, createChunksParametersArg api.CreateChunksParameters) (api.CreateChunksResponse, error) {
-	var defaultReturnVal api.CreateChunksResponse
+func (c *seriesCacheServiceClientWithTokenProvider) CreateChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, createChunksParametersArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error) {
+	var defaultReturnVal api1.CreateChunksResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return defaultReturnVal, err
@@ -250,8 +183,8 @@ func (c *seriesCacheServiceClientWithTokenProvider) CreateChunks(ctx context.Con
 	return c.client.CreateChunks(ctx, bearertoken.Token(token), logicalSeriesRidArg, createChunksParametersArg)
 }
 
-func (c *seriesCacheServiceClientWithTokenProvider) BatchCreateChunks(ctx context.Context, requestArg api.CreateChunksParameters) (api.CreateChunksResponse, error) {
-	var defaultReturnVal api.CreateChunksResponse
+func (c *seriesCacheServiceClientWithTokenProvider) BatchCreateChunks(ctx context.Context, requestArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error) {
+	var defaultReturnVal api1.CreateChunksResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return defaultReturnVal, err
@@ -259,8 +192,8 @@ func (c *seriesCacheServiceClientWithTokenProvider) BatchCreateChunks(ctx contex
 	return c.client.BatchCreateChunks(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *seriesCacheServiceClientWithTokenProvider) DeleteChunks(ctx context.Context, logicalSeriesRidArg api1.LogicalSeriesRid, requestArg api.DeleteChunksParameters) (api.DeleteChunksResponse, error) {
-	var defaultReturnVal api.DeleteChunksResponse
+func (c *seriesCacheServiceClientWithTokenProvider) DeleteChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, requestArg api1.DeleteChunksParameters) (api1.DeleteChunksResponse, error) {
+	var defaultReturnVal api1.DeleteChunksResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return defaultReturnVal, err

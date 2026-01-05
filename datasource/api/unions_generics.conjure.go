@@ -76,9 +76,9 @@ type ChannelOrPrefixVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
-type SeriesArchetypeRidOrLogicalSeriesRidWithT[T any] SeriesArchetypeRidOrLogicalSeriesRid
+type SeriesMetadataRidOrLogicalSeriesRidWithT[T any] SeriesMetadataRidOrLogicalSeriesRid
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRidWithT[T]) Accept(ctx context.Context, v SeriesArchetypeRidOrLogicalSeriesRidVisitorWithT[T]) (T, error) {
+func (u *SeriesMetadataRidOrLogicalSeriesRidWithT[T]) Accept(ctx context.Context, v SeriesMetadataRidOrLogicalSeriesRidVisitorWithT[T]) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -99,7 +99,7 @@ func (u *SeriesArchetypeRidOrLogicalSeriesRidWithT[T]) Accept(ctx context.Contex
 	}
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRidWithT[T]) AcceptFuncs(seriesArchetypeFunc func(api.SeriesArchetypeRid) (T, error), logicalSeriesFunc func(api.LogicalSeriesRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SeriesMetadataRidOrLogicalSeriesRidWithT[T]) AcceptFuncs(seriesArchetypeFunc func(api.SeriesMetadataRid) (T, error), logicalSeriesFunc func(api.LogicalSeriesRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -120,23 +120,23 @@ func (u *SeriesArchetypeRidOrLogicalSeriesRidWithT[T]) AcceptFuncs(seriesArchety
 	}
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRidWithT[T]) SeriesArchetypeNoopSuccess(api.SeriesArchetypeRid) (T, error) {
+func (u *SeriesMetadataRidOrLogicalSeriesRidWithT[T]) SeriesArchetypeNoopSuccess(api.SeriesMetadataRid) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRidWithT[T]) LogicalSeriesNoopSuccess(api.LogicalSeriesRid) (T, error) {
+func (u *SeriesMetadataRidOrLogicalSeriesRidWithT[T]) LogicalSeriesNoopSuccess(api.LogicalSeriesRid) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRidWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+func (u *SeriesMetadataRidOrLogicalSeriesRidWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
-type SeriesArchetypeRidOrLogicalSeriesRidVisitorWithT[T any] interface {
-	VisitSeriesArchetype(ctx context.Context, v api.SeriesArchetypeRid) (T, error)
+type SeriesMetadataRidOrLogicalSeriesRidVisitorWithT[T any] interface {
+	VisitSeriesArchetype(ctx context.Context, v api.SeriesMetadataRid) (T, error)
 	VisitLogicalSeries(ctx context.Context, v api.LogicalSeriesRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

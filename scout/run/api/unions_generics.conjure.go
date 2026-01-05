@@ -127,16 +127,31 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 			return result, fmt.Errorf("field \"startTimeInclusive\" is required")
 		}
 		return v.VisitStartTimeInclusive(ctx, *u.startTimeInclusive)
+	case "startTime":
+		if u.startTime == nil {
+			return result, fmt.Errorf("field \"startTime\" is required")
+		}
+		return v.VisitStartTime(ctx, *u.startTime)
 	case "endTimeInclusive":
 		if u.endTimeInclusive == nil {
 			return result, fmt.Errorf("field \"endTimeInclusive\" is required")
 		}
 		return v.VisitEndTimeInclusive(ctx, *u.endTimeInclusive)
+	case "endTime":
+		if u.endTime == nil {
+			return result, fmt.Errorf("field \"endTime\" is required")
+		}
+		return v.VisitEndTime(ctx, *u.endTime)
 	case "timeRange":
 		if u.timeRange == nil {
 			return result, fmt.Errorf("field \"timeRange\" is required")
 		}
 		return v.VisitTimeRange(ctx, *u.timeRange)
+	case "createdAt":
+		if u.createdAt == nil {
+			return result, fmt.Errorf("field \"createdAt\" is required")
+		}
+		return v.VisitCreatedAt(ctx, *u.createdAt)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return result, fmt.Errorf("field \"exactMatch\" is required")
@@ -152,6 +167,11 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 			return result, fmt.Errorf("field \"asset\" is required")
 		}
 		return v.VisitAsset(ctx, *u.asset)
+	case "assets":
+		if u.assets == nil {
+			return result, fmt.Errorf("field \"assets\" is required")
+		}
+		return v.VisitAssets(ctx, *u.assets)
 	case "isSingleAsset":
 		if u.isSingleAsset == nil {
 			return result, fmt.Errorf("field \"isSingleAsset\" is required")
@@ -162,11 +182,21 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 			return result, fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return result, fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return result, fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(ctx, *u.properties)
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return result, fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -197,6 +227,11 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 			return result, fmt.Errorf("field \"checkAlertStatesFilter\" is required")
 		}
 		return v.VisitCheckAlertStatesFilter(ctx, *u.checkAlertStatesFilter)
+	case "archived":
+		if u.archived == nil {
+			return result, fmt.Errorf("field \"archived\" is required")
+		}
+		return v.VisitArchived(ctx, *u.archived)
 	case "and":
 		if u.and == nil {
 			return result, fmt.Errorf("field \"and\" is required")
@@ -220,7 +255,7 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 	}
 }
 
-func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) (T, error), endTimeInclusiveFunc func(UtcTimestamp) (T, error), timeRangeFunc func(TimeRangeFilter) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), assetFunc func(api.AssetRid) (T, error), isSingleAssetFunc func(bool) (T, error), labelFunc func(api1.Label) (T, error), propertyFunc func(api1.Property) (T, error), dataSourceSeriesTagFunc func(DataSourceSeriesTag) (T, error), dataSourceRefNameFunc func(api2.DataSourceRefName) (T, error), dataSourceFunc func(DataSource) (T, error), runNumberFunc func(safelong.SafeLong) (T, error), runPrefixFunc func(string) (T, error), checkAlertStatesFilterFunc func(CheckAlertStatesFilter) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) (T, error), startTimeFunc func(TimeframeFilter) (T, error), endTimeInclusiveFunc func(UtcTimestamp) (T, error), endTimeFunc func(TimeframeFilter) (T, error), timeRangeFunc func(TimeRangeFilter) (T, error), createdAtFunc func(TimeframeFilter) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), assetFunc func(api.AssetRid) (T, error), assetsFunc func(AssetsFilter) (T, error), isSingleAssetFunc func(bool) (T, error), labelFunc func(api1.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api1.Property) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), dataSourceSeriesTagFunc func(DataSourceSeriesTag) (T, error), dataSourceRefNameFunc func(api2.DataSourceRefName) (T, error), dataSourceFunc func(DataSource) (T, error), runNumberFunc func(safelong.SafeLong) (T, error), runPrefixFunc func(string) (T, error), checkAlertStatesFilterFunc func(CheckAlertStatesFilter) (T, error), archivedFunc func(bool) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -233,16 +268,31 @@ func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimesta
 			return result, fmt.Errorf("field \"startTimeInclusive\" is required")
 		}
 		return startTimeInclusiveFunc(*u.startTimeInclusive)
+	case "startTime":
+		if u.startTime == nil {
+			return result, fmt.Errorf("field \"startTime\" is required")
+		}
+		return startTimeFunc(*u.startTime)
 	case "endTimeInclusive":
 		if u.endTimeInclusive == nil {
 			return result, fmt.Errorf("field \"endTimeInclusive\" is required")
 		}
 		return endTimeInclusiveFunc(*u.endTimeInclusive)
+	case "endTime":
+		if u.endTime == nil {
+			return result, fmt.Errorf("field \"endTime\" is required")
+		}
+		return endTimeFunc(*u.endTime)
 	case "timeRange":
 		if u.timeRange == nil {
 			return result, fmt.Errorf("field \"timeRange\" is required")
 		}
 		return timeRangeFunc(*u.timeRange)
+	case "createdAt":
+		if u.createdAt == nil {
+			return result, fmt.Errorf("field \"createdAt\" is required")
+		}
+		return createdAtFunc(*u.createdAt)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return result, fmt.Errorf("field \"exactMatch\" is required")
@@ -258,6 +308,11 @@ func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimesta
 			return result, fmt.Errorf("field \"asset\" is required")
 		}
 		return assetFunc(*u.asset)
+	case "assets":
+		if u.assets == nil {
+			return result, fmt.Errorf("field \"assets\" is required")
+		}
+		return assetsFunc(*u.assets)
 	case "isSingleAsset":
 		if u.isSingleAsset == nil {
 			return result, fmt.Errorf("field \"isSingleAsset\" is required")
@@ -268,11 +323,21 @@ func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimesta
 			return result, fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return result, fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return result, fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return result, fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -303,6 +368,11 @@ func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimesta
 			return result, fmt.Errorf("field \"checkAlertStatesFilter\" is required")
 		}
 		return checkAlertStatesFilterFunc(*u.checkAlertStatesFilter)
+	case "archived":
+		if u.archived == nil {
+			return result, fmt.Errorf("field \"archived\" is required")
+		}
+		return archivedFunc(*u.archived)
 	case "and":
 		if u.and == nil {
 			return result, fmt.Errorf("field \"and\" is required")
@@ -331,12 +401,27 @@ func (u *SearchQueryWithT[T]) StartTimeInclusiveNoopSuccess(UtcTimestamp) (T, er
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) StartTimeNoopSuccess(TimeframeFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) EndTimeInclusiveNoopSuccess(UtcTimestamp) (T, error) {
 	var result T
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) EndTimeNoopSuccess(TimeframeFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) TimeRangeNoopSuccess(TimeRangeFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchQueryWithT[T]) CreatedAtNoopSuccess(TimeframeFilter) (T, error) {
 	var result T
 	return result, nil
 }
@@ -356,6 +441,11 @@ func (u *SearchQueryWithT[T]) AssetNoopSuccess(api.AssetRid) (T, error) {
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) AssetsNoopSuccess(AssetsFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) IsSingleAssetNoopSuccess(bool) (T, error) {
 	var result T
 	return result, nil
@@ -366,7 +456,17 @@ func (u *SearchQueryWithT[T]) LabelNoopSuccess(api1.Label) (T, error) {
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) LabelsNoopSuccess(api.LabelsFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) PropertyNoopSuccess(api1.Property) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchQueryWithT[T]) PropertiesNoopSuccess(api.PropertiesFilter) (T, error) {
 	var result T
 	return result, nil
 }
@@ -401,6 +501,11 @@ func (u *SearchQueryWithT[T]) CheckAlertStatesFilterNoopSuccess(CheckAlertStates
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) ArchivedNoopSuccess(bool) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) AndNoopSuccess([]SearchQuery) (T, error) {
 	var result T
 	return result, nil
@@ -428,20 +533,27 @@ func (u *SearchQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type SearchQueryVisitorWithT[T any] interface {
 	VisitStartTimeInclusive(ctx context.Context, v UtcTimestamp) (T, error)
+	VisitStartTime(ctx context.Context, v TimeframeFilter) (T, error)
 	VisitEndTimeInclusive(ctx context.Context, v UtcTimestamp) (T, error)
+	VisitEndTime(ctx context.Context, v TimeframeFilter) (T, error)
 	VisitTimeRange(ctx context.Context, v TimeRangeFilter) (T, error)
+	VisitCreatedAt(ctx context.Context, v TimeframeFilter) (T, error)
 	VisitExactMatch(ctx context.Context, v string) (T, error)
 	VisitSearchText(ctx context.Context, v string) (T, error)
 	VisitAsset(ctx context.Context, v api.AssetRid) (T, error)
+	VisitAssets(ctx context.Context, v AssetsFilter) (T, error)
 	VisitIsSingleAsset(ctx context.Context, v bool) (T, error)
 	VisitLabel(ctx context.Context, v api1.Label) (T, error)
+	VisitLabels(ctx context.Context, v api.LabelsFilter) (T, error)
 	VisitProperty(ctx context.Context, v api1.Property) (T, error)
+	VisitProperties(ctx context.Context, v api.PropertiesFilter) (T, error)
 	VisitDataSourceSeriesTag(ctx context.Context, v DataSourceSeriesTag) (T, error)
 	VisitDataSourceRefName(ctx context.Context, v api2.DataSourceRefName) (T, error)
 	VisitDataSource(ctx context.Context, v DataSource) (T, error)
 	VisitRunNumber(ctx context.Context, v safelong.SafeLong) (T, error)
 	VisitRunPrefix(ctx context.Context, v string) (T, error)
 	VisitCheckAlertStatesFilter(ctx context.Context, v CheckAlertStatesFilter) (T, error)
+	VisitArchived(ctx context.Context, v bool) (T, error)
 	VisitAnd(ctx context.Context, v []SearchQuery) (T, error)
 	VisitOr(ctx context.Context, v []SearchQuery) (T, error)
 	VisitNot(ctx context.Context, v SearchQuery) (T, error)
@@ -511,5 +623,70 @@ func (u *SortKeyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type SortKeyVisitorWithT[T any] interface {
 	VisitField(ctx context.Context, v SortField) (T, error)
 	VisitProperty(ctx context.Context, v SortProperty) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type TimeframeFilterWithT[T any] TimeframeFilter
+
+func (u *TimeframeFilterWithT[T]) Accept(ctx context.Context, v TimeframeFilterVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "custom":
+		if u.custom == nil {
+			return result, fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustom(ctx, *u.custom)
+	case "preset":
+		if u.preset == nil {
+			return result, fmt.Errorf("field \"preset\" is required")
+		}
+		return v.VisitPreset(ctx, *u.preset)
+	}
+}
+
+func (u *TimeframeFilterWithT[T]) AcceptFuncs(customFunc func(CustomTimeframeFilter) (T, error), presetFunc func(PresetTimeframeFilter) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "custom":
+		if u.custom == nil {
+			return result, fmt.Errorf("field \"custom\" is required")
+		}
+		return customFunc(*u.custom)
+	case "preset":
+		if u.preset == nil {
+			return result, fmt.Errorf("field \"preset\" is required")
+		}
+		return presetFunc(*u.preset)
+	}
+}
+
+func (u *TimeframeFilterWithT[T]) CustomNoopSuccess(CustomTimeframeFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *TimeframeFilterWithT[T]) PresetNoopSuccess(PresetTimeframeFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *TimeframeFilterWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type TimeframeFilterVisitorWithT[T any] interface {
+	VisitCustom(ctx context.Context, v CustomTimeframeFilter) (T, error)
+	VisitPreset(ctx context.Context, v PresetTimeframeFilter) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

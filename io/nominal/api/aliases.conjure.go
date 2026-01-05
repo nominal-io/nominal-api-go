@@ -55,18 +55,18 @@ type McapChannelTopic string
 type PropertyName string
 type PropertyValue string
 type S3Path string
-type SeriesArchetypeRid rid.ResourceIdentifier
+type SeriesArchetypeRid SeriesMetadataRid
 
 func (a SeriesArchetypeRid) String() string {
-	return rid.ResourceIdentifier(a).String()
+	return SeriesMetadataRid(a).String()
 }
 
 func (a SeriesArchetypeRid) MarshalText() ([]byte, error) {
-	return rid.ResourceIdentifier(a).MarshalText()
+	return SeriesMetadataRid(a).MarshalText()
 }
 
 func (a *SeriesArchetypeRid) UnmarshalText(data []byte) error {
-	var rawSeriesArchetypeRid rid.ResourceIdentifier
+	var rawSeriesArchetypeRid SeriesMetadataRid
 	if err := rawSeriesArchetypeRid.UnmarshalText(data); err != nil {
 		return err
 	}
@@ -83,6 +83,41 @@ func (a SeriesArchetypeRid) MarshalYAML() (interface{}, error) {
 }
 
 func (a *SeriesArchetypeRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+type SeriesMetadataRid rid.ResourceIdentifier
+
+func (a SeriesMetadataRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a SeriesMetadataRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *SeriesMetadataRid) UnmarshalText(data []byte) error {
+	var rawSeriesMetadataRid rid.ResourceIdentifier
+	if err := rawSeriesMetadataRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = SeriesMetadataRid(rawSeriesMetadataRid)
+	return nil
+}
+
+func (a SeriesMetadataRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *SeriesMetadataRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

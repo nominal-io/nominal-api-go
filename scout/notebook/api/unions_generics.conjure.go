@@ -99,6 +99,11 @@ func (u *SearchNotebooksQueryWithT[T]) Accept(ctx context.Context, v SearchNoteb
 			return result, fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOr(ctx, *u.or)
+	case "not":
+		if u.not == nil {
+			return result, fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(ctx, *u.not)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return result, fmt.Errorf("field \"exactMatch\" is required")
@@ -114,16 +119,31 @@ func (u *SearchNotebooksQueryWithT[T]) Accept(ctx context.Context, v SearchNoteb
 			return result, fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return result, fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return result, fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(ctx, *u.properties)
 	case "assetRid":
 		if u.assetRid == nil {
 			return result, fmt.Errorf("field \"assetRid\" is required")
 		}
 		return v.VisitAssetRid(ctx, *u.assetRid)
+	case "assetRids":
+		if u.assetRids == nil {
+			return result, fmt.Errorf("field \"assetRids\" is required")
+		}
+		return v.VisitAssetRids(ctx, *u.assetRids)
 	case "exactAssetRids":
 		if u.exactAssetRids == nil {
 			return result, fmt.Errorf("field \"exactAssetRids\" is required")
@@ -139,11 +159,21 @@ func (u *SearchNotebooksQueryWithT[T]) Accept(ctx context.Context, v SearchNoteb
 			return result, fmt.Errorf("field \"runRid\" is required")
 		}
 		return v.VisitRunRid(ctx, *u.runRid)
+	case "runRids":
+		if u.runRids == nil {
+			return result, fmt.Errorf("field \"runRids\" is required")
+		}
+		return v.VisitRunRids(ctx, *u.runRids)
 	case "notebookType":
 		if u.notebookType == nil {
 			return result, fmt.Errorf("field \"notebookType\" is required")
 		}
 		return v.VisitNotebookType(ctx, *u.notebookType)
+	case "notebookTypes":
+		if u.notebookTypes == nil {
+			return result, fmt.Errorf("field \"notebookTypes\" is required")
+		}
+		return v.VisitNotebookTypes(ctx, *u.notebookTypes)
 	case "draftState":
 		if u.draftState == nil {
 			return result, fmt.Errorf("field \"draftState\" is required")
@@ -159,10 +189,20 @@ func (u *SearchNotebooksQueryWithT[T]) Accept(ctx context.Context, v SearchNoteb
 			return result, fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspace(ctx, *u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return result, fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return v.VisitAuthorIsCurrentUser(ctx, *u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return result, fmt.Errorf("field \"authorRids\" is required")
+		}
+		return v.VisitAuthorRids(ctx, *u.authorRids)
 	}
 }
 
-func (u *SearchNotebooksQueryWithT[T]) AcceptFuncs(andFunc func([]SearchNotebooksQuery) (T, error), orFunc func([]SearchNotebooksQuery) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api2.Label) (T, error), propertyFunc func(api2.Property) (T, error), assetRidFunc func(api1.AssetRid) (T, error), exactAssetRidsFunc func([]api1.AssetRid) (T, error), authorRidFunc func(api1.UserRid) (T, error), runRidFunc func(api.RunRid) (T, error), notebookTypeFunc func(NotebookType) (T, error), draftStateFunc func(bool) (T, error), archivedFunc func(bool) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchNotebooksQueryWithT[T]) AcceptFuncs(andFunc func([]SearchNotebooksQuery) (T, error), orFunc func([]SearchNotebooksQuery) (T, error), notFunc func(SearchNotebooksQuery) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api2.Label) (T, error), labelsFunc func(api1.LabelsFilter) (T, error), propertyFunc func(api2.Property) (T, error), propertiesFunc func(api1.PropertiesFilter) (T, error), assetRidFunc func(api1.AssetRid) (T, error), assetRidsFunc func(AssetsFilter) (T, error), exactAssetRidsFunc func([]api1.AssetRid) (T, error), authorRidFunc func(api1.UserRid) (T, error), runRidFunc func(api.RunRid) (T, error), runRidsFunc func(RunsFilter) (T, error), notebookTypeFunc func(NotebookType) (T, error), notebookTypesFunc func(NotebookTypesFilter) (T, error), draftStateFunc func(bool) (T, error), archivedFunc func(bool) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), authorIsCurrentUserFunc func(bool) (T, error), authorRidsFunc func([]api1.UserRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -180,6 +220,11 @@ func (u *SearchNotebooksQueryWithT[T]) AcceptFuncs(andFunc func([]SearchNotebook
 			return result, fmt.Errorf("field \"or\" is required")
 		}
 		return orFunc(*u.or)
+	case "not":
+		if u.not == nil {
+			return result, fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return result, fmt.Errorf("field \"exactMatch\" is required")
@@ -195,16 +240,31 @@ func (u *SearchNotebooksQueryWithT[T]) AcceptFuncs(andFunc func([]SearchNotebook
 			return result, fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return result, fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return result, fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "assetRid":
 		if u.assetRid == nil {
 			return result, fmt.Errorf("field \"assetRid\" is required")
 		}
 		return assetRidFunc(*u.assetRid)
+	case "assetRids":
+		if u.assetRids == nil {
+			return result, fmt.Errorf("field \"assetRids\" is required")
+		}
+		return assetRidsFunc(*u.assetRids)
 	case "exactAssetRids":
 		if u.exactAssetRids == nil {
 			return result, fmt.Errorf("field \"exactAssetRids\" is required")
@@ -220,11 +280,21 @@ func (u *SearchNotebooksQueryWithT[T]) AcceptFuncs(andFunc func([]SearchNotebook
 			return result, fmt.Errorf("field \"runRid\" is required")
 		}
 		return runRidFunc(*u.runRid)
+	case "runRids":
+		if u.runRids == nil {
+			return result, fmt.Errorf("field \"runRids\" is required")
+		}
+		return runRidsFunc(*u.runRids)
 	case "notebookType":
 		if u.notebookType == nil {
 			return result, fmt.Errorf("field \"notebookType\" is required")
 		}
 		return notebookTypeFunc(*u.notebookType)
+	case "notebookTypes":
+		if u.notebookTypes == nil {
+			return result, fmt.Errorf("field \"notebookTypes\" is required")
+		}
+		return notebookTypesFunc(*u.notebookTypes)
 	case "draftState":
 		if u.draftState == nil {
 			return result, fmt.Errorf("field \"draftState\" is required")
@@ -240,6 +310,16 @@ func (u *SearchNotebooksQueryWithT[T]) AcceptFuncs(andFunc func([]SearchNotebook
 			return result, fmt.Errorf("field \"workspace\" is required")
 		}
 		return workspaceFunc(*u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return result, fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return authorIsCurrentUserFunc(*u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return result, fmt.Errorf("field \"authorRids\" is required")
+		}
+		return authorRidsFunc(*u.authorRids)
 	}
 }
 
@@ -249,6 +329,11 @@ func (u *SearchNotebooksQueryWithT[T]) AndNoopSuccess([]SearchNotebooksQuery) (T
 }
 
 func (u *SearchNotebooksQueryWithT[T]) OrNoopSuccess([]SearchNotebooksQuery) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchNotebooksQueryWithT[T]) NotNoopSuccess(SearchNotebooksQuery) (T, error) {
 	var result T
 	return result, nil
 }
@@ -268,12 +353,27 @@ func (u *SearchNotebooksQueryWithT[T]) LabelNoopSuccess(api2.Label) (T, error) {
 	return result, nil
 }
 
+func (u *SearchNotebooksQueryWithT[T]) LabelsNoopSuccess(api1.LabelsFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchNotebooksQueryWithT[T]) PropertyNoopSuccess(api2.Property) (T, error) {
 	var result T
 	return result, nil
 }
 
+func (u *SearchNotebooksQueryWithT[T]) PropertiesNoopSuccess(api1.PropertiesFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchNotebooksQueryWithT[T]) AssetRidNoopSuccess(api1.AssetRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchNotebooksQueryWithT[T]) AssetRidsNoopSuccess(AssetsFilter) (T, error) {
 	var result T
 	return result, nil
 }
@@ -293,7 +393,17 @@ func (u *SearchNotebooksQueryWithT[T]) RunRidNoopSuccess(api.RunRid) (T, error) 
 	return result, nil
 }
 
+func (u *SearchNotebooksQueryWithT[T]) RunRidsNoopSuccess(RunsFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchNotebooksQueryWithT[T]) NotebookTypeNoopSuccess(NotebookType) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchNotebooksQueryWithT[T]) NotebookTypesNoopSuccess(NotebookTypesFilter) (T, error) {
 	var result T
 	return result, nil
 }
@@ -313,6 +423,16 @@ func (u *SearchNotebooksQueryWithT[T]) WorkspaceNoopSuccess(rids.WorkspaceRid) (
 	return result, nil
 }
 
+func (u *SearchNotebooksQueryWithT[T]) AuthorIsCurrentUserNoopSuccess(bool) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchNotebooksQueryWithT[T]) AuthorRidsNoopSuccess([]api1.UserRid) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchNotebooksQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -321,17 +441,25 @@ func (u *SearchNotebooksQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error
 type SearchNotebooksQueryVisitorWithT[T any] interface {
 	VisitAnd(ctx context.Context, v []SearchNotebooksQuery) (T, error)
 	VisitOr(ctx context.Context, v []SearchNotebooksQuery) (T, error)
+	VisitNot(ctx context.Context, v SearchNotebooksQuery) (T, error)
 	VisitExactMatch(ctx context.Context, v string) (T, error)
 	VisitSearchText(ctx context.Context, v string) (T, error)
 	VisitLabel(ctx context.Context, v api2.Label) (T, error)
+	VisitLabels(ctx context.Context, v api1.LabelsFilter) (T, error)
 	VisitProperty(ctx context.Context, v api2.Property) (T, error)
+	VisitProperties(ctx context.Context, v api1.PropertiesFilter) (T, error)
 	VisitAssetRid(ctx context.Context, v api1.AssetRid) (T, error)
+	VisitAssetRids(ctx context.Context, v AssetsFilter) (T, error)
 	VisitExactAssetRids(ctx context.Context, v []api1.AssetRid) (T, error)
 	VisitAuthorRid(ctx context.Context, v api1.UserRid) (T, error)
 	VisitRunRid(ctx context.Context, v api.RunRid) (T, error)
+	VisitRunRids(ctx context.Context, v RunsFilter) (T, error)
 	VisitNotebookType(ctx context.Context, v NotebookType) (T, error)
+	VisitNotebookTypes(ctx context.Context, v NotebookTypesFilter) (T, error)
 	VisitDraftState(ctx context.Context, v bool) (T, error)
 	VisitArchived(ctx context.Context, v bool) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
+	VisitAuthorIsCurrentUser(ctx context.Context, v bool) (T, error)
+	VisitAuthorRids(ctx context.Context, v []api1.UserRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

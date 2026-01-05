@@ -13,9 +13,85 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// The internal secrets service provides functionality for retrieving customer secrets where the "user" is a service.
+type InternalSecretServiceClient interface {
+	/*
+	   Get decrypted secret by rid. This is a privileged operation that is restricted to services only.
+	   This endpoint must be a conjure endpoint in order to support TLS.
+	*/
+	GetDecrypted(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) (DecryptedSecret, error)
+}
+
+type internalSecretServiceClient struct {
+	client httpclient.Client
+}
+
+func NewInternalSecretServiceClient(client httpclient.Client) InternalSecretServiceClient {
+	return &internalSecretServiceClient{client: client}
+}
+
+func (c *internalSecretServiceClient) GetDecrypted(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) (DecryptedSecret, error) {
+	var defaultReturnVal DecryptedSecret
+	var returnVal *DecryptedSecret
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDecrypted"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/secrets/internal/v1/secrets/%s/decrypted", url.PathEscape(fmt.Sprint(ridArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getDecrypted failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getDecrypted response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+// The internal secrets service provides functionality for retrieving customer secrets where the "user" is a service.
+type InternalSecretServiceClientWithAuth interface {
+	/*
+	   Get decrypted secret by rid. This is a privileged operation that is restricted to services only.
+	   This endpoint must be a conjure endpoint in order to support TLS.
+	*/
+	GetDecrypted(ctx context.Context, ridArg SecretRid) (DecryptedSecret, error)
+}
+
+func NewInternalSecretServiceClientWithAuth(client InternalSecretServiceClient, authHeader bearertoken.Token) InternalSecretServiceClientWithAuth {
+	return &internalSecretServiceClientWithAuth{client: client, authHeader: authHeader}
+}
+
+type internalSecretServiceClientWithAuth struct {
+	client     InternalSecretServiceClient
+	authHeader bearertoken.Token
+}
+
+func (c *internalSecretServiceClientWithAuth) GetDecrypted(ctx context.Context, ridArg SecretRid) (DecryptedSecret, error) {
+	return c.client.GetDecrypted(ctx, c.authHeader, ridArg)
+}
+
+func NewInternalSecretServiceClientWithTokenProvider(client InternalSecretServiceClient, tokenProvider httpclient.TokenProvider) InternalSecretServiceClientWithAuth {
+	return &internalSecretServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
+}
+
+type internalSecretServiceClientWithTokenProvider struct {
+	client        InternalSecretServiceClient
+	tokenProvider httpclient.TokenProvider
+}
+
+func (c *internalSecretServiceClientWithTokenProvider) GetDecrypted(ctx context.Context, ridArg SecretRid) (DecryptedSecret, error) {
+	var defaultReturnVal DecryptedSecret
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetDecrypted(ctx, bearertoken.Token(token), ridArg)
+}
+
 // The secrets service provides functionality for creating and retrieving customer secrets (e.g. influx passwords, API keys, etc)
 type SecretServiceClient interface {
-	// Create a new secret. The secret value is immutable after creation.
+	// Create a new secret.
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg CreateSecretRequest) (Secret, error)
 	// Get secret by rid.
 	Get(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) (Secret, error)
@@ -184,7 +260,7 @@ func (c *secretServiceClient) Search(ctx context.Context, authHeader bearertoken
 
 // The secrets service provides functionality for creating and retrieving customer secrets (e.g. influx passwords, API keys, etc)
 type SecretServiceClientWithAuth interface {
-	// Create a new secret. The secret value is immutable after creation.
+	// Create a new secret.
 	Create(ctx context.Context, requestArg CreateSecretRequest) (Secret, error)
 	// Get secret by rid.
 	Get(ctx context.Context, ridArg SecretRid) (Secret, error)

@@ -21,12 +21,14 @@ const (
 	NominalDataType_UINT64       NominalDataType_Value = "UINT64"
 	NominalDataType_DOUBLE_ARRAY NominalDataType_Value = "DOUBLE_ARRAY"
 	NominalDataType_STRING_ARRAY NominalDataType_Value = "STRING_ARRAY"
+	NominalDataType_STRUCT       NominalDataType_Value = "STRUCT"
+	NominalDataType_VIDEO        NominalDataType_Value = "VIDEO"
 	NominalDataType_UNKNOWN      NominalDataType_Value = "UNKNOWN"
 )
 
 // NominalDataType_Values returns all known variants of NominalDataType.
 func NominalDataType_Values() []NominalDataType_Value {
-	return []NominalDataType_Value{NominalDataType_DOUBLE, NominalDataType_STRING, NominalDataType_LOG, NominalDataType_INT64, NominalDataType_UINT64, NominalDataType_DOUBLE_ARRAY, NominalDataType_STRING_ARRAY}
+	return []NominalDataType_Value{NominalDataType_DOUBLE, NominalDataType_STRING, NominalDataType_LOG, NominalDataType_INT64, NominalDataType_UINT64, NominalDataType_DOUBLE_ARRAY, NominalDataType_STRING_ARRAY, NominalDataType_STRUCT, NominalDataType_VIDEO}
 }
 
 func New_NominalDataType(value NominalDataType_Value) NominalDataType {
@@ -36,7 +38,7 @@ func New_NominalDataType(value NominalDataType_Value) NominalDataType {
 // IsUnknown returns false for all known variants of NominalDataType and true otherwise.
 func (e NominalDataType) IsUnknown() bool {
 	switch e.val {
-	case NominalDataType_DOUBLE, NominalDataType_STRING, NominalDataType_LOG, NominalDataType_INT64, NominalDataType_UINT64, NominalDataType_DOUBLE_ARRAY, NominalDataType_STRING_ARRAY:
+	case NominalDataType_DOUBLE, NominalDataType_STRING, NominalDataType_LOG, NominalDataType_INT64, NominalDataType_UINT64, NominalDataType_DOUBLE_ARRAY, NominalDataType_STRING_ARRAY, NominalDataType_STRUCT, NominalDataType_VIDEO:
 		return false
 	}
 	return true
@@ -75,6 +77,10 @@ func (e *NominalDataType) UnmarshalText(data []byte) error {
 		*e = New_NominalDataType(NominalDataType_DOUBLE_ARRAY)
 	case "STRING_ARRAY":
 		*e = New_NominalDataType(NominalDataType_STRING_ARRAY)
+	case "STRUCT":
+		*e = New_NominalDataType(NominalDataType_STRUCT)
+	case "VIDEO":
+		*e = New_NominalDataType(NominalDataType_VIDEO)
 	}
 	return nil
 }

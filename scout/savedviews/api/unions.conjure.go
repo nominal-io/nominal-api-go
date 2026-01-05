@@ -7,11 +7,226 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
-	"github.com/nominal-io/nominal-api-go/scout/api"
+	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/event"
+	api1 "github.com/nominal-io/nominal-api-go/scout/api"
+	"github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
+
+type AssetMetricColumnTimeRange struct {
+	typ           string
+	mostRecentRun *MostRecentRun
+	custom        *api.CustomTimeframeFilter
+	preset        *api.PresetTimeframeFilter
+}
+
+type assetMetricColumnTimeRangeDeserializer struct {
+	Type          string                     `json:"type"`
+	MostRecentRun *MostRecentRun             `json:"mostRecentRun"`
+	Custom        *api.CustomTimeframeFilter `json:"custom"`
+	Preset        *api.PresetTimeframeFilter `json:"preset"`
+}
+
+func (u *assetMetricColumnTimeRangeDeserializer) toStruct() AssetMetricColumnTimeRange {
+	return AssetMetricColumnTimeRange{typ: u.Type, mostRecentRun: u.MostRecentRun, custom: u.Custom, preset: u.Preset}
+}
+
+func (u *AssetMetricColumnTimeRange) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "mostRecentRun":
+		if u.mostRecentRun == nil {
+			return nil, fmt.Errorf("field \"mostRecentRun\" is required")
+		}
+		return struct {
+			Type          string        `json:"type"`
+			MostRecentRun MostRecentRun `json:"mostRecentRun"`
+		}{Type: "mostRecentRun", MostRecentRun: *u.mostRecentRun}, nil
+	case "custom":
+		if u.custom == nil {
+			return nil, fmt.Errorf("field \"custom\" is required")
+		}
+		return struct {
+			Type   string                    `json:"type"`
+			Custom api.CustomTimeframeFilter `json:"custom"`
+		}{Type: "custom", Custom: *u.custom}, nil
+	case "preset":
+		if u.preset == nil {
+			return nil, fmt.Errorf("field \"preset\" is required")
+		}
+		return struct {
+			Type   string                    `json:"type"`
+			Preset api.PresetTimeframeFilter `json:"preset"`
+		}{Type: "preset", Preset: *u.preset}, nil
+	}
+}
+
+func (u AssetMetricColumnTimeRange) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *AssetMetricColumnTimeRange) UnmarshalJSON(data []byte) error {
+	var deser assetMetricColumnTimeRangeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "mostRecentRun":
+		if u.mostRecentRun == nil {
+			return fmt.Errorf("field \"mostRecentRun\" is required")
+		}
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+	}
+	return nil
+}
+
+func (u AssetMetricColumnTimeRange) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *AssetMetricColumnTimeRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *AssetMetricColumnTimeRange) AcceptFuncs(mostRecentRunFunc func(MostRecentRun) error, customFunc func(api.CustomTimeframeFilter) error, presetFunc func(api.PresetTimeframeFilter) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "mostRecentRun":
+		if u.mostRecentRun == nil {
+			return fmt.Errorf("field \"mostRecentRun\" is required")
+		}
+		return mostRecentRunFunc(*u.mostRecentRun)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return customFunc(*u.custom)
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+		return presetFunc(*u.preset)
+	}
+}
+
+func (u *AssetMetricColumnTimeRange) MostRecentRunNoopSuccess(MostRecentRun) error {
+	return nil
+}
+
+func (u *AssetMetricColumnTimeRange) CustomNoopSuccess(api.CustomTimeframeFilter) error {
+	return nil
+}
+
+func (u *AssetMetricColumnTimeRange) PresetNoopSuccess(api.PresetTimeframeFilter) error {
+	return nil
+}
+
+func (u *AssetMetricColumnTimeRange) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *AssetMetricColumnTimeRange) Accept(v AssetMetricColumnTimeRangeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "mostRecentRun":
+		if u.mostRecentRun == nil {
+			return fmt.Errorf("field \"mostRecentRun\" is required")
+		}
+		return v.VisitMostRecentRun(*u.mostRecentRun)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustom(*u.custom)
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+		return v.VisitPreset(*u.preset)
+	}
+}
+
+type AssetMetricColumnTimeRangeVisitor interface {
+	VisitMostRecentRun(v MostRecentRun) error
+	VisitCustom(v api.CustomTimeframeFilter) error
+	VisitPreset(v api.PresetTimeframeFilter) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *AssetMetricColumnTimeRange) AcceptWithContext(ctx context.Context, v AssetMetricColumnTimeRangeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "mostRecentRun":
+		if u.mostRecentRun == nil {
+			return fmt.Errorf("field \"mostRecentRun\" is required")
+		}
+		return v.VisitMostRecentRunWithContext(ctx, *u.mostRecentRun)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustomWithContext(ctx, *u.custom)
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+		return v.VisitPresetWithContext(ctx, *u.preset)
+	}
+}
+
+type AssetMetricColumnTimeRangeVisitorWithContext interface {
+	VisitMostRecentRunWithContext(ctx context.Context, v MostRecentRun) error
+	VisitCustomWithContext(ctx context.Context, v api.CustomTimeframeFilter) error
+	VisitPresetWithContext(ctx context.Context, v api.PresetTimeframeFilter) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewAssetMetricColumnTimeRangeFromMostRecentRun(v MostRecentRun) AssetMetricColumnTimeRange {
+	return AssetMetricColumnTimeRange{typ: "mostRecentRun", mostRecentRun: &v}
+}
+
+func NewAssetMetricColumnTimeRangeFromCustom(v api.CustomTimeframeFilter) AssetMetricColumnTimeRange {
+	return AssetMetricColumnTimeRange{typ: "custom", custom: &v}
+}
+
+func NewAssetMetricColumnTimeRangeFromPreset(v api.PresetTimeframeFilter) AssetMetricColumnTimeRange {
+	return AssetMetricColumnTimeRange{typ: "preset", preset: &v}
+}
 
 type DisplayState struct {
 	typ            string
@@ -146,6 +361,276 @@ type DisplayStateVisitorWithContext interface {
 
 func NewDisplayStateFromDisplayStateV1(v TableState) DisplayState {
 	return DisplayState{typ: "displayStateV1", displayStateV1: &v}
+}
+
+type MetricColumnData struct {
+	typ   string
+	event *event.SearchQuery
+}
+
+type metricColumnDataDeserializer struct {
+	Type  string             `json:"type"`
+	Event *event.SearchQuery `json:"event"`
+}
+
+func (u *metricColumnDataDeserializer) toStruct() MetricColumnData {
+	return MetricColumnData{typ: u.Type, event: u.Event}
+}
+
+func (u *MetricColumnData) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "event":
+		if u.event == nil {
+			return nil, fmt.Errorf("field \"event\" is required")
+		}
+		return struct {
+			Type  string            `json:"type"`
+			Event event.SearchQuery `json:"event"`
+		}{Type: "event", Event: *u.event}, nil
+	}
+}
+
+func (u MetricColumnData) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *MetricColumnData) UnmarshalJSON(data []byte) error {
+	var deser metricColumnDataDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "event":
+		if u.event == nil {
+			return fmt.Errorf("field \"event\" is required")
+		}
+	}
+	return nil
+}
+
+func (u MetricColumnData) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *MetricColumnData) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *MetricColumnData) AcceptFuncs(eventFunc func(event.SearchQuery) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "event":
+		if u.event == nil {
+			return fmt.Errorf("field \"event\" is required")
+		}
+		return eventFunc(*u.event)
+	}
+}
+
+func (u *MetricColumnData) EventNoopSuccess(event.SearchQuery) error {
+	return nil
+}
+
+func (u *MetricColumnData) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *MetricColumnData) Accept(v MetricColumnDataVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "event":
+		if u.event == nil {
+			return fmt.Errorf("field \"event\" is required")
+		}
+		return v.VisitEvent(*u.event)
+	}
+}
+
+type MetricColumnDataVisitor interface {
+	VisitEvent(v event.SearchQuery) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *MetricColumnData) AcceptWithContext(ctx context.Context, v MetricColumnDataVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "event":
+		if u.event == nil {
+			return fmt.Errorf("field \"event\" is required")
+		}
+		return v.VisitEventWithContext(ctx, *u.event)
+	}
+}
+
+type MetricColumnDataVisitorWithContext interface {
+	VisitEventWithContext(ctx context.Context, v event.SearchQuery) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewMetricColumnDataFromEvent(v event.SearchQuery) MetricColumnData {
+	return MetricColumnData{typ: "event", event: &v}
+}
+
+type MetricColumns struct {
+	typ   string
+	asset *AssetMetricColumns
+}
+
+type metricColumnsDeserializer struct {
+	Type  string              `json:"type"`
+	Asset *AssetMetricColumns `json:"asset"`
+}
+
+func (u *metricColumnsDeserializer) toStruct() MetricColumns {
+	return MetricColumns{typ: u.Type, asset: u.Asset}
+}
+
+func (u *MetricColumns) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "asset":
+		if u.asset == nil {
+			return nil, fmt.Errorf("field \"asset\" is required")
+		}
+		return struct {
+			Type  string             `json:"type"`
+			Asset AssetMetricColumns `json:"asset"`
+		}{Type: "asset", Asset: *u.asset}, nil
+	}
+}
+
+func (u MetricColumns) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *MetricColumns) UnmarshalJSON(data []byte) error {
+	var deser metricColumnsDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+	}
+	return nil
+}
+
+func (u MetricColumns) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *MetricColumns) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *MetricColumns) AcceptFuncs(assetFunc func(AssetMetricColumns) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return assetFunc(*u.asset)
+	}
+}
+
+func (u *MetricColumns) AssetNoopSuccess(AssetMetricColumns) error {
+	return nil
+}
+
+func (u *MetricColumns) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *MetricColumns) Accept(v MetricColumnsVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAsset(*u.asset)
+	}
+}
+
+type MetricColumnsVisitor interface {
+	VisitAsset(v AssetMetricColumns) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *MetricColumns) AcceptWithContext(ctx context.Context, v MetricColumnsVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAssetWithContext(ctx, *u.asset)
+	}
+}
+
+type MetricColumnsVisitorWithContext interface {
+	VisitAssetWithContext(ctx context.Context, v AssetMetricColumns) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewMetricColumnsFromAsset(v AssetMetricColumns) MetricColumns {
+	return MetricColumns{typ: "asset", asset: &v}
 }
 
 type SearchSavedViewsQuery struct {
@@ -906,14 +1391,14 @@ func NewSortKeyFromField(v SortField) SortKey {
 
 type UpdateColor struct {
 	typ        string
-	color      *api.Color
-	clearColor *api1.Empty
+	color      *api1.Color
+	clearColor *api2.Empty
 }
 
 type updateColorDeserializer struct {
 	Type       string      `json:"type"`
-	Color      *api.Color  `json:"color"`
-	ClearColor *api1.Empty `json:"clearColor"`
+	Color      *api1.Color `json:"color"`
+	ClearColor *api2.Empty `json:"clearColor"`
 }
 
 func (u *updateColorDeserializer) toStruct() UpdateColor {
@@ -929,8 +1414,8 @@ func (u *UpdateColor) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"color\" is required")
 		}
 		return struct {
-			Type  string    `json:"type"`
-			Color api.Color `json:"color"`
+			Type  string     `json:"type"`
+			Color api1.Color `json:"color"`
 		}{Type: "color", Color: *u.color}, nil
 	case "clearColor":
 		if u.clearColor == nil {
@@ -938,7 +1423,7 @@ func (u *UpdateColor) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type       string     `json:"type"`
-			ClearColor api1.Empty `json:"clearColor"`
+			ClearColor api2.Empty `json:"clearColor"`
 		}{Type: "clearColor", ClearColor: *u.clearColor}, nil
 	}
 }
@@ -986,7 +1471,7 @@ func (u *UpdateColor) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UpdateColor) AcceptFuncs(colorFunc func(api.Color) error, clearColorFunc func(api1.Empty) error, unknownFunc func(string) error) error {
+func (u *UpdateColor) AcceptFuncs(colorFunc func(api1.Color) error, clearColorFunc func(api2.Empty) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1006,11 +1491,11 @@ func (u *UpdateColor) AcceptFuncs(colorFunc func(api.Color) error, clearColorFun
 	}
 }
 
-func (u *UpdateColor) ColorNoopSuccess(api.Color) error {
+func (u *UpdateColor) ColorNoopSuccess(api1.Color) error {
 	return nil
 }
 
-func (u *UpdateColor) ClearColorNoopSuccess(api1.Empty) error {
+func (u *UpdateColor) ClearColorNoopSuccess(api2.Empty) error {
 	return nil
 }
 
@@ -1039,8 +1524,8 @@ func (u *UpdateColor) Accept(v UpdateColorVisitor) error {
 }
 
 type UpdateColorVisitor interface {
-	VisitColor(v api.Color) error
-	VisitClearColor(v api1.Empty) error
+	VisitColor(v api1.Color) error
+	VisitClearColor(v api2.Empty) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1065,29 +1550,29 @@ func (u *UpdateColor) AcceptWithContext(ctx context.Context, v UpdateColorVisito
 }
 
 type UpdateColorVisitorWithContext interface {
-	VisitColorWithContext(ctx context.Context, v api.Color) error
-	VisitClearColorWithContext(ctx context.Context, v api1.Empty) error
+	VisitColorWithContext(ctx context.Context, v api1.Color) error
+	VisitClearColorWithContext(ctx context.Context, v api2.Empty) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewUpdateColorFromColor(v api.Color) UpdateColor {
+func NewUpdateColorFromColor(v api1.Color) UpdateColor {
 	return UpdateColor{typ: "color", color: &v}
 }
 
-func NewUpdateColorFromClearColor(v api1.Empty) UpdateColor {
+func NewUpdateColorFromClearColor(v api2.Empty) UpdateColor {
 	return UpdateColor{typ: "clearColor", clearColor: &v}
 }
 
 type UpdateSymbol struct {
 	typ         string
-	symbol      *api.Symbol
-	clearSymbol *api1.Empty
+	symbol      *api1.Symbol
+	clearSymbol *api2.Empty
 }
 
 type updateSymbolDeserializer struct {
-	Type        string      `json:"type"`
-	Symbol      *api.Symbol `json:"symbol"`
-	ClearSymbol *api1.Empty `json:"clearSymbol"`
+	Type        string       `json:"type"`
+	Symbol      *api1.Symbol `json:"symbol"`
+	ClearSymbol *api2.Empty  `json:"clearSymbol"`
 }
 
 func (u *updateSymbolDeserializer) toStruct() UpdateSymbol {
@@ -1103,8 +1588,8 @@ func (u *UpdateSymbol) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"symbol\" is required")
 		}
 		return struct {
-			Type   string     `json:"type"`
-			Symbol api.Symbol `json:"symbol"`
+			Type   string      `json:"type"`
+			Symbol api1.Symbol `json:"symbol"`
 		}{Type: "symbol", Symbol: *u.symbol}, nil
 	case "clearSymbol":
 		if u.clearSymbol == nil {
@@ -1112,7 +1597,7 @@ func (u *UpdateSymbol) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type        string     `json:"type"`
-			ClearSymbol api1.Empty `json:"clearSymbol"`
+			ClearSymbol api2.Empty `json:"clearSymbol"`
 		}{Type: "clearSymbol", ClearSymbol: *u.clearSymbol}, nil
 	}
 }
@@ -1160,7 +1645,7 @@ func (u *UpdateSymbol) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UpdateSymbol) AcceptFuncs(symbolFunc func(api.Symbol) error, clearSymbolFunc func(api1.Empty) error, unknownFunc func(string) error) error {
+func (u *UpdateSymbol) AcceptFuncs(symbolFunc func(api1.Symbol) error, clearSymbolFunc func(api2.Empty) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1180,11 +1665,11 @@ func (u *UpdateSymbol) AcceptFuncs(symbolFunc func(api.Symbol) error, clearSymbo
 	}
 }
 
-func (u *UpdateSymbol) SymbolNoopSuccess(api.Symbol) error {
+func (u *UpdateSymbol) SymbolNoopSuccess(api1.Symbol) error {
 	return nil
 }
 
-func (u *UpdateSymbol) ClearSymbolNoopSuccess(api1.Empty) error {
+func (u *UpdateSymbol) ClearSymbolNoopSuccess(api2.Empty) error {
 	return nil
 }
 
@@ -1213,8 +1698,8 @@ func (u *UpdateSymbol) Accept(v UpdateSymbolVisitor) error {
 }
 
 type UpdateSymbolVisitor interface {
-	VisitSymbol(v api.Symbol) error
-	VisitClearSymbol(v api1.Empty) error
+	VisitSymbol(v api1.Symbol) error
+	VisitClearSymbol(v api2.Empty) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1239,15 +1724,15 @@ func (u *UpdateSymbol) AcceptWithContext(ctx context.Context, v UpdateSymbolVisi
 }
 
 type UpdateSymbolVisitorWithContext interface {
-	VisitSymbolWithContext(ctx context.Context, v api.Symbol) error
-	VisitClearSymbolWithContext(ctx context.Context, v api1.Empty) error
+	VisitSymbolWithContext(ctx context.Context, v api1.Symbol) error
+	VisitClearSymbolWithContext(ctx context.Context, v api2.Empty) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewUpdateSymbolFromSymbol(v api.Symbol) UpdateSymbol {
+func NewUpdateSymbolFromSymbol(v api1.Symbol) UpdateSymbol {
 	return UpdateSymbol{typ: "symbol", symbol: &v}
 }
 
-func NewUpdateSymbolFromClearSymbol(v api1.Empty) UpdateSymbol {
+func NewUpdateSymbolFromClearSymbol(v api2.Empty) UpdateSymbol {
 	return UpdateSymbol{typ: "clearSymbol", clearSymbol: &v}
 }

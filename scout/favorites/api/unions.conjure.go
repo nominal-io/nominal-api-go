@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
@@ -19,19 +20,23 @@ type FavoriteResource struct {
 	notebook         *api.NotebookRid
 	notebookTemplate *api.TemplateRid
 	checklist        *api.ChecklistRid
+	savedView        *api.SavedViewRid
+	procedure        *rids.ProcedureRid
 }
 
 type favoriteResourceDeserializer struct {
-	Type             string            `json:"type"`
-	Asset            *api.AssetRid     `json:"asset"`
-	Run              *api1.RunRid      `json:"run"`
-	Notebook         *api.NotebookRid  `json:"notebook"`
-	NotebookTemplate *api.TemplateRid  `json:"notebookTemplate"`
-	Checklist        *api.ChecklistRid `json:"checklist"`
+	Type             string             `json:"type"`
+	Asset            *api.AssetRid      `json:"asset"`
+	Run              *api1.RunRid       `json:"run"`
+	Notebook         *api.NotebookRid   `json:"notebook"`
+	NotebookTemplate *api.TemplateRid   `json:"notebookTemplate"`
+	Checklist        *api.ChecklistRid  `json:"checklist"`
+	SavedView        *api.SavedViewRid  `json:"savedView"`
+	Procedure        *rids.ProcedureRid `json:"procedure"`
 }
 
 func (u *favoriteResourceDeserializer) toStruct() FavoriteResource {
-	return FavoriteResource{typ: u.Type, asset: u.Asset, run: u.Run, notebook: u.Notebook, notebookTemplate: u.NotebookTemplate, checklist: u.Checklist}
+	return FavoriteResource{typ: u.Type, asset: u.Asset, run: u.Run, notebook: u.Notebook, notebookTemplate: u.NotebookTemplate, checklist: u.Checklist, savedView: u.SavedView, procedure: u.Procedure}
 }
 
 func (u *FavoriteResource) toSerializer() (interface{}, error) {
@@ -78,6 +83,22 @@ func (u *FavoriteResource) toSerializer() (interface{}, error) {
 			Type      string           `json:"type"`
 			Checklist api.ChecklistRid `json:"checklist"`
 		}{Type: "checklist", Checklist: *u.checklist}, nil
+	case "savedView":
+		if u.savedView == nil {
+			return nil, fmt.Errorf("field \"savedView\" is required")
+		}
+		return struct {
+			Type      string           `json:"type"`
+			SavedView api.SavedViewRid `json:"savedView"`
+		}{Type: "savedView", SavedView: *u.savedView}, nil
+	case "procedure":
+		if u.procedure == nil {
+			return nil, fmt.Errorf("field \"procedure\" is required")
+		}
+		return struct {
+			Type      string            `json:"type"`
+			Procedure rids.ProcedureRid `json:"procedure"`
+		}{Type: "procedure", Procedure: *u.procedure}, nil
 	}
 }
 
@@ -116,6 +137,14 @@ func (u *FavoriteResource) UnmarshalJSON(data []byte) error {
 		if u.checklist == nil {
 			return fmt.Errorf("field \"checklist\" is required")
 		}
+	case "savedView":
+		if u.savedView == nil {
+			return fmt.Errorf("field \"savedView\" is required")
+		}
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
 	}
 	return nil
 }
@@ -136,7 +165,7 @@ func (u *FavoriteResource) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *FavoriteResource) AcceptFuncs(assetFunc func(api.AssetRid) error, runFunc func(api1.RunRid) error, notebookFunc func(api.NotebookRid) error, notebookTemplateFunc func(api.TemplateRid) error, checklistFunc func(api.ChecklistRid) error, unknownFunc func(string) error) error {
+func (u *FavoriteResource) AcceptFuncs(assetFunc func(api.AssetRid) error, runFunc func(api1.RunRid) error, notebookFunc func(api.NotebookRid) error, notebookTemplateFunc func(api.TemplateRid) error, checklistFunc func(api.ChecklistRid) error, savedViewFunc func(api.SavedViewRid) error, procedureFunc func(rids.ProcedureRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -168,6 +197,16 @@ func (u *FavoriteResource) AcceptFuncs(assetFunc func(api.AssetRid) error, runFu
 			return fmt.Errorf("field \"checklist\" is required")
 		}
 		return checklistFunc(*u.checklist)
+	case "savedView":
+		if u.savedView == nil {
+			return fmt.Errorf("field \"savedView\" is required")
+		}
+		return savedViewFunc(*u.savedView)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return procedureFunc(*u.procedure)
 	}
 }
 
@@ -188,6 +227,14 @@ func (u *FavoriteResource) NotebookTemplateNoopSuccess(api.TemplateRid) error {
 }
 
 func (u *FavoriteResource) ChecklistNoopSuccess(api.ChecklistRid) error {
+	return nil
+}
+
+func (u *FavoriteResource) SavedViewNoopSuccess(api.SavedViewRid) error {
+	return nil
+}
+
+func (u *FavoriteResource) ProcedureNoopSuccess(rids.ProcedureRid) error {
 	return nil
 }
 
@@ -227,6 +274,16 @@ func (u *FavoriteResource) Accept(v FavoriteResourceVisitor) error {
 			return fmt.Errorf("field \"checklist\" is required")
 		}
 		return v.VisitChecklist(*u.checklist)
+	case "savedView":
+		if u.savedView == nil {
+			return fmt.Errorf("field \"savedView\" is required")
+		}
+		return v.VisitSavedView(*u.savedView)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return v.VisitProcedure(*u.procedure)
 	}
 }
 
@@ -236,6 +293,8 @@ type FavoriteResourceVisitor interface {
 	VisitNotebook(v api.NotebookRid) error
 	VisitNotebookTemplate(v api.TemplateRid) error
 	VisitChecklist(v api.ChecklistRid) error
+	VisitSavedView(v api.SavedViewRid) error
+	VisitProcedure(v rids.ProcedureRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -271,6 +330,16 @@ func (u *FavoriteResource) AcceptWithContext(ctx context.Context, v FavoriteReso
 			return fmt.Errorf("field \"checklist\" is required")
 		}
 		return v.VisitChecklistWithContext(ctx, *u.checklist)
+	case "savedView":
+		if u.savedView == nil {
+			return fmt.Errorf("field \"savedView\" is required")
+		}
+		return v.VisitSavedViewWithContext(ctx, *u.savedView)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return v.VisitProcedureWithContext(ctx, *u.procedure)
 	}
 }
 
@@ -280,6 +349,8 @@ type FavoriteResourceVisitorWithContext interface {
 	VisitNotebookWithContext(ctx context.Context, v api.NotebookRid) error
 	VisitNotebookTemplateWithContext(ctx context.Context, v api.TemplateRid) error
 	VisitChecklistWithContext(ctx context.Context, v api.ChecklistRid) error
+	VisitSavedViewWithContext(ctx context.Context, v api.SavedViewRid) error
+	VisitProcedureWithContext(ctx context.Context, v rids.ProcedureRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -301,4 +372,12 @@ func NewFavoriteResourceFromNotebookTemplate(v api.TemplateRid) FavoriteResource
 
 func NewFavoriteResourceFromChecklist(v api.ChecklistRid) FavoriteResource {
 	return FavoriteResource{typ: "checklist", checklist: &v}
+}
+
+func NewFavoriteResourceFromSavedView(v api.SavedViewRid) FavoriteResource {
+	return FavoriteResource{typ: "savedView", savedView: &v}
+}
+
+func NewFavoriteResourceFromProcedure(v rids.ProcedureRid) FavoriteResource {
+	return FavoriteResource{typ: "procedure", procedure: &v}
 }

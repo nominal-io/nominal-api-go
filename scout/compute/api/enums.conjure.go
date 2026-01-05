@@ -122,6 +122,70 @@ func (e *BinaryArithmeticOperation) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// The type of detrending to apply to the signal. When absent, will default to the detrend behavior for that function.
+type DetrendType struct {
+	val DetrendType_Value
+}
+
+type DetrendType_Value string
+
+const (
+	// Removes the mean value of the signal.
+	DetrendType_CONSTANT DetrendType_Value = "CONSTANT"
+	// Removes a best-fit linear trend from the signal.
+	DetrendType_LINEAR DetrendType_Value = "LINEAR"
+	// Does not perform any detrending.
+	DetrendType_NO_OP   DetrendType_Value = "NO_OP"
+	DetrendType_UNKNOWN DetrendType_Value = "UNKNOWN"
+)
+
+// DetrendType_Values returns all known variants of DetrendType.
+func DetrendType_Values() []DetrendType_Value {
+	return []DetrendType_Value{DetrendType_CONSTANT, DetrendType_LINEAR, DetrendType_NO_OP}
+}
+
+func New_DetrendType(value DetrendType_Value) DetrendType {
+	return DetrendType{val: value}
+}
+
+// IsUnknown returns false for all known variants of DetrendType and true otherwise.
+func (e DetrendType) IsUnknown() bool {
+	switch e.val {
+	case DetrendType_CONSTANT, DetrendType_LINEAR, DetrendType_NO_OP:
+		return false
+	}
+	return true
+}
+
+func (e DetrendType) Value() DetrendType_Value {
+	if e.IsUnknown() {
+		return DetrendType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e DetrendType) String() string {
+	return string(e.val)
+}
+
+func (e DetrendType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *DetrendType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_DetrendType(DetrendType_Value(v))
+	case "CONSTANT":
+		*e = New_DetrendType(DetrendType_CONSTANT)
+	case "LINEAR":
+		*e = New_DetrendType(DetrendType_LINEAR)
+	case "NO_OP":
+		*e = New_DetrendType(DetrendType_NO_OP)
+	}
+	return nil
+}
+
 type DriverSeries3d struct {
 	val DriverSeries3d_Value
 }
@@ -416,203 +480,65 @@ func (e *EqualityOperator) UnmarshalText(data []byte) error {
 	return nil
 }
 
-type EventDispositionStatus struct {
-	val EventDispositionStatus_Value
+type FftWindow struct {
+	val FftWindow_Value
 }
 
-type EventDispositionStatus_Value string
+type FftWindow_Value string
 
 const (
-	EventDispositionStatus_PENDING_REVIEW                 EventDispositionStatus_Value = "PENDING_REVIEW"
-	EventDispositionStatus_CLOSED_IGNORED                 EventDispositionStatus_Value = "CLOSED_IGNORED"
-	EventDispositionStatus_CLOSED_REQUIRES_FURTHER_ACTION EventDispositionStatus_Value = "CLOSED_REQUIRES_FURTHER_ACTION"
-	EventDispositionStatus_NO_DISPOSITION                 EventDispositionStatus_Value = "NO_DISPOSITION"
-	EventDispositionStatus_UNKNOWN                        EventDispositionStatus_Value = "UNKNOWN"
+	FftWindow_BLACKMAN FftWindow_Value = "BLACKMAN"
+	FftWindow_HANN     FftWindow_Value = "HANN"
+	FftWindow_HAMMING  FftWindow_Value = "HAMMING"
+	FftWindow_RECT     FftWindow_Value = "RECT"
+	FftWindow_UNKNOWN  FftWindow_Value = "UNKNOWN"
 )
 
-// EventDispositionStatus_Values returns all known variants of EventDispositionStatus.
-func EventDispositionStatus_Values() []EventDispositionStatus_Value {
-	return []EventDispositionStatus_Value{EventDispositionStatus_PENDING_REVIEW, EventDispositionStatus_CLOSED_IGNORED, EventDispositionStatus_CLOSED_REQUIRES_FURTHER_ACTION, EventDispositionStatus_NO_DISPOSITION}
+// FftWindow_Values returns all known variants of FftWindow.
+func FftWindow_Values() []FftWindow_Value {
+	return []FftWindow_Value{FftWindow_BLACKMAN, FftWindow_HANN, FftWindow_HAMMING, FftWindow_RECT}
 }
 
-func New_EventDispositionStatus(value EventDispositionStatus_Value) EventDispositionStatus {
-	return EventDispositionStatus{val: value}
+func New_FftWindow(value FftWindow_Value) FftWindow {
+	return FftWindow{val: value}
 }
 
-// IsUnknown returns false for all known variants of EventDispositionStatus and true otherwise.
-func (e EventDispositionStatus) IsUnknown() bool {
+// IsUnknown returns false for all known variants of FftWindow and true otherwise.
+func (e FftWindow) IsUnknown() bool {
 	switch e.val {
-	case EventDispositionStatus_PENDING_REVIEW, EventDispositionStatus_CLOSED_IGNORED, EventDispositionStatus_CLOSED_REQUIRES_FURTHER_ACTION, EventDispositionStatus_NO_DISPOSITION:
+	case FftWindow_BLACKMAN, FftWindow_HANN, FftWindow_HAMMING, FftWindow_RECT:
 		return false
 	}
 	return true
 }
 
-func (e EventDispositionStatus) Value() EventDispositionStatus_Value {
+func (e FftWindow) Value() FftWindow_Value {
 	if e.IsUnknown() {
-		return EventDispositionStatus_UNKNOWN
+		return FftWindow_UNKNOWN
 	}
 	return e.val
 }
 
-func (e EventDispositionStatus) String() string {
+func (e FftWindow) String() string {
 	return string(e.val)
 }
 
-func (e EventDispositionStatus) MarshalText() ([]byte, error) {
+func (e FftWindow) MarshalText() ([]byte, error) {
 	return []byte(e.val), nil
 }
 
-func (e *EventDispositionStatus) UnmarshalText(data []byte) error {
+func (e *FftWindow) UnmarshalText(data []byte) error {
 	switch v := strings.ToUpper(string(data)); v {
 	default:
-		*e = New_EventDispositionStatus(EventDispositionStatus_Value(v))
-	case "PENDING_REVIEW":
-		*e = New_EventDispositionStatus(EventDispositionStatus_PENDING_REVIEW)
-	case "CLOSED_IGNORED":
-		*e = New_EventDispositionStatus(EventDispositionStatus_CLOSED_IGNORED)
-	case "CLOSED_REQUIRES_FURTHER_ACTION":
-		*e = New_EventDispositionStatus(EventDispositionStatus_CLOSED_REQUIRES_FURTHER_ACTION)
-	case "NO_DISPOSITION":
-		*e = New_EventDispositionStatus(EventDispositionStatus_NO_DISPOSITION)
-	}
-	return nil
-}
-
-type EventTimeFilterCondition struct {
-	val EventTimeFilterCondition_Value
-}
-
-type EventTimeFilterCondition_Value string
-
-const (
-	EventTimeFilterCondition_START_TIME_BEFORE_INCLUSIVE EventTimeFilterCondition_Value = "START_TIME_BEFORE_INCLUSIVE"
-	EventTimeFilterCondition_START_TIME_BEFORE_EXCLUSIVE EventTimeFilterCondition_Value = "START_TIME_BEFORE_EXCLUSIVE"
-	EventTimeFilterCondition_START_TIME_AFTER_INCLUSIVE  EventTimeFilterCondition_Value = "START_TIME_AFTER_INCLUSIVE"
-	EventTimeFilterCondition_START_TIME_AFTER_EXCLUSIVE  EventTimeFilterCondition_Value = "START_TIME_AFTER_EXCLUSIVE"
-	EventTimeFilterCondition_END_TIME_BEFORE_INCLUSIVE   EventTimeFilterCondition_Value = "END_TIME_BEFORE_INCLUSIVE"
-	EventTimeFilterCondition_END_TIME_BEFORE_EXCLUSIVE   EventTimeFilterCondition_Value = "END_TIME_BEFORE_EXCLUSIVE"
-	EventTimeFilterCondition_END_TIME_AFTER_INCLUSIVE    EventTimeFilterCondition_Value = "END_TIME_AFTER_INCLUSIVE"
-	EventTimeFilterCondition_END_TIME_AFTER_EXCLUSIVE    EventTimeFilterCondition_Value = "END_TIME_AFTER_EXCLUSIVE"
-	EventTimeFilterCondition_UNKNOWN                     EventTimeFilterCondition_Value = "UNKNOWN"
-)
-
-// EventTimeFilterCondition_Values returns all known variants of EventTimeFilterCondition.
-func EventTimeFilterCondition_Values() []EventTimeFilterCondition_Value {
-	return []EventTimeFilterCondition_Value{EventTimeFilterCondition_START_TIME_BEFORE_INCLUSIVE, EventTimeFilterCondition_START_TIME_BEFORE_EXCLUSIVE, EventTimeFilterCondition_START_TIME_AFTER_INCLUSIVE, EventTimeFilterCondition_START_TIME_AFTER_EXCLUSIVE, EventTimeFilterCondition_END_TIME_BEFORE_INCLUSIVE, EventTimeFilterCondition_END_TIME_BEFORE_EXCLUSIVE, EventTimeFilterCondition_END_TIME_AFTER_INCLUSIVE, EventTimeFilterCondition_END_TIME_AFTER_EXCLUSIVE}
-}
-
-func New_EventTimeFilterCondition(value EventTimeFilterCondition_Value) EventTimeFilterCondition {
-	return EventTimeFilterCondition{val: value}
-}
-
-// IsUnknown returns false for all known variants of EventTimeFilterCondition and true otherwise.
-func (e EventTimeFilterCondition) IsUnknown() bool {
-	switch e.val {
-	case EventTimeFilterCondition_START_TIME_BEFORE_INCLUSIVE, EventTimeFilterCondition_START_TIME_BEFORE_EXCLUSIVE, EventTimeFilterCondition_START_TIME_AFTER_INCLUSIVE, EventTimeFilterCondition_START_TIME_AFTER_EXCLUSIVE, EventTimeFilterCondition_END_TIME_BEFORE_INCLUSIVE, EventTimeFilterCondition_END_TIME_BEFORE_EXCLUSIVE, EventTimeFilterCondition_END_TIME_AFTER_INCLUSIVE, EventTimeFilterCondition_END_TIME_AFTER_EXCLUSIVE:
-		return false
-	}
-	return true
-}
-
-func (e EventTimeFilterCondition) Value() EventTimeFilterCondition_Value {
-	if e.IsUnknown() {
-		return EventTimeFilterCondition_UNKNOWN
-	}
-	return e.val
-}
-
-func (e EventTimeFilterCondition) String() string {
-	return string(e.val)
-}
-
-func (e EventTimeFilterCondition) MarshalText() ([]byte, error) {
-	return []byte(e.val), nil
-}
-
-func (e *EventTimeFilterCondition) UnmarshalText(data []byte) error {
-	switch v := strings.ToUpper(string(data)); v {
-	default:
-		*e = New_EventTimeFilterCondition(EventTimeFilterCondition_Value(v))
-	case "START_TIME_BEFORE_INCLUSIVE":
-		*e = New_EventTimeFilterCondition(EventTimeFilterCondition_START_TIME_BEFORE_INCLUSIVE)
-	case "START_TIME_BEFORE_EXCLUSIVE":
-		*e = New_EventTimeFilterCondition(EventTimeFilterCondition_START_TIME_BEFORE_EXCLUSIVE)
-	case "START_TIME_AFTER_INCLUSIVE":
-		*e = New_EventTimeFilterCondition(EventTimeFilterCondition_START_TIME_AFTER_INCLUSIVE)
-	case "START_TIME_AFTER_EXCLUSIVE":
-		*e = New_EventTimeFilterCondition(EventTimeFilterCondition_START_TIME_AFTER_EXCLUSIVE)
-	case "END_TIME_BEFORE_INCLUSIVE":
-		*e = New_EventTimeFilterCondition(EventTimeFilterCondition_END_TIME_BEFORE_INCLUSIVE)
-	case "END_TIME_BEFORE_EXCLUSIVE":
-		*e = New_EventTimeFilterCondition(EventTimeFilterCondition_END_TIME_BEFORE_EXCLUSIVE)
-	case "END_TIME_AFTER_INCLUSIVE":
-		*e = New_EventTimeFilterCondition(EventTimeFilterCondition_END_TIME_AFTER_INCLUSIVE)
-	case "END_TIME_AFTER_EXCLUSIVE":
-		*e = New_EventTimeFilterCondition(EventTimeFilterCondition_END_TIME_AFTER_EXCLUSIVE)
-	}
-	return nil
-}
-
-type EventType struct {
-	val EventType_Value
-}
-
-type EventType_Value string
-
-const (
-	EventType_INFO    EventType_Value = "INFO"
-	EventType_FLAG    EventType_Value = "FLAG"
-	EventType_ERROR   EventType_Value = "ERROR"
-	EventType_SUCCESS EventType_Value = "SUCCESS"
-	EventType_UNKNOWN EventType_Value = "UNKNOWN"
-)
-
-// EventType_Values returns all known variants of EventType.
-func EventType_Values() []EventType_Value {
-	return []EventType_Value{EventType_INFO, EventType_FLAG, EventType_ERROR, EventType_SUCCESS}
-}
-
-func New_EventType(value EventType_Value) EventType {
-	return EventType{val: value}
-}
-
-// IsUnknown returns false for all known variants of EventType and true otherwise.
-func (e EventType) IsUnknown() bool {
-	switch e.val {
-	case EventType_INFO, EventType_FLAG, EventType_ERROR, EventType_SUCCESS:
-		return false
-	}
-	return true
-}
-
-func (e EventType) Value() EventType_Value {
-	if e.IsUnknown() {
-		return EventType_UNKNOWN
-	}
-	return e.val
-}
-
-func (e EventType) String() string {
-	return string(e.val)
-}
-
-func (e EventType) MarshalText() ([]byte, error) {
-	return []byte(e.val), nil
-}
-
-func (e *EventType) UnmarshalText(data []byte) error {
-	switch v := strings.ToUpper(string(data)); v {
-	default:
-		*e = New_EventType(EventType_Value(v))
-	case "INFO":
-		*e = New_EventType(EventType_INFO)
-	case "FLAG":
-		*e = New_EventType(EventType_FLAG)
-	case "ERROR":
-		*e = New_EventType(EventType_ERROR)
-	case "SUCCESS":
-		*e = New_EventType(EventType_SUCCESS)
+		*e = New_FftWindow(FftWindow_Value(v))
+	case "BLACKMAN":
+		*e = New_FftWindow(FftWindow_BLACKMAN)
+	case "HANN":
+		*e = New_FftWindow(FftWindow_HANN)
+	case "HAMMING":
+		*e = New_FftWindow(FftWindow_HAMMING)
+	case "RECT":
+		*e = New_FftWindow(FftWindow_RECT)
 	}
 	return nil
 }
@@ -668,6 +594,69 @@ func (e *LogUnionOperation) UnmarshalText(data []byte) error {
 		*e = New_LogUnionOperation(LogUnionOperation_Value(v))
 	case "KEEP_ALL":
 		*e = New_LogUnionOperation(LogUnionOperation_KEEP_ALL)
+	}
+	return nil
+}
+
+type MagnitudeScaling struct {
+	val MagnitudeScaling_Value
+}
+
+type MagnitudeScaling_Value string
+
+const (
+	// Linear scaling of the magnitude.
+	MagnitudeScaling_LINEAR MagnitudeScaling_Value = "LINEAR"
+	// Scales the magnitude via 10 * log10(magnitude).
+	MagnitudeScaling_MAGNITUDE_DB_10 MagnitudeScaling_Value = "MAGNITUDE_DB_10"
+	// Scales the magnitude via 20 * log10(magnitude).
+	MagnitudeScaling_MAGNITUDE_DB_20 MagnitudeScaling_Value = "MAGNITUDE_DB_20"
+	MagnitudeScaling_UNKNOWN         MagnitudeScaling_Value = "UNKNOWN"
+)
+
+// MagnitudeScaling_Values returns all known variants of MagnitudeScaling.
+func MagnitudeScaling_Values() []MagnitudeScaling_Value {
+	return []MagnitudeScaling_Value{MagnitudeScaling_LINEAR, MagnitudeScaling_MAGNITUDE_DB_10, MagnitudeScaling_MAGNITUDE_DB_20}
+}
+
+func New_MagnitudeScaling(value MagnitudeScaling_Value) MagnitudeScaling {
+	return MagnitudeScaling{val: value}
+}
+
+// IsUnknown returns false for all known variants of MagnitudeScaling and true otherwise.
+func (e MagnitudeScaling) IsUnknown() bool {
+	switch e.val {
+	case MagnitudeScaling_LINEAR, MagnitudeScaling_MAGNITUDE_DB_10, MagnitudeScaling_MAGNITUDE_DB_20:
+		return false
+	}
+	return true
+}
+
+func (e MagnitudeScaling) Value() MagnitudeScaling_Value {
+	if e.IsUnknown() {
+		return MagnitudeScaling_UNKNOWN
+	}
+	return e.val
+}
+
+func (e MagnitudeScaling) String() string {
+	return string(e.val)
+}
+
+func (e MagnitudeScaling) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *MagnitudeScaling) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_MagnitudeScaling(MagnitudeScaling_Value(v))
+	case "LINEAR":
+		*e = New_MagnitudeScaling(MagnitudeScaling_LINEAR)
+	case "MAGNITUDE_DB_10":
+		*e = New_MagnitudeScaling(MagnitudeScaling_MAGNITUDE_DB_10)
+	case "MAGNITUDE_DB_20":
+		*e = New_MagnitudeScaling(MagnitudeScaling_MAGNITUDE_DB_20)
 	}
 	return nil
 }
@@ -748,12 +737,13 @@ const (
 	NumericAggregationFunction_MAX                NumericAggregationFunction_Value = "MAX"
 	NumericAggregationFunction_COUNT              NumericAggregationFunction_Value = "COUNT"
 	NumericAggregationFunction_STANDARD_DEVIATION NumericAggregationFunction_Value = "STANDARD_DEVIATION"
+	NumericAggregationFunction_ROOT_MEAN_SQUARE   NumericAggregationFunction_Value = "ROOT_MEAN_SQUARE"
 	NumericAggregationFunction_UNKNOWN            NumericAggregationFunction_Value = "UNKNOWN"
 )
 
 // NumericAggregationFunction_Values returns all known variants of NumericAggregationFunction.
 func NumericAggregationFunction_Values() []NumericAggregationFunction_Value {
-	return []NumericAggregationFunction_Value{NumericAggregationFunction_SUM, NumericAggregationFunction_MEAN, NumericAggregationFunction_MIN, NumericAggregationFunction_MAX, NumericAggregationFunction_COUNT, NumericAggregationFunction_STANDARD_DEVIATION}
+	return []NumericAggregationFunction_Value{NumericAggregationFunction_SUM, NumericAggregationFunction_MEAN, NumericAggregationFunction_MIN, NumericAggregationFunction_MAX, NumericAggregationFunction_COUNT, NumericAggregationFunction_STANDARD_DEVIATION, NumericAggregationFunction_ROOT_MEAN_SQUARE}
 }
 
 func New_NumericAggregationFunction(value NumericAggregationFunction_Value) NumericAggregationFunction {
@@ -763,7 +753,7 @@ func New_NumericAggregationFunction(value NumericAggregationFunction_Value) Nume
 // IsUnknown returns false for all known variants of NumericAggregationFunction and true otherwise.
 func (e NumericAggregationFunction) IsUnknown() bool {
 	switch e.val {
-	case NumericAggregationFunction_SUM, NumericAggregationFunction_MEAN, NumericAggregationFunction_MIN, NumericAggregationFunction_MAX, NumericAggregationFunction_COUNT, NumericAggregationFunction_STANDARD_DEVIATION:
+	case NumericAggregationFunction_SUM, NumericAggregationFunction_MEAN, NumericAggregationFunction_MIN, NumericAggregationFunction_MAX, NumericAggregationFunction_COUNT, NumericAggregationFunction_STANDARD_DEVIATION, NumericAggregationFunction_ROOT_MEAN_SQUARE:
 		return false
 	}
 	return true
@@ -800,6 +790,69 @@ func (e *NumericAggregationFunction) UnmarshalText(data []byte) error {
 		*e = New_NumericAggregationFunction(NumericAggregationFunction_COUNT)
 	case "STANDARD_DEVIATION":
 		*e = New_NumericAggregationFunction(NumericAggregationFunction_STANDARD_DEVIATION)
+	case "ROOT_MEAN_SQUARE":
+		*e = New_NumericAggregationFunction(NumericAggregationFunction_ROOT_MEAN_SQUARE)
+	}
+	return nil
+}
+
+// Supported numeric data types for value casting.
+type NumericDataType struct {
+	val NumericDataType_Value
+}
+
+type NumericDataType_Value string
+
+const (
+	NumericDataType_INT64   NumericDataType_Value = "INT64"
+	NumericDataType_FLOAT64 NumericDataType_Value = "FLOAT64"
+	NumericDataType_UINT64  NumericDataType_Value = "UINT64"
+	NumericDataType_UNKNOWN NumericDataType_Value = "UNKNOWN"
+)
+
+// NumericDataType_Values returns all known variants of NumericDataType.
+func NumericDataType_Values() []NumericDataType_Value {
+	return []NumericDataType_Value{NumericDataType_INT64, NumericDataType_FLOAT64, NumericDataType_UINT64}
+}
+
+func New_NumericDataType(value NumericDataType_Value) NumericDataType {
+	return NumericDataType{val: value}
+}
+
+// IsUnknown returns false for all known variants of NumericDataType and true otherwise.
+func (e NumericDataType) IsUnknown() bool {
+	switch e.val {
+	case NumericDataType_INT64, NumericDataType_FLOAT64, NumericDataType_UINT64:
+		return false
+	}
+	return true
+}
+
+func (e NumericDataType) Value() NumericDataType_Value {
+	if e.IsUnknown() {
+		return NumericDataType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e NumericDataType) String() string {
+	return string(e.val)
+}
+
+func (e NumericDataType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *NumericDataType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_NumericDataType(NumericDataType_Value(v))
+	case "INT64":
+		*e = New_NumericDataType(NumericDataType_INT64)
+	case "FLOAT64":
+		*e = New_NumericDataType(NumericDataType_FLOAT64)
+	case "UINT64":
+		*e = New_NumericDataType(NumericDataType_UINT64)
 	}
 	return nil
 }
@@ -895,6 +948,8 @@ const (
 	NumericUnionOperation_COUNT NumericUnionOperation_Value = "COUNT"
 	// Combines multiple points by taking the standard deviation of the values
 	NumericUnionOperation_STANDARD_DEVIATION NumericUnionOperation_Value = "STANDARD_DEVIATION"
+	// Combines multiple points by taking the root mean square of the values
+	NumericUnionOperation_ROOT_MEAN_SQUARE NumericUnionOperation_Value = "ROOT_MEAN_SQUARE"
 	// Throws a DuplicateTimestamp error if two series contain points with a duplicate timestamp.
 	NumericUnionOperation_THROW   NumericUnionOperation_Value = "THROW"
 	NumericUnionOperation_UNKNOWN NumericUnionOperation_Value = "UNKNOWN"
@@ -902,7 +957,7 @@ const (
 
 // NumericUnionOperation_Values returns all known variants of NumericUnionOperation.
 func NumericUnionOperation_Values() []NumericUnionOperation_Value {
-	return []NumericUnionOperation_Value{NumericUnionOperation_MIN, NumericUnionOperation_MAX, NumericUnionOperation_MEAN, NumericUnionOperation_SUM, NumericUnionOperation_COUNT, NumericUnionOperation_STANDARD_DEVIATION, NumericUnionOperation_THROW}
+	return []NumericUnionOperation_Value{NumericUnionOperation_MIN, NumericUnionOperation_MAX, NumericUnionOperation_MEAN, NumericUnionOperation_SUM, NumericUnionOperation_COUNT, NumericUnionOperation_STANDARD_DEVIATION, NumericUnionOperation_ROOT_MEAN_SQUARE, NumericUnionOperation_THROW}
 }
 
 func New_NumericUnionOperation(value NumericUnionOperation_Value) NumericUnionOperation {
@@ -912,7 +967,7 @@ func New_NumericUnionOperation(value NumericUnionOperation_Value) NumericUnionOp
 // IsUnknown returns false for all known variants of NumericUnionOperation and true otherwise.
 func (e NumericUnionOperation) IsUnknown() bool {
 	switch e.val {
-	case NumericUnionOperation_MIN, NumericUnionOperation_MAX, NumericUnionOperation_MEAN, NumericUnionOperation_SUM, NumericUnionOperation_COUNT, NumericUnionOperation_STANDARD_DEVIATION, NumericUnionOperation_THROW:
+	case NumericUnionOperation_MIN, NumericUnionOperation_MAX, NumericUnionOperation_MEAN, NumericUnionOperation_SUM, NumericUnionOperation_COUNT, NumericUnionOperation_STANDARD_DEVIATION, NumericUnionOperation_ROOT_MEAN_SQUARE, NumericUnionOperation_THROW:
 		return false
 	}
 	return true
@@ -949,6 +1004,8 @@ func (e *NumericUnionOperation) UnmarshalText(data []byte) error {
 		*e = New_NumericUnionOperation(NumericUnionOperation_COUNT)
 	case "STANDARD_DEVIATION":
 		*e = New_NumericUnionOperation(NumericUnionOperation_STANDARD_DEVIATION)
+	case "ROOT_MEAN_SQUARE":
+		*e = New_NumericUnionOperation(NumericUnionOperation_ROOT_MEAN_SQUARE)
 	case "THROW":
 		*e = New_NumericUnionOperation(NumericUnionOperation_THROW)
 	}
@@ -962,16 +1019,14 @@ type OutputFormat struct {
 type OutputFormat_Value string
 
 const (
-	OutputFormat_ARROW_V1   OutputFormat_Value = "ARROW_V1"
-	OutputFormat_ARROW_V1_1 OutputFormat_Value = "ARROW_V1_1"
-	OutputFormat_ARROW_V2   OutputFormat_Value = "ARROW_V2"
-	OutputFormat_LEGACY     OutputFormat_Value = "LEGACY"
-	OutputFormat_UNKNOWN    OutputFormat_Value = "UNKNOWN"
+	OutputFormat_ARROW_V3 OutputFormat_Value = "ARROW_V3"
+	OutputFormat_LEGACY   OutputFormat_Value = "LEGACY"
+	OutputFormat_UNKNOWN  OutputFormat_Value = "UNKNOWN"
 )
 
 // OutputFormat_Values returns all known variants of OutputFormat.
 func OutputFormat_Values() []OutputFormat_Value {
-	return []OutputFormat_Value{OutputFormat_ARROW_V1, OutputFormat_ARROW_V1_1, OutputFormat_ARROW_V2, OutputFormat_LEGACY}
+	return []OutputFormat_Value{OutputFormat_ARROW_V3, OutputFormat_LEGACY}
 }
 
 func New_OutputFormat(value OutputFormat_Value) OutputFormat {
@@ -981,7 +1036,7 @@ func New_OutputFormat(value OutputFormat_Value) OutputFormat {
 // IsUnknown returns false for all known variants of OutputFormat and true otherwise.
 func (e OutputFormat) IsUnknown() bool {
 	switch e.val {
-	case OutputFormat_ARROW_V1, OutputFormat_ARROW_V1_1, OutputFormat_ARROW_V2, OutputFormat_LEGACY:
+	case OutputFormat_ARROW_V3, OutputFormat_LEGACY:
 		return false
 	}
 	return true
@@ -1006,14 +1061,134 @@ func (e *OutputFormat) UnmarshalText(data []byte) error {
 	switch v := strings.ToUpper(string(data)); v {
 	default:
 		*e = New_OutputFormat(OutputFormat_Value(v))
-	case "ARROW_V1":
-		*e = New_OutputFormat(OutputFormat_ARROW_V1)
-	case "ARROW_V1_1":
-		*e = New_OutputFormat(OutputFormat_ARROW_V1_1)
-	case "ARROW_V2":
-		*e = New_OutputFormat(OutputFormat_ARROW_V2)
+	case "ARROW_V3":
+		*e = New_OutputFormat(OutputFormat_ARROW_V3)
 	case "LEGACY":
 		*e = New_OutputFormat(OutputFormat_LEGACY)
+	}
+	return nil
+}
+
+type OutputFrequencyType struct {
+	val OutputFrequencyType_Value
+}
+
+type OutputFrequencyType_Value string
+
+const (
+	// Frequency in Hertz.
+	OutputFrequencyType_LINEAR OutputFrequencyType_Value = "LINEAR"
+	// Frequency in radians per second.
+	OutputFrequencyType_ANGULAR OutputFrequencyType_Value = "ANGULAR"
+	// Normalized frequency, in the range [0, 0.5] for real-valued signals.
+	OutputFrequencyType_NORMALIZED_LINEAR OutputFrequencyType_Value = "NORMALIZED_LINEAR"
+	// Normalized angular frequency, in the range [0, π] for real-valued signals.
+	OutputFrequencyType_NORMALIZED_ANGULAR OutputFrequencyType_Value = "NORMALIZED_ANGULAR"
+	OutputFrequencyType_UNKNOWN            OutputFrequencyType_Value = "UNKNOWN"
+)
+
+// OutputFrequencyType_Values returns all known variants of OutputFrequencyType.
+func OutputFrequencyType_Values() []OutputFrequencyType_Value {
+	return []OutputFrequencyType_Value{OutputFrequencyType_LINEAR, OutputFrequencyType_ANGULAR, OutputFrequencyType_NORMALIZED_LINEAR, OutputFrequencyType_NORMALIZED_ANGULAR}
+}
+
+func New_OutputFrequencyType(value OutputFrequencyType_Value) OutputFrequencyType {
+	return OutputFrequencyType{val: value}
+}
+
+// IsUnknown returns false for all known variants of OutputFrequencyType and true otherwise.
+func (e OutputFrequencyType) IsUnknown() bool {
+	switch e.val {
+	case OutputFrequencyType_LINEAR, OutputFrequencyType_ANGULAR, OutputFrequencyType_NORMALIZED_LINEAR, OutputFrequencyType_NORMALIZED_ANGULAR:
+		return false
+	}
+	return true
+}
+
+func (e OutputFrequencyType) Value() OutputFrequencyType_Value {
+	if e.IsUnknown() {
+		return OutputFrequencyType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e OutputFrequencyType) String() string {
+	return string(e.val)
+}
+
+func (e OutputFrequencyType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *OutputFrequencyType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_OutputFrequencyType(OutputFrequencyType_Value(v))
+	case "LINEAR":
+		*e = New_OutputFrequencyType(OutputFrequencyType_LINEAR)
+	case "ANGULAR":
+		*e = New_OutputFrequencyType(OutputFrequencyType_ANGULAR)
+	case "NORMALIZED_LINEAR":
+		*e = New_OutputFrequencyType(OutputFrequencyType_NORMALIZED_LINEAR)
+	case "NORMALIZED_ANGULAR":
+		*e = New_OutputFrequencyType(OutputFrequencyType_NORMALIZED_ANGULAR)
+	}
+	return nil
+}
+
+type OutputPhaseUnit struct {
+	val OutputPhaseUnit_Value
+}
+
+type OutputPhaseUnit_Value string
+
+const (
+	OutputPhaseUnit_RADIANS OutputPhaseUnit_Value = "RADIANS"
+	OutputPhaseUnit_DEGREES OutputPhaseUnit_Value = "DEGREES"
+	OutputPhaseUnit_UNKNOWN OutputPhaseUnit_Value = "UNKNOWN"
+)
+
+// OutputPhaseUnit_Values returns all known variants of OutputPhaseUnit.
+func OutputPhaseUnit_Values() []OutputPhaseUnit_Value {
+	return []OutputPhaseUnit_Value{OutputPhaseUnit_RADIANS, OutputPhaseUnit_DEGREES}
+}
+
+func New_OutputPhaseUnit(value OutputPhaseUnit_Value) OutputPhaseUnit {
+	return OutputPhaseUnit{val: value}
+}
+
+// IsUnknown returns false for all known variants of OutputPhaseUnit and true otherwise.
+func (e OutputPhaseUnit) IsUnknown() bool {
+	switch e.val {
+	case OutputPhaseUnit_RADIANS, OutputPhaseUnit_DEGREES:
+		return false
+	}
+	return true
+}
+
+func (e OutputPhaseUnit) Value() OutputPhaseUnit_Value {
+	if e.IsUnknown() {
+		return OutputPhaseUnit_UNKNOWN
+	}
+	return e.val
+}
+
+func (e OutputPhaseUnit) String() string {
+	return string(e.val)
+}
+
+func (e OutputPhaseUnit) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *OutputPhaseUnit) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_OutputPhaseUnit(OutputPhaseUnit_Value(v))
+	case "RADIANS":
+		*e = New_OutputPhaseUnit(OutputPhaseUnit_RADIANS)
+	case "DEGREES":
+		*e = New_OutputPhaseUnit(OutputPhaseUnit_DEGREES)
 	}
 	return nil
 }
@@ -1078,68 +1253,343 @@ func (e *PeakType) UnmarshalText(data []byte) error {
 	return nil
 }
 
-type SearchEventOriginType struct {
-	val SearchEventOriginType_Value
+type PeriodogramMethod struct {
+	val PeriodogramMethod_Value
 }
 
-type SearchEventOriginType_Value string
+type PeriodogramMethod_Value string
 
 const (
-	SearchEventOriginType_WORKBOOK    SearchEventOriginType_Value = "WORKBOOK"
-	SearchEventOriginType_TEMPLATE    SearchEventOriginType_Value = "TEMPLATE"
-	SearchEventOriginType_API         SearchEventOriginType_Value = "API"
-	SearchEventOriginType_DATA_REVIEW SearchEventOriginType_Value = "DATA_REVIEW"
-	SearchEventOriginType_PROCEDURE   SearchEventOriginType_Value = "PROCEDURE"
-	SearchEventOriginType_UNKNOWN     SearchEventOriginType_Value = "UNKNOWN"
+	PeriodogramMethod_WELCH_BLACKMAN PeriodogramMethod_Value = "WELCH_BLACKMAN"
+	PeriodogramMethod_WELCH_HANN     PeriodogramMethod_Value = "WELCH_HANN"
+	PeriodogramMethod_WELCH_HAMMING  PeriodogramMethod_Value = "WELCH_HAMMING"
+	PeriodogramMethod_WELCH_RECT     PeriodogramMethod_Value = "WELCH_RECT"
+	PeriodogramMethod_UNKNOWN        PeriodogramMethod_Value = "UNKNOWN"
 )
 
-// SearchEventOriginType_Values returns all known variants of SearchEventOriginType.
-func SearchEventOriginType_Values() []SearchEventOriginType_Value {
-	return []SearchEventOriginType_Value{SearchEventOriginType_WORKBOOK, SearchEventOriginType_TEMPLATE, SearchEventOriginType_API, SearchEventOriginType_DATA_REVIEW, SearchEventOriginType_PROCEDURE}
+// PeriodogramMethod_Values returns all known variants of PeriodogramMethod.
+func PeriodogramMethod_Values() []PeriodogramMethod_Value {
+	return []PeriodogramMethod_Value{PeriodogramMethod_WELCH_BLACKMAN, PeriodogramMethod_WELCH_HANN, PeriodogramMethod_WELCH_HAMMING, PeriodogramMethod_WELCH_RECT}
 }
 
-func New_SearchEventOriginType(value SearchEventOriginType_Value) SearchEventOriginType {
-	return SearchEventOriginType{val: value}
+func New_PeriodogramMethod(value PeriodogramMethod_Value) PeriodogramMethod {
+	return PeriodogramMethod{val: value}
 }
 
-// IsUnknown returns false for all known variants of SearchEventOriginType and true otherwise.
-func (e SearchEventOriginType) IsUnknown() bool {
+// IsUnknown returns false for all known variants of PeriodogramMethod and true otherwise.
+func (e PeriodogramMethod) IsUnknown() bool {
 	switch e.val {
-	case SearchEventOriginType_WORKBOOK, SearchEventOriginType_TEMPLATE, SearchEventOriginType_API, SearchEventOriginType_DATA_REVIEW, SearchEventOriginType_PROCEDURE:
+	case PeriodogramMethod_WELCH_BLACKMAN, PeriodogramMethod_WELCH_HANN, PeriodogramMethod_WELCH_HAMMING, PeriodogramMethod_WELCH_RECT:
 		return false
 	}
 	return true
 }
 
-func (e SearchEventOriginType) Value() SearchEventOriginType_Value {
+func (e PeriodogramMethod) Value() PeriodogramMethod_Value {
 	if e.IsUnknown() {
-		return SearchEventOriginType_UNKNOWN
+		return PeriodogramMethod_UNKNOWN
 	}
 	return e.val
 }
 
-func (e SearchEventOriginType) String() string {
+func (e PeriodogramMethod) String() string {
 	return string(e.val)
 }
 
-func (e SearchEventOriginType) MarshalText() ([]byte, error) {
+func (e PeriodogramMethod) MarshalText() ([]byte, error) {
 	return []byte(e.val), nil
 }
 
-func (e *SearchEventOriginType) UnmarshalText(data []byte) error {
+func (e *PeriodogramMethod) UnmarshalText(data []byte) error {
 	switch v := strings.ToUpper(string(data)); v {
 	default:
-		*e = New_SearchEventOriginType(SearchEventOriginType_Value(v))
-	case "WORKBOOK":
-		*e = New_SearchEventOriginType(SearchEventOriginType_WORKBOOK)
-	case "TEMPLATE":
-		*e = New_SearchEventOriginType(SearchEventOriginType_TEMPLATE)
-	case "API":
-		*e = New_SearchEventOriginType(SearchEventOriginType_API)
-	case "DATA_REVIEW":
-		*e = New_SearchEventOriginType(SearchEventOriginType_DATA_REVIEW)
-	case "PROCEDURE":
-		*e = New_SearchEventOriginType(SearchEventOriginType_PROCEDURE)
+		*e = New_PeriodogramMethod(PeriodogramMethod_Value(v))
+	case "WELCH_BLACKMAN":
+		*e = New_PeriodogramMethod(PeriodogramMethod_WELCH_BLACKMAN)
+	case "WELCH_HANN":
+		*e = New_PeriodogramMethod(PeriodogramMethod_WELCH_HANN)
+	case "WELCH_HAMMING":
+		*e = New_PeriodogramMethod(PeriodogramMethod_WELCH_HAMMING)
+	case "WELCH_RECT":
+		*e = New_PeriodogramMethod(PeriodogramMethod_WELCH_RECT)
+	}
+	return nil
+}
+
+type RangePaddingConfiguration struct {
+	val RangePaddingConfiguration_Value
+}
+
+type RangePaddingConfiguration_Value string
+
+const (
+	RangePaddingConfiguration_PAD_START         RangePaddingConfiguration_Value = "PAD_START"
+	RangePaddingConfiguration_PAD_END           RangePaddingConfiguration_Value = "PAD_END"
+	RangePaddingConfiguration_PAD_START_AND_END RangePaddingConfiguration_Value = "PAD_START_AND_END"
+	RangePaddingConfiguration_UNKNOWN           RangePaddingConfiguration_Value = "UNKNOWN"
+)
+
+// RangePaddingConfiguration_Values returns all known variants of RangePaddingConfiguration.
+func RangePaddingConfiguration_Values() []RangePaddingConfiguration_Value {
+	return []RangePaddingConfiguration_Value{RangePaddingConfiguration_PAD_START, RangePaddingConfiguration_PAD_END, RangePaddingConfiguration_PAD_START_AND_END}
+}
+
+func New_RangePaddingConfiguration(value RangePaddingConfiguration_Value) RangePaddingConfiguration {
+	return RangePaddingConfiguration{val: value}
+}
+
+// IsUnknown returns false for all known variants of RangePaddingConfiguration and true otherwise.
+func (e RangePaddingConfiguration) IsUnknown() bool {
+	switch e.val {
+	case RangePaddingConfiguration_PAD_START, RangePaddingConfiguration_PAD_END, RangePaddingConfiguration_PAD_START_AND_END:
+		return false
+	}
+	return true
+}
+
+func (e RangePaddingConfiguration) Value() RangePaddingConfiguration_Value {
+	if e.IsUnknown() {
+		return RangePaddingConfiguration_UNKNOWN
+	}
+	return e.val
+}
+
+func (e RangePaddingConfiguration) String() string {
+	return string(e.val)
+}
+
+func (e RangePaddingConfiguration) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *RangePaddingConfiguration) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_RangePaddingConfiguration(RangePaddingConfiguration_Value(v))
+	case "PAD_START":
+		*e = New_RangePaddingConfiguration(RangePaddingConfiguration_PAD_START)
+	case "PAD_END":
+		*e = New_RangePaddingConfiguration(RangePaddingConfiguration_PAD_END)
+	case "PAD_START_AND_END":
+		*e = New_RangePaddingConfiguration(RangePaddingConfiguration_PAD_START_AND_END)
+	}
+	return nil
+}
+
+// Supported properties for REFPROP calculations
+type RefpropProperty struct {
+	val RefpropProperty_Value
+}
+
+type RefpropProperty_Value string
+
+const (
+	RefpropProperty_TEMPERATURE                   RefpropProperty_Value = "TEMPERATURE"
+	RefpropProperty_PRESSURE                      RefpropProperty_Value = "PRESSURE"
+	RefpropProperty_MASS_DENSITY                  RefpropProperty_Value = "MASS_DENSITY"
+	RefpropProperty_MASS_SPECIFIC_ENTHALPY        RefpropProperty_Value = "MASS_SPECIFIC_ENTHALPY"
+	RefpropProperty_MASS_SPECIFIC_INTERNAL_ENERGY RefpropProperty_Value = "MASS_SPECIFIC_INTERNAL_ENERGY"
+	RefpropProperty_MASS_SPECIFIC_ENTROPY         RefpropProperty_Value = "MASS_SPECIFIC_ENTROPY"
+	RefpropProperty_UNKNOWN                       RefpropProperty_Value = "UNKNOWN"
+)
+
+// RefpropProperty_Values returns all known variants of RefpropProperty.
+func RefpropProperty_Values() []RefpropProperty_Value {
+	return []RefpropProperty_Value{RefpropProperty_TEMPERATURE, RefpropProperty_PRESSURE, RefpropProperty_MASS_DENSITY, RefpropProperty_MASS_SPECIFIC_ENTHALPY, RefpropProperty_MASS_SPECIFIC_INTERNAL_ENERGY, RefpropProperty_MASS_SPECIFIC_ENTROPY}
+}
+
+func New_RefpropProperty(value RefpropProperty_Value) RefpropProperty {
+	return RefpropProperty{val: value}
+}
+
+// IsUnknown returns false for all known variants of RefpropProperty and true otherwise.
+func (e RefpropProperty) IsUnknown() bool {
+	switch e.val {
+	case RefpropProperty_TEMPERATURE, RefpropProperty_PRESSURE, RefpropProperty_MASS_DENSITY, RefpropProperty_MASS_SPECIFIC_ENTHALPY, RefpropProperty_MASS_SPECIFIC_INTERNAL_ENERGY, RefpropProperty_MASS_SPECIFIC_ENTROPY:
+		return false
+	}
+	return true
+}
+
+func (e RefpropProperty) Value() RefpropProperty_Value {
+	if e.IsUnknown() {
+		return RefpropProperty_UNKNOWN
+	}
+	return e.val
+}
+
+func (e RefpropProperty) String() string {
+	return string(e.val)
+}
+
+func (e RefpropProperty) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *RefpropProperty) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_RefpropProperty(RefpropProperty_Value(v))
+	case "TEMPERATURE":
+		*e = New_RefpropProperty(RefpropProperty_TEMPERATURE)
+	case "PRESSURE":
+		*e = New_RefpropProperty(RefpropProperty_PRESSURE)
+	case "MASS_DENSITY":
+		*e = New_RefpropProperty(RefpropProperty_MASS_DENSITY)
+	case "MASS_SPECIFIC_ENTHALPY":
+		*e = New_RefpropProperty(RefpropProperty_MASS_SPECIFIC_ENTHALPY)
+	case "MASS_SPECIFIC_INTERNAL_ENERGY":
+		*e = New_RefpropProperty(RefpropProperty_MASS_SPECIFIC_INTERNAL_ENERGY)
+	case "MASS_SPECIFIC_ENTROPY":
+		*e = New_RefpropProperty(RefpropProperty_MASS_SPECIFIC_ENTROPY)
+	}
+	return nil
+}
+
+// Supported substances for REFPROP calculations
+type RefpropSubstance struct {
+	val RefpropSubstance_Value
+}
+
+type RefpropSubstance_Value string
+
+const (
+	RefpropSubstance_NITROGEN RefpropSubstance_Value = "NITROGEN"
+	RefpropSubstance_OXYGEN   RefpropSubstance_Value = "OXYGEN"
+	RefpropSubstance_HELIUM   RefpropSubstance_Value = "HELIUM"
+	RefpropSubstance_HYDROGEN RefpropSubstance_Value = "HYDROGEN"
+	RefpropSubstance_METHANE  RefpropSubstance_Value = "METHANE"
+	RefpropSubstance_PROPANE  RefpropSubstance_Value = "PROPANE"
+	RefpropSubstance_BUTANE   RefpropSubstance_Value = "BUTANE"
+	RefpropSubstance_WATER    RefpropSubstance_Value = "WATER"
+	RefpropSubstance_XENON    RefpropSubstance_Value = "XENON"
+	RefpropSubstance_AIR      RefpropSubstance_Value = "AIR"
+	RefpropSubstance_UNKNOWN  RefpropSubstance_Value = "UNKNOWN"
+)
+
+// RefpropSubstance_Values returns all known variants of RefpropSubstance.
+func RefpropSubstance_Values() []RefpropSubstance_Value {
+	return []RefpropSubstance_Value{RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR}
+}
+
+func New_RefpropSubstance(value RefpropSubstance_Value) RefpropSubstance {
+	return RefpropSubstance{val: value}
+}
+
+// IsUnknown returns false for all known variants of RefpropSubstance and true otherwise.
+func (e RefpropSubstance) IsUnknown() bool {
+	switch e.val {
+	case RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR:
+		return false
+	}
+	return true
+}
+
+func (e RefpropSubstance) Value() RefpropSubstance_Value {
+	if e.IsUnknown() {
+		return RefpropSubstance_UNKNOWN
+	}
+	return e.val
+}
+
+func (e RefpropSubstance) String() string {
+	return string(e.val)
+}
+
+func (e RefpropSubstance) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *RefpropSubstance) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_RefpropSubstance(RefpropSubstance_Value(v))
+	case "NITROGEN":
+		*e = New_RefpropSubstance(RefpropSubstance_NITROGEN)
+	case "OXYGEN":
+		*e = New_RefpropSubstance(RefpropSubstance_OXYGEN)
+	case "HELIUM":
+		*e = New_RefpropSubstance(RefpropSubstance_HELIUM)
+	case "HYDROGEN":
+		*e = New_RefpropSubstance(RefpropSubstance_HYDROGEN)
+	case "METHANE":
+		*e = New_RefpropSubstance(RefpropSubstance_METHANE)
+	case "PROPANE":
+		*e = New_RefpropSubstance(RefpropSubstance_PROPANE)
+	case "BUTANE":
+		*e = New_RefpropSubstance(RefpropSubstance_BUTANE)
+	case "WATER":
+		*e = New_RefpropSubstance(RefpropSubstance_WATER)
+	case "XENON":
+		*e = New_RefpropSubstance(RefpropSubstance_XENON)
+	case "AIR":
+		*e = New_RefpropSubstance(RefpropSubstance_AIR)
+	}
+	return nil
+}
+
+type ScatterTemporalAggregation struct {
+	val ScatterTemporalAggregation_Value
+}
+
+type ScatterTemporalAggregation_Value string
+
+const (
+	ScatterTemporalAggregation_MEAN    ScatterTemporalAggregation_Value = "MEAN"
+	ScatterTemporalAggregation_MIN     ScatterTemporalAggregation_Value = "MIN"
+	ScatterTemporalAggregation_MAX     ScatterTemporalAggregation_Value = "MAX"
+	ScatterTemporalAggregation_FIRST   ScatterTemporalAggregation_Value = "FIRST"
+	ScatterTemporalAggregation_LAST    ScatterTemporalAggregation_Value = "LAST"
+	ScatterTemporalAggregation_UNKNOWN ScatterTemporalAggregation_Value = "UNKNOWN"
+)
+
+// ScatterTemporalAggregation_Values returns all known variants of ScatterTemporalAggregation.
+func ScatterTemporalAggregation_Values() []ScatterTemporalAggregation_Value {
+	return []ScatterTemporalAggregation_Value{ScatterTemporalAggregation_MEAN, ScatterTemporalAggregation_MIN, ScatterTemporalAggregation_MAX, ScatterTemporalAggregation_FIRST, ScatterTemporalAggregation_LAST}
+}
+
+func New_ScatterTemporalAggregation(value ScatterTemporalAggregation_Value) ScatterTemporalAggregation {
+	return ScatterTemporalAggregation{val: value}
+}
+
+// IsUnknown returns false for all known variants of ScatterTemporalAggregation and true otherwise.
+func (e ScatterTemporalAggregation) IsUnknown() bool {
+	switch e.val {
+	case ScatterTemporalAggregation_MEAN, ScatterTemporalAggregation_MIN, ScatterTemporalAggregation_MAX, ScatterTemporalAggregation_FIRST, ScatterTemporalAggregation_LAST:
+		return false
+	}
+	return true
+}
+
+func (e ScatterTemporalAggregation) Value() ScatterTemporalAggregation_Value {
+	if e.IsUnknown() {
+		return ScatterTemporalAggregation_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ScatterTemporalAggregation) String() string {
+	return string(e.val)
+}
+
+func (e ScatterTemporalAggregation) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ScatterTemporalAggregation) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ScatterTemporalAggregation(ScatterTemporalAggregation_Value(v))
+	case "MEAN":
+		*e = New_ScatterTemporalAggregation(ScatterTemporalAggregation_MEAN)
+	case "MIN":
+		*e = New_ScatterTemporalAggregation(ScatterTemporalAggregation_MIN)
+	case "MAX":
+		*e = New_ScatterTemporalAggregation(ScatterTemporalAggregation_MAX)
+	case "FIRST":
+		*e = New_ScatterTemporalAggregation(ScatterTemporalAggregation_FIRST)
+	case "LAST":
+		*e = New_ScatterTemporalAggregation(ScatterTemporalAggregation_LAST)
 	}
 	return nil
 }
@@ -1570,6 +2020,122 @@ func (e *UnitOperation) UnmarshalText(data []byte) error {
 		*e = New_UnitOperation(UnitOperation_COMPARISON)
 	case "TERNARY_OPERATOR":
 		*e = New_UnitOperation(UnitOperation_TERNARY_OPERATOR)
+	}
+	return nil
+}
+
+type ValueStrategy struct {
+	val ValueStrategy_Value
+}
+
+type ValueStrategy_Value string
+
+const (
+	ValueStrategy_FIRST   ValueStrategy_Value = "FIRST"
+	ValueStrategy_LAST    ValueStrategy_Value = "LAST"
+	ValueStrategy_UNKNOWN ValueStrategy_Value = "UNKNOWN"
+)
+
+// ValueStrategy_Values returns all known variants of ValueStrategy.
+func ValueStrategy_Values() []ValueStrategy_Value {
+	return []ValueStrategy_Value{ValueStrategy_FIRST, ValueStrategy_LAST}
+}
+
+func New_ValueStrategy(value ValueStrategy_Value) ValueStrategy {
+	return ValueStrategy{val: value}
+}
+
+// IsUnknown returns false for all known variants of ValueStrategy and true otherwise.
+func (e ValueStrategy) IsUnknown() bool {
+	switch e.val {
+	case ValueStrategy_FIRST, ValueStrategy_LAST:
+		return false
+	}
+	return true
+}
+
+func (e ValueStrategy) Value() ValueStrategy_Value {
+	if e.IsUnknown() {
+		return ValueStrategy_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ValueStrategy) String() string {
+	return string(e.val)
+}
+
+func (e ValueStrategy) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ValueStrategy) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ValueStrategy(ValueStrategy_Value(v))
+	case "FIRST":
+		*e = New_ValueStrategy(ValueStrategy_FIRST)
+	case "LAST":
+		*e = New_ValueStrategy(ValueStrategy_LAST)
+	}
+	return nil
+}
+
+type WindowSymmetry struct {
+	val WindowSymmetry_Value
+}
+
+type WindowSymmetry_Value string
+
+const (
+	// Generates dft-even/periodic window values.
+	WindowSymmetry_DFT_EVEN WindowSymmetry_Value = "DFT_EVEN"
+	// Generates symmetric window values.
+	WindowSymmetry_SYMMETRIC WindowSymmetry_Value = "SYMMETRIC"
+	WindowSymmetry_UNKNOWN   WindowSymmetry_Value = "UNKNOWN"
+)
+
+// WindowSymmetry_Values returns all known variants of WindowSymmetry.
+func WindowSymmetry_Values() []WindowSymmetry_Value {
+	return []WindowSymmetry_Value{WindowSymmetry_DFT_EVEN, WindowSymmetry_SYMMETRIC}
+}
+
+func New_WindowSymmetry(value WindowSymmetry_Value) WindowSymmetry {
+	return WindowSymmetry{val: value}
+}
+
+// IsUnknown returns false for all known variants of WindowSymmetry and true otherwise.
+func (e WindowSymmetry) IsUnknown() bool {
+	switch e.val {
+	case WindowSymmetry_DFT_EVEN, WindowSymmetry_SYMMETRIC:
+		return false
+	}
+	return true
+}
+
+func (e WindowSymmetry) Value() WindowSymmetry_Value {
+	if e.IsUnknown() {
+		return WindowSymmetry_UNKNOWN
+	}
+	return e.val
+}
+
+func (e WindowSymmetry) String() string {
+	return string(e.val)
+}
+
+func (e WindowSymmetry) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *WindowSymmetry) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_WindowSymmetry(WindowSymmetry_Value(v))
+	case "DFT_EVEN":
+		*e = New_WindowSymmetry(WindowSymmetry_DFT_EVEN)
+	case "SYMMETRIC":
+		*e = New_WindowSymmetry(WindowSymmetry_SYMMETRIC)
 	}
 	return nil
 }

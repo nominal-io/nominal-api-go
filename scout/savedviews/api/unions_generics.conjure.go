@@ -9,9 +9,92 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
-	"github.com/nominal-io/nominal-api-go/scout/api"
+	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/event"
+	api1 "github.com/nominal-io/nominal-api-go/scout/api"
+	"github.com/nominal-io/nominal-api-go/scout/run/api"
 )
+
+type AssetMetricColumnTimeRangeWithT[T any] AssetMetricColumnTimeRange
+
+func (u *AssetMetricColumnTimeRangeWithT[T]) Accept(ctx context.Context, v AssetMetricColumnTimeRangeVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "mostRecentRun":
+		if u.mostRecentRun == nil {
+			return result, fmt.Errorf("field \"mostRecentRun\" is required")
+		}
+		return v.VisitMostRecentRun(ctx, *u.mostRecentRun)
+	case "custom":
+		if u.custom == nil {
+			return result, fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustom(ctx, *u.custom)
+	case "preset":
+		if u.preset == nil {
+			return result, fmt.Errorf("field \"preset\" is required")
+		}
+		return v.VisitPreset(ctx, *u.preset)
+	}
+}
+
+func (u *AssetMetricColumnTimeRangeWithT[T]) AcceptFuncs(mostRecentRunFunc func(MostRecentRun) (T, error), customFunc func(api.CustomTimeframeFilter) (T, error), presetFunc func(api.PresetTimeframeFilter) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "mostRecentRun":
+		if u.mostRecentRun == nil {
+			return result, fmt.Errorf("field \"mostRecentRun\" is required")
+		}
+		return mostRecentRunFunc(*u.mostRecentRun)
+	case "custom":
+		if u.custom == nil {
+			return result, fmt.Errorf("field \"custom\" is required")
+		}
+		return customFunc(*u.custom)
+	case "preset":
+		if u.preset == nil {
+			return result, fmt.Errorf("field \"preset\" is required")
+		}
+		return presetFunc(*u.preset)
+	}
+}
+
+func (u *AssetMetricColumnTimeRangeWithT[T]) MostRecentRunNoopSuccess(MostRecentRun) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *AssetMetricColumnTimeRangeWithT[T]) CustomNoopSuccess(api.CustomTimeframeFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *AssetMetricColumnTimeRangeWithT[T]) PresetNoopSuccess(api.PresetTimeframeFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *AssetMetricColumnTimeRangeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type AssetMetricColumnTimeRangeVisitorWithT[T any] interface {
+	VisitMostRecentRun(ctx context.Context, v MostRecentRun) (T, error)
+	VisitCustom(ctx context.Context, v api.CustomTimeframeFilter) (T, error)
+	VisitPreset(ctx context.Context, v api.PresetTimeframeFilter) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
 
 type DisplayStateWithT[T any] DisplayState
 
@@ -59,6 +142,104 @@ func (u *DisplayStateWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type DisplayStateVisitorWithT[T any] interface {
 	VisitDisplayStateV1(ctx context.Context, v TableState) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type MetricColumnDataWithT[T any] MetricColumnData
+
+func (u *MetricColumnDataWithT[T]) Accept(ctx context.Context, v MetricColumnDataVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "event":
+		if u.event == nil {
+			return result, fmt.Errorf("field \"event\" is required")
+		}
+		return v.VisitEvent(ctx, *u.event)
+	}
+}
+
+func (u *MetricColumnDataWithT[T]) AcceptFuncs(eventFunc func(event.SearchQuery) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "event":
+		if u.event == nil {
+			return result, fmt.Errorf("field \"event\" is required")
+		}
+		return eventFunc(*u.event)
+	}
+}
+
+func (u *MetricColumnDataWithT[T]) EventNoopSuccess(event.SearchQuery) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *MetricColumnDataWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type MetricColumnDataVisitorWithT[T any] interface {
+	VisitEvent(ctx context.Context, v event.SearchQuery) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type MetricColumnsWithT[T any] MetricColumns
+
+func (u *MetricColumnsWithT[T]) Accept(ctx context.Context, v MetricColumnsVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "asset":
+		if u.asset == nil {
+			return result, fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAsset(ctx, *u.asset)
+	}
+}
+
+func (u *MetricColumnsWithT[T]) AcceptFuncs(assetFunc func(AssetMetricColumns) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "asset":
+		if u.asset == nil {
+			return result, fmt.Errorf("field \"asset\" is required")
+		}
+		return assetFunc(*u.asset)
+	}
+}
+
+func (u *MetricColumnsWithT[T]) AssetNoopSuccess(AssetMetricColumns) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *MetricColumnsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type MetricColumnsVisitorWithT[T any] interface {
+	VisitAsset(ctx context.Context, v AssetMetricColumns) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -376,7 +557,7 @@ func (u *UpdateColorWithT[T]) Accept(ctx context.Context, v UpdateColorVisitorWi
 	}
 }
 
-func (u *UpdateColorWithT[T]) AcceptFuncs(colorFunc func(api.Color) (T, error), clearColorFunc func(api1.Empty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UpdateColorWithT[T]) AcceptFuncs(colorFunc func(api1.Color) (T, error), clearColorFunc func(api2.Empty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -397,12 +578,12 @@ func (u *UpdateColorWithT[T]) AcceptFuncs(colorFunc func(api.Color) (T, error), 
 	}
 }
 
-func (u *UpdateColorWithT[T]) ColorNoopSuccess(api.Color) (T, error) {
+func (u *UpdateColorWithT[T]) ColorNoopSuccess(api1.Color) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *UpdateColorWithT[T]) ClearColorNoopSuccess(api1.Empty) (T, error) {
+func (u *UpdateColorWithT[T]) ClearColorNoopSuccess(api2.Empty) (T, error) {
 	var result T
 	return result, nil
 }
@@ -413,8 +594,8 @@ func (u *UpdateColorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type UpdateColorVisitorWithT[T any] interface {
-	VisitColor(ctx context.Context, v api.Color) (T, error)
-	VisitClearColor(ctx context.Context, v api1.Empty) (T, error)
+	VisitColor(ctx context.Context, v api1.Color) (T, error)
+	VisitClearColor(ctx context.Context, v api2.Empty) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -441,7 +622,7 @@ func (u *UpdateSymbolWithT[T]) Accept(ctx context.Context, v UpdateSymbolVisitor
 	}
 }
 
-func (u *UpdateSymbolWithT[T]) AcceptFuncs(symbolFunc func(api.Symbol) (T, error), clearSymbolFunc func(api1.Empty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UpdateSymbolWithT[T]) AcceptFuncs(symbolFunc func(api1.Symbol) (T, error), clearSymbolFunc func(api2.Empty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -462,12 +643,12 @@ func (u *UpdateSymbolWithT[T]) AcceptFuncs(symbolFunc func(api.Symbol) (T, error
 	}
 }
 
-func (u *UpdateSymbolWithT[T]) SymbolNoopSuccess(api.Symbol) (T, error) {
+func (u *UpdateSymbolWithT[T]) SymbolNoopSuccess(api1.Symbol) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *UpdateSymbolWithT[T]) ClearSymbolNoopSuccess(api1.Empty) (T, error) {
+func (u *UpdateSymbolWithT[T]) ClearSymbolNoopSuccess(api2.Empty) (T, error) {
 	var result T
 	return result, nil
 }
@@ -478,7 +659,7 @@ func (u *UpdateSymbolWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type UpdateSymbolVisitorWithT[T any] interface {
-	VisitSymbol(ctx context.Context, v api.Symbol) (T, error)
-	VisitClearSymbol(ctx context.Context, v api1.Empty) (T, error)
+	VisitSymbol(ctx context.Context, v api1.Symbol) (T, error)
+	VisitClearSymbol(ctx context.Context, v api2.Empty) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

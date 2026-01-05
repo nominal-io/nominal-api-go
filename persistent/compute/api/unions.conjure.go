@@ -276,6 +276,7 @@ type ComputeNodeAppendResponse struct {
 	range_               *[]api.Range
 	enumPoint            **api.EnumPoint
 	numericPoint         **api.NumericPoint
+	singlePoint          **api.SinglePoint
 	logPoint             **api.LogPoint
 	rangeValue           **api.Range
 	numeric              *api.NumericPlot
@@ -294,6 +295,7 @@ type computeNodeAppendResponseDeserializer struct {
 	Range                *[]api.Range                       `json:"range"`
 	EnumPoint            **api.EnumPoint                    `json:"enumPoint"`
 	NumericPoint         **api.NumericPoint                 `json:"numericPoint"`
+	SinglePoint          **api.SinglePoint                  `json:"singlePoint"`
 	LogPoint             **api.LogPoint                     `json:"logPoint"`
 	RangeValue           **api.Range                        `json:"rangeValue"`
 	Numeric              *api.NumericPlot                   `json:"numeric"`
@@ -308,7 +310,7 @@ type computeNodeAppendResponseDeserializer struct {
 }
 
 func (u *computeNodeAppendResponseDeserializer) toStruct() ComputeNodeAppendResponse {
-	return ComputeNodeAppendResponse{typ: u.Type, range_: u.Range, enumPoint: u.EnumPoint, numericPoint: u.NumericPoint, logPoint: u.LogPoint, rangeValue: u.RangeValue, numeric: u.Numeric, enum: u.Enum, bucketedNumeric: u.BucketedNumeric, bucketedEnum: u.BucketedEnum, arrowNumeric: u.ArrowNumeric, arrowEnum: u.ArrowEnum, arrowBucketedNumeric: u.ArrowBucketedNumeric, arrowBucketedEnum: u.ArrowBucketedEnum, grouped: u.Grouped}
+	return ComputeNodeAppendResponse{typ: u.Type, range_: u.Range, enumPoint: u.EnumPoint, numericPoint: u.NumericPoint, singlePoint: u.SinglePoint, logPoint: u.LogPoint, rangeValue: u.RangeValue, numeric: u.Numeric, enum: u.Enum, bucketedNumeric: u.BucketedNumeric, bucketedEnum: u.BucketedEnum, arrowNumeric: u.ArrowNumeric, arrowEnum: u.ArrowEnum, arrowBucketedNumeric: u.ArrowBucketedNumeric, arrowBucketedEnum: u.ArrowBucketedEnum, grouped: u.Grouped}
 }
 
 func (u *ComputeNodeAppendResponse) toSerializer() (interface{}, error) {
@@ -341,6 +343,15 @@ func (u *ComputeNodeAppendResponse) toSerializer() (interface{}, error) {
 			Type         string            `json:"type"`
 			NumericPoint *api.NumericPoint `json:"numericPoint"`
 		}{Type: "numericPoint", NumericPoint: numericPoint}, nil
+	case "singlePoint":
+		var singlePoint *api.SinglePoint
+		if u.singlePoint != nil {
+			singlePoint = *u.singlePoint
+		}
+		return struct {
+			Type        string           `json:"type"`
+			SinglePoint *api.SinglePoint `json:"singlePoint"`
+		}{Type: "singlePoint", SinglePoint: singlePoint}, nil
 	case "logPoint":
 		var logPoint *api.LogPoint
 		if u.logPoint != nil {
@@ -455,6 +466,7 @@ func (u *ComputeNodeAppendResponse) UnmarshalJSON(data []byte) error {
 		}
 	case "enumPoint":
 	case "numericPoint":
+	case "singlePoint":
 	case "logPoint":
 	case "rangeValue":
 	case "numeric":
@@ -513,7 +525,7 @@ func (u *ComputeNodeAppendResponse) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ComputeNodeAppendResponse) AcceptFuncs(range_Func func([]api.Range) error, enumPointFunc func(*api.EnumPoint) error, numericPointFunc func(*api.NumericPoint) error, logPointFunc func(*api.LogPoint) error, rangeValueFunc func(*api.Range) error, numericFunc func(api.NumericPlot) error, enumFunc func(api.EnumPlot) error, bucketedNumericFunc func(api.BucketedNumericPlot) error, bucketedEnumFunc func(api.BucketedEnumPlot) error, arrowNumericFunc func(api.ArrowNumericPlot) error, arrowEnumFunc func(api.ArrowEnumPlot) error, arrowBucketedNumericFunc func(api.ArrowBucketedNumericPlot) error, arrowBucketedEnumFunc func(api.ArrowBucketedEnumPlot) error, groupedFunc func(GroupedComputeNodeAppendResponses) error, unknownFunc func(string) error) error {
+func (u *ComputeNodeAppendResponse) AcceptFuncs(range_Func func([]api.Range) error, enumPointFunc func(*api.EnumPoint) error, numericPointFunc func(*api.NumericPoint) error, singlePointFunc func(*api.SinglePoint) error, logPointFunc func(*api.LogPoint) error, rangeValueFunc func(*api.Range) error, numericFunc func(api.NumericPlot) error, enumFunc func(api.EnumPlot) error, bucketedNumericFunc func(api.BucketedNumericPlot) error, bucketedEnumFunc func(api.BucketedEnumPlot) error, arrowNumericFunc func(api.ArrowNumericPlot) error, arrowEnumFunc func(api.ArrowEnumPlot) error, arrowBucketedNumericFunc func(api.ArrowBucketedNumericPlot) error, arrowBucketedEnumFunc func(api.ArrowBucketedEnumPlot) error, groupedFunc func(GroupedComputeNodeAppendResponses) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -537,6 +549,12 @@ func (u *ComputeNodeAppendResponse) AcceptFuncs(range_Func func([]api.Range) err
 			numericPoint = *u.numericPoint
 		}
 		return numericPointFunc(numericPoint)
+	case "singlePoint":
+		var singlePoint *api.SinglePoint
+		if u.singlePoint != nil {
+			singlePoint = *u.singlePoint
+		}
+		return singlePointFunc(singlePoint)
 	case "logPoint":
 		var logPoint *api.LogPoint
 		if u.logPoint != nil {
@@ -606,6 +624,10 @@ func (u *ComputeNodeAppendResponse) EnumPointNoopSuccess(*api.EnumPoint) error {
 }
 
 func (u *ComputeNodeAppendResponse) NumericPointNoopSuccess(*api.NumericPoint) error {
+	return nil
+}
+
+func (u *ComputeNodeAppendResponse) SinglePointNoopSuccess(*api.SinglePoint) error {
 	return nil
 }
 
@@ -681,6 +703,12 @@ func (u *ComputeNodeAppendResponse) Accept(v ComputeNodeAppendResponseVisitor) e
 			numericPoint = *u.numericPoint
 		}
 		return v.VisitNumericPoint(numericPoint)
+	case "singlePoint":
+		var singlePoint *api.SinglePoint
+		if u.singlePoint != nil {
+			singlePoint = *u.singlePoint
+		}
+		return v.VisitSinglePoint(singlePoint)
 	case "logPoint":
 		var logPoint *api.LogPoint
 		if u.logPoint != nil {
@@ -745,6 +773,7 @@ type ComputeNodeAppendResponseVisitor interface {
 	VisitRange(v []api.Range) error
 	VisitEnumPoint(v *api.EnumPoint) error
 	VisitNumericPoint(v *api.NumericPoint) error
+	VisitSinglePoint(v *api.SinglePoint) error
 	VisitLogPoint(v *api.LogPoint) error
 	VisitRangeValue(v *api.Range) error
 	VisitNumeric(v api.NumericPlot) error
@@ -783,6 +812,12 @@ func (u *ComputeNodeAppendResponse) AcceptWithContext(ctx context.Context, v Com
 			numericPoint = *u.numericPoint
 		}
 		return v.VisitNumericPointWithContext(ctx, numericPoint)
+	case "singlePoint":
+		var singlePoint *api.SinglePoint
+		if u.singlePoint != nil {
+			singlePoint = *u.singlePoint
+		}
+		return v.VisitSinglePointWithContext(ctx, singlePoint)
 	case "logPoint":
 		var logPoint *api.LogPoint
 		if u.logPoint != nil {
@@ -847,6 +882,7 @@ type ComputeNodeAppendResponseVisitorWithContext interface {
 	VisitRangeWithContext(ctx context.Context, v []api.Range) error
 	VisitEnumPointWithContext(ctx context.Context, v *api.EnumPoint) error
 	VisitNumericPointWithContext(ctx context.Context, v *api.NumericPoint) error
+	VisitSinglePointWithContext(ctx context.Context, v *api.SinglePoint) error
 	VisitLogPointWithContext(ctx context.Context, v *api.LogPoint) error
 	VisitRangeValueWithContext(ctx context.Context, v *api.Range) error
 	VisitNumericWithContext(ctx context.Context, v api.NumericPlot) error
@@ -871,6 +907,10 @@ func NewComputeNodeAppendResponseFromEnumPoint(v *api.EnumPoint) ComputeNodeAppe
 
 func NewComputeNodeAppendResponseFromNumericPoint(v *api.NumericPoint) ComputeNodeAppendResponse {
 	return ComputeNodeAppendResponse{typ: "numericPoint", numericPoint: &v}
+}
+
+func NewComputeNodeAppendResponseFromSinglePoint(v *api.SinglePoint) ComputeNodeAppendResponse {
+	return ComputeNodeAppendResponse{typ: "singlePoint", singlePoint: &v}
 }
 
 func NewComputeNodeAppendResponseFromLogPoint(v *api.LogPoint) ComputeNodeAppendResponse {
@@ -918,21 +958,23 @@ func NewComputeNodeAppendResponseFromGrouped(v GroupedComputeNodeAppendResponses
 }
 
 type HealthMessage struct {
-	typ            string
-	ping           *Ping
-	pong           *Pong
-	shutdownNotice *ShutdownNotice
+	typ                string
+	ping               *Ping
+	pong               *Pong
+	shutdownNotice     *ShutdownNotice
+	clientMessageError *ClientMessageError
 }
 
 type healthMessageDeserializer struct {
-	Type           string          `json:"type"`
-	Ping           *Ping           `json:"ping"`
-	Pong           *Pong           `json:"pong"`
-	ShutdownNotice *ShutdownNotice `json:"shutdownNotice"`
+	Type               string              `json:"type"`
+	Ping               *Ping               `json:"ping"`
+	Pong               *Pong               `json:"pong"`
+	ShutdownNotice     *ShutdownNotice     `json:"shutdownNotice"`
+	ClientMessageError *ClientMessageError `json:"clientMessageError"`
 }
 
 func (u *healthMessageDeserializer) toStruct() HealthMessage {
-	return HealthMessage{typ: u.Type, ping: u.Ping, pong: u.Pong, shutdownNotice: u.ShutdownNotice}
+	return HealthMessage{typ: u.Type, ping: u.Ping, pong: u.Pong, shutdownNotice: u.ShutdownNotice, clientMessageError: u.ClientMessageError}
 }
 
 func (u *HealthMessage) toSerializer() (interface{}, error) {
@@ -963,6 +1005,14 @@ func (u *HealthMessage) toSerializer() (interface{}, error) {
 			Type           string         `json:"type"`
 			ShutdownNotice ShutdownNotice `json:"shutdownNotice"`
 		}{Type: "shutdownNotice", ShutdownNotice: *u.shutdownNotice}, nil
+	case "clientMessageError":
+		if u.clientMessageError == nil {
+			return nil, fmt.Errorf("field \"clientMessageError\" is required")
+		}
+		return struct {
+			Type               string             `json:"type"`
+			ClientMessageError ClientMessageError `json:"clientMessageError"`
+		}{Type: "clientMessageError", ClientMessageError: *u.clientMessageError}, nil
 	}
 }
 
@@ -993,6 +1043,10 @@ func (u *HealthMessage) UnmarshalJSON(data []byte) error {
 		if u.shutdownNotice == nil {
 			return fmt.Errorf("field \"shutdownNotice\" is required")
 		}
+	case "clientMessageError":
+		if u.clientMessageError == nil {
+			return fmt.Errorf("field \"clientMessageError\" is required")
+		}
 	}
 	return nil
 }
@@ -1013,7 +1067,7 @@ func (u *HealthMessage) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *HealthMessage) AcceptFuncs(pingFunc func(Ping) error, pongFunc func(Pong) error, shutdownNoticeFunc func(ShutdownNotice) error, unknownFunc func(string) error) error {
+func (u *HealthMessage) AcceptFuncs(pingFunc func(Ping) error, pongFunc func(Pong) error, shutdownNoticeFunc func(ShutdownNotice) error, clientMessageErrorFunc func(ClientMessageError) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1035,6 +1089,11 @@ func (u *HealthMessage) AcceptFuncs(pingFunc func(Ping) error, pongFunc func(Pon
 			return fmt.Errorf("field \"shutdownNotice\" is required")
 		}
 		return shutdownNoticeFunc(*u.shutdownNotice)
+	case "clientMessageError":
+		if u.clientMessageError == nil {
+			return fmt.Errorf("field \"clientMessageError\" is required")
+		}
+		return clientMessageErrorFunc(*u.clientMessageError)
 	}
 }
 
@@ -1047,6 +1106,10 @@ func (u *HealthMessage) PongNoopSuccess(Pong) error {
 }
 
 func (u *HealthMessage) ShutdownNoticeNoopSuccess(ShutdownNotice) error {
+	return nil
+}
+
+func (u *HealthMessage) ClientMessageErrorNoopSuccess(ClientMessageError) error {
 	return nil
 }
 
@@ -1076,6 +1139,11 @@ func (u *HealthMessage) Accept(v HealthMessageVisitor) error {
 			return fmt.Errorf("field \"shutdownNotice\" is required")
 		}
 		return v.VisitShutdownNotice(*u.shutdownNotice)
+	case "clientMessageError":
+		if u.clientMessageError == nil {
+			return fmt.Errorf("field \"clientMessageError\" is required")
+		}
+		return v.VisitClientMessageError(*u.clientMessageError)
 	}
 }
 
@@ -1083,6 +1151,7 @@ type HealthMessageVisitor interface {
 	VisitPing(v Ping) error
 	VisitPong(v Pong) error
 	VisitShutdownNotice(v ShutdownNotice) error
+	VisitClientMessageError(v ClientMessageError) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1108,6 +1177,11 @@ func (u *HealthMessage) AcceptWithContext(ctx context.Context, v HealthMessageVi
 			return fmt.Errorf("field \"shutdownNotice\" is required")
 		}
 		return v.VisitShutdownNoticeWithContext(ctx, *u.shutdownNotice)
+	case "clientMessageError":
+		if u.clientMessageError == nil {
+			return fmt.Errorf("field \"clientMessageError\" is required")
+		}
+		return v.VisitClientMessageErrorWithContext(ctx, *u.clientMessageError)
 	}
 }
 
@@ -1115,6 +1189,7 @@ type HealthMessageVisitorWithContext interface {
 	VisitPingWithContext(ctx context.Context, v Ping) error
 	VisitPongWithContext(ctx context.Context, v Pong) error
 	VisitShutdownNoticeWithContext(ctx context.Context, v ShutdownNotice) error
+	VisitClientMessageErrorWithContext(ctx context.Context, v ClientMessageError) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1128,6 +1203,145 @@ func NewHealthMessageFromPong(v Pong) HealthMessage {
 
 func NewHealthMessageFromShutdownNotice(v ShutdownNotice) HealthMessage {
 	return HealthMessage{typ: "shutdownNotice", shutdownNotice: &v}
+}
+
+func NewHealthMessageFromClientMessageError(v ClientMessageError) HealthMessage {
+	return HealthMessage{typ: "clientMessageError", clientMessageError: &v}
+}
+
+type ResultConfiguration struct {
+	typ        string
+	appendOnly *AppendOnlyConfig
+}
+
+type resultConfigurationDeserializer struct {
+	Type       string            `json:"type"`
+	AppendOnly *AppendOnlyConfig `json:"appendOnly"`
+}
+
+func (u *resultConfigurationDeserializer) toStruct() ResultConfiguration {
+	return ResultConfiguration{typ: u.Type, appendOnly: u.AppendOnly}
+}
+
+func (u *ResultConfiguration) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "appendOnly":
+		if u.appendOnly == nil {
+			return nil, fmt.Errorf("field \"appendOnly\" is required")
+		}
+		return struct {
+			Type       string           `json:"type"`
+			AppendOnly AppendOnlyConfig `json:"appendOnly"`
+		}{Type: "appendOnly", AppendOnly: *u.appendOnly}, nil
+	}
+}
+
+func (u ResultConfiguration) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ResultConfiguration) UnmarshalJSON(data []byte) error {
+	var deser resultConfigurationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "appendOnly":
+		if u.appendOnly == nil {
+			return fmt.Errorf("field \"appendOnly\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ResultConfiguration) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ResultConfiguration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ResultConfiguration) AcceptFuncs(appendOnlyFunc func(AppendOnlyConfig) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "appendOnly":
+		if u.appendOnly == nil {
+			return fmt.Errorf("field \"appendOnly\" is required")
+		}
+		return appendOnlyFunc(*u.appendOnly)
+	}
+}
+
+func (u *ResultConfiguration) AppendOnlyNoopSuccess(AppendOnlyConfig) error {
+	return nil
+}
+
+func (u *ResultConfiguration) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ResultConfiguration) Accept(v ResultConfigurationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "appendOnly":
+		if u.appendOnly == nil {
+			return fmt.Errorf("field \"appendOnly\" is required")
+		}
+		return v.VisitAppendOnly(*u.appendOnly)
+	}
+}
+
+type ResultConfigurationVisitor interface {
+	VisitAppendOnly(v AppendOnlyConfig) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ResultConfiguration) AcceptWithContext(ctx context.Context, v ResultConfigurationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "appendOnly":
+		if u.appendOnly == nil {
+			return fmt.Errorf("field \"appendOnly\" is required")
+		}
+		return v.VisitAppendOnlyWithContext(ctx, *u.appendOnly)
+	}
+}
+
+type ResultConfigurationVisitorWithContext interface {
+	VisitAppendOnlyWithContext(ctx context.Context, v AppendOnlyConfig) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewResultConfigurationFromAppendOnly(v AppendOnlyConfig) ResultConfiguration {
+	return ResultConfiguration{typ: "appendOnly", appendOnly: &v}
 }
 
 type ServerMessage struct {

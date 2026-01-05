@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/scout/api"
 )
 
@@ -272,6 +273,71 @@ type ColorStyleVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type DecimalPlacesWithT[T any] DecimalPlaces
+
+func (u *DecimalPlacesWithT[T]) Accept(ctx context.Context, v DecimalPlacesVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "fixed":
+		if u.fixed == nil {
+			return result, fmt.Errorf("field \"fixed\" is required")
+		}
+		return v.VisitFixed(ctx, *u.fixed)
+	case "max":
+		if u.max == nil {
+			return result, fmt.Errorf("field \"max\" is required")
+		}
+		return v.VisitMax(ctx, *u.max)
+	}
+}
+
+func (u *DecimalPlacesWithT[T]) AcceptFuncs(fixedFunc func(FixedDecimalPlaces) (T, error), maxFunc func(MaxDecimalPlaces) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "fixed":
+		if u.fixed == nil {
+			return result, fmt.Errorf("field \"fixed\" is required")
+		}
+		return fixedFunc(*u.fixed)
+	case "max":
+		if u.max == nil {
+			return result, fmt.Errorf("field \"max\" is required")
+		}
+		return maxFunc(*u.max)
+	}
+}
+
+func (u *DecimalPlacesWithT[T]) FixedNoopSuccess(FixedDecimalPlaces) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DecimalPlacesWithT[T]) MaxNoopSuccess(MaxDecimalPlaces) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DecimalPlacesWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type DecimalPlacesVisitorWithT[T any] interface {
+	VisitFixed(ctx context.Context, v FixedDecimalPlaces) (T, error)
+	VisitMax(ctx context.Context, v MaxDecimalPlaces) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type DisconnectedValueVisualizationWithT[T any] DisconnectedValueVisualization
 
 func (u *DisconnectedValueVisualizationWithT[T]) Accept(ctx context.Context, v DisconnectedValueVisualizationVisitorWithT[T]) (T, error) {
@@ -350,6 +416,55 @@ type DisconnectedValueVisualizationVisitorWithT[T any] interface {
 	VisitAlwaysConnect(ctx context.Context, v AlwaysConnectDisconnectedValues) (T, error)
 	VisitNever(ctx context.Context, v NeverConnectDisconnectedValues) (T, error)
 	VisitThreshold(ctx context.Context, v ThresholdDisconnectedValues) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type EnumArrayVisualisationWithT[T any] EnumArrayVisualisation
+
+func (u *EnumArrayVisualisationWithT[T]) Accept(ctx context.Context, v EnumArrayVisualisationVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "raw":
+		if u.raw == nil {
+			return result, fmt.Errorf("field \"raw\" is required")
+		}
+		return v.VisitRaw(ctx, *u.raw)
+	}
+}
+
+func (u *EnumArrayVisualisationWithT[T]) AcceptFuncs(rawFunc func(EnumArrayRawVisualisation) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "raw":
+		if u.raw == nil {
+			return result, fmt.Errorf("field \"raw\" is required")
+		}
+		return rawFunc(*u.raw)
+	}
+}
+
+func (u *EnumArrayVisualisationWithT[T]) RawNoopSuccess(EnumArrayRawVisualisation) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *EnumArrayVisualisationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type EnumArrayVisualisationVisitorWithT[T any] interface {
+	VisitRaw(ctx context.Context, v EnumArrayRawVisualisation) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -482,10 +597,15 @@ func (u *FrequencyChartDefinitionWithT[T]) Accept(ctx context.Context, v Frequen
 			return result, fmt.Errorf("field \"v1\" is required")
 		}
 		return v.VisitV1(ctx, *u.v1)
+	case "v2":
+		if u.v2 == nil {
+			return result, fmt.Errorf("field \"v2\" is required")
+		}
+		return v.VisitV2(ctx, *u.v2)
 	}
 }
 
-func (u *FrequencyChartDefinitionWithT[T]) AcceptFuncs(v1Func func(FrequencyChartDefinitionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *FrequencyChartDefinitionWithT[T]) AcceptFuncs(v1Func func(FrequencyChartDefinitionV1) (T, error), v2Func func(FrequencyChartDefinitionV2) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -498,10 +618,20 @@ func (u *FrequencyChartDefinitionWithT[T]) AcceptFuncs(v1Func func(FrequencyChar
 			return result, fmt.Errorf("field \"v1\" is required")
 		}
 		return v1Func(*u.v1)
+	case "v2":
+		if u.v2 == nil {
+			return result, fmt.Errorf("field \"v2\" is required")
+		}
+		return v2Func(*u.v2)
 	}
 }
 
 func (u *FrequencyChartDefinitionWithT[T]) V1NoopSuccess(FrequencyChartDefinitionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FrequencyChartDefinitionWithT[T]) V2NoopSuccess(FrequencyChartDefinitionV2) (T, error) {
 	var result T
 	return result, nil
 }
@@ -513,6 +643,201 @@ func (u *FrequencyChartDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, e
 
 type FrequencyChartDefinitionVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v FrequencyChartDefinitionV1) (T, error)
+	VisitV2(ctx context.Context, v FrequencyChartDefinitionV2) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type FrequencyPlotTypeWithT[T any] FrequencyPlotType
+
+func (u *FrequencyPlotTypeWithT[T]) Accept(ctx context.Context, v FrequencyPlotTypeVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "fft":
+		if u.fft == nil {
+			return result, fmt.Errorf("field \"fft\" is required")
+		}
+		return v.VisitFft(ctx, *u.fft)
+	case "periodogram":
+		if u.periodogram == nil {
+			return result, fmt.Errorf("field \"periodogram\" is required")
+		}
+		return v.VisitPeriodogram(ctx, *u.periodogram)
+	case "psd":
+		if u.psd == nil {
+			return result, fmt.Errorf("field \"psd\" is required")
+		}
+		return v.VisitPsd(ctx, *u.psd)
+	case "cpsd":
+		if u.cpsd == nil {
+			return result, fmt.Errorf("field \"cpsd\" is required")
+		}
+		return v.VisitCpsd(ctx, *u.cpsd)
+	case "nyquist":
+		if u.nyquist == nil {
+			return result, fmt.Errorf("field \"nyquist\" is required")
+		}
+		return v.VisitNyquist(ctx, *u.nyquist)
+	case "bode":
+		if u.bode == nil {
+			return result, fmt.Errorf("field \"bode\" is required")
+		}
+		return v.VisitBode(ctx, *u.bode)
+	}
+}
+
+func (u *FrequencyPlotTypeWithT[T]) AcceptFuncs(fftFunc func(FrequencyPlotTypeFft) (T, error), periodogramFunc func(FrequencyPlotTypePeriodogram) (T, error), psdFunc func(FrequencyPlotTypePsd) (T, error), cpsdFunc func(FrequencyPlotTypeCpsd) (T, error), nyquistFunc func(FrequencyPlotTypeNyquist) (T, error), bodeFunc func(FrequencyPlotTypeBode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "fft":
+		if u.fft == nil {
+			return result, fmt.Errorf("field \"fft\" is required")
+		}
+		return fftFunc(*u.fft)
+	case "periodogram":
+		if u.periodogram == nil {
+			return result, fmt.Errorf("field \"periodogram\" is required")
+		}
+		return periodogramFunc(*u.periodogram)
+	case "psd":
+		if u.psd == nil {
+			return result, fmt.Errorf("field \"psd\" is required")
+		}
+		return psdFunc(*u.psd)
+	case "cpsd":
+		if u.cpsd == nil {
+			return result, fmt.Errorf("field \"cpsd\" is required")
+		}
+		return cpsdFunc(*u.cpsd)
+	case "nyquist":
+		if u.nyquist == nil {
+			return result, fmt.Errorf("field \"nyquist\" is required")
+		}
+		return nyquistFunc(*u.nyquist)
+	case "bode":
+		if u.bode == nil {
+			return result, fmt.Errorf("field \"bode\" is required")
+		}
+		return bodeFunc(*u.bode)
+	}
+}
+
+func (u *FrequencyPlotTypeWithT[T]) FftNoopSuccess(FrequencyPlotTypeFft) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FrequencyPlotTypeWithT[T]) PeriodogramNoopSuccess(FrequencyPlotTypePeriodogram) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FrequencyPlotTypeWithT[T]) PsdNoopSuccess(FrequencyPlotTypePsd) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FrequencyPlotTypeWithT[T]) CpsdNoopSuccess(FrequencyPlotTypeCpsd) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FrequencyPlotTypeWithT[T]) NyquistNoopSuccess(FrequencyPlotTypeNyquist) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FrequencyPlotTypeWithT[T]) BodeNoopSuccess(FrequencyPlotTypeBode) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FrequencyPlotTypeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type FrequencyPlotTypeVisitorWithT[T any] interface {
+	VisitFft(ctx context.Context, v FrequencyPlotTypeFft) (T, error)
+	VisitPeriodogram(ctx context.Context, v FrequencyPlotTypePeriodogram) (T, error)
+	VisitPsd(ctx context.Context, v FrequencyPlotTypePsd) (T, error)
+	VisitCpsd(ctx context.Context, v FrequencyPlotTypeCpsd) (T, error)
+	VisitNyquist(ctx context.Context, v FrequencyPlotTypeNyquist) (T, error)
+	VisitBode(ctx context.Context, v FrequencyPlotTypeBode) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type FrequencyPlotV2WithT[T any] FrequencyPlotV2
+
+func (u *FrequencyPlotV2WithT[T]) Accept(ctx context.Context, v FrequencyPlotV2VisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "single":
+		if u.single == nil {
+			return result, fmt.Errorf("field \"single\" is required")
+		}
+		return v.VisitSingle(ctx, *u.single)
+	case "multivariate":
+		if u.multivariate == nil {
+			return result, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariate(ctx, *u.multivariate)
+	}
+}
+
+func (u *FrequencyPlotV2WithT[T]) AcceptFuncs(singleFunc func(FrequencyPlot) (T, error), multivariateFunc func(FrequencyPlotMultivariate) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "single":
+		if u.single == nil {
+			return result, fmt.Errorf("field \"single\" is required")
+		}
+		return singleFunc(*u.single)
+	case "multivariate":
+		if u.multivariate == nil {
+			return result, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return multivariateFunc(*u.multivariate)
+	}
+}
+
+func (u *FrequencyPlotV2WithT[T]) SingleNoopSuccess(FrequencyPlot) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FrequencyPlotV2WithT[T]) MultivariateNoopSuccess(FrequencyPlotMultivariate) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FrequencyPlotV2WithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type FrequencyPlotV2VisitorWithT[T any] interface {
+	VisitSingle(ctx context.Context, v FrequencyPlot) (T, error)
+	VisitMultivariate(ctx context.Context, v FrequencyPlotMultivariate) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -694,10 +1019,15 @@ func (u *Geo3dPositionWithT[T]) Accept(ctx context.Context, v Geo3dPositionVisit
 			return result, fmt.Errorf("field \"wgs84\" is required")
 		}
 		return v.VisitWgs84(ctx, *u.wgs84)
+	case "ecef":
+		if u.ecef == nil {
+			return result, fmt.Errorf("field \"ecef\" is required")
+		}
+		return v.VisitEcef(ctx, *u.ecef)
 	}
 }
 
-func (u *Geo3dPositionWithT[T]) AcceptFuncs(wgs84Func func(Geo3dPositionWgs84) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *Geo3dPositionWithT[T]) AcceptFuncs(wgs84Func func(Geo3dPositionWgs84) (T, error), ecefFunc func(Geo3dPositionEcef) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -710,10 +1040,20 @@ func (u *Geo3dPositionWithT[T]) AcceptFuncs(wgs84Func func(Geo3dPositionWgs84) (
 			return result, fmt.Errorf("field \"wgs84\" is required")
 		}
 		return wgs84Func(*u.wgs84)
+	case "ecef":
+		if u.ecef == nil {
+			return result, fmt.Errorf("field \"ecef\" is required")
+		}
+		return ecefFunc(*u.ecef)
 	}
 }
 
 func (u *Geo3dPositionWithT[T]) Wgs84NoopSuccess(Geo3dPositionWgs84) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dPositionWithT[T]) EcefNoopSuccess(Geo3dPositionEcef) (T, error) {
 	var result T
 	return result, nil
 }
@@ -725,6 +1065,7 @@ func (u *Geo3dPositionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type Geo3dPositionVisitorWithT[T any] interface {
 	VisitWgs84(ctx context.Context, v Geo3dPositionWgs84) (T, error)
+	VisitEcef(ctx context.Context, v Geo3dPositionEcef) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1019,6 +1360,55 @@ func (u *LogPanelDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) 
 
 type LogPanelDefinitionVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v LogPanelDefinitionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type NumericArrayVisualisationWithT[T any] NumericArrayVisualisation
+
+func (u *NumericArrayVisualisationWithT[T]) Accept(ctx context.Context, v NumericArrayVisualisationVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "raw":
+		if u.raw == nil {
+			return result, fmt.Errorf("field \"raw\" is required")
+		}
+		return v.VisitRaw(ctx, *u.raw)
+	}
+}
+
+func (u *NumericArrayVisualisationWithT[T]) AcceptFuncs(rawFunc func(NumericArrayRawVisualisation) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "raw":
+		if u.raw == nil {
+			return result, fmt.Errorf("field \"raw\" is required")
+		}
+		return rawFunc(*u.raw)
+	}
+}
+
+func (u *NumericArrayVisualisationWithT[T]) RawNoopSuccess(NumericArrayRawVisualisation) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericArrayVisualisationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type NumericArrayVisualisationVisitorWithT[T any] interface {
+	VisitRaw(ctx context.Context, v NumericArrayRawVisualisation) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1330,10 +1720,15 @@ func (u *ProcedureVizDefinitionWithT[T]) Accept(ctx context.Context, v Procedure
 			return result, fmt.Errorf("field \"v1\" is required")
 		}
 		return v.VisitV1(ctx, *u.v1)
+	case "v2":
+		if u.v2 == nil {
+			return result, fmt.Errorf("field \"v2\" is required")
+		}
+		return v.VisitV2(ctx, *u.v2)
 	}
 }
 
-func (u *ProcedureVizDefinitionWithT[T]) AcceptFuncs(v1Func func(ProcedureVizDefinitionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ProcedureVizDefinitionWithT[T]) AcceptFuncs(v1Func func(ProcedureVizDefinitionV1) (T, error), v2Func func(ProcedureVizDefinitionV2) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1346,10 +1741,20 @@ func (u *ProcedureVizDefinitionWithT[T]) AcceptFuncs(v1Func func(ProcedureVizDef
 			return result, fmt.Errorf("field \"v1\" is required")
 		}
 		return v1Func(*u.v1)
+	case "v2":
+		if u.v2 == nil {
+			return result, fmt.Errorf("field \"v2\" is required")
+		}
+		return v2Func(*u.v2)
 	}
 }
 
 func (u *ProcedureVizDefinitionWithT[T]) V1NoopSuccess(ProcedureVizDefinitionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureVizDefinitionWithT[T]) V2NoopSuccess(ProcedureVizDefinitionV2) (T, error) {
 	var result T
 	return result, nil
 }
@@ -1361,6 +1766,72 @@ func (u *ProcedureVizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, err
 
 type ProcedureVizDefinitionVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v ProcedureVizDefinitionV1) (T, error)
+	VisitV2(ctx context.Context, v ProcedureVizDefinitionV2) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type ProcedureVizIdWithT[T any] ProcedureVizId
+
+func (u *ProcedureVizIdWithT[T]) Accept(ctx context.Context, v ProcedureVizIdVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "executionRid":
+		if u.executionRid == nil {
+			return result, fmt.Errorf("field \"executionRid\" is required")
+		}
+		return v.VisitExecutionRid(ctx, *u.executionRid)
+	case "templateRid":
+		if u.templateRid == nil {
+			return result, fmt.Errorf("field \"templateRid\" is required")
+		}
+		return v.VisitTemplateRid(ctx, *u.templateRid)
+	}
+}
+
+func (u *ProcedureVizIdWithT[T]) AcceptFuncs(executionRidFunc func(rids.ProcedureExecutionRid) (T, error), templateRidFunc func(rids.ProcedureRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "executionRid":
+		if u.executionRid == nil {
+			return result, fmt.Errorf("field \"executionRid\" is required")
+		}
+		return executionRidFunc(*u.executionRid)
+	case "templateRid":
+		if u.templateRid == nil {
+			return result, fmt.Errorf("field \"templateRid\" is required")
+		}
+		return templateRidFunc(*u.templateRid)
+	}
+}
+
+func (u *ProcedureVizIdWithT[T]) ExecutionRidNoopSuccess(rids.ProcedureExecutionRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureVizIdWithT[T]) TemplateRidNoopSuccess(rids.ProcedureRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureVizIdWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ProcedureVizIdVisitorWithT[T any] interface {
+	VisitExecutionRid(ctx context.Context, v rids.ProcedureExecutionRid) (T, error)
+	VisitTemplateRid(ctx context.Context, v rids.ProcedureRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1459,6 +1930,120 @@ func (u *RangeValueVisualisationWithT[T]) ErrorOnUnknown(typeName string) (T, er
 
 type RangeValueVisualisationVisitorWithT[T any] interface {
 	VisitRaw(ctx context.Context, v RangeRawVisualisation) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type StalenessVisualisationWithT[T any] StalenessVisualisation
+
+func (u *StalenessVisualisationWithT[T]) Accept(ctx context.Context, v StalenessVisualisationVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "raw":
+		if u.raw == nil {
+			return result, fmt.Errorf("field \"raw\" is required")
+		}
+		return v.VisitRaw(ctx, *u.raw)
+	case "bar":
+		if u.bar == nil {
+			return result, fmt.Errorf("field \"bar\" is required")
+		}
+		return v.VisitBar(ctx, *u.bar)
+	}
+}
+
+func (u *StalenessVisualisationWithT[T]) AcceptFuncs(rawFunc func(NumericRawVisualisationV2) (T, error), barFunc func(NumericBarVisualisationV2) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "raw":
+		if u.raw == nil {
+			return result, fmt.Errorf("field \"raw\" is required")
+		}
+		return rawFunc(*u.raw)
+	case "bar":
+		if u.bar == nil {
+			return result, fmt.Errorf("field \"bar\" is required")
+		}
+		return barFunc(*u.bar)
+	}
+}
+
+func (u *StalenessVisualisationWithT[T]) RawNoopSuccess(NumericRawVisualisationV2) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *StalenessVisualisationWithT[T]) BarNoopSuccess(NumericBarVisualisationV2) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *StalenessVisualisationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type StalenessVisualisationVisitorWithT[T any] interface {
+	VisitRaw(ctx context.Context, v NumericRawVisualisationV2) (T, error)
+	VisitBar(ctx context.Context, v NumericBarVisualisationV2) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type StructVisualisationWithT[T any] StructVisualisation
+
+func (u *StructVisualisationWithT[T]) Accept(ctx context.Context, v StructVisualisationVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "raw":
+		if u.raw == nil {
+			return result, fmt.Errorf("field \"raw\" is required")
+		}
+		return v.VisitRaw(ctx, *u.raw)
+	}
+}
+
+func (u *StructVisualisationWithT[T]) AcceptFuncs(rawFunc func(StructRawVisualisation) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "raw":
+		if u.raw == nil {
+			return result, fmt.Errorf("field \"raw\" is required")
+		}
+		return rawFunc(*u.raw)
+	}
+}
+
+func (u *StructVisualisationWithT[T]) RawNoopSuccess(StructRawVisualisation) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *StructVisualisationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type StructVisualisationVisitorWithT[T any] interface {
+	VisitRaw(ctx context.Context, v StructRawVisualisation) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1671,10 +2256,30 @@ func (u *ValueTableCellConfigWithT[T]) Accept(ctx context.Context, v ValueTableC
 			return result, fmt.Errorf("field \"bitFlagMap\" is required")
 		}
 		return v.VisitBitFlagMap(ctx, *u.bitFlagMap)
+	case "staleness":
+		if u.staleness == nil {
+			return result, fmt.Errorf("field \"staleness\" is required")
+		}
+		return v.VisitStaleness(ctx, *u.staleness)
+	case "numericArray":
+		if u.numericArray == nil {
+			return result, fmt.Errorf("field \"numericArray\" is required")
+		}
+		return v.VisitNumericArray(ctx, *u.numericArray)
+	case "enumArray":
+		if u.enumArray == nil {
+			return result, fmt.Errorf("field \"enumArray\" is required")
+		}
+		return v.VisitEnumArray(ctx, *u.enumArray)
+	case "struct":
+		if u.struct_ == nil {
+			return result, fmt.Errorf("field \"struct\" is required")
+		}
+		return v.VisitStruct(ctx, *u.struct_)
 	}
 }
 
-func (u *ValueTableCellConfigWithT[T]) AcceptFuncs(numericFunc func(NumericCellConfig) (T, error), enumFunc func(EnumCellConfig) (T, error), range_Func func(RangeCellConfig) (T, error), bitFlagMapFunc func(BitFlagMapCellConfig) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ValueTableCellConfigWithT[T]) AcceptFuncs(numericFunc func(NumericCellConfig) (T, error), enumFunc func(EnumCellConfig) (T, error), range_Func func(RangeCellConfig) (T, error), bitFlagMapFunc func(BitFlagMapCellConfig) (T, error), stalenessFunc func(StalenessCellConfig) (T, error), numericArrayFunc func(NumericArrayCellConfig) (T, error), enumArrayFunc func(EnumArrayCellConfig) (T, error), struct_Func func(StructCellConfig) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1702,6 +2307,26 @@ func (u *ValueTableCellConfigWithT[T]) AcceptFuncs(numericFunc func(NumericCellC
 			return result, fmt.Errorf("field \"bitFlagMap\" is required")
 		}
 		return bitFlagMapFunc(*u.bitFlagMap)
+	case "staleness":
+		if u.staleness == nil {
+			return result, fmt.Errorf("field \"staleness\" is required")
+		}
+		return stalenessFunc(*u.staleness)
+	case "numericArray":
+		if u.numericArray == nil {
+			return result, fmt.Errorf("field \"numericArray\" is required")
+		}
+		return numericArrayFunc(*u.numericArray)
+	case "enumArray":
+		if u.enumArray == nil {
+			return result, fmt.Errorf("field \"enumArray\" is required")
+		}
+		return enumArrayFunc(*u.enumArray)
+	case "struct":
+		if u.struct_ == nil {
+			return result, fmt.Errorf("field \"struct\" is required")
+		}
+		return struct_Func(*u.struct_)
 	}
 }
 
@@ -1725,6 +2350,26 @@ func (u *ValueTableCellConfigWithT[T]) BitFlagMapNoopSuccess(BitFlagMapCellConfi
 	return result, nil
 }
 
+func (u *ValueTableCellConfigWithT[T]) StalenessNoopSuccess(StalenessCellConfig) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValueTableCellConfigWithT[T]) NumericArrayNoopSuccess(NumericArrayCellConfig) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValueTableCellConfigWithT[T]) EnumArrayNoopSuccess(EnumArrayCellConfig) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValueTableCellConfigWithT[T]) StructNoopSuccess(StructCellConfig) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ValueTableCellConfigWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -1735,6 +2380,10 @@ type ValueTableCellConfigVisitorWithT[T any] interface {
 	VisitEnum(ctx context.Context, v EnumCellConfig) (T, error)
 	VisitRange(ctx context.Context, v RangeCellConfig) (T, error)
 	VisitBitFlagMap(ctx context.Context, v BitFlagMapCellConfig) (T, error)
+	VisitStaleness(ctx context.Context, v StalenessCellConfig) (T, error)
+	VisitNumericArray(ctx context.Context, v NumericArrayCellConfig) (T, error)
+	VisitEnumArray(ctx context.Context, v EnumArrayCellConfig) (T, error)
+	VisitStruct(ctx context.Context, v StructCellConfig) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

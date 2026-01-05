@@ -21,6 +21,11 @@ type DeleteDataRequest struct {
 	   If not specified, will delete data across all tags.
 	*/
 	Tags *map[api.TagName]api.TagValue `conjure-docs:"If specified, will only delete data that fully matches the given tags.\nIf not specified, will delete data across all tags." json:"tags,omitempty"`
+	/*
+	   If specified, will only delete data that has an exact channel name match with the given names.
+	   If not specified, will delete data across all channels.
+	*/
+	ChannelNames *[]string `conjure-docs:"If specified, will only delete data that has an exact channel name match with the given names.\nIf not specified, will delete data across all channels." json:"channelNames,omitempty"`
 }
 
 func (o DeleteDataRequest) MarshalYAML() (interface{}, error) {

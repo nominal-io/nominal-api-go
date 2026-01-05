@@ -149,7 +149,7 @@ type NominalChannelWriterServiceClient interface {
 	   message Series {
 	     Channel channel = 1;
 	     map<string, string> tags = 2;   // Key-value pairs for series tags
-	     Points points = 3;              // Contains either double or string points
+	     Points points = 3;              // Contains double, string, integer, array, or struct points
 	   }
 
 	   message Channel {
@@ -160,6 +160,10 @@ type NominalChannelWriterServiceClient interface {
 	     oneof points_type {
 	       DoublePoints double_points = 1;
 	       StringPoints string_points = 2;
+	       IntegerPoints integer_points = 3;
+	       ArrayPoints array_points = 4;
+	       StructPoints struct_points = 5;
+	       Uint64Points uint64_points = 6;
 	     }
 	   }
 
@@ -171,6 +175,33 @@ type NominalChannelWriterServiceClient interface {
 	     repeated StringPoint points = 1;
 	   }
 
+	   message IntegerPoints {
+	     repeated IntegerPoint points = 1;
+	   }
+
+	   message Uint64Points {
+	     repeated Uint64Point points = 1;
+	   }
+
+	   message ArrayPoints {
+	     oneof array_type {
+	       DoubleArrayPoints double_array_points = 1;
+	       StringArrayPoints string_array_points = 2;
+	     }
+	   }
+
+	   message DoubleArrayPoints {
+	     repeated DoubleArrayPoint points = 1;
+	   }
+
+	   message StringArrayPoints {
+	     repeated StringArrayPoint points = 1;
+	   }
+
+	   message StructPoints {
+	     repeated StructPoint points = 1;
+	   }
+
 	   message DoublePoint {
 	     google.protobuf.Timestamp timestamp = 1;
 	     double value = 2;
@@ -180,13 +211,40 @@ type NominalChannelWriterServiceClient interface {
 	     google.protobuf.Timestamp timestamp = 1;
 	     string value = 2;
 	   }
+
+	   message IntegerPoint {
+	     google.protobuf.Timestamp timestamp = 1;
+	     int64 value = 2;
+	   }
+
+	   message Uint64Point {
+	     google.protobuf.Timestamp timestamp = 1;
+	     uint64 value = 2;
+	   }
+
+	   message DoubleArrayPoint {
+	     google.protobuf.Timestamp timestamp = 1;
+	     repeated double value = 2;
+	   }
+
+	   message StringArrayPoint {
+	     google.protobuf.Timestamp timestamp = 1;
+	     repeated string value = 2;
+	   }
+
+	   message StructPoint {
+	     google.protobuf.Timestamp timestamp = 1;
+	     string jsonString = 2;
+	   }
 	   ```
 
 	   Each request can contain multiple series, where each series consists of:
 	   - A channel name
 	   - A map of tags (key-value pairs)
-	   - A collection of points, which can be either double or string values
+	   - A collection of points, which can be double, string, integer, array (double/string), or struct (json) values
 	   - Each point includes a timestamp (using google.protobuf.Timestamp) and its value
+	   - Array points contain repeated values (array<double> or array<string>)
+	   - Struct points are represented using strings that contain the JSON formatted blobs, with all keys being strings
 
 	   The endpoint requires the Content-Type header to be set to "application/x-protobuf".
 	   If the payload is compressed, the appropriate Content-Encoding header must be included.
@@ -366,7 +424,7 @@ type NominalChannelWriterServiceClientWithAuth interface {
 	   message Series {
 	     Channel channel = 1;
 	     map<string, string> tags = 2;   // Key-value pairs for series tags
-	     Points points = 3;              // Contains either double or string points
+	     Points points = 3;              // Contains double, string, integer, array, or struct points
 	   }
 
 	   message Channel {
@@ -377,6 +435,10 @@ type NominalChannelWriterServiceClientWithAuth interface {
 	     oneof points_type {
 	       DoublePoints double_points = 1;
 	       StringPoints string_points = 2;
+	       IntegerPoints integer_points = 3;
+	       ArrayPoints array_points = 4;
+	       StructPoints struct_points = 5;
+	       Uint64Points uint64_points = 6;
 	     }
 	   }
 
@@ -388,6 +450,33 @@ type NominalChannelWriterServiceClientWithAuth interface {
 	     repeated StringPoint points = 1;
 	   }
 
+	   message IntegerPoints {
+	     repeated IntegerPoint points = 1;
+	   }
+
+	   message Uint64Points {
+	     repeated Uint64Point points = 1;
+	   }
+
+	   message ArrayPoints {
+	     oneof array_type {
+	       DoubleArrayPoints double_array_points = 1;
+	       StringArrayPoints string_array_points = 2;
+	     }
+	   }
+
+	   message DoubleArrayPoints {
+	     repeated DoubleArrayPoint points = 1;
+	   }
+
+	   message StringArrayPoints {
+	     repeated StringArrayPoint points = 1;
+	   }
+
+	   message StructPoints {
+	     repeated StructPoint points = 1;
+	   }
+
 	   message DoublePoint {
 	     google.protobuf.Timestamp timestamp = 1;
 	     double value = 2;
@@ -397,13 +486,40 @@ type NominalChannelWriterServiceClientWithAuth interface {
 	     google.protobuf.Timestamp timestamp = 1;
 	     string value = 2;
 	   }
+
+	   message IntegerPoint {
+	     google.protobuf.Timestamp timestamp = 1;
+	     int64 value = 2;
+	   }
+
+	   message Uint64Point {
+	     google.protobuf.Timestamp timestamp = 1;
+	     uint64 value = 2;
+	   }
+
+	   message DoubleArrayPoint {
+	     google.protobuf.Timestamp timestamp = 1;
+	     repeated double value = 2;
+	   }
+
+	   message StringArrayPoint {
+	     google.protobuf.Timestamp timestamp = 1;
+	     repeated string value = 2;
+	   }
+
+	   message StructPoint {
+	     google.protobuf.Timestamp timestamp = 1;
+	     string jsonString = 2;
+	   }
 	   ```
 
 	   Each request can contain multiple series, where each series consists of:
 	   - A channel name
 	   - A map of tags (key-value pairs)
-	   - A collection of points, which can be either double or string values
+	   - A collection of points, which can be double, string, integer, array (double/string), or struct (json) values
 	   - Each point includes a timestamp (using google.protobuf.Timestamp) and its value
+	   - Array points contain repeated values (array<double> or array<string>)
+	   - Struct points are represented using strings that contain the JSON formatted blobs, with all keys being strings
 
 	   The endpoint requires the Content-Type header to be set to "application/x-protobuf".
 	   If the payload is compressed, the appropriate Content-Encoding header must be included.

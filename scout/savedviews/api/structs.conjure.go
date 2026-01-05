@@ -4,45 +4,28 @@ package api
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
-	api4 "github.com/nominal-io/nominal-api-go/scout/api"
-	api1 "github.com/nominal-io/nominal-api-go/scout/asset/api"
-	api3 "github.com/nominal-io/nominal-api-go/scout/checks/api"
+	api5 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/api"
+	"github.com/nominal-io/nominal-api-go/scout/asset/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/checks/api"
 	api7 "github.com/nominal-io/nominal-api-go/scout/notebook/api"
-	"github.com/nominal-io/nominal-api-go/scout/rids/api"
-	api5 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	api6 "github.com/nominal-io/nominal-api-go/scout/template/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type ArchiveSavedViewsRequest struct {
-	SavedViewRids []api.SavedViewRid `json:"savedViewRids"`
+type AssetMetricColumn struct {
+	Metadata    MetricColumnMetadata       `json:"metadata"`
+	TimeRange   AssetMetricColumnTimeRange `json:"timeRange"`
+	Aggregation MetricColumnAggregation    `json:"aggregation"`
+	Data        MetricColumnData           `json:"data"`
+	Style       *MetricColumnStyle         `json:"style,omitempty"`
 }
 
-func (o ArchiveSavedViewsRequest) MarshalJSON() ([]byte, error) {
-	if o.SavedViewRids == nil {
-		o.SavedViewRids = make([]api.SavedViewRid, 0)
-	}
-	type _tmpArchiveSavedViewsRequest ArchiveSavedViewsRequest
-	return safejson.Marshal(_tmpArchiveSavedViewsRequest(o))
-}
-
-func (o *ArchiveSavedViewsRequest) UnmarshalJSON(data []byte) error {
-	type _tmpArchiveSavedViewsRequest ArchiveSavedViewsRequest
-	var rawArchiveSavedViewsRequest _tmpArchiveSavedViewsRequest
-	if err := safejson.Unmarshal(data, &rawArchiveSavedViewsRequest); err != nil {
-		return err
-	}
-	if rawArchiveSavedViewsRequest.SavedViewRids == nil {
-		rawArchiveSavedViewsRequest.SavedViewRids = make([]api.SavedViewRid, 0)
-	}
-	*o = ArchiveSavedViewsRequest(rawArchiveSavedViewsRequest)
-	return nil
-}
-
-func (o ArchiveSavedViewsRequest) MarshalYAML() (interface{}, error) {
+func (o AssetMetricColumn) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -50,7 +33,48 @@ func (o ArchiveSavedViewsRequest) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *ArchiveSavedViewsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *AssetMetricColumn) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type AssetMetricColumns struct {
+	MetricColumns map[ColumnId]AssetMetricColumn `json:"metricColumns"`
+}
+
+func (o AssetMetricColumns) MarshalJSON() ([]byte, error) {
+	if o.MetricColumns == nil {
+		o.MetricColumns = make(map[ColumnId]AssetMetricColumn, 0)
+	}
+	type _tmpAssetMetricColumns AssetMetricColumns
+	return safejson.Marshal(_tmpAssetMetricColumns(o))
+}
+
+func (o *AssetMetricColumns) UnmarshalJSON(data []byte) error {
+	type _tmpAssetMetricColumns AssetMetricColumns
+	var rawAssetMetricColumns _tmpAssetMetricColumns
+	if err := safejson.Unmarshal(data, &rawAssetMetricColumns); err != nil {
+		return err
+	}
+	if rawAssetMetricColumns.MetricColumns == nil {
+		rawAssetMetricColumns.MetricColumns = make(map[ColumnId]AssetMetricColumn, 0)
+	}
+	*o = AssetMetricColumns(rawAssetMetricColumns)
+	return nil
+}
+
+func (o AssetMetricColumns) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AssetMetricColumns) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -59,30 +83,9 @@ func (o *ArchiveSavedViewsRequest) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 type AssetSearchState struct {
-	Sort             api1.AssetSortOptions  `json:"sort"`
-	Query            api1.SearchAssetsQuery `json:"query"`
-	ArchivedStatuses []api2.ArchivedStatus  `json:"archivedStatuses"`
-}
-
-func (o AssetSearchState) MarshalJSON() ([]byte, error) {
-	if o.ArchivedStatuses == nil {
-		o.ArchivedStatuses = make([]api2.ArchivedStatus, 0)
-	}
-	type _tmpAssetSearchState AssetSearchState
-	return safejson.Marshal(_tmpAssetSearchState(o))
-}
-
-func (o *AssetSearchState) UnmarshalJSON(data []byte) error {
-	type _tmpAssetSearchState AssetSearchState
-	var rawAssetSearchState _tmpAssetSearchState
-	if err := safejson.Unmarshal(data, &rawAssetSearchState); err != nil {
-		return err
-	}
-	if rawAssetSearchState.ArchivedStatuses == nil {
-		rawAssetSearchState.ArchivedStatuses = make([]api2.ArchivedStatus, 0)
-	}
-	*o = AssetSearchState(rawAssetSearchState)
-	return nil
+	Sort    *api.AssetSortOptions `json:"sort,omitempty"`
+	GroupBy *[]ColumnId           `json:"groupBy,omitempty"`
+	Query   api.SearchAssetsQuery `json:"query"`
 }
 
 func (o AssetSearchState) MarshalYAML() (interface{}, error) {
@@ -143,30 +146,8 @@ func (o *BatchGetSavedViewsResponse) UnmarshalYAML(unmarshal func(interface{}) e
 }
 
 type ChecklistSearchState struct {
-	Sort             api3.SortOptions          `json:"sort"`
-	Query            api3.ChecklistSearchQuery `json:"query"`
-	ArchivedStatuses []api2.ArchivedStatus     `json:"archivedStatuses"`
-}
-
-func (o ChecklistSearchState) MarshalJSON() ([]byte, error) {
-	if o.ArchivedStatuses == nil {
-		o.ArchivedStatuses = make([]api2.ArchivedStatus, 0)
-	}
-	type _tmpChecklistSearchState ChecklistSearchState
-	return safejson.Marshal(_tmpChecklistSearchState(o))
-}
-
-func (o *ChecklistSearchState) UnmarshalJSON(data []byte) error {
-	type _tmpChecklistSearchState ChecklistSearchState
-	var rawChecklistSearchState _tmpChecklistSearchState
-	if err := safejson.Unmarshal(data, &rawChecklistSearchState); err != nil {
-		return err
-	}
-	if rawChecklistSearchState.ArchivedStatuses == nil {
-		rawChecklistSearchState.ArchivedStatuses = make([]api2.ArchivedStatus, 0)
-	}
-	*o = ChecklistSearchState(rawChecklistSearchState)
-	return nil
+	Sort  *api1.SortOptions         `json:"sort,omitempty"`
+	Query api1.ChecklistSearchQuery `json:"query"`
 }
 
 func (o ChecklistSearchState) MarshalYAML() (interface{}, error) {
@@ -235,8 +216,8 @@ func (o *ColumnPinningState) UnmarshalYAML(unmarshal func(interface{}) error) er
 
 type CreateSavedViewRequest struct {
 	Title        string             `json:"title"`
-	Symbol       *api4.Symbol       `json:"symbol,omitempty"`
-	Color        *api4.Color        `json:"color,omitempty"`
+	Symbol       *api2.Symbol       `json:"symbol,omitempty"`
+	Color        *api2.Color        `json:"color,omitempty"`
 	SearchState  SearchState        `json:"searchState"`
 	DisplayState DisplayState       `json:"displayState"`
 	WorkspaceRid *rids.WorkspaceRid `json:"workspaceRid,omitempty"`
@@ -298,31 +279,93 @@ func (o *GetSavedViewResponse) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type RunSearchState struct {
-	Sort             api5.SortOptions      `json:"sort"`
-	Query            api5.SearchQuery      `json:"query"`
-	ArchivedStatuses []api2.ArchivedStatus `json:"archivedStatuses"`
+type MetricColumnMetadata struct {
+	Title       string       `json:"title"`
+	Description *string      `json:"description,omitempty"`
+	Symbol      *api2.Symbol `json:"symbol,omitempty"`
 }
 
-func (o RunSearchState) MarshalJSON() ([]byte, error) {
-	if o.ArchivedStatuses == nil {
-		o.ArchivedStatuses = make([]api2.ArchivedStatus, 0)
+func (o MetricColumnMetadata) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
 	}
-	type _tmpRunSearchState RunSearchState
-	return safejson.Marshal(_tmpRunSearchState(o))
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *RunSearchState) UnmarshalJSON(data []byte) error {
-	type _tmpRunSearchState RunSearchState
-	var rawRunSearchState _tmpRunSearchState
-	if err := safejson.Unmarshal(data, &rawRunSearchState); err != nil {
+func (o *MetricColumnMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
 		return err
 	}
-	if rawRunSearchState.ArchivedStatuses == nil {
-		rawRunSearchState.ArchivedStatuses = make([]api2.ArchivedStatus, 0)
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type MetricColumnStyle struct {
+	Type  MetricColumnThresholdType `json:"type"`
+	Value *[]MetricColumnThreshold  `json:"value,omitempty"`
+}
+
+func (o MetricColumnStyle) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
 	}
-	*o = RunSearchState(rawRunSearchState)
-	return nil
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MetricColumnStyle) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type MetricColumnThreshold struct {
+	Value float64 `json:"value"`
+	Color string  `json:"color"`
+	Label *string `json:"label,omitempty"`
+}
+
+func (o MetricColumnThreshold) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MetricColumnThreshold) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type MostRecentRun struct{}
+
+func (o MostRecentRun) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MostRecentRun) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type RunSearchState struct {
+	Sort    *api3.SortOptions `json:"sort,omitempty"`
+	GroupBy *[]ColumnId       `json:"groupBy,omitempty"`
+	Query   api3.SearchQuery  `json:"query"`
 }
 
 func (o RunSearchState) MarshalYAML() (interface{}, error) {
@@ -342,17 +385,9 @@ func (o *RunSearchState) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type SavedView struct {
-	Rid          api.SavedViewRid  `json:"rid"`
-	ResourceType ResourceType      `json:"resourceType"`
-	Title        string            `json:"title"`
-	Symbol       *api4.Symbol      `json:"symbol,omitempty"`
-	Color        *api4.Color       `json:"color,omitempty"`
+	Metadata     SavedViewMetadata `json:"metadata"`
 	SearchState  SearchState       `json:"searchState"`
 	DisplayState DisplayState      `json:"displayState"`
-	IsArchived   bool              `json:"isArchived"`
-	CreatedAt    datetime.DateTime `json:"createdAt"`
-	CreatedBy    api.UserRid       `json:"createdBy"`
-	UpdatedAt    datetime.DateTime `json:"updatedAt"`
 }
 
 func (o SavedView) MarshalYAML() (interface{}, error) {
@@ -364,6 +399,34 @@ func (o SavedView) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SavedView) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type SavedViewMetadata struct {
+	Rid          api4.SavedViewRid `json:"rid"`
+	ResourceType ResourceType      `json:"resourceType"`
+	Title        string            `json:"title"`
+	Symbol       *api2.Symbol      `json:"symbol,omitempty"`
+	Color        *api2.Color       `json:"color,omitempty"`
+	IsArchived   bool              `json:"isArchived"`
+	CreatedAt    datetime.DateTime `json:"createdAt"`
+	CreatedBy    api4.UserRid      `json:"createdBy"`
+	UpdatedAt    datetime.DateTime `json:"updatedAt"`
+}
+
+func (o SavedViewMetadata) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SavedViewMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -438,10 +501,10 @@ type SearchSavedViewsRequest struct {
 	Sort SavedViewSortOptions `json:"sort"`
 	// Defaults to 100. Will throw if larger than 1_000.
 	PageSize      *int                  `conjure-docs:"Defaults to 100. Will throw if larger than 1_000." json:"pageSize,omitempty"`
-	NextPageToken *api2.Token           `json:"nextPageToken,omitempty"`
+	NextPageToken *api5.Token           `json:"nextPageToken,omitempty"`
 	Query         SearchSavedViewsQuery `json:"query"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search.
-	ArchivedStatuses *[]api2.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api5.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search." json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchSavedViewsRequest) MarshalYAML() (interface{}, error) {
@@ -461,13 +524,13 @@ func (o *SearchSavedViewsRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 type SearchSavedViewsResponse struct {
-	SavedViews    []SavedView `json:"savedViews"`
-	NextPageToken *api2.Token `json:"nextPageToken,omitempty"`
+	SavedViews    []SavedViewMetadata `json:"savedViews"`
+	NextPageToken *api5.Token         `json:"nextPageToken,omitempty"`
 }
 
 func (o SearchSavedViewsResponse) MarshalJSON() ([]byte, error) {
 	if o.SavedViews == nil {
-		o.SavedViews = make([]SavedView, 0)
+		o.SavedViews = make([]SavedViewMetadata, 0)
 	}
 	type _tmpSearchSavedViewsResponse SearchSavedViewsResponse
 	return safejson.Marshal(_tmpSearchSavedViewsResponse(o))
@@ -480,7 +543,7 @@ func (o *SearchSavedViewsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawSearchSavedViewsResponse.SavedViews == nil {
-		rawSearchSavedViewsResponse.SavedViews = make([]SavedView, 0)
+		rawSearchSavedViewsResponse.SavedViews = make([]SavedViewMetadata, 0)
 	}
 	*o = SearchSavedViewsResponse(rawSearchSavedViewsResponse)
 	return nil
@@ -507,6 +570,7 @@ type TableState struct {
 	ColumnSizing     *map[ColumnId]int   `json:"columnSizing,omitempty"`
 	ColumnOrder      *[]ColumnId         `json:"columnOrder,omitempty"`
 	ColumnPinning    *ColumnPinningState `json:"columnPinning,omitempty"`
+	MetricColumns    *MetricColumns      `json:"metricColumns,omitempty"`
 }
 
 func (o TableState) MarshalYAML() (interface{}, error) {
@@ -526,7 +590,8 @@ func (o *TableState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type TemplateSearchState struct {
-	Sort  api6.SortBy               `json:"sort"`
+	// Sort for templates view. Uses BE-supplied default if empty.
+	Sort  *api6.SortBy              `conjure-docs:"Sort for templates view. Uses BE-supplied default if empty." json:"sort,omitempty"`
 	Query api6.SearchTemplatesQuery `json:"query"`
 }
 
@@ -546,53 +611,13 @@ func (o *TemplateSearchState) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type UnarchiveSavedViewsRequest struct {
-	SavedViewRids []api.SavedViewRid `json:"savedViewRids"`
-}
-
-func (o UnarchiveSavedViewsRequest) MarshalJSON() ([]byte, error) {
-	if o.SavedViewRids == nil {
-		o.SavedViewRids = make([]api.SavedViewRid, 0)
-	}
-	type _tmpUnarchiveSavedViewsRequest UnarchiveSavedViewsRequest
-	return safejson.Marshal(_tmpUnarchiveSavedViewsRequest(o))
-}
-
-func (o *UnarchiveSavedViewsRequest) UnmarshalJSON(data []byte) error {
-	type _tmpUnarchiveSavedViewsRequest UnarchiveSavedViewsRequest
-	var rawUnarchiveSavedViewsRequest _tmpUnarchiveSavedViewsRequest
-	if err := safejson.Unmarshal(data, &rawUnarchiveSavedViewsRequest); err != nil {
-		return err
-	}
-	if rawUnarchiveSavedViewsRequest.SavedViewRids == nil {
-		rawUnarchiveSavedViewsRequest.SavedViewRids = make([]api.SavedViewRid, 0)
-	}
-	*o = UnarchiveSavedViewsRequest(rawUnarchiveSavedViewsRequest)
-	return nil
-}
-
-func (o UnarchiveSavedViewsRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *UnarchiveSavedViewsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type UpdateSavedViewRequest struct {
 	Title        *string       `json:"title,omitempty"`
 	Symbol       *UpdateSymbol `json:"symbol,omitempty"`
 	Color        *UpdateColor  `json:"color,omitempty"`
 	SearchState  *SearchState  `json:"searchState,omitempty"`
 	DisplayState *DisplayState `json:"displayState,omitempty"`
+	Index        *int          `json:"index,omitempty"`
 }
 
 func (o UpdateSavedViewRequest) MarshalYAML() (interface{}, error) {
@@ -632,7 +657,7 @@ func (o *UpdateSavedViewResponse) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 type WorkbookSearchState struct {
-	Sort  api7.SortBy               `json:"sort"`
+	Sort  *api7.SortBy              `json:"sort,omitempty"`
 	Query api7.SearchNotebooksQuery `json:"query"`
 }
 

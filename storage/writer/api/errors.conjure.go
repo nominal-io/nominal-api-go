@@ -617,6 +617,156 @@ func (e *InvalidDataSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type invalidStruct struct {
+	StructString string `json:"structString"`
+}
+
+func (o invalidStruct) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidStruct) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidStruct returns new instance of InvalidStruct error.
+func NewInvalidStruct(structStringArg string) *InvalidStruct {
+	return &InvalidStruct{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidStruct: invalidStruct{StructString: structStringArg}}
+}
+
+// WrapWithInvalidStruct returns new instance of InvalidStruct error wrapping an existing error.
+func WrapWithInvalidStruct(err error, structStringArg string) *InvalidStruct {
+	return &InvalidStruct{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidStruct: invalidStruct{StructString: structStringArg}}
+}
+
+// InvalidStruct is an error type.
+// Ingested Struct is not a valid JSON struct
+type InvalidStruct struct {
+	errorInstanceID uuid.UUID
+	invalidStruct
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidStruct returns true if err is an instance of InvalidStruct.
+func IsInvalidStruct(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidStruct)
+	return ok
+}
+
+func (e *InvalidStruct) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT NominalChannelWriter:InvalidStruct (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidStruct) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidStruct) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidStruct) Message() string {
+	return "INVALID_ARGUMENT NominalChannelWriter:InvalidStruct"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidStruct) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidStruct) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidStruct) Name() string {
+	return "NominalChannelWriter:InvalidStruct"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidStruct) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidStruct) Parameters() map[string]interface{} {
+	return map[string]interface{}{"structString": e.StructString}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidStruct) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidStruct) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidStruct) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"structString": e.StructString}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidStruct) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidStruct) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidStruct)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "NominalChannelWriter:InvalidStruct", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidStruct) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidStruct
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidStruct = parameters
+	return nil
+}
+
 type invalidTelegrafTimestamp struct {
 	Timestamp interface{} `json:"timestamp"`
 }
@@ -1066,6 +1216,154 @@ func (e *MismatchedTimestampsAndValues) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type pointsTooLarge struct{}
+
+func (o pointsTooLarge) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *pointsTooLarge) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewPointsTooLarge returns new instance of PointsTooLarge error.
+func NewPointsTooLarge() *PointsTooLarge {
+	return &PointsTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), pointsTooLarge: pointsTooLarge{}}
+}
+
+// WrapWithPointsTooLarge returns new instance of PointsTooLarge error wrapping an existing error.
+func WrapWithPointsTooLarge(err error) *PointsTooLarge {
+	return &PointsTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, pointsTooLarge: pointsTooLarge{}}
+}
+
+// PointsTooLarge is an error type.
+// The size of the points being written exceeds the maximum allowed size.
+type PointsTooLarge struct {
+	errorInstanceID uuid.UUID
+	pointsTooLarge
+	cause error
+	stack werror.StackTrace
+}
+
+// IsPointsTooLarge returns true if err is an instance of PointsTooLarge.
+func IsPointsTooLarge(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*PointsTooLarge)
+	return ok
+}
+
+func (e *PointsTooLarge) Error() string {
+	return fmt.Sprintf("REQUEST_ENTITY_TOO_LARGE NominalChannelWriter:PointsTooLarge (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *PointsTooLarge) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *PointsTooLarge) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *PointsTooLarge) Message() string {
+	return "REQUEST_ENTITY_TOO_LARGE NominalChannelWriter:PointsTooLarge"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *PointsTooLarge) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *PointsTooLarge) Code() errors.ErrorCode {
+	return errors.RequestEntityTooLarge
+}
+
+// Name returns an error name identifying error type.
+func (e *PointsTooLarge) Name() string {
+	return "NominalChannelWriter:PointsTooLarge"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *PointsTooLarge) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *PointsTooLarge) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *PointsTooLarge) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *PointsTooLarge) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *PointsTooLarge) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *PointsTooLarge) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e PointsTooLarge) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.pointsTooLarge)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.RequestEntityTooLarge, ErrorName: "NominalChannelWriter:PointsTooLarge", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *PointsTooLarge) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters pointsTooLarge
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.pointsTooLarge = parameters
+	return nil
+}
+
 type streamingDisabledOnDataset struct {
 	DatasetRid rids.DatasetRid `json:"datasetRid"`
 }
@@ -1221,8 +1519,10 @@ func init() {
 	conjureerrors.RegisterErrorType("NominalChannelWriter:ConflictingDataTypes", reflect.TypeOf(ConflictingDataTypes{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:InvalidChannelName", reflect.TypeOf(InvalidChannelName{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:InvalidDataSource", reflect.TypeOf(InvalidDataSource{}))
+	conjureerrors.RegisterErrorType("NominalChannelWriter:InvalidStruct", reflect.TypeOf(InvalidStruct{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:InvalidTelegrafTimestamp", reflect.TypeOf(InvalidTelegrafTimestamp{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:InvalidTimestamp", reflect.TypeOf(InvalidTimestamp{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:MismatchedTimestampsAndValues", reflect.TypeOf(MismatchedTimestampsAndValues{}))
+	conjureerrors.RegisterErrorType("NominalChannelWriter:PointsTooLarge", reflect.TypeOf(PointsTooLarge{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:StreamingDisabledOnDataset", reflect.TypeOf(StreamingDisabledOnDataset{}))
 }

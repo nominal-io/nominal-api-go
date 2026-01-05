@@ -16,7 +16,7 @@ import (
 type InternalNominalStorageDataDeletionServiceClient interface {
 	/*
 	   Deletes stored data. This is an irreversible operation so be careful about specified
-	   time range and tag scope.
+	   time range, channel names, and tag scope.
 	*/
 	Delete(ctx context.Context, authHeader bearertoken.Token, requestArg DeleteDataRequest) error
 }
@@ -47,7 +47,7 @@ func (c *internalNominalStorageDataDeletionServiceClient) Delete(ctx context.Con
 type InternalNominalStorageDataDeletionServiceClientWithAuth interface {
 	/*
 	   Deletes stored data. This is an irreversible operation so be careful about specified
-	   time range and tag scope.
+	   time range, channel names, and tag scope.
 	*/
 	Delete(ctx context.Context, requestArg DeleteDataRequest) error
 }

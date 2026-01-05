@@ -185,23 +185,23 @@ func NewChannelOrPrefixFromPrefix(v DataSourcePrefixNode) ChannelOrPrefix {
 	return ChannelOrPrefix{typ: "prefix", prefix: &v}
 }
 
-type SeriesArchetypeRidOrLogicalSeriesRid struct {
+type SeriesMetadataRidOrLogicalSeriesRid struct {
 	typ             string
-	seriesArchetype *api.SeriesArchetypeRid
+	seriesArchetype *api.SeriesMetadataRid
 	logicalSeries   *api.LogicalSeriesRid
 }
 
-type seriesArchetypeRidOrLogicalSeriesRidDeserializer struct {
-	Type            string                  `json:"type"`
-	SeriesArchetype *api.SeriesArchetypeRid `json:"seriesArchetype"`
-	LogicalSeries   *api.LogicalSeriesRid   `json:"logicalSeries"`
+type seriesMetadataRidOrLogicalSeriesRidDeserializer struct {
+	Type            string                 `json:"type"`
+	SeriesArchetype *api.SeriesMetadataRid `json:"seriesArchetype"`
+	LogicalSeries   *api.LogicalSeriesRid  `json:"logicalSeries"`
 }
 
-func (u *seriesArchetypeRidOrLogicalSeriesRidDeserializer) toStruct() SeriesArchetypeRidOrLogicalSeriesRid {
-	return SeriesArchetypeRidOrLogicalSeriesRid{typ: u.Type, seriesArchetype: u.SeriesArchetype, logicalSeries: u.LogicalSeries}
+func (u *seriesMetadataRidOrLogicalSeriesRidDeserializer) toStruct() SeriesMetadataRidOrLogicalSeriesRid {
+	return SeriesMetadataRidOrLogicalSeriesRid{typ: u.Type, seriesArchetype: u.SeriesArchetype, logicalSeries: u.LogicalSeries}
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRid) toSerializer() (interface{}, error) {
+func (u *SeriesMetadataRidOrLogicalSeriesRid) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
@@ -210,8 +210,8 @@ func (u *SeriesArchetypeRidOrLogicalSeriesRid) toSerializer() (interface{}, erro
 			return nil, fmt.Errorf("field \"seriesArchetype\" is required")
 		}
 		return struct {
-			Type            string                 `json:"type"`
-			SeriesArchetype api.SeriesArchetypeRid `json:"seriesArchetype"`
+			Type            string                `json:"type"`
+			SeriesArchetype api.SeriesMetadataRid `json:"seriesArchetype"`
 		}{Type: "seriesArchetype", SeriesArchetype: *u.seriesArchetype}, nil
 	case "logicalSeries":
 		if u.logicalSeries == nil {
@@ -224,7 +224,7 @@ func (u *SeriesArchetypeRidOrLogicalSeriesRid) toSerializer() (interface{}, erro
 	}
 }
 
-func (u SeriesArchetypeRidOrLogicalSeriesRid) MarshalJSON() ([]byte, error) {
+func (u SeriesMetadataRidOrLogicalSeriesRid) MarshalJSON() ([]byte, error) {
 	ser, err := u.toSerializer()
 	if err != nil {
 		return nil, err
@@ -232,8 +232,8 @@ func (u SeriesArchetypeRidOrLogicalSeriesRid) MarshalJSON() ([]byte, error) {
 	return safejson.Marshal(ser)
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRid) UnmarshalJSON(data []byte) error {
-	var deser seriesArchetypeRidOrLogicalSeriesRidDeserializer
+func (u *SeriesMetadataRidOrLogicalSeriesRid) UnmarshalJSON(data []byte) error {
+	var deser seriesMetadataRidOrLogicalSeriesRidDeserializer
 	if err := safejson.Unmarshal(data, &deser); err != nil {
 		return err
 	}
@@ -251,7 +251,7 @@ func (u *SeriesArchetypeRidOrLogicalSeriesRid) UnmarshalJSON(data []byte) error 
 	return nil
 }
 
-func (u SeriesArchetypeRidOrLogicalSeriesRid) MarshalYAML() (interface{}, error) {
+func (u SeriesMetadataRidOrLogicalSeriesRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(u)
 	if err != nil {
 		return nil, err
@@ -259,7 +259,7 @@ func (u SeriesArchetypeRidOrLogicalSeriesRid) MarshalYAML() (interface{}, error)
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (u *SeriesMetadataRidOrLogicalSeriesRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -267,7 +267,7 @@ func (u *SeriesArchetypeRidOrLogicalSeriesRid) UnmarshalYAML(unmarshal func(inte
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRid) AcceptFuncs(seriesArchetypeFunc func(api.SeriesArchetypeRid) error, logicalSeriesFunc func(api.LogicalSeriesRid) error, unknownFunc func(string) error) error {
+func (u *SeriesMetadataRidOrLogicalSeriesRid) AcceptFuncs(seriesArchetypeFunc func(api.SeriesMetadataRid) error, logicalSeriesFunc func(api.LogicalSeriesRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -287,19 +287,19 @@ func (u *SeriesArchetypeRidOrLogicalSeriesRid) AcceptFuncs(seriesArchetypeFunc f
 	}
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRid) SeriesArchetypeNoopSuccess(api.SeriesArchetypeRid) error {
+func (u *SeriesMetadataRidOrLogicalSeriesRid) SeriesArchetypeNoopSuccess(api.SeriesMetadataRid) error {
 	return nil
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRid) LogicalSeriesNoopSuccess(api.LogicalSeriesRid) error {
+func (u *SeriesMetadataRidOrLogicalSeriesRid) LogicalSeriesNoopSuccess(api.LogicalSeriesRid) error {
 	return nil
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRid) ErrorOnUnknown(typeName string) error {
+func (u *SeriesMetadataRidOrLogicalSeriesRid) ErrorOnUnknown(typeName string) error {
 	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRid) Accept(v SeriesArchetypeRidOrLogicalSeriesRidVisitor) error {
+func (u *SeriesMetadataRidOrLogicalSeriesRid) Accept(v SeriesMetadataRidOrLogicalSeriesRidVisitor) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -319,13 +319,13 @@ func (u *SeriesArchetypeRidOrLogicalSeriesRid) Accept(v SeriesArchetypeRidOrLogi
 	}
 }
 
-type SeriesArchetypeRidOrLogicalSeriesRidVisitor interface {
-	VisitSeriesArchetype(v api.SeriesArchetypeRid) error
+type SeriesMetadataRidOrLogicalSeriesRidVisitor interface {
+	VisitSeriesArchetype(v api.SeriesMetadataRid) error
 	VisitLogicalSeries(v api.LogicalSeriesRid) error
 	VisitUnknown(typeName string) error
 }
 
-func (u *SeriesArchetypeRidOrLogicalSeriesRid) AcceptWithContext(ctx context.Context, v SeriesArchetypeRidOrLogicalSeriesRidVisitorWithContext) error {
+func (u *SeriesMetadataRidOrLogicalSeriesRid) AcceptWithContext(ctx context.Context, v SeriesMetadataRidOrLogicalSeriesRidVisitorWithContext) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -345,16 +345,16 @@ func (u *SeriesArchetypeRidOrLogicalSeriesRid) AcceptWithContext(ctx context.Con
 	}
 }
 
-type SeriesArchetypeRidOrLogicalSeriesRidVisitorWithContext interface {
-	VisitSeriesArchetypeWithContext(ctx context.Context, v api.SeriesArchetypeRid) error
+type SeriesMetadataRidOrLogicalSeriesRidVisitorWithContext interface {
+	VisitSeriesArchetypeWithContext(ctx context.Context, v api.SeriesMetadataRid) error
 	VisitLogicalSeriesWithContext(ctx context.Context, v api.LogicalSeriesRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewSeriesArchetypeRidOrLogicalSeriesRidFromSeriesArchetype(v api.SeriesArchetypeRid) SeriesArchetypeRidOrLogicalSeriesRid {
-	return SeriesArchetypeRidOrLogicalSeriesRid{typ: "seriesArchetype", seriesArchetype: &v}
+func NewSeriesMetadataRidOrLogicalSeriesRidFromSeriesArchetype(v api.SeriesMetadataRid) SeriesMetadataRidOrLogicalSeriesRid {
+	return SeriesMetadataRidOrLogicalSeriesRid{typ: "seriesArchetype", seriesArchetype: &v}
 }
 
-func NewSeriesArchetypeRidOrLogicalSeriesRidFromLogicalSeries(v api.LogicalSeriesRid) SeriesArchetypeRidOrLogicalSeriesRid {
-	return SeriesArchetypeRidOrLogicalSeriesRid{typ: "logicalSeries", logicalSeries: &v}
+func NewSeriesMetadataRidOrLogicalSeriesRidFromLogicalSeries(v api.LogicalSeriesRid) SeriesMetadataRidOrLogicalSeriesRid {
+	return SeriesMetadataRidOrLogicalSeriesRid{typ: "logicalSeries", logicalSeries: &v}
 }

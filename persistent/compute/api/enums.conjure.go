@@ -13,23 +13,25 @@ type InvalidComputationType struct {
 type InvalidComputationType_Value string
 
 const (
-	InvalidComputationType_POINT_PERSISTENCE           InvalidComputationType_Value = "POINT_PERSISTENCE"
-	InvalidComputationType_CUMULATIVE_SUM              InvalidComputationType_Value = "CUMULATIVE_SUM"
-	InvalidComputationType_INTEGRAL                    InvalidComputationType_Value = "INTEGRAL"
-	InvalidComputationType_STALENESS_DETECTION         InvalidComputationType_Value = "STALENESS_DETECTION"
-	InvalidComputationType_TIME_RANGE_FILTER           InvalidComputationType_Value = "TIME_RANGE_FILTER"
-	InvalidComputationType_FREQUENCY_DOMAIN            InvalidComputationType_Value = "FREQUENCY_DOMAIN"
-	InvalidComputationType_CURVE_FITTING               InvalidComputationType_Value = "CURVE_FITTING"
-	InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY InvalidComputationType_Value = "PAGE_SUMMARIZATION_STRATEGY"
-	InvalidComputationType_LOG_SERIES                  InvalidComputationType_Value = "LOG_SERIES"
-	InvalidComputationType_LITERAL_RANGES              InvalidComputationType_Value = "LITERAL_RANGES"
-	InvalidComputationType_ARRAY                       InvalidComputationType_Value = "ARRAY"
-	InvalidComputationType_UNKNOWN                     InvalidComputationType_Value = "UNKNOWN"
+	InvalidComputationType_POINT_PERSISTENCE               InvalidComputationType_Value = "POINT_PERSISTENCE"
+	InvalidComputationType_CUMULATIVE_SUM                  InvalidComputationType_Value = "CUMULATIVE_SUM"
+	InvalidComputationType_INTEGRAL                        InvalidComputationType_Value = "INTEGRAL"
+	InvalidComputationType_STALENESS_DETECTION             InvalidComputationType_Value = "STALENESS_DETECTION"
+	InvalidComputationType_TIME_RANGE_FILTER               InvalidComputationType_Value = "TIME_RANGE_FILTER"
+	InvalidComputationType_FREQUENCY_DOMAIN                InvalidComputationType_Value = "FREQUENCY_DOMAIN"
+	InvalidComputationType_CURVE_FITTING                   InvalidComputationType_Value = "CURVE_FITTING"
+	InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY     InvalidComputationType_Value = "PAGE_SUMMARIZATION_STRATEGY"
+	InvalidComputationType_TRUNCATE_SUMMARIZATION_STRATEGY InvalidComputationType_Value = "TRUNCATE_SUMMARIZATION_STRATEGY"
+	InvalidComputationType_LOG_SERIES                      InvalidComputationType_Value = "LOG_SERIES"
+	InvalidComputationType_LITERAL_RANGES                  InvalidComputationType_Value = "LITERAL_RANGES"
+	InvalidComputationType_ARRAY                           InvalidComputationType_Value = "ARRAY"
+	InvalidComputationType_STRUCT                          InvalidComputationType_Value = "STRUCT"
+	InvalidComputationType_UNKNOWN                         InvalidComputationType_Value = "UNKNOWN"
 )
 
 // InvalidComputationType_Values returns all known variants of InvalidComputationType.
 func InvalidComputationType_Values() []InvalidComputationType_Value {
-	return []InvalidComputationType_Value{InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_TIME_RANGE_FILTER, InvalidComputationType_FREQUENCY_DOMAIN, InvalidComputationType_CURVE_FITTING, InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY, InvalidComputationType_LOG_SERIES, InvalidComputationType_LITERAL_RANGES, InvalidComputationType_ARRAY}
+	return []InvalidComputationType_Value{InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_TIME_RANGE_FILTER, InvalidComputationType_FREQUENCY_DOMAIN, InvalidComputationType_CURVE_FITTING, InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY, InvalidComputationType_TRUNCATE_SUMMARIZATION_STRATEGY, InvalidComputationType_LOG_SERIES, InvalidComputationType_LITERAL_RANGES, InvalidComputationType_ARRAY, InvalidComputationType_STRUCT}
 }
 
 func New_InvalidComputationType(value InvalidComputationType_Value) InvalidComputationType {
@@ -39,7 +41,7 @@ func New_InvalidComputationType(value InvalidComputationType_Value) InvalidCompu
 // IsUnknown returns false for all known variants of InvalidComputationType and true otherwise.
 func (e InvalidComputationType) IsUnknown() bool {
 	switch e.val {
-	case InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_TIME_RANGE_FILTER, InvalidComputationType_FREQUENCY_DOMAIN, InvalidComputationType_CURVE_FITTING, InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY, InvalidComputationType_LOG_SERIES, InvalidComputationType_LITERAL_RANGES, InvalidComputationType_ARRAY:
+	case InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_TIME_RANGE_FILTER, InvalidComputationType_FREQUENCY_DOMAIN, InvalidComputationType_CURVE_FITTING, InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY, InvalidComputationType_TRUNCATE_SUMMARIZATION_STRATEGY, InvalidComputationType_LOG_SERIES, InvalidComputationType_LITERAL_RANGES, InvalidComputationType_ARRAY, InvalidComputationType_STRUCT:
 		return false
 	}
 	return true
@@ -80,12 +82,73 @@ func (e *InvalidComputationType) UnmarshalText(data []byte) error {
 		*e = New_InvalidComputationType(InvalidComputationType_CURVE_FITTING)
 	case "PAGE_SUMMARIZATION_STRATEGY":
 		*e = New_InvalidComputationType(InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY)
+	case "TRUNCATE_SUMMARIZATION_STRATEGY":
+		*e = New_InvalidComputationType(InvalidComputationType_TRUNCATE_SUMMARIZATION_STRATEGY)
 	case "LOG_SERIES":
 		*e = New_InvalidComputationType(InvalidComputationType_LOG_SERIES)
 	case "LITERAL_RANGES":
 		*e = New_InvalidComputationType(InvalidComputationType_LITERAL_RANGES)
 	case "ARRAY":
 		*e = New_InvalidComputationType(InvalidComputationType_ARRAY)
+	case "STRUCT":
+		*e = New_InvalidComputationType(InvalidComputationType_STRUCT)
+	}
+	return nil
+}
+
+type UnavailableResultConfigurationReason struct {
+	val UnavailableResultConfigurationReason_Value
+}
+
+type UnavailableResultConfigurationReason_Value string
+
+const (
+	UnavailableResultConfigurationReason_APPENDS_NOT_SUPPORTED_FOR_COMPUTE       UnavailableResultConfigurationReason_Value = "APPENDS_NOT_SUPPORTED_FOR_COMPUTE"
+	UnavailableResultConfigurationReason_TOO_MANY_POINTS_FOR_UNDECIMATED_APPENDS UnavailableResultConfigurationReason_Value = "TOO_MANY_POINTS_FOR_UNDECIMATED_APPENDS"
+	UnavailableResultConfigurationReason_UNKNOWN                                 UnavailableResultConfigurationReason_Value = "UNKNOWN"
+)
+
+// UnavailableResultConfigurationReason_Values returns all known variants of UnavailableResultConfigurationReason.
+func UnavailableResultConfigurationReason_Values() []UnavailableResultConfigurationReason_Value {
+	return []UnavailableResultConfigurationReason_Value{UnavailableResultConfigurationReason_APPENDS_NOT_SUPPORTED_FOR_COMPUTE, UnavailableResultConfigurationReason_TOO_MANY_POINTS_FOR_UNDECIMATED_APPENDS}
+}
+
+func New_UnavailableResultConfigurationReason(value UnavailableResultConfigurationReason_Value) UnavailableResultConfigurationReason {
+	return UnavailableResultConfigurationReason{val: value}
+}
+
+// IsUnknown returns false for all known variants of UnavailableResultConfigurationReason and true otherwise.
+func (e UnavailableResultConfigurationReason) IsUnknown() bool {
+	switch e.val {
+	case UnavailableResultConfigurationReason_APPENDS_NOT_SUPPORTED_FOR_COMPUTE, UnavailableResultConfigurationReason_TOO_MANY_POINTS_FOR_UNDECIMATED_APPENDS:
+		return false
+	}
+	return true
+}
+
+func (e UnavailableResultConfigurationReason) Value() UnavailableResultConfigurationReason_Value {
+	if e.IsUnknown() {
+		return UnavailableResultConfigurationReason_UNKNOWN
+	}
+	return e.val
+}
+
+func (e UnavailableResultConfigurationReason) String() string {
+	return string(e.val)
+}
+
+func (e UnavailableResultConfigurationReason) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *UnavailableResultConfigurationReason) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_UnavailableResultConfigurationReason(UnavailableResultConfigurationReason_Value(v))
+	case "APPENDS_NOT_SUPPORTED_FOR_COMPUTE":
+		*e = New_UnavailableResultConfigurationReason(UnavailableResultConfigurationReason_APPENDS_NOT_SUPPORTED_FOR_COMPUTE)
+	case "TOO_MANY_POINTS_FOR_UNDECIMATED_APPENDS":
+		*e = New_UnavailableResultConfigurationReason(UnavailableResultConfigurationReason_TOO_MANY_POINTS_FOR_UNDECIMATED_APPENDS)
 	}
 	return nil
 }

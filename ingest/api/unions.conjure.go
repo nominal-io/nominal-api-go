@@ -1408,45 +1408,23 @@ func NewIngestDetailsFromVideo(v IngestVideoFileDetails) IngestDetails {
 }
 
 type IngestJobRequest struct {
-	typ               string
-	ingestMcap        *IngestMcapRequest
-	triggerFileIngest *TriggerFileIngest
-	ingestRequest     *IngestRequest
-	triggerIngest     *TriggerIngest
+	typ           string
+	ingestRequest *IngestRequest
 }
 
 type ingestJobRequestDeserializer struct {
-	Type              string             `json:"type"`
-	IngestMcap        *IngestMcapRequest `json:"ingestMcap"`
-	TriggerFileIngest *TriggerFileIngest `json:"triggerFileIngest"`
-	IngestRequest     *IngestRequest     `json:"ingestRequest"`
-	TriggerIngest     *TriggerIngest     `json:"triggerIngest"`
+	Type          string         `json:"type"`
+	IngestRequest *IngestRequest `json:"ingestRequest"`
 }
 
 func (u *ingestJobRequestDeserializer) toStruct() IngestJobRequest {
-	return IngestJobRequest{typ: u.Type, ingestMcap: u.IngestMcap, triggerFileIngest: u.TriggerFileIngest, ingestRequest: u.IngestRequest, triggerIngest: u.TriggerIngest}
+	return IngestJobRequest{typ: u.Type, ingestRequest: u.IngestRequest}
 }
 
 func (u *IngestJobRequest) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "ingestMcap":
-		if u.ingestMcap == nil {
-			return nil, fmt.Errorf("field \"ingestMcap\" is required")
-		}
-		return struct {
-			Type       string            `json:"type"`
-			IngestMcap IngestMcapRequest `json:"ingestMcap"`
-		}{Type: "ingestMcap", IngestMcap: *u.ingestMcap}, nil
-	case "triggerFileIngest":
-		if u.triggerFileIngest == nil {
-			return nil, fmt.Errorf("field \"triggerFileIngest\" is required")
-		}
-		return struct {
-			Type              string            `json:"type"`
-			TriggerFileIngest TriggerFileIngest `json:"triggerFileIngest"`
-		}{Type: "triggerFileIngest", TriggerFileIngest: *u.triggerFileIngest}, nil
 	case "ingestRequest":
 		if u.ingestRequest == nil {
 			return nil, fmt.Errorf("field \"ingestRequest\" is required")
@@ -1455,14 +1433,6 @@ func (u *IngestJobRequest) toSerializer() (interface{}, error) {
 			Type          string        `json:"type"`
 			IngestRequest IngestRequest `json:"ingestRequest"`
 		}{Type: "ingestRequest", IngestRequest: *u.ingestRequest}, nil
-	case "triggerIngest":
-		if u.triggerIngest == nil {
-			return nil, fmt.Errorf("field \"triggerIngest\" is required")
-		}
-		return struct {
-			Type          string        `json:"type"`
-			TriggerIngest TriggerIngest `json:"triggerIngest"`
-		}{Type: "triggerIngest", TriggerIngest: *u.triggerIngest}, nil
 	}
 }
 
@@ -1481,21 +1451,9 @@ func (u *IngestJobRequest) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "ingestMcap":
-		if u.ingestMcap == nil {
-			return fmt.Errorf("field \"ingestMcap\" is required")
-		}
-	case "triggerFileIngest":
-		if u.triggerFileIngest == nil {
-			return fmt.Errorf("field \"triggerFileIngest\" is required")
-		}
 	case "ingestRequest":
 		if u.ingestRequest == nil {
 			return fmt.Errorf("field \"ingestRequest\" is required")
-		}
-	case "triggerIngest":
-		if u.triggerIngest == nil {
-			return fmt.Errorf("field \"triggerIngest\" is required")
 		}
 	}
 	return nil
@@ -1517,49 +1475,22 @@ func (u *IngestJobRequest) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *IngestJobRequest) AcceptFuncs(ingestMcapFunc func(IngestMcapRequest) error, triggerFileIngestFunc func(TriggerFileIngest) error, ingestRequestFunc func(IngestRequest) error, triggerIngestFunc func(TriggerIngest) error, unknownFunc func(string) error) error {
+func (u *IngestJobRequest) AcceptFuncs(ingestRequestFunc func(IngestRequest) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "ingestMcap":
-		if u.ingestMcap == nil {
-			return fmt.Errorf("field \"ingestMcap\" is required")
-		}
-		return ingestMcapFunc(*u.ingestMcap)
-	case "triggerFileIngest":
-		if u.triggerFileIngest == nil {
-			return fmt.Errorf("field \"triggerFileIngest\" is required")
-		}
-		return triggerFileIngestFunc(*u.triggerFileIngest)
 	case "ingestRequest":
 		if u.ingestRequest == nil {
 			return fmt.Errorf("field \"ingestRequest\" is required")
 		}
 		return ingestRequestFunc(*u.ingestRequest)
-	case "triggerIngest":
-		if u.triggerIngest == nil {
-			return fmt.Errorf("field \"triggerIngest\" is required")
-		}
-		return triggerIngestFunc(*u.triggerIngest)
 	}
 }
 
-func (u *IngestJobRequest) IngestMcapNoopSuccess(IngestMcapRequest) error {
-	return nil
-}
-
-func (u *IngestJobRequest) TriggerFileIngestNoopSuccess(TriggerFileIngest) error {
-	return nil
-}
-
 func (u *IngestJobRequest) IngestRequestNoopSuccess(IngestRequest) error {
-	return nil
-}
-
-func (u *IngestJobRequest) TriggerIngestNoopSuccess(TriggerIngest) error {
 	return nil
 }
 
@@ -1574,34 +1505,16 @@ func (u *IngestJobRequest) Accept(v IngestJobRequestVisitor) error {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "ingestMcap":
-		if u.ingestMcap == nil {
-			return fmt.Errorf("field \"ingestMcap\" is required")
-		}
-		return v.VisitIngestMcap(*u.ingestMcap)
-	case "triggerFileIngest":
-		if u.triggerFileIngest == nil {
-			return fmt.Errorf("field \"triggerFileIngest\" is required")
-		}
-		return v.VisitTriggerFileIngest(*u.triggerFileIngest)
 	case "ingestRequest":
 		if u.ingestRequest == nil {
 			return fmt.Errorf("field \"ingestRequest\" is required")
 		}
 		return v.VisitIngestRequest(*u.ingestRequest)
-	case "triggerIngest":
-		if u.triggerIngest == nil {
-			return fmt.Errorf("field \"triggerIngest\" is required")
-		}
-		return v.VisitTriggerIngest(*u.triggerIngest)
 	}
 }
 
 type IngestJobRequestVisitor interface {
-	VisitIngestMcap(v IngestMcapRequest) error
-	VisitTriggerFileIngest(v TriggerFileIngest) error
 	VisitIngestRequest(v IngestRequest) error
-	VisitTriggerIngest(v TriggerIngest) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1612,51 +1525,21 @@ func (u *IngestJobRequest) AcceptWithContext(ctx context.Context, v IngestJobReq
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "ingestMcap":
-		if u.ingestMcap == nil {
-			return fmt.Errorf("field \"ingestMcap\" is required")
-		}
-		return v.VisitIngestMcapWithContext(ctx, *u.ingestMcap)
-	case "triggerFileIngest":
-		if u.triggerFileIngest == nil {
-			return fmt.Errorf("field \"triggerFileIngest\" is required")
-		}
-		return v.VisitTriggerFileIngestWithContext(ctx, *u.triggerFileIngest)
 	case "ingestRequest":
 		if u.ingestRequest == nil {
 			return fmt.Errorf("field \"ingestRequest\" is required")
 		}
 		return v.VisitIngestRequestWithContext(ctx, *u.ingestRequest)
-	case "triggerIngest":
-		if u.triggerIngest == nil {
-			return fmt.Errorf("field \"triggerIngest\" is required")
-		}
-		return v.VisitTriggerIngestWithContext(ctx, *u.triggerIngest)
 	}
 }
 
 type IngestJobRequestVisitorWithContext interface {
-	VisitIngestMcapWithContext(ctx context.Context, v IngestMcapRequest) error
-	VisitTriggerFileIngestWithContext(ctx context.Context, v TriggerFileIngest) error
 	VisitIngestRequestWithContext(ctx context.Context, v IngestRequest) error
-	VisitTriggerIngestWithContext(ctx context.Context, v TriggerIngest) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewIngestJobRequestFromIngestMcap(v IngestMcapRequest) IngestJobRequest {
-	return IngestJobRequest{typ: "ingestMcap", ingestMcap: &v}
-}
-
-func NewIngestJobRequestFromTriggerFileIngest(v TriggerFileIngest) IngestJobRequest {
-	return IngestJobRequest{typ: "triggerFileIngest", triggerFileIngest: &v}
 }
 
 func NewIngestJobRequestFromIngestRequest(v IngestRequest) IngestJobRequest {
 	return IngestJobRequest{typ: "ingestRequest", ingestRequest: &v}
-}
-
-func NewIngestJobRequestFromTriggerIngest(v TriggerIngest) IngestJobRequest {
-	return IngestJobRequest{typ: "triggerIngest", triggerIngest: &v}
 }
 
 type IngestOptions struct {
@@ -2068,19 +1951,21 @@ func NewIngestOptionsFromAvroStream(v AvroStreamOpts) IngestOptions {
 }
 
 type IngestSource struct {
-	typ string
-	s3  *S3IngestSource
-	gcs *GcsIngestSource
+	typ           string
+	s3            *S3IngestSource
+	gcs           *GcsIngestSource
+	presignedFile *PresignedFileIngestSource
 }
 
 type ingestSourceDeserializer struct {
-	Type string           `json:"type"`
-	S3   *S3IngestSource  `json:"s3"`
-	Gcs  *GcsIngestSource `json:"gcs"`
+	Type          string                     `json:"type"`
+	S3            *S3IngestSource            `json:"s3"`
+	Gcs           *GcsIngestSource           `json:"gcs"`
+	PresignedFile *PresignedFileIngestSource `json:"presignedFile"`
 }
 
 func (u *ingestSourceDeserializer) toStruct() IngestSource {
-	return IngestSource{typ: u.Type, s3: u.S3, gcs: u.Gcs}
+	return IngestSource{typ: u.Type, s3: u.S3, gcs: u.Gcs, presignedFile: u.PresignedFile}
 }
 
 func (u *IngestSource) toSerializer() (interface{}, error) {
@@ -2103,6 +1988,14 @@ func (u *IngestSource) toSerializer() (interface{}, error) {
 			Type string          `json:"type"`
 			Gcs  GcsIngestSource `json:"gcs"`
 		}{Type: "gcs", Gcs: *u.gcs}, nil
+	case "presignedFile":
+		if u.presignedFile == nil {
+			return nil, fmt.Errorf("field \"presignedFile\" is required")
+		}
+		return struct {
+			Type          string                    `json:"type"`
+			PresignedFile PresignedFileIngestSource `json:"presignedFile"`
+		}{Type: "presignedFile", PresignedFile: *u.presignedFile}, nil
 	}
 }
 
@@ -2129,6 +2022,10 @@ func (u *IngestSource) UnmarshalJSON(data []byte) error {
 		if u.gcs == nil {
 			return fmt.Errorf("field \"gcs\" is required")
 		}
+	case "presignedFile":
+		if u.presignedFile == nil {
+			return fmt.Errorf("field \"presignedFile\" is required")
+		}
 	}
 	return nil
 }
@@ -2149,7 +2046,7 @@ func (u *IngestSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *IngestSource) AcceptFuncs(s3Func func(S3IngestSource) error, gcsFunc func(GcsIngestSource) error, unknownFunc func(string) error) error {
+func (u *IngestSource) AcceptFuncs(s3Func func(S3IngestSource) error, gcsFunc func(GcsIngestSource) error, presignedFileFunc func(PresignedFileIngestSource) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2166,6 +2063,11 @@ func (u *IngestSource) AcceptFuncs(s3Func func(S3IngestSource) error, gcsFunc fu
 			return fmt.Errorf("field \"gcs\" is required")
 		}
 		return gcsFunc(*u.gcs)
+	case "presignedFile":
+		if u.presignedFile == nil {
+			return fmt.Errorf("field \"presignedFile\" is required")
+		}
+		return presignedFileFunc(*u.presignedFile)
 	}
 }
 
@@ -2174,6 +2076,10 @@ func (u *IngestSource) S3NoopSuccess(S3IngestSource) error {
 }
 
 func (u *IngestSource) GcsNoopSuccess(GcsIngestSource) error {
+	return nil
+}
+
+func (u *IngestSource) PresignedFileNoopSuccess(PresignedFileIngestSource) error {
 	return nil
 }
 
@@ -2198,12 +2104,18 @@ func (u *IngestSource) Accept(v IngestSourceVisitor) error {
 			return fmt.Errorf("field \"gcs\" is required")
 		}
 		return v.VisitGcs(*u.gcs)
+	case "presignedFile":
+		if u.presignedFile == nil {
+			return fmt.Errorf("field \"presignedFile\" is required")
+		}
+		return v.VisitPresignedFile(*u.presignedFile)
 	}
 }
 
 type IngestSourceVisitor interface {
 	VisitS3(v S3IngestSource) error
 	VisitGcs(v GcsIngestSource) error
+	VisitPresignedFile(v PresignedFileIngestSource) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2224,12 +2136,18 @@ func (u *IngestSource) AcceptWithContext(ctx context.Context, v IngestSourceVisi
 			return fmt.Errorf("field \"gcs\" is required")
 		}
 		return v.VisitGcsWithContext(ctx, *u.gcs)
+	case "presignedFile":
+		if u.presignedFile == nil {
+			return fmt.Errorf("field \"presignedFile\" is required")
+		}
+		return v.VisitPresignedFileWithContext(ctx, *u.presignedFile)
 	}
 }
 
 type IngestSourceVisitorWithContext interface {
 	VisitS3WithContext(ctx context.Context, v S3IngestSource) error
 	VisitGcsWithContext(ctx context.Context, v GcsIngestSource) error
+	VisitPresignedFileWithContext(ctx context.Context, v PresignedFileIngestSource) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -2239,6 +2157,10 @@ func NewIngestSourceFromS3(v S3IngestSource) IngestSource {
 
 func NewIngestSourceFromGcs(v GcsIngestSource) IngestSource {
 	return IngestSource{typ: "gcs", gcs: &v}
+}
+
+func NewIngestSourceFromPresignedFile(v PresignedFileIngestSource) IngestSource {
+	return IngestSource{typ: "presignedFile", presignedFile: &v}
 }
 
 type McapChannelConfigType struct {

@@ -6,52 +6,11 @@ import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/modules/api"
-	api3 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
-
-type ArchiveModuleApplicationRequest struct {
-	ModuleApplicationRid api.ModuleApplicationRid `json:"moduleApplicationRid"`
-}
-
-func (o ArchiveModuleApplicationRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ArchiveModuleApplicationRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type ArchiveModuleApplicationResponse struct {
-	Success bool `json:"success"`
-}
-
-func (o ArchiveModuleApplicationResponse) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ArchiveModuleApplicationResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
 
 type BatchArchiveModulesRequest struct {
 	Requests []api.ModuleRid `json:"requests"`
@@ -135,95 +94,13 @@ func (o *BatchArchiveModulesResponse) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type BatchGetModuleApplicationsRequest struct {
-	Requests []api.ModuleApplicationRid `json:"requests"`
-}
-
-func (o BatchGetModuleApplicationsRequest) MarshalJSON() ([]byte, error) {
-	if o.Requests == nil {
-		o.Requests = make([]api.ModuleApplicationRid, 0)
-	}
-	type _tmpBatchGetModuleApplicationsRequest BatchGetModuleApplicationsRequest
-	return safejson.Marshal(_tmpBatchGetModuleApplicationsRequest(o))
-}
-
-func (o *BatchGetModuleApplicationsRequest) UnmarshalJSON(data []byte) error {
-	type _tmpBatchGetModuleApplicationsRequest BatchGetModuleApplicationsRequest
-	var rawBatchGetModuleApplicationsRequest _tmpBatchGetModuleApplicationsRequest
-	if err := safejson.Unmarshal(data, &rawBatchGetModuleApplicationsRequest); err != nil {
-		return err
-	}
-	if rawBatchGetModuleApplicationsRequest.Requests == nil {
-		rawBatchGetModuleApplicationsRequest.Requests = make([]api.ModuleApplicationRid, 0)
-	}
-	*o = BatchGetModuleApplicationsRequest(rawBatchGetModuleApplicationsRequest)
-	return nil
-}
-
-func (o BatchGetModuleApplicationsRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *BatchGetModuleApplicationsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type BatchGetModuleApplicationsResponse struct {
-	Results []ModuleApplication `json:"results"`
-}
-
-func (o BatchGetModuleApplicationsResponse) MarshalJSON() ([]byte, error) {
-	if o.Results == nil {
-		o.Results = make([]ModuleApplication, 0)
-	}
-	type _tmpBatchGetModuleApplicationsResponse BatchGetModuleApplicationsResponse
-	return safejson.Marshal(_tmpBatchGetModuleApplicationsResponse(o))
-}
-
-func (o *BatchGetModuleApplicationsResponse) UnmarshalJSON(data []byte) error {
-	type _tmpBatchGetModuleApplicationsResponse BatchGetModuleApplicationsResponse
-	var rawBatchGetModuleApplicationsResponse _tmpBatchGetModuleApplicationsResponse
-	if err := safejson.Unmarshal(data, &rawBatchGetModuleApplicationsResponse); err != nil {
-		return err
-	}
-	if rawBatchGetModuleApplicationsResponse.Results == nil {
-		rawBatchGetModuleApplicationsResponse.Results = make([]ModuleApplication, 0)
-	}
-	*o = BatchGetModuleApplicationsResponse(rawBatchGetModuleApplicationsResponse)
-	return nil
-}
-
-func (o BatchGetModuleApplicationsResponse) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *BatchGetModuleApplicationsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type BatchGetModulesRequest struct {
-	Requests []GetModuleRequest `json:"requests"`
+	Requests []RequestModuleRef `json:"requests"`
 }
 
 func (o BatchGetModulesRequest) MarshalJSON() ([]byte, error) {
 	if o.Requests == nil {
-		o.Requests = make([]GetModuleRequest, 0)
+		o.Requests = make([]RequestModuleRef, 0)
 	}
 	type _tmpBatchGetModulesRequest BatchGetModulesRequest
 	return safejson.Marshal(_tmpBatchGetModulesRequest(o))
@@ -236,7 +113,7 @@ func (o *BatchGetModulesRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawBatchGetModulesRequest.Requests == nil {
-		rawBatchGetModulesRequest.Requests = make([]GetModuleRequest, 0)
+		rawBatchGetModulesRequest.Requests = make([]RequestModuleRef, 0)
 	}
 	*o = BatchGetModulesRequest(rawBatchGetModulesRequest)
 	return nil
@@ -340,50 +217,9 @@ func (o *BatchUnarchiveModulesResponse) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type CreateModuleApplicationRequest struct {
-	ModuleRid api.ModuleRid `json:"moduleRid"`
-	AssetRid  api1.AssetRid `json:"assetRid"`
-}
-
-func (o CreateModuleApplicationRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *CreateModuleApplicationRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type CreateModuleApplicationResponse struct {
-	Result ModuleApplication `json:"result"`
-}
-
-func (o CreateModuleApplicationResponse) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *CreateModuleApplicationResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type CreateModuleRequest struct {
-	// The name of the module. This should be unique to the module in the current workspace.
-	Name        string                  `conjure-docs:"The name of the module. This should be unique to the module in the current workspace." json:"name"`
+	// The API name for the module. This string will uniquely identify the module within the organization.
+	ApiName     string                  `conjure-docs:"The API name for the module. This string will uniquely identify the module within the organization." json:"apiName"`
 	Title       string                  `json:"title"`
 	Description string                  `json:"description"`
 	Definition  ModuleVersionDefinition `json:"definition"`
@@ -399,53 +235,6 @@ func (o CreateModuleRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CreateModuleRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type DerivedSeriesMetadata struct {
-	FunctionName         string                   `json:"functionName"`
-	FunctionDescription  string                   `json:"functionDescription"`
-	ModuleName           string                   `json:"moduleName"`
-	ModuleApplicationRid api.ModuleApplicationRid `json:"moduleApplicationRid"`
-	// The parameters and their values that were resolved when the module was applied to the asset.
-	ApplicationResolvedParameters []ModuleVariable `conjure-docs:"The parameters and their values that were resolved when the module was applied to the asset." json:"applicationResolvedParameters"`
-	DataType                      ValueType        `json:"dataType"`
-}
-
-func (o DerivedSeriesMetadata) MarshalJSON() ([]byte, error) {
-	if o.ApplicationResolvedParameters == nil {
-		o.ApplicationResolvedParameters = make([]ModuleVariable, 0)
-	}
-	type _tmpDerivedSeriesMetadata DerivedSeriesMetadata
-	return safejson.Marshal(_tmpDerivedSeriesMetadata(o))
-}
-
-func (o *DerivedSeriesMetadata) UnmarshalJSON(data []byte) error {
-	type _tmpDerivedSeriesMetadata DerivedSeriesMetadata
-	var rawDerivedSeriesMetadata _tmpDerivedSeriesMetadata
-	if err := safejson.Unmarshal(data, &rawDerivedSeriesMetadata); err != nil {
-		return err
-	}
-	if rawDerivedSeriesMetadata.ApplicationResolvedParameters == nil {
-		rawDerivedSeriesMetadata.ApplicationResolvedParameters = make([]ModuleVariable, 0)
-	}
-	*o = DerivedSeriesMetadata(rawDerivedSeriesMetadata)
-	return nil
-}
-
-func (o DerivedSeriesMetadata) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *DerivedSeriesMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -502,11 +291,6 @@ func (o *Function) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type FunctionParameter struct {
 	Name ParameterName `json:"name"`
 	Type ValueType     `json:"type"`
-	/*
-	   This must reference a ModuleVariable within the `defaultVariables` field of the containing Module.
-	   For now, this is required for all parameters.
-	*/
-	DefaultValue *VariableName `conjure-docs:"This must reference a ModuleVariable within the \"defaultVariables\" field of the containing Module.\nFor now, this is required for all parameters." json:"defaultValue,omitempty"`
 }
 
 func (o FunctionParameter) MarshalYAML() (interface{}, error) {
@@ -518,94 +302,6 @@ func (o FunctionParameter) MarshalYAML() (interface{}, error) {
 }
 
 func (o *FunctionParameter) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type GetDerivedSeriesRequest struct {
-	AssetRid api1.AssetRid `json:"assetRid"`
-	// Search text which will be checked for exact matches with the derived channel names.
-	ExactMatch *string `conjure-docs:"Search text which will be checked for exact matches with the derived channel names." json:"exactMatch,omitempty"`
-	// Optional filter to limit the returned derived channels to those with specified return data type.
-	ReturnTypes   *[]ValueType `conjure-docs:"Optional filter to limit the returned derived channels to those with specified return data type." json:"returnTypes,omitempty"`
-	PageSize      int          `json:"pageSize"`
-	NextPageToken *api2.Token  `json:"nextPageToken,omitempty"`
-}
-
-func (o GetDerivedSeriesRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *GetDerivedSeriesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type GetDerivedSeriesResponse struct {
-	Results       []DerivedSeriesMetadata `json:"results"`
-	NextPageToken *api2.Token             `json:"nextPageToken,omitempty"`
-}
-
-func (o GetDerivedSeriesResponse) MarshalJSON() ([]byte, error) {
-	if o.Results == nil {
-		o.Results = make([]DerivedSeriesMetadata, 0)
-	}
-	type _tmpGetDerivedSeriesResponse GetDerivedSeriesResponse
-	return safejson.Marshal(_tmpGetDerivedSeriesResponse(o))
-}
-
-func (o *GetDerivedSeriesResponse) UnmarshalJSON(data []byte) error {
-	type _tmpGetDerivedSeriesResponse GetDerivedSeriesResponse
-	var rawGetDerivedSeriesResponse _tmpGetDerivedSeriesResponse
-	if err := safejson.Unmarshal(data, &rawGetDerivedSeriesResponse); err != nil {
-		return err
-	}
-	if rawGetDerivedSeriesResponse.Results == nil {
-		rawGetDerivedSeriesResponse.Results = make([]DerivedSeriesMetadata, 0)
-	}
-	*o = GetDerivedSeriesResponse(rawGetDerivedSeriesResponse)
-	return nil
-}
-
-func (o GetDerivedSeriesResponse) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *GetDerivedSeriesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type GetModuleRequest struct {
-	ModuleRid api.ModuleRid `json:"moduleRid"`
-}
-
-func (o GetModuleRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *GetModuleRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -633,8 +329,9 @@ func (o *LatestVersionStrategy) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 type Module struct {
-	Metadata   ModuleMetadata          `json:"metadata"`
-	Definition ModuleVersionDefinition `json:"definition"`
+	Metadata        ModuleMetadata          `json:"metadata"`
+	VersionMetadata ModuleVersionMetadata   `json:"versionMetadata"`
+	Definition      ModuleVersionDefinition `json:"definition"`
 }
 
 func (o Module) MarshalYAML() (interface{}, error) {
@@ -653,34 +350,13 @@ func (o *Module) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type ModuleApplication struct {
-	Rid       api.ModuleApplicationRid `json:"rid"`
-	Module    ModuleRef                `json:"module"`
-	AssetRid  api1.AssetRid            `json:"assetRid"`
-	AppliedAt datetime.DateTime        `json:"appliedAt"`
-	AppliedBy api1.UserRid             `json:"appliedBy"`
-}
-
-func (o ModuleApplication) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ModuleApplication) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type ModuleMetadata struct {
 	Rid api.ModuleRid `json:"rid"`
-	// The name of the module. This is unique to the module in the current workspace.
-	Name        string            `conjure-docs:"The name of the module. This is unique to the module in the current workspace." json:"name"`
+	/*
+	   This uniquely identifies the module within the org.
+	   Note that this cannot be changed after creation.
+	*/
+	ApiName     string            `conjure-docs:"This uniquely identifies the module within the org.\nNote that this cannot be changed after creation." json:"apiName"`
 	Title       string            `json:"title"`
 	Description string            `json:"description"`
 	CreatedBy   api1.UserRid      `json:"createdBy"`
@@ -705,29 +381,10 @@ func (o *ModuleMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type ModuleParameter struct {
-	Name ParameterName `json:"name"`
-	Type ValueType     `json:"type"`
-}
-
-func (o ModuleParameter) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ModuleParameter) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type ModuleRef struct {
-	Rid api.ModuleRid `json:"rid"`
+	Rid     api.ModuleRid `json:"rid"`
+	ApiName string        `json:"apiName"`
+	Version ModuleVersion `json:"version"`
 }
 
 func (o ModuleRef) MarshalYAML() (interface{}, error) {
@@ -767,39 +424,7 @@ func (o *ModuleSummary) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type ModuleVariable struct {
-	Name  VariableName       `json:"name"`
-	Type  ValueType          `json:"type"`
-	Value api3.VariableValue `json:"value"`
-}
-
-func (o ModuleVariable) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ModuleVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type ModuleVersionDefinition struct {
-	/*
-	   Specifies the parameters the module accepts when applying it.
-	   For now, parameters MUST contain exactly 1 parameter with name 'ASSET_RID' and be of type ASSET_RID.
-	*/
-	Parameters []ModuleParameter `conjure-docs:"Specifies the parameters the module accepts when applying it.\nFor now, parameters MUST contain exactly 1 parameter with name 'ASSET_RID' and be of type ASSET_RID." json:"parameters"`
-	/*
-	   Specifies the variables that are present within the module to be used by other variables or functions.
-	   Limited to 100.
-	*/
-	DefaultVariables []ModuleVariable `conjure-docs:"Specifies the variables that are present within the module to be used by other variables or functions.\nLimited to 100." json:"defaultVariables"`
 	/*
 	   The list of functions that resolve to derived series that appear in channel search after applying to an
 	   asset. Limited to 100.
@@ -808,12 +433,6 @@ type ModuleVersionDefinition struct {
 }
 
 func (o ModuleVersionDefinition) MarshalJSON() ([]byte, error) {
-	if o.Parameters == nil {
-		o.Parameters = make([]ModuleParameter, 0)
-	}
-	if o.DefaultVariables == nil {
-		o.DefaultVariables = make([]ModuleVariable, 0)
-	}
 	if o.Functions == nil {
 		o.Functions = make([]Function, 0)
 	}
@@ -826,12 +445,6 @@ func (o *ModuleVersionDefinition) UnmarshalJSON(data []byte) error {
 	var rawModuleVersionDefinition _tmpModuleVersionDefinition
 	if err := safejson.Unmarshal(data, &rawModuleVersionDefinition); err != nil {
 		return err
-	}
-	if rawModuleVersionDefinition.Parameters == nil {
-		rawModuleVersionDefinition.Parameters = make([]ModuleParameter, 0)
-	}
-	if rawModuleVersionDefinition.DefaultVariables == nil {
-		rawModuleVersionDefinition.DefaultVariables = make([]ModuleVariable, 0)
 	}
 	if rawModuleVersionDefinition.Functions == nil {
 		rawModuleVersionDefinition.Functions = make([]Function, 0)
@@ -859,6 +472,7 @@ func (o *ModuleVersionDefinition) UnmarshalYAML(unmarshal func(interface{}) erro
 type ModuleVersionMetadata struct {
 	CreatedBy api1.UserRid      `json:"createdBy"`
 	CreatedAt datetime.DateTime `json:"createdAt"`
+	Version   ModuleVersion     `json:"version"`
 }
 
 func (o ModuleVersionMetadata) MarshalYAML() (interface{}, error) {
@@ -900,7 +514,7 @@ func (o *PinnedVersionStrategy) UnmarshalYAML(unmarshal func(interface{}) error)
 
 // This is used to refer to modules in requests by name.
 type RequestModuleNameRef struct {
-	Name            string          `json:"name"`
+	ApiName         string          `json:"apiName"`
 	VersionStrategy VersionStrategy `json:"versionStrategy"`
 }
 
@@ -920,13 +534,13 @@ func (o *RequestModuleNameRef) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type SearchModuleApplicationsRequest struct {
-	Query         SearchModuleApplicationsQuery `json:"query"`
-	PageSize      int                           `json:"pageSize"`
-	NextPageToken *api2.Token                   `json:"nextPageToken,omitempty"`
+// This is used to refer to modules in requests by rid.
+type RequestModuleRidRef struct {
+	Rid             api.ModuleRid   `json:"rid"`
+	VersionStrategy VersionStrategy `json:"versionStrategy"`
 }
 
-func (o SearchModuleApplicationsRequest) MarshalYAML() (interface{}, error) {
+func (o RequestModuleRidRef) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -934,49 +548,7 @@ func (o SearchModuleApplicationsRequest) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *SearchModuleApplicationsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type SearchModuleApplicationsResponse struct {
-	Results       []ModuleApplication `json:"results"`
-	NextPageToken *api2.Token         `json:"nextPageToken,omitempty"`
-}
-
-func (o SearchModuleApplicationsResponse) MarshalJSON() ([]byte, error) {
-	if o.Results == nil {
-		o.Results = make([]ModuleApplication, 0)
-	}
-	type _tmpSearchModuleApplicationsResponse SearchModuleApplicationsResponse
-	return safejson.Marshal(_tmpSearchModuleApplicationsResponse(o))
-}
-
-func (o *SearchModuleApplicationsResponse) UnmarshalJSON(data []byte) error {
-	type _tmpSearchModuleApplicationsResponse SearchModuleApplicationsResponse
-	var rawSearchModuleApplicationsResponse _tmpSearchModuleApplicationsResponse
-	if err := safejson.Unmarshal(data, &rawSearchModuleApplicationsResponse); err != nil {
-		return err
-	}
-	if rawSearchModuleApplicationsResponse.Results == nil {
-		rawSearchModuleApplicationsResponse.Results = make([]ModuleApplication, 0)
-	}
-	*o = SearchModuleApplicationsResponse(rawSearchModuleApplicationsResponse)
-	return nil
-}
-
-func (o SearchModuleApplicationsResponse) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *SearchModuleApplicationsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *RequestModuleRidRef) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1065,48 +637,6 @@ func (o SearchModulesSortOptions) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SearchModulesSortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type UpdateModuleApplicationRequest struct {
-	ModuleApplicationRid api.ModuleApplicationRid `json:"moduleApplicationRid"`
-	ModuleRid            api.ModuleRid            `json:"moduleRid"`
-	AssetRid             api1.AssetRid            `json:"assetRid"`
-}
-
-func (o UpdateModuleApplicationRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *UpdateModuleApplicationRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type UpdateModuleApplicationResponse struct {
-	Result ModuleApplication `json:"result"`
-}
-
-func (o UpdateModuleApplicationResponse) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *UpdateModuleApplicationResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

@@ -4,9 +4,295 @@ package api
 
 import (
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
+
+/*
+A record of a coachmark dismissal, including when it was dismissed
+and on which app version.
+*/
+type CoachmarkDismissal struct {
+	// The coachmark identifier (typically the feature flag name)
+	CoachmarkId string `conjure-docs:"The coachmark identifier (typically the feature flag name)" json:"coachmarkId"`
+	// ISO 8601 timestamp of when the coachmark was dismissed
+	DismissedAt datetime.DateTime `conjure-docs:"ISO 8601 timestamp of when the coachmark was dismissed" json:"dismissedAt"`
+	// The apps-scout version (semver) when the coachmark was dismissed
+	AppVersion string `conjure-docs:"The apps-scout version (semver) when the coachmark was dismissed" json:"appVersion"`
+	/*
+	   The step index when dismissed (for multi-step coachmarks).
+	   If not present, the coachmark was dismissed via the X button.
+	*/
+	StepIndex *int `conjure-docs:"The step index when dismissed (for multi-step coachmarks).\nIf not present, the coachmark was dismissed via the X button." json:"stepIndex,omitempty"`
+}
+
+func (o CoachmarkDismissal) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CoachmarkDismissal) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Request to dismiss a coachmark
+type DismissCoachmarkRequest struct {
+	// The coachmark identifier to dismiss
+	CoachmarkId string `conjure-docs:"The coachmark identifier to dismiss" json:"coachmarkId"`
+	// The apps-scout version (semver) when dismissing
+	AppVersion string `conjure-docs:"The apps-scout version (semver) when dismissing" json:"appVersion"`
+	// The step index when dismissed (for multi-step coachmarks)
+	StepIndex *int `conjure-docs:"The step index when dismissed (for multi-step coachmarks)" json:"stepIndex,omitempty"`
+}
+
+func (o DismissCoachmarkRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DismissCoachmarkRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Request to generate a MediaMTX authentication token
+type GenerateMediaMtxTokenRequest struct {
+	// List of permissions to include in the token
+	Permissions []MediaMtxPermission `conjure-docs:"List of permissions to include in the token" json:"permissions"`
+}
+
+func (o GenerateMediaMtxTokenRequest) MarshalJSON() ([]byte, error) {
+	if o.Permissions == nil {
+		o.Permissions = make([]MediaMtxPermission, 0)
+	}
+	type _tmpGenerateMediaMtxTokenRequest GenerateMediaMtxTokenRequest
+	return safejson.Marshal(_tmpGenerateMediaMtxTokenRequest(o))
+}
+
+func (o *GenerateMediaMtxTokenRequest) UnmarshalJSON(data []byte) error {
+	type _tmpGenerateMediaMtxTokenRequest GenerateMediaMtxTokenRequest
+	var rawGenerateMediaMtxTokenRequest _tmpGenerateMediaMtxTokenRequest
+	if err := safejson.Unmarshal(data, &rawGenerateMediaMtxTokenRequest); err != nil {
+		return err
+	}
+	if rawGenerateMediaMtxTokenRequest.Permissions == nil {
+		rawGenerateMediaMtxTokenRequest.Permissions = make([]MediaMtxPermission, 0)
+	}
+	*o = GenerateMediaMtxTokenRequest(rawGenerateMediaMtxTokenRequest)
+	return nil
+}
+
+func (o GenerateMediaMtxTokenRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GenerateMediaMtxTokenRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Response containing the generated MediaMTX token
+type GenerateMediaMtxTokenResponse struct {
+	// The signed JWT token for MediaMTX authentication
+	Token string `conjure-docs:"The signed JWT token for MediaMTX authentication" json:"token"`
+}
+
+func (o GenerateMediaMtxTokenResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GenerateMediaMtxTokenResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Request to get coachmark dismissals
+type GetCoachmarkDismissalsRequest struct {
+	/*
+	   Optional list of coachmark IDs to filter by.
+	   If empty, returns all dismissals for the user.
+	*/
+	CoachmarkIds *[]string `conjure-docs:"Optional list of coachmark IDs to filter by.\nIf empty, returns all dismissals for the user." json:"coachmarkIds,omitempty"`
+}
+
+func (o GetCoachmarkDismissalsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetCoachmarkDismissalsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Response containing coachmark dismissals
+type GetCoachmarkDismissalsResponse struct {
+	// Map of coachmark ID to dismissal record
+	Dismissals map[string]CoachmarkDismissal `conjure-docs:"Map of coachmark ID to dismissal record" json:"dismissals"`
+}
+
+func (o GetCoachmarkDismissalsResponse) MarshalJSON() ([]byte, error) {
+	if o.Dismissals == nil {
+		o.Dismissals = make(map[string]CoachmarkDismissal, 0)
+	}
+	type _tmpGetCoachmarkDismissalsResponse GetCoachmarkDismissalsResponse
+	return safejson.Marshal(_tmpGetCoachmarkDismissalsResponse(o))
+}
+
+func (o *GetCoachmarkDismissalsResponse) UnmarshalJSON(data []byte) error {
+	type _tmpGetCoachmarkDismissalsResponse GetCoachmarkDismissalsResponse
+	var rawGetCoachmarkDismissalsResponse _tmpGetCoachmarkDismissalsResponse
+	if err := safejson.Unmarshal(data, &rawGetCoachmarkDismissalsResponse); err != nil {
+		return err
+	}
+	if rawGetCoachmarkDismissalsResponse.Dismissals == nil {
+		rawGetCoachmarkDismissalsResponse.Dismissals = make(map[string]CoachmarkDismissal, 0)
+	}
+	*o = GetCoachmarkDismissalsResponse(rawGetCoachmarkDismissalsResponse)
+	return nil
+}
+
+func (o GetCoachmarkDismissalsResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetCoachmarkDismissalsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A JSON Web Key (JWK) representation for RSA public keys
+type Jwk struct {
+	Kty string `json:"kty"`
+	Kid string `json:"kid"`
+	Use string `json:"use"`
+	Alg string `json:"alg"`
+	N   string `json:"n"`
+	E   string `json:"e"`
+}
+
+func (o Jwk) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Jwk) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A JSON Web Key Set (JWKS) containing one or more keys
+type Jwks struct {
+	Keys []Jwk `json:"keys"`
+}
+
+func (o Jwks) MarshalJSON() ([]byte, error) {
+	if o.Keys == nil {
+		o.Keys = make([]Jwk, 0)
+	}
+	type _tmpJwks Jwks
+	return safejson.Marshal(_tmpJwks(o))
+}
+
+func (o *Jwks) UnmarshalJSON(data []byte) error {
+	type _tmpJwks Jwks
+	var rawJwks _tmpJwks
+	if err := safejson.Unmarshal(data, &rawJwks); err != nil {
+		return err
+	}
+	if rawJwks.Keys == nil {
+		rawJwks.Keys = make([]Jwk, 0)
+	}
+	*o = Jwks(rawJwks)
+	return nil
+}
+
+func (o Jwks) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Jwks) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A permission definition for MediaMTX authentication
+type MediaMtxPermission struct {
+	// The action permitted. Allowed values are publish, read, playback, api, metrics, pprof.
+	Action string `conjure-docs:"The action permitted. Allowed values are publish, read, playback, api, metrics, pprof." json:"action"`
+	// The stream path this permission applies to (e.g., "stream/test")
+	Path string `conjure-docs:"The stream path this permission applies to (e.g., \"stream/test\")" json:"path"`
+}
+
+func (o MediaMtxPermission) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MediaMtxPermission) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
 
 type OrgSettings struct {
 	DefaultTimeRangeType *DefaultTimeRangeTypeSetting `json:"defaultTimeRangeType,omitempty"`
@@ -137,10 +423,15 @@ func (o *UpdateMyProfileRequest) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 type UserSettings struct {
-	DefaultTimeRangeType          *DefaultTimeRangeTypeSetting `json:"defaultTimeRangeType,omitempty"`
-	Appearance                    *AppearanceSetting           `json:"appearance,omitempty"`
-	Timezone                      *TimezoneSetting             `json:"timezone,omitempty"`
-	TimeSeriesHoverTooltipConcise *bool                        `json:"timeSeriesHoverTooltipConcise,omitempty"`
+	DefaultTimeRangeType *DefaultTimeRangeTypeSetting `json:"defaultTimeRangeType,omitempty"`
+	Appearance           *AppearanceSetting           `json:"appearance,omitempty"`
+	Timezone             *TimezoneSetting             `json:"timezone,omitempty"`
+	/*
+	   Deprecated: Use `chartHoverTooltipMode` instead. If `chartHoverTooltipMode` is not set, this field will be
+	   used: `true` as `SINGLE` and `false` as `VERBOSE`.
+	*/
+	TimeSeriesHoverTooltipConcise *bool                    `json:"timeSeriesHoverTooltipConcise,omitempty"`
+	ChartHoverTooltipMode         *ChartTooltipModeSetting `json:"chartHoverTooltipMode,omitempty"`
 }
 
 func (o UserSettings) MarshalYAML() (interface{}, error) {

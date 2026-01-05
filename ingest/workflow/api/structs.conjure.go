@@ -41,11 +41,16 @@ type EnsureExtractorJobCreatedRequest struct {
 	MultipartUploadDetails MultipartUploadDetails     `json:"multipartUploadDetails"`
 	// Name of the Kubernetes secret to use for pulling the image, if authentication is required.
 	ImagePullSecretName *string `conjure-docs:"Name of the Kubernetes secret to use for pulling the image, if authentication is required." json:"imagePullSecretName,omitempty"`
+	// Additional arguments to pass as environment variables to the container.
+	Arguments map[api.EnvironmentVariable]string `conjure-docs:"Additional arguments to pass as environment variables to the container." json:"arguments"`
 }
 
 func (o EnsureExtractorJobCreatedRequest) MarshalJSON() ([]byte, error) {
 	if o.ValidatedFileInputs == nil {
 		o.ValidatedFileInputs = make([]ValidatedFileInput, 0)
+	}
+	if o.Arguments == nil {
+		o.Arguments = make(map[api.EnvironmentVariable]string, 0)
 	}
 	type _tmpEnsureExtractorJobCreatedRequest EnsureExtractorJobCreatedRequest
 	return safejson.Marshal(_tmpEnsureExtractorJobCreatedRequest(o))
@@ -59,6 +64,9 @@ func (o *EnsureExtractorJobCreatedRequest) UnmarshalJSON(data []byte) error {
 	}
 	if rawEnsureExtractorJobCreatedRequest.ValidatedFileInputs == nil {
 		rawEnsureExtractorJobCreatedRequest.ValidatedFileInputs = make([]ValidatedFileInput, 0)
+	}
+	if rawEnsureExtractorJobCreatedRequest.Arguments == nil {
+		rawEnsureExtractorJobCreatedRequest.Arguments = make(map[api.EnvironmentVariable]string, 0)
 	}
 	*o = EnsureExtractorJobCreatedRequest(rawEnsureExtractorJobCreatedRequest)
 	return nil
@@ -325,6 +333,11 @@ type IngestDataflashResponse struct {
 	TimestampSeriesName string `conjure-docs:"The name of the column in the generated parquet file that contains the timestamp." json:"timestampSeriesName"`
 	// The unit of time for the timestamp column. Can only be seconds.
 	TimeUnit TimeUnitSeconds `conjure-docs:"The unit of time for the timestamp column. Can only be seconds." json:"timeUnit"`
+	/*
+	   Azure or S3-style blob locator of avro file when avro processing is configured.
+	   This field is only set when the workflow is configured to write avro stream.
+	*/
+	AvroLocator *ObjectLocator `conjure-docs:"Azure or S3-style blob locator of avro file when avro processing is configured.\nThis field is only set when the workflow is configured to write avro stream." json:"avroLocator,omitempty"`
 }
 
 func (o IngestDataflashResponse) MarshalJSON() ([]byte, error) {

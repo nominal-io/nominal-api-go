@@ -7,25 +7,24 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api1 "github.com/nominal-io/nominal-api-go/modules/api"
-	"github.com/nominal-io/nominal-api-go/scout/compute/api"
-	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	"github.com/nominal-io/nominal-api-go/scout/compute/api1"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
 
 type FunctionNode struct {
 	typ     string
-	enum    *api.EnumSeries
-	numeric *api.NumericSeries
-	ranges  *api.RangeSeries
+	enum    *api1.EnumSeries
+	numeric *api1.NumericSeries
+	ranges  *api1.RangeSeries
 }
 
 type functionNodeDeserializer struct {
-	Type    string             `json:"type"`
-	Enum    *api.EnumSeries    `json:"enum"`
-	Numeric *api.NumericSeries `json:"numeric"`
-	Ranges  *api.RangeSeries   `json:"ranges"`
+	Type    string              `json:"type"`
+	Enum    *api1.EnumSeries    `json:"enum"`
+	Numeric *api1.NumericSeries `json:"numeric"`
+	Ranges  *api1.RangeSeries   `json:"ranges"`
 }
 
 func (u *functionNodeDeserializer) toStruct() FunctionNode {
@@ -41,24 +40,24 @@ func (u *FunctionNode) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"enum\" is required")
 		}
 		return struct {
-			Type string         `json:"type"`
-			Enum api.EnumSeries `json:"enum"`
+			Type string          `json:"type"`
+			Enum api1.EnumSeries `json:"enum"`
 		}{Type: "enum", Enum: *u.enum}, nil
 	case "numeric":
 		if u.numeric == nil {
 			return nil, fmt.Errorf("field \"numeric\" is required")
 		}
 		return struct {
-			Type    string            `json:"type"`
-			Numeric api.NumericSeries `json:"numeric"`
+			Type    string             `json:"type"`
+			Numeric api1.NumericSeries `json:"numeric"`
 		}{Type: "numeric", Numeric: *u.numeric}, nil
 	case "ranges":
 		if u.ranges == nil {
 			return nil, fmt.Errorf("field \"ranges\" is required")
 		}
 		return struct {
-			Type   string          `json:"type"`
-			Ranges api.RangeSeries `json:"ranges"`
+			Type   string           `json:"type"`
+			Ranges api1.RangeSeries `json:"ranges"`
 		}{Type: "ranges", Ranges: *u.ranges}, nil
 	}
 }
@@ -110,7 +109,7 @@ func (u *FunctionNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *FunctionNode) AcceptFuncs(enumFunc func(api.EnumSeries) error, numericFunc func(api.NumericSeries) error, rangesFunc func(api.RangeSeries) error, unknownFunc func(string) error) error {
+func (u *FunctionNode) AcceptFuncs(enumFunc func(api1.EnumSeries) error, numericFunc func(api1.NumericSeries) error, rangesFunc func(api1.RangeSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -135,15 +134,15 @@ func (u *FunctionNode) AcceptFuncs(enumFunc func(api.EnumSeries) error, numericF
 	}
 }
 
-func (u *FunctionNode) EnumNoopSuccess(api.EnumSeries) error {
+func (u *FunctionNode) EnumNoopSuccess(api1.EnumSeries) error {
 	return nil
 }
 
-func (u *FunctionNode) NumericNoopSuccess(api.NumericSeries) error {
+func (u *FunctionNode) NumericNoopSuccess(api1.NumericSeries) error {
 	return nil
 }
 
-func (u *FunctionNode) RangesNoopSuccess(api.RangeSeries) error {
+func (u *FunctionNode) RangesNoopSuccess(api1.RangeSeries) error {
 	return nil
 }
 
@@ -177,9 +176,9 @@ func (u *FunctionNode) Accept(v FunctionNodeVisitor) error {
 }
 
 type FunctionNodeVisitor interface {
-	VisitEnum(v api.EnumSeries) error
-	VisitNumeric(v api.NumericSeries) error
-	VisitRanges(v api.RangeSeries) error
+	VisitEnum(v api1.EnumSeries) error
+	VisitNumeric(v api1.NumericSeries) error
+	VisitRanges(v api1.RangeSeries) error
 	VisitUnknown(typeName string) error
 }
 
@@ -209,21 +208,21 @@ func (u *FunctionNode) AcceptWithContext(ctx context.Context, v FunctionNodeVisi
 }
 
 type FunctionNodeVisitorWithContext interface {
-	VisitEnumWithContext(ctx context.Context, v api.EnumSeries) error
-	VisitNumericWithContext(ctx context.Context, v api.NumericSeries) error
-	VisitRangesWithContext(ctx context.Context, v api.RangeSeries) error
+	VisitEnumWithContext(ctx context.Context, v api1.EnumSeries) error
+	VisitNumericWithContext(ctx context.Context, v api1.NumericSeries) error
+	VisitRangesWithContext(ctx context.Context, v api1.RangeSeries) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewFunctionNodeFromEnum(v api.EnumSeries) FunctionNode {
+func NewFunctionNodeFromEnum(v api1.EnumSeries) FunctionNode {
 	return FunctionNode{typ: "enum", enum: &v}
 }
 
-func NewFunctionNodeFromNumeric(v api.NumericSeries) FunctionNode {
+func NewFunctionNodeFromNumeric(v api1.NumericSeries) FunctionNode {
 	return FunctionNode{typ: "numeric", numeric: &v}
 }
 
-func NewFunctionNodeFromRanges(v api.RangeSeries) FunctionNode {
+func NewFunctionNodeFromRanges(v api1.RangeSeries) FunctionNode {
 	return FunctionNode{typ: "ranges", ranges: &v}
 }
 
@@ -231,15 +230,17 @@ func NewFunctionNodeFromRanges(v api.RangeSeries) FunctionNode {
 type RequestModuleRef struct {
 	typ  string
 	name *RequestModuleNameRef
+	rid  *RequestModuleRidRef
 }
 
 type requestModuleRefDeserializer struct {
 	Type string                `json:"type"`
 	Name *RequestModuleNameRef `json:"name"`
+	Rid  *RequestModuleRidRef  `json:"rid"`
 }
 
 func (u *requestModuleRefDeserializer) toStruct() RequestModuleRef {
-	return RequestModuleRef{typ: u.Type, name: u.Name}
+	return RequestModuleRef{typ: u.Type, name: u.Name, rid: u.Rid}
 }
 
 func (u *RequestModuleRef) toSerializer() (interface{}, error) {
@@ -254,6 +255,14 @@ func (u *RequestModuleRef) toSerializer() (interface{}, error) {
 			Type string               `json:"type"`
 			Name RequestModuleNameRef `json:"name"`
 		}{Type: "name", Name: *u.name}, nil
+	case "rid":
+		if u.rid == nil {
+			return nil, fmt.Errorf("field \"rid\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Rid  RequestModuleRidRef `json:"rid"`
+		}{Type: "rid", Rid: *u.rid}, nil
 	}
 }
 
@@ -276,6 +285,10 @@ func (u *RequestModuleRef) UnmarshalJSON(data []byte) error {
 		if u.name == nil {
 			return fmt.Errorf("field \"name\" is required")
 		}
+	case "rid":
+		if u.rid == nil {
+			return fmt.Errorf("field \"rid\" is required")
+		}
 	}
 	return nil
 }
@@ -296,7 +309,7 @@ func (u *RequestModuleRef) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *RequestModuleRef) AcceptFuncs(nameFunc func(RequestModuleNameRef) error, unknownFunc func(string) error) error {
+func (u *RequestModuleRef) AcceptFuncs(nameFunc func(RequestModuleNameRef) error, ridFunc func(RequestModuleRidRef) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -308,10 +321,19 @@ func (u *RequestModuleRef) AcceptFuncs(nameFunc func(RequestModuleNameRef) error
 			return fmt.Errorf("field \"name\" is required")
 		}
 		return nameFunc(*u.name)
+	case "rid":
+		if u.rid == nil {
+			return fmt.Errorf("field \"rid\" is required")
+		}
+		return ridFunc(*u.rid)
 	}
 }
 
 func (u *RequestModuleRef) NameNoopSuccess(RequestModuleNameRef) error {
+	return nil
+}
+
+func (u *RequestModuleRef) RidNoopSuccess(RequestModuleRidRef) error {
 	return nil
 }
 
@@ -331,11 +353,17 @@ func (u *RequestModuleRef) Accept(v RequestModuleRefVisitor) error {
 			return fmt.Errorf("field \"name\" is required")
 		}
 		return v.VisitName(*u.name)
+	case "rid":
+		if u.rid == nil {
+			return fmt.Errorf("field \"rid\" is required")
+		}
+		return v.VisitRid(*u.rid)
 	}
 }
 
 type RequestModuleRefVisitor interface {
 	VisitName(v RequestModuleNameRef) error
+	VisitRid(v RequestModuleRidRef) error
 	VisitUnknown(typeName string) error
 }
 
@@ -351,11 +379,17 @@ func (u *RequestModuleRef) AcceptWithContext(ctx context.Context, v RequestModul
 			return fmt.Errorf("field \"name\" is required")
 		}
 		return v.VisitNameWithContext(ctx, *u.name)
+	case "rid":
+		if u.rid == nil {
+			return fmt.Errorf("field \"rid\" is required")
+		}
+		return v.VisitRidWithContext(ctx, *u.rid)
 	}
 }
 
 type RequestModuleRefVisitorWithContext interface {
 	VisitNameWithContext(ctx context.Context, v RequestModuleNameRef) error
+	VisitRidWithContext(ctx context.Context, v RequestModuleRidRef) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -363,341 +397,15 @@ func NewRequestModuleRefFromName(v RequestModuleNameRef) RequestModuleRef {
 	return RequestModuleRef{typ: "name", name: &v}
 }
 
-type SearchModuleApplicationsQuery struct {
-	typ       string
-	moduleRid *api1.ModuleRid
-	assetRid  *api2.AssetRid
-	workspace *rids.WorkspaceRid
-	and       *[]SearchModuleApplicationsQuery
-	or        *[]SearchModuleApplicationsQuery
-	not       *SearchModuleApplicationsQuery
-}
-
-type searchModuleApplicationsQueryDeserializer struct {
-	Type      string                           `json:"type"`
-	ModuleRid *api1.ModuleRid                  `json:"moduleRid"`
-	AssetRid  *api2.AssetRid                   `json:"assetRid"`
-	Workspace *rids.WorkspaceRid               `json:"workspace"`
-	And       *[]SearchModuleApplicationsQuery `json:"and"`
-	Or        *[]SearchModuleApplicationsQuery `json:"or"`
-	Not       *SearchModuleApplicationsQuery   `json:"not"`
-}
-
-func (u *searchModuleApplicationsQueryDeserializer) toStruct() SearchModuleApplicationsQuery {
-	return SearchModuleApplicationsQuery{typ: u.Type, moduleRid: u.ModuleRid, assetRid: u.AssetRid, workspace: u.Workspace, and: u.And, or: u.Or, not: u.Not}
-}
-
-func (u *SearchModuleApplicationsQuery) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "moduleRid":
-		if u.moduleRid == nil {
-			return nil, fmt.Errorf("field \"moduleRid\" is required")
-		}
-		return struct {
-			Type      string         `json:"type"`
-			ModuleRid api1.ModuleRid `json:"moduleRid"`
-		}{Type: "moduleRid", ModuleRid: *u.moduleRid}, nil
-	case "assetRid":
-		if u.assetRid == nil {
-			return nil, fmt.Errorf("field \"assetRid\" is required")
-		}
-		return struct {
-			Type     string        `json:"type"`
-			AssetRid api2.AssetRid `json:"assetRid"`
-		}{Type: "assetRid", AssetRid: *u.assetRid}, nil
-	case "workspace":
-		if u.workspace == nil {
-			return nil, fmt.Errorf("field \"workspace\" is required")
-		}
-		return struct {
-			Type      string            `json:"type"`
-			Workspace rids.WorkspaceRid `json:"workspace"`
-		}{Type: "workspace", Workspace: *u.workspace}, nil
-	case "and":
-		if u.and == nil {
-			return nil, fmt.Errorf("field \"and\" is required")
-		}
-		return struct {
-			Type string                          `json:"type"`
-			And  []SearchModuleApplicationsQuery `json:"and"`
-		}{Type: "and", And: *u.and}, nil
-	case "or":
-		if u.or == nil {
-			return nil, fmt.Errorf("field \"or\" is required")
-		}
-		return struct {
-			Type string                          `json:"type"`
-			Or   []SearchModuleApplicationsQuery `json:"or"`
-		}{Type: "or", Or: *u.or}, nil
-	case "not":
-		if u.not == nil {
-			return nil, fmt.Errorf("field \"not\" is required")
-		}
-		return struct {
-			Type string                        `json:"type"`
-			Not  SearchModuleApplicationsQuery `json:"not"`
-		}{Type: "not", Not: *u.not}, nil
-	}
-}
-
-func (u SearchModuleApplicationsQuery) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *SearchModuleApplicationsQuery) UnmarshalJSON(data []byte) error {
-	var deser searchModuleApplicationsQueryDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "moduleRid":
-		if u.moduleRid == nil {
-			return fmt.Errorf("field \"moduleRid\" is required")
-		}
-	case "assetRid":
-		if u.assetRid == nil {
-			return fmt.Errorf("field \"assetRid\" is required")
-		}
-	case "workspace":
-		if u.workspace == nil {
-			return fmt.Errorf("field \"workspace\" is required")
-		}
-	case "and":
-		if u.and == nil {
-			return fmt.Errorf("field \"and\" is required")
-		}
-	case "or":
-		if u.or == nil {
-			return fmt.Errorf("field \"or\" is required")
-		}
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-	}
-	return nil
-}
-
-func (u SearchModuleApplicationsQuery) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *SearchModuleApplicationsQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *SearchModuleApplicationsQuery) AcceptFuncs(moduleRidFunc func(api1.ModuleRid) error, assetRidFunc func(api2.AssetRid) error, workspaceFunc func(rids.WorkspaceRid) error, andFunc func([]SearchModuleApplicationsQuery) error, orFunc func([]SearchModuleApplicationsQuery) error, notFunc func(SearchModuleApplicationsQuery) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "moduleRid":
-		if u.moduleRid == nil {
-			return fmt.Errorf("field \"moduleRid\" is required")
-		}
-		return moduleRidFunc(*u.moduleRid)
-	case "assetRid":
-		if u.assetRid == nil {
-			return fmt.Errorf("field \"assetRid\" is required")
-		}
-		return assetRidFunc(*u.assetRid)
-	case "workspace":
-		if u.workspace == nil {
-			return fmt.Errorf("field \"workspace\" is required")
-		}
-		return workspaceFunc(*u.workspace)
-	case "and":
-		if u.and == nil {
-			return fmt.Errorf("field \"and\" is required")
-		}
-		return andFunc(*u.and)
-	case "or":
-		if u.or == nil {
-			return fmt.Errorf("field \"or\" is required")
-		}
-		return orFunc(*u.or)
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-		return notFunc(*u.not)
-	}
-}
-
-func (u *SearchModuleApplicationsQuery) ModuleRidNoopSuccess(api1.ModuleRid) error {
-	return nil
-}
-
-func (u *SearchModuleApplicationsQuery) AssetRidNoopSuccess(api2.AssetRid) error {
-	return nil
-}
-
-func (u *SearchModuleApplicationsQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
-	return nil
-}
-
-func (u *SearchModuleApplicationsQuery) AndNoopSuccess([]SearchModuleApplicationsQuery) error {
-	return nil
-}
-
-func (u *SearchModuleApplicationsQuery) OrNoopSuccess([]SearchModuleApplicationsQuery) error {
-	return nil
-}
-
-func (u *SearchModuleApplicationsQuery) NotNoopSuccess(SearchModuleApplicationsQuery) error {
-	return nil
-}
-
-func (u *SearchModuleApplicationsQuery) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *SearchModuleApplicationsQuery) Accept(v SearchModuleApplicationsQueryVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
-	case "moduleRid":
-		if u.moduleRid == nil {
-			return fmt.Errorf("field \"moduleRid\" is required")
-		}
-		return v.VisitModuleRid(*u.moduleRid)
-	case "assetRid":
-		if u.assetRid == nil {
-			return fmt.Errorf("field \"assetRid\" is required")
-		}
-		return v.VisitAssetRid(*u.assetRid)
-	case "workspace":
-		if u.workspace == nil {
-			return fmt.Errorf("field \"workspace\" is required")
-		}
-		return v.VisitWorkspace(*u.workspace)
-	case "and":
-		if u.and == nil {
-			return fmt.Errorf("field \"and\" is required")
-		}
-		return v.VisitAnd(*u.and)
-	case "or":
-		if u.or == nil {
-			return fmt.Errorf("field \"or\" is required")
-		}
-		return v.VisitOr(*u.or)
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-		return v.VisitNot(*u.not)
-	}
-}
-
-type SearchModuleApplicationsQueryVisitor interface {
-	VisitModuleRid(v api1.ModuleRid) error
-	VisitAssetRid(v api2.AssetRid) error
-	VisitWorkspace(v rids.WorkspaceRid) error
-	VisitAnd(v []SearchModuleApplicationsQuery) error
-	VisitOr(v []SearchModuleApplicationsQuery) error
-	VisitNot(v SearchModuleApplicationsQuery) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *SearchModuleApplicationsQuery) AcceptWithContext(ctx context.Context, v SearchModuleApplicationsQueryVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "moduleRid":
-		if u.moduleRid == nil {
-			return fmt.Errorf("field \"moduleRid\" is required")
-		}
-		return v.VisitModuleRidWithContext(ctx, *u.moduleRid)
-	case "assetRid":
-		if u.assetRid == nil {
-			return fmt.Errorf("field \"assetRid\" is required")
-		}
-		return v.VisitAssetRidWithContext(ctx, *u.assetRid)
-	case "workspace":
-		if u.workspace == nil {
-			return fmt.Errorf("field \"workspace\" is required")
-		}
-		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
-	case "and":
-		if u.and == nil {
-			return fmt.Errorf("field \"and\" is required")
-		}
-		return v.VisitAndWithContext(ctx, *u.and)
-	case "or":
-		if u.or == nil {
-			return fmt.Errorf("field \"or\" is required")
-		}
-		return v.VisitOrWithContext(ctx, *u.or)
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-		return v.VisitNotWithContext(ctx, *u.not)
-	}
-}
-
-type SearchModuleApplicationsQueryVisitorWithContext interface {
-	VisitModuleRidWithContext(ctx context.Context, v api1.ModuleRid) error
-	VisitAssetRidWithContext(ctx context.Context, v api2.AssetRid) error
-	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
-	VisitAndWithContext(ctx context.Context, v []SearchModuleApplicationsQuery) error
-	VisitOrWithContext(ctx context.Context, v []SearchModuleApplicationsQuery) error
-	VisitNotWithContext(ctx context.Context, v SearchModuleApplicationsQuery) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewSearchModuleApplicationsQueryFromModuleRid(v api1.ModuleRid) SearchModuleApplicationsQuery {
-	return SearchModuleApplicationsQuery{typ: "moduleRid", moduleRid: &v}
-}
-
-func NewSearchModuleApplicationsQueryFromAssetRid(v api2.AssetRid) SearchModuleApplicationsQuery {
-	return SearchModuleApplicationsQuery{typ: "assetRid", assetRid: &v}
-}
-
-func NewSearchModuleApplicationsQueryFromWorkspace(v rids.WorkspaceRid) SearchModuleApplicationsQuery {
-	return SearchModuleApplicationsQuery{typ: "workspace", workspace: &v}
-}
-
-func NewSearchModuleApplicationsQueryFromAnd(v []SearchModuleApplicationsQuery) SearchModuleApplicationsQuery {
-	return SearchModuleApplicationsQuery{typ: "and", and: &v}
-}
-
-func NewSearchModuleApplicationsQueryFromOr(v []SearchModuleApplicationsQuery) SearchModuleApplicationsQuery {
-	return SearchModuleApplicationsQuery{typ: "or", or: &v}
-}
-
-func NewSearchModuleApplicationsQueryFromNot(v SearchModuleApplicationsQuery) SearchModuleApplicationsQuery {
-	return SearchModuleApplicationsQuery{typ: "not", not: &v}
+func NewRequestModuleRefFromRid(v RequestModuleRidRef) RequestModuleRef {
+	return RequestModuleRef{typ: "rid", rid: &v}
 }
 
 type SearchModulesQuery struct {
 	typ           string
 	searchText    *string
-	createdBy     *api2.UserRid
-	lastUpdatedBy *api2.UserRid
+	createdBy     *api.UserRid
+	lastUpdatedBy *api.UserRid
 	workspace     *rids.WorkspaceRid
 	and           *[]SearchModulesQuery
 	or            *[]SearchModulesQuery
@@ -707,8 +415,8 @@ type SearchModulesQuery struct {
 type searchModulesQueryDeserializer struct {
 	Type          string                `json:"type"`
 	SearchText    *string               `json:"searchText"`
-	CreatedBy     *api2.UserRid         `json:"createdBy"`
-	LastUpdatedBy *api2.UserRid         `json:"lastUpdatedBy"`
+	CreatedBy     *api.UserRid          `json:"createdBy"`
+	LastUpdatedBy *api.UserRid          `json:"lastUpdatedBy"`
 	Workspace     *rids.WorkspaceRid    `json:"workspace"`
 	And           *[]SearchModulesQuery `json:"and"`
 	Or            *[]SearchModulesQuery `json:"or"`
@@ -736,16 +444,16 @@ func (u *SearchModulesQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"createdBy\" is required")
 		}
 		return struct {
-			Type      string       `json:"type"`
-			CreatedBy api2.UserRid `json:"createdBy"`
+			Type      string      `json:"type"`
+			CreatedBy api.UserRid `json:"createdBy"`
 		}{Type: "createdBy", CreatedBy: *u.createdBy}, nil
 	case "lastUpdatedBy":
 		if u.lastUpdatedBy == nil {
 			return nil, fmt.Errorf("field \"lastUpdatedBy\" is required")
 		}
 		return struct {
-			Type          string       `json:"type"`
-			LastUpdatedBy api2.UserRid `json:"lastUpdatedBy"`
+			Type          string      `json:"type"`
+			LastUpdatedBy api.UserRid `json:"lastUpdatedBy"`
 		}{Type: "lastUpdatedBy", LastUpdatedBy: *u.lastUpdatedBy}, nil
 	case "workspace":
 		if u.workspace == nil {
@@ -845,7 +553,7 @@ func (u *SearchModulesQuery) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchModulesQuery) AcceptFuncs(searchTextFunc func(string) error, createdByFunc func(api2.UserRid) error, lastUpdatedByFunc func(api2.UserRid) error, workspaceFunc func(rids.WorkspaceRid) error, andFunc func([]SearchModulesQuery) error, orFunc func([]SearchModulesQuery) error, notFunc func(SearchModulesQuery) error, unknownFunc func(string) error) error {
+func (u *SearchModulesQuery) AcceptFuncs(searchTextFunc func(string) error, createdByFunc func(api.UserRid) error, lastUpdatedByFunc func(api.UserRid) error, workspaceFunc func(rids.WorkspaceRid) error, andFunc func([]SearchModulesQuery) error, orFunc func([]SearchModulesQuery) error, notFunc func(SearchModulesQuery) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -894,11 +602,11 @@ func (u *SearchModulesQuery) SearchTextNoopSuccess(string) error {
 	return nil
 }
 
-func (u *SearchModulesQuery) CreatedByNoopSuccess(api2.UserRid) error {
+func (u *SearchModulesQuery) CreatedByNoopSuccess(api.UserRid) error {
 	return nil
 }
 
-func (u *SearchModulesQuery) LastUpdatedByNoopSuccess(api2.UserRid) error {
+func (u *SearchModulesQuery) LastUpdatedByNoopSuccess(api.UserRid) error {
 	return nil
 }
 
@@ -969,8 +677,8 @@ func (u *SearchModulesQuery) Accept(v SearchModulesQueryVisitor) error {
 
 type SearchModulesQueryVisitor interface {
 	VisitSearchText(v string) error
-	VisitCreatedBy(v api2.UserRid) error
-	VisitLastUpdatedBy(v api2.UserRid) error
+	VisitCreatedBy(v api.UserRid) error
+	VisitLastUpdatedBy(v api.UserRid) error
 	VisitWorkspace(v rids.WorkspaceRid) error
 	VisitAnd(v []SearchModulesQuery) error
 	VisitOr(v []SearchModulesQuery) error
@@ -1025,8 +733,8 @@ func (u *SearchModulesQuery) AcceptWithContext(ctx context.Context, v SearchModu
 
 type SearchModulesQueryVisitorWithContext interface {
 	VisitSearchTextWithContext(ctx context.Context, v string) error
-	VisitCreatedByWithContext(ctx context.Context, v api2.UserRid) error
-	VisitLastUpdatedByWithContext(ctx context.Context, v api2.UserRid) error
+	VisitCreatedByWithContext(ctx context.Context, v api.UserRid) error
+	VisitLastUpdatedByWithContext(ctx context.Context, v api.UserRid) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
 	VisitAndWithContext(ctx context.Context, v []SearchModulesQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchModulesQuery) error
@@ -1038,11 +746,11 @@ func NewSearchModulesQueryFromSearchText(v string) SearchModulesQuery {
 	return SearchModulesQuery{typ: "searchText", searchText: &v}
 }
 
-func NewSearchModulesQueryFromCreatedBy(v api2.UserRid) SearchModulesQuery {
+func NewSearchModulesQueryFromCreatedBy(v api.UserRid) SearchModulesQuery {
 	return SearchModulesQuery{typ: "createdBy", createdBy: &v}
 }
 
-func NewSearchModulesQueryFromLastUpdatedBy(v api2.UserRid) SearchModulesQuery {
+func NewSearchModulesQueryFromLastUpdatedBy(v api.UserRid) SearchModulesQuery {
 	return SearchModulesQuery{typ: "lastUpdatedBy", lastUpdatedBy: &v}
 }
 

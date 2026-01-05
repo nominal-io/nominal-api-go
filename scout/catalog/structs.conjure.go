@@ -17,11 +17,15 @@ import (
 )
 
 type AddFileToDataset struct {
-	Handle            Handle             `json:"handle"`
+	Handle Handle `json:"handle"`
+	// The size of the file in bytes.
+	FileSize          safelong.SafeLong  `conjure-docs:"The size of the file in bytes." json:"fileSize"`
 	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
 	IngestTagMetadata *IngestTagMetadata `json:"ingestTagMetadata,omitempty"`
 	OriginFileHandles *[]S3Handle        `json:"originFileHandles,omitempty"`
 	IngestJobRid      *api.IngestJobRid  `json:"ingestJobRid,omitempty"`
+	// File-type-specific metadata. For video files, contains timestamp manifest.
+	Metadata *DatasetFileMetadata `conjure-docs:"File-type-specific metadata. For video files, contains timestamp manifest." json:"metadata,omitempty"`
 }
 
 func (o AddFileToDataset) MarshalYAML() (interface{}, error) {
@@ -387,6 +391,8 @@ type DatasetFile struct {
 	IngestJobRid      *api.IngestJobRid   `json:"ingestJobRid,omitempty"`
 	// Timestamp that the file is deleted at, only present if the file has been deleted.
 	DeletedAt *datetime.DateTime `conjure-docs:"Timestamp that the file is deleted at, only present if the file has been deleted." json:"deletedAt,omitempty"`
+	// File-type-specific metadata. For video files, contains timestamp manifest and segment metadata.
+	Metadata *DatasetFileMetadata `conjure-docs:"File-type-specific metadata. For video files, contains timestamp manifest and segment metadata." json:"metadata,omitempty"`
 }
 
 func (o DatasetFile) MarshalYAML() (interface{}, error) {

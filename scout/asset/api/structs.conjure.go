@@ -152,7 +152,7 @@ func (o *Asset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type AssetSortOptions struct {
 	IsDescending bool `json:"isDescending"`
 	// Deprecated: use SortKey with SortField union type instead
-	Field *SortField `json:"field,omitempty"`
+	Field *AssetSortField `json:"field,omitempty"`
 	/*
 	   Field to sort by. Includes both field and property-based sorting.
 	   Must be supplied if field is not provided separately.
@@ -194,6 +194,48 @@ func (o AssetTypeDataScopeConfig) MarshalYAML() (interface{}, error) {
 }
 
 func (o *AssetTypeDataScopeConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// returns runs that match any of the provided assetTypes.
+type AssetTypesFilter struct {
+	AssetTypes []api.TypeRid `json:"assetTypes"`
+}
+
+func (o AssetTypesFilter) MarshalJSON() ([]byte, error) {
+	if o.AssetTypes == nil {
+		o.AssetTypes = make([]api.TypeRid, 0)
+	}
+	type _tmpAssetTypesFilter AssetTypesFilter
+	return safejson.Marshal(_tmpAssetTypesFilter(o))
+}
+
+func (o *AssetTypesFilter) UnmarshalJSON(data []byte) error {
+	type _tmpAssetTypesFilter AssetTypesFilter
+	var rawAssetTypesFilter _tmpAssetTypesFilter
+	if err := safejson.Unmarshal(data, &rawAssetTypesFilter); err != nil {
+		return err
+	}
+	if rawAssetTypesFilter.AssetTypes == nil {
+		rawAssetTypesFilter.AssetTypes = make([]api.TypeRid, 0)
+	}
+	*o = AssetTypesFilter(rawAssetTypesFilter)
+	return nil
+}
+
+func (o AssetTypesFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AssetTypesFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -640,8 +682,11 @@ type SearchTypesRequest struct {
 	PageSize      *int             `conjure-docs:"Page sizes greater than 10_000 will be rejected. Default pageSize is 100." json:"pageSize,omitempty"`
 	NextPageToken *api1.Token      `json:"nextPageToken,omitempty"`
 	Query         SearchTypesQuery `json:"query"`
-	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search.
-	ArchivedStatuses *[]api1.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search." json:"archivedStatuses,omitempty"`
+	/*
+	   Deprecated: Use the isArchived search query option instead. If no filter is applied and this field is empty, the
+	   default search status is NOT_ARCHIVED.
+	*/
+	ArchivedStatuses *[]api1.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchTypesRequest) MarshalYAML() (interface{}, error) {
@@ -781,8 +826,8 @@ func (o *Type) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type TypeSortOptions struct {
-	IsDescending bool      `json:"isDescending"`
-	Field        SortField `json:"field"`
+	IsDescending bool          `json:"isDescending"`
+	Field        TypeSortField `json:"field"`
 }
 
 func (o TypeSortOptions) MarshalYAML() (interface{}, error) {

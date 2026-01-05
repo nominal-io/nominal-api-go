@@ -8,8 +8,8 @@ import (
 	api2 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/comparisonrun/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/compute/api"
-	api4 "github.com/nominal-io/nominal-api-go/scout/rids/api"
-	api5 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	api5 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 	"github.com/palantir/pkg/uuid"
@@ -339,6 +339,45 @@ func (o *DefaultFill) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type EnumArrayCellConfig struct {
+	Visualisation *EnumArrayVisualisation `json:"visualisation,omitempty"`
+}
+
+func (o EnumArrayCellConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EnumArrayCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A raw enum array visualisation with optional coloring based on enum thresholds.
+type EnumArrayRawVisualisation struct{}
+
+func (o EnumArrayRawVisualisation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EnumArrayRawVisualisation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type EnumCellConfig struct {
 	Visualisation *EnumValueVisualisation `json:"visualisation,omitempty"`
 	/*
@@ -521,6 +560,27 @@ func (o *Figure) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Format the number to a fixed number of decimal places, padding with zeroes or rounding as needed.
+type FixedDecimalPlaces struct {
+	Places int `json:"places"`
+}
+
+func (o FixedDecimalPlaces) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FixedDecimalPlaces) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type FrequencyChartDefinitionV1 struct {
 	Plots []FrequencyPlot `json:"plots"`
 	// Deprecated: Please use the workbook's eventRefs field instead.
@@ -528,6 +588,8 @@ type FrequencyChartDefinitionV1 struct {
 	ComparisonRunGroups []api1.ComparisonRunGroup `json:"comparisonRunGroups"`
 	Title               *string                   `json:"title,omitempty"`
 	ValueAxes           []ValueAxis               `json:"valueAxes"`
+	// The type of plot to display. If not specified, the default is FFT.
+	PlotType *FrequencyPlotType `conjure-docs:"The type of plot to display. If not specified, the default is FFT." json:"plotType,omitempty"`
 }
 
 func (o FrequencyChartDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -579,6 +641,67 @@ func (o *FrequencyChartDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type FrequencyChartDefinitionV2 struct {
+	Plots []FrequencyPlotV2 `json:"plots"`
+	// Deprecated: Please use the workbook's eventRefs field instead.
+	Events              *[]Event                  `json:"events,omitempty"`
+	ComparisonRunGroups []api1.ComparisonRunGroup `json:"comparisonRunGroups"`
+	Title               *string                   `json:"title,omitempty"`
+	ValueAxes           []ValueAxis               `json:"valueAxes"`
+	// The type of plot to display. If not specified, the default is FFT.
+	PlotType *FrequencyPlotType `conjure-docs:"The type of plot to display. If not specified, the default is FFT." json:"plotType,omitempty"`
+}
+
+func (o FrequencyChartDefinitionV2) MarshalJSON() ([]byte, error) {
+	if o.Plots == nil {
+		o.Plots = make([]FrequencyPlotV2, 0)
+	}
+	if o.ComparisonRunGroups == nil {
+		o.ComparisonRunGroups = make([]api1.ComparisonRunGroup, 0)
+	}
+	if o.ValueAxes == nil {
+		o.ValueAxes = make([]ValueAxis, 0)
+	}
+	type _tmpFrequencyChartDefinitionV2 FrequencyChartDefinitionV2
+	return safejson.Marshal(_tmpFrequencyChartDefinitionV2(o))
+}
+
+func (o *FrequencyChartDefinitionV2) UnmarshalJSON(data []byte) error {
+	type _tmpFrequencyChartDefinitionV2 FrequencyChartDefinitionV2
+	var rawFrequencyChartDefinitionV2 _tmpFrequencyChartDefinitionV2
+	if err := safejson.Unmarshal(data, &rawFrequencyChartDefinitionV2); err != nil {
+		return err
+	}
+	if rawFrequencyChartDefinitionV2.Plots == nil {
+		rawFrequencyChartDefinitionV2.Plots = make([]FrequencyPlotV2, 0)
+	}
+	if rawFrequencyChartDefinitionV2.ComparisonRunGroups == nil {
+		rawFrequencyChartDefinitionV2.ComparisonRunGroups = make([]api1.ComparisonRunGroup, 0)
+	}
+	if rawFrequencyChartDefinitionV2.ValueAxes == nil {
+		rawFrequencyChartDefinitionV2.ValueAxes = make([]ValueAxis, 0)
+	}
+	*o = FrequencyChartDefinitionV2(rawFrequencyChartDefinitionV2)
+	return nil
+}
+
+func (o FrequencyChartDefinitionV2) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyChartDefinitionV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A frequency plot that displays a real value against the frequency domain.
 type FrequencyPlot struct {
 	VariableName api2.ChannelVariableName `json:"variableName"`
 	Enabled      *bool                    `json:"enabled,omitempty"`
@@ -596,6 +719,195 @@ func (o FrequencyPlot) MarshalYAML() (interface{}, error) {
 }
 
 func (o *FrequencyPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A plot that performs an analysis on an multiple signals and returns
+data mapped to the frequency domain.
+*/
+type FrequencyPlotMultivariate struct {
+	Title         *string                    `json:"title,omitempty"`
+	VariableNames []api2.ChannelVariableName `json:"variableNames"`
+	AxesIds       []AxisId                   `json:"axesIds"`
+	Enabled       *bool                      `json:"enabled,omitempty"`
+	Color         api.HexColor               `json:"color"`
+	LineStyle     LineStyle                  `json:"lineStyle"`
+}
+
+func (o FrequencyPlotMultivariate) MarshalJSON() ([]byte, error) {
+	if o.VariableNames == nil {
+		o.VariableNames = make([]api2.ChannelVariableName, 0)
+	}
+	if o.AxesIds == nil {
+		o.AxesIds = make([]AxisId, 0)
+	}
+	type _tmpFrequencyPlotMultivariate FrequencyPlotMultivariate
+	return safejson.Marshal(_tmpFrequencyPlotMultivariate(o))
+}
+
+func (o *FrequencyPlotMultivariate) UnmarshalJSON(data []byte) error {
+	type _tmpFrequencyPlotMultivariate FrequencyPlotMultivariate
+	var rawFrequencyPlotMultivariate _tmpFrequencyPlotMultivariate
+	if err := safejson.Unmarshal(data, &rawFrequencyPlotMultivariate); err != nil {
+		return err
+	}
+	if rawFrequencyPlotMultivariate.VariableNames == nil {
+		rawFrequencyPlotMultivariate.VariableNames = make([]api2.ChannelVariableName, 0)
+	}
+	if rawFrequencyPlotMultivariate.AxesIds == nil {
+		rawFrequencyPlotMultivariate.AxesIds = make([]AxisId, 0)
+	}
+	*o = FrequencyPlotMultivariate(rawFrequencyPlotMultivariate)
+	return nil
+}
+
+func (o FrequencyPlotMultivariate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyPlotMultivariate) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type FrequencyPlotTypeBode struct {
+	StftOptions         *api3.StftOptions         `json:"stftOptions,omitempty"`
+	MagnitudeScaling    *api3.MagnitudeScaling    `json:"magnitudeScaling,omitempty"`
+	OutputFrequencyType *api3.OutputFrequencyType `json:"outputFrequencyType,omitempty"`
+	UnwrapPhase         *bool                     `json:"unwrapPhase,omitempty"`
+	// Whether to the magnitude or phase of the output. Defaults to MAGNITUDE if not specified.
+	DisplayMode *MagnitudeAndPhaseDisplayMode `conjure-docs:"Whether to the magnitude or phase of the output. Defaults to MAGNITUDE if not specified." json:"displayMode,omitempty"`
+}
+
+func (o FrequencyPlotTypeBode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyPlotTypeBode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type FrequencyPlotTypeCpsd struct {
+	StftOptions         *api3.StftOptions         `json:"stftOptions,omitempty"`
+	MagnitudeScaling    *api3.MagnitudeScaling    `json:"magnitudeScaling,omitempty"`
+	OutputFrequencyType *api3.OutputFrequencyType `json:"outputFrequencyType,omitempty"`
+	UnwrapPhase         *bool                     `json:"unwrapPhase,omitempty"`
+	OutputPhaseUnit     *api3.OutputPhaseUnit     `json:"outputPhaseUnit,omitempty"`
+	// Whether to the magnitude or phase of the output. Defaults to MAGNITUDE if not specified.
+	DisplayMode *MagnitudeAndPhaseDisplayMode `conjure-docs:"Whether to the magnitude or phase of the output. Defaults to MAGNITUDE if not specified." json:"displayMode,omitempty"`
+}
+
+func (o FrequencyPlotTypeCpsd) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyPlotTypeCpsd) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type FrequencyPlotTypeFft struct {
+	Window *api3.FftWindow `json:"window,omitempty"`
+}
+
+func (o FrequencyPlotTypeFft) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyPlotTypeFft) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type FrequencyPlotTypeNyquist struct {
+	StftOptions *api3.StftOptions `json:"stftOptions,omitempty"`
+}
+
+func (o FrequencyPlotTypeNyquist) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyPlotTypeNyquist) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type FrequencyPlotTypePeriodogram struct {
+	Method api3.PeriodogramMethod `json:"method"`
+}
+
+func (o FrequencyPlotTypePeriodogram) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyPlotTypePeriodogram) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type FrequencyPlotTypePsd struct {
+	StftOptions         *api3.StftOptions         `json:"stftOptions,omitempty"`
+	MagnitudeScaling    *api3.MagnitudeScaling    `json:"magnitudeScaling,omitempty"`
+	OutputFrequencyType *api3.OutputFrequencyType `json:"outputFrequencyType,omitempty"`
+}
+
+func (o FrequencyPlotTypePsd) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyPlotTypePsd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -681,6 +993,28 @@ func (o Geo3dOrientationPrincipalAxes) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Geo3dOrientationPrincipalAxes) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type Geo3dPositionEcef struct {
+	EcefXVariableName api2.ChannelVariableName `json:"ecefXVariableName"`
+	EcefYVariableName api2.ChannelVariableName `json:"ecefYVariableName"`
+	EcefZVariableName api2.ChannelVariableName `json:"ecefZVariableName"`
+}
+
+func (o Geo3dPositionEcef) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dPositionEcef) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1222,6 +1556,27 @@ func (o *LogPanelDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Format the number to a maximum number of decimal places, rounding numbers that have greater precision.
+type MaxDecimalPlaces struct {
+	Places int `json:"places"`
+}
+
+func (o MaxDecimalPlaces) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MaxDecimalPlaces) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // This option indicates that disconnected values are never connected with a line.
 type NeverConnectDisconnectedValues struct{}
 
@@ -1243,9 +1598,14 @@ func (o *NeverConnectDisconnectedValues) UnmarshalYAML(unmarshal func(interface{
 
 // Number format for numeric cells, eg 1e4 | 10000 | 10,000.
 type NumberFormat struct {
-	SigFigs            *int                       `json:"sigFigs,omitempty"`
-	DisplayOption      *NumberFormatDisplayOption `json:"displayOption,omitempty"`
-	FixedDecimalPlaces *int                       `json:"fixedDecimalPlaces,omitempty"`
+	// Include the specified number of significant figures, rounding if needed.
+	SigFigs *int `conjure-docs:"Include the specified number of significant figures, rounding if needed." json:"sigFigs,omitempty"`
+	// The base display format for the number.
+	DisplayOption *NumberFormatDisplayOption `conjure-docs:"The base display format for the number." json:"displayOption,omitempty"`
+	// Deprecated: use decimalPlaces instead
+	FixedDecimalPlaces *int `json:"fixedDecimalPlaces,omitempty"`
+	// Options for formatting the decimal part of number.
+	DecimalPlaces *DecimalPlaces `conjure-docs:"Options for formatting the decimal part of number." json:"decimalPlaces,omitempty"`
 }
 
 func (o NumberFormat) MarshalYAML() (interface{}, error) {
@@ -1257,6 +1617,46 @@ func (o NumberFormat) MarshalYAML() (interface{}, error) {
 }
 
 func (o *NumberFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type NumericArrayCellConfig struct {
+	Visualisation *NumericArrayVisualisation `json:"visualisation,omitempty"`
+	NumberFormat  *NumberFormat              `json:"numberFormat,omitempty"`
+}
+
+func (o NumericArrayCellConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericArrayCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A raw numeric array visualisation with optional coloring based on numeric thresholds.
+type NumericArrayRawVisualisation struct{}
+
+func (o NumericArrayRawVisualisation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericArrayRawVisualisation) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1492,7 +1892,7 @@ func (o *PlotlyPanelDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) erro
 
 type ProcedureVizDefinitionV1 struct {
 	Title        *string                     `json:"title,omitempty"`
-	ExecutionRid *api4.ProcedureExecutionRid `json:"executionRid,omitempty"`
+	ExecutionRid *rids.ProcedureExecutionRid `json:"executionRid,omitempty"`
 }
 
 func (o ProcedureVizDefinitionV1) MarshalYAML() (interface{}, error) {
@@ -1504,6 +1904,28 @@ func (o ProcedureVizDefinitionV1) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ProcedureVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ProcedureVizDefinitionV2 struct {
+	Title *string `json:"title,omitempty"`
+	// A workbook can save either an execution or a template. Workbook templates should only use the latter.
+	Procedure *ProcedureVizId `conjure-docs:"A workbook can save either an execution or a template. Workbook templates should only use the latter." json:"procedure,omitempty"`
+}
+
+func (o ProcedureVizDefinitionV2) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ProcedureVizDefinitionV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1604,9 +2026,34 @@ func (o *Scatter3dTraceComputeConfig) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type StalenessCellConfig struct {
+	Visualisation *StalenessVisualisation `json:"visualisation,omitempty"`
+	/*
+	   Sorting configuration for grouped data rendering in a cell.
+	   If undefined, will sort alphabetically by grouping.
+	*/
+	GroupBySort *NumericGroupBySort `conjure-docs:"Sorting configuration for grouped data rendering in a cell.\nIf undefined, will sort alphabetically by grouping." json:"groupBySort,omitempty"`
+}
+
+func (o StalenessCellConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StalenessCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type StalenessConfiguration struct {
 	// The duration above which points are considered stale. By default this is 1 second.
-	Threshold api5.Duration `conjure-docs:"The duration above which points are considered stale. By default this is 1 second." json:"threshold"`
+	Threshold api4.Duration `conjure-docs:"The duration above which points are considered stale. By default this is 1 second." json:"threshold"`
 	// Whether or not to visually connect stale points, i.e. points whose distance exceeds that of the configured threshold. By default this is true.
 	ConnectStalePoints bool `conjure-docs:"Whether or not to visually connect stale points, i.e. points whose distance exceeds that of the configured threshold. By default this is true." json:"connectStalePoints"`
 }
@@ -1627,13 +2074,57 @@ func (o *StalenessConfiguration) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type StructCellConfig struct {
+	Visualisation *StructVisualisation `json:"visualisation,omitempty"`
+}
+
+func (o StructCellConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StructCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A raw struct visualisation (renders the JSON as-is)
+type StructRawVisualisation struct{}
+
+func (o StructRawVisualisation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StructRawVisualisation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Threshold struct {
-	// The minimum value a number must be to .
-	Value float64 `conjure-docs:"The minimum value a number must be to ." json:"value"`
+	// The minimum value a number must be to trigger the threshold color. If used in a staleness cell, this value is in milliseconds.
+	Value float64 `conjure-docs:"The minimum value a number must be to trigger the threshold color. If used in a staleness cell, this value is in milliseconds." json:"value"`
 	// The color to apply to the cell when the threshold is active.
 	Color api.HexColor `conjure-docs:"The color to apply to the cell when the threshold is active." json:"color"`
 	// A name for this threshold to display while editing.
 	Label *string `conjure-docs:"A name for this threshold to display while editing." json:"label,omitempty"`
+	/*
+	   Options for pinning an indicator that data was within the threshold range
+	   while streaming.
+	*/
+	Latch *ThresholdLatch `conjure-docs:"Options for pinning an indicator that data was within the threshold range \nwhile streaming." json:"latch,omitempty"`
 }
 
 func (o Threshold) MarshalYAML() (interface{}, error) {
@@ -1657,7 +2148,7 @@ NOTE this is deprecated and will be translated to NeverConnectDisconnectedValues
 This option indicates the duration below which disconnected values will always be connected with a line.
 */
 type ThresholdDisconnectedValues struct {
-	Type api5.Duration `json:"type"`
+	Type api4.Duration `json:"type"`
 }
 
 func (o ThresholdDisconnectedValues) MarshalYAML() (interface{}, error) {
@@ -1669,6 +2160,26 @@ func (o ThresholdDisconnectedValues) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ThresholdDisconnectedValues) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ThresholdLatch struct {
+	Enabled bool `json:"enabled"`
+}
+
+func (o ThresholdLatch) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ThresholdLatch) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1981,13 +2492,15 @@ func (o *TraceCompute) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type ValueAxis struct {
-	Id             string             `json:"id"`
-	Title          string             `json:"title"`
-	DisplayOptions AxisDisplayOptions `json:"displayOptions"`
-	Range          AxisRange          `json:"range"`
-	Limit          AxisRange          `json:"limit"`
-	Position       AxisPosition       `json:"position"`
-	DomainType     AxisDomainType     `json:"domainType"`
+	Id                  string             `json:"id"`
+	Title               string             `json:"title"`
+	DisplayOptions      AxisDisplayOptions `json:"displayOptions"`
+	Range               AxisRange          `json:"range"`
+	Limit               AxisRange          `json:"limit"`
+	Position            AxisPosition       `json:"position"`
+	DomainType          AxisDomainType     `json:"domainType"`
+	TickNumberFormat    *NumberFormat      `json:"tickNumberFormat,omitempty"`
+	TooltipNumberFormat *NumberFormat      `json:"tooltipNumberFormat,omitempty"`
 }
 
 func (o ValueAxis) MarshalYAML() (interface{}, error) {
@@ -2032,6 +2545,7 @@ func (o *ValueSort) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type ValueTableCell struct {
 	VariableName string               `json:"variableName"`
+	Uuid         *uuid.UUID           `json:"uuid,omitempty"`
 	Config       ValueTableCellConfig `json:"config"`
 }
 
@@ -2248,9 +2762,13 @@ Configurations for each type of cell in a grouping of heterogenous cells, such a
 for a row, for a column, or for the entire grid.
 */
 type ValueTableMultiCellConfig struct {
-	Range   *RangeCellConfig   `json:"range,omitempty"`
-	Enum    *EnumCellConfig    `json:"enum,omitempty"`
-	Numeric *NumericCellConfig `json:"numeric,omitempty"`
+	Range        *RangeCellConfig        `json:"range,omitempty"`
+	Enum         *EnumCellConfig         `json:"enum,omitempty"`
+	Numeric      *NumericCellConfig      `json:"numeric,omitempty"`
+	Staleness    *StalenessCellConfig    `json:"staleness,omitempty"`
+	NumericArray *NumericArrayCellConfig `json:"numericArray,omitempty"`
+	EnumArray    *EnumArrayCellConfig    `json:"enumArray,omitempty"`
+	Struct       *StructCellConfig       `json:"struct,omitempty"`
 }
 
 func (o ValueTableMultiCellConfig) MarshalYAML() (interface{}, error) {
@@ -2293,7 +2811,8 @@ func (o *ValueTableStalenessConfig) UnmarshalYAML(unmarshal func(interface{}) er
 
 // Enhanced video panel data source to be compatible with multiple assets
 type VideoPanelDataSource struct {
-	AssetRid api4.AssetRid     `json:"assetRid"`
+	RunRid   *api4.RunRid      `json:"runRid,omitempty"`
+	AssetRid api5.AssetRid     `json:"assetRid"`
 	RefName  DataSourceRefName `json:"refName"`
 }
 

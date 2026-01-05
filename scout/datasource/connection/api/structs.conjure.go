@@ -13,6 +13,47 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+type AllChannelsConnectionsScrapingConfig struct{}
+
+func (o AllChannelsConnectionsScrapingConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AllChannelsConnectionsScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ApiConnectionDetails struct {
+	// The URI to connect to hit the endpoints specified in the spec.
+	ApiUri string `conjure-docs:"The URI to connect to hit the endpoints specified in the spec." json:"apiUri"`
+	// Secret Rid of token secret stored in Secrets Service.
+	TokenSecretRid SecretRid `conjure-docs:"Secret Rid of token secret stored in Secrets Service." json:"tokenSecretRid"`
+}
+
+func (o ApiConnectionDetails) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ApiConnectionDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type BigQueryChannelNameComponent struct {
 	// Whether to include the project name in the channel name.
 	IncludeProject bool `conjure-docs:"Whether to include the project name in the channel name." json:"includeProject"`
@@ -115,6 +156,90 @@ func (o BigQueryScrapingConfig) MarshalYAML() (interface{}, error) {
 }
 
 func (o *BigQueryScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ChannelAllowListConnectionsScrapingConfig struct {
+	// Only channels in this set will be scraped. Must not be empty.
+	ChannelAllowList []api.Channel `conjure-docs:"Only channels in this set will be scraped. Must not be empty." json:"channelAllowList"`
+}
+
+func (o ChannelAllowListConnectionsScrapingConfig) MarshalJSON() ([]byte, error) {
+	if o.ChannelAllowList == nil {
+		o.ChannelAllowList = make([]api.Channel, 0)
+	}
+	type _tmpChannelAllowListConnectionsScrapingConfig ChannelAllowListConnectionsScrapingConfig
+	return safejson.Marshal(_tmpChannelAllowListConnectionsScrapingConfig(o))
+}
+
+func (o *ChannelAllowListConnectionsScrapingConfig) UnmarshalJSON(data []byte) error {
+	type _tmpChannelAllowListConnectionsScrapingConfig ChannelAllowListConnectionsScrapingConfig
+	var rawChannelAllowListConnectionsScrapingConfig _tmpChannelAllowListConnectionsScrapingConfig
+	if err := safejson.Unmarshal(data, &rawChannelAllowListConnectionsScrapingConfig); err != nil {
+		return err
+	}
+	if rawChannelAllowListConnectionsScrapingConfig.ChannelAllowList == nil {
+		rawChannelAllowListConnectionsScrapingConfig.ChannelAllowList = make([]api.Channel, 0)
+	}
+	*o = ChannelAllowListConnectionsScrapingConfig(rawChannelAllowListConnectionsScrapingConfig)
+	return nil
+}
+
+func (o ChannelAllowListConnectionsScrapingConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ChannelAllowListConnectionsScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ChannelBlockListConnectionsScrapingConfig struct {
+	// Only channels not in this set will be scraped. Must not be empty.
+	ChannelBlockList []api.Channel `conjure-docs:"Only channels not in this set will be scraped. Must not be empty." json:"channelBlockList"`
+}
+
+func (o ChannelBlockListConnectionsScrapingConfig) MarshalJSON() ([]byte, error) {
+	if o.ChannelBlockList == nil {
+		o.ChannelBlockList = make([]api.Channel, 0)
+	}
+	type _tmpChannelBlockListConnectionsScrapingConfig ChannelBlockListConnectionsScrapingConfig
+	return safejson.Marshal(_tmpChannelBlockListConnectionsScrapingConfig(o))
+}
+
+func (o *ChannelBlockListConnectionsScrapingConfig) UnmarshalJSON(data []byte) error {
+	type _tmpChannelBlockListConnectionsScrapingConfig ChannelBlockListConnectionsScrapingConfig
+	var rawChannelBlockListConnectionsScrapingConfig _tmpChannelBlockListConnectionsScrapingConfig
+	if err := safejson.Unmarshal(data, &rawChannelBlockListConnectionsScrapingConfig); err != nil {
+		return err
+	}
+	if rawChannelBlockListConnectionsScrapingConfig.ChannelBlockList == nil {
+		rawChannelBlockListConnectionsScrapingConfig.ChannelBlockList = make([]api.Channel, 0)
+	}
+	*o = ChannelBlockListConnectionsScrapingConfig(rawChannelBlockListConnectionsScrapingConfig)
+	return nil
+}
+
+func (o ChannelBlockListConnectionsScrapingConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ChannelBlockListConnectionsScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -527,6 +652,48 @@ func (o LimitsConfig) MarshalYAML() (interface{}, error) {
 }
 
 func (o *LimitsConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ListConnectionsResponse struct {
+	Connections   []Connection `json:"connections"`
+	NextPageToken *api.Token   `json:"nextPageToken,omitempty"`
+}
+
+func (o ListConnectionsResponse) MarshalJSON() ([]byte, error) {
+	if o.Connections == nil {
+		o.Connections = make([]Connection, 0)
+	}
+	type _tmpListConnectionsResponse ListConnectionsResponse
+	return safejson.Marshal(_tmpListConnectionsResponse(o))
+}
+
+func (o *ListConnectionsResponse) UnmarshalJSON(data []byte) error {
+	type _tmpListConnectionsResponse ListConnectionsResponse
+	var rawListConnectionsResponse _tmpListConnectionsResponse
+	if err := safejson.Unmarshal(data, &rawListConnectionsResponse); err != nil {
+		return err
+	}
+	if rawListConnectionsResponse.Connections == nil {
+		rawListConnectionsResponse.Connections = make([]Connection, 0)
+	}
+	*o = ListConnectionsResponse(rawListConnectionsResponse)
+	return nil
+}
+
+func (o ListConnectionsResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ListConnectionsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

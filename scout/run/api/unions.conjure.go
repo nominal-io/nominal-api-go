@@ -270,20 +270,27 @@ func NewDataSourceFromVideo(v rids.VideoRid) DataSource {
 type SearchQuery struct {
 	typ                    string
 	startTimeInclusive     *UtcTimestamp
+	startTime              *TimeframeFilter
 	endTimeInclusive       *UtcTimestamp
+	endTime                *TimeframeFilter
 	timeRange              *TimeRangeFilter
+	createdAt              *TimeframeFilter
 	exactMatch             *string
 	searchText             *string
 	asset                  *api.AssetRid
+	assets                 *AssetsFilter
 	isSingleAsset          *bool
 	label                  *api1.Label
+	labels                 *api.LabelsFilter
 	property               *api1.Property
+	properties             *api.PropertiesFilter
 	dataSourceSeriesTag    *DataSourceSeriesTag
 	dataSourceRefName      *api2.DataSourceRefName
 	dataSource             *DataSource
 	runNumber              *safelong.SafeLong
 	runPrefix              *string
 	checkAlertStatesFilter *CheckAlertStatesFilter
+	archived               *bool
 	and                    *[]SearchQuery
 	or                     *[]SearchQuery
 	not                    *SearchQuery
@@ -293,20 +300,27 @@ type SearchQuery struct {
 type searchQueryDeserializer struct {
 	Type                   string                  `json:"type"`
 	StartTimeInclusive     *UtcTimestamp           `json:"startTimeInclusive"`
+	StartTime              *TimeframeFilter        `json:"startTime"`
 	EndTimeInclusive       *UtcTimestamp           `json:"endTimeInclusive"`
+	EndTime                *TimeframeFilter        `json:"endTime"`
 	TimeRange              *TimeRangeFilter        `json:"timeRange"`
+	CreatedAt              *TimeframeFilter        `json:"createdAt"`
 	ExactMatch             *string                 `json:"exactMatch"`
 	SearchText             *string                 `json:"searchText"`
 	Asset                  *api.AssetRid           `json:"asset"`
+	Assets                 *AssetsFilter           `json:"assets"`
 	IsSingleAsset          *bool                   `json:"isSingleAsset"`
 	Label                  *api1.Label             `json:"label"`
+	Labels                 *api.LabelsFilter       `json:"labels"`
 	Property               *api1.Property          `json:"property"`
+	Properties             *api.PropertiesFilter   `json:"properties"`
 	DataSourceSeriesTag    *DataSourceSeriesTag    `json:"dataSourceSeriesTag"`
 	DataSourceRefName      *api2.DataSourceRefName `json:"dataSourceRefName"`
 	DataSource             *DataSource             `json:"dataSource"`
 	RunNumber              *safelong.SafeLong      `json:"runNumber"`
 	RunPrefix              *string                 `json:"runPrefix"`
 	CheckAlertStatesFilter *CheckAlertStatesFilter `json:"checkAlertStatesFilter"`
+	Archived               *bool                   `json:"archived"`
 	And                    *[]SearchQuery          `json:"and"`
 	Or                     *[]SearchQuery          `json:"or"`
 	Not                    *SearchQuery            `json:"not"`
@@ -314,7 +328,7 @@ type searchQueryDeserializer struct {
 }
 
 func (u *searchQueryDeserializer) toStruct() SearchQuery {
-	return SearchQuery{typ: u.Type, startTimeInclusive: u.StartTimeInclusive, endTimeInclusive: u.EndTimeInclusive, timeRange: u.TimeRange, exactMatch: u.ExactMatch, searchText: u.SearchText, asset: u.Asset, isSingleAsset: u.IsSingleAsset, label: u.Label, property: u.Property, dataSourceSeriesTag: u.DataSourceSeriesTag, dataSourceRefName: u.DataSourceRefName, dataSource: u.DataSource, runNumber: u.RunNumber, runPrefix: u.RunPrefix, checkAlertStatesFilter: u.CheckAlertStatesFilter, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace}
+	return SearchQuery{typ: u.Type, startTimeInclusive: u.StartTimeInclusive, startTime: u.StartTime, endTimeInclusive: u.EndTimeInclusive, endTime: u.EndTime, timeRange: u.TimeRange, createdAt: u.CreatedAt, exactMatch: u.ExactMatch, searchText: u.SearchText, asset: u.Asset, assets: u.Assets, isSingleAsset: u.IsSingleAsset, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, dataSourceSeriesTag: u.DataSourceSeriesTag, dataSourceRefName: u.DataSourceRefName, dataSource: u.DataSource, runNumber: u.RunNumber, runPrefix: u.RunPrefix, checkAlertStatesFilter: u.CheckAlertStatesFilter, archived: u.Archived, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace}
 }
 
 func (u *SearchQuery) toSerializer() (interface{}, error) {
@@ -329,6 +343,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type               string       `json:"type"`
 			StartTimeInclusive UtcTimestamp `json:"startTimeInclusive"`
 		}{Type: "startTimeInclusive", StartTimeInclusive: *u.startTimeInclusive}, nil
+	case "startTime":
+		if u.startTime == nil {
+			return nil, fmt.Errorf("field \"startTime\" is required")
+		}
+		return struct {
+			Type      string          `json:"type"`
+			StartTime TimeframeFilter `json:"startTime"`
+		}{Type: "startTime", StartTime: *u.startTime}, nil
 	case "endTimeInclusive":
 		if u.endTimeInclusive == nil {
 			return nil, fmt.Errorf("field \"endTimeInclusive\" is required")
@@ -337,6 +359,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type             string       `json:"type"`
 			EndTimeInclusive UtcTimestamp `json:"endTimeInclusive"`
 		}{Type: "endTimeInclusive", EndTimeInclusive: *u.endTimeInclusive}, nil
+	case "endTime":
+		if u.endTime == nil {
+			return nil, fmt.Errorf("field \"endTime\" is required")
+		}
+		return struct {
+			Type    string          `json:"type"`
+			EndTime TimeframeFilter `json:"endTime"`
+		}{Type: "endTime", EndTime: *u.endTime}, nil
 	case "timeRange":
 		if u.timeRange == nil {
 			return nil, fmt.Errorf("field \"timeRange\" is required")
@@ -345,6 +375,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type      string          `json:"type"`
 			TimeRange TimeRangeFilter `json:"timeRange"`
 		}{Type: "timeRange", TimeRange: *u.timeRange}, nil
+	case "createdAt":
+		if u.createdAt == nil {
+			return nil, fmt.Errorf("field \"createdAt\" is required")
+		}
+		return struct {
+			Type      string          `json:"type"`
+			CreatedAt TimeframeFilter `json:"createdAt"`
+		}{Type: "createdAt", CreatedAt: *u.createdAt}, nil
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return nil, fmt.Errorf("field \"exactMatch\" is required")
@@ -369,6 +407,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type  string       `json:"type"`
 			Asset api.AssetRid `json:"asset"`
 		}{Type: "asset", Asset: *u.asset}, nil
+	case "assets":
+		if u.assets == nil {
+			return nil, fmt.Errorf("field \"assets\" is required")
+		}
+		return struct {
+			Type   string       `json:"type"`
+			Assets AssetsFilter `json:"assets"`
+		}{Type: "assets", Assets: *u.assets}, nil
 	case "isSingleAsset":
 		if u.isSingleAsset == nil {
 			return nil, fmt.Errorf("field \"isSingleAsset\" is required")
@@ -385,6 +431,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type  string     `json:"type"`
 			Label api1.Label `json:"label"`
 		}{Type: "label", Label: *u.label}, nil
+	case "labels":
+		if u.labels == nil {
+			return nil, fmt.Errorf("field \"labels\" is required")
+		}
+		return struct {
+			Type   string           `json:"type"`
+			Labels api.LabelsFilter `json:"labels"`
+		}{Type: "labels", Labels: *u.labels}, nil
 	case "property":
 		if u.property == nil {
 			return nil, fmt.Errorf("field \"property\" is required")
@@ -393,6 +447,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type     string        `json:"type"`
 			Property api1.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "properties":
+		if u.properties == nil {
+			return nil, fmt.Errorf("field \"properties\" is required")
+		}
+		return struct {
+			Type       string               `json:"type"`
+			Properties api.PropertiesFilter `json:"properties"`
+		}{Type: "properties", Properties: *u.properties}, nil
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return nil, fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -441,6 +503,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type                   string                 `json:"type"`
 			CheckAlertStatesFilter CheckAlertStatesFilter `json:"checkAlertStatesFilter"`
 		}{Type: "checkAlertStatesFilter", CheckAlertStatesFilter: *u.checkAlertStatesFilter}, nil
+	case "archived":
+		if u.archived == nil {
+			return nil, fmt.Errorf("field \"archived\" is required")
+		}
+		return struct {
+			Type     string `json:"type"`
+			Archived bool   `json:"archived"`
+		}{Type: "archived", Archived: *u.archived}, nil
 	case "and":
 		if u.and == nil {
 			return nil, fmt.Errorf("field \"and\" is required")
@@ -495,13 +565,25 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.startTimeInclusive == nil {
 			return fmt.Errorf("field \"startTimeInclusive\" is required")
 		}
+	case "startTime":
+		if u.startTime == nil {
+			return fmt.Errorf("field \"startTime\" is required")
+		}
 	case "endTimeInclusive":
 		if u.endTimeInclusive == nil {
 			return fmt.Errorf("field \"endTimeInclusive\" is required")
 		}
+	case "endTime":
+		if u.endTime == nil {
+			return fmt.Errorf("field \"endTime\" is required")
+		}
 	case "timeRange":
 		if u.timeRange == nil {
 			return fmt.Errorf("field \"timeRange\" is required")
+		}
+	case "createdAt":
+		if u.createdAt == nil {
+			return fmt.Errorf("field \"createdAt\" is required")
 		}
 	case "exactMatch":
 		if u.exactMatch == nil {
@@ -515,6 +597,10 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.asset == nil {
 			return fmt.Errorf("field \"asset\" is required")
 		}
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
 	case "isSingleAsset":
 		if u.isSingleAsset == nil {
 			return fmt.Errorf("field \"isSingleAsset\" is required")
@@ -523,9 +609,17 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.label == nil {
 			return fmt.Errorf("field \"label\" is required")
 		}
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
+		}
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
 		}
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
@@ -550,6 +644,10 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 	case "checkAlertStatesFilter":
 		if u.checkAlertStatesFilter == nil {
 			return fmt.Errorf("field \"checkAlertStatesFilter\" is required")
+		}
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
 		}
 	case "and":
 		if u.and == nil {
@@ -587,7 +685,7 @@ func (u *SearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) error, endTimeInclusiveFunc func(UtcTimestamp) error, timeRangeFunc func(TimeRangeFilter) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, assetFunc func(api.AssetRid) error, isSingleAssetFunc func(bool) error, labelFunc func(api1.Label) error, propertyFunc func(api1.Property) error, dataSourceSeriesTagFunc func(DataSourceSeriesTag) error, dataSourceRefNameFunc func(api2.DataSourceRefName) error, dataSourceFunc func(DataSource) error, runNumberFunc func(safelong.SafeLong) error, runPrefixFunc func(string) error, checkAlertStatesFilterFunc func(CheckAlertStatesFilter) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) error, startTimeFunc func(TimeframeFilter) error, endTimeInclusiveFunc func(UtcTimestamp) error, endTimeFunc func(TimeframeFilter) error, timeRangeFunc func(TimeRangeFilter) error, createdAtFunc func(TimeframeFilter) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, assetFunc func(api.AssetRid) error, assetsFunc func(AssetsFilter) error, isSingleAssetFunc func(bool) error, labelFunc func(api1.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api1.Property) error, propertiesFunc func(api.PropertiesFilter) error, dataSourceSeriesTagFunc func(DataSourceSeriesTag) error, dataSourceRefNameFunc func(api2.DataSourceRefName) error, dataSourceFunc func(DataSource) error, runNumberFunc func(safelong.SafeLong) error, runPrefixFunc func(string) error, checkAlertStatesFilterFunc func(CheckAlertStatesFilter) error, archivedFunc func(bool) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -599,16 +697,31 @@ func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) erro
 			return fmt.Errorf("field \"startTimeInclusive\" is required")
 		}
 		return startTimeInclusiveFunc(*u.startTimeInclusive)
+	case "startTime":
+		if u.startTime == nil {
+			return fmt.Errorf("field \"startTime\" is required")
+		}
+		return startTimeFunc(*u.startTime)
 	case "endTimeInclusive":
 		if u.endTimeInclusive == nil {
 			return fmt.Errorf("field \"endTimeInclusive\" is required")
 		}
 		return endTimeInclusiveFunc(*u.endTimeInclusive)
+	case "endTime":
+		if u.endTime == nil {
+			return fmt.Errorf("field \"endTime\" is required")
+		}
+		return endTimeFunc(*u.endTime)
 	case "timeRange":
 		if u.timeRange == nil {
 			return fmt.Errorf("field \"timeRange\" is required")
 		}
 		return timeRangeFunc(*u.timeRange)
+	case "createdAt":
+		if u.createdAt == nil {
+			return fmt.Errorf("field \"createdAt\" is required")
+		}
+		return createdAtFunc(*u.createdAt)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -624,6 +737,11 @@ func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) erro
 			return fmt.Errorf("field \"asset\" is required")
 		}
 		return assetFunc(*u.asset)
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
+		return assetsFunc(*u.assets)
 	case "isSingleAsset":
 		if u.isSingleAsset == nil {
 			return fmt.Errorf("field \"isSingleAsset\" is required")
@@ -634,11 +752,21 @@ func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) erro
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -669,6 +797,11 @@ func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) erro
 			return fmt.Errorf("field \"checkAlertStatesFilter\" is required")
 		}
 		return checkAlertStatesFilterFunc(*u.checkAlertStatesFilter)
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
+		}
+		return archivedFunc(*u.archived)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -696,11 +829,23 @@ func (u *SearchQuery) StartTimeInclusiveNoopSuccess(UtcTimestamp) error {
 	return nil
 }
 
+func (u *SearchQuery) StartTimeNoopSuccess(TimeframeFilter) error {
+	return nil
+}
+
 func (u *SearchQuery) EndTimeInclusiveNoopSuccess(UtcTimestamp) error {
 	return nil
 }
 
+func (u *SearchQuery) EndTimeNoopSuccess(TimeframeFilter) error {
+	return nil
+}
+
 func (u *SearchQuery) TimeRangeNoopSuccess(TimeRangeFilter) error {
+	return nil
+}
+
+func (u *SearchQuery) CreatedAtNoopSuccess(TimeframeFilter) error {
 	return nil
 }
 
@@ -716,6 +861,10 @@ func (u *SearchQuery) AssetNoopSuccess(api.AssetRid) error {
 	return nil
 }
 
+func (u *SearchQuery) AssetsNoopSuccess(AssetsFilter) error {
+	return nil
+}
+
 func (u *SearchQuery) IsSingleAssetNoopSuccess(bool) error {
 	return nil
 }
@@ -724,7 +873,15 @@ func (u *SearchQuery) LabelNoopSuccess(api1.Label) error {
 	return nil
 }
 
+func (u *SearchQuery) LabelsNoopSuccess(api.LabelsFilter) error {
+	return nil
+}
+
 func (u *SearchQuery) PropertyNoopSuccess(api1.Property) error {
+	return nil
+}
+
+func (u *SearchQuery) PropertiesNoopSuccess(api.PropertiesFilter) error {
 	return nil
 }
 
@@ -749,6 +906,10 @@ func (u *SearchQuery) RunPrefixNoopSuccess(string) error {
 }
 
 func (u *SearchQuery) CheckAlertStatesFilterNoopSuccess(CheckAlertStatesFilter) error {
+	return nil
+}
+
+func (u *SearchQuery) ArchivedNoopSuccess(bool) error {
 	return nil
 }
 
@@ -784,16 +945,31 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"startTimeInclusive\" is required")
 		}
 		return v.VisitStartTimeInclusive(*u.startTimeInclusive)
+	case "startTime":
+		if u.startTime == nil {
+			return fmt.Errorf("field \"startTime\" is required")
+		}
+		return v.VisitStartTime(*u.startTime)
 	case "endTimeInclusive":
 		if u.endTimeInclusive == nil {
 			return fmt.Errorf("field \"endTimeInclusive\" is required")
 		}
 		return v.VisitEndTimeInclusive(*u.endTimeInclusive)
+	case "endTime":
+		if u.endTime == nil {
+			return fmt.Errorf("field \"endTime\" is required")
+		}
+		return v.VisitEndTime(*u.endTime)
 	case "timeRange":
 		if u.timeRange == nil {
 			return fmt.Errorf("field \"timeRange\" is required")
 		}
 		return v.VisitTimeRange(*u.timeRange)
+	case "createdAt":
+		if u.createdAt == nil {
+			return fmt.Errorf("field \"createdAt\" is required")
+		}
+		return v.VisitCreatedAt(*u.createdAt)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -809,6 +985,11 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"asset\" is required")
 		}
 		return v.VisitAsset(*u.asset)
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
+		return v.VisitAssets(*u.assets)
 	case "isSingleAsset":
 		if u.isSingleAsset == nil {
 			return fmt.Errorf("field \"isSingleAsset\" is required")
@@ -819,11 +1000,21 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(*u.properties)
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -854,6 +1045,11 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"checkAlertStatesFilter\" is required")
 		}
 		return v.VisitCheckAlertStatesFilter(*u.checkAlertStatesFilter)
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
+		}
+		return v.VisitArchived(*u.archived)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -879,20 +1075,27 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 
 type SearchQueryVisitor interface {
 	VisitStartTimeInclusive(v UtcTimestamp) error
+	VisitStartTime(v TimeframeFilter) error
 	VisitEndTimeInclusive(v UtcTimestamp) error
+	VisitEndTime(v TimeframeFilter) error
 	VisitTimeRange(v TimeRangeFilter) error
+	VisitCreatedAt(v TimeframeFilter) error
 	VisitExactMatch(v string) error
 	VisitSearchText(v string) error
 	VisitAsset(v api.AssetRid) error
+	VisitAssets(v AssetsFilter) error
 	VisitIsSingleAsset(v bool) error
 	VisitLabel(v api1.Label) error
+	VisitLabels(v api.LabelsFilter) error
 	VisitProperty(v api1.Property) error
+	VisitProperties(v api.PropertiesFilter) error
 	VisitDataSourceSeriesTag(v DataSourceSeriesTag) error
 	VisitDataSourceRefName(v api2.DataSourceRefName) error
 	VisitDataSource(v DataSource) error
 	VisitRunNumber(v safelong.SafeLong) error
 	VisitRunPrefix(v string) error
 	VisitCheckAlertStatesFilter(v CheckAlertStatesFilter) error
+	VisitArchived(v bool) error
 	VisitAnd(v []SearchQuery) error
 	VisitOr(v []SearchQuery) error
 	VisitNot(v SearchQuery) error
@@ -912,16 +1115,31 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"startTimeInclusive\" is required")
 		}
 		return v.VisitStartTimeInclusiveWithContext(ctx, *u.startTimeInclusive)
+	case "startTime":
+		if u.startTime == nil {
+			return fmt.Errorf("field \"startTime\" is required")
+		}
+		return v.VisitStartTimeWithContext(ctx, *u.startTime)
 	case "endTimeInclusive":
 		if u.endTimeInclusive == nil {
 			return fmt.Errorf("field \"endTimeInclusive\" is required")
 		}
 		return v.VisitEndTimeInclusiveWithContext(ctx, *u.endTimeInclusive)
+	case "endTime":
+		if u.endTime == nil {
+			return fmt.Errorf("field \"endTime\" is required")
+		}
+		return v.VisitEndTimeWithContext(ctx, *u.endTime)
 	case "timeRange":
 		if u.timeRange == nil {
 			return fmt.Errorf("field \"timeRange\" is required")
 		}
 		return v.VisitTimeRangeWithContext(ctx, *u.timeRange)
+	case "createdAt":
+		if u.createdAt == nil {
+			return fmt.Errorf("field \"createdAt\" is required")
+		}
+		return v.VisitCreatedAtWithContext(ctx, *u.createdAt)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -937,6 +1155,11 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"asset\" is required")
 		}
 		return v.VisitAssetWithContext(ctx, *u.asset)
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
+		return v.VisitAssetsWithContext(ctx, *u.assets)
 	case "isSingleAsset":
 		if u.isSingleAsset == nil {
 			return fmt.Errorf("field \"isSingleAsset\" is required")
@@ -947,11 +1170,21 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabelWithContext(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabelsWithContext(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitPropertiesWithContext(ctx, *u.properties)
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -982,6 +1215,11 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"checkAlertStatesFilter\" is required")
 		}
 		return v.VisitCheckAlertStatesFilterWithContext(ctx, *u.checkAlertStatesFilter)
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
+		}
+		return v.VisitArchivedWithContext(ctx, *u.archived)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -1007,20 +1245,27 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 
 type SearchQueryVisitorWithContext interface {
 	VisitStartTimeInclusiveWithContext(ctx context.Context, v UtcTimestamp) error
+	VisitStartTimeWithContext(ctx context.Context, v TimeframeFilter) error
 	VisitEndTimeInclusiveWithContext(ctx context.Context, v UtcTimestamp) error
+	VisitEndTimeWithContext(ctx context.Context, v TimeframeFilter) error
 	VisitTimeRangeWithContext(ctx context.Context, v TimeRangeFilter) error
+	VisitCreatedAtWithContext(ctx context.Context, v TimeframeFilter) error
 	VisitExactMatchWithContext(ctx context.Context, v string) error
 	VisitSearchTextWithContext(ctx context.Context, v string) error
 	VisitAssetWithContext(ctx context.Context, v api.AssetRid) error
+	VisitAssetsWithContext(ctx context.Context, v AssetsFilter) error
 	VisitIsSingleAssetWithContext(ctx context.Context, v bool) error
 	VisitLabelWithContext(ctx context.Context, v api1.Label) error
+	VisitLabelsWithContext(ctx context.Context, v api.LabelsFilter) error
 	VisitPropertyWithContext(ctx context.Context, v api1.Property) error
+	VisitPropertiesWithContext(ctx context.Context, v api.PropertiesFilter) error
 	VisitDataSourceSeriesTagWithContext(ctx context.Context, v DataSourceSeriesTag) error
 	VisitDataSourceRefNameWithContext(ctx context.Context, v api2.DataSourceRefName) error
 	VisitDataSourceWithContext(ctx context.Context, v DataSource) error
 	VisitRunNumberWithContext(ctx context.Context, v safelong.SafeLong) error
 	VisitRunPrefixWithContext(ctx context.Context, v string) error
 	VisitCheckAlertStatesFilterWithContext(ctx context.Context, v CheckAlertStatesFilter) error
+	VisitArchivedWithContext(ctx context.Context, v bool) error
 	VisitAndWithContext(ctx context.Context, v []SearchQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchQuery) error
 	VisitNotWithContext(ctx context.Context, v SearchQuery) error
@@ -1032,12 +1277,24 @@ func NewSearchQueryFromStartTimeInclusive(v UtcTimestamp) SearchQuery {
 	return SearchQuery{typ: "startTimeInclusive", startTimeInclusive: &v}
 }
 
+func NewSearchQueryFromStartTime(v TimeframeFilter) SearchQuery {
+	return SearchQuery{typ: "startTime", startTime: &v}
+}
+
 func NewSearchQueryFromEndTimeInclusive(v UtcTimestamp) SearchQuery {
 	return SearchQuery{typ: "endTimeInclusive", endTimeInclusive: &v}
 }
 
+func NewSearchQueryFromEndTime(v TimeframeFilter) SearchQuery {
+	return SearchQuery{typ: "endTime", endTime: &v}
+}
+
 func NewSearchQueryFromTimeRange(v TimeRangeFilter) SearchQuery {
 	return SearchQuery{typ: "timeRange", timeRange: &v}
+}
+
+func NewSearchQueryFromCreatedAt(v TimeframeFilter) SearchQuery {
+	return SearchQuery{typ: "createdAt", createdAt: &v}
 }
 
 func NewSearchQueryFromExactMatch(v string) SearchQuery {
@@ -1052,6 +1309,10 @@ func NewSearchQueryFromAsset(v api.AssetRid) SearchQuery {
 	return SearchQuery{typ: "asset", asset: &v}
 }
 
+func NewSearchQueryFromAssets(v AssetsFilter) SearchQuery {
+	return SearchQuery{typ: "assets", assets: &v}
+}
+
 func NewSearchQueryFromIsSingleAsset(v bool) SearchQuery {
 	return SearchQuery{typ: "isSingleAsset", isSingleAsset: &v}
 }
@@ -1060,8 +1321,16 @@ func NewSearchQueryFromLabel(v api1.Label) SearchQuery {
 	return SearchQuery{typ: "label", label: &v}
 }
 
+func NewSearchQueryFromLabels(v api.LabelsFilter) SearchQuery {
+	return SearchQuery{typ: "labels", labels: &v}
+}
+
 func NewSearchQueryFromProperty(v api1.Property) SearchQuery {
 	return SearchQuery{typ: "property", property: &v}
+}
+
+func NewSearchQueryFromProperties(v api.PropertiesFilter) SearchQuery {
+	return SearchQuery{typ: "properties", properties: &v}
 }
 
 func NewSearchQueryFromDataSourceSeriesTag(v DataSourceSeriesTag) SearchQuery {
@@ -1086,6 +1355,10 @@ func NewSearchQueryFromRunPrefix(v string) SearchQuery {
 
 func NewSearchQueryFromCheckAlertStatesFilter(v CheckAlertStatesFilter) SearchQuery {
 	return SearchQuery{typ: "checkAlertStatesFilter", checkAlertStatesFilter: &v}
+}
+
+func NewSearchQueryFromArchived(v bool) SearchQuery {
+	return SearchQuery{typ: "archived", archived: &v}
 }
 
 func NewSearchQueryFromAnd(v []SearchQuery) SearchQuery {
@@ -1276,4 +1549,178 @@ func NewSortKeyFromField(v SortField) SortKey {
 
 func NewSortKeyFromProperty(v SortProperty) SortKey {
 	return SortKey{typ: "property", property: &v}
+}
+
+type TimeframeFilter struct {
+	typ    string
+	custom *CustomTimeframeFilter
+	preset *PresetTimeframeFilter
+}
+
+type timeframeFilterDeserializer struct {
+	Type   string                 `json:"type"`
+	Custom *CustomTimeframeFilter `json:"custom"`
+	Preset *PresetTimeframeFilter `json:"preset"`
+}
+
+func (u *timeframeFilterDeserializer) toStruct() TimeframeFilter {
+	return TimeframeFilter{typ: u.Type, custom: u.Custom, preset: u.Preset}
+}
+
+func (u *TimeframeFilter) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "custom":
+		if u.custom == nil {
+			return nil, fmt.Errorf("field \"custom\" is required")
+		}
+		return struct {
+			Type   string                `json:"type"`
+			Custom CustomTimeframeFilter `json:"custom"`
+		}{Type: "custom", Custom: *u.custom}, nil
+	case "preset":
+		if u.preset == nil {
+			return nil, fmt.Errorf("field \"preset\" is required")
+		}
+		return struct {
+			Type   string                `json:"type"`
+			Preset PresetTimeframeFilter `json:"preset"`
+		}{Type: "preset", Preset: *u.preset}, nil
+	}
+}
+
+func (u TimeframeFilter) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *TimeframeFilter) UnmarshalJSON(data []byte) error {
+	var deser timeframeFilterDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+	}
+	return nil
+}
+
+func (u TimeframeFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *TimeframeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *TimeframeFilter) AcceptFuncs(customFunc func(CustomTimeframeFilter) error, presetFunc func(PresetTimeframeFilter) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return customFunc(*u.custom)
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+		return presetFunc(*u.preset)
+	}
+}
+
+func (u *TimeframeFilter) CustomNoopSuccess(CustomTimeframeFilter) error {
+	return nil
+}
+
+func (u *TimeframeFilter) PresetNoopSuccess(PresetTimeframeFilter) error {
+	return nil
+}
+
+func (u *TimeframeFilter) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *TimeframeFilter) Accept(v TimeframeFilterVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustom(*u.custom)
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+		return v.VisitPreset(*u.preset)
+	}
+}
+
+type TimeframeFilterVisitor interface {
+	VisitCustom(v CustomTimeframeFilter) error
+	VisitPreset(v PresetTimeframeFilter) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *TimeframeFilter) AcceptWithContext(ctx context.Context, v TimeframeFilterVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustomWithContext(ctx, *u.custom)
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+		return v.VisitPresetWithContext(ctx, *u.preset)
+	}
+}
+
+type TimeframeFilterVisitorWithContext interface {
+	VisitCustomWithContext(ctx context.Context, v CustomTimeframeFilter) error
+	VisitPresetWithContext(ctx context.Context, v PresetTimeframeFilter) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewTimeframeFilterFromCustom(v CustomTimeframeFilter) TimeframeFilter {
+	return TimeframeFilter{typ: "custom", custom: &v}
+}
+
+func NewTimeframeFilterFromPreset(v PresetTimeframeFilter) TimeframeFilter {
+	return TimeframeFilter{typ: "preset", preset: &v}
 }

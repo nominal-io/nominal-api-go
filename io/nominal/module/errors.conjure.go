@@ -8,8 +8,7 @@ import (
 	"reflect"
 
 	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
-	api1 "github.com/nominal-io/nominal-api-go/modules/api"
-	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	"github.com/nominal-io/nominal-api-go/modules/api"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-contract/errors"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
@@ -17,32 +16,32 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
-type assetsNotFound struct {
-	AssetRids []api.AssetRid `json:"assetRids"`
+type cyclicModuleFunctionDefinitions struct {
+	FunctionNames []string `json:"functionNames"`
 }
 
-func (o assetsNotFound) MarshalJSON() ([]byte, error) {
-	if o.AssetRids == nil {
-		o.AssetRids = make([]api.AssetRid, 0)
+func (o cyclicModuleFunctionDefinitions) MarshalJSON() ([]byte, error) {
+	if o.FunctionNames == nil {
+		o.FunctionNames = make([]string, 0)
 	}
-	type _tmpassetsNotFound assetsNotFound
-	return safejson.Marshal(_tmpassetsNotFound(o))
+	type _tmpcyclicModuleFunctionDefinitions cyclicModuleFunctionDefinitions
+	return safejson.Marshal(_tmpcyclicModuleFunctionDefinitions(o))
 }
 
-func (o *assetsNotFound) UnmarshalJSON(data []byte) error {
-	type _tmpassetsNotFound assetsNotFound
-	var rawassetsNotFound _tmpassetsNotFound
-	if err := safejson.Unmarshal(data, &rawassetsNotFound); err != nil {
+func (o *cyclicModuleFunctionDefinitions) UnmarshalJSON(data []byte) error {
+	type _tmpcyclicModuleFunctionDefinitions cyclicModuleFunctionDefinitions
+	var rawcyclicModuleFunctionDefinitions _tmpcyclicModuleFunctionDefinitions
+	if err := safejson.Unmarshal(data, &rawcyclicModuleFunctionDefinitions); err != nil {
 		return err
 	}
-	if rawassetsNotFound.AssetRids == nil {
-		rawassetsNotFound.AssetRids = make([]api.AssetRid, 0)
+	if rawcyclicModuleFunctionDefinitions.FunctionNames == nil {
+		rawcyclicModuleFunctionDefinitions.FunctionNames = make([]string, 0)
 	}
-	*o = assetsNotFound(rawassetsNotFound)
+	*o = cyclicModuleFunctionDefinitions(rawcyclicModuleFunctionDefinitions)
 	return nil
 }
 
-func (o assetsNotFound) MarshalYAML() (interface{}, error) {
+func (o cyclicModuleFunctionDefinitions) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -50,7 +49,7 @@ func (o assetsNotFound) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *assetsNotFound) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *cyclicModuleFunctionDefinitions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -58,87 +57,88 @@ func (o *assetsNotFound) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewAssetsNotFound returns new instance of AssetsNotFound error.
-func NewAssetsNotFound(assetRidsArg []api.AssetRid) *AssetsNotFound {
-	return &AssetsNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), assetsNotFound: assetsNotFound{AssetRids: assetRidsArg}}
+// NewCyclicModuleFunctionDefinitions returns new instance of CyclicModuleFunctionDefinitions error.
+func NewCyclicModuleFunctionDefinitions(functionNamesArg []string) *CyclicModuleFunctionDefinitions {
+	return &CyclicModuleFunctionDefinitions{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cyclicModuleFunctionDefinitions: cyclicModuleFunctionDefinitions{FunctionNames: functionNamesArg}}
 }
 
-// WrapWithAssetsNotFound returns new instance of AssetsNotFound error wrapping an existing error.
-func WrapWithAssetsNotFound(err error, assetRidsArg []api.AssetRid) *AssetsNotFound {
-	return &AssetsNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, assetsNotFound: assetsNotFound{AssetRids: assetRidsArg}}
+// WrapWithCyclicModuleFunctionDefinitions returns new instance of CyclicModuleFunctionDefinitions error wrapping an existing error.
+func WrapWithCyclicModuleFunctionDefinitions(err error, functionNamesArg []string) *CyclicModuleFunctionDefinitions {
+	return &CyclicModuleFunctionDefinitions{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, cyclicModuleFunctionDefinitions: cyclicModuleFunctionDefinitions{FunctionNames: functionNamesArg}}
 }
 
-// AssetsNotFound is an error type.
-type AssetsNotFound struct {
+// CyclicModuleFunctionDefinitions is an error type.
+// One or more functions contain cyclic references to each other.
+type CyclicModuleFunctionDefinitions struct {
 	errorInstanceID uuid.UUID
-	assetsNotFound
+	cyclicModuleFunctionDefinitions
 	cause error
 	stack werror.StackTrace
 }
 
-// IsAssetsNotFound returns true if err is an instance of AssetsNotFound.
-func IsAssetsNotFound(err error) bool {
+// IsCyclicModuleFunctionDefinitions returns true if err is an instance of CyclicModuleFunctionDefinitions.
+func IsCyclicModuleFunctionDefinitions(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*AssetsNotFound)
+	_, ok := errors.GetConjureError(err).(*CyclicModuleFunctionDefinitions)
 	return ok
 }
 
-func (e *AssetsNotFound) Error() string {
-	return fmt.Sprintf("NOT_FOUND Scout:AssetsNotFound (%s)", e.errorInstanceID)
+func (e *CyclicModuleFunctionDefinitions) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Module:CyclicModuleFunctionDefinitions (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *AssetsNotFound) Cause() error {
+func (e *CyclicModuleFunctionDefinitions) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *AssetsNotFound) StackTrace() werror.StackTrace {
+func (e *CyclicModuleFunctionDefinitions) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *AssetsNotFound) Message() string {
-	return "NOT_FOUND Scout:AssetsNotFound"
+func (e *CyclicModuleFunctionDefinitions) Message() string {
+	return "INVALID_ARGUMENT Module:CyclicModuleFunctionDefinitions"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *AssetsNotFound) Format(state fmt.State, verb rune) {
+func (e *CyclicModuleFunctionDefinitions) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *AssetsNotFound) Code() errors.ErrorCode {
-	return errors.NotFound
+func (e *CyclicModuleFunctionDefinitions) Code() errors.ErrorCode {
+	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
-func (e *AssetsNotFound) Name() string {
-	return "Scout:AssetsNotFound"
+func (e *CyclicModuleFunctionDefinitions) Name() string {
+	return "Module:CyclicModuleFunctionDefinitions"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *AssetsNotFound) InstanceID() uuid.UUID {
+func (e *CyclicModuleFunctionDefinitions) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *AssetsNotFound) Parameters() map[string]interface{} {
-	return map[string]interface{}{"assetRids": e.AssetRids}
+func (e *CyclicModuleFunctionDefinitions) Parameters() map[string]interface{} {
+	return map[string]interface{}{"functionNames": e.FunctionNames}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *AssetsNotFound) safeParams() map[string]interface{} {
-	return map[string]interface{}{"assetRids": e.AssetRids, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+func (e *CyclicModuleFunctionDefinitions) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *AssetsNotFound) SafeParams() map[string]interface{} {
+func (e *CyclicModuleFunctionDefinitions) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -149,13 +149,13 @@ func (e *AssetsNotFound) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *AssetsNotFound) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *CyclicModuleFunctionDefinitions) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"functionNames": e.FunctionNames}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *AssetsNotFound) UnsafeParams() map[string]interface{} {
+func (e *CyclicModuleFunctionDefinitions) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -165,31 +165,54 @@ func (e *AssetsNotFound) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e AssetsNotFound) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.assetsNotFound)
+func (e CyclicModuleFunctionDefinitions) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.cyclicModuleFunctionDefinitions)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Scout:AssetsNotFound", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Module:CyclicModuleFunctionDefinitions", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *AssetsNotFound) UnmarshalJSON(data []byte) error {
+func (e *CyclicModuleFunctionDefinitions) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters assetsNotFound
+	var parameters cyclicModuleFunctionDefinitions
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.assetsNotFound = parameters
+	e.cyclicModuleFunctionDefinitions = parameters
 	return nil
 }
 
-type conflictingFunctionNamesError struct{}
+type functionNameConflict struct {
+	FunctionNames []string `json:"functionNames"`
+}
 
-func (o conflictingFunctionNamesError) MarshalYAML() (interface{}, error) {
+func (o functionNameConflict) MarshalJSON() ([]byte, error) {
+	if o.FunctionNames == nil {
+		o.FunctionNames = make([]string, 0)
+	}
+	type _tmpfunctionNameConflict functionNameConflict
+	return safejson.Marshal(_tmpfunctionNameConflict(o))
+}
+
+func (o *functionNameConflict) UnmarshalJSON(data []byte) error {
+	type _tmpfunctionNameConflict functionNameConflict
+	var rawfunctionNameConflict _tmpfunctionNameConflict
+	if err := safejson.Unmarshal(data, &rawfunctionNameConflict); err != nil {
+		return err
+	}
+	if rawfunctionNameConflict.FunctionNames == nil {
+		rawfunctionNameConflict.FunctionNames = make([]string, 0)
+	}
+	*o = functionNameConflict(rawfunctionNameConflict)
+	return nil
+}
+
+func (o functionNameConflict) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -197,7 +220,7 @@ func (o conflictingFunctionNamesError) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *conflictingFunctionNamesError) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *functionNameConflict) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -205,87 +228,88 @@ func (o *conflictingFunctionNamesError) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewConflictingFunctionNamesError returns new instance of ConflictingFunctionNamesError error.
-func NewConflictingFunctionNamesError() *ConflictingFunctionNamesError {
-	return &ConflictingFunctionNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), conflictingFunctionNamesError: conflictingFunctionNamesError{}}
+// NewFunctionNameConflict returns new instance of FunctionNameConflict error.
+func NewFunctionNameConflict(functionNamesArg []string) *FunctionNameConflict {
+	return &FunctionNameConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), functionNameConflict: functionNameConflict{FunctionNames: functionNamesArg}}
 }
 
-// WrapWithConflictingFunctionNamesError returns new instance of ConflictingFunctionNamesError error wrapping an existing error.
-func WrapWithConflictingFunctionNamesError(err error) *ConflictingFunctionNamesError {
-	return &ConflictingFunctionNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, conflictingFunctionNamesError: conflictingFunctionNamesError{}}
+// WrapWithFunctionNameConflict returns new instance of FunctionNameConflict error wrapping an existing error.
+func WrapWithFunctionNameConflict(err error, functionNamesArg []string) *FunctionNameConflict {
+	return &FunctionNameConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, functionNameConflict: functionNameConflict{FunctionNames: functionNamesArg}}
 }
 
-// ConflictingFunctionNamesError is an error type.
-type ConflictingFunctionNamesError struct {
+// FunctionNameConflict is an error type.
+// One or more function names conflict with each other in the module definition.
+type FunctionNameConflict struct {
 	errorInstanceID uuid.UUID
-	conflictingFunctionNamesError
+	functionNameConflict
 	cause error
 	stack werror.StackTrace
 }
 
-// IsConflictingFunctionNamesError returns true if err is an instance of ConflictingFunctionNamesError.
-func IsConflictingFunctionNamesError(err error) bool {
+// IsFunctionNameConflict returns true if err is an instance of FunctionNameConflict.
+func IsFunctionNameConflict(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*ConflictingFunctionNamesError)
+	_, ok := errors.GetConjureError(err).(*FunctionNameConflict)
 	return ok
 }
 
-func (e *ConflictingFunctionNamesError) Error() string {
-	return fmt.Sprintf("CONFLICT Scout:ConflictingFunctionNamesError (%s)", e.errorInstanceID)
+func (e *FunctionNameConflict) Error() string {
+	return fmt.Sprintf("CONFLICT Module:FunctionNameConflict (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *ConflictingFunctionNamesError) Cause() error {
+func (e *FunctionNameConflict) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *ConflictingFunctionNamesError) StackTrace() werror.StackTrace {
+func (e *FunctionNameConflict) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *ConflictingFunctionNamesError) Message() string {
-	return "CONFLICT Scout:ConflictingFunctionNamesError"
+func (e *FunctionNameConflict) Message() string {
+	return "CONFLICT Module:FunctionNameConflict"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *ConflictingFunctionNamesError) Format(state fmt.State, verb rune) {
+func (e *FunctionNameConflict) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *ConflictingFunctionNamesError) Code() errors.ErrorCode {
+func (e *FunctionNameConflict) Code() errors.ErrorCode {
 	return errors.Conflict
 }
 
 // Name returns an error name identifying error type.
-func (e *ConflictingFunctionNamesError) Name() string {
-	return "Scout:ConflictingFunctionNamesError"
+func (e *FunctionNameConflict) Name() string {
+	return "Module:FunctionNameConflict"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *ConflictingFunctionNamesError) InstanceID() uuid.UUID {
+func (e *FunctionNameConflict) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *ConflictingFunctionNamesError) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *FunctionNameConflict) Parameters() map[string]interface{} {
+	return map[string]interface{}{"functionNames": e.FunctionNames}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *ConflictingFunctionNamesError) safeParams() map[string]interface{} {
+func (e *FunctionNameConflict) safeParams() map[string]interface{} {
 	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *ConflictingFunctionNamesError) SafeParams() map[string]interface{} {
+func (e *FunctionNameConflict) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -296,13 +320,13 @@ func (e *ConflictingFunctionNamesError) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *ConflictingFunctionNamesError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *FunctionNameConflict) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"functionNames": e.FunctionNames}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *ConflictingFunctionNamesError) UnsafeParams() map[string]interface{} {
+func (e *FunctionNameConflict) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -312,31 +336,54 @@ func (e *ConflictingFunctionNamesError) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e ConflictingFunctionNamesError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.conflictingFunctionNamesError)
+func (e FunctionNameConflict) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.functionNameConflict)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Scout:ConflictingFunctionNamesError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Module:FunctionNameConflict", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *ConflictingFunctionNamesError) UnmarshalJSON(data []byte) error {
+func (e *FunctionNameConflict) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters conflictingFunctionNamesError
+	var parameters functionNameConflict
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.conflictingFunctionNamesError = parameters
+	e.functionNameConflict = parameters
 	return nil
 }
 
-type conflictingParameterNamesError struct{}
+type invalidFunctionNames struct {
+	FunctionNames []string `json:"functionNames"`
+}
 
-func (o conflictingParameterNamesError) MarshalYAML() (interface{}, error) {
+func (o invalidFunctionNames) MarshalJSON() ([]byte, error) {
+	if o.FunctionNames == nil {
+		o.FunctionNames = make([]string, 0)
+	}
+	type _tmpinvalidFunctionNames invalidFunctionNames
+	return safejson.Marshal(_tmpinvalidFunctionNames(o))
+}
+
+func (o *invalidFunctionNames) UnmarshalJSON(data []byte) error {
+	type _tmpinvalidFunctionNames invalidFunctionNames
+	var rawinvalidFunctionNames _tmpinvalidFunctionNames
+	if err := safejson.Unmarshal(data, &rawinvalidFunctionNames); err != nil {
+		return err
+	}
+	if rawinvalidFunctionNames.FunctionNames == nil {
+		rawinvalidFunctionNames.FunctionNames = make([]string, 0)
+	}
+	*o = invalidFunctionNames(rawinvalidFunctionNames)
+	return nil
+}
+
+func (o invalidFunctionNames) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -344,7 +391,7 @@ func (o conflictingParameterNamesError) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *conflictingParameterNamesError) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *invalidFunctionNames) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -352,551 +399,91 @@ func (o *conflictingParameterNamesError) UnmarshalYAML(unmarshal func(interface{
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewConflictingParameterNamesError returns new instance of ConflictingParameterNamesError error.
-func NewConflictingParameterNamesError() *ConflictingParameterNamesError {
-	return &ConflictingParameterNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), conflictingParameterNamesError: conflictingParameterNamesError{}}
+// NewInvalidFunctionNames returns new instance of InvalidFunctionNames error.
+func NewInvalidFunctionNames(functionNamesArg []string) *InvalidFunctionNames {
+	return &InvalidFunctionNames{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidFunctionNames: invalidFunctionNames{FunctionNames: functionNamesArg}}
 }
 
-// WrapWithConflictingParameterNamesError returns new instance of ConflictingParameterNamesError error wrapping an existing error.
-func WrapWithConflictingParameterNamesError(err error) *ConflictingParameterNamesError {
-	return &ConflictingParameterNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, conflictingParameterNamesError: conflictingParameterNamesError{}}
+// WrapWithInvalidFunctionNames returns new instance of InvalidFunctionNames error wrapping an existing error.
+func WrapWithInvalidFunctionNames(err error, functionNamesArg []string) *InvalidFunctionNames {
+	return &InvalidFunctionNames{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidFunctionNames: invalidFunctionNames{FunctionNames: functionNamesArg}}
 }
 
-// ConflictingParameterNamesError is an error type.
-type ConflictingParameterNamesError struct {
+// InvalidFunctionNames is an error type.
+/*
+One or more function names are invalid.
+Function names must begin with a letter and can only contain letters, numbers, and underscores.
+*/
+type InvalidFunctionNames struct {
 	errorInstanceID uuid.UUID
-	conflictingParameterNamesError
+	invalidFunctionNames
 	cause error
 	stack werror.StackTrace
 }
 
-// IsConflictingParameterNamesError returns true if err is an instance of ConflictingParameterNamesError.
-func IsConflictingParameterNamesError(err error) bool {
+// IsInvalidFunctionNames returns true if err is an instance of InvalidFunctionNames.
+func IsInvalidFunctionNames(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*ConflictingParameterNamesError)
+	_, ok := errors.GetConjureError(err).(*InvalidFunctionNames)
 	return ok
 }
 
-func (e *ConflictingParameterNamesError) Error() string {
-	return fmt.Sprintf("CONFLICT Scout:ConflictingParameterNamesError (%s)", e.errorInstanceID)
+func (e *InvalidFunctionNames) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Module:InvalidFunctionNames (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *ConflictingParameterNamesError) Cause() error {
+func (e *InvalidFunctionNames) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *ConflictingParameterNamesError) StackTrace() werror.StackTrace {
+func (e *InvalidFunctionNames) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *ConflictingParameterNamesError) Message() string {
-	return "CONFLICT Scout:ConflictingParameterNamesError"
+func (e *InvalidFunctionNames) Message() string {
+	return "INVALID_ARGUMENT Module:InvalidFunctionNames"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *ConflictingParameterNamesError) Format(state fmt.State, verb rune) {
+func (e *InvalidFunctionNames) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *ConflictingParameterNamesError) Code() errors.ErrorCode {
-	return errors.Conflict
-}
-
-// Name returns an error name identifying error type.
-func (e *ConflictingParameterNamesError) Name() string {
-	return "Scout:ConflictingParameterNamesError"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *ConflictingParameterNamesError) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *ConflictingParameterNamesError) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *ConflictingParameterNamesError) safeParams() map[string]interface{} {
-	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *ConflictingParameterNamesError) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *ConflictingParameterNamesError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *ConflictingParameterNamesError) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e ConflictingParameterNamesError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.conflictingParameterNamesError)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Scout:ConflictingParameterNamesError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *ConflictingParameterNamesError) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters conflictingParameterNamesError
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.conflictingParameterNamesError = parameters
-	return nil
-}
-
-type conflictingVariableNamesError struct{}
-
-func (o conflictingVariableNamesError) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *conflictingVariableNamesError) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewConflictingVariableNamesError returns new instance of ConflictingVariableNamesError error.
-func NewConflictingVariableNamesError() *ConflictingVariableNamesError {
-	return &ConflictingVariableNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), conflictingVariableNamesError: conflictingVariableNamesError{}}
-}
-
-// WrapWithConflictingVariableNamesError returns new instance of ConflictingVariableNamesError error wrapping an existing error.
-func WrapWithConflictingVariableNamesError(err error) *ConflictingVariableNamesError {
-	return &ConflictingVariableNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, conflictingVariableNamesError: conflictingVariableNamesError{}}
-}
-
-// ConflictingVariableNamesError is an error type.
-type ConflictingVariableNamesError struct {
-	errorInstanceID uuid.UUID
-	conflictingVariableNamesError
-	cause error
-	stack werror.StackTrace
-}
-
-// IsConflictingVariableNamesError returns true if err is an instance of ConflictingVariableNamesError.
-func IsConflictingVariableNamesError(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*ConflictingVariableNamesError)
-	return ok
-}
-
-func (e *ConflictingVariableNamesError) Error() string {
-	return fmt.Sprintf("CONFLICT Scout:ConflictingVariableNamesError (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *ConflictingVariableNamesError) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *ConflictingVariableNamesError) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *ConflictingVariableNamesError) Message() string {
-	return "CONFLICT Scout:ConflictingVariableNamesError"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *ConflictingVariableNamesError) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *ConflictingVariableNamesError) Code() errors.ErrorCode {
-	return errors.Conflict
-}
-
-// Name returns an error name identifying error type.
-func (e *ConflictingVariableNamesError) Name() string {
-	return "Scout:ConflictingVariableNamesError"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *ConflictingVariableNamesError) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *ConflictingVariableNamesError) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *ConflictingVariableNamesError) safeParams() map[string]interface{} {
-	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *ConflictingVariableNamesError) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *ConflictingVariableNamesError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *ConflictingVariableNamesError) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e ConflictingVariableNamesError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.conflictingVariableNamesError)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Scout:ConflictingVariableNamesError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *ConflictingVariableNamesError) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters conflictingVariableNamesError
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.conflictingVariableNamesError = parameters
-	return nil
-}
-
-type functionParameterMissingDefaultValueError struct {
-	InvalidParametersByFunction map[string][]ParameterName `json:"invalidParametersByFunction"`
-}
-
-func (o functionParameterMissingDefaultValueError) MarshalJSON() ([]byte, error) {
-	if o.InvalidParametersByFunction == nil {
-		o.InvalidParametersByFunction = make(map[string][]ParameterName, 0)
-	}
-	type _tmpfunctionParameterMissingDefaultValueError functionParameterMissingDefaultValueError
-	return safejson.Marshal(_tmpfunctionParameterMissingDefaultValueError(o))
-}
-
-func (o *functionParameterMissingDefaultValueError) UnmarshalJSON(data []byte) error {
-	type _tmpfunctionParameterMissingDefaultValueError functionParameterMissingDefaultValueError
-	var rawfunctionParameterMissingDefaultValueError _tmpfunctionParameterMissingDefaultValueError
-	if err := safejson.Unmarshal(data, &rawfunctionParameterMissingDefaultValueError); err != nil {
-		return err
-	}
-	if rawfunctionParameterMissingDefaultValueError.InvalidParametersByFunction == nil {
-		rawfunctionParameterMissingDefaultValueError.InvalidParametersByFunction = make(map[string][]ParameterName, 0)
-	}
-	*o = functionParameterMissingDefaultValueError(rawfunctionParameterMissingDefaultValueError)
-	return nil
-}
-
-func (o functionParameterMissingDefaultValueError) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *functionParameterMissingDefaultValueError) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewFunctionParameterMissingDefaultValueError returns new instance of FunctionParameterMissingDefaultValueError error.
-func NewFunctionParameterMissingDefaultValueError(invalidParametersByFunctionArg map[string][]ParameterName) *FunctionParameterMissingDefaultValueError {
-	return &FunctionParameterMissingDefaultValueError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), functionParameterMissingDefaultValueError: functionParameterMissingDefaultValueError{InvalidParametersByFunction: invalidParametersByFunctionArg}}
-}
-
-// WrapWithFunctionParameterMissingDefaultValueError returns new instance of FunctionParameterMissingDefaultValueError error wrapping an existing error.
-func WrapWithFunctionParameterMissingDefaultValueError(err error, invalidParametersByFunctionArg map[string][]ParameterName) *FunctionParameterMissingDefaultValueError {
-	return &FunctionParameterMissingDefaultValueError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, functionParameterMissingDefaultValueError: functionParameterMissingDefaultValueError{InvalidParametersByFunction: invalidParametersByFunctionArg}}
-}
-
-// FunctionParameterMissingDefaultValueError is an error type.
-type FunctionParameterMissingDefaultValueError struct {
-	errorInstanceID uuid.UUID
-	functionParameterMissingDefaultValueError
-	cause error
-	stack werror.StackTrace
-}
-
-// IsFunctionParameterMissingDefaultValueError returns true if err is an instance of FunctionParameterMissingDefaultValueError.
-func IsFunctionParameterMissingDefaultValueError(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*FunctionParameterMissingDefaultValueError)
-	return ok
-}
-
-func (e *FunctionParameterMissingDefaultValueError) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Scout:FunctionParameterMissingDefaultValueError (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *FunctionParameterMissingDefaultValueError) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *FunctionParameterMissingDefaultValueError) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *FunctionParameterMissingDefaultValueError) Message() string {
-	return "INVALID_ARGUMENT Scout:FunctionParameterMissingDefaultValueError"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *FunctionParameterMissingDefaultValueError) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *FunctionParameterMissingDefaultValueError) Code() errors.ErrorCode {
+func (e *InvalidFunctionNames) Code() errors.ErrorCode {
 	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
-func (e *FunctionParameterMissingDefaultValueError) Name() string {
-	return "Scout:FunctionParameterMissingDefaultValueError"
+func (e *InvalidFunctionNames) Name() string {
+	return "Module:InvalidFunctionNames"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *FunctionParameterMissingDefaultValueError) InstanceID() uuid.UUID {
+func (e *InvalidFunctionNames) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *FunctionParameterMissingDefaultValueError) Parameters() map[string]interface{} {
-	return map[string]interface{}{"invalidParametersByFunction": e.InvalidParametersByFunction}
+func (e *InvalidFunctionNames) Parameters() map[string]interface{} {
+	return map[string]interface{}{"functionNames": e.FunctionNames}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *FunctionParameterMissingDefaultValueError) safeParams() map[string]interface{} {
-	return map[string]interface{}{"invalidParametersByFunction": e.InvalidParametersByFunction, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *FunctionParameterMissingDefaultValueError) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *FunctionParameterMissingDefaultValueError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *FunctionParameterMissingDefaultValueError) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e FunctionParameterMissingDefaultValueError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.functionParameterMissingDefaultValueError)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:FunctionParameterMissingDefaultValueError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *FunctionParameterMissingDefaultValueError) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters functionParameterMissingDefaultValueError
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.functionParameterMissingDefaultValueError = parameters
-	return nil
-}
-
-type invalidFunctionNamesError struct{}
-
-func (o invalidFunctionNamesError) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *invalidFunctionNamesError) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewInvalidFunctionNamesError returns new instance of InvalidFunctionNamesError error.
-func NewInvalidFunctionNamesError() *InvalidFunctionNamesError {
-	return &InvalidFunctionNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidFunctionNamesError: invalidFunctionNamesError{}}
-}
-
-// WrapWithInvalidFunctionNamesError returns new instance of InvalidFunctionNamesError error wrapping an existing error.
-func WrapWithInvalidFunctionNamesError(err error) *InvalidFunctionNamesError {
-	return &InvalidFunctionNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidFunctionNamesError: invalidFunctionNamesError{}}
-}
-
-// InvalidFunctionNamesError is an error type.
-type InvalidFunctionNamesError struct {
-	errorInstanceID uuid.UUID
-	invalidFunctionNamesError
-	cause error
-	stack werror.StackTrace
-}
-
-// IsInvalidFunctionNamesError returns true if err is an instance of InvalidFunctionNamesError.
-func IsInvalidFunctionNamesError(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*InvalidFunctionNamesError)
-	return ok
-}
-
-func (e *InvalidFunctionNamesError) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidFunctionNamesError (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *InvalidFunctionNamesError) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *InvalidFunctionNamesError) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *InvalidFunctionNamesError) Message() string {
-	return "INVALID_ARGUMENT Scout:InvalidFunctionNamesError"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *InvalidFunctionNamesError) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *InvalidFunctionNamesError) Code() errors.ErrorCode {
-	return errors.InvalidArgument
-}
-
-// Name returns an error name identifying error type.
-func (e *InvalidFunctionNamesError) Name() string {
-	return "Scout:InvalidFunctionNamesError"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *InvalidFunctionNamesError) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *InvalidFunctionNamesError) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *InvalidFunctionNamesError) safeParams() map[string]interface{} {
+func (e *InvalidFunctionNames) safeParams() map[string]interface{} {
 	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *InvalidFunctionNamesError) SafeParams() map[string]interface{} {
+func (e *InvalidFunctionNames) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -907,13 +494,13 @@ func (e *InvalidFunctionNamesError) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *InvalidFunctionNamesError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *InvalidFunctionNames) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"functionNames": e.FunctionNames}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *InvalidFunctionNamesError) UnsafeParams() map[string]interface{} {
+func (e *InvalidFunctionNames) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -923,31 +510,33 @@ func (e *InvalidFunctionNamesError) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e InvalidFunctionNamesError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.invalidFunctionNamesError)
+func (e InvalidFunctionNames) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidFunctionNames)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidFunctionNamesError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Module:InvalidFunctionNames", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *InvalidFunctionNamesError) UnmarshalJSON(data []byte) error {
+func (e *InvalidFunctionNames) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters invalidFunctionNamesError
+	var parameters invalidFunctionNames
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.invalidFunctionNamesError = parameters
+	e.invalidFunctionNames = parameters
 	return nil
 }
 
-type invalidModuleNameError struct{}
+type invalidModuleApiName struct {
+	ModuleApiName string `json:"moduleApiName"`
+}
 
-func (o invalidModuleNameError) MarshalYAML() (interface{}, error) {
+func (o invalidModuleApiName) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -955,7 +544,7 @@ func (o invalidModuleNameError) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *invalidModuleNameError) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *invalidModuleApiName) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -963,87 +552,91 @@ func (o *invalidModuleNameError) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewInvalidModuleNameError returns new instance of InvalidModuleNameError error.
-func NewInvalidModuleNameError() *InvalidModuleNameError {
-	return &InvalidModuleNameError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidModuleNameError: invalidModuleNameError{}}
+// NewInvalidModuleApiName returns new instance of InvalidModuleApiName error.
+func NewInvalidModuleApiName(moduleApiNameArg string) *InvalidModuleApiName {
+	return &InvalidModuleApiName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidModuleApiName: invalidModuleApiName{ModuleApiName: moduleApiNameArg}}
 }
 
-// WrapWithInvalidModuleNameError returns new instance of InvalidModuleNameError error wrapping an existing error.
-func WrapWithInvalidModuleNameError(err error) *InvalidModuleNameError {
-	return &InvalidModuleNameError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidModuleNameError: invalidModuleNameError{}}
+// WrapWithInvalidModuleApiName returns new instance of InvalidModuleApiName error wrapping an existing error.
+func WrapWithInvalidModuleApiName(err error, moduleApiNameArg string) *InvalidModuleApiName {
+	return &InvalidModuleApiName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidModuleApiName: invalidModuleApiName{ModuleApiName: moduleApiNameArg}}
 }
 
-// InvalidModuleNameError is an error type.
-type InvalidModuleNameError struct {
+// InvalidModuleApiName is an error type.
+/*
+The provided module API name is invalid.
+Module names must begin with a letter and can only contain letters, numbers, and underscores.
+*/
+type InvalidModuleApiName struct {
 	errorInstanceID uuid.UUID
-	invalidModuleNameError
+	invalidModuleApiName
 	cause error
 	stack werror.StackTrace
 }
 
-// IsInvalidModuleNameError returns true if err is an instance of InvalidModuleNameError.
-func IsInvalidModuleNameError(err error) bool {
+// IsInvalidModuleApiName returns true if err is an instance of InvalidModuleApiName.
+func IsInvalidModuleApiName(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*InvalidModuleNameError)
+	_, ok := errors.GetConjureError(err).(*InvalidModuleApiName)
 	return ok
 }
 
-func (e *InvalidModuleNameError) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidModuleNameError (%s)", e.errorInstanceID)
+func (e *InvalidModuleApiName) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Module:InvalidModuleApiName (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *InvalidModuleNameError) Cause() error {
+func (e *InvalidModuleApiName) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *InvalidModuleNameError) StackTrace() werror.StackTrace {
+func (e *InvalidModuleApiName) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *InvalidModuleNameError) Message() string {
-	return "INVALID_ARGUMENT Scout:InvalidModuleNameError"
+func (e *InvalidModuleApiName) Message() string {
+	return "INVALID_ARGUMENT Module:InvalidModuleApiName"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *InvalidModuleNameError) Format(state fmt.State, verb rune) {
+func (e *InvalidModuleApiName) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *InvalidModuleNameError) Code() errors.ErrorCode {
+func (e *InvalidModuleApiName) Code() errors.ErrorCode {
 	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
-func (e *InvalidModuleNameError) Name() string {
-	return "Scout:InvalidModuleNameError"
+func (e *InvalidModuleApiName) Name() string {
+	return "Module:InvalidModuleApiName"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *InvalidModuleNameError) InstanceID() uuid.UUID {
+func (e *InvalidModuleApiName) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *InvalidModuleNameError) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *InvalidModuleApiName) Parameters() map[string]interface{} {
+	return map[string]interface{}{"moduleApiName": e.ModuleApiName}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *InvalidModuleNameError) safeParams() map[string]interface{} {
+func (e *InvalidModuleApiName) safeParams() map[string]interface{} {
 	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *InvalidModuleNameError) SafeParams() map[string]interface{} {
+func (e *InvalidModuleApiName) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -1054,13 +647,13 @@ func (e *InvalidModuleNameError) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *InvalidModuleNameError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *InvalidModuleApiName) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"moduleApiName": e.ModuleApiName}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *InvalidModuleNameError) UnsafeParams() map[string]interface{} {
+func (e *InvalidModuleApiName) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -1070,31 +663,33 @@ func (e *InvalidModuleNameError) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e InvalidModuleNameError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.invalidModuleNameError)
+func (e InvalidModuleApiName) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidModuleApiName)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidModuleNameError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Module:InvalidModuleApiName", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *InvalidModuleNameError) UnmarshalJSON(data []byte) error {
+func (e *InvalidModuleApiName) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters invalidModuleNameError
+	var parameters invalidModuleApiName
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.invalidModuleNameError = parameters
+	e.invalidModuleApiName = parameters
 	return nil
 }
 
-type invalidModuleParametersShapeError struct{}
+type invalidModuleVersionString struct {
+	Version string `json:"version"`
+}
 
-func (o invalidModuleParametersShapeError) MarshalYAML() (interface{}, error) {
+func (o invalidModuleVersionString) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -1102,7 +697,7 @@ func (o invalidModuleParametersShapeError) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *invalidModuleParametersShapeError) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *invalidModuleVersionString) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1110,530 +705,91 @@ func (o *invalidModuleParametersShapeError) UnmarshalYAML(unmarshal func(interfa
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewInvalidModuleParametersShapeError returns new instance of InvalidModuleParametersShapeError error.
-func NewInvalidModuleParametersShapeError() *InvalidModuleParametersShapeError {
-	return &InvalidModuleParametersShapeError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidModuleParametersShapeError: invalidModuleParametersShapeError{}}
+// NewInvalidModuleVersionString returns new instance of InvalidModuleVersionString error.
+func NewInvalidModuleVersionString(versionArg string) *InvalidModuleVersionString {
+	return &InvalidModuleVersionString{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidModuleVersionString: invalidModuleVersionString{Version: versionArg}}
 }
 
-// WrapWithInvalidModuleParametersShapeError returns new instance of InvalidModuleParametersShapeError error wrapping an existing error.
-func WrapWithInvalidModuleParametersShapeError(err error) *InvalidModuleParametersShapeError {
-	return &InvalidModuleParametersShapeError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidModuleParametersShapeError: invalidModuleParametersShapeError{}}
+// WrapWithInvalidModuleVersionString returns new instance of InvalidModuleVersionString error wrapping an existing error.
+func WrapWithInvalidModuleVersionString(err error, versionArg string) *InvalidModuleVersionString {
+	return &InvalidModuleVersionString{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidModuleVersionString: invalidModuleVersionString{Version: versionArg}}
 }
 
-// InvalidModuleParametersShapeError is an error type.
-type InvalidModuleParametersShapeError struct {
+// InvalidModuleVersionString is an error type.
+/*
+The provided module version string is invalid.
+Module version strings must be of the form "MAJOR", where MAJOR is a non-negative integer.
+*/
+type InvalidModuleVersionString struct {
 	errorInstanceID uuid.UUID
-	invalidModuleParametersShapeError
+	invalidModuleVersionString
 	cause error
 	stack werror.StackTrace
 }
 
-// IsInvalidModuleParametersShapeError returns true if err is an instance of InvalidModuleParametersShapeError.
-func IsInvalidModuleParametersShapeError(err error) bool {
+// IsInvalidModuleVersionString returns true if err is an instance of InvalidModuleVersionString.
+func IsInvalidModuleVersionString(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*InvalidModuleParametersShapeError)
+	_, ok := errors.GetConjureError(err).(*InvalidModuleVersionString)
 	return ok
 }
 
-func (e *InvalidModuleParametersShapeError) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidModuleParametersShapeError (%s)", e.errorInstanceID)
+func (e *InvalidModuleVersionString) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Module:InvalidModuleVersionString (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *InvalidModuleParametersShapeError) Cause() error {
+func (e *InvalidModuleVersionString) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *InvalidModuleParametersShapeError) StackTrace() werror.StackTrace {
+func (e *InvalidModuleVersionString) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *InvalidModuleParametersShapeError) Message() string {
-	return "INVALID_ARGUMENT Scout:InvalidModuleParametersShapeError"
+func (e *InvalidModuleVersionString) Message() string {
+	return "INVALID_ARGUMENT Module:InvalidModuleVersionString"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *InvalidModuleParametersShapeError) Format(state fmt.State, verb rune) {
+func (e *InvalidModuleVersionString) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *InvalidModuleParametersShapeError) Code() errors.ErrorCode {
+func (e *InvalidModuleVersionString) Code() errors.ErrorCode {
 	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
-func (e *InvalidModuleParametersShapeError) Name() string {
-	return "Scout:InvalidModuleParametersShapeError"
+func (e *InvalidModuleVersionString) Name() string {
+	return "Module:InvalidModuleVersionString"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *InvalidModuleParametersShapeError) InstanceID() uuid.UUID {
+func (e *InvalidModuleVersionString) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *InvalidModuleParametersShapeError) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *InvalidModuleParametersShapeError) safeParams() map[string]interface{} {
-	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *InvalidModuleParametersShapeError) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *InvalidModuleParametersShapeError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *InvalidModuleParametersShapeError) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e InvalidModuleParametersShapeError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.invalidModuleParametersShapeError)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidModuleParametersShapeError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *InvalidModuleParametersShapeError) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters invalidModuleParametersShapeError
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.invalidModuleParametersShapeError = parameters
-	return nil
-}
-
-type invalidModuleTitleError struct{}
-
-func (o invalidModuleTitleError) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *invalidModuleTitleError) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewInvalidModuleTitleError returns new instance of InvalidModuleTitleError error.
-func NewInvalidModuleTitleError() *InvalidModuleTitleError {
-	return &InvalidModuleTitleError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidModuleTitleError: invalidModuleTitleError{}}
-}
-
-// WrapWithInvalidModuleTitleError returns new instance of InvalidModuleTitleError error wrapping an existing error.
-func WrapWithInvalidModuleTitleError(err error) *InvalidModuleTitleError {
-	return &InvalidModuleTitleError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidModuleTitleError: invalidModuleTitleError{}}
-}
-
-// InvalidModuleTitleError is an error type.
-type InvalidModuleTitleError struct {
-	errorInstanceID uuid.UUID
-	invalidModuleTitleError
-	cause error
-	stack werror.StackTrace
-}
-
-// IsInvalidModuleTitleError returns true if err is an instance of InvalidModuleTitleError.
-func IsInvalidModuleTitleError(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*InvalidModuleTitleError)
-	return ok
-}
-
-func (e *InvalidModuleTitleError) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidModuleTitleError (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *InvalidModuleTitleError) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *InvalidModuleTitleError) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *InvalidModuleTitleError) Message() string {
-	return "INVALID_ARGUMENT Scout:InvalidModuleTitleError"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *InvalidModuleTitleError) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *InvalidModuleTitleError) Code() errors.ErrorCode {
-	return errors.InvalidArgument
-}
-
-// Name returns an error name identifying error type.
-func (e *InvalidModuleTitleError) Name() string {
-	return "Scout:InvalidModuleTitleError"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *InvalidModuleTitleError) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *InvalidModuleTitleError) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *InvalidModuleTitleError) safeParams() map[string]interface{} {
-	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *InvalidModuleTitleError) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *InvalidModuleTitleError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *InvalidModuleTitleError) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e InvalidModuleTitleError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.invalidModuleTitleError)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidModuleTitleError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *InvalidModuleTitleError) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters invalidModuleTitleError
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.invalidModuleTitleError = parameters
-	return nil
-}
-
-type invalidModuleVersionStringError struct {
-	Version ModuleVersion `json:"version"`
-}
-
-func (o invalidModuleVersionStringError) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *invalidModuleVersionStringError) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewInvalidModuleVersionStringError returns new instance of InvalidModuleVersionStringError error.
-func NewInvalidModuleVersionStringError(versionArg ModuleVersion) *InvalidModuleVersionStringError {
-	return &InvalidModuleVersionStringError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidModuleVersionStringError: invalidModuleVersionStringError{Version: versionArg}}
-}
-
-// WrapWithInvalidModuleVersionStringError returns new instance of InvalidModuleVersionStringError error wrapping an existing error.
-func WrapWithInvalidModuleVersionStringError(err error, versionArg ModuleVersion) *InvalidModuleVersionStringError {
-	return &InvalidModuleVersionStringError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidModuleVersionStringError: invalidModuleVersionStringError{Version: versionArg}}
-}
-
-// InvalidModuleVersionStringError is an error type.
-type InvalidModuleVersionStringError struct {
-	errorInstanceID uuid.UUID
-	invalidModuleVersionStringError
-	cause error
-	stack werror.StackTrace
-}
-
-// IsInvalidModuleVersionStringError returns true if err is an instance of InvalidModuleVersionStringError.
-func IsInvalidModuleVersionStringError(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*InvalidModuleVersionStringError)
-	return ok
-}
-
-func (e *InvalidModuleVersionStringError) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidModuleVersionStringError (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *InvalidModuleVersionStringError) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *InvalidModuleVersionStringError) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *InvalidModuleVersionStringError) Message() string {
-	return "INVALID_ARGUMENT Scout:InvalidModuleVersionStringError"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *InvalidModuleVersionStringError) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *InvalidModuleVersionStringError) Code() errors.ErrorCode {
-	return errors.InvalidArgument
-}
-
-// Name returns an error name identifying error type.
-func (e *InvalidModuleVersionStringError) Name() string {
-	return "Scout:InvalidModuleVersionStringError"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *InvalidModuleVersionStringError) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *InvalidModuleVersionStringError) Parameters() map[string]interface{} {
+func (e *InvalidModuleVersionString) Parameters() map[string]interface{} {
 	return map[string]interface{}{"version": e.Version}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *InvalidModuleVersionStringError) safeParams() map[string]interface{} {
-	return map[string]interface{}{"version": e.Version, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *InvalidModuleVersionStringError) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *InvalidModuleVersionStringError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *InvalidModuleVersionStringError) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e InvalidModuleVersionStringError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.invalidModuleVersionStringError)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidModuleVersionStringError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *InvalidModuleVersionStringError) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters invalidModuleVersionStringError
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.invalidModuleVersionStringError = parameters
-	return nil
-}
-
-type invalidParameterNamesError struct{}
-
-func (o invalidParameterNamesError) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *invalidParameterNamesError) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewInvalidParameterNamesError returns new instance of InvalidParameterNamesError error.
-func NewInvalidParameterNamesError() *InvalidParameterNamesError {
-	return &InvalidParameterNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidParameterNamesError: invalidParameterNamesError{}}
-}
-
-// WrapWithInvalidParameterNamesError returns new instance of InvalidParameterNamesError error wrapping an existing error.
-func WrapWithInvalidParameterNamesError(err error) *InvalidParameterNamesError {
-	return &InvalidParameterNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidParameterNamesError: invalidParameterNamesError{}}
-}
-
-// InvalidParameterNamesError is an error type.
-type InvalidParameterNamesError struct {
-	errorInstanceID uuid.UUID
-	invalidParameterNamesError
-	cause error
-	stack werror.StackTrace
-}
-
-// IsInvalidParameterNamesError returns true if err is an instance of InvalidParameterNamesError.
-func IsInvalidParameterNamesError(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*InvalidParameterNamesError)
-	return ok
-}
-
-func (e *InvalidParameterNamesError) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidParameterNamesError (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *InvalidParameterNamesError) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *InvalidParameterNamesError) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *InvalidParameterNamesError) Message() string {
-	return "INVALID_ARGUMENT Scout:InvalidParameterNamesError"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *InvalidParameterNamesError) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *InvalidParameterNamesError) Code() errors.ErrorCode {
-	return errors.InvalidArgument
-}
-
-// Name returns an error name identifying error type.
-func (e *InvalidParameterNamesError) Name() string {
-	return "Scout:InvalidParameterNamesError"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *InvalidParameterNamesError) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *InvalidParameterNamesError) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *InvalidParameterNamesError) safeParams() map[string]interface{} {
+func (e *InvalidModuleVersionString) safeParams() map[string]interface{} {
 	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *InvalidParameterNamesError) SafeParams() map[string]interface{} {
+func (e *InvalidModuleVersionString) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -1644,13 +800,13 @@ func (e *InvalidParameterNamesError) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *InvalidParameterNamesError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *InvalidModuleVersionString) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"version": e.Version}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *InvalidParameterNamesError) UnsafeParams() map[string]interface{} {
+func (e *InvalidModuleVersionString) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -1660,31 +816,54 @@ func (e *InvalidParameterNamesError) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e InvalidParameterNamesError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.invalidParameterNamesError)
+func (e InvalidModuleVersionString) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidModuleVersionString)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidParameterNamesError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Module:InvalidModuleVersionString", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *InvalidParameterNamesError) UnmarshalJSON(data []byte) error {
+func (e *InvalidModuleVersionString) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters invalidParameterNamesError
+	var parameters invalidModuleVersionString
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.invalidParameterNamesError = parameters
+	e.invalidModuleVersionString = parameters
 	return nil
 }
 
-type invalidVariableNamesError struct{}
+type invalidNestedFunctionReferences struct {
+	FunctionName []string `json:"functionName"`
+}
 
-func (o invalidVariableNamesError) MarshalYAML() (interface{}, error) {
+func (o invalidNestedFunctionReferences) MarshalJSON() ([]byte, error) {
+	if o.FunctionName == nil {
+		o.FunctionName = make([]string, 0)
+	}
+	type _tmpinvalidNestedFunctionReferences invalidNestedFunctionReferences
+	return safejson.Marshal(_tmpinvalidNestedFunctionReferences(o))
+}
+
+func (o *invalidNestedFunctionReferences) UnmarshalJSON(data []byte) error {
+	type _tmpinvalidNestedFunctionReferences invalidNestedFunctionReferences
+	var rawinvalidNestedFunctionReferences _tmpinvalidNestedFunctionReferences
+	if err := safejson.Unmarshal(data, &rawinvalidNestedFunctionReferences); err != nil {
+		return err
+	}
+	if rawinvalidNestedFunctionReferences.FunctionName == nil {
+		rawinvalidNestedFunctionReferences.FunctionName = make([]string, 0)
+	}
+	*o = invalidNestedFunctionReferences(rawinvalidNestedFunctionReferences)
+	return nil
+}
+
+func (o invalidNestedFunctionReferences) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -1692,7 +871,7 @@ func (o invalidVariableNamesError) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *invalidVariableNamesError) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *invalidNestedFunctionReferences) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1700,87 +879,91 @@ func (o *invalidVariableNamesError) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewInvalidVariableNamesError returns new instance of InvalidVariableNamesError error.
-func NewInvalidVariableNamesError() *InvalidVariableNamesError {
-	return &InvalidVariableNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidVariableNamesError: invalidVariableNamesError{}}
+// NewInvalidNestedFunctionReferences returns new instance of InvalidNestedFunctionReferences error.
+func NewInvalidNestedFunctionReferences(functionNameArg []string) *InvalidNestedFunctionReferences {
+	return &InvalidNestedFunctionReferences{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidNestedFunctionReferences: invalidNestedFunctionReferences{FunctionName: functionNameArg}}
 }
 
-// WrapWithInvalidVariableNamesError returns new instance of InvalidVariableNamesError error wrapping an existing error.
-func WrapWithInvalidVariableNamesError(err error) *InvalidVariableNamesError {
-	return &InvalidVariableNamesError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidVariableNamesError: invalidVariableNamesError{}}
+// WrapWithInvalidNestedFunctionReferences returns new instance of InvalidNestedFunctionReferences error wrapping an existing error.
+func WrapWithInvalidNestedFunctionReferences(err error, functionNameArg []string) *InvalidNestedFunctionReferences {
+	return &InvalidNestedFunctionReferences{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidNestedFunctionReferences: invalidNestedFunctionReferences{FunctionName: functionNameArg}}
 }
 
-// InvalidVariableNamesError is an error type.
-type InvalidVariableNamesError struct {
+// InvalidNestedFunctionReferences is an error type.
+/*
+One or more functions contain invalid nested function references.
+Functions cannot reference other functions that are not defined in the same module.
+*/
+type InvalidNestedFunctionReferences struct {
 	errorInstanceID uuid.UUID
-	invalidVariableNamesError
+	invalidNestedFunctionReferences
 	cause error
 	stack werror.StackTrace
 }
 
-// IsInvalidVariableNamesError returns true if err is an instance of InvalidVariableNamesError.
-func IsInvalidVariableNamesError(err error) bool {
+// IsInvalidNestedFunctionReferences returns true if err is an instance of InvalidNestedFunctionReferences.
+func IsInvalidNestedFunctionReferences(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*InvalidVariableNamesError)
+	_, ok := errors.GetConjureError(err).(*InvalidNestedFunctionReferences)
 	return ok
 }
 
-func (e *InvalidVariableNamesError) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidVariableNamesError (%s)", e.errorInstanceID)
+func (e *InvalidNestedFunctionReferences) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Module:InvalidNestedFunctionReferences (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *InvalidVariableNamesError) Cause() error {
+func (e *InvalidNestedFunctionReferences) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *InvalidVariableNamesError) StackTrace() werror.StackTrace {
+func (e *InvalidNestedFunctionReferences) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *InvalidVariableNamesError) Message() string {
-	return "INVALID_ARGUMENT Scout:InvalidVariableNamesError"
+func (e *InvalidNestedFunctionReferences) Message() string {
+	return "INVALID_ARGUMENT Module:InvalidNestedFunctionReferences"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *InvalidVariableNamesError) Format(state fmt.State, verb rune) {
+func (e *InvalidNestedFunctionReferences) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *InvalidVariableNamesError) Code() errors.ErrorCode {
+func (e *InvalidNestedFunctionReferences) Code() errors.ErrorCode {
 	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
-func (e *InvalidVariableNamesError) Name() string {
-	return "Scout:InvalidVariableNamesError"
+func (e *InvalidNestedFunctionReferences) Name() string {
+	return "Module:InvalidNestedFunctionReferences"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *InvalidVariableNamesError) InstanceID() uuid.UUID {
+func (e *InvalidNestedFunctionReferences) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *InvalidVariableNamesError) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *InvalidNestedFunctionReferences) Parameters() map[string]interface{} {
+	return map[string]interface{}{"functionName": e.FunctionName}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *InvalidVariableNamesError) safeParams() map[string]interface{} {
+func (e *InvalidNestedFunctionReferences) safeParams() map[string]interface{} {
 	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *InvalidVariableNamesError) SafeParams() map[string]interface{} {
+func (e *InvalidNestedFunctionReferences) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -1791,13 +974,13 @@ func (e *InvalidVariableNamesError) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *InvalidVariableNamesError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *InvalidNestedFunctionReferences) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"functionName": e.FunctionName}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *InvalidVariableNamesError) UnsafeParams() map[string]interface{} {
+func (e *InvalidNestedFunctionReferences) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -1807,54 +990,54 @@ func (e *InvalidVariableNamesError) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e InvalidVariableNamesError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.invalidVariableNamesError)
+func (e InvalidNestedFunctionReferences) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidNestedFunctionReferences)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidVariableNamesError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Module:InvalidNestedFunctionReferences", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *InvalidVariableNamesError) UnmarshalJSON(data []byte) error {
+func (e *InvalidNestedFunctionReferences) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters invalidVariableNamesError
+	var parameters invalidNestedFunctionReferences
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.invalidVariableNamesError = parameters
+	e.invalidNestedFunctionReferences = parameters
 	return nil
 }
 
-type moduleApplicationsNotFoundError struct {
-	ModuleApplicationRids []api1.ModuleApplicationRid `json:"moduleApplicationRids"`
+type invalidParameterNames struct {
+	ParameterName []string `json:"parameterName"`
 }
 
-func (o moduleApplicationsNotFoundError) MarshalJSON() ([]byte, error) {
-	if o.ModuleApplicationRids == nil {
-		o.ModuleApplicationRids = make([]api1.ModuleApplicationRid, 0)
+func (o invalidParameterNames) MarshalJSON() ([]byte, error) {
+	if o.ParameterName == nil {
+		o.ParameterName = make([]string, 0)
 	}
-	type _tmpmoduleApplicationsNotFoundError moduleApplicationsNotFoundError
-	return safejson.Marshal(_tmpmoduleApplicationsNotFoundError(o))
+	type _tmpinvalidParameterNames invalidParameterNames
+	return safejson.Marshal(_tmpinvalidParameterNames(o))
 }
 
-func (o *moduleApplicationsNotFoundError) UnmarshalJSON(data []byte) error {
-	type _tmpmoduleApplicationsNotFoundError moduleApplicationsNotFoundError
-	var rawmoduleApplicationsNotFoundError _tmpmoduleApplicationsNotFoundError
-	if err := safejson.Unmarshal(data, &rawmoduleApplicationsNotFoundError); err != nil {
+func (o *invalidParameterNames) UnmarshalJSON(data []byte) error {
+	type _tmpinvalidParameterNames invalidParameterNames
+	var rawinvalidParameterNames _tmpinvalidParameterNames
+	if err := safejson.Unmarshal(data, &rawinvalidParameterNames); err != nil {
 		return err
 	}
-	if rawmoduleApplicationsNotFoundError.ModuleApplicationRids == nil {
-		rawmoduleApplicationsNotFoundError.ModuleApplicationRids = make([]api1.ModuleApplicationRid, 0)
+	if rawinvalidParameterNames.ParameterName == nil {
+		rawinvalidParameterNames.ParameterName = make([]string, 0)
 	}
-	*o = moduleApplicationsNotFoundError(rawmoduleApplicationsNotFoundError)
+	*o = invalidParameterNames(rawinvalidParameterNames)
 	return nil
 }
 
-func (o moduleApplicationsNotFoundError) MarshalYAML() (interface{}, error) {
+func (o invalidParameterNames) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -1862,7 +1045,7 @@ func (o moduleApplicationsNotFoundError) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *moduleApplicationsNotFoundError) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *invalidParameterNames) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1870,87 +1053,91 @@ func (o *moduleApplicationsNotFoundError) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewModuleApplicationsNotFoundError returns new instance of ModuleApplicationsNotFoundError error.
-func NewModuleApplicationsNotFoundError(moduleApplicationRidsArg []api1.ModuleApplicationRid) *ModuleApplicationsNotFoundError {
-	return &ModuleApplicationsNotFoundError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), moduleApplicationsNotFoundError: moduleApplicationsNotFoundError{ModuleApplicationRids: moduleApplicationRidsArg}}
+// NewInvalidParameterNames returns new instance of InvalidParameterNames error.
+func NewInvalidParameterNames(parameterNameArg []string) *InvalidParameterNames {
+	return &InvalidParameterNames{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidParameterNames: invalidParameterNames{ParameterName: parameterNameArg}}
 }
 
-// WrapWithModuleApplicationsNotFoundError returns new instance of ModuleApplicationsNotFoundError error wrapping an existing error.
-func WrapWithModuleApplicationsNotFoundError(err error, moduleApplicationRidsArg []api1.ModuleApplicationRid) *ModuleApplicationsNotFoundError {
-	return &ModuleApplicationsNotFoundError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, moduleApplicationsNotFoundError: moduleApplicationsNotFoundError{ModuleApplicationRids: moduleApplicationRidsArg}}
+// WrapWithInvalidParameterNames returns new instance of InvalidParameterNames error wrapping an existing error.
+func WrapWithInvalidParameterNames(err error, parameterNameArg []string) *InvalidParameterNames {
+	return &InvalidParameterNames{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidParameterNames: invalidParameterNames{ParameterName: parameterNameArg}}
 }
 
-// ModuleApplicationsNotFoundError is an error type.
-type ModuleApplicationsNotFoundError struct {
+// InvalidParameterNames is an error type.
+/*
+One or more parameter names are invalid.
+Parameter names must begin with a letter and can only contain letters, numbers, and underscores.
+*/
+type InvalidParameterNames struct {
 	errorInstanceID uuid.UUID
-	moduleApplicationsNotFoundError
+	invalidParameterNames
 	cause error
 	stack werror.StackTrace
 }
 
-// IsModuleApplicationsNotFoundError returns true if err is an instance of ModuleApplicationsNotFoundError.
-func IsModuleApplicationsNotFoundError(err error) bool {
+// IsInvalidParameterNames returns true if err is an instance of InvalidParameterNames.
+func IsInvalidParameterNames(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*ModuleApplicationsNotFoundError)
+	_, ok := errors.GetConjureError(err).(*InvalidParameterNames)
 	return ok
 }
 
-func (e *ModuleApplicationsNotFoundError) Error() string {
-	return fmt.Sprintf("NOT_FOUND Scout:ModuleApplicationsNotFoundError (%s)", e.errorInstanceID)
+func (e *InvalidParameterNames) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Module:InvalidParameterNames (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *ModuleApplicationsNotFoundError) Cause() error {
+func (e *InvalidParameterNames) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *ModuleApplicationsNotFoundError) StackTrace() werror.StackTrace {
+func (e *InvalidParameterNames) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *ModuleApplicationsNotFoundError) Message() string {
-	return "NOT_FOUND Scout:ModuleApplicationsNotFoundError"
+func (e *InvalidParameterNames) Message() string {
+	return "INVALID_ARGUMENT Module:InvalidParameterNames"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *ModuleApplicationsNotFoundError) Format(state fmt.State, verb rune) {
+func (e *InvalidParameterNames) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *ModuleApplicationsNotFoundError) Code() errors.ErrorCode {
-	return errors.NotFound
+func (e *InvalidParameterNames) Code() errors.ErrorCode {
+	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
-func (e *ModuleApplicationsNotFoundError) Name() string {
-	return "Scout:ModuleApplicationsNotFoundError"
+func (e *InvalidParameterNames) Name() string {
+	return "Module:InvalidParameterNames"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *ModuleApplicationsNotFoundError) InstanceID() uuid.UUID {
+func (e *InvalidParameterNames) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *ModuleApplicationsNotFoundError) Parameters() map[string]interface{} {
-	return map[string]interface{}{"moduleApplicationRids": e.ModuleApplicationRids}
+func (e *InvalidParameterNames) Parameters() map[string]interface{} {
+	return map[string]interface{}{"parameterName": e.ParameterName}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *ModuleApplicationsNotFoundError) safeParams() map[string]interface{} {
-	return map[string]interface{}{"moduleApplicationRids": e.ModuleApplicationRids, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+func (e *InvalidParameterNames) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *ModuleApplicationsNotFoundError) SafeParams() map[string]interface{} {
+func (e *InvalidParameterNames) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -1961,13 +1148,13 @@ func (e *ModuleApplicationsNotFoundError) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *ModuleApplicationsNotFoundError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *InvalidParameterNames) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"parameterName": e.ParameterName}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *ModuleApplicationsNotFoundError) UnsafeParams() map[string]interface{} {
+func (e *InvalidParameterNames) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -1977,31 +1164,33 @@ func (e *ModuleApplicationsNotFoundError) UnsafeParams() map[string]interface{} 
 	return unsafeParams
 }
 
-func (e ModuleApplicationsNotFoundError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.moduleApplicationsNotFoundError)
+func (e InvalidParameterNames) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidParameterNames)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Scout:ModuleApplicationsNotFoundError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Module:InvalidParameterNames", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *ModuleApplicationsNotFoundError) UnmarshalJSON(data []byte) error {
+func (e *InvalidParameterNames) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters moduleApplicationsNotFoundError
+	var parameters invalidParameterNames
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.moduleApplicationsNotFoundError = parameters
+	e.invalidParameterNames = parameters
 	return nil
 }
 
-type moduleNameConflictError struct{}
+type moduleNameConflict struct {
+	ModuleApiName string `json:"moduleApiName"`
+}
 
-func (o moduleNameConflictError) MarshalYAML() (interface{}, error) {
+func (o moduleNameConflict) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -2009,7 +1198,7 @@ func (o moduleNameConflictError) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *moduleNameConflictError) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *moduleNameConflict) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2017,87 +1206,88 @@ func (o *moduleNameConflictError) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewModuleNameConflictError returns new instance of ModuleNameConflictError error.
-func NewModuleNameConflictError() *ModuleNameConflictError {
-	return &ModuleNameConflictError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), moduleNameConflictError: moduleNameConflictError{}}
+// NewModuleNameConflict returns new instance of ModuleNameConflict error.
+func NewModuleNameConflict(moduleApiNameArg string) *ModuleNameConflict {
+	return &ModuleNameConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), moduleNameConflict: moduleNameConflict{ModuleApiName: moduleApiNameArg}}
 }
 
-// WrapWithModuleNameConflictError returns new instance of ModuleNameConflictError error wrapping an existing error.
-func WrapWithModuleNameConflictError(err error) *ModuleNameConflictError {
-	return &ModuleNameConflictError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, moduleNameConflictError: moduleNameConflictError{}}
+// WrapWithModuleNameConflict returns new instance of ModuleNameConflict error wrapping an existing error.
+func WrapWithModuleNameConflict(err error, moduleApiNameArg string) *ModuleNameConflict {
+	return &ModuleNameConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, moduleNameConflict: moduleNameConflict{ModuleApiName: moduleApiNameArg}}
 }
 
-// ModuleNameConflictError is an error type.
-type ModuleNameConflictError struct {
+// ModuleNameConflict is an error type.
+// A module with the given API name already exists in the current organization.
+type ModuleNameConflict struct {
 	errorInstanceID uuid.UUID
-	moduleNameConflictError
+	moduleNameConflict
 	cause error
 	stack werror.StackTrace
 }
 
-// IsModuleNameConflictError returns true if err is an instance of ModuleNameConflictError.
-func IsModuleNameConflictError(err error) bool {
+// IsModuleNameConflict returns true if err is an instance of ModuleNameConflict.
+func IsModuleNameConflict(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*ModuleNameConflictError)
+	_, ok := errors.GetConjureError(err).(*ModuleNameConflict)
 	return ok
 }
 
-func (e *ModuleNameConflictError) Error() string {
-	return fmt.Sprintf("CONFLICT Scout:ModuleNameConflictError (%s)", e.errorInstanceID)
+func (e *ModuleNameConflict) Error() string {
+	return fmt.Sprintf("CONFLICT Module:ModuleNameConflict (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *ModuleNameConflictError) Cause() error {
+func (e *ModuleNameConflict) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *ModuleNameConflictError) StackTrace() werror.StackTrace {
+func (e *ModuleNameConflict) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *ModuleNameConflictError) Message() string {
-	return "CONFLICT Scout:ModuleNameConflictError"
+func (e *ModuleNameConflict) Message() string {
+	return "CONFLICT Module:ModuleNameConflict"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *ModuleNameConflictError) Format(state fmt.State, verb rune) {
+func (e *ModuleNameConflict) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *ModuleNameConflictError) Code() errors.ErrorCode {
+func (e *ModuleNameConflict) Code() errors.ErrorCode {
 	return errors.Conflict
 }
 
 // Name returns an error name identifying error type.
-func (e *ModuleNameConflictError) Name() string {
-	return "Scout:ModuleNameConflictError"
+func (e *ModuleNameConflict) Name() string {
+	return "Module:ModuleNameConflict"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *ModuleNameConflictError) InstanceID() uuid.UUID {
+func (e *ModuleNameConflict) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *ModuleNameConflictError) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *ModuleNameConflict) Parameters() map[string]interface{} {
+	return map[string]interface{}{"moduleApiName": e.ModuleApiName}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *ModuleNameConflictError) safeParams() map[string]interface{} {
+func (e *ModuleNameConflict) safeParams() map[string]interface{} {
 	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *ModuleNameConflictError) SafeParams() map[string]interface{} {
+func (e *ModuleNameConflict) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -2108,13 +1298,13 @@ func (e *ModuleNameConflictError) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *ModuleNameConflictError) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *ModuleNameConflict) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"moduleApiName": e.ModuleApiName}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *ModuleNameConflictError) UnsafeParams() map[string]interface{} {
+func (e *ModuleNameConflict) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -2124,54 +1314,54 @@ func (e *ModuleNameConflictError) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e ModuleNameConflictError) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.moduleNameConflictError)
+func (e ModuleNameConflict) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.moduleNameConflict)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Scout:ModuleNameConflictError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Module:ModuleNameConflict", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *ModuleNameConflictError) UnmarshalJSON(data []byte) error {
+func (e *ModuleNameConflict) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters moduleNameConflictError
+	var parameters moduleNameConflict
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.moduleNameConflictError = parameters
+	e.moduleNameConflict = parameters
 	return nil
 }
 
-type moduleNamesNotFound struct {
-	ModuleNames []string `json:"moduleNames"`
+type moduleRidsNotFound struct {
+	ModuleRids []api.ModuleRid `json:"moduleRids"`
 }
 
-func (o moduleNamesNotFound) MarshalJSON() ([]byte, error) {
-	if o.ModuleNames == nil {
-		o.ModuleNames = make([]string, 0)
+func (o moduleRidsNotFound) MarshalJSON() ([]byte, error) {
+	if o.ModuleRids == nil {
+		o.ModuleRids = make([]api.ModuleRid, 0)
 	}
-	type _tmpmoduleNamesNotFound moduleNamesNotFound
-	return safejson.Marshal(_tmpmoduleNamesNotFound(o))
+	type _tmpmoduleRidsNotFound moduleRidsNotFound
+	return safejson.Marshal(_tmpmoduleRidsNotFound(o))
 }
 
-func (o *moduleNamesNotFound) UnmarshalJSON(data []byte) error {
-	type _tmpmoduleNamesNotFound moduleNamesNotFound
-	var rawmoduleNamesNotFound _tmpmoduleNamesNotFound
-	if err := safejson.Unmarshal(data, &rawmoduleNamesNotFound); err != nil {
+func (o *moduleRidsNotFound) UnmarshalJSON(data []byte) error {
+	type _tmpmoduleRidsNotFound moduleRidsNotFound
+	var rawmoduleRidsNotFound _tmpmoduleRidsNotFound
+	if err := safejson.Unmarshal(data, &rawmoduleRidsNotFound); err != nil {
 		return err
 	}
-	if rawmoduleNamesNotFound.ModuleNames == nil {
-		rawmoduleNamesNotFound.ModuleNames = make([]string, 0)
+	if rawmoduleRidsNotFound.ModuleRids == nil {
+		rawmoduleRidsNotFound.ModuleRids = make([]api.ModuleRid, 0)
 	}
-	*o = moduleNamesNotFound(rawmoduleNamesNotFound)
+	*o = moduleRidsNotFound(rawmoduleRidsNotFound)
 	return nil
 }
 
-func (o moduleNamesNotFound) MarshalYAML() (interface{}, error) {
+func (o moduleRidsNotFound) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -2179,7 +1369,7 @@ func (o moduleNamesNotFound) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *moduleNamesNotFound) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *moduleRidsNotFound) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2187,87 +1377,88 @@ func (o *moduleNamesNotFound) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewModuleNamesNotFound returns new instance of ModuleNamesNotFound error.
-func NewModuleNamesNotFound(moduleNamesArg []string) *ModuleNamesNotFound {
-	return &ModuleNamesNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), moduleNamesNotFound: moduleNamesNotFound{ModuleNames: moduleNamesArg}}
+// NewModuleRidsNotFound returns new instance of ModuleRidsNotFound error.
+func NewModuleRidsNotFound(moduleRidsArg []api.ModuleRid) *ModuleRidsNotFound {
+	return &ModuleRidsNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), moduleRidsNotFound: moduleRidsNotFound{ModuleRids: moduleRidsArg}}
 }
 
-// WrapWithModuleNamesNotFound returns new instance of ModuleNamesNotFound error wrapping an existing error.
-func WrapWithModuleNamesNotFound(err error, moduleNamesArg []string) *ModuleNamesNotFound {
-	return &ModuleNamesNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, moduleNamesNotFound: moduleNamesNotFound{ModuleNames: moduleNamesArg}}
+// WrapWithModuleRidsNotFound returns new instance of ModuleRidsNotFound error wrapping an existing error.
+func WrapWithModuleRidsNotFound(err error, moduleRidsArg []api.ModuleRid) *ModuleRidsNotFound {
+	return &ModuleRidsNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, moduleRidsNotFound: moduleRidsNotFound{ModuleRids: moduleRidsArg}}
 }
 
-// ModuleNamesNotFound is an error type.
-type ModuleNamesNotFound struct {
+// ModuleRidsNotFound is an error type.
+// One or more modules were not found in the current workspace.
+type ModuleRidsNotFound struct {
 	errorInstanceID uuid.UUID
-	moduleNamesNotFound
+	moduleRidsNotFound
 	cause error
 	stack werror.StackTrace
 }
 
-// IsModuleNamesNotFound returns true if err is an instance of ModuleNamesNotFound.
-func IsModuleNamesNotFound(err error) bool {
+// IsModuleRidsNotFound returns true if err is an instance of ModuleRidsNotFound.
+func IsModuleRidsNotFound(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*ModuleNamesNotFound)
+	_, ok := errors.GetConjureError(err).(*ModuleRidsNotFound)
 	return ok
 }
 
-func (e *ModuleNamesNotFound) Error() string {
-	return fmt.Sprintf("NOT_FOUND Scout:ModuleNamesNotFound (%s)", e.errorInstanceID)
+func (e *ModuleRidsNotFound) Error() string {
+	return fmt.Sprintf("NOT_FOUND Module:ModuleRidsNotFound (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *ModuleNamesNotFound) Cause() error {
+func (e *ModuleRidsNotFound) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *ModuleNamesNotFound) StackTrace() werror.StackTrace {
+func (e *ModuleRidsNotFound) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *ModuleNamesNotFound) Message() string {
-	return "NOT_FOUND Scout:ModuleNamesNotFound"
+func (e *ModuleRidsNotFound) Message() string {
+	return "NOT_FOUND Module:ModuleRidsNotFound"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *ModuleNamesNotFound) Format(state fmt.State, verb rune) {
+func (e *ModuleRidsNotFound) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *ModuleNamesNotFound) Code() errors.ErrorCode {
+func (e *ModuleRidsNotFound) Code() errors.ErrorCode {
 	return errors.NotFound
 }
 
 // Name returns an error name identifying error type.
-func (e *ModuleNamesNotFound) Name() string {
-	return "Scout:ModuleNamesNotFound"
+func (e *ModuleRidsNotFound) Name() string {
+	return "Module:ModuleRidsNotFound"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *ModuleNamesNotFound) InstanceID() uuid.UUID {
+func (e *ModuleRidsNotFound) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *ModuleNamesNotFound) Parameters() map[string]interface{} {
-	return map[string]interface{}{"moduleNames": e.ModuleNames}
+func (e *ModuleRidsNotFound) Parameters() map[string]interface{} {
+	return map[string]interface{}{"moduleRids": e.ModuleRids}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *ModuleNamesNotFound) safeParams() map[string]interface{} {
-	return map[string]interface{}{"moduleNames": e.ModuleNames, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+func (e *ModuleRidsNotFound) safeParams() map[string]interface{} {
+	return map[string]interface{}{"moduleRids": e.ModuleRids, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *ModuleNamesNotFound) SafeParams() map[string]interface{} {
+func (e *ModuleRidsNotFound) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -2278,13 +1469,13 @@ func (e *ModuleNamesNotFound) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *ModuleNamesNotFound) unsafeParams() map[string]interface{} {
+func (e *ModuleRidsNotFound) unsafeParams() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *ModuleNamesNotFound) UnsafeParams() map[string]interface{} {
+func (e *ModuleRidsNotFound) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -2294,35 +1485,35 @@ func (e *ModuleNamesNotFound) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e ModuleNamesNotFound) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.moduleNamesNotFound)
+func (e ModuleRidsNotFound) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.moduleRidsNotFound)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Scout:ModuleNamesNotFound", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Module:ModuleRidsNotFound", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *ModuleNamesNotFound) UnmarshalJSON(data []byte) error {
+func (e *ModuleRidsNotFound) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters moduleNamesNotFound
+	var parameters moduleRidsNotFound
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.moduleNamesNotFound = parameters
+	e.moduleRidsNotFound = parameters
 	return nil
 }
 
 type modulesNotFound struct {
-	ModuleRids []api1.ModuleRid `json:"moduleRids"`
+	ModuleRefs []RequestModuleRef `json:"moduleRefs"`
 }
 
 func (o modulesNotFound) MarshalJSON() ([]byte, error) {
-	if o.ModuleRids == nil {
-		o.ModuleRids = make([]api1.ModuleRid, 0)
+	if o.ModuleRefs == nil {
+		o.ModuleRefs = make([]RequestModuleRef, 0)
 	}
 	type _tmpmodulesNotFound modulesNotFound
 	return safejson.Marshal(_tmpmodulesNotFound(o))
@@ -2334,8 +1525,8 @@ func (o *modulesNotFound) UnmarshalJSON(data []byte) error {
 	if err := safejson.Unmarshal(data, &rawmodulesNotFound); err != nil {
 		return err
 	}
-	if rawmodulesNotFound.ModuleRids == nil {
-		rawmodulesNotFound.ModuleRids = make([]api1.ModuleRid, 0)
+	if rawmodulesNotFound.ModuleRefs == nil {
+		rawmodulesNotFound.ModuleRefs = make([]RequestModuleRef, 0)
 	}
 	*o = modulesNotFound(rawmodulesNotFound)
 	return nil
@@ -2358,16 +1549,17 @@ func (o *modulesNotFound) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 // NewModulesNotFound returns new instance of ModulesNotFound error.
-func NewModulesNotFound(moduleRidsArg []api1.ModuleRid) *ModulesNotFound {
-	return &ModulesNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), modulesNotFound: modulesNotFound{ModuleRids: moduleRidsArg}}
+func NewModulesNotFound(moduleRefsArg []RequestModuleRef) *ModulesNotFound {
+	return &ModulesNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), modulesNotFound: modulesNotFound{ModuleRefs: moduleRefsArg}}
 }
 
 // WrapWithModulesNotFound returns new instance of ModulesNotFound error wrapping an existing error.
-func WrapWithModulesNotFound(err error, moduleRidsArg []api1.ModuleRid) *ModulesNotFound {
-	return &ModulesNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, modulesNotFound: modulesNotFound{ModuleRids: moduleRidsArg}}
+func WrapWithModulesNotFound(err error, moduleRefsArg []RequestModuleRef) *ModulesNotFound {
+	return &ModulesNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, modulesNotFound: modulesNotFound{ModuleRefs: moduleRefsArg}}
 }
 
 // ModulesNotFound is an error type.
+// One or more modules were not found in the current workspace.
 type ModulesNotFound struct {
 	errorInstanceID uuid.UUID
 	modulesNotFound
@@ -2385,7 +1577,7 @@ func IsModulesNotFound(err error) bool {
 }
 
 func (e *ModulesNotFound) Error() string {
-	return fmt.Sprintf("NOT_FOUND Scout:ModulesNotFound (%s)", e.errorInstanceID)
+	return fmt.Sprintf("NOT_FOUND Module:ModulesNotFound (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
@@ -2402,7 +1594,7 @@ func (e *ModulesNotFound) StackTrace() werror.StackTrace {
 
 // Message returns the message body for the error.
 func (e *ModulesNotFound) Message() string {
-	return "NOT_FOUND Scout:ModulesNotFound"
+	return "NOT_FOUND Module:ModulesNotFound"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
@@ -2417,7 +1609,7 @@ func (e *ModulesNotFound) Code() errors.ErrorCode {
 
 // Name returns an error name identifying error type.
 func (e *ModulesNotFound) Name() string {
-	return "Scout:ModulesNotFound"
+	return "Module:ModulesNotFound"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
@@ -2427,12 +1619,12 @@ func (e *ModulesNotFound) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *ModulesNotFound) Parameters() map[string]interface{} {
-	return map[string]interface{}{"moduleRids": e.ModuleRids}
+	return map[string]interface{}{"moduleRefs": e.ModuleRefs}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *ModulesNotFound) safeParams() map[string]interface{} {
-	return map[string]interface{}{"moduleRids": e.ModuleRids, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -2449,7 +1641,7 @@ func (e *ModulesNotFound) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *ModulesNotFound) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"moduleRefs": e.ModuleRefs}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -2469,7 +1661,7 @@ func (e ModulesNotFound) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Scout:ModulesNotFound", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Module:ModulesNotFound", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
 func (e *ModulesNotFound) UnmarshalJSON(data []byte) error {
@@ -2486,21 +1678,510 @@ func (e *ModulesNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type parameterNameConflict struct {
+	ParameterNames []string `json:"parameterNames"`
+}
+
+func (o parameterNameConflict) MarshalJSON() ([]byte, error) {
+	if o.ParameterNames == nil {
+		o.ParameterNames = make([]string, 0)
+	}
+	type _tmpparameterNameConflict parameterNameConflict
+	return safejson.Marshal(_tmpparameterNameConflict(o))
+}
+
+func (o *parameterNameConflict) UnmarshalJSON(data []byte) error {
+	type _tmpparameterNameConflict parameterNameConflict
+	var rawparameterNameConflict _tmpparameterNameConflict
+	if err := safejson.Unmarshal(data, &rawparameterNameConflict); err != nil {
+		return err
+	}
+	if rawparameterNameConflict.ParameterNames == nil {
+		rawparameterNameConflict.ParameterNames = make([]string, 0)
+	}
+	*o = parameterNameConflict(rawparameterNameConflict)
+	return nil
+}
+
+func (o parameterNameConflict) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *parameterNameConflict) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewParameterNameConflict returns new instance of ParameterNameConflict error.
+func NewParameterNameConflict(parameterNamesArg []string) *ParameterNameConflict {
+	return &ParameterNameConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), parameterNameConflict: parameterNameConflict{ParameterNames: parameterNamesArg}}
+}
+
+// WrapWithParameterNameConflict returns new instance of ParameterNameConflict error wrapping an existing error.
+func WrapWithParameterNameConflict(err error, parameterNamesArg []string) *ParameterNameConflict {
+	return &ParameterNameConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, parameterNameConflict: parameterNameConflict{ParameterNames: parameterNamesArg}}
+}
+
+// ParameterNameConflict is an error type.
+// One or more parameter names conflict with each other in the module definition.
+type ParameterNameConflict struct {
+	errorInstanceID uuid.UUID
+	parameterNameConflict
+	cause error
+	stack werror.StackTrace
+}
+
+// IsParameterNameConflict returns true if err is an instance of ParameterNameConflict.
+func IsParameterNameConflict(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ParameterNameConflict)
+	return ok
+}
+
+func (e *ParameterNameConflict) Error() string {
+	return fmt.Sprintf("CONFLICT Module:ParameterNameConflict (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ParameterNameConflict) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ParameterNameConflict) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ParameterNameConflict) Message() string {
+	return "CONFLICT Module:ParameterNameConflict"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ParameterNameConflict) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ParameterNameConflict) Code() errors.ErrorCode {
+	return errors.Conflict
+}
+
+// Name returns an error name identifying error type.
+func (e *ParameterNameConflict) Name() string {
+	return "Module:ParameterNameConflict"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ParameterNameConflict) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ParameterNameConflict) Parameters() map[string]interface{} {
+	return map[string]interface{}{"parameterNames": e.ParameterNames}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ParameterNameConflict) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ParameterNameConflict) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ParameterNameConflict) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"parameterNames": e.ParameterNames}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ParameterNameConflict) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ParameterNameConflict) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.parameterNameConflict)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Module:ParameterNameConflict", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ParameterNameConflict) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters parameterNameConflict
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.parameterNameConflict = parameters
+	return nil
+}
+
+type undefinedModuleFunctionReference struct {
+	InvalidFunctionReference string `json:"invalidFunctionReference"`
+}
+
+func (o undefinedModuleFunctionReference) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *undefinedModuleFunctionReference) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewUndefinedModuleFunctionReference returns new instance of UndefinedModuleFunctionReference error.
+func NewUndefinedModuleFunctionReference(invalidFunctionReferenceArg string) *UndefinedModuleFunctionReference {
+	return &UndefinedModuleFunctionReference{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), undefinedModuleFunctionReference: undefinedModuleFunctionReference{InvalidFunctionReference: invalidFunctionReferenceArg}}
+}
+
+// WrapWithUndefinedModuleFunctionReference returns new instance of UndefinedModuleFunctionReference error wrapping an existing error.
+func WrapWithUndefinedModuleFunctionReference(err error, invalidFunctionReferenceArg string) *UndefinedModuleFunctionReference {
+	return &UndefinedModuleFunctionReference{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, undefinedModuleFunctionReference: undefinedModuleFunctionReference{InvalidFunctionReference: invalidFunctionReferenceArg}}
+}
+
+// UndefinedModuleFunctionReference is an error type.
+// The following function reference is undefined in the module.
+type UndefinedModuleFunctionReference struct {
+	errorInstanceID uuid.UUID
+	undefinedModuleFunctionReference
+	cause error
+	stack werror.StackTrace
+}
+
+// IsUndefinedModuleFunctionReference returns true if err is an instance of UndefinedModuleFunctionReference.
+func IsUndefinedModuleFunctionReference(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*UndefinedModuleFunctionReference)
+	return ok
+}
+
+func (e *UndefinedModuleFunctionReference) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Module:UndefinedModuleFunctionReference (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *UndefinedModuleFunctionReference) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *UndefinedModuleFunctionReference) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *UndefinedModuleFunctionReference) Message() string {
+	return "INVALID_ARGUMENT Module:UndefinedModuleFunctionReference"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *UndefinedModuleFunctionReference) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *UndefinedModuleFunctionReference) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *UndefinedModuleFunctionReference) Name() string {
+	return "Module:UndefinedModuleFunctionReference"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *UndefinedModuleFunctionReference) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *UndefinedModuleFunctionReference) Parameters() map[string]interface{} {
+	return map[string]interface{}{"invalidFunctionReference": e.InvalidFunctionReference}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *UndefinedModuleFunctionReference) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UndefinedModuleFunctionReference) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *UndefinedModuleFunctionReference) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"invalidFunctionReference": e.InvalidFunctionReference}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UndefinedModuleFunctionReference) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e UndefinedModuleFunctionReference) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.undefinedModuleFunctionReference)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Module:UndefinedModuleFunctionReference", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *UndefinedModuleFunctionReference) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters undefinedModuleFunctionReference
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.undefinedModuleFunctionReference = parameters
+	return nil
+}
+
+type variableNameConflict struct {
+	VariableName []string `json:"variableName"`
+}
+
+func (o variableNameConflict) MarshalJSON() ([]byte, error) {
+	if o.VariableName == nil {
+		o.VariableName = make([]string, 0)
+	}
+	type _tmpvariableNameConflict variableNameConflict
+	return safejson.Marshal(_tmpvariableNameConflict(o))
+}
+
+func (o *variableNameConflict) UnmarshalJSON(data []byte) error {
+	type _tmpvariableNameConflict variableNameConflict
+	var rawvariableNameConflict _tmpvariableNameConflict
+	if err := safejson.Unmarshal(data, &rawvariableNameConflict); err != nil {
+		return err
+	}
+	if rawvariableNameConflict.VariableName == nil {
+		rawvariableNameConflict.VariableName = make([]string, 0)
+	}
+	*o = variableNameConflict(rawvariableNameConflict)
+	return nil
+}
+
+func (o variableNameConflict) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *variableNameConflict) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewVariableNameConflict returns new instance of VariableNameConflict error.
+func NewVariableNameConflict(variableNameArg []string) *VariableNameConflict {
+	return &VariableNameConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), variableNameConflict: variableNameConflict{VariableName: variableNameArg}}
+}
+
+// WrapWithVariableNameConflict returns new instance of VariableNameConflict error wrapping an existing error.
+func WrapWithVariableNameConflict(err error, variableNameArg []string) *VariableNameConflict {
+	return &VariableNameConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, variableNameConflict: variableNameConflict{VariableName: variableNameArg}}
+}
+
+// VariableNameConflict is an error type.
+// One or more variable names conflict with each other in the module definition.
+type VariableNameConflict struct {
+	errorInstanceID uuid.UUID
+	variableNameConflict
+	cause error
+	stack werror.StackTrace
+}
+
+// IsVariableNameConflict returns true if err is an instance of VariableNameConflict.
+func IsVariableNameConflict(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*VariableNameConflict)
+	return ok
+}
+
+func (e *VariableNameConflict) Error() string {
+	return fmt.Sprintf("CONFLICT Module:VariableNameConflict (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *VariableNameConflict) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *VariableNameConflict) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *VariableNameConflict) Message() string {
+	return "CONFLICT Module:VariableNameConflict"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *VariableNameConflict) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *VariableNameConflict) Code() errors.ErrorCode {
+	return errors.Conflict
+}
+
+// Name returns an error name identifying error type.
+func (e *VariableNameConflict) Name() string {
+	return "Module:VariableNameConflict"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *VariableNameConflict) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *VariableNameConflict) Parameters() map[string]interface{} {
+	return map[string]interface{}{"variableName": e.VariableName}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *VariableNameConflict) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *VariableNameConflict) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *VariableNameConflict) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"variableName": e.VariableName}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *VariableNameConflict) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e VariableNameConflict) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.variableNameConflict)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Module:VariableNameConflict", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *VariableNameConflict) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters variableNameConflict
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.variableNameConflict = parameters
+	return nil
+}
+
 func init() {
-	conjureerrors.RegisterErrorType("Scout:AssetsNotFound", reflect.TypeOf(AssetsNotFound{}))
-	conjureerrors.RegisterErrorType("Scout:ConflictingFunctionNamesError", reflect.TypeOf(ConflictingFunctionNamesError{}))
-	conjureerrors.RegisterErrorType("Scout:ConflictingParameterNamesError", reflect.TypeOf(ConflictingParameterNamesError{}))
-	conjureerrors.RegisterErrorType("Scout:ConflictingVariableNamesError", reflect.TypeOf(ConflictingVariableNamesError{}))
-	conjureerrors.RegisterErrorType("Scout:FunctionParameterMissingDefaultValueError", reflect.TypeOf(FunctionParameterMissingDefaultValueError{}))
-	conjureerrors.RegisterErrorType("Scout:InvalidFunctionNamesError", reflect.TypeOf(InvalidFunctionNamesError{}))
-	conjureerrors.RegisterErrorType("Scout:InvalidModuleNameError", reflect.TypeOf(InvalidModuleNameError{}))
-	conjureerrors.RegisterErrorType("Scout:InvalidModuleParametersShapeError", reflect.TypeOf(InvalidModuleParametersShapeError{}))
-	conjureerrors.RegisterErrorType("Scout:InvalidModuleTitleError", reflect.TypeOf(InvalidModuleTitleError{}))
-	conjureerrors.RegisterErrorType("Scout:InvalidModuleVersionStringError", reflect.TypeOf(InvalidModuleVersionStringError{}))
-	conjureerrors.RegisterErrorType("Scout:InvalidParameterNamesError", reflect.TypeOf(InvalidParameterNamesError{}))
-	conjureerrors.RegisterErrorType("Scout:InvalidVariableNamesError", reflect.TypeOf(InvalidVariableNamesError{}))
-	conjureerrors.RegisterErrorType("Scout:ModuleApplicationsNotFoundError", reflect.TypeOf(ModuleApplicationsNotFoundError{}))
-	conjureerrors.RegisterErrorType("Scout:ModuleNameConflictError", reflect.TypeOf(ModuleNameConflictError{}))
-	conjureerrors.RegisterErrorType("Scout:ModuleNamesNotFound", reflect.TypeOf(ModuleNamesNotFound{}))
-	conjureerrors.RegisterErrorType("Scout:ModulesNotFound", reflect.TypeOf(ModulesNotFound{}))
+	conjureerrors.RegisterErrorType("Module:CyclicModuleFunctionDefinitions", reflect.TypeOf(CyclicModuleFunctionDefinitions{}))
+	conjureerrors.RegisterErrorType("Module:FunctionNameConflict", reflect.TypeOf(FunctionNameConflict{}))
+	conjureerrors.RegisterErrorType("Module:InvalidFunctionNames", reflect.TypeOf(InvalidFunctionNames{}))
+	conjureerrors.RegisterErrorType("Module:InvalidModuleApiName", reflect.TypeOf(InvalidModuleApiName{}))
+	conjureerrors.RegisterErrorType("Module:InvalidModuleVersionString", reflect.TypeOf(InvalidModuleVersionString{}))
+	conjureerrors.RegisterErrorType("Module:InvalidNestedFunctionReferences", reflect.TypeOf(InvalidNestedFunctionReferences{}))
+	conjureerrors.RegisterErrorType("Module:InvalidParameterNames", reflect.TypeOf(InvalidParameterNames{}))
+	conjureerrors.RegisterErrorType("Module:ModuleNameConflict", reflect.TypeOf(ModuleNameConflict{}))
+	conjureerrors.RegisterErrorType("Module:ModuleRidsNotFound", reflect.TypeOf(ModuleRidsNotFound{}))
+	conjureerrors.RegisterErrorType("Module:ModulesNotFound", reflect.TypeOf(ModulesNotFound{}))
+	conjureerrors.RegisterErrorType("Module:ParameterNameConflict", reflect.TypeOf(ParameterNameConflict{}))
+	conjureerrors.RegisterErrorType("Module:UndefinedModuleFunctionReference", reflect.TypeOf(UndefinedModuleFunctionReference{}))
+	conjureerrors.RegisterErrorType("Module:VariableNameConflict", reflect.TypeOf(VariableNameConflict{}))
 }

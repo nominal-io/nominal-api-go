@@ -18,12 +18,13 @@ const (
 	FileOutputFormat_PARQUET_TAR FileOutputFormat_Value = "PARQUET_TAR"
 	FileOutputFormat_AVRO_STREAM FileOutputFormat_Value = "AVRO_STREAM"
 	FileOutputFormat_JSON_L      FileOutputFormat_Value = "JSON_L"
+	FileOutputFormat_MANIFEST    FileOutputFormat_Value = "MANIFEST"
 	FileOutputFormat_UNKNOWN     FileOutputFormat_Value = "UNKNOWN"
 )
 
 // FileOutputFormat_Values returns all known variants of FileOutputFormat.
 func FileOutputFormat_Values() []FileOutputFormat_Value {
-	return []FileOutputFormat_Value{FileOutputFormat_PARQUET, FileOutputFormat_CSV, FileOutputFormat_PARQUET_TAR, FileOutputFormat_AVRO_STREAM, FileOutputFormat_JSON_L}
+	return []FileOutputFormat_Value{FileOutputFormat_PARQUET, FileOutputFormat_CSV, FileOutputFormat_PARQUET_TAR, FileOutputFormat_AVRO_STREAM, FileOutputFormat_JSON_L, FileOutputFormat_MANIFEST}
 }
 
 func New_FileOutputFormat(value FileOutputFormat_Value) FileOutputFormat {
@@ -33,7 +34,7 @@ func New_FileOutputFormat(value FileOutputFormat_Value) FileOutputFormat {
 // IsUnknown returns false for all known variants of FileOutputFormat and true otherwise.
 func (e FileOutputFormat) IsUnknown() bool {
 	switch e.val {
-	case FileOutputFormat_PARQUET, FileOutputFormat_CSV, FileOutputFormat_PARQUET_TAR, FileOutputFormat_AVRO_STREAM, FileOutputFormat_JSON_L:
+	case FileOutputFormat_PARQUET, FileOutputFormat_CSV, FileOutputFormat_PARQUET_TAR, FileOutputFormat_AVRO_STREAM, FileOutputFormat_JSON_L, FileOutputFormat_MANIFEST:
 		return false
 	}
 	return true
@@ -68,6 +69,8 @@ func (e *FileOutputFormat) UnmarshalText(data []byte) error {
 		*e = New_FileOutputFormat(FileOutputFormat_AVRO_STREAM)
 	case "JSON_L":
 		*e = New_FileOutputFormat(FileOutputFormat_JSON_L)
+	case "MANIFEST":
+		*e = New_FileOutputFormat(FileOutputFormat_MANIFEST)
 	}
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/nominal-io/nominal-api-go/scout/compute/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -221,4 +222,1036 @@ func NewCheckAlertStateFromClosedWithFurtherAction(v ClosedWithFurtherActionAler
 
 func NewCheckAlertStateFromClosedWithIgnore(v ClosedWithIgnoreAlertState) CheckAlertState {
 	return CheckAlertState{typ: "closedWithIgnore", closedWithIgnore: &v}
+}
+
+type ComputeEventQuery struct {
+	typ                string
+	searchText         *api.StringConstant
+	after              *api.TimestampConstant
+	before             *api.TimestampConstant
+	advancedTimeFilter *EventTimeFilter
+	asset              *api.StringConstant
+	template           *api.StringConstant
+	workbook           *api.StringConstant
+	dataReview         *api.StringConstant
+	originType         *SearchEventOriginType
+	dataReviewCheck    *api.StringConstant
+	dispositionStatus  *EventDispositionStatus
+	priority           *api.StringConstant
+	assignee           *api.StringConstant
+	eventType          *EventType
+	createdBy          *api.StringConstant
+	label              *api.StringConstant
+	property           *Property
+	and                *[]ComputeEventQuery
+	or                 *[]ComputeEventQuery
+	not                *ComputeEventQuery
+	workspace          *api.StringConstant
+	procedure          *api.StringConstant
+	procedureExecution *api.StringConstant
+	stepId             *api.StringConstant
+}
+
+type computeEventQueryDeserializer struct {
+	Type               string                  `json:"type"`
+	SearchText         *api.StringConstant     `json:"searchText"`
+	After              *api.TimestampConstant  `json:"after"`
+	Before             *api.TimestampConstant  `json:"before"`
+	AdvancedTimeFilter *EventTimeFilter        `json:"advancedTimeFilter"`
+	Asset              *api.StringConstant     `json:"asset"`
+	Template           *api.StringConstant     `json:"template"`
+	Workbook           *api.StringConstant     `json:"workbook"`
+	DataReview         *api.StringConstant     `json:"dataReview"`
+	OriginType         *SearchEventOriginType  `json:"originType"`
+	DataReviewCheck    *api.StringConstant     `json:"dataReviewCheck"`
+	DispositionStatus  *EventDispositionStatus `json:"dispositionStatus"`
+	Priority           *api.StringConstant     `json:"priority"`
+	Assignee           *api.StringConstant     `json:"assignee"`
+	EventType          *EventType              `json:"eventType"`
+	CreatedBy          *api.StringConstant     `json:"createdBy"`
+	Label              *api.StringConstant     `json:"label"`
+	Property           *Property               `json:"property"`
+	And                *[]ComputeEventQuery    `json:"and"`
+	Or                 *[]ComputeEventQuery    `json:"or"`
+	Not                *ComputeEventQuery      `json:"not"`
+	Workspace          *api.StringConstant     `json:"workspace"`
+	Procedure          *api.StringConstant     `json:"procedure"`
+	ProcedureExecution *api.StringConstant     `json:"procedureExecution"`
+	StepId             *api.StringConstant     `json:"stepId"`
+}
+
+func (u *computeEventQueryDeserializer) toStruct() ComputeEventQuery {
+	return ComputeEventQuery{typ: u.Type, searchText: u.SearchText, after: u.After, before: u.Before, advancedTimeFilter: u.AdvancedTimeFilter, asset: u.Asset, template: u.Template, workbook: u.Workbook, dataReview: u.DataReview, originType: u.OriginType, dataReviewCheck: u.DataReviewCheck, dispositionStatus: u.DispositionStatus, priority: u.Priority, assignee: u.Assignee, eventType: u.EventType, createdBy: u.CreatedBy, label: u.Label, property: u.Property, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, procedure: u.Procedure, procedureExecution: u.ProcedureExecution, stepId: u.StepId}
+}
+
+func (u *ComputeEventQuery) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return nil, fmt.Errorf("field \"searchText\" is required")
+		}
+		return struct {
+			Type       string             `json:"type"`
+			SearchText api.StringConstant `json:"searchText"`
+		}{Type: "searchText", SearchText: *u.searchText}, nil
+	case "after":
+		if u.after == nil {
+			return nil, fmt.Errorf("field \"after\" is required")
+		}
+		return struct {
+			Type  string                `json:"type"`
+			After api.TimestampConstant `json:"after"`
+		}{Type: "after", After: *u.after}, nil
+	case "before":
+		if u.before == nil {
+			return nil, fmt.Errorf("field \"before\" is required")
+		}
+		return struct {
+			Type   string                `json:"type"`
+			Before api.TimestampConstant `json:"before"`
+		}{Type: "before", Before: *u.before}, nil
+	case "advancedTimeFilter":
+		if u.advancedTimeFilter == nil {
+			return nil, fmt.Errorf("field \"advancedTimeFilter\" is required")
+		}
+		return struct {
+			Type               string          `json:"type"`
+			AdvancedTimeFilter EventTimeFilter `json:"advancedTimeFilter"`
+		}{Type: "advancedTimeFilter", AdvancedTimeFilter: *u.advancedTimeFilter}, nil
+	case "asset":
+		if u.asset == nil {
+			return nil, fmt.Errorf("field \"asset\" is required")
+		}
+		return struct {
+			Type  string             `json:"type"`
+			Asset api.StringConstant `json:"asset"`
+		}{Type: "asset", Asset: *u.asset}, nil
+	case "template":
+		if u.template == nil {
+			return nil, fmt.Errorf("field \"template\" is required")
+		}
+		return struct {
+			Type     string             `json:"type"`
+			Template api.StringConstant `json:"template"`
+		}{Type: "template", Template: *u.template}, nil
+	case "workbook":
+		if u.workbook == nil {
+			return nil, fmt.Errorf("field \"workbook\" is required")
+		}
+		return struct {
+			Type     string             `json:"type"`
+			Workbook api.StringConstant `json:"workbook"`
+		}{Type: "workbook", Workbook: *u.workbook}, nil
+	case "dataReview":
+		if u.dataReview == nil {
+			return nil, fmt.Errorf("field \"dataReview\" is required")
+		}
+		return struct {
+			Type       string             `json:"type"`
+			DataReview api.StringConstant `json:"dataReview"`
+		}{Type: "dataReview", DataReview: *u.dataReview}, nil
+	case "originType":
+		if u.originType == nil {
+			return nil, fmt.Errorf("field \"originType\" is required")
+		}
+		return struct {
+			Type       string                `json:"type"`
+			OriginType SearchEventOriginType `json:"originType"`
+		}{Type: "originType", OriginType: *u.originType}, nil
+	case "dataReviewCheck":
+		if u.dataReviewCheck == nil {
+			return nil, fmt.Errorf("field \"dataReviewCheck\" is required")
+		}
+		return struct {
+			Type            string             `json:"type"`
+			DataReviewCheck api.StringConstant `json:"dataReviewCheck"`
+		}{Type: "dataReviewCheck", DataReviewCheck: *u.dataReviewCheck}, nil
+	case "dispositionStatus":
+		if u.dispositionStatus == nil {
+			return nil, fmt.Errorf("field \"dispositionStatus\" is required")
+		}
+		return struct {
+			Type              string                 `json:"type"`
+			DispositionStatus EventDispositionStatus `json:"dispositionStatus"`
+		}{Type: "dispositionStatus", DispositionStatus: *u.dispositionStatus}, nil
+	case "priority":
+		if u.priority == nil {
+			return nil, fmt.Errorf("field \"priority\" is required")
+		}
+		return struct {
+			Type     string             `json:"type"`
+			Priority api.StringConstant `json:"priority"`
+		}{Type: "priority", Priority: *u.priority}, nil
+	case "assignee":
+		if u.assignee == nil {
+			return nil, fmt.Errorf("field \"assignee\" is required")
+		}
+		return struct {
+			Type     string             `json:"type"`
+			Assignee api.StringConstant `json:"assignee"`
+		}{Type: "assignee", Assignee: *u.assignee}, nil
+	case "eventType":
+		if u.eventType == nil {
+			return nil, fmt.Errorf("field \"eventType\" is required")
+		}
+		return struct {
+			Type      string    `json:"type"`
+			EventType EventType `json:"eventType"`
+		}{Type: "eventType", EventType: *u.eventType}, nil
+	case "createdBy":
+		if u.createdBy == nil {
+			return nil, fmt.Errorf("field \"createdBy\" is required")
+		}
+		return struct {
+			Type      string             `json:"type"`
+			CreatedBy api.StringConstant `json:"createdBy"`
+		}{Type: "createdBy", CreatedBy: *u.createdBy}, nil
+	case "label":
+		if u.label == nil {
+			return nil, fmt.Errorf("field \"label\" is required")
+		}
+		return struct {
+			Type  string             `json:"type"`
+			Label api.StringConstant `json:"label"`
+		}{Type: "label", Label: *u.label}, nil
+	case "property":
+		if u.property == nil {
+			return nil, fmt.Errorf("field \"property\" is required")
+		}
+		return struct {
+			Type     string   `json:"type"`
+			Property Property `json:"property"`
+		}{Type: "property", Property: *u.property}, nil
+	case "and":
+		if u.and == nil {
+			return nil, fmt.Errorf("field \"and\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			And  []ComputeEventQuery `json:"and"`
+		}{Type: "and", And: *u.and}, nil
+	case "or":
+		if u.or == nil {
+			return nil, fmt.Errorf("field \"or\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Or   []ComputeEventQuery `json:"or"`
+		}{Type: "or", Or: *u.or}, nil
+	case "not":
+		if u.not == nil {
+			return nil, fmt.Errorf("field \"not\" is required")
+		}
+		return struct {
+			Type string            `json:"type"`
+			Not  ComputeEventQuery `json:"not"`
+		}{Type: "not", Not: *u.not}, nil
+	case "workspace":
+		if u.workspace == nil {
+			return nil, fmt.Errorf("field \"workspace\" is required")
+		}
+		return struct {
+			Type      string             `json:"type"`
+			Workspace api.StringConstant `json:"workspace"`
+		}{Type: "workspace", Workspace: *u.workspace}, nil
+	case "procedure":
+		if u.procedure == nil {
+			return nil, fmt.Errorf("field \"procedure\" is required")
+		}
+		return struct {
+			Type      string             `json:"type"`
+			Procedure api.StringConstant `json:"procedure"`
+		}{Type: "procedure", Procedure: *u.procedure}, nil
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return nil, fmt.Errorf("field \"procedureExecution\" is required")
+		}
+		return struct {
+			Type               string             `json:"type"`
+			ProcedureExecution api.StringConstant `json:"procedureExecution"`
+		}{Type: "procedureExecution", ProcedureExecution: *u.procedureExecution}, nil
+	case "stepId":
+		if u.stepId == nil {
+			return nil, fmt.Errorf("field \"stepId\" is required")
+		}
+		return struct {
+			Type   string             `json:"type"`
+			StepId api.StringConstant `json:"stepId"`
+		}{Type: "stepId", StepId: *u.stepId}, nil
+	}
+}
+
+func (u ComputeEventQuery) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ComputeEventQuery) UnmarshalJSON(data []byte) error {
+	var deser computeEventQueryDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+	case "after":
+		if u.after == nil {
+			return fmt.Errorf("field \"after\" is required")
+		}
+	case "before":
+		if u.before == nil {
+			return fmt.Errorf("field \"before\" is required")
+		}
+	case "advancedTimeFilter":
+		if u.advancedTimeFilter == nil {
+			return fmt.Errorf("field \"advancedTimeFilter\" is required")
+		}
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+	case "template":
+		if u.template == nil {
+			return fmt.Errorf("field \"template\" is required")
+		}
+	case "workbook":
+		if u.workbook == nil {
+			return fmt.Errorf("field \"workbook\" is required")
+		}
+	case "dataReview":
+		if u.dataReview == nil {
+			return fmt.Errorf("field \"dataReview\" is required")
+		}
+	case "originType":
+		if u.originType == nil {
+			return fmt.Errorf("field \"originType\" is required")
+		}
+	case "dataReviewCheck":
+		if u.dataReviewCheck == nil {
+			return fmt.Errorf("field \"dataReviewCheck\" is required")
+		}
+	case "dispositionStatus":
+		if u.dispositionStatus == nil {
+			return fmt.Errorf("field \"dispositionStatus\" is required")
+		}
+	case "priority":
+		if u.priority == nil {
+			return fmt.Errorf("field \"priority\" is required")
+		}
+	case "assignee":
+		if u.assignee == nil {
+			return fmt.Errorf("field \"assignee\" is required")
+		}
+	case "eventType":
+		if u.eventType == nil {
+			return fmt.Errorf("field \"eventType\" is required")
+		}
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return fmt.Errorf("field \"procedureExecution\" is required")
+		}
+	case "stepId":
+		if u.stepId == nil {
+			return fmt.Errorf("field \"stepId\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ComputeEventQuery) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ComputeEventQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ComputeEventQuery) AcceptFuncs(searchTextFunc func(api.StringConstant) error, afterFunc func(api.TimestampConstant) error, beforeFunc func(api.TimestampConstant) error, advancedTimeFilterFunc func(EventTimeFilter) error, assetFunc func(api.StringConstant) error, templateFunc func(api.StringConstant) error, workbookFunc func(api.StringConstant) error, dataReviewFunc func(api.StringConstant) error, originTypeFunc func(SearchEventOriginType) error, dataReviewCheckFunc func(api.StringConstant) error, dispositionStatusFunc func(EventDispositionStatus) error, priorityFunc func(api.StringConstant) error, assigneeFunc func(api.StringConstant) error, eventTypeFunc func(EventType) error, createdByFunc func(api.StringConstant) error, labelFunc func(api.StringConstant) error, propertyFunc func(Property) error, andFunc func([]ComputeEventQuery) error, orFunc func([]ComputeEventQuery) error, notFunc func(ComputeEventQuery) error, workspaceFunc func(api.StringConstant) error, procedureFunc func(api.StringConstant) error, procedureExecutionFunc func(api.StringConstant) error, stepIdFunc func(api.StringConstant) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return searchTextFunc(*u.searchText)
+	case "after":
+		if u.after == nil {
+			return fmt.Errorf("field \"after\" is required")
+		}
+		return afterFunc(*u.after)
+	case "before":
+		if u.before == nil {
+			return fmt.Errorf("field \"before\" is required")
+		}
+		return beforeFunc(*u.before)
+	case "advancedTimeFilter":
+		if u.advancedTimeFilter == nil {
+			return fmt.Errorf("field \"advancedTimeFilter\" is required")
+		}
+		return advancedTimeFilterFunc(*u.advancedTimeFilter)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return assetFunc(*u.asset)
+	case "template":
+		if u.template == nil {
+			return fmt.Errorf("field \"template\" is required")
+		}
+		return templateFunc(*u.template)
+	case "workbook":
+		if u.workbook == nil {
+			return fmt.Errorf("field \"workbook\" is required")
+		}
+		return workbookFunc(*u.workbook)
+	case "dataReview":
+		if u.dataReview == nil {
+			return fmt.Errorf("field \"dataReview\" is required")
+		}
+		return dataReviewFunc(*u.dataReview)
+	case "originType":
+		if u.originType == nil {
+			return fmt.Errorf("field \"originType\" is required")
+		}
+		return originTypeFunc(*u.originType)
+	case "dataReviewCheck":
+		if u.dataReviewCheck == nil {
+			return fmt.Errorf("field \"dataReviewCheck\" is required")
+		}
+		return dataReviewCheckFunc(*u.dataReviewCheck)
+	case "dispositionStatus":
+		if u.dispositionStatus == nil {
+			return fmt.Errorf("field \"dispositionStatus\" is required")
+		}
+		return dispositionStatusFunc(*u.dispositionStatus)
+	case "priority":
+		if u.priority == nil {
+			return fmt.Errorf("field \"priority\" is required")
+		}
+		return priorityFunc(*u.priority)
+	case "assignee":
+		if u.assignee == nil {
+			return fmt.Errorf("field \"assignee\" is required")
+		}
+		return assigneeFunc(*u.assignee)
+	case "eventType":
+		if u.eventType == nil {
+			return fmt.Errorf("field \"eventType\" is required")
+		}
+		return eventTypeFunc(*u.eventType)
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+		return createdByFunc(*u.createdBy)
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+		return labelFunc(*u.label)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return propertyFunc(*u.property)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return andFunc(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return orFunc(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return workspaceFunc(*u.workspace)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return procedureFunc(*u.procedure)
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return fmt.Errorf("field \"procedureExecution\" is required")
+		}
+		return procedureExecutionFunc(*u.procedureExecution)
+	case "stepId":
+		if u.stepId == nil {
+			return fmt.Errorf("field \"stepId\" is required")
+		}
+		return stepIdFunc(*u.stepId)
+	}
+}
+
+func (u *ComputeEventQuery) SearchTextNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) AfterNoopSuccess(api.TimestampConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) BeforeNoopSuccess(api.TimestampConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) AdvancedTimeFilterNoopSuccess(EventTimeFilter) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) AssetNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) TemplateNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) WorkbookNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) DataReviewNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) OriginTypeNoopSuccess(SearchEventOriginType) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) DataReviewCheckNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) DispositionStatusNoopSuccess(EventDispositionStatus) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) PriorityNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) AssigneeNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) EventTypeNoopSuccess(EventType) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) CreatedByNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) LabelNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) PropertyNoopSuccess(Property) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) AndNoopSuccess([]ComputeEventQuery) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) OrNoopSuccess([]ComputeEventQuery) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) NotNoopSuccess(ComputeEventQuery) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) WorkspaceNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) ProcedureNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) ProcedureExecutionNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) StepIdNoopSuccess(api.StringConstant) error {
+	return nil
+}
+
+func (u *ComputeEventQuery) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ComputeEventQuery) Accept(v ComputeEventQueryVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchText(*u.searchText)
+	case "after":
+		if u.after == nil {
+			return fmt.Errorf("field \"after\" is required")
+		}
+		return v.VisitAfter(*u.after)
+	case "before":
+		if u.before == nil {
+			return fmt.Errorf("field \"before\" is required")
+		}
+		return v.VisitBefore(*u.before)
+	case "advancedTimeFilter":
+		if u.advancedTimeFilter == nil {
+			return fmt.Errorf("field \"advancedTimeFilter\" is required")
+		}
+		return v.VisitAdvancedTimeFilter(*u.advancedTimeFilter)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAsset(*u.asset)
+	case "template":
+		if u.template == nil {
+			return fmt.Errorf("field \"template\" is required")
+		}
+		return v.VisitTemplate(*u.template)
+	case "workbook":
+		if u.workbook == nil {
+			return fmt.Errorf("field \"workbook\" is required")
+		}
+		return v.VisitWorkbook(*u.workbook)
+	case "dataReview":
+		if u.dataReview == nil {
+			return fmt.Errorf("field \"dataReview\" is required")
+		}
+		return v.VisitDataReview(*u.dataReview)
+	case "originType":
+		if u.originType == nil {
+			return fmt.Errorf("field \"originType\" is required")
+		}
+		return v.VisitOriginType(*u.originType)
+	case "dataReviewCheck":
+		if u.dataReviewCheck == nil {
+			return fmt.Errorf("field \"dataReviewCheck\" is required")
+		}
+		return v.VisitDataReviewCheck(*u.dataReviewCheck)
+	case "dispositionStatus":
+		if u.dispositionStatus == nil {
+			return fmt.Errorf("field \"dispositionStatus\" is required")
+		}
+		return v.VisitDispositionStatus(*u.dispositionStatus)
+	case "priority":
+		if u.priority == nil {
+			return fmt.Errorf("field \"priority\" is required")
+		}
+		return v.VisitPriority(*u.priority)
+	case "assignee":
+		if u.assignee == nil {
+			return fmt.Errorf("field \"assignee\" is required")
+		}
+		return v.VisitAssignee(*u.assignee)
+	case "eventType":
+		if u.eventType == nil {
+			return fmt.Errorf("field \"eventType\" is required")
+		}
+		return v.VisitEventType(*u.eventType)
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+		return v.VisitCreatedBy(*u.createdBy)
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+		return v.VisitLabel(*u.label)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitProperty(*u.property)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAnd(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOr(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(*u.not)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspace(*u.workspace)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return v.VisitProcedure(*u.procedure)
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return fmt.Errorf("field \"procedureExecution\" is required")
+		}
+		return v.VisitProcedureExecution(*u.procedureExecution)
+	case "stepId":
+		if u.stepId == nil {
+			return fmt.Errorf("field \"stepId\" is required")
+		}
+		return v.VisitStepId(*u.stepId)
+	}
+}
+
+type ComputeEventQueryVisitor interface {
+	VisitSearchText(v api.StringConstant) error
+	VisitAfter(v api.TimestampConstant) error
+	VisitBefore(v api.TimestampConstant) error
+	VisitAdvancedTimeFilter(v EventTimeFilter) error
+	VisitAsset(v api.StringConstant) error
+	VisitTemplate(v api.StringConstant) error
+	VisitWorkbook(v api.StringConstant) error
+	VisitDataReview(v api.StringConstant) error
+	VisitOriginType(v SearchEventOriginType) error
+	VisitDataReviewCheck(v api.StringConstant) error
+	VisitDispositionStatus(v EventDispositionStatus) error
+	VisitPriority(v api.StringConstant) error
+	VisitAssignee(v api.StringConstant) error
+	VisitEventType(v EventType) error
+	VisitCreatedBy(v api.StringConstant) error
+	VisitLabel(v api.StringConstant) error
+	VisitProperty(v Property) error
+	VisitAnd(v []ComputeEventQuery) error
+	VisitOr(v []ComputeEventQuery) error
+	VisitNot(v ComputeEventQuery) error
+	VisitWorkspace(v api.StringConstant) error
+	VisitProcedure(v api.StringConstant) error
+	VisitProcedureExecution(v api.StringConstant) error
+	VisitStepId(v api.StringConstant) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ComputeEventQuery) AcceptWithContext(ctx context.Context, v ComputeEventQueryVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchTextWithContext(ctx, *u.searchText)
+	case "after":
+		if u.after == nil {
+			return fmt.Errorf("field \"after\" is required")
+		}
+		return v.VisitAfterWithContext(ctx, *u.after)
+	case "before":
+		if u.before == nil {
+			return fmt.Errorf("field \"before\" is required")
+		}
+		return v.VisitBeforeWithContext(ctx, *u.before)
+	case "advancedTimeFilter":
+		if u.advancedTimeFilter == nil {
+			return fmt.Errorf("field \"advancedTimeFilter\" is required")
+		}
+		return v.VisitAdvancedTimeFilterWithContext(ctx, *u.advancedTimeFilter)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAssetWithContext(ctx, *u.asset)
+	case "template":
+		if u.template == nil {
+			return fmt.Errorf("field \"template\" is required")
+		}
+		return v.VisitTemplateWithContext(ctx, *u.template)
+	case "workbook":
+		if u.workbook == nil {
+			return fmt.Errorf("field \"workbook\" is required")
+		}
+		return v.VisitWorkbookWithContext(ctx, *u.workbook)
+	case "dataReview":
+		if u.dataReview == nil {
+			return fmt.Errorf("field \"dataReview\" is required")
+		}
+		return v.VisitDataReviewWithContext(ctx, *u.dataReview)
+	case "originType":
+		if u.originType == nil {
+			return fmt.Errorf("field \"originType\" is required")
+		}
+		return v.VisitOriginTypeWithContext(ctx, *u.originType)
+	case "dataReviewCheck":
+		if u.dataReviewCheck == nil {
+			return fmt.Errorf("field \"dataReviewCheck\" is required")
+		}
+		return v.VisitDataReviewCheckWithContext(ctx, *u.dataReviewCheck)
+	case "dispositionStatus":
+		if u.dispositionStatus == nil {
+			return fmt.Errorf("field \"dispositionStatus\" is required")
+		}
+		return v.VisitDispositionStatusWithContext(ctx, *u.dispositionStatus)
+	case "priority":
+		if u.priority == nil {
+			return fmt.Errorf("field \"priority\" is required")
+		}
+		return v.VisitPriorityWithContext(ctx, *u.priority)
+	case "assignee":
+		if u.assignee == nil {
+			return fmt.Errorf("field \"assignee\" is required")
+		}
+		return v.VisitAssigneeWithContext(ctx, *u.assignee)
+	case "eventType":
+		if u.eventType == nil {
+			return fmt.Errorf("field \"eventType\" is required")
+		}
+		return v.VisitEventTypeWithContext(ctx, *u.eventType)
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+		return v.VisitCreatedByWithContext(ctx, *u.createdBy)
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+		return v.VisitLabelWithContext(ctx, *u.label)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAndWithContext(ctx, *u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOrWithContext(ctx, *u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNotWithContext(ctx, *u.not)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return v.VisitProcedureWithContext(ctx, *u.procedure)
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return fmt.Errorf("field \"procedureExecution\" is required")
+		}
+		return v.VisitProcedureExecutionWithContext(ctx, *u.procedureExecution)
+	case "stepId":
+		if u.stepId == nil {
+			return fmt.Errorf("field \"stepId\" is required")
+		}
+		return v.VisitStepIdWithContext(ctx, *u.stepId)
+	}
+}
+
+type ComputeEventQueryVisitorWithContext interface {
+	VisitSearchTextWithContext(ctx context.Context, v api.StringConstant) error
+	VisitAfterWithContext(ctx context.Context, v api.TimestampConstant) error
+	VisitBeforeWithContext(ctx context.Context, v api.TimestampConstant) error
+	VisitAdvancedTimeFilterWithContext(ctx context.Context, v EventTimeFilter) error
+	VisitAssetWithContext(ctx context.Context, v api.StringConstant) error
+	VisitTemplateWithContext(ctx context.Context, v api.StringConstant) error
+	VisitWorkbookWithContext(ctx context.Context, v api.StringConstant) error
+	VisitDataReviewWithContext(ctx context.Context, v api.StringConstant) error
+	VisitOriginTypeWithContext(ctx context.Context, v SearchEventOriginType) error
+	VisitDataReviewCheckWithContext(ctx context.Context, v api.StringConstant) error
+	VisitDispositionStatusWithContext(ctx context.Context, v EventDispositionStatus) error
+	VisitPriorityWithContext(ctx context.Context, v api.StringConstant) error
+	VisitAssigneeWithContext(ctx context.Context, v api.StringConstant) error
+	VisitEventTypeWithContext(ctx context.Context, v EventType) error
+	VisitCreatedByWithContext(ctx context.Context, v api.StringConstant) error
+	VisitLabelWithContext(ctx context.Context, v api.StringConstant) error
+	VisitPropertyWithContext(ctx context.Context, v Property) error
+	VisitAndWithContext(ctx context.Context, v []ComputeEventQuery) error
+	VisitOrWithContext(ctx context.Context, v []ComputeEventQuery) error
+	VisitNotWithContext(ctx context.Context, v ComputeEventQuery) error
+	VisitWorkspaceWithContext(ctx context.Context, v api.StringConstant) error
+	VisitProcedureWithContext(ctx context.Context, v api.StringConstant) error
+	VisitProcedureExecutionWithContext(ctx context.Context, v api.StringConstant) error
+	VisitStepIdWithContext(ctx context.Context, v api.StringConstant) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewComputeEventQueryFromSearchText(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "searchText", searchText: &v}
+}
+
+func NewComputeEventQueryFromAfter(v api.TimestampConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "after", after: &v}
+}
+
+func NewComputeEventQueryFromBefore(v api.TimestampConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "before", before: &v}
+}
+
+func NewComputeEventQueryFromAdvancedTimeFilter(v EventTimeFilter) ComputeEventQuery {
+	return ComputeEventQuery{typ: "advancedTimeFilter", advancedTimeFilter: &v}
+}
+
+func NewComputeEventQueryFromAsset(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "asset", asset: &v}
+}
+
+func NewComputeEventQueryFromTemplate(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "template", template: &v}
+}
+
+func NewComputeEventQueryFromWorkbook(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "workbook", workbook: &v}
+}
+
+func NewComputeEventQueryFromDataReview(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "dataReview", dataReview: &v}
+}
+
+func NewComputeEventQueryFromOriginType(v SearchEventOriginType) ComputeEventQuery {
+	return ComputeEventQuery{typ: "originType", originType: &v}
+}
+
+func NewComputeEventQueryFromDataReviewCheck(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "dataReviewCheck", dataReviewCheck: &v}
+}
+
+func NewComputeEventQueryFromDispositionStatus(v EventDispositionStatus) ComputeEventQuery {
+	return ComputeEventQuery{typ: "dispositionStatus", dispositionStatus: &v}
+}
+
+func NewComputeEventQueryFromPriority(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "priority", priority: &v}
+}
+
+func NewComputeEventQueryFromAssignee(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "assignee", assignee: &v}
+}
+
+func NewComputeEventQueryFromEventType(v EventType) ComputeEventQuery {
+	return ComputeEventQuery{typ: "eventType", eventType: &v}
+}
+
+func NewComputeEventQueryFromCreatedBy(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "createdBy", createdBy: &v}
+}
+
+func NewComputeEventQueryFromLabel(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "label", label: &v}
+}
+
+func NewComputeEventQueryFromProperty(v Property) ComputeEventQuery {
+	return ComputeEventQuery{typ: "property", property: &v}
+}
+
+func NewComputeEventQueryFromAnd(v []ComputeEventQuery) ComputeEventQuery {
+	return ComputeEventQuery{typ: "and", and: &v}
+}
+
+func NewComputeEventQueryFromOr(v []ComputeEventQuery) ComputeEventQuery {
+	return ComputeEventQuery{typ: "or", or: &v}
+}
+
+func NewComputeEventQueryFromNot(v ComputeEventQuery) ComputeEventQuery {
+	return ComputeEventQuery{typ: "not", not: &v}
+}
+
+func NewComputeEventQueryFromWorkspace(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "workspace", workspace: &v}
+}
+
+func NewComputeEventQueryFromProcedure(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "procedure", procedure: &v}
+}
+
+func NewComputeEventQueryFromProcedureExecution(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "procedureExecution", procedureExecution: &v}
+}
+
+func NewComputeEventQueryFromStepId(v api.StringConstant) ComputeEventQuery {
+	return ComputeEventQuery{typ: "stepId", stepId: &v}
 }

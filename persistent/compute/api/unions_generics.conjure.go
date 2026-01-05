@@ -135,6 +135,12 @@ func (u *ComputeNodeAppendResponseWithT[T]) Accept(ctx context.Context, v Comput
 			numericPoint = *u.numericPoint
 		}
 		return v.VisitNumericPoint(ctx, numericPoint)
+	case "singlePoint":
+		var singlePoint *api.SinglePoint
+		if u.singlePoint != nil {
+			singlePoint = *u.singlePoint
+		}
+		return v.VisitSinglePoint(ctx, singlePoint)
 	case "logPoint":
 		var logPoint *api.LogPoint
 		if u.logPoint != nil {
@@ -195,7 +201,7 @@ func (u *ComputeNodeAppendResponseWithT[T]) Accept(ctx context.Context, v Comput
 	}
 }
 
-func (u *ComputeNodeAppendResponseWithT[T]) AcceptFuncs(range_Func func([]api.Range) (T, error), enumPointFunc func(*api.EnumPoint) (T, error), numericPointFunc func(*api.NumericPoint) (T, error), logPointFunc func(*api.LogPoint) (T, error), rangeValueFunc func(*api.Range) (T, error), numericFunc func(api.NumericPlot) (T, error), enumFunc func(api.EnumPlot) (T, error), bucketedNumericFunc func(api.BucketedNumericPlot) (T, error), bucketedEnumFunc func(api.BucketedEnumPlot) (T, error), arrowNumericFunc func(api.ArrowNumericPlot) (T, error), arrowEnumFunc func(api.ArrowEnumPlot) (T, error), arrowBucketedNumericFunc func(api.ArrowBucketedNumericPlot) (T, error), arrowBucketedEnumFunc func(api.ArrowBucketedEnumPlot) (T, error), groupedFunc func(GroupedComputeNodeAppendResponses) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ComputeNodeAppendResponseWithT[T]) AcceptFuncs(range_Func func([]api.Range) (T, error), enumPointFunc func(*api.EnumPoint) (T, error), numericPointFunc func(*api.NumericPoint) (T, error), singlePointFunc func(*api.SinglePoint) (T, error), logPointFunc func(*api.LogPoint) (T, error), rangeValueFunc func(*api.Range) (T, error), numericFunc func(api.NumericPlot) (T, error), enumFunc func(api.EnumPlot) (T, error), bucketedNumericFunc func(api.BucketedNumericPlot) (T, error), bucketedEnumFunc func(api.BucketedEnumPlot) (T, error), arrowNumericFunc func(api.ArrowNumericPlot) (T, error), arrowEnumFunc func(api.ArrowEnumPlot) (T, error), arrowBucketedNumericFunc func(api.ArrowBucketedNumericPlot) (T, error), arrowBucketedEnumFunc func(api.ArrowBucketedEnumPlot) (T, error), groupedFunc func(GroupedComputeNodeAppendResponses) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -220,6 +226,12 @@ func (u *ComputeNodeAppendResponseWithT[T]) AcceptFuncs(range_Func func([]api.Ra
 			numericPoint = *u.numericPoint
 		}
 		return numericPointFunc(numericPoint)
+	case "singlePoint":
+		var singlePoint *api.SinglePoint
+		if u.singlePoint != nil {
+			singlePoint = *u.singlePoint
+		}
+		return singlePointFunc(singlePoint)
 	case "logPoint":
 		var logPoint *api.LogPoint
 		if u.logPoint != nil {
@@ -295,6 +307,11 @@ func (u *ComputeNodeAppendResponseWithT[T]) NumericPointNoopSuccess(*api.Numeric
 	return result, nil
 }
 
+func (u *ComputeNodeAppendResponseWithT[T]) SinglePointNoopSuccess(*api.SinglePoint) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ComputeNodeAppendResponseWithT[T]) LogPointNoopSuccess(*api.LogPoint) (T, error) {
 	var result T
 	return result, nil
@@ -359,6 +376,7 @@ type ComputeNodeAppendResponseVisitorWithT[T any] interface {
 	VisitRange(ctx context.Context, v []api.Range) (T, error)
 	VisitEnumPoint(ctx context.Context, v *api.EnumPoint) (T, error)
 	VisitNumericPoint(ctx context.Context, v *api.NumericPoint) (T, error)
+	VisitSinglePoint(ctx context.Context, v *api.SinglePoint) (T, error)
 	VisitLogPoint(ctx context.Context, v *api.LogPoint) (T, error)
 	VisitRangeValue(ctx context.Context, v *api.Range) (T, error)
 	VisitNumeric(ctx context.Context, v api.NumericPlot) (T, error)
@@ -398,10 +416,15 @@ func (u *HealthMessageWithT[T]) Accept(ctx context.Context, v HealthMessageVisit
 			return result, fmt.Errorf("field \"shutdownNotice\" is required")
 		}
 		return v.VisitShutdownNotice(ctx, *u.shutdownNotice)
+	case "clientMessageError":
+		if u.clientMessageError == nil {
+			return result, fmt.Errorf("field \"clientMessageError\" is required")
+		}
+		return v.VisitClientMessageError(ctx, *u.clientMessageError)
 	}
 }
 
-func (u *HealthMessageWithT[T]) AcceptFuncs(pingFunc func(Ping) (T, error), pongFunc func(Pong) (T, error), shutdownNoticeFunc func(ShutdownNotice) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *HealthMessageWithT[T]) AcceptFuncs(pingFunc func(Ping) (T, error), pongFunc func(Pong) (T, error), shutdownNoticeFunc func(ShutdownNotice) (T, error), clientMessageErrorFunc func(ClientMessageError) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -424,6 +447,11 @@ func (u *HealthMessageWithT[T]) AcceptFuncs(pingFunc func(Ping) (T, error), pong
 			return result, fmt.Errorf("field \"shutdownNotice\" is required")
 		}
 		return shutdownNoticeFunc(*u.shutdownNotice)
+	case "clientMessageError":
+		if u.clientMessageError == nil {
+			return result, fmt.Errorf("field \"clientMessageError\" is required")
+		}
+		return clientMessageErrorFunc(*u.clientMessageError)
 	}
 }
 
@@ -442,6 +470,11 @@ func (u *HealthMessageWithT[T]) ShutdownNoticeNoopSuccess(ShutdownNotice) (T, er
 	return result, nil
 }
 
+func (u *HealthMessageWithT[T]) ClientMessageErrorNoopSuccess(ClientMessageError) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *HealthMessageWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -451,6 +484,56 @@ type HealthMessageVisitorWithT[T any] interface {
 	VisitPing(ctx context.Context, v Ping) (T, error)
 	VisitPong(ctx context.Context, v Pong) (T, error)
 	VisitShutdownNotice(ctx context.Context, v ShutdownNotice) (T, error)
+	VisitClientMessageError(ctx context.Context, v ClientMessageError) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type ResultConfigurationWithT[T any] ResultConfiguration
+
+func (u *ResultConfigurationWithT[T]) Accept(ctx context.Context, v ResultConfigurationVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "appendOnly":
+		if u.appendOnly == nil {
+			return result, fmt.Errorf("field \"appendOnly\" is required")
+		}
+		return v.VisitAppendOnly(ctx, *u.appendOnly)
+	}
+}
+
+func (u *ResultConfigurationWithT[T]) AcceptFuncs(appendOnlyFunc func(AppendOnlyConfig) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "appendOnly":
+		if u.appendOnly == nil {
+			return result, fmt.Errorf("field \"appendOnly\" is required")
+		}
+		return appendOnlyFunc(*u.appendOnly)
+	}
+}
+
+func (u *ResultConfigurationWithT[T]) AppendOnlyNoopSuccess(AppendOnlyConfig) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ResultConfigurationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ResultConfigurationVisitorWithT[T any] interface {
+	VisitAppendOnly(ctx context.Context, v AppendOnlyConfig) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

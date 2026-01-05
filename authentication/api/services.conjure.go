@@ -36,6 +36,35 @@ type AuthenticationServiceV2Client interface {
 	GetUsers(ctx context.Context, authHeader bearertoken.Token, userRidsArg []UserRid) ([]UserV2, error)
 	// Gets a user by RID.
 	GetUser(ctx context.Context, authHeader bearertoken.Token, userRidArg UserRid) (UserV2, error)
+	/*
+	   Returns JWKS (JSON Web Key Set) for MediaMTX JWT verification.
+	   Only available if MediaMTX integration is enabled.
+	*/
+	GetJwks(ctx context.Context) (Jwks, error)
+	/*
+	   Generates a JWT token for MediaMTX authentication with a 2-hour expiration.
+	   The token is signed with the MediaMTX private key and contains the specified permissions.
+	   Requires authentication with Nominal. This endpoint is intended for internal use only.
+	*/
+	GenerateMediaMtxToken(ctx context.Context, authHeader bearertoken.Token, requestArg GenerateMediaMtxTokenRequest) (GenerateMediaMtxTokenResponse, error)
+	/*
+	   Gets coachmark dismissals for the authenticated user.
+	   Optionally filter by specific coachmark IDs.
+	*/
+	GetMyCoachmarkDismissals(ctx context.Context, authHeader bearertoken.Token, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error)
+	/*
+	   Dismisses a coachmark for the authenticated user.
+	   Records the dismissal timestamp and app version.
+	*/
+	DismissMyCoachmark(ctx context.Context, authHeader bearertoken.Token, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error)
+	// Checks if a specific coachmark has been dismissed by the authenticated user.
+	IsMyCoachmarkDismissed(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) (bool, error)
+	/*
+	   Resets a coachmark dismissal for the authenticated user.
+	   This allows the coachmark to be shown again.
+	   Primarily intended for testing and debugging.
+	*/
+	ResetMyCoachmarkDismissal(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) error
 }
 
 type authenticationServiceV2Client struct {
@@ -221,6 +250,116 @@ func (c *authenticationServiceV2Client) GetUser(ctx context.Context, authHeader 
 	return *returnVal, nil
 }
 
+func (c *authenticationServiceV2Client) GetJwks(ctx context.Context) (Jwks, error) {
+	var defaultReturnVal Jwks
+	var returnVal *Jwks
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetJwks"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
+	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/jwks"))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getJwks failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getJwks response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *authenticationServiceV2Client) GenerateMediaMtxToken(ctx context.Context, authHeader bearertoken.Token, requestArg GenerateMediaMtxTokenRequest) (GenerateMediaMtxTokenResponse, error) {
+	var defaultReturnVal GenerateMediaMtxTokenResponse
+	var returnVal *GenerateMediaMtxTokenResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GenerateMediaMtxToken"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/mediamtx/token"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "generateMediaMtxToken failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "generateMediaMtxToken response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *authenticationServiceV2Client) GetMyCoachmarkDismissals(ctx context.Context, authHeader bearertoken.Token, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error) {
+	var defaultReturnVal GetCoachmarkDismissalsResponse
+	var returnVal *GetCoachmarkDismissalsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetMyCoachmarkDismissals"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismissals"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getMyCoachmarkDismissals failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getMyCoachmarkDismissals response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *authenticationServiceV2Client) DismissMyCoachmark(ctx context.Context, authHeader bearertoken.Token, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error) {
+	var defaultReturnVal CoachmarkDismissal
+	var returnVal *CoachmarkDismissal
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("DismissMyCoachmark"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismiss"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "dismissMyCoachmark failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "dismissMyCoachmark response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *authenticationServiceV2Client) IsMyCoachmarkDismissed(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) (bool, error) {
+	var defaultReturnVal bool
+	var returnVal *bool
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("IsMyCoachmarkDismissed"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismissed/%s", url.PathEscape(fmt.Sprint(coachmarkIdArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "isMyCoachmarkDismissed failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "isMyCoachmarkDismissed response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *authenticationServiceV2Client) ResetMyCoachmarkDismissal(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("ResetMyCoachmarkDismissal"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismissals/%s", url.PathEscape(fmt.Sprint(coachmarkIdArg))))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "resetMyCoachmarkDismissal failed")
+	}
+	return nil
+}
+
 /*
 This service provides operations for managing user and org profiles/settings.
 Its name is a bit of a misnomer.
@@ -244,6 +383,35 @@ type AuthenticationServiceV2ClientWithAuth interface {
 	GetUsers(ctx context.Context, userRidsArg []UserRid) ([]UserV2, error)
 	// Gets a user by RID.
 	GetUser(ctx context.Context, userRidArg UserRid) (UserV2, error)
+	/*
+	   Returns JWKS (JSON Web Key Set) for MediaMTX JWT verification.
+	   Only available if MediaMTX integration is enabled.
+	*/
+	GetJwks(ctx context.Context) (Jwks, error)
+	/*
+	   Generates a JWT token for MediaMTX authentication with a 2-hour expiration.
+	   The token is signed with the MediaMTX private key and contains the specified permissions.
+	   Requires authentication with Nominal. This endpoint is intended for internal use only.
+	*/
+	GenerateMediaMtxToken(ctx context.Context, requestArg GenerateMediaMtxTokenRequest) (GenerateMediaMtxTokenResponse, error)
+	/*
+	   Gets coachmark dismissals for the authenticated user.
+	   Optionally filter by specific coachmark IDs.
+	*/
+	GetMyCoachmarkDismissals(ctx context.Context, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error)
+	/*
+	   Dismisses a coachmark for the authenticated user.
+	   Records the dismissal timestamp and app version.
+	*/
+	DismissMyCoachmark(ctx context.Context, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error)
+	// Checks if a specific coachmark has been dismissed by the authenticated user.
+	IsMyCoachmarkDismissed(ctx context.Context, coachmarkIdArg string) (bool, error)
+	/*
+	   Resets a coachmark dismissal for the authenticated user.
+	   This allows the coachmark to be shown again.
+	   Primarily intended for testing and debugging.
+	*/
+	ResetMyCoachmarkDismissal(ctx context.Context, coachmarkIdArg string) error
 }
 
 func NewAuthenticationServiceV2ClientWithAuth(client AuthenticationServiceV2Client, authHeader bearertoken.Token) AuthenticationServiceV2ClientWithAuth {
@@ -289,6 +457,30 @@ func (c *authenticationServiceV2ClientWithAuth) GetUsers(ctx context.Context, us
 
 func (c *authenticationServiceV2ClientWithAuth) GetUser(ctx context.Context, userRidArg UserRid) (UserV2, error) {
 	return c.client.GetUser(ctx, c.authHeader, userRidArg)
+}
+
+func (c *authenticationServiceV2ClientWithAuth) GetJwks(ctx context.Context) (Jwks, error) {
+	return c.client.GetJwks(ctx)
+}
+
+func (c *authenticationServiceV2ClientWithAuth) GenerateMediaMtxToken(ctx context.Context, requestArg GenerateMediaMtxTokenRequest) (GenerateMediaMtxTokenResponse, error) {
+	return c.client.GenerateMediaMtxToken(ctx, c.authHeader, requestArg)
+}
+
+func (c *authenticationServiceV2ClientWithAuth) GetMyCoachmarkDismissals(ctx context.Context, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error) {
+	return c.client.GetMyCoachmarkDismissals(ctx, c.authHeader, requestArg)
+}
+
+func (c *authenticationServiceV2ClientWithAuth) DismissMyCoachmark(ctx context.Context, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error) {
+	return c.client.DismissMyCoachmark(ctx, c.authHeader, requestArg)
+}
+
+func (c *authenticationServiceV2ClientWithAuth) IsMyCoachmarkDismissed(ctx context.Context, coachmarkIdArg string) (bool, error) {
+	return c.client.IsMyCoachmarkDismissed(ctx, c.authHeader, coachmarkIdArg)
+}
+
+func (c *authenticationServiceV2ClientWithAuth) ResetMyCoachmarkDismissal(ctx context.Context, coachmarkIdArg string) error {
+	return c.client.ResetMyCoachmarkDismissal(ctx, c.authHeader, coachmarkIdArg)
 }
 
 func NewAuthenticationServiceV2ClientWithTokenProvider(client AuthenticationServiceV2Client, tokenProvider httpclient.TokenProvider) AuthenticationServiceV2ClientWithAuth {
@@ -379,4 +571,52 @@ func (c *authenticationServiceV2ClientWithTokenProvider) GetUser(ctx context.Con
 		return defaultReturnVal, err
 	}
 	return c.client.GetUser(ctx, bearertoken.Token(token), userRidArg)
+}
+
+func (c *authenticationServiceV2ClientWithTokenProvider) GetJwks(ctx context.Context) (Jwks, error) {
+	return c.client.GetJwks(ctx)
+}
+
+func (c *authenticationServiceV2ClientWithTokenProvider) GenerateMediaMtxToken(ctx context.Context, requestArg GenerateMediaMtxTokenRequest) (GenerateMediaMtxTokenResponse, error) {
+	var defaultReturnVal GenerateMediaMtxTokenResponse
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GenerateMediaMtxToken(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *authenticationServiceV2ClientWithTokenProvider) GetMyCoachmarkDismissals(ctx context.Context, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error) {
+	var defaultReturnVal GetCoachmarkDismissalsResponse
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetMyCoachmarkDismissals(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *authenticationServiceV2ClientWithTokenProvider) DismissMyCoachmark(ctx context.Context, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error) {
+	var defaultReturnVal CoachmarkDismissal
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.DismissMyCoachmark(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *authenticationServiceV2ClientWithTokenProvider) IsMyCoachmarkDismissed(ctx context.Context, coachmarkIdArg string) (bool, error) {
+	var defaultReturnVal bool
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.IsMyCoachmarkDismissed(ctx, bearertoken.Token(token), coachmarkIdArg)
+}
+
+func (c *authenticationServiceV2ClientWithTokenProvider) ResetMyCoachmarkDismissal(ctx context.Context, coachmarkIdArg string) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.ResetMyCoachmarkDismissal(ctx, bearertoken.Token(token), coachmarkIdArg)
 }

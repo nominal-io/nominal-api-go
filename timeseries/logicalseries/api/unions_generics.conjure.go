@@ -70,16 +70,6 @@ func (u *LocatorWithT[T]) Accept(ctx context.Context, v LocatorVisitorWithT[T]) 
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
-	case "csvLocator":
-		if u.csvLocator == nil {
-			return result, fmt.Errorf("field \"csvLocator\" is required")
-		}
-		return v.VisitCsvLocator(ctx, *u.csvLocator)
-	case "csvV2":
-		if u.csvV2 == nil {
-			return result, fmt.Errorf("field \"csvV2\" is required")
-		}
-		return v.VisitCsvV2(ctx, *u.csvV2)
 	case "timescaleDbLocator":
 		if u.timescaleDbLocator == nil {
 			return result, fmt.Errorf("field \"timescaleDbLocator\" is required")
@@ -115,10 +105,15 @@ func (u *LocatorWithT[T]) Accept(ctx context.Context, v LocatorVisitorWithT[T]) 
 			return result, fmt.Errorf("field \"bigQueryLocator\" is required")
 		}
 		return v.VisitBigQueryLocator(ctx, *u.bigQueryLocator)
+	case "apiLocator":
+		if u.apiLocator == nil {
+			return result, fmt.Errorf("field \"apiLocator\" is required")
+		}
+		return v.VisitApiLocator(ctx, *u.apiLocator)
 	}
 }
 
-func (u *LocatorWithT[T]) AcceptFuncs(csvLocatorFunc func(CsvLocator) (T, error), csvV2Func func(CsvLocatorV2) (T, error), timescaleDbLocatorFunc func(TimescaleDbLocator) (T, error), influxLocatorFunc func(Influx2Locator) (T, error), influx1LocatorFunc func(Influx1Locator) (T, error), nominalLocatorFunc func(NominalLocator) (T, error), timestreamLocatorFunc func(TimestreamLocator) (T, error), visualCrossingLocatorFunc func(VisualCrossingLocator) (T, error), bigQueryLocatorFunc func(BigQueryLocator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *LocatorWithT[T]) AcceptFuncs(timescaleDbLocatorFunc func(TimescaleDbLocator) (T, error), influxLocatorFunc func(Influx2Locator) (T, error), influx1LocatorFunc func(Influx1Locator) (T, error), nominalLocatorFunc func(NominalLocator) (T, error), timestreamLocatorFunc func(TimestreamLocator) (T, error), visualCrossingLocatorFunc func(VisualCrossingLocator) (T, error), bigQueryLocatorFunc func(BigQueryLocator) (T, error), apiLocatorFunc func(ApiLocator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -126,16 +121,6 @@ func (u *LocatorWithT[T]) AcceptFuncs(csvLocatorFunc func(CsvLocator) (T, error)
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "csvLocator":
-		if u.csvLocator == nil {
-			return result, fmt.Errorf("field \"csvLocator\" is required")
-		}
-		return csvLocatorFunc(*u.csvLocator)
-	case "csvV2":
-		if u.csvV2 == nil {
-			return result, fmt.Errorf("field \"csvV2\" is required")
-		}
-		return csvV2Func(*u.csvV2)
 	case "timescaleDbLocator":
 		if u.timescaleDbLocator == nil {
 			return result, fmt.Errorf("field \"timescaleDbLocator\" is required")
@@ -171,17 +156,12 @@ func (u *LocatorWithT[T]) AcceptFuncs(csvLocatorFunc func(CsvLocator) (T, error)
 			return result, fmt.Errorf("field \"bigQueryLocator\" is required")
 		}
 		return bigQueryLocatorFunc(*u.bigQueryLocator)
+	case "apiLocator":
+		if u.apiLocator == nil {
+			return result, fmt.Errorf("field \"apiLocator\" is required")
+		}
+		return apiLocatorFunc(*u.apiLocator)
 	}
-}
-
-func (u *LocatorWithT[T]) CsvLocatorNoopSuccess(CsvLocator) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *LocatorWithT[T]) CsvV2NoopSuccess(CsvLocatorV2) (T, error) {
-	var result T
-	return result, nil
 }
 
 func (u *LocatorWithT[T]) TimescaleDbLocatorNoopSuccess(TimescaleDbLocator) (T, error) {
@@ -219,14 +199,17 @@ func (u *LocatorWithT[T]) BigQueryLocatorNoopSuccess(BigQueryLocator) (T, error)
 	return result, nil
 }
 
+func (u *LocatorWithT[T]) ApiLocatorNoopSuccess(ApiLocator) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *LocatorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
 type LocatorVisitorWithT[T any] interface {
-	VisitCsvLocator(ctx context.Context, v CsvLocator) (T, error)
-	VisitCsvV2(ctx context.Context, v CsvLocatorV2) (T, error)
 	VisitTimescaleDbLocator(ctx context.Context, v TimescaleDbLocator) (T, error)
 	VisitInfluxLocator(ctx context.Context, v Influx2Locator) (T, error)
 	VisitInflux1Locator(ctx context.Context, v Influx1Locator) (T, error)
@@ -234,6 +217,7 @@ type LocatorVisitorWithT[T any] interface {
 	VisitTimestreamLocator(ctx context.Context, v TimestreamLocator) (T, error)
 	VisitVisualCrossingLocator(ctx context.Context, v VisualCrossingLocator) (T, error)
 	VisitBigQueryLocator(ctx context.Context, v BigQueryLocator) (T, error)
+	VisitApiLocator(ctx context.Context, v ApiLocator) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

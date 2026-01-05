@@ -6,6 +6,7 @@ import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/palantir/pkg/safejson"
+	"github.com/palantir/pkg/safelong"
 	"github.com/palantir/pkg/safeyaml"
 )
 
@@ -366,6 +367,27 @@ func (o *StringPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type StructPoint struct {
+	Timestamp  api.Timestamp `json:"timestamp"`
+	JsonString string        `json:"jsonString"`
+}
+
+func (o StructPoint) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StructPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type TelegrafMetric struct {
 	// The values are expected to be either numeric or string values
 	Fields map[Field]interface{} `conjure-docs:"The values are expected to be either numeric or string values" json:"fields"`
@@ -411,6 +433,27 @@ func (o TelegrafMetric) MarshalYAML() (interface{}, error) {
 }
 
 func (o *TelegrafMetric) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type Uint64Point struct {
+	Timestamp api.Timestamp     `json:"timestamp"`
+	Value     safelong.SafeLong `json:"value"`
+}
+
+func (o Uint64Point) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Uint64Point) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -597,6 +640,52 @@ func (o WriteLogsRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *WriteLogsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type WriteStructsRequest struct {
+	Structs []StructPoint `json:"structs"`
+	/*
+	   If provided, the channel to which to write structs.
+	   If not provided, defaults to "structs"
+	*/
+	Channel *api.Channel `conjure-docs:"If provided, the channel to which to write structs.\nIf not provided, defaults to \"structs\"" json:"channel,omitempty"`
+}
+
+func (o WriteStructsRequest) MarshalJSON() ([]byte, error) {
+	if o.Structs == nil {
+		o.Structs = make([]StructPoint, 0)
+	}
+	type _tmpWriteStructsRequest WriteStructsRequest
+	return safejson.Marshal(_tmpWriteStructsRequest(o))
+}
+
+func (o *WriteStructsRequest) UnmarshalJSON(data []byte) error {
+	type _tmpWriteStructsRequest WriteStructsRequest
+	var rawWriteStructsRequest _tmpWriteStructsRequest
+	if err := safejson.Unmarshal(data, &rawWriteStructsRequest); err != nil {
+		return err
+	}
+	if rawWriteStructsRequest.Structs == nil {
+		rawWriteStructsRequest.Structs = make([]StructPoint, 0)
+	}
+	*o = WriteStructsRequest(rawWriteStructsRequest)
+	return nil
+}
+
+func (o WriteStructsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *WriteStructsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

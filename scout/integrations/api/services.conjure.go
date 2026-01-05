@@ -26,6 +26,11 @@ type IntegrationsServiceClient interface {
 	DeleteIntegration(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid) error
 	// Updates the metadata of an integration.
 	UpdateIntegrationMetadata(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid, requestArg UpdateIntegrationRequest) (Integration, error)
+	/*
+	   Updates the integration details for an integration.
+	   Intended to allow changing webhooks or rotating API keys.
+	*/
+	UpdateIntegrationDetails(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid, requestArg UpdateIntegrationDetailsRequest) (Integration, error)
 	// Retrieves an integration with the specified integration RID.
 	GetIntegration(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid) (Integration, error)
 	// Lists all integrations. Archived integrations are not included.
@@ -139,6 +144,26 @@ func (c *integrationsServiceClient) UpdateIntegrationMetadata(ctx context.Contex
 	return *returnVal, nil
 }
 
+func (c *integrationsServiceClient) UpdateIntegrationDetails(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid, requestArg UpdateIntegrationDetailsRequest) (Integration, error) {
+	var defaultReturnVal Integration
+	var returnVal *Integration
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateIntegrationDetails"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/%s/details", url.PathEscape(fmt.Sprint(integrationRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateIntegrationDetails failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateIntegrationDetails response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *integrationsServiceClient) GetIntegration(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid) (Integration, error) {
 	var defaultReturnVal Integration
 	var returnVal *Integration
@@ -207,6 +232,11 @@ type IntegrationsServiceClientWithAuth interface {
 	DeleteIntegration(ctx context.Context, integrationRidArg IntegrationRid) error
 	// Updates the metadata of an integration.
 	UpdateIntegrationMetadata(ctx context.Context, integrationRidArg IntegrationRid, requestArg UpdateIntegrationRequest) (Integration, error)
+	/*
+	   Updates the integration details for an integration.
+	   Intended to allow changing webhooks or rotating API keys.
+	*/
+	UpdateIntegrationDetails(ctx context.Context, integrationRidArg IntegrationRid, requestArg UpdateIntegrationDetailsRequest) (Integration, error)
 	// Retrieves an integration with the specified integration RID.
 	GetIntegration(ctx context.Context, integrationRidArg IntegrationRid) (Integration, error)
 	// Lists all integrations. Archived integrations are not included.
@@ -242,6 +272,10 @@ func (c *integrationsServiceClientWithAuth) DeleteIntegration(ctx context.Contex
 
 func (c *integrationsServiceClientWithAuth) UpdateIntegrationMetadata(ctx context.Context, integrationRidArg IntegrationRid, requestArg UpdateIntegrationRequest) (Integration, error) {
 	return c.client.UpdateIntegrationMetadata(ctx, c.authHeader, integrationRidArg, requestArg)
+}
+
+func (c *integrationsServiceClientWithAuth) UpdateIntegrationDetails(ctx context.Context, integrationRidArg IntegrationRid, requestArg UpdateIntegrationDetailsRequest) (Integration, error) {
+	return c.client.UpdateIntegrationDetails(ctx, c.authHeader, integrationRidArg, requestArg)
 }
 
 func (c *integrationsServiceClientWithAuth) GetIntegration(ctx context.Context, integrationRidArg IntegrationRid) (Integration, error) {
@@ -306,6 +340,15 @@ func (c *integrationsServiceClientWithTokenProvider) UpdateIntegrationMetadata(c
 		return defaultReturnVal, err
 	}
 	return c.client.UpdateIntegrationMetadata(ctx, bearertoken.Token(token), integrationRidArg, requestArg)
+}
+
+func (c *integrationsServiceClientWithTokenProvider) UpdateIntegrationDetails(ctx context.Context, integrationRidArg IntegrationRid, requestArg UpdateIntegrationDetailsRequest) (Integration, error) {
+	var defaultReturnVal Integration
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.UpdateIntegrationDetails(ctx, bearertoken.Token(token), integrationRidArg, requestArg)
 }
 
 func (c *integrationsServiceClientWithTokenProvider) GetIntegration(ctx context.Context, integrationRidArg IntegrationRid) (Integration, error) {

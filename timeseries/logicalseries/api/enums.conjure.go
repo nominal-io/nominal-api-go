@@ -6,6 +6,66 @@ import (
 	"strings"
 )
 
+type ApiType struct {
+	val ApiType_Value
+}
+
+type ApiType_Value string
+
+const (
+	ApiType_DOUBLE  ApiType_Value = "DOUBLE"
+	ApiType_STRING  ApiType_Value = "STRING"
+	ApiType_INT64   ApiType_Value = "INT64"
+	ApiType_UNKNOWN ApiType_Value = "UNKNOWN"
+)
+
+// ApiType_Values returns all known variants of ApiType.
+func ApiType_Values() []ApiType_Value {
+	return []ApiType_Value{ApiType_DOUBLE, ApiType_STRING, ApiType_INT64}
+}
+
+func New_ApiType(value ApiType_Value) ApiType {
+	return ApiType{val: value}
+}
+
+// IsUnknown returns false for all known variants of ApiType and true otherwise.
+func (e ApiType) IsUnknown() bool {
+	switch e.val {
+	case ApiType_DOUBLE, ApiType_STRING, ApiType_INT64:
+		return false
+	}
+	return true
+}
+
+func (e ApiType) Value() ApiType_Value {
+	if e.IsUnknown() {
+		return ApiType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ApiType) String() string {
+	return string(e.val)
+}
+
+func (e ApiType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ApiType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ApiType(ApiType_Value(v))
+	case "DOUBLE":
+		*e = New_ApiType(ApiType_DOUBLE)
+	case "STRING":
+		*e = New_ApiType(ApiType_STRING)
+	case "INT64":
+		*e = New_ApiType(ApiType_INT64)
+	}
+	return nil
+}
+
 type BigQueryType struct {
 	val BigQueryType_Value
 }

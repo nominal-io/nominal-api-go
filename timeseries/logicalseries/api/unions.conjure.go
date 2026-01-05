@@ -148,8 +148,6 @@ func NewContextPropertyFromValue(v string) ContextProperty {
 
 type Locator struct {
 	typ                   string
-	csvLocator            *CsvLocator
-	csvV2                 *CsvLocatorV2
 	timescaleDbLocator    *TimescaleDbLocator
 	influxLocator         *Influx2Locator
 	influx1Locator        *Influx1Locator
@@ -157,12 +155,11 @@ type Locator struct {
 	timestreamLocator     *TimestreamLocator
 	visualCrossingLocator *VisualCrossingLocator
 	bigQueryLocator       *BigQueryLocator
+	apiLocator            *ApiLocator
 }
 
 type locatorDeserializer struct {
 	Type                  string                 `json:"type"`
-	CsvLocator            *CsvLocator            `json:"csvLocator"`
-	CsvV2                 *CsvLocatorV2          `json:"csvV2"`
 	TimescaleDbLocator    *TimescaleDbLocator    `json:"timescaleDbLocator"`
 	InfluxLocator         *Influx2Locator        `json:"influxLocator"`
 	Influx1Locator        *Influx1Locator        `json:"influx1Locator"`
@@ -170,32 +167,17 @@ type locatorDeserializer struct {
 	TimestreamLocator     *TimestreamLocator     `json:"timestreamLocator"`
 	VisualCrossingLocator *VisualCrossingLocator `json:"visualCrossingLocator"`
 	BigQueryLocator       *BigQueryLocator       `json:"bigQueryLocator"`
+	ApiLocator            *ApiLocator            `json:"apiLocator"`
 }
 
 func (u *locatorDeserializer) toStruct() Locator {
-	return Locator{typ: u.Type, csvLocator: u.CsvLocator, csvV2: u.CsvV2, timescaleDbLocator: u.TimescaleDbLocator, influxLocator: u.InfluxLocator, influx1Locator: u.Influx1Locator, nominalLocator: u.NominalLocator, timestreamLocator: u.TimestreamLocator, visualCrossingLocator: u.VisualCrossingLocator, bigQueryLocator: u.BigQueryLocator}
+	return Locator{typ: u.Type, timescaleDbLocator: u.TimescaleDbLocator, influxLocator: u.InfluxLocator, influx1Locator: u.Influx1Locator, nominalLocator: u.NominalLocator, timestreamLocator: u.TimestreamLocator, visualCrossingLocator: u.VisualCrossingLocator, bigQueryLocator: u.BigQueryLocator, apiLocator: u.ApiLocator}
 }
 
 func (u *Locator) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "csvLocator":
-		if u.csvLocator == nil {
-			return nil, fmt.Errorf("field \"csvLocator\" is required")
-		}
-		return struct {
-			Type       string     `json:"type"`
-			CsvLocator CsvLocator `json:"csvLocator"`
-		}{Type: "csvLocator", CsvLocator: *u.csvLocator}, nil
-	case "csvV2":
-		if u.csvV2 == nil {
-			return nil, fmt.Errorf("field \"csvV2\" is required")
-		}
-		return struct {
-			Type  string       `json:"type"`
-			CsvV2 CsvLocatorV2 `json:"csvV2"`
-		}{Type: "csvV2", CsvV2: *u.csvV2}, nil
 	case "timescaleDbLocator":
 		if u.timescaleDbLocator == nil {
 			return nil, fmt.Errorf("field \"timescaleDbLocator\" is required")
@@ -252,6 +234,14 @@ func (u *Locator) toSerializer() (interface{}, error) {
 			Type            string          `json:"type"`
 			BigQueryLocator BigQueryLocator `json:"bigQueryLocator"`
 		}{Type: "bigQueryLocator", BigQueryLocator: *u.bigQueryLocator}, nil
+	case "apiLocator":
+		if u.apiLocator == nil {
+			return nil, fmt.Errorf("field \"apiLocator\" is required")
+		}
+		return struct {
+			Type       string     `json:"type"`
+			ApiLocator ApiLocator `json:"apiLocator"`
+		}{Type: "apiLocator", ApiLocator: *u.apiLocator}, nil
 	}
 }
 
@@ -270,14 +260,6 @@ func (u *Locator) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "csvLocator":
-		if u.csvLocator == nil {
-			return fmt.Errorf("field \"csvLocator\" is required")
-		}
-	case "csvV2":
-		if u.csvV2 == nil {
-			return fmt.Errorf("field \"csvV2\" is required")
-		}
 	case "timescaleDbLocator":
 		if u.timescaleDbLocator == nil {
 			return fmt.Errorf("field \"timescaleDbLocator\" is required")
@@ -306,6 +288,10 @@ func (u *Locator) UnmarshalJSON(data []byte) error {
 		if u.bigQueryLocator == nil {
 			return fmt.Errorf("field \"bigQueryLocator\" is required")
 		}
+	case "apiLocator":
+		if u.apiLocator == nil {
+			return fmt.Errorf("field \"apiLocator\" is required")
+		}
 	}
 	return nil
 }
@@ -326,23 +312,13 @@ func (u *Locator) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Locator) AcceptFuncs(csvLocatorFunc func(CsvLocator) error, csvV2Func func(CsvLocatorV2) error, timescaleDbLocatorFunc func(TimescaleDbLocator) error, influxLocatorFunc func(Influx2Locator) error, influx1LocatorFunc func(Influx1Locator) error, nominalLocatorFunc func(NominalLocator) error, timestreamLocatorFunc func(TimestreamLocator) error, visualCrossingLocatorFunc func(VisualCrossingLocator) error, bigQueryLocatorFunc func(BigQueryLocator) error, unknownFunc func(string) error) error {
+func (u *Locator) AcceptFuncs(timescaleDbLocatorFunc func(TimescaleDbLocator) error, influxLocatorFunc func(Influx2Locator) error, influx1LocatorFunc func(Influx1Locator) error, nominalLocatorFunc func(NominalLocator) error, timestreamLocatorFunc func(TimestreamLocator) error, visualCrossingLocatorFunc func(VisualCrossingLocator) error, bigQueryLocatorFunc func(BigQueryLocator) error, apiLocatorFunc func(ApiLocator) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "csvLocator":
-		if u.csvLocator == nil {
-			return fmt.Errorf("field \"csvLocator\" is required")
-		}
-		return csvLocatorFunc(*u.csvLocator)
-	case "csvV2":
-		if u.csvV2 == nil {
-			return fmt.Errorf("field \"csvV2\" is required")
-		}
-		return csvV2Func(*u.csvV2)
 	case "timescaleDbLocator":
 		if u.timescaleDbLocator == nil {
 			return fmt.Errorf("field \"timescaleDbLocator\" is required")
@@ -378,15 +354,12 @@ func (u *Locator) AcceptFuncs(csvLocatorFunc func(CsvLocator) error, csvV2Func f
 			return fmt.Errorf("field \"bigQueryLocator\" is required")
 		}
 		return bigQueryLocatorFunc(*u.bigQueryLocator)
+	case "apiLocator":
+		if u.apiLocator == nil {
+			return fmt.Errorf("field \"apiLocator\" is required")
+		}
+		return apiLocatorFunc(*u.apiLocator)
 	}
-}
-
-func (u *Locator) CsvLocatorNoopSuccess(CsvLocator) error {
-	return nil
-}
-
-func (u *Locator) CsvV2NoopSuccess(CsvLocatorV2) error {
-	return nil
 }
 
 func (u *Locator) TimescaleDbLocatorNoopSuccess(TimescaleDbLocator) error {
@@ -417,6 +390,10 @@ func (u *Locator) BigQueryLocatorNoopSuccess(BigQueryLocator) error {
 	return nil
 }
 
+func (u *Locator) ApiLocatorNoopSuccess(ApiLocator) error {
+	return nil
+}
+
 func (u *Locator) ErrorOnUnknown(typeName string) error {
 	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
@@ -428,16 +405,6 @@ func (u *Locator) Accept(v LocatorVisitor) error {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "csvLocator":
-		if u.csvLocator == nil {
-			return fmt.Errorf("field \"csvLocator\" is required")
-		}
-		return v.VisitCsvLocator(*u.csvLocator)
-	case "csvV2":
-		if u.csvV2 == nil {
-			return fmt.Errorf("field \"csvV2\" is required")
-		}
-		return v.VisitCsvV2(*u.csvV2)
 	case "timescaleDbLocator":
 		if u.timescaleDbLocator == nil {
 			return fmt.Errorf("field \"timescaleDbLocator\" is required")
@@ -473,12 +440,15 @@ func (u *Locator) Accept(v LocatorVisitor) error {
 			return fmt.Errorf("field \"bigQueryLocator\" is required")
 		}
 		return v.VisitBigQueryLocator(*u.bigQueryLocator)
+	case "apiLocator":
+		if u.apiLocator == nil {
+			return fmt.Errorf("field \"apiLocator\" is required")
+		}
+		return v.VisitApiLocator(*u.apiLocator)
 	}
 }
 
 type LocatorVisitor interface {
-	VisitCsvLocator(v CsvLocator) error
-	VisitCsvV2(v CsvLocatorV2) error
 	VisitTimescaleDbLocator(v TimescaleDbLocator) error
 	VisitInfluxLocator(v Influx2Locator) error
 	VisitInflux1Locator(v Influx1Locator) error
@@ -486,6 +456,7 @@ type LocatorVisitor interface {
 	VisitTimestreamLocator(v TimestreamLocator) error
 	VisitVisualCrossingLocator(v VisualCrossingLocator) error
 	VisitBigQueryLocator(v BigQueryLocator) error
+	VisitApiLocator(v ApiLocator) error
 	VisitUnknown(typeName string) error
 }
 
@@ -496,16 +467,6 @@ func (u *Locator) AcceptWithContext(ctx context.Context, v LocatorVisitorWithCon
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "csvLocator":
-		if u.csvLocator == nil {
-			return fmt.Errorf("field \"csvLocator\" is required")
-		}
-		return v.VisitCsvLocatorWithContext(ctx, *u.csvLocator)
-	case "csvV2":
-		if u.csvV2 == nil {
-			return fmt.Errorf("field \"csvV2\" is required")
-		}
-		return v.VisitCsvV2WithContext(ctx, *u.csvV2)
 	case "timescaleDbLocator":
 		if u.timescaleDbLocator == nil {
 			return fmt.Errorf("field \"timescaleDbLocator\" is required")
@@ -541,12 +502,15 @@ func (u *Locator) AcceptWithContext(ctx context.Context, v LocatorVisitorWithCon
 			return fmt.Errorf("field \"bigQueryLocator\" is required")
 		}
 		return v.VisitBigQueryLocatorWithContext(ctx, *u.bigQueryLocator)
+	case "apiLocator":
+		if u.apiLocator == nil {
+			return fmt.Errorf("field \"apiLocator\" is required")
+		}
+		return v.VisitApiLocatorWithContext(ctx, *u.apiLocator)
 	}
 }
 
 type LocatorVisitorWithContext interface {
-	VisitCsvLocatorWithContext(ctx context.Context, v CsvLocator) error
-	VisitCsvV2WithContext(ctx context.Context, v CsvLocatorV2) error
 	VisitTimescaleDbLocatorWithContext(ctx context.Context, v TimescaleDbLocator) error
 	VisitInfluxLocatorWithContext(ctx context.Context, v Influx2Locator) error
 	VisitInflux1LocatorWithContext(ctx context.Context, v Influx1Locator) error
@@ -554,15 +518,8 @@ type LocatorVisitorWithContext interface {
 	VisitTimestreamLocatorWithContext(ctx context.Context, v TimestreamLocator) error
 	VisitVisualCrossingLocatorWithContext(ctx context.Context, v VisualCrossingLocator) error
 	VisitBigQueryLocatorWithContext(ctx context.Context, v BigQueryLocator) error
+	VisitApiLocatorWithContext(ctx context.Context, v ApiLocator) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewLocatorFromCsvLocator(v CsvLocator) Locator {
-	return Locator{typ: "csvLocator", csvLocator: &v}
-}
-
-func NewLocatorFromCsvV2(v CsvLocatorV2) Locator {
-	return Locator{typ: "csvV2", csvV2: &v}
 }
 
 func NewLocatorFromTimescaleDbLocator(v TimescaleDbLocator) Locator {
@@ -591,6 +548,10 @@ func NewLocatorFromVisualCrossingLocator(v VisualCrossingLocator) Locator {
 
 func NewLocatorFromBigQueryLocator(v BigQueryLocator) Locator {
 	return Locator{typ: "bigQueryLocator", bigQueryLocator: &v}
+}
+
+func NewLocatorFromApiLocator(v ApiLocator) Locator {
+	return Locator{typ: "apiLocator", apiLocator: &v}
 }
 
 type ResolveSeriesResponse struct {

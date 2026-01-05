@@ -5,6 +5,7 @@ package deprecated
 import (
 	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safelong"
@@ -121,13 +122,13 @@ func (o *ComputeNodeRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 type Context struct {
-	Variables   map[api.VariableName]api.SeriesSpec `json:"variables"`
-	VariablesV2 map[api.VariableName]VariableValue  `json:"variablesV2"`
+	Variables   map[api.VariableName]api11.SeriesSpec `json:"variables"`
+	VariablesV2 map[api.VariableName]VariableValue    `json:"variablesV2"`
 }
 
 func (o Context) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api.VariableName]api.SeriesSpec, 0)
+		o.Variables = make(map[api.VariableName]api11.SeriesSpec, 0)
 	}
 	if o.VariablesV2 == nil {
 		o.VariablesV2 = make(map[api.VariableName]VariableValue, 0)
@@ -143,7 +144,7 @@ func (o *Context) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawContext.Variables == nil {
-		rawContext.Variables = make(map[api.VariableName]api.SeriesSpec, 0)
+		rawContext.Variables = make(map[api.VariableName]api11.SeriesSpec, 0)
 	}
 	if rawContext.VariablesV2 == nil {
 		rawContext.VariablesV2 = make(map[api.VariableName]VariableValue, 0)

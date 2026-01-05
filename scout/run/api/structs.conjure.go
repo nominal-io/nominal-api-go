@@ -62,6 +62,94 @@ func (o *AllRunsPropertiesAndLabelsResponse) UnmarshalYAML(unmarshal func(interf
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type ArchiveRunsRequest struct {
+	Rids []RunRid `json:"rids"`
+	/*
+	   If true, all auto-archived workbooks that are linked to run will be unarchived as well.
+	   Defaults to false.
+	*/
+	IncludeLinkedWorkbooks *bool `conjure-docs:"If true, all auto-archived workbooks that are linked to run will be unarchived as well.\nDefaults to false." json:"includeLinkedWorkbooks,omitempty"`
+}
+
+func (o ArchiveRunsRequest) MarshalJSON() ([]byte, error) {
+	if o.Rids == nil {
+		o.Rids = make([]RunRid, 0)
+	}
+	type _tmpArchiveRunsRequest ArchiveRunsRequest
+	return safejson.Marshal(_tmpArchiveRunsRequest(o))
+}
+
+func (o *ArchiveRunsRequest) UnmarshalJSON(data []byte) error {
+	type _tmpArchiveRunsRequest ArchiveRunsRequest
+	var rawArchiveRunsRequest _tmpArchiveRunsRequest
+	if err := safejson.Unmarshal(data, &rawArchiveRunsRequest); err != nil {
+		return err
+	}
+	if rawArchiveRunsRequest.Rids == nil {
+		rawArchiveRunsRequest.Rids = make([]RunRid, 0)
+	}
+	*o = ArchiveRunsRequest(rawArchiveRunsRequest)
+	return nil
+}
+
+func (o ArchiveRunsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ArchiveRunsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// returns runs that match any of the provided assets.
+type AssetsFilter struct {
+	Assets []api1.AssetRid `json:"assets"`
+}
+
+func (o AssetsFilter) MarshalJSON() ([]byte, error) {
+	if o.Assets == nil {
+		o.Assets = make([]api1.AssetRid, 0)
+	}
+	type _tmpAssetsFilter AssetsFilter
+	return safejson.Marshal(_tmpAssetsFilter(o))
+}
+
+func (o *AssetsFilter) UnmarshalJSON(data []byte) error {
+	type _tmpAssetsFilter AssetsFilter
+	var rawAssetsFilter _tmpAssetsFilter
+	if err := safejson.Unmarshal(data, &rawAssetsFilter); err != nil {
+		return err
+	}
+	if rawAssetsFilter.Assets == nil {
+		rawAssetsFilter.Assets = make([]api1.AssetRid, 0)
+	}
+	*o = AssetsFilter(rawAssetsFilter)
+	return nil
+}
+
+func (o AssetsFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AssetsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ChannelMetadata struct {
 	Name        api.Channel         `json:"name"`
 	DataSource  DataSource          `json:"dataSource"`
@@ -279,6 +367,27 @@ func (o *CreateRunRequest) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type CustomTimeframeFilter struct {
+	StartTime *UtcTimestamp `json:"startTime,omitempty"`
+	EndTime   *UtcTimestamp `json:"endTime,omitempty"`
+}
+
+func (o CustomTimeframeFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CustomTimeframeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type DataReviewAlertMetrics struct {
 	PendingReview           int `json:"pendingReview"`
 	ClosedWithIgnore        int `json:"closedWithIgnore"`
@@ -456,6 +565,26 @@ func (o Link) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Link) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type PresetTimeframeFilter struct {
+	Duration PresetTimeframeDuration `json:"duration"`
+}
+
+func (o PresetTimeframeFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PresetTimeframeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -660,7 +789,11 @@ type SearchRunsRequest struct {
 	PageSize      int         `conjure-docs:"Will reject page sizes greater than 1000." json:"pageSize"`
 	NextPageToken *api.Token  `json:"nextPageToken,omitempty"`
 	Query         SearchQuery `json:"query"`
-	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived runs in search.
+	/*
+	   Default search status is NOT_ARCHIVED if none are provided. Allows for including archived runs in search.
+
+	   Deprecated: use archived filter in search query instead.
+	*/
 	ArchivedStatuses *[]api.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived runs in search." json:"archivedStatuses,omitempty"`
 }
 
@@ -746,6 +879,52 @@ func (o *TimeRangeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type UnarchiveRunsRequest struct {
+	Rids []RunRid `json:"rids"`
+	/*
+	   If true, all auto-archived workbooks that are linked to run will be unarchived as well.
+	   Defaults to false.
+	*/
+	IncludeLinkedWorkbooks *bool `conjure-docs:"If true, all auto-archived workbooks that are linked to run will be unarchived as well.\nDefaults to false." json:"includeLinkedWorkbooks,omitempty"`
+}
+
+func (o UnarchiveRunsRequest) MarshalJSON() ([]byte, error) {
+	if o.Rids == nil {
+		o.Rids = make([]RunRid, 0)
+	}
+	type _tmpUnarchiveRunsRequest UnarchiveRunsRequest
+	return safejson.Marshal(_tmpUnarchiveRunsRequest(o))
+}
+
+func (o *UnarchiveRunsRequest) UnmarshalJSON(data []byte) error {
+	type _tmpUnarchiveRunsRequest UnarchiveRunsRequest
+	var rawUnarchiveRunsRequest _tmpUnarchiveRunsRequest
+	if err := safejson.Unmarshal(data, &rawUnarchiveRunsRequest); err != nil {
+		return err
+	}
+	if rawUnarchiveRunsRequest.Rids == nil {
+		rawUnarchiveRunsRequest.Rids = make([]RunRid, 0)
+	}
+	*o = UnarchiveRunsRequest(rawUnarchiveRunsRequest)
+	return nil
+}
+
+func (o UnarchiveRunsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UnarchiveRunsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Unit struct {
 	// Deprecated: use the units service for additional display metadata
 	Name   *string `json:"name,omitempty"`
@@ -817,13 +996,15 @@ func (o *UpdateAttachmentsRequest) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 type UpdateRunRequest struct {
-	Title       *string                                 `json:"title,omitempty"`
-	Description *string                                 `json:"description,omitempty"`
-	StartTime   *UtcTimestamp                           `json:"startTime,omitempty"`
-	EndTime     *UtcTimestamp                           `json:"endTime,omitempty"`
-	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
-	Labels      *[]api.Label                            `json:"labels,omitempty"`
-	Links       *[]Link                                 `json:"links,omitempty"`
+	Title       *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+	// If strictOverwrite is false, will only update the startTime if it is before the existing startTime.
+	StartTime *UtcTimestamp `conjure-docs:"If strictOverwrite is false, will only update the startTime if it is before the existing startTime." json:"startTime,omitempty"`
+	// If strictOverwrite is false, will only update the endTime if it is after the existing endTime.
+	EndTime    *UtcTimestamp                           `conjure-docs:"If strictOverwrite is false, will only update the endTime if it is after the existing endTime." json:"endTime,omitempty"`
+	Properties *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
+	Labels     *[]api.Label                            `json:"labels,omitempty"`
+	Links      *[]Link                                 `json:"links,omitempty"`
 	// Pass in an empty string to remove the run prefix.
 	RunPrefix   *string                                         `conjure-docs:"Pass in an empty string to remove the run prefix." json:"runPrefix,omitempty"`
 	DataSources *map[api3.DataSourceRefName]CreateRunDataSource `json:"dataSources,omitempty"`
@@ -831,6 +1012,13 @@ type UpdateRunRequest struct {
 	// Deprecated: Use assets
 	Asset  *api1.AssetRid  `json:"asset,omitempty"`
 	Assets []api1.AssetRid `json:"assets"`
+	/*
+	   If true, will blindly overwrite the existing fields with the new values in the request.
+	   If false, will only update the fields if application constraints are maintained.
+	   See individual field docs for more details.
+	   Defaults to true for backwards compatibility.
+	*/
+	StrictOverwrite *bool `conjure-docs:"If true, will blindly overwrite the existing fields with the new values in the request.\nIf false, will only update the fields if application constraints are maintained.\nSee individual field docs for more details.\nDefaults to true for backwards compatibility." json:"strictOverwrite,omitempty"`
 }
 
 func (o UpdateRunRequest) MarshalJSON() ([]byte, error) {

@@ -256,7 +256,7 @@ type NotebookServiceClient interface {
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api1.CreateNotebookRequest) (api1.Notebook, error)
 	// Updates the contents of a workbook.
 	Update(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookRequest) (api1.Notebook, error)
-	Get(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) (api1.Notebook, error)
+	Get(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error)
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, ridsArg []api2.NotebookRid) ([]api1.Notebook, error)
 	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api2.NotebookRid) ([]api1.NotebookMetadataWithRid, error)
 	// Updates metadata about a workbook, but not its contents.
@@ -284,6 +284,11 @@ type NotebookServiceClient interface {
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error
 	// The workbook will be deleted and is not recoverable. For soft deletion, use archive.
 	Delete(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error
+	/*
+	   Retrieves the snapshot history for a given workbook. These are sorted in reverse chronological order. Results
+	   are limited by page size.
+	*/
+	GetSnapshotHistory(ctx context.Context, authHeader bearertoken.Token, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error)
 }
 
 type notebookServiceClient struct {
@@ -334,7 +339,7 @@ func (c *notebookServiceClient) Update(ctx context.Context, authHeader bearertok
 	return *returnVal, nil
 }
 
-func (c *notebookServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) (api1.Notebook, error) {
+func (c *notebookServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error) {
 	var defaultReturnVal api1.Notebook
 	var returnVal *api1.Notebook
 	var requestParams []httpclient.RequestParam
@@ -342,6 +347,11 @@ func (c *notebookServiceClient) Get(ctx context.Context, authHeader bearertoken.
 	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s", url.PathEscape(fmt.Sprint(ridArg))))
+	queryParams := make(url.Values)
+	if snapshotArg != nil {
+		queryParams.Set("snapshot", fmt.Sprint(*snapshotArg))
+	}
+	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Do(ctx, requestParams...); err != nil {
@@ -558,6 +568,26 @@ func (c *notebookServiceClient) Delete(ctx context.Context, authHeader bearertok
 	return nil
 }
 
+func (c *notebookServiceClient) GetSnapshotHistory(ctx context.Context, authHeader bearertoken.Token, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error) {
+	var defaultReturnVal api1.GetSnapshotHistoryResponse
+	var returnVal *api1.GetSnapshotHistoryResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSnapshotHistory"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/snapshot-history"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getSnapshotHistory failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getSnapshotHistory response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 // NotebookService manages workbooks (formerly known as notebooks).
 type NotebookServiceClientWithAuth interface {
 	/*
@@ -567,7 +597,7 @@ type NotebookServiceClientWithAuth interface {
 	Create(ctx context.Context, requestArg api1.CreateNotebookRequest) (api1.Notebook, error)
 	// Updates the contents of a workbook.
 	Update(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookRequest) (api1.Notebook, error)
-	Get(ctx context.Context, ridArg api2.NotebookRid) (api1.Notebook, error)
+	Get(ctx context.Context, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error)
 	BatchGet(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.Notebook, error)
 	BatchGetMetadata(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.NotebookMetadataWithRid, error)
 	// Updates metadata about a workbook, but not its contents.
@@ -595,6 +625,11 @@ type NotebookServiceClientWithAuth interface {
 	Unarchive(ctx context.Context, ridArg api2.NotebookRid) error
 	// The workbook will be deleted and is not recoverable. For soft deletion, use archive.
 	Delete(ctx context.Context, ridArg api2.NotebookRid) error
+	/*
+	   Retrieves the snapshot history for a given workbook. These are sorted in reverse chronological order. Results
+	   are limited by page size.
+	*/
+	GetSnapshotHistory(ctx context.Context, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error)
 }
 
 func NewNotebookServiceClientWithAuth(client NotebookServiceClient, authHeader bearertoken.Token) NotebookServiceClientWithAuth {
@@ -614,8 +649,8 @@ func (c *notebookServiceClientWithAuth) Update(ctx context.Context, ridArg api2.
 	return c.client.Update(ctx, c.authHeader, ridArg, requestArg)
 }
 
-func (c *notebookServiceClientWithAuth) Get(ctx context.Context, ridArg api2.NotebookRid) (api1.Notebook, error) {
-	return c.client.Get(ctx, c.authHeader, ridArg)
+func (c *notebookServiceClientWithAuth) Get(ctx context.Context, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error) {
+	return c.client.Get(ctx, c.authHeader, ridArg, snapshotArg)
 }
 
 func (c *notebookServiceClientWithAuth) BatchGet(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.Notebook, error) {
@@ -666,6 +701,10 @@ func (c *notebookServiceClientWithAuth) Delete(ctx context.Context, ridArg api2.
 	return c.client.Delete(ctx, c.authHeader, ridArg)
 }
 
+func (c *notebookServiceClientWithAuth) GetSnapshotHistory(ctx context.Context, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error) {
+	return c.client.GetSnapshotHistory(ctx, c.authHeader, requestArg)
+}
+
 func NewNotebookServiceClientWithTokenProvider(client NotebookServiceClient, tokenProvider httpclient.TokenProvider) NotebookServiceClientWithAuth {
 	return &notebookServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
 }
@@ -693,13 +732,13 @@ func (c *notebookServiceClientWithTokenProvider) Update(ctx context.Context, rid
 	return c.client.Update(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) Get(ctx context.Context, ridArg api2.NotebookRid) (api1.Notebook, error) {
+func (c *notebookServiceClientWithTokenProvider) Get(ctx context.Context, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error) {
 	var defaultReturnVal api1.Notebook
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return defaultReturnVal, err
 	}
-	return c.client.Get(ctx, bearertoken.Token(token), ridArg)
+	return c.client.Get(ctx, bearertoken.Token(token), ridArg, snapshotArg)
 }
 
 func (c *notebookServiceClientWithTokenProvider) BatchGet(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.Notebook, error) {
@@ -805,6 +844,15 @@ func (c *notebookServiceClientWithTokenProvider) Delete(ctx context.Context, rid
 	return c.client.Delete(ctx, bearertoken.Token(token), ridArg)
 }
 
+func (c *notebookServiceClientWithTokenProvider) GetSnapshotHistory(ctx context.Context, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error) {
+	var defaultReturnVal api1.GetSnapshotHistoryResponse
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetSnapshotHistory(ctx, bearertoken.Token(token), requestArg)
+}
+
 /*
 Runs are collections of channels and metadata from one or more data sources, synchronized over a
 range of real time, which represents a test event or simulation. These API endpoints let you
@@ -849,17 +897,27 @@ type RunServiceClient interface {
 	GetRuns(ctx context.Context, authHeader bearertoken.Token, ridsArg []api4.RunRid) (map[api4.RunRid]api11.Run, error)
 	// Fetches the runs with the given asset.
 	GetRunsByAsset(ctx context.Context, authHeader bearertoken.Token, requestArg api4.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error)
+	/*
+	   Fetches the latest run for each requested asset.
+	   Assets without associated runs will not be included in response.
+	*/
+	GetLatestRunForAssets(ctx context.Context, authHeader bearertoken.Token, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error)
 	// Deprecated: Deprecated in favor of MetadataService#listPropertiesAndLabels
 	GetAllRunsPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error)
-	// Searches for runs that match the given filters.
+	/*
+	   Searches for runs that match the given filters. Defaults to returning un-archived runs, absent an archive
+	   filter.
+	*/
 	SearchRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsResponse, error)
 	/*
 	   Searches for runs that match the given filters and
-	   includes metrics for check and violation review status.
+	   includes metrics for check and violation review status. Defaults to returning un-archived runs, absent an
+	   archive filter.
 	*/
 	SearchRunsWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error)
 	/*
-	   Searches for runs that match the given filters and includes a summary of the data review status.
+	   Searches for runs that match the given filters and includes a summary of the data review status. Defaults to
+	   returning un-archived runs, absent an archive filter.
 
 	   Deprecated: Deprecated in favor of searchRunsWithDataReviewMetrics
 	*/
@@ -867,10 +925,10 @@ type RunServiceClient interface {
 	// Soft-deletes a run. Runs still exist in the database but are no longer visible.
 	ArchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
 	UnarchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
+	ArchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.ArchiveRunsRequest) error
+	UnarchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.UnarchiveRunsRequest) error
 	// Returns the list of ref names that are in use across specified and authorized workspaces.
 	GetDataSourceRefNameAndTypeList(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error)
-	// Deprecated: Deprecated in favor of DatasourceChannelSearchService#searchChannels
-	SearchChannels(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, requestArg api4.SearchRunChannelsRequest) (api4.SearchRunChannelsResponse, error)
 	// Updates the attachments associated with a run.
 	UpdateRunAttachment(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error
 }
@@ -1079,6 +1137,25 @@ func (c *runServiceClient) GetRunsByAsset(ctx context.Context, authHeader bearer
 	return *returnVal, nil
 }
 
+func (c *runServiceClient) GetLatestRunForAssets(ctx context.Context, authHeader bearertoken.Token, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error) {
+	var returnVal map[api2.AssetRid]api11.Run
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetLatestRunForAssets"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/by-assets/latest"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "getLatestRunForAssets failed")
+	}
+	if returnVal == nil {
+		return nil, werror.ErrorWithContextParams(ctx, "getLatestRunForAssets response cannot be nil")
+	}
+	return returnVal, nil
+}
+
 func (c *runServiceClient) GetAllRunsPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error) {
 	var defaultReturnVal api4.AllRunsPropertiesAndLabelsResponse
 	var returnVal *api4.AllRunsPropertiesAndLabelsResponse
@@ -1211,6 +1288,34 @@ func (c *runServiceClient) UnarchiveRun(ctx context.Context, authHeader bearerto
 	return *returnVal, nil
 }
 
+func (c *runServiceClient) ArchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.ArchiveRunsRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveRuns"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/archive-run"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "archiveRuns failed")
+	}
+	return nil
+}
+
+func (c *runServiceClient) UnarchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.UnarchiveRunsRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveRuns"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/unarchive-run"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "unarchiveRuns failed")
+	}
+	return nil
+}
+
 func (c *runServiceClient) GetDataSourceRefNameAndTypeList(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error) {
 	var returnVal []api4.RefNameAndType
 	var requestParams []httpclient.RequestParam
@@ -1232,26 +1337,6 @@ func (c *runServiceClient) GetDataSourceRefNameAndTypeList(ctx context.Context, 
 		return nil, werror.ErrorWithContextParams(ctx, "getDataSourceRefNameAndTypeList response cannot be nil")
 	}
 	return returnVal, nil
-}
-
-func (c *runServiceClient) SearchChannels(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, requestArg api4.SearchRunChannelsRequest) (api4.SearchRunChannelsResponse, error) {
-	var defaultReturnVal api4.SearchRunChannelsResponse
-	var returnVal *api4.SearchRunChannelsResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchChannels"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/%s/search-channels", url.PathEscape(fmt.Sprint(ridArg))))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchChannels failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchChannels response cannot be nil")
-	}
-	return *returnVal, nil
 }
 
 func (c *runServiceClient) UpdateRunAttachment(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error {
@@ -1312,17 +1397,27 @@ type RunServiceClientWithAuth interface {
 	GetRuns(ctx context.Context, ridsArg []api4.RunRid) (map[api4.RunRid]api11.Run, error)
 	// Fetches the runs with the given asset.
 	GetRunsByAsset(ctx context.Context, requestArg api4.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error)
+	/*
+	   Fetches the latest run for each requested asset.
+	   Assets without associated runs will not be included in response.
+	*/
+	GetLatestRunForAssets(ctx context.Context, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error)
 	// Deprecated: Deprecated in favor of MetadataService#listPropertiesAndLabels
 	GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error)
-	// Searches for runs that match the given filters.
+	/*
+	   Searches for runs that match the given filters. Defaults to returning un-archived runs, absent an archive
+	   filter.
+	*/
 	SearchRuns(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsResponse, error)
 	/*
 	   Searches for runs that match the given filters and
-	   includes metrics for check and violation review status.
+	   includes metrics for check and violation review status. Defaults to returning un-archived runs, absent an
+	   archive filter.
 	*/
 	SearchRunsWithDataReviewMetrics(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error)
 	/*
-	   Searches for runs that match the given filters and includes a summary of the data review status.
+	   Searches for runs that match the given filters and includes a summary of the data review status. Defaults to
+	   returning un-archived runs, absent an archive filter.
 
 	   Deprecated: Deprecated in favor of searchRunsWithDataReviewMetrics
 	*/
@@ -1330,10 +1425,10 @@ type RunServiceClientWithAuth interface {
 	// Soft-deletes a run. Runs still exist in the database but are no longer visible.
 	ArchiveRun(ctx context.Context, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
 	UnarchiveRun(ctx context.Context, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
+	ArchiveRuns(ctx context.Context, requestArg api4.ArchiveRunsRequest) error
+	UnarchiveRuns(ctx context.Context, requestArg api4.UnarchiveRunsRequest) error
 	// Returns the list of ref names that are in use across specified and authorized workspaces.
 	GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error)
-	// Deprecated: Deprecated in favor of DatasourceChannelSearchService#searchChannels
-	SearchChannels(ctx context.Context, ridArg api4.RunRid, requestArg api4.SearchRunChannelsRequest) (api4.SearchRunChannelsResponse, error)
 	// Updates the attachments associated with a run.
 	UpdateRunAttachment(ctx context.Context, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error
 }
@@ -1387,6 +1482,10 @@ func (c *runServiceClientWithAuth) GetRunsByAsset(ctx context.Context, requestAr
 	return c.client.GetRunsByAsset(ctx, c.authHeader, requestArg)
 }
 
+func (c *runServiceClientWithAuth) GetLatestRunForAssets(ctx context.Context, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error) {
+	return c.client.GetLatestRunForAssets(ctx, c.authHeader, requestArg)
+}
+
 func (c *runServiceClientWithAuth) GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error) {
 	return c.client.GetAllRunsPropertiesAndLabels(ctx, c.authHeader, workspacesArg)
 }
@@ -1411,12 +1510,16 @@ func (c *runServiceClientWithAuth) UnarchiveRun(ctx context.Context, ridArg api4
 	return c.client.UnarchiveRun(ctx, c.authHeader, ridArg, includeLinkedWorkbooksArg)
 }
 
-func (c *runServiceClientWithAuth) GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error) {
-	return c.client.GetDataSourceRefNameAndTypeList(ctx, c.authHeader, workspacesArg)
+func (c *runServiceClientWithAuth) ArchiveRuns(ctx context.Context, requestArg api4.ArchiveRunsRequest) error {
+	return c.client.ArchiveRuns(ctx, c.authHeader, requestArg)
 }
 
-func (c *runServiceClientWithAuth) SearchChannels(ctx context.Context, ridArg api4.RunRid, requestArg api4.SearchRunChannelsRequest) (api4.SearchRunChannelsResponse, error) {
-	return c.client.SearchChannels(ctx, c.authHeader, ridArg, requestArg)
+func (c *runServiceClientWithAuth) UnarchiveRuns(ctx context.Context, requestArg api4.UnarchiveRunsRequest) error {
+	return c.client.UnarchiveRuns(ctx, c.authHeader, requestArg)
+}
+
+func (c *runServiceClientWithAuth) GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error) {
+	return c.client.GetDataSourceRefNameAndTypeList(ctx, c.authHeader, workspacesArg)
 }
 
 func (c *runServiceClientWithAuth) UpdateRunAttachment(ctx context.Context, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error {
@@ -1522,6 +1625,15 @@ func (c *runServiceClientWithTokenProvider) GetRunsByAsset(ctx context.Context, 
 	return c.client.GetRunsByAsset(ctx, bearertoken.Token(token), requestArg)
 }
 
+func (c *runServiceClientWithTokenProvider) GetLatestRunForAssets(ctx context.Context, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error) {
+	var defaultReturnVal map[api2.AssetRid]api11.Run
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetLatestRunForAssets(ctx, bearertoken.Token(token), requestArg)
+}
+
 func (c *runServiceClientWithTokenProvider) GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error) {
 	var defaultReturnVal api4.AllRunsPropertiesAndLabelsResponse
 	token, err := c.tokenProvider(ctx)
@@ -1576,6 +1688,22 @@ func (c *runServiceClientWithTokenProvider) UnarchiveRun(ctx context.Context, ri
 	return c.client.UnarchiveRun(ctx, bearertoken.Token(token), ridArg, includeLinkedWorkbooksArg)
 }
 
+func (c *runServiceClientWithTokenProvider) ArchiveRuns(ctx context.Context, requestArg api4.ArchiveRunsRequest) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.ArchiveRuns(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *runServiceClientWithTokenProvider) UnarchiveRuns(ctx context.Context, requestArg api4.UnarchiveRunsRequest) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.UnarchiveRuns(ctx, bearertoken.Token(token), requestArg)
+}
+
 func (c *runServiceClientWithTokenProvider) GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error) {
 	var defaultReturnVal []api4.RefNameAndType
 	token, err := c.tokenProvider(ctx)
@@ -1583,15 +1711,6 @@ func (c *runServiceClientWithTokenProvider) GetDataSourceRefNameAndTypeList(ctx 
 		return defaultReturnVal, err
 	}
 	return c.client.GetDataSourceRefNameAndTypeList(ctx, bearertoken.Token(token), workspacesArg)
-}
-
-func (c *runServiceClientWithTokenProvider) SearchChannels(ctx context.Context, ridArg api4.RunRid, requestArg api4.SearchRunChannelsRequest) (api4.SearchRunChannelsResponse, error) {
-	var defaultReturnVal api4.SearchRunChannelsResponse
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.SearchChannels(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
 func (c *runServiceClientWithTokenProvider) UpdateRunAttachment(ctx context.Context, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error {

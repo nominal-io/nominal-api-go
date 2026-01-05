@@ -33,6 +33,11 @@ func (u *SearchTemplatesQueryWithT[T]) Accept(ctx context.Context, v SearchTempl
 			return result, fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOr(ctx, *u.or)
+	case "not":
+		if u.not == nil {
+			return result, fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(ctx, *u.not)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return result, fmt.Errorf("field \"exactMatch\" is required")
@@ -48,11 +53,21 @@ func (u *SearchTemplatesQueryWithT[T]) Accept(ctx context.Context, v SearchTempl
 			return result, fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return result, fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return result, fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(ctx, *u.properties)
 	case "createdBy":
 		if u.createdBy == nil {
 			return result, fmt.Errorf("field \"createdBy\" is required")
@@ -73,10 +88,20 @@ func (u *SearchTemplatesQueryWithT[T]) Accept(ctx context.Context, v SearchTempl
 			return result, fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspace(ctx, *u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return result, fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return v.VisitAuthorIsCurrentUser(ctx, *u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return result, fmt.Errorf("field \"authorRids\" is required")
+		}
+		return v.VisitAuthorRids(ctx, *u.authorRids)
 	}
 }
 
-func (u *SearchTemplatesQueryWithT[T]) AcceptFuncs(andFunc func([]SearchTemplatesQuery) (T, error), orFunc func([]SearchTemplatesQuery) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api.Label) (T, error), propertyFunc func(api.Property) (T, error), createdByFunc func(api1.UserRid) (T, error), isArchivedFunc func(bool) (T, error), isPublishedFunc func(bool) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchTemplatesQueryWithT[T]) AcceptFuncs(andFunc func([]SearchTemplatesQuery) (T, error), orFunc func([]SearchTemplatesQuery) (T, error), notFunc func(SearchTemplatesQuery) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api.Label) (T, error), labelsFunc func(api1.LabelsFilter) (T, error), propertyFunc func(api.Property) (T, error), propertiesFunc func(api1.PropertiesFilter) (T, error), createdByFunc func(api1.UserRid) (T, error), isArchivedFunc func(bool) (T, error), isPublishedFunc func(bool) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), authorIsCurrentUserFunc func(bool) (T, error), authorRidsFunc func([]api1.UserRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -94,6 +119,11 @@ func (u *SearchTemplatesQueryWithT[T]) AcceptFuncs(andFunc func([]SearchTemplate
 			return result, fmt.Errorf("field \"or\" is required")
 		}
 		return orFunc(*u.or)
+	case "not":
+		if u.not == nil {
+			return result, fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return result, fmt.Errorf("field \"exactMatch\" is required")
@@ -109,11 +139,21 @@ func (u *SearchTemplatesQueryWithT[T]) AcceptFuncs(andFunc func([]SearchTemplate
 			return result, fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return result, fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return result, fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "createdBy":
 		if u.createdBy == nil {
 			return result, fmt.Errorf("field \"createdBy\" is required")
@@ -134,6 +174,16 @@ func (u *SearchTemplatesQueryWithT[T]) AcceptFuncs(andFunc func([]SearchTemplate
 			return result, fmt.Errorf("field \"workspace\" is required")
 		}
 		return workspaceFunc(*u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return result, fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return authorIsCurrentUserFunc(*u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return result, fmt.Errorf("field \"authorRids\" is required")
+		}
+		return authorRidsFunc(*u.authorRids)
 	}
 }
 
@@ -143,6 +193,11 @@ func (u *SearchTemplatesQueryWithT[T]) AndNoopSuccess([]SearchTemplatesQuery) (T
 }
 
 func (u *SearchTemplatesQueryWithT[T]) OrNoopSuccess([]SearchTemplatesQuery) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchTemplatesQueryWithT[T]) NotNoopSuccess(SearchTemplatesQuery) (T, error) {
 	var result T
 	return result, nil
 }
@@ -162,7 +217,17 @@ func (u *SearchTemplatesQueryWithT[T]) LabelNoopSuccess(api.Label) (T, error) {
 	return result, nil
 }
 
+func (u *SearchTemplatesQueryWithT[T]) LabelsNoopSuccess(api1.LabelsFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchTemplatesQueryWithT[T]) PropertyNoopSuccess(api.Property) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchTemplatesQueryWithT[T]) PropertiesNoopSuccess(api1.PropertiesFilter) (T, error) {
 	var result T
 	return result, nil
 }
@@ -187,6 +252,16 @@ func (u *SearchTemplatesQueryWithT[T]) WorkspaceNoopSuccess(rids.WorkspaceRid) (
 	return result, nil
 }
 
+func (u *SearchTemplatesQueryWithT[T]) AuthorIsCurrentUserNoopSuccess(bool) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchTemplatesQueryWithT[T]) AuthorRidsNoopSuccess([]api1.UserRid) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchTemplatesQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -195,13 +270,18 @@ func (u *SearchTemplatesQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error
 type SearchTemplatesQueryVisitorWithT[T any] interface {
 	VisitAnd(ctx context.Context, v []SearchTemplatesQuery) (T, error)
 	VisitOr(ctx context.Context, v []SearchTemplatesQuery) (T, error)
+	VisitNot(ctx context.Context, v SearchTemplatesQuery) (T, error)
 	VisitExactMatch(ctx context.Context, v string) (T, error)
 	VisitSearchText(ctx context.Context, v string) (T, error)
 	VisitLabel(ctx context.Context, v api.Label) (T, error)
+	VisitLabels(ctx context.Context, v api1.LabelsFilter) (T, error)
 	VisitProperty(ctx context.Context, v api.Property) (T, error)
+	VisitProperties(ctx context.Context, v api1.PropertiesFilter) (T, error)
 	VisitCreatedBy(ctx context.Context, v api1.UserRid) (T, error)
 	VisitIsArchived(ctx context.Context, v bool) (T, error)
 	VisitIsPublished(ctx context.Context, v bool) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
+	VisitAuthorIsCurrentUser(ctx context.Context, v bool) (T, error)
+	VisitAuthorRids(ctx context.Context, v []api1.UserRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

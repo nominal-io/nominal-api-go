@@ -255,12 +255,14 @@ const (
 	SeriesDataType_UINT         SeriesDataType_Value = "UINT"
 	SeriesDataType_DOUBLE_ARRAY SeriesDataType_Value = "DOUBLE_ARRAY"
 	SeriesDataType_STRING_ARRAY SeriesDataType_Value = "STRING_ARRAY"
+	SeriesDataType_STRUCT       SeriesDataType_Value = "STRUCT"
+	SeriesDataType_VIDEO        SeriesDataType_Value = "VIDEO"
 	SeriesDataType_UNKNOWN      SeriesDataType_Value = "UNKNOWN"
 )
 
 // SeriesDataType_Values returns all known variants of SeriesDataType.
 func SeriesDataType_Values() []SeriesDataType_Value {
-	return []SeriesDataType_Value{SeriesDataType_DOUBLE, SeriesDataType_STRING, SeriesDataType_LOG, SeriesDataType_INT, SeriesDataType_UINT, SeriesDataType_DOUBLE_ARRAY, SeriesDataType_STRING_ARRAY}
+	return []SeriesDataType_Value{SeriesDataType_DOUBLE, SeriesDataType_STRING, SeriesDataType_LOG, SeriesDataType_INT, SeriesDataType_UINT, SeriesDataType_DOUBLE_ARRAY, SeriesDataType_STRING_ARRAY, SeriesDataType_STRUCT, SeriesDataType_VIDEO}
 }
 
 func New_SeriesDataType(value SeriesDataType_Value) SeriesDataType {
@@ -270,7 +272,7 @@ func New_SeriesDataType(value SeriesDataType_Value) SeriesDataType {
 // IsUnknown returns false for all known variants of SeriesDataType and true otherwise.
 func (e SeriesDataType) IsUnknown() bool {
 	switch e.val {
-	case SeriesDataType_DOUBLE, SeriesDataType_STRING, SeriesDataType_LOG, SeriesDataType_INT, SeriesDataType_UINT, SeriesDataType_DOUBLE_ARRAY, SeriesDataType_STRING_ARRAY:
+	case SeriesDataType_DOUBLE, SeriesDataType_STRING, SeriesDataType_LOG, SeriesDataType_INT, SeriesDataType_UINT, SeriesDataType_DOUBLE_ARRAY, SeriesDataType_STRING_ARRAY, SeriesDataType_STRUCT, SeriesDataType_VIDEO:
 		return false
 	}
 	return true
@@ -309,6 +311,67 @@ func (e *SeriesDataType) UnmarshalText(data []byte) error {
 		*e = New_SeriesDataType(SeriesDataType_DOUBLE_ARRAY)
 	case "STRING_ARRAY":
 		*e = New_SeriesDataType(SeriesDataType_STRING_ARRAY)
+	case "STRUCT":
+		*e = New_SeriesDataType(SeriesDataType_STRUCT)
+	case "VIDEO":
+		*e = New_SeriesDataType(SeriesDataType_VIDEO)
+	}
+	return nil
+}
+
+type SetOperator struct {
+	val SetOperator_Value
+}
+
+type SetOperator_Value string
+
+const (
+	SetOperator_AND     SetOperator_Value = "AND"
+	SetOperator_OR      SetOperator_Value = "OR"
+	SetOperator_UNKNOWN SetOperator_Value = "UNKNOWN"
+)
+
+// SetOperator_Values returns all known variants of SetOperator.
+func SetOperator_Values() []SetOperator_Value {
+	return []SetOperator_Value{SetOperator_AND, SetOperator_OR}
+}
+
+func New_SetOperator(value SetOperator_Value) SetOperator {
+	return SetOperator{val: value}
+}
+
+// IsUnknown returns false for all known variants of SetOperator and true otherwise.
+func (e SetOperator) IsUnknown() bool {
+	switch e.val {
+	case SetOperator_AND, SetOperator_OR:
+		return false
+	}
+	return true
+}
+
+func (e SetOperator) Value() SetOperator_Value {
+	if e.IsUnknown() {
+		return SetOperator_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SetOperator) String() string {
+	return string(e.val)
+}
+
+func (e SetOperator) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SetOperator) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SetOperator(SetOperator_Value(v))
+	case "AND":
+		*e = New_SetOperator(SetOperator_AND)
+	case "OR":
+		*e = New_SetOperator(SetOperator_OR)
 	}
 	return nil
 }

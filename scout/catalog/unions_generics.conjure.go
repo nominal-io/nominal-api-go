@@ -10,6 +10,7 @@ import (
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/datasource"
 	"github.com/palantir/pkg/datetime"
 )
 
@@ -91,6 +92,55 @@ type AbsoluteTimestampVisitorWithT[T any] interface {
 	VisitIso8601(ctx context.Context, v Iso8601Timestamp) (T, error)
 	VisitEpochOfTimeUnit(ctx context.Context, v EpochTimestamp) (T, error)
 	VisitCustomFormat(ctx context.Context, v CustomTimestamp) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type DatasetFileMetadataWithT[T any] DatasetFileMetadata
+
+func (u *DatasetFileMetadataWithT[T]) Accept(ctx context.Context, v DatasetFileMetadataVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "video":
+		if u.video == nil {
+			return result, fmt.Errorf("field \"video\" is required")
+		}
+		return v.VisitVideo(ctx, *u.video)
+	}
+}
+
+func (u *DatasetFileMetadataWithT[T]) AcceptFuncs(videoFunc func(datasource.VideoFileMetadata) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "video":
+		if u.video == nil {
+			return result, fmt.Errorf("field \"video\" is required")
+		}
+		return videoFunc(*u.video)
+	}
+}
+
+func (u *DatasetFileMetadataWithT[T]) VideoNoopSuccess(datasource.VideoFileMetadata) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DatasetFileMetadataWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type DatasetFileMetadataVisitorWithT[T any] interface {
+	VisitVideo(ctx context.Context, v datasource.VideoFileMetadata) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

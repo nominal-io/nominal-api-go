@@ -6,7 +6,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api-go/scout/comparisonnotebook/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/comparisonnotebook/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -144,6 +145,180 @@ type InputTypeVisitorWithContext interface {
 
 func NewInputTypeFromTag(v Tag) InputType {
 	return InputType{typ: "tag", tag: &v}
+}
+
+type Offset struct {
+	typ      string
+	custom   *api.UserDuration
+	runAlign *RunAlignment
+}
+
+type offsetDeserializer struct {
+	Type     string            `json:"type"`
+	Custom   *api.UserDuration `json:"custom"`
+	RunAlign *RunAlignment     `json:"runAlign"`
+}
+
+func (u *offsetDeserializer) toStruct() Offset {
+	return Offset{typ: u.Type, custom: u.Custom, runAlign: u.RunAlign}
+}
+
+func (u *Offset) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "custom":
+		if u.custom == nil {
+			return nil, fmt.Errorf("field \"custom\" is required")
+		}
+		return struct {
+			Type   string           `json:"type"`
+			Custom api.UserDuration `json:"custom"`
+		}{Type: "custom", Custom: *u.custom}, nil
+	case "runAlign":
+		if u.runAlign == nil {
+			return nil, fmt.Errorf("field \"runAlign\" is required")
+		}
+		return struct {
+			Type     string       `json:"type"`
+			RunAlign RunAlignment `json:"runAlign"`
+		}{Type: "runAlign", RunAlign: *u.runAlign}, nil
+	}
+}
+
+func (u Offset) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *Offset) UnmarshalJSON(data []byte) error {
+	var deser offsetDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+	case "runAlign":
+		if u.runAlign == nil {
+			return fmt.Errorf("field \"runAlign\" is required")
+		}
+	}
+	return nil
+}
+
+func (u Offset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *Offset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *Offset) AcceptFuncs(customFunc func(api.UserDuration) error, runAlignFunc func(RunAlignment) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return customFunc(*u.custom)
+	case "runAlign":
+		if u.runAlign == nil {
+			return fmt.Errorf("field \"runAlign\" is required")
+		}
+		return runAlignFunc(*u.runAlign)
+	}
+}
+
+func (u *Offset) CustomNoopSuccess(api.UserDuration) error {
+	return nil
+}
+
+func (u *Offset) RunAlignNoopSuccess(RunAlignment) error {
+	return nil
+}
+
+func (u *Offset) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *Offset) Accept(v OffsetVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustom(*u.custom)
+	case "runAlign":
+		if u.runAlign == nil {
+			return fmt.Errorf("field \"runAlign\" is required")
+		}
+		return v.VisitRunAlign(*u.runAlign)
+	}
+}
+
+type OffsetVisitor interface {
+	VisitCustom(v api.UserDuration) error
+	VisitRunAlign(v RunAlignment) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *Offset) AcceptWithContext(ctx context.Context, v OffsetVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustomWithContext(ctx, *u.custom)
+	case "runAlign":
+		if u.runAlign == nil {
+			return fmt.Errorf("field \"runAlign\" is required")
+		}
+		return v.VisitRunAlignWithContext(ctx, *u.runAlign)
+	}
+}
+
+type OffsetVisitorWithContext interface {
+	VisitCustomWithContext(ctx context.Context, v api.UserDuration) error
+	VisitRunAlignWithContext(ctx context.Context, v RunAlignment) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewOffsetFromCustom(v api.UserDuration) Offset {
+	return Offset{typ: "custom", custom: &v}
+}
+
+func NewOffsetFromRunAlign(v RunAlignment) Offset {
+	return Offset{typ: "runAlign", runAlign: &v}
 }
 
 type TagString struct {
@@ -284,13 +459,13 @@ func NewTagStringFromLiteral(v TagStringLiteral) TagString {
 type UnifiedWorkbookContent struct {
 	typ                string
 	workbook           *WorkbookContent
-	comparisonWorkbook *api.ComparisonWorkbookContent
+	comparisonWorkbook *api1.ComparisonWorkbookContent
 }
 
 type unifiedWorkbookContentDeserializer struct {
-	Type               string                         `json:"type"`
-	Workbook           *WorkbookContent               `json:"workbook"`
-	ComparisonWorkbook *api.ComparisonWorkbookContent `json:"comparisonWorkbook"`
+	Type               string                          `json:"type"`
+	Workbook           *WorkbookContent                `json:"workbook"`
+	ComparisonWorkbook *api1.ComparisonWorkbookContent `json:"comparisonWorkbook"`
 }
 
 func (u *unifiedWorkbookContentDeserializer) toStruct() UnifiedWorkbookContent {
@@ -314,8 +489,8 @@ func (u *UnifiedWorkbookContent) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"comparisonWorkbook\" is required")
 		}
 		return struct {
-			Type               string                        `json:"type"`
-			ComparisonWorkbook api.ComparisonWorkbookContent `json:"comparisonWorkbook"`
+			Type               string                         `json:"type"`
+			ComparisonWorkbook api1.ComparisonWorkbookContent `json:"comparisonWorkbook"`
 		}{Type: "comparisonWorkbook", ComparisonWorkbook: *u.comparisonWorkbook}, nil
 	}
 }
@@ -363,7 +538,7 @@ func (u *UnifiedWorkbookContent) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UnifiedWorkbookContent) AcceptFuncs(workbookFunc func(WorkbookContent) error, comparisonWorkbookFunc func(api.ComparisonWorkbookContent) error, unknownFunc func(string) error) error {
+func (u *UnifiedWorkbookContent) AcceptFuncs(workbookFunc func(WorkbookContent) error, comparisonWorkbookFunc func(api1.ComparisonWorkbookContent) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -387,7 +562,7 @@ func (u *UnifiedWorkbookContent) WorkbookNoopSuccess(WorkbookContent) error {
 	return nil
 }
 
-func (u *UnifiedWorkbookContent) ComparisonWorkbookNoopSuccess(api.ComparisonWorkbookContent) error {
+func (u *UnifiedWorkbookContent) ComparisonWorkbookNoopSuccess(api1.ComparisonWorkbookContent) error {
 	return nil
 }
 
@@ -417,7 +592,7 @@ func (u *UnifiedWorkbookContent) Accept(v UnifiedWorkbookContentVisitor) error {
 
 type UnifiedWorkbookContentVisitor interface {
 	VisitWorkbook(v WorkbookContent) error
-	VisitComparisonWorkbook(v api.ComparisonWorkbookContent) error
+	VisitComparisonWorkbook(v api1.ComparisonWorkbookContent) error
 	VisitUnknown(typeName string) error
 }
 
@@ -443,7 +618,7 @@ func (u *UnifiedWorkbookContent) AcceptWithContext(ctx context.Context, v Unifie
 
 type UnifiedWorkbookContentVisitorWithContext interface {
 	VisitWorkbookWithContext(ctx context.Context, v WorkbookContent) error
-	VisitComparisonWorkbookWithContext(ctx context.Context, v api.ComparisonWorkbookContent) error
+	VisitComparisonWorkbookWithContext(ctx context.Context, v api1.ComparisonWorkbookContent) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -451,7 +626,7 @@ func NewUnifiedWorkbookContentFromWorkbook(v WorkbookContent) UnifiedWorkbookCon
 	return UnifiedWorkbookContent{typ: "workbook", workbook: &v}
 }
 
-func NewUnifiedWorkbookContentFromComparisonWorkbook(v api.ComparisonWorkbookContent) UnifiedWorkbookContent {
+func NewUnifiedWorkbookContentFromComparisonWorkbook(v api1.ComparisonWorkbookContent) UnifiedWorkbookContent {
 	return UnifiedWorkbookContent{typ: "comparisonWorkbook", comparisonWorkbook: &v}
 }
 
@@ -588,4 +763,274 @@ type WorkbookInputsVisitorWithContext interface {
 
 func NewWorkbookInputsFromV1(v WorkbookInputsV1) WorkbookInputs {
 	return WorkbookInputs{typ: "v1", v1: &v}
+}
+
+type WorkbookOffsets struct {
+	typ string
+	v1  *WorkbookOffsetsV1
+}
+
+type workbookOffsetsDeserializer struct {
+	Type string             `json:"type"`
+	V1   *WorkbookOffsetsV1 `json:"v1"`
+}
+
+func (u *workbookOffsetsDeserializer) toStruct() WorkbookOffsets {
+	return WorkbookOffsets{typ: u.Type, v1: u.V1}
+}
+
+func (u *WorkbookOffsets) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string            `json:"type"`
+			V1   WorkbookOffsetsV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u WorkbookOffsets) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *WorkbookOffsets) UnmarshalJSON(data []byte) error {
+	var deser workbookOffsetsDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u WorkbookOffsets) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *WorkbookOffsets) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *WorkbookOffsets) AcceptFuncs(v1Func func(WorkbookOffsetsV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *WorkbookOffsets) V1NoopSuccess(WorkbookOffsetsV1) error {
+	return nil
+}
+
+func (u *WorkbookOffsets) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *WorkbookOffsets) Accept(v WorkbookOffsetsVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type WorkbookOffsetsVisitor interface {
+	VisitV1(v WorkbookOffsetsV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *WorkbookOffsets) AcceptWithContext(ctx context.Context, v WorkbookOffsetsVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type WorkbookOffsetsVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v WorkbookOffsetsV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewWorkbookOffsetsFromV1(v WorkbookOffsetsV1) WorkbookOffsets {
+	return WorkbookOffsets{typ: "v1", v1: &v}
+}
+
+type WorkbookTimeSettings struct {
+	typ string
+	v1  *WorkbookTimeSettingsV1
+}
+
+type workbookTimeSettingsDeserializer struct {
+	Type string                  `json:"type"`
+	V1   *WorkbookTimeSettingsV1 `json:"v1"`
+}
+
+func (u *workbookTimeSettingsDeserializer) toStruct() WorkbookTimeSettings {
+	return WorkbookTimeSettings{typ: u.Type, v1: u.V1}
+}
+
+func (u *WorkbookTimeSettings) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string                 `json:"type"`
+			V1   WorkbookTimeSettingsV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u WorkbookTimeSettings) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *WorkbookTimeSettings) UnmarshalJSON(data []byte) error {
+	var deser workbookTimeSettingsDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u WorkbookTimeSettings) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *WorkbookTimeSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *WorkbookTimeSettings) AcceptFuncs(v1Func func(WorkbookTimeSettingsV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *WorkbookTimeSettings) V1NoopSuccess(WorkbookTimeSettingsV1) error {
+	return nil
+}
+
+func (u *WorkbookTimeSettings) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *WorkbookTimeSettings) Accept(v WorkbookTimeSettingsVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type WorkbookTimeSettingsVisitor interface {
+	VisitV1(v WorkbookTimeSettingsV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *WorkbookTimeSettings) AcceptWithContext(ctx context.Context, v WorkbookTimeSettingsVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type WorkbookTimeSettingsVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v WorkbookTimeSettingsV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewWorkbookTimeSettingsFromV1(v WorkbookTimeSettingsV1) WorkbookTimeSettings {
+	return WorkbookTimeSettings{typ: "v1", v1: &v}
 }

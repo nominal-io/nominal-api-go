@@ -15,8 +15,8 @@ import (
 )
 
 /*
-Modules define collections of compute logic that can be shared and used across different contexts by applying them
-to assets. The Modules Service provides the api for managing these collections and using them.
+Modules define collections of compute logic that can be shared and used across different contexts.
+The Modules Service provides the API for managing these collections of functions.
 */
 type ModuleServiceClient interface {
 	// Create a new module.
@@ -31,18 +31,6 @@ type ModuleServiceClient interface {
 	BatchArchiveModules(ctx context.Context, authHeader bearertoken.Token, requestArg BatchArchiveModulesRequest) (BatchArchiveModulesResponse, error)
 	// Unarchive a set of modules.
 	BatchUnarchiveModules(ctx context.Context, authHeader bearertoken.Token, requestArg BatchUnarchiveModulesRequest) (BatchUnarchiveModulesResponse, error)
-	// Create a module application by applying a module to an asset.
-	CreateModuleApplication(ctx context.Context, authHeader bearertoken.Token, requestArg CreateModuleApplicationRequest) (CreateModuleApplicationResponse, error)
-	// Archive a module application, un-applying the module from the asset.
-	ArchiveModuleApplication(ctx context.Context, authHeader bearertoken.Token, requestArg ArchiveModuleApplicationRequest) (ArchiveModuleApplicationResponse, error)
-	// Search for module applications.
-	SearchModuleApplications(ctx context.Context, authHeader bearertoken.Token, requestArg SearchModuleApplicationsRequest) (SearchModuleApplicationsResponse, error)
-	// Update a module application.
-	UpdateModuleApplication(ctx context.Context, authHeader bearertoken.Token, requestArg UpdateModuleApplicationRequest) (UpdateModuleApplicationResponse, error)
-	// Get a list of module applications by their RIDs.
-	BatchGetModuleApplications(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetModuleApplicationsRequest) (BatchGetModuleApplicationsResponse, error)
-	// Get the derived series from modules applied to an asset.
-	GetDerivedSeries(ctx context.Context, authHeader bearertoken.Token, requestArg GetDerivedSeriesRequest) (GetDerivedSeriesResponse, error)
 }
 
 type moduleServiceClient struct {
@@ -172,129 +160,9 @@ func (c *moduleServiceClient) BatchUnarchiveModules(ctx context.Context, authHea
 	return *returnVal, nil
 }
 
-func (c *moduleServiceClient) CreateModuleApplication(ctx context.Context, authHeader bearertoken.Token, requestArg CreateModuleApplicationRequest) (CreateModuleApplicationResponse, error) {
-	var defaultReturnVal CreateModuleApplicationResponse
-	var returnVal *CreateModuleApplicationResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateModuleApplication"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/application/create"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createModuleApplication failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createModuleApplication response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *moduleServiceClient) ArchiveModuleApplication(ctx context.Context, authHeader bearertoken.Token, requestArg ArchiveModuleApplicationRequest) (ArchiveModuleApplicationResponse, error) {
-	var defaultReturnVal ArchiveModuleApplicationResponse
-	var returnVal *ArchiveModuleApplicationResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveModuleApplication"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/application/archive"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "archiveModuleApplication failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "archiveModuleApplication response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *moduleServiceClient) SearchModuleApplications(ctx context.Context, authHeader bearertoken.Token, requestArg SearchModuleApplicationsRequest) (SearchModuleApplicationsResponse, error) {
-	var defaultReturnVal SearchModuleApplicationsResponse
-	var returnVal *SearchModuleApplicationsResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchModuleApplications"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/applications/search"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchModuleApplications failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchModuleApplications response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *moduleServiceClient) UpdateModuleApplication(ctx context.Context, authHeader bearertoken.Token, requestArg UpdateModuleApplicationRequest) (UpdateModuleApplicationResponse, error) {
-	var defaultReturnVal UpdateModuleApplicationResponse
-	var returnVal *UpdateModuleApplicationResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateModuleApplication"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/applications/update"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateModuleApplication failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateModuleApplication response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *moduleServiceClient) BatchGetModuleApplications(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetModuleApplicationsRequest) (BatchGetModuleApplicationsResponse, error) {
-	var defaultReturnVal BatchGetModuleApplicationsResponse
-	var returnVal *BatchGetModuleApplicationsResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetModuleApplications"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/applications/batch-get"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGetModuleApplications failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGetModuleApplications response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *moduleServiceClient) GetDerivedSeries(ctx context.Context, authHeader bearertoken.Token, requestArg GetDerivedSeriesRequest) (GetDerivedSeriesResponse, error) {
-	var defaultReturnVal GetDerivedSeriesResponse
-	var returnVal *GetDerivedSeriesResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDerivedSeries"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/derived-series/get"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getDerivedSeries failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getDerivedSeries response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
 /*
-Modules define collections of compute logic that can be shared and used across different contexts by applying them
-to assets. The Modules Service provides the api for managing these collections and using them.
+Modules define collections of compute logic that can be shared and used across different contexts.
+The Modules Service provides the API for managing these collections of functions.
 */
 type ModuleServiceClientWithAuth interface {
 	// Create a new module.
@@ -309,18 +177,6 @@ type ModuleServiceClientWithAuth interface {
 	BatchArchiveModules(ctx context.Context, requestArg BatchArchiveModulesRequest) (BatchArchiveModulesResponse, error)
 	// Unarchive a set of modules.
 	BatchUnarchiveModules(ctx context.Context, requestArg BatchUnarchiveModulesRequest) (BatchUnarchiveModulesResponse, error)
-	// Create a module application by applying a module to an asset.
-	CreateModuleApplication(ctx context.Context, requestArg CreateModuleApplicationRequest) (CreateModuleApplicationResponse, error)
-	// Archive a module application, un-applying the module from the asset.
-	ArchiveModuleApplication(ctx context.Context, requestArg ArchiveModuleApplicationRequest) (ArchiveModuleApplicationResponse, error)
-	// Search for module applications.
-	SearchModuleApplications(ctx context.Context, requestArg SearchModuleApplicationsRequest) (SearchModuleApplicationsResponse, error)
-	// Update a module application.
-	UpdateModuleApplication(ctx context.Context, requestArg UpdateModuleApplicationRequest) (UpdateModuleApplicationResponse, error)
-	// Get a list of module applications by their RIDs.
-	BatchGetModuleApplications(ctx context.Context, requestArg BatchGetModuleApplicationsRequest) (BatchGetModuleApplicationsResponse, error)
-	// Get the derived series from modules applied to an asset.
-	GetDerivedSeries(ctx context.Context, requestArg GetDerivedSeriesRequest) (GetDerivedSeriesResponse, error)
 }
 
 func NewModuleServiceClientWithAuth(client ModuleServiceClient, authHeader bearertoken.Token) ModuleServiceClientWithAuth {
@@ -354,30 +210,6 @@ func (c *moduleServiceClientWithAuth) BatchArchiveModules(ctx context.Context, r
 
 func (c *moduleServiceClientWithAuth) BatchUnarchiveModules(ctx context.Context, requestArg BatchUnarchiveModulesRequest) (BatchUnarchiveModulesResponse, error) {
 	return c.client.BatchUnarchiveModules(ctx, c.authHeader, requestArg)
-}
-
-func (c *moduleServiceClientWithAuth) CreateModuleApplication(ctx context.Context, requestArg CreateModuleApplicationRequest) (CreateModuleApplicationResponse, error) {
-	return c.client.CreateModuleApplication(ctx, c.authHeader, requestArg)
-}
-
-func (c *moduleServiceClientWithAuth) ArchiveModuleApplication(ctx context.Context, requestArg ArchiveModuleApplicationRequest) (ArchiveModuleApplicationResponse, error) {
-	return c.client.ArchiveModuleApplication(ctx, c.authHeader, requestArg)
-}
-
-func (c *moduleServiceClientWithAuth) SearchModuleApplications(ctx context.Context, requestArg SearchModuleApplicationsRequest) (SearchModuleApplicationsResponse, error) {
-	return c.client.SearchModuleApplications(ctx, c.authHeader, requestArg)
-}
-
-func (c *moduleServiceClientWithAuth) UpdateModuleApplication(ctx context.Context, requestArg UpdateModuleApplicationRequest) (UpdateModuleApplicationResponse, error) {
-	return c.client.UpdateModuleApplication(ctx, c.authHeader, requestArg)
-}
-
-func (c *moduleServiceClientWithAuth) BatchGetModuleApplications(ctx context.Context, requestArg BatchGetModuleApplicationsRequest) (BatchGetModuleApplicationsResponse, error) {
-	return c.client.BatchGetModuleApplications(ctx, c.authHeader, requestArg)
-}
-
-func (c *moduleServiceClientWithAuth) GetDerivedSeries(ctx context.Context, requestArg GetDerivedSeriesRequest) (GetDerivedSeriesResponse, error) {
-	return c.client.GetDerivedSeries(ctx, c.authHeader, requestArg)
 }
 
 func NewModuleServiceClientWithTokenProvider(client ModuleServiceClient, tokenProvider httpclient.TokenProvider) ModuleServiceClientWithAuth {
@@ -441,58 +273,4 @@ func (c *moduleServiceClientWithTokenProvider) BatchUnarchiveModules(ctx context
 		return defaultReturnVal, err
 	}
 	return c.client.BatchUnarchiveModules(ctx, bearertoken.Token(token), requestArg)
-}
-
-func (c *moduleServiceClientWithTokenProvider) CreateModuleApplication(ctx context.Context, requestArg CreateModuleApplicationRequest) (CreateModuleApplicationResponse, error) {
-	var defaultReturnVal CreateModuleApplicationResponse
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.CreateModuleApplication(ctx, bearertoken.Token(token), requestArg)
-}
-
-func (c *moduleServiceClientWithTokenProvider) ArchiveModuleApplication(ctx context.Context, requestArg ArchiveModuleApplicationRequest) (ArchiveModuleApplicationResponse, error) {
-	var defaultReturnVal ArchiveModuleApplicationResponse
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.ArchiveModuleApplication(ctx, bearertoken.Token(token), requestArg)
-}
-
-func (c *moduleServiceClientWithTokenProvider) SearchModuleApplications(ctx context.Context, requestArg SearchModuleApplicationsRequest) (SearchModuleApplicationsResponse, error) {
-	var defaultReturnVal SearchModuleApplicationsResponse
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.SearchModuleApplications(ctx, bearertoken.Token(token), requestArg)
-}
-
-func (c *moduleServiceClientWithTokenProvider) UpdateModuleApplication(ctx context.Context, requestArg UpdateModuleApplicationRequest) (UpdateModuleApplicationResponse, error) {
-	var defaultReturnVal UpdateModuleApplicationResponse
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.UpdateModuleApplication(ctx, bearertoken.Token(token), requestArg)
-}
-
-func (c *moduleServiceClientWithTokenProvider) BatchGetModuleApplications(ctx context.Context, requestArg BatchGetModuleApplicationsRequest) (BatchGetModuleApplicationsResponse, error) {
-	var defaultReturnVal BatchGetModuleApplicationsResponse
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.BatchGetModuleApplications(ctx, bearertoken.Token(token), requestArg)
-}
-
-func (c *moduleServiceClientWithTokenProvider) GetDerivedSeries(ctx context.Context, requestArg GetDerivedSeriesRequest) (GetDerivedSeriesResponse, error) {
-	var defaultReturnVal GetDerivedSeriesResponse
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.GetDerivedSeries(ctx, bearertoken.Token(token), requestArg)
 }

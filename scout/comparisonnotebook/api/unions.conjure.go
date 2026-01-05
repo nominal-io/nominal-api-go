@@ -21,6 +21,7 @@ type AggregationType struct {
 	mean              *Mean
 	standardDeviation *StandardDeviation
 	count             *Count
+	rootMeanSquare    *RootMeanSquare
 }
 
 type aggregationTypeDeserializer struct {
@@ -30,10 +31,11 @@ type aggregationTypeDeserializer struct {
 	Mean              *Mean              `json:"mean"`
 	StandardDeviation *StandardDeviation `json:"standardDeviation"`
 	Count             *Count             `json:"count"`
+	RootMeanSquare    *RootMeanSquare    `json:"rootMeanSquare"`
 }
 
 func (u *aggregationTypeDeserializer) toStruct() AggregationType {
-	return AggregationType{typ: u.Type, max: u.Max, min: u.Min, mean: u.Mean, standardDeviation: u.StandardDeviation, count: u.Count}
+	return AggregationType{typ: u.Type, max: u.Max, min: u.Min, mean: u.Mean, standardDeviation: u.StandardDeviation, count: u.Count, rootMeanSquare: u.RootMeanSquare}
 }
 
 func (u *AggregationType) toSerializer() (interface{}, error) {
@@ -80,6 +82,14 @@ func (u *AggregationType) toSerializer() (interface{}, error) {
 			Type  string `json:"type"`
 			Count Count  `json:"count"`
 		}{Type: "count", Count: *u.count}, nil
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return nil, fmt.Errorf("field \"rootMeanSquare\" is required")
+		}
+		return struct {
+			Type           string         `json:"type"`
+			RootMeanSquare RootMeanSquare `json:"rootMeanSquare"`
+		}{Type: "rootMeanSquare", RootMeanSquare: *u.rootMeanSquare}, nil
 	}
 }
 
@@ -118,6 +128,10 @@ func (u *AggregationType) UnmarshalJSON(data []byte) error {
 		if u.count == nil {
 			return fmt.Errorf("field \"count\" is required")
 		}
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return fmt.Errorf("field \"rootMeanSquare\" is required")
+		}
 	}
 	return nil
 }
@@ -138,7 +152,7 @@ func (u *AggregationType) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *AggregationType) AcceptFuncs(maxFunc func(Max) error, minFunc func(Min) error, meanFunc func(Mean) error, standardDeviationFunc func(StandardDeviation) error, countFunc func(Count) error, unknownFunc func(string) error) error {
+func (u *AggregationType) AcceptFuncs(maxFunc func(Max) error, minFunc func(Min) error, meanFunc func(Mean) error, standardDeviationFunc func(StandardDeviation) error, countFunc func(Count) error, rootMeanSquareFunc func(RootMeanSquare) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -170,6 +184,11 @@ func (u *AggregationType) AcceptFuncs(maxFunc func(Max) error, minFunc func(Min)
 			return fmt.Errorf("field \"count\" is required")
 		}
 		return countFunc(*u.count)
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return fmt.Errorf("field \"rootMeanSquare\" is required")
+		}
+		return rootMeanSquareFunc(*u.rootMeanSquare)
 	}
 }
 
@@ -190,6 +209,10 @@ func (u *AggregationType) StandardDeviationNoopSuccess(StandardDeviation) error 
 }
 
 func (u *AggregationType) CountNoopSuccess(Count) error {
+	return nil
+}
+
+func (u *AggregationType) RootMeanSquareNoopSuccess(RootMeanSquare) error {
 	return nil
 }
 
@@ -229,6 +252,11 @@ func (u *AggregationType) Accept(v AggregationTypeVisitor) error {
 			return fmt.Errorf("field \"count\" is required")
 		}
 		return v.VisitCount(*u.count)
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return fmt.Errorf("field \"rootMeanSquare\" is required")
+		}
+		return v.VisitRootMeanSquare(*u.rootMeanSquare)
 	}
 }
 
@@ -238,6 +266,7 @@ type AggregationTypeVisitor interface {
 	VisitMean(v Mean) error
 	VisitStandardDeviation(v StandardDeviation) error
 	VisitCount(v Count) error
+	VisitRootMeanSquare(v RootMeanSquare) error
 	VisitUnknown(typeName string) error
 }
 
@@ -273,6 +302,11 @@ func (u *AggregationType) AcceptWithContext(ctx context.Context, v AggregationTy
 			return fmt.Errorf("field \"count\" is required")
 		}
 		return v.VisitCountWithContext(ctx, *u.count)
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return fmt.Errorf("field \"rootMeanSquare\" is required")
+		}
+		return v.VisitRootMeanSquareWithContext(ctx, *u.rootMeanSquare)
 	}
 }
 
@@ -282,6 +316,7 @@ type AggregationTypeVisitorWithContext interface {
 	VisitMeanWithContext(ctx context.Context, v Mean) error
 	VisitStandardDeviationWithContext(ctx context.Context, v StandardDeviation) error
 	VisitCountWithContext(ctx context.Context, v Count) error
+	VisitRootMeanSquareWithContext(ctx context.Context, v RootMeanSquare) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -303,6 +338,10 @@ func NewAggregationTypeFromStandardDeviation(v StandardDeviation) AggregationTyp
 
 func NewAggregationTypeFromCount(v Count) AggregationType {
 	return AggregationType{typ: "count", count: &v}
+}
+
+func NewAggregationTypeFromRootMeanSquare(v RootMeanSquare) AggregationType {
+	return AggregationType{typ: "rootMeanSquare", rootMeanSquare: &v}
 }
 
 type ComparisonScatterPlotColoringOption struct {

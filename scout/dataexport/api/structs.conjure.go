@@ -4,7 +4,7 @@ package api
 
 import (
 	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
-	api2 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	"github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
@@ -35,6 +35,26 @@ func (o *AllTimestampsForwardFillStrategy) UnmarshalYAML(unmarshal func(interfac
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Export settings for a stream of arrow-compatible data.
+type Arrow struct{}
+
+func (o Arrow) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Arrow) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Export settings for a stream of `.csv` data.
 type Csv struct{}
 
 func (o Csv) MarshalYAML() (interface{}, error) {
@@ -60,7 +80,7 @@ type ExportDataRequest struct {
 	EndTime     api1.Timestamp     `json:"endTime"`
 	Resolution  ResolutionOption   `json:"resolution"`
 	Channels    ExportChannels     `json:"channels"`
-	Context     api2.Context       `json:"context"`
+	Context     api11.Context      `json:"context"`
 }
 
 func (o ExportDataRequest) MarshalYAML() (interface{}, error) {
@@ -140,6 +160,25 @@ func (o *Iso8601TimestampFormat) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Export settings for a `.mat` file compatible with matlab.
+type Matfile struct{}
+
+func (o Matfile) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Matfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 /*
 Do nothing. The value of a channel will be empty at
 timestamps not present in its original time series.
@@ -185,8 +224,8 @@ func (o *RelativeTimestampFormat) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 type TimeDomainChannel struct {
-	ColumnName  string      `json:"columnName"`
-	ComputeNode api2.Series `json:"computeNode"`
+	ColumnName  string       `json:"columnName"`
+	ComputeNode api11.Series `json:"computeNode"`
 }
 
 func (o TimeDomainChannel) MarshalYAML() (interface{}, error) {

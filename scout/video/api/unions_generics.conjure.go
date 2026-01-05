@@ -449,6 +449,71 @@ type UpdateIngestStatusVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type VideoChannelSeriesWithT[T any] VideoChannelSeries
+
+func (u *VideoChannelSeriesWithT[T]) Accept(ctx context.Context, v VideoChannelSeriesVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "dataSource":
+		if u.dataSource == nil {
+			return result, fmt.Errorf("field \"dataSource\" is required")
+		}
+		return v.VisitDataSource(ctx, *u.dataSource)
+	case "asset":
+		if u.asset == nil {
+			return result, fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAsset(ctx, *u.asset)
+	}
+}
+
+func (u *VideoChannelSeriesWithT[T]) AcceptFuncs(dataSourceFunc func(VideoDataSourceChannel) (T, error), assetFunc func(VideoAssetChannel) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "dataSource":
+		if u.dataSource == nil {
+			return result, fmt.Errorf("field \"dataSource\" is required")
+		}
+		return dataSourceFunc(*u.dataSource)
+	case "asset":
+		if u.asset == nil {
+			return result, fmt.Errorf("field \"asset\" is required")
+		}
+		return assetFunc(*u.asset)
+	}
+}
+
+func (u *VideoChannelSeriesWithT[T]) DataSourceNoopSuccess(VideoDataSourceChannel) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *VideoChannelSeriesWithT[T]) AssetNoopSuccess(VideoAssetChannel) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *VideoChannelSeriesWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type VideoChannelSeriesVisitorWithT[T any] interface {
+	VisitDataSource(ctx context.Context, v VideoDataSourceChannel) (T, error)
+	VisitAsset(ctx context.Context, v VideoAssetChannel) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type VideoFileIngestStatusWithT[T any] VideoFileIngestStatus
 
 func (u *VideoFileIngestStatusWithT[T]) Accept(ctx context.Context, v VideoFileIngestStatusVisitorWithT[T]) (T, error) {

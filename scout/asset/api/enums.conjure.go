@@ -6,56 +6,113 @@ import (
 	"strings"
 )
 
-type SortField struct {
-	val SortField_Value
+type AssetSortField struct {
+	val AssetSortField_Value
 }
 
-type SortField_Value string
+type AssetSortField_Value string
 
 const (
-	SortField_CREATED_AT SortField_Value = "CREATED_AT"
-	SortField_UNKNOWN    SortField_Value = "UNKNOWN"
+	AssetSortField_NAME       AssetSortField_Value = "NAME"
+	AssetSortField_CREATED_AT AssetSortField_Value = "CREATED_AT"
+	AssetSortField_UNKNOWN    AssetSortField_Value = "UNKNOWN"
 )
 
-// SortField_Values returns all known variants of SortField.
-func SortField_Values() []SortField_Value {
-	return []SortField_Value{SortField_CREATED_AT}
+// AssetSortField_Values returns all known variants of AssetSortField.
+func AssetSortField_Values() []AssetSortField_Value {
+	return []AssetSortField_Value{AssetSortField_NAME, AssetSortField_CREATED_AT}
 }
 
-func New_SortField(value SortField_Value) SortField {
-	return SortField{val: value}
+func New_AssetSortField(value AssetSortField_Value) AssetSortField {
+	return AssetSortField{val: value}
 }
 
-// IsUnknown returns false for all known variants of SortField and true otherwise.
-func (e SortField) IsUnknown() bool {
+// IsUnknown returns false for all known variants of AssetSortField and true otherwise.
+func (e AssetSortField) IsUnknown() bool {
 	switch e.val {
-	case SortField_CREATED_AT:
+	case AssetSortField_NAME, AssetSortField_CREATED_AT:
 		return false
 	}
 	return true
 }
 
-func (e SortField) Value() SortField_Value {
+func (e AssetSortField) Value() AssetSortField_Value {
 	if e.IsUnknown() {
-		return SortField_UNKNOWN
+		return AssetSortField_UNKNOWN
 	}
 	return e.val
 }
 
-func (e SortField) String() string {
+func (e AssetSortField) String() string {
 	return string(e.val)
 }
 
-func (e SortField) MarshalText() ([]byte, error) {
+func (e AssetSortField) MarshalText() ([]byte, error) {
 	return []byte(e.val), nil
 }
 
-func (e *SortField) UnmarshalText(data []byte) error {
+func (e *AssetSortField) UnmarshalText(data []byte) error {
 	switch v := strings.ToUpper(string(data)); v {
 	default:
-		*e = New_SortField(SortField_Value(v))
+		*e = New_AssetSortField(AssetSortField_Value(v))
+	case "NAME":
+		*e = New_AssetSortField(AssetSortField_NAME)
 	case "CREATED_AT":
-		*e = New_SortField(SortField_CREATED_AT)
+		*e = New_AssetSortField(AssetSortField_CREATED_AT)
+	}
+	return nil
+}
+
+type TypeSortField struct {
+	val TypeSortField_Value
+}
+
+type TypeSortField_Value string
+
+const (
+	TypeSortField_CREATED_AT TypeSortField_Value = "CREATED_AT"
+	TypeSortField_UNKNOWN    TypeSortField_Value = "UNKNOWN"
+)
+
+// TypeSortField_Values returns all known variants of TypeSortField.
+func TypeSortField_Values() []TypeSortField_Value {
+	return []TypeSortField_Value{TypeSortField_CREATED_AT}
+}
+
+func New_TypeSortField(value TypeSortField_Value) TypeSortField {
+	return TypeSortField{val: value}
+}
+
+// IsUnknown returns false for all known variants of TypeSortField and true otherwise.
+func (e TypeSortField) IsUnknown() bool {
+	switch e.val {
+	case TypeSortField_CREATED_AT:
+		return false
+	}
+	return true
+}
+
+func (e TypeSortField) Value() TypeSortField_Value {
+	if e.IsUnknown() {
+		return TypeSortField_UNKNOWN
+	}
+	return e.val
+}
+
+func (e TypeSortField) String() string {
+	return string(e.val)
+}
+
+func (e TypeSortField) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *TypeSortField) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_TypeSortField(TypeSortField_Value(v))
+	case "CREATED_AT":
+		*e = New_TypeSortField(TypeSortField_CREATED_AT)
 	}
 	return nil
 }

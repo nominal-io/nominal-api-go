@@ -146,21 +146,25 @@ func NewHandleFromS3(v S3Path) Handle {
 }
 
 type IngestStatusV2 struct {
-	typ        string
-	success    *SuccessResult
-	error      *ErrorResult
-	inProgress *InProgressResult
+	typ                string
+	success            *SuccessResult
+	error              *ErrorResult
+	inProgress         *InProgressResult
+	deletionInProgress *DeletionInProgress
+	deleted            *Deleted
 }
 
 type ingestStatusV2Deserializer struct {
-	Type       string            `json:"type"`
-	Success    *SuccessResult    `json:"success"`
-	Error      *ErrorResult      `json:"error"`
-	InProgress *InProgressResult `json:"inProgress"`
+	Type               string              `json:"type"`
+	Success            *SuccessResult      `json:"success"`
+	Error              *ErrorResult        `json:"error"`
+	InProgress         *InProgressResult   `json:"inProgress"`
+	DeletionInProgress *DeletionInProgress `json:"deletionInProgress"`
+	Deleted            *Deleted            `json:"deleted"`
 }
 
 func (u *ingestStatusV2Deserializer) toStruct() IngestStatusV2 {
-	return IngestStatusV2{typ: u.Type, success: u.Success, error: u.Error, inProgress: u.InProgress}
+	return IngestStatusV2{typ: u.Type, success: u.Success, error: u.Error, inProgress: u.InProgress, deletionInProgress: u.DeletionInProgress, deleted: u.Deleted}
 }
 
 func (u *IngestStatusV2) toSerializer() (interface{}, error) {
@@ -191,6 +195,22 @@ func (u *IngestStatusV2) toSerializer() (interface{}, error) {
 			Type       string           `json:"type"`
 			InProgress InProgressResult `json:"inProgress"`
 		}{Type: "inProgress", InProgress: *u.inProgress}, nil
+	case "deletionInProgress":
+		if u.deletionInProgress == nil {
+			return nil, fmt.Errorf("field \"deletionInProgress\" is required")
+		}
+		return struct {
+			Type               string             `json:"type"`
+			DeletionInProgress DeletionInProgress `json:"deletionInProgress"`
+		}{Type: "deletionInProgress", DeletionInProgress: *u.deletionInProgress}, nil
+	case "deleted":
+		if u.deleted == nil {
+			return nil, fmt.Errorf("field \"deleted\" is required")
+		}
+		return struct {
+			Type    string  `json:"type"`
+			Deleted Deleted `json:"deleted"`
+		}{Type: "deleted", Deleted: *u.deleted}, nil
 	}
 }
 
@@ -221,6 +241,14 @@ func (u *IngestStatusV2) UnmarshalJSON(data []byte) error {
 		if u.inProgress == nil {
 			return fmt.Errorf("field \"inProgress\" is required")
 		}
+	case "deletionInProgress":
+		if u.deletionInProgress == nil {
+			return fmt.Errorf("field \"deletionInProgress\" is required")
+		}
+	case "deleted":
+		if u.deleted == nil {
+			return fmt.Errorf("field \"deleted\" is required")
+		}
 	}
 	return nil
 }
@@ -241,7 +269,7 @@ func (u *IngestStatusV2) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *IngestStatusV2) AcceptFuncs(successFunc func(SuccessResult) error, errorFunc func(ErrorResult) error, inProgressFunc func(InProgressResult) error, unknownFunc func(string) error) error {
+func (u *IngestStatusV2) AcceptFuncs(successFunc func(SuccessResult) error, errorFunc func(ErrorResult) error, inProgressFunc func(InProgressResult) error, deletionInProgressFunc func(DeletionInProgress) error, deletedFunc func(Deleted) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -263,6 +291,16 @@ func (u *IngestStatusV2) AcceptFuncs(successFunc func(SuccessResult) error, erro
 			return fmt.Errorf("field \"inProgress\" is required")
 		}
 		return inProgressFunc(*u.inProgress)
+	case "deletionInProgress":
+		if u.deletionInProgress == nil {
+			return fmt.Errorf("field \"deletionInProgress\" is required")
+		}
+		return deletionInProgressFunc(*u.deletionInProgress)
+	case "deleted":
+		if u.deleted == nil {
+			return fmt.Errorf("field \"deleted\" is required")
+		}
+		return deletedFunc(*u.deleted)
 	}
 }
 
@@ -275,6 +313,14 @@ func (u *IngestStatusV2) ErrorNoopSuccess(ErrorResult) error {
 }
 
 func (u *IngestStatusV2) InProgressNoopSuccess(InProgressResult) error {
+	return nil
+}
+
+func (u *IngestStatusV2) DeletionInProgressNoopSuccess(DeletionInProgress) error {
+	return nil
+}
+
+func (u *IngestStatusV2) DeletedNoopSuccess(Deleted) error {
 	return nil
 }
 
@@ -304,6 +350,16 @@ func (u *IngestStatusV2) Accept(v IngestStatusV2Visitor) error {
 			return fmt.Errorf("field \"inProgress\" is required")
 		}
 		return v.VisitInProgress(*u.inProgress)
+	case "deletionInProgress":
+		if u.deletionInProgress == nil {
+			return fmt.Errorf("field \"deletionInProgress\" is required")
+		}
+		return v.VisitDeletionInProgress(*u.deletionInProgress)
+	case "deleted":
+		if u.deleted == nil {
+			return fmt.Errorf("field \"deleted\" is required")
+		}
+		return v.VisitDeleted(*u.deleted)
 	}
 }
 
@@ -311,6 +367,8 @@ type IngestStatusV2Visitor interface {
 	VisitSuccess(v SuccessResult) error
 	VisitError(v ErrorResult) error
 	VisitInProgress(v InProgressResult) error
+	VisitDeletionInProgress(v DeletionInProgress) error
+	VisitDeleted(v Deleted) error
 	VisitUnknown(typeName string) error
 }
 
@@ -336,6 +394,16 @@ func (u *IngestStatusV2) AcceptWithContext(ctx context.Context, v IngestStatusV2
 			return fmt.Errorf("field \"inProgress\" is required")
 		}
 		return v.VisitInProgressWithContext(ctx, *u.inProgress)
+	case "deletionInProgress":
+		if u.deletionInProgress == nil {
+			return fmt.Errorf("field \"deletionInProgress\" is required")
+		}
+		return v.VisitDeletionInProgressWithContext(ctx, *u.deletionInProgress)
+	case "deleted":
+		if u.deleted == nil {
+			return fmt.Errorf("field \"deleted\" is required")
+		}
+		return v.VisitDeletedWithContext(ctx, *u.deleted)
 	}
 }
 
@@ -343,6 +411,8 @@ type IngestStatusV2VisitorWithContext interface {
 	VisitSuccessWithContext(ctx context.Context, v SuccessResult) error
 	VisitErrorWithContext(ctx context.Context, v ErrorResult) error
 	VisitInProgressWithContext(ctx context.Context, v InProgressResult) error
+	VisitDeletionInProgressWithContext(ctx context.Context, v DeletionInProgress) error
+	VisitDeletedWithContext(ctx context.Context, v Deleted) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -356,6 +426,14 @@ func NewIngestStatusV2FromError(v ErrorResult) IngestStatusV2 {
 
 func NewIngestStatusV2FromInProgress(v InProgressResult) IngestStatusV2 {
 	return IngestStatusV2{typ: "inProgress", inProgress: &v}
+}
+
+func NewIngestStatusV2FromDeletionInProgress(v DeletionInProgress) IngestStatusV2 {
+	return IngestStatusV2{typ: "deletionInProgress", deletionInProgress: &v}
+}
+
+func NewIngestStatusV2FromDeleted(v Deleted) IngestStatusV2 {
+	return IngestStatusV2{typ: "deleted", deleted: &v}
 }
 
 /*

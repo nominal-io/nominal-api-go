@@ -36,10 +36,10 @@ type SavedViewServiceClient interface {
 	   Throws NOT_FOUND if the view doesn't exist and INVALID_ARGUMENT if it is archived.
 	*/
 	UpdateSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid, requestArg api.UpdateSavedViewRequest) (api.UpdateSavedViewResponse, error)
-	// Archives the specified saved views. Archived views are hidden from search.
-	ArchiveSavedViews(ctx context.Context, authHeader bearertoken.Token, requestArg api.ArchiveSavedViewsRequest) error
-	// Restores archived saved views, making them discoverable in search again.
-	UnarchiveSavedViews(ctx context.Context, authHeader bearertoken.Token, requestArg api.UnarchiveSavedViewsRequest) error
+	// Archives the specified saved view. Archived views are hidden from search.
+	ArchiveSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid) error
+	// Restores archived saved view, making them discoverable in search again.
+	UnarchiveSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid) error
 }
 
 type savedViewServiceClient struct {
@@ -149,30 +149,28 @@ func (c *savedViewServiceClient) UpdateSavedView(ctx context.Context, authHeader
 	return *returnVal, nil
 }
 
-func (c *savedViewServiceClient) ArchiveSavedViews(ctx context.Context, authHeader bearertoken.Token, requestArg api.ArchiveSavedViewsRequest) error {
+func (c *savedViewServiceClient) ArchiveSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid) error {
 	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveSavedViews"))
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveSavedView"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1/archive-batch"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1/%s/archive", url.PathEscape(fmt.Sprint(savedViewRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return werror.WrapWithContextParams(ctx, err, "archiveSavedViews failed")
+		return werror.WrapWithContextParams(ctx, err, "archiveSavedView failed")
 	}
 	return nil
 }
 
-func (c *savedViewServiceClient) UnarchiveSavedViews(ctx context.Context, authHeader bearertoken.Token, requestArg api.UnarchiveSavedViewsRequest) error {
+func (c *savedViewServiceClient) UnarchiveSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid) error {
 	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveSavedViews"))
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveSavedView"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1/unarchive-batch"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1/%s/unarchive", url.PathEscape(fmt.Sprint(savedViewRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return werror.WrapWithContextParams(ctx, err, "unarchiveSavedViews failed")
+		return werror.WrapWithContextParams(ctx, err, "unarchiveSavedView failed")
 	}
 	return nil
 }
@@ -198,10 +196,10 @@ type SavedViewServiceClientWithAuth interface {
 	   Throws NOT_FOUND if the view doesn't exist and INVALID_ARGUMENT if it is archived.
 	*/
 	UpdateSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid, requestArg api.UpdateSavedViewRequest) (api.UpdateSavedViewResponse, error)
-	// Archives the specified saved views. Archived views are hidden from search.
-	ArchiveSavedViews(ctx context.Context, requestArg api.ArchiveSavedViewsRequest) error
-	// Restores archived saved views, making them discoverable in search again.
-	UnarchiveSavedViews(ctx context.Context, requestArg api.UnarchiveSavedViewsRequest) error
+	// Archives the specified saved view. Archived views are hidden from search.
+	ArchiveSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid) error
+	// Restores archived saved view, making them discoverable in search again.
+	UnarchiveSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid) error
 }
 
 func NewSavedViewServiceClientWithAuth(client SavedViewServiceClient, authHeader bearertoken.Token) SavedViewServiceClientWithAuth {
@@ -233,12 +231,12 @@ func (c *savedViewServiceClientWithAuth) UpdateSavedView(ctx context.Context, sa
 	return c.client.UpdateSavedView(ctx, c.authHeader, savedViewRidArg, requestArg)
 }
 
-func (c *savedViewServiceClientWithAuth) ArchiveSavedViews(ctx context.Context, requestArg api.ArchiveSavedViewsRequest) error {
-	return c.client.ArchiveSavedViews(ctx, c.authHeader, requestArg)
+func (c *savedViewServiceClientWithAuth) ArchiveSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid) error {
+	return c.client.ArchiveSavedView(ctx, c.authHeader, savedViewRidArg)
 }
 
-func (c *savedViewServiceClientWithAuth) UnarchiveSavedViews(ctx context.Context, requestArg api.UnarchiveSavedViewsRequest) error {
-	return c.client.UnarchiveSavedViews(ctx, c.authHeader, requestArg)
+func (c *savedViewServiceClientWithAuth) UnarchiveSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid) error {
+	return c.client.UnarchiveSavedView(ctx, c.authHeader, savedViewRidArg)
 }
 
 func NewSavedViewServiceClientWithTokenProvider(client SavedViewServiceClient, tokenProvider httpclient.TokenProvider) SavedViewServiceClientWithAuth {
@@ -295,18 +293,18 @@ func (c *savedViewServiceClientWithTokenProvider) UpdateSavedView(ctx context.Co
 	return c.client.UpdateSavedView(ctx, bearertoken.Token(token), savedViewRidArg, requestArg)
 }
 
-func (c *savedViewServiceClientWithTokenProvider) ArchiveSavedViews(ctx context.Context, requestArg api.ArchiveSavedViewsRequest) error {
+func (c *savedViewServiceClientWithTokenProvider) ArchiveSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
 	}
-	return c.client.ArchiveSavedViews(ctx, bearertoken.Token(token), requestArg)
+	return c.client.ArchiveSavedView(ctx, bearertoken.Token(token), savedViewRidArg)
 }
 
-func (c *savedViewServiceClientWithTokenProvider) UnarchiveSavedViews(ctx context.Context, requestArg api.UnarchiveSavedViewsRequest) error {
+func (c *savedViewServiceClientWithTokenProvider) UnarchiveSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
 	}
-	return c.client.UnarchiveSavedViews(ctx, bearertoken.Token(token), requestArg)
+	return c.client.UnarchiveSavedView(ctx, bearertoken.Token(token), savedViewRidArg)
 }

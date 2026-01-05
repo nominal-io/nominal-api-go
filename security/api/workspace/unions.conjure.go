@@ -146,6 +146,141 @@ func NewPreferredRefNameConfigurationFromV1(v []api.RefNameAndType) PreferredRef
 	return PreferredRefNameConfiguration{typ: "v1", v1: &v}
 }
 
+type ProcedureSettings struct {
+	typ string
+	v1  *ProcedureSettingsV1
+}
+
+type procedureSettingsDeserializer struct {
+	Type string               `json:"type"`
+	V1   *ProcedureSettingsV1 `json:"v1"`
+}
+
+func (u *procedureSettingsDeserializer) toStruct() ProcedureSettings {
+	return ProcedureSettings{typ: u.Type, v1: u.V1}
+}
+
+func (u *ProcedureSettings) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			V1   ProcedureSettingsV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u ProcedureSettings) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ProcedureSettings) UnmarshalJSON(data []byte) error {
+	var deser procedureSettingsDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ProcedureSettings) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ProcedureSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ProcedureSettings) AcceptFuncs(v1Func func(ProcedureSettingsV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ProcedureSettings) V1NoopSuccess(ProcedureSettingsV1) error {
+	return nil
+}
+
+func (u *ProcedureSettings) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ProcedureSettings) Accept(v ProcedureSettingsVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type ProcedureSettingsVisitor interface {
+	VisitV1(v ProcedureSettingsV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ProcedureSettings) AcceptWithContext(ctx context.Context, v ProcedureSettingsVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type ProcedureSettingsVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v ProcedureSettingsV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewProcedureSettingsFromV1(v ProcedureSettingsV1) ProcedureSettings {
+	return ProcedureSettings{typ: "v1", v1: &v}
+}
+
 /*
 The request to update the display name of the workspace. The request will replace the existing display name
 with the display name specified if it's provided. Otherwise, the current display name will be removed from

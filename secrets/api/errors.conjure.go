@@ -334,7 +334,155 @@ func (e *SecretsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type unableToEncryptSecret struct{}
+
+func (o unableToEncryptSecret) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *unableToEncryptSecret) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewUnableToEncryptSecret returns new instance of UnableToEncryptSecret error.
+func NewUnableToEncryptSecret() *UnableToEncryptSecret {
+	return &UnableToEncryptSecret{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), unableToEncryptSecret: unableToEncryptSecret{}}
+}
+
+// WrapWithUnableToEncryptSecret returns new instance of UnableToEncryptSecret error wrapping an existing error.
+func WrapWithUnableToEncryptSecret(err error) *UnableToEncryptSecret {
+	return &UnableToEncryptSecret{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, unableToEncryptSecret: unableToEncryptSecret{}}
+}
+
+// UnableToEncryptSecret is an error type.
+type UnableToEncryptSecret struct {
+	errorInstanceID uuid.UUID
+	unableToEncryptSecret
+	cause error
+	stack werror.StackTrace
+}
+
+// IsUnableToEncryptSecret returns true if err is an instance of UnableToEncryptSecret.
+func IsUnableToEncryptSecret(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*UnableToEncryptSecret)
+	return ok
+}
+
+func (e *UnableToEncryptSecret) Error() string {
+	return fmt.Sprintf("FAILED_PRECONDITION Secrets:UnableToEncryptSecret (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *UnableToEncryptSecret) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *UnableToEncryptSecret) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *UnableToEncryptSecret) Message() string {
+	return "FAILED_PRECONDITION Secrets:UnableToEncryptSecret"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *UnableToEncryptSecret) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *UnableToEncryptSecret) Code() errors.ErrorCode {
+	return errors.FailedPrecondition
+}
+
+// Name returns an error name identifying error type.
+func (e *UnableToEncryptSecret) Name() string {
+	return "Secrets:UnableToEncryptSecret"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *UnableToEncryptSecret) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *UnableToEncryptSecret) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *UnableToEncryptSecret) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UnableToEncryptSecret) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *UnableToEncryptSecret) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UnableToEncryptSecret) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e UnableToEncryptSecret) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.unableToEncryptSecret)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.FailedPrecondition, ErrorName: "Secrets:UnableToEncryptSecret", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *UnableToEncryptSecret) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters unableToEncryptSecret
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.unableToEncryptSecret = parameters
+	return nil
+}
+
 func init() {
 	conjureerrors.RegisterErrorType("Secrets:SecretNotFound", reflect.TypeOf(SecretNotFound{}))
 	conjureerrors.RegisterErrorType("Secrets:SecretsNotFound", reflect.TypeOf(SecretsNotFound{}))
+	conjureerrors.RegisterErrorType("Secrets:UnableToEncryptSecret", reflect.TypeOf(UnableToEncryptSecret{}))
 }

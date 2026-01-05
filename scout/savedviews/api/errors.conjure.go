@@ -166,6 +166,302 @@ func (e *CannotChangeSavedViewResourceType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type cannotUpdateArchivedSavedView struct{}
+
+func (o cannotUpdateArchivedSavedView) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *cannotUpdateArchivedSavedView) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewCannotUpdateArchivedSavedView returns new instance of CannotUpdateArchivedSavedView error.
+func NewCannotUpdateArchivedSavedView() *CannotUpdateArchivedSavedView {
+	return &CannotUpdateArchivedSavedView{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cannotUpdateArchivedSavedView: cannotUpdateArchivedSavedView{}}
+}
+
+// WrapWithCannotUpdateArchivedSavedView returns new instance of CannotUpdateArchivedSavedView error wrapping an existing error.
+func WrapWithCannotUpdateArchivedSavedView(err error) *CannotUpdateArchivedSavedView {
+	return &CannotUpdateArchivedSavedView{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, cannotUpdateArchivedSavedView: cannotUpdateArchivedSavedView{}}
+}
+
+// CannotUpdateArchivedSavedView is an error type.
+type CannotUpdateArchivedSavedView struct {
+	errorInstanceID uuid.UUID
+	cannotUpdateArchivedSavedView
+	cause error
+	stack werror.StackTrace
+}
+
+// IsCannotUpdateArchivedSavedView returns true if err is an instance of CannotUpdateArchivedSavedView.
+func IsCannotUpdateArchivedSavedView(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*CannotUpdateArchivedSavedView)
+	return ok
+}
+
+func (e *CannotUpdateArchivedSavedView) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT SavedView:CannotUpdateArchivedSavedView (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *CannotUpdateArchivedSavedView) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *CannotUpdateArchivedSavedView) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *CannotUpdateArchivedSavedView) Message() string {
+	return "INVALID_ARGUMENT SavedView:CannotUpdateArchivedSavedView"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *CannotUpdateArchivedSavedView) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *CannotUpdateArchivedSavedView) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *CannotUpdateArchivedSavedView) Name() string {
+	return "SavedView:CannotUpdateArchivedSavedView"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *CannotUpdateArchivedSavedView) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *CannotUpdateArchivedSavedView) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *CannotUpdateArchivedSavedView) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotUpdateArchivedSavedView) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *CannotUpdateArchivedSavedView) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotUpdateArchivedSavedView) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e CannotUpdateArchivedSavedView) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.cannotUpdateArchivedSavedView)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "SavedView:CannotUpdateArchivedSavedView", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *CannotUpdateArchivedSavedView) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters cannotUpdateArchivedSavedView
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.cannotUpdateArchivedSavedView = parameters
+	return nil
+}
+
+type invalidIndex struct {
+	Index int `json:"index"`
+}
+
+func (o invalidIndex) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidIndex) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidIndex returns new instance of InvalidIndex error.
+func NewInvalidIndex(indexArg int) *InvalidIndex {
+	return &InvalidIndex{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidIndex: invalidIndex{Index: indexArg}}
+}
+
+// WrapWithInvalidIndex returns new instance of InvalidIndex error wrapping an existing error.
+func WrapWithInvalidIndex(err error, indexArg int) *InvalidIndex {
+	return &InvalidIndex{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidIndex: invalidIndex{Index: indexArg}}
+}
+
+// InvalidIndex is an error type.
+type InvalidIndex struct {
+	errorInstanceID uuid.UUID
+	invalidIndex
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidIndex returns true if err is an instance of InvalidIndex.
+func IsInvalidIndex(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidIndex)
+	return ok
+}
+
+func (e *InvalidIndex) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT SavedView:InvalidIndex (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidIndex) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidIndex) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidIndex) Message() string {
+	return "INVALID_ARGUMENT SavedView:InvalidIndex"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidIndex) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidIndex) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidIndex) Name() string {
+	return "SavedView:InvalidIndex"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidIndex) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidIndex) Parameters() map[string]interface{} {
+	return map[string]interface{}{"index": e.Index}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidIndex) safeParams() map[string]interface{} {
+	return map[string]interface{}{"index": e.Index, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidIndex) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidIndex) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidIndex) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidIndex) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidIndex)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "SavedView:InvalidIndex", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidIndex) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidIndex
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidIndex = parameters
+	return nil
+}
+
 type resourceTypeAndSearchStateMismatch struct {
 	ResourceType            ResourceType `json:"resourceType"`
 	SearchStateExpectedType ResourceType `json:"searchStateExpectedType"`
@@ -635,9 +931,161 @@ func (e *SavedViewsNotFoundError) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type tooManyActiveSavedViews struct {
+	MaxSavedViews int `json:"maxSavedViews"`
+}
+
+func (o tooManyActiveSavedViews) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *tooManyActiveSavedViews) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewTooManyActiveSavedViews returns new instance of TooManyActiveSavedViews error.
+func NewTooManyActiveSavedViews(maxSavedViewsArg int) *TooManyActiveSavedViews {
+	return &TooManyActiveSavedViews{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooManyActiveSavedViews: tooManyActiveSavedViews{MaxSavedViews: maxSavedViewsArg}}
+}
+
+// WrapWithTooManyActiveSavedViews returns new instance of TooManyActiveSavedViews error wrapping an existing error.
+func WrapWithTooManyActiveSavedViews(err error, maxSavedViewsArg int) *TooManyActiveSavedViews {
+	return &TooManyActiveSavedViews{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooManyActiveSavedViews: tooManyActiveSavedViews{MaxSavedViews: maxSavedViewsArg}}
+}
+
+// TooManyActiveSavedViews is an error type.
+type TooManyActiveSavedViews struct {
+	errorInstanceID uuid.UUID
+	tooManyActiveSavedViews
+	cause error
+	stack werror.StackTrace
+}
+
+// IsTooManyActiveSavedViews returns true if err is an instance of TooManyActiveSavedViews.
+func IsTooManyActiveSavedViews(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*TooManyActiveSavedViews)
+	return ok
+}
+
+func (e *TooManyActiveSavedViews) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT SavedView:TooManyActiveSavedViews (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *TooManyActiveSavedViews) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *TooManyActiveSavedViews) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *TooManyActiveSavedViews) Message() string {
+	return "INVALID_ARGUMENT SavedView:TooManyActiveSavedViews"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *TooManyActiveSavedViews) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *TooManyActiveSavedViews) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *TooManyActiveSavedViews) Name() string {
+	return "SavedView:TooManyActiveSavedViews"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *TooManyActiveSavedViews) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *TooManyActiveSavedViews) Parameters() map[string]interface{} {
+	return map[string]interface{}{"maxSavedViews": e.MaxSavedViews}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *TooManyActiveSavedViews) safeParams() map[string]interface{} {
+	return map[string]interface{}{"maxSavedViews": e.MaxSavedViews, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyActiveSavedViews) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *TooManyActiveSavedViews) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyActiveSavedViews) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e TooManyActiveSavedViews) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.tooManyActiveSavedViews)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "SavedView:TooManyActiveSavedViews", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *TooManyActiveSavedViews) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters tooManyActiveSavedViews
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.tooManyActiveSavedViews = parameters
+	return nil
+}
+
 func init() {
 	conjureerrors.RegisterErrorType("SavedView:CannotChangeSavedViewResourceType", reflect.TypeOf(CannotChangeSavedViewResourceType{}))
+	conjureerrors.RegisterErrorType("SavedView:CannotUpdateArchivedSavedView", reflect.TypeOf(CannotUpdateArchivedSavedView{}))
+	conjureerrors.RegisterErrorType("SavedView:InvalidIndex", reflect.TypeOf(InvalidIndex{}))
 	conjureerrors.RegisterErrorType("SavedView:ResourceTypeAndSearchStateMismatch", reflect.TypeOf(ResourceTypeAndSearchStateMismatch{}))
 	conjureerrors.RegisterErrorType("SavedView:SavedViewNotFoundError", reflect.TypeOf(SavedViewNotFoundError{}))
 	conjureerrors.RegisterErrorType("SavedView:SavedViewsNotFoundError", reflect.TypeOf(SavedViewsNotFoundError{}))
+	conjureerrors.RegisterErrorType("SavedView:TooManyActiveSavedViews", reflect.TypeOf(TooManyActiveSavedViews{}))
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
@@ -403,35 +404,45 @@ func NewChecklistEntryFromCheck(v Check) ChecklistEntry {
 }
 
 type ChecklistSearchQuery struct {
-	typ         string
-	and         *[]ChecklistSearchQuery
-	or          *[]ChecklistSearchQuery
-	searchText  *string
-	label       *api.Label
-	property    *api.Property
-	authorRid   *api1.UserRid
-	assigneeRid *api1.UserRid
-	isPublished *bool
-	not         *ChecklistSearchQuery
-	workspace   *rids.WorkspaceRid
+	typ                 string
+	and                 *[]ChecklistSearchQuery
+	or                  *[]ChecklistSearchQuery
+	searchText          *string
+	label               *api.Label
+	labels              *api1.LabelsFilter
+	property            *api.Property
+	properties          *api1.PropertiesFilter
+	authorRid           *api1.UserRid
+	assigneeRid         *api1.UserRid
+	isPublished         *bool
+	not                 *ChecklistSearchQuery
+	workspace           *rids.WorkspaceRid
+	authorIsCurrentUser *bool
+	authorRids          *[]api1.UserRid
+	isArchived          *bool
 }
 
 type checklistSearchQueryDeserializer struct {
-	Type        string                  `json:"type"`
-	And         *[]ChecklistSearchQuery `json:"and"`
-	Or          *[]ChecklistSearchQuery `json:"or"`
-	SearchText  *string                 `json:"searchText"`
-	Label       *api.Label              `json:"label"`
-	Property    *api.Property           `json:"property"`
-	AuthorRid   *api1.UserRid           `json:"authorRid"`
-	AssigneeRid *api1.UserRid           `json:"assigneeRid"`
-	IsPublished *bool                   `json:"isPublished"`
-	Not         *ChecklistSearchQuery   `json:"not"`
-	Workspace   *rids.WorkspaceRid      `json:"workspace"`
+	Type                string                  `json:"type"`
+	And                 *[]ChecklistSearchQuery `json:"and"`
+	Or                  *[]ChecklistSearchQuery `json:"or"`
+	SearchText          *string                 `json:"searchText"`
+	Label               *api.Label              `json:"label"`
+	Labels              *api1.LabelsFilter      `json:"labels"`
+	Property            *api.Property           `json:"property"`
+	Properties          *api1.PropertiesFilter  `json:"properties"`
+	AuthorRid           *api1.UserRid           `json:"authorRid"`
+	AssigneeRid         *api1.UserRid           `json:"assigneeRid"`
+	IsPublished         *bool                   `json:"isPublished"`
+	Not                 *ChecklistSearchQuery   `json:"not"`
+	Workspace           *rids.WorkspaceRid      `json:"workspace"`
+	AuthorIsCurrentUser *bool                   `json:"authorIsCurrentUser"`
+	AuthorRids          *[]api1.UserRid         `json:"authorRids"`
+	IsArchived          *bool                   `json:"isArchived"`
 }
 
 func (u *checklistSearchQueryDeserializer) toStruct() ChecklistSearchQuery {
-	return ChecklistSearchQuery{typ: u.Type, and: u.And, or: u.Or, searchText: u.SearchText, label: u.Label, property: u.Property, authorRid: u.AuthorRid, assigneeRid: u.AssigneeRid, isPublished: u.IsPublished, not: u.Not, workspace: u.Workspace}
+	return ChecklistSearchQuery{typ: u.Type, and: u.And, or: u.Or, searchText: u.SearchText, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, authorRid: u.AuthorRid, assigneeRid: u.AssigneeRid, isPublished: u.IsPublished, not: u.Not, workspace: u.Workspace, authorIsCurrentUser: u.AuthorIsCurrentUser, authorRids: u.AuthorRids, isArchived: u.IsArchived}
 }
 
 func (u *ChecklistSearchQuery) toSerializer() (interface{}, error) {
@@ -470,6 +481,14 @@ func (u *ChecklistSearchQuery) toSerializer() (interface{}, error) {
 			Type  string    `json:"type"`
 			Label api.Label `json:"label"`
 		}{Type: "label", Label: *u.label}, nil
+	case "labels":
+		if u.labels == nil {
+			return nil, fmt.Errorf("field \"labels\" is required")
+		}
+		return struct {
+			Type   string            `json:"type"`
+			Labels api1.LabelsFilter `json:"labels"`
+		}{Type: "labels", Labels: *u.labels}, nil
 	case "property":
 		if u.property == nil {
 			return nil, fmt.Errorf("field \"property\" is required")
@@ -478,6 +497,14 @@ func (u *ChecklistSearchQuery) toSerializer() (interface{}, error) {
 			Type     string       `json:"type"`
 			Property api.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "properties":
+		if u.properties == nil {
+			return nil, fmt.Errorf("field \"properties\" is required")
+		}
+		return struct {
+			Type       string                `json:"type"`
+			Properties api1.PropertiesFilter `json:"properties"`
+		}{Type: "properties", Properties: *u.properties}, nil
 	case "authorRid":
 		if u.authorRid == nil {
 			return nil, fmt.Errorf("field \"authorRid\" is required")
@@ -518,6 +545,30 @@ func (u *ChecklistSearchQuery) toSerializer() (interface{}, error) {
 			Type      string            `json:"type"`
 			Workspace rids.WorkspaceRid `json:"workspace"`
 		}{Type: "workspace", Workspace: *u.workspace}, nil
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return nil, fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return struct {
+			Type                string `json:"type"`
+			AuthorIsCurrentUser bool   `json:"authorIsCurrentUser"`
+		}{Type: "authorIsCurrentUser", AuthorIsCurrentUser: *u.authorIsCurrentUser}, nil
+	case "authorRids":
+		if u.authorRids == nil {
+			return nil, fmt.Errorf("field \"authorRids\" is required")
+		}
+		return struct {
+			Type       string         `json:"type"`
+			AuthorRids []api1.UserRid `json:"authorRids"`
+		}{Type: "authorRids", AuthorRids: *u.authorRids}, nil
+	case "isArchived":
+		if u.isArchived == nil {
+			return nil, fmt.Errorf("field \"isArchived\" is required")
+		}
+		return struct {
+			Type       string `json:"type"`
+			IsArchived bool   `json:"isArchived"`
+		}{Type: "isArchived", IsArchived: *u.isArchived}, nil
 	}
 }
 
@@ -552,9 +603,17 @@ func (u *ChecklistSearchQuery) UnmarshalJSON(data []byte) error {
 		if u.label == nil {
 			return fmt.Errorf("field \"label\" is required")
 		}
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
+		}
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
 		}
 	case "authorRid":
 		if u.authorRid == nil {
@@ -576,6 +635,18 @@ func (u *ChecklistSearchQuery) UnmarshalJSON(data []byte) error {
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
 		}
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
+		}
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
 	}
 	return nil
 }
@@ -596,7 +667,7 @@ func (u *ChecklistSearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) error, orFunc func([]ChecklistSearchQuery) error, searchTextFunc func(string) error, labelFunc func(api.Label) error, propertyFunc func(api.Property) error, authorRidFunc func(api1.UserRid) error, assigneeRidFunc func(api1.UserRid) error, isPublishedFunc func(bool) error, notFunc func(ChecklistSearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) error, orFunc func([]ChecklistSearchQuery) error, searchTextFunc func(string) error, labelFunc func(api.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api.Property) error, propertiesFunc func(api1.PropertiesFilter) error, authorRidFunc func(api1.UserRid) error, assigneeRidFunc func(api1.UserRid) error, isPublishedFunc func(bool) error, notFunc func(ChecklistSearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, authorIsCurrentUserFunc func(bool) error, authorRidsFunc func([]api1.UserRid) error, isArchivedFunc func(bool) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -623,11 +694,21 @@ func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) 
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "authorRid":
 		if u.authorRid == nil {
 			return fmt.Errorf("field \"authorRid\" is required")
@@ -653,6 +734,21 @@ func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) 
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return workspaceFunc(*u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return authorIsCurrentUserFunc(*u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
+		}
+		return authorRidsFunc(*u.authorRids)
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+		return isArchivedFunc(*u.isArchived)
 	}
 }
 
@@ -672,7 +768,15 @@ func (u *ChecklistSearchQuery) LabelNoopSuccess(api.Label) error {
 	return nil
 }
 
+func (u *ChecklistSearchQuery) LabelsNoopSuccess(api1.LabelsFilter) error {
+	return nil
+}
+
 func (u *ChecklistSearchQuery) PropertyNoopSuccess(api.Property) error {
+	return nil
+}
+
+func (u *ChecklistSearchQuery) PropertiesNoopSuccess(api1.PropertiesFilter) error {
 	return nil
 }
 
@@ -693,6 +797,18 @@ func (u *ChecklistSearchQuery) NotNoopSuccess(ChecklistSearchQuery) error {
 }
 
 func (u *ChecklistSearchQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+	return nil
+}
+
+func (u *ChecklistSearchQuery) AuthorIsCurrentUserNoopSuccess(bool) error {
+	return nil
+}
+
+func (u *ChecklistSearchQuery) AuthorRidsNoopSuccess([]api1.UserRid) error {
+	return nil
+}
+
+func (u *ChecklistSearchQuery) IsArchivedNoopSuccess(bool) error {
 	return nil
 }
 
@@ -727,11 +843,21 @@ func (u *ChecklistSearchQuery) Accept(v ChecklistSearchQueryVisitor) error {
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(*u.properties)
 	case "authorRid":
 		if u.authorRid == nil {
 			return fmt.Errorf("field \"authorRid\" is required")
@@ -757,6 +883,21 @@ func (u *ChecklistSearchQuery) Accept(v ChecklistSearchQueryVisitor) error {
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspace(*u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return v.VisitAuthorIsCurrentUser(*u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
+		}
+		return v.VisitAuthorRids(*u.authorRids)
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+		return v.VisitIsArchived(*u.isArchived)
 	}
 }
 
@@ -765,12 +906,17 @@ type ChecklistSearchQueryVisitor interface {
 	VisitOr(v []ChecklistSearchQuery) error
 	VisitSearchText(v string) error
 	VisitLabel(v api.Label) error
+	VisitLabels(v api1.LabelsFilter) error
 	VisitProperty(v api.Property) error
+	VisitProperties(v api1.PropertiesFilter) error
 	VisitAuthorRid(v api1.UserRid) error
 	VisitAssigneeRid(v api1.UserRid) error
 	VisitIsPublished(v bool) error
 	VisitNot(v ChecklistSearchQuery) error
 	VisitWorkspace(v rids.WorkspaceRid) error
+	VisitAuthorIsCurrentUser(v bool) error
+	VisitAuthorRids(v []api1.UserRid) error
+	VisitIsArchived(v bool) error
 	VisitUnknown(typeName string) error
 }
 
@@ -801,11 +947,21 @@ func (u *ChecklistSearchQuery) AcceptWithContext(ctx context.Context, v Checklis
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabelWithContext(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabelsWithContext(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitPropertiesWithContext(ctx, *u.properties)
 	case "authorRid":
 		if u.authorRid == nil {
 			return fmt.Errorf("field \"authorRid\" is required")
@@ -831,6 +987,21 @@ func (u *ChecklistSearchQuery) AcceptWithContext(ctx context.Context, v Checklis
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return v.VisitAuthorIsCurrentUserWithContext(ctx, *u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
+		}
+		return v.VisitAuthorRidsWithContext(ctx, *u.authorRids)
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+		return v.VisitIsArchivedWithContext(ctx, *u.isArchived)
 	}
 }
 
@@ -839,12 +1010,17 @@ type ChecklistSearchQueryVisitorWithContext interface {
 	VisitOrWithContext(ctx context.Context, v []ChecklistSearchQuery) error
 	VisitSearchTextWithContext(ctx context.Context, v string) error
 	VisitLabelWithContext(ctx context.Context, v api.Label) error
+	VisitLabelsWithContext(ctx context.Context, v api1.LabelsFilter) error
 	VisitPropertyWithContext(ctx context.Context, v api.Property) error
+	VisitPropertiesWithContext(ctx context.Context, v api1.PropertiesFilter) error
 	VisitAuthorRidWithContext(ctx context.Context, v api1.UserRid) error
 	VisitAssigneeRidWithContext(ctx context.Context, v api1.UserRid) error
 	VisitIsPublishedWithContext(ctx context.Context, v bool) error
 	VisitNotWithContext(ctx context.Context, v ChecklistSearchQuery) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
+	VisitAuthorIsCurrentUserWithContext(ctx context.Context, v bool) error
+	VisitAuthorRidsWithContext(ctx context.Context, v []api1.UserRid) error
+	VisitIsArchivedWithContext(ctx context.Context, v bool) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -864,8 +1040,16 @@ func NewChecklistSearchQueryFromLabel(v api.Label) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "label", label: &v}
 }
 
+func NewChecklistSearchQueryFromLabels(v api1.LabelsFilter) ChecklistSearchQuery {
+	return ChecklistSearchQuery{typ: "labels", labels: &v}
+}
+
 func NewChecklistSearchQueryFromProperty(v api.Property) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "property", property: &v}
+}
+
+func NewChecklistSearchQueryFromProperties(v api1.PropertiesFilter) ChecklistSearchQuery {
+	return ChecklistSearchQuery{typ: "properties", properties: &v}
 }
 
 func NewChecklistSearchQueryFromAuthorRid(v api1.UserRid) ChecklistSearchQuery {
@@ -886,6 +1070,18 @@ func NewChecklistSearchQueryFromNot(v ChecklistSearchQuery) ChecklistSearchQuery
 
 func NewChecklistSearchQueryFromWorkspace(v rids.WorkspaceRid) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "workspace", workspace: &v}
+}
+
+func NewChecklistSearchQueryFromAuthorIsCurrentUser(v bool) ChecklistSearchQuery {
+	return ChecklistSearchQuery{typ: "authorIsCurrentUser", authorIsCurrentUser: &v}
+}
+
+func NewChecklistSearchQueryFromAuthorRids(v []api1.UserRid) ChecklistSearchQuery {
+	return ChecklistSearchQuery{typ: "authorRids", authorRids: &v}
+}
+
+func NewChecklistSearchQueryFromIsArchived(v bool) ChecklistSearchQuery {
+	return ChecklistSearchQuery{typ: "isArchived", isArchived: &v}
 }
 
 type CreateChecklistEntryRequest struct {
@@ -1025,16 +1221,16 @@ func NewCreateChecklistEntryRequestFromCreateCheck(v CreateCheckRequest) CreateC
 
 type FunctionNode struct {
 	typ     string
-	enum    *api2.EnumSeries
-	numeric *api2.NumericSeries
-	ranges  *api2.RangeSeries
+	enum    *api11.EnumSeries
+	numeric *api11.NumericSeries
+	ranges  *api11.RangeSeries
 }
 
 type functionNodeDeserializer struct {
-	Type    string              `json:"type"`
-	Enum    *api2.EnumSeries    `json:"enum"`
-	Numeric *api2.NumericSeries `json:"numeric"`
-	Ranges  *api2.RangeSeries   `json:"ranges"`
+	Type    string               `json:"type"`
+	Enum    *api11.EnumSeries    `json:"enum"`
+	Numeric *api11.NumericSeries `json:"numeric"`
+	Ranges  *api11.RangeSeries   `json:"ranges"`
 }
 
 func (u *functionNodeDeserializer) toStruct() FunctionNode {
@@ -1050,24 +1246,24 @@ func (u *FunctionNode) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"enum\" is required")
 		}
 		return struct {
-			Type string          `json:"type"`
-			Enum api2.EnumSeries `json:"enum"`
+			Type string           `json:"type"`
+			Enum api11.EnumSeries `json:"enum"`
 		}{Type: "enum", Enum: *u.enum}, nil
 	case "numeric":
 		if u.numeric == nil {
 			return nil, fmt.Errorf("field \"numeric\" is required")
 		}
 		return struct {
-			Type    string             `json:"type"`
-			Numeric api2.NumericSeries `json:"numeric"`
+			Type    string              `json:"type"`
+			Numeric api11.NumericSeries `json:"numeric"`
 		}{Type: "numeric", Numeric: *u.numeric}, nil
 	case "ranges":
 		if u.ranges == nil {
 			return nil, fmt.Errorf("field \"ranges\" is required")
 		}
 		return struct {
-			Type   string           `json:"type"`
-			Ranges api2.RangeSeries `json:"ranges"`
+			Type   string            `json:"type"`
+			Ranges api11.RangeSeries `json:"ranges"`
 		}{Type: "ranges", Ranges: *u.ranges}, nil
 	}
 }
@@ -1119,7 +1315,7 @@ func (u *FunctionNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *FunctionNode) AcceptFuncs(enumFunc func(api2.EnumSeries) error, numericFunc func(api2.NumericSeries) error, rangesFunc func(api2.RangeSeries) error, unknownFunc func(string) error) error {
+func (u *FunctionNode) AcceptFuncs(enumFunc func(api11.EnumSeries) error, numericFunc func(api11.NumericSeries) error, rangesFunc func(api11.RangeSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1144,15 +1340,15 @@ func (u *FunctionNode) AcceptFuncs(enumFunc func(api2.EnumSeries) error, numeric
 	}
 }
 
-func (u *FunctionNode) EnumNoopSuccess(api2.EnumSeries) error {
+func (u *FunctionNode) EnumNoopSuccess(api11.EnumSeries) error {
 	return nil
 }
 
-func (u *FunctionNode) NumericNoopSuccess(api2.NumericSeries) error {
+func (u *FunctionNode) NumericNoopSuccess(api11.NumericSeries) error {
 	return nil
 }
 
-func (u *FunctionNode) RangesNoopSuccess(api2.RangeSeries) error {
+func (u *FunctionNode) RangesNoopSuccess(api11.RangeSeries) error {
 	return nil
 }
 
@@ -1186,9 +1382,9 @@ func (u *FunctionNode) Accept(v FunctionNodeVisitor) error {
 }
 
 type FunctionNodeVisitor interface {
-	VisitEnum(v api2.EnumSeries) error
-	VisitNumeric(v api2.NumericSeries) error
-	VisitRanges(v api2.RangeSeries) error
+	VisitEnum(v api11.EnumSeries) error
+	VisitNumeric(v api11.NumericSeries) error
+	VisitRanges(v api11.RangeSeries) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1218,21 +1414,21 @@ func (u *FunctionNode) AcceptWithContext(ctx context.Context, v FunctionNodeVisi
 }
 
 type FunctionNodeVisitorWithContext interface {
-	VisitEnumWithContext(ctx context.Context, v api2.EnumSeries) error
-	VisitNumericWithContext(ctx context.Context, v api2.NumericSeries) error
-	VisitRangesWithContext(ctx context.Context, v api2.RangeSeries) error
+	VisitEnumWithContext(ctx context.Context, v api11.EnumSeries) error
+	VisitNumericWithContext(ctx context.Context, v api11.NumericSeries) error
+	VisitRangesWithContext(ctx context.Context, v api11.RangeSeries) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewFunctionNodeFromEnum(v api2.EnumSeries) FunctionNode {
+func NewFunctionNodeFromEnum(v api11.EnumSeries) FunctionNode {
 	return FunctionNode{typ: "enum", enum: &v}
 }
 
-func NewFunctionNodeFromNumeric(v api2.NumericSeries) FunctionNode {
+func NewFunctionNodeFromNumeric(v api11.NumericSeries) FunctionNode {
 	return FunctionNode{typ: "numeric", numeric: &v}
 }
 
-func NewFunctionNodeFromRanges(v api2.RangeSeries) FunctionNode {
+func NewFunctionNodeFromRanges(v api11.RangeSeries) FunctionNode {
 	return FunctionNode{typ: "ranges", ranges: &v}
 }
 

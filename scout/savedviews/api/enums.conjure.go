@@ -6,6 +6,120 @@ import (
 	"strings"
 )
 
+type MetricColumnAggregation struct {
+	val MetricColumnAggregation_Value
+}
+
+type MetricColumnAggregation_Value string
+
+const (
+	MetricColumnAggregation_TOTAL_COUNT    MetricColumnAggregation_Value = "TOTAL_COUNT"
+	MetricColumnAggregation_TOTAL_DURATION MetricColumnAggregation_Value = "TOTAL_DURATION"
+	MetricColumnAggregation_UNKNOWN        MetricColumnAggregation_Value = "UNKNOWN"
+)
+
+// MetricColumnAggregation_Values returns all known variants of MetricColumnAggregation.
+func MetricColumnAggregation_Values() []MetricColumnAggregation_Value {
+	return []MetricColumnAggregation_Value{MetricColumnAggregation_TOTAL_COUNT, MetricColumnAggregation_TOTAL_DURATION}
+}
+
+func New_MetricColumnAggregation(value MetricColumnAggregation_Value) MetricColumnAggregation {
+	return MetricColumnAggregation{val: value}
+}
+
+// IsUnknown returns false for all known variants of MetricColumnAggregation and true otherwise.
+func (e MetricColumnAggregation) IsUnknown() bool {
+	switch e.val {
+	case MetricColumnAggregation_TOTAL_COUNT, MetricColumnAggregation_TOTAL_DURATION:
+		return false
+	}
+	return true
+}
+
+func (e MetricColumnAggregation) Value() MetricColumnAggregation_Value {
+	if e.IsUnknown() {
+		return MetricColumnAggregation_UNKNOWN
+	}
+	return e.val
+}
+
+func (e MetricColumnAggregation) String() string {
+	return string(e.val)
+}
+
+func (e MetricColumnAggregation) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *MetricColumnAggregation) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_MetricColumnAggregation(MetricColumnAggregation_Value(v))
+	case "TOTAL_COUNT":
+		*e = New_MetricColumnAggregation(MetricColumnAggregation_TOTAL_COUNT)
+	case "TOTAL_DURATION":
+		*e = New_MetricColumnAggregation(MetricColumnAggregation_TOTAL_DURATION)
+	}
+	return nil
+}
+
+type MetricColumnThresholdType struct {
+	val MetricColumnThresholdType_Value
+}
+
+type MetricColumnThresholdType_Value string
+
+const (
+	MetricColumnThresholdType_RAW     MetricColumnThresholdType_Value = "RAW"
+	MetricColumnThresholdType_BAR     MetricColumnThresholdType_Value = "BAR"
+	MetricColumnThresholdType_UNKNOWN MetricColumnThresholdType_Value = "UNKNOWN"
+)
+
+// MetricColumnThresholdType_Values returns all known variants of MetricColumnThresholdType.
+func MetricColumnThresholdType_Values() []MetricColumnThresholdType_Value {
+	return []MetricColumnThresholdType_Value{MetricColumnThresholdType_RAW, MetricColumnThresholdType_BAR}
+}
+
+func New_MetricColumnThresholdType(value MetricColumnThresholdType_Value) MetricColumnThresholdType {
+	return MetricColumnThresholdType{val: value}
+}
+
+// IsUnknown returns false for all known variants of MetricColumnThresholdType and true otherwise.
+func (e MetricColumnThresholdType) IsUnknown() bool {
+	switch e.val {
+	case MetricColumnThresholdType_RAW, MetricColumnThresholdType_BAR:
+		return false
+	}
+	return true
+}
+
+func (e MetricColumnThresholdType) Value() MetricColumnThresholdType_Value {
+	if e.IsUnknown() {
+		return MetricColumnThresholdType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e MetricColumnThresholdType) String() string {
+	return string(e.val)
+}
+
+func (e MetricColumnThresholdType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *MetricColumnThresholdType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_MetricColumnThresholdType(MetricColumnThresholdType_Value(v))
+	case "RAW":
+		*e = New_MetricColumnThresholdType(MetricColumnThresholdType_RAW)
+	case "BAR":
+		*e = New_MetricColumnThresholdType(MetricColumnThresholdType_BAR)
+	}
+	return nil
+}
+
 type ResourceType struct {
 	val ResourceType_Value
 }
@@ -17,12 +131,13 @@ const (
 	ResourceType_RUN       ResourceType_Value = "RUN"
 	ResourceType_WORKBOOK  ResourceType_Value = "WORKBOOK"
 	ResourceType_CHECKLIST ResourceType_Value = "CHECKLIST"
+	ResourceType_TEMPLATE  ResourceType_Value = "TEMPLATE"
 	ResourceType_UNKNOWN   ResourceType_Value = "UNKNOWN"
 )
 
 // ResourceType_Values returns all known variants of ResourceType.
 func ResourceType_Values() []ResourceType_Value {
-	return []ResourceType_Value{ResourceType_ASSET, ResourceType_RUN, ResourceType_WORKBOOK, ResourceType_CHECKLIST}
+	return []ResourceType_Value{ResourceType_ASSET, ResourceType_RUN, ResourceType_WORKBOOK, ResourceType_CHECKLIST, ResourceType_TEMPLATE}
 }
 
 func New_ResourceType(value ResourceType_Value) ResourceType {
@@ -32,7 +147,7 @@ func New_ResourceType(value ResourceType_Value) ResourceType {
 // IsUnknown returns false for all known variants of ResourceType and true otherwise.
 func (e ResourceType) IsUnknown() bool {
 	switch e.val {
-	case ResourceType_ASSET, ResourceType_RUN, ResourceType_WORKBOOK, ResourceType_CHECKLIST:
+	case ResourceType_ASSET, ResourceType_RUN, ResourceType_WORKBOOK, ResourceType_CHECKLIST, ResourceType_TEMPLATE:
 		return false
 	}
 	return true
@@ -65,6 +180,8 @@ func (e *ResourceType) UnmarshalText(data []byte) error {
 		*e = New_ResourceType(ResourceType_WORKBOOK)
 	case "CHECKLIST":
 		*e = New_ResourceType(ResourceType_CHECKLIST)
+	case "TEMPLATE":
+		*e = New_ResourceType(ResourceType_TEMPLATE)
 	}
 	return nil
 }
@@ -76,14 +193,15 @@ type SortField struct {
 type SortField_Value string
 
 const (
-	SortField_TITLE      SortField_Value = "TITLE"
-	SortField_CREATED_AT SortField_Value = "CREATED_AT"
-	SortField_UNKNOWN    SortField_Value = "UNKNOWN"
+	SortField_TITLE        SortField_Value = "TITLE"
+	SortField_CREATED_AT   SortField_Value = "CREATED_AT"
+	SortField_USER_DEFINED SortField_Value = "USER_DEFINED"
+	SortField_UNKNOWN      SortField_Value = "UNKNOWN"
 )
 
 // SortField_Values returns all known variants of SortField.
 func SortField_Values() []SortField_Value {
-	return []SortField_Value{SortField_TITLE, SortField_CREATED_AT}
+	return []SortField_Value{SortField_TITLE, SortField_CREATED_AT, SortField_USER_DEFINED}
 }
 
 func New_SortField(value SortField_Value) SortField {
@@ -93,7 +211,7 @@ func New_SortField(value SortField_Value) SortField {
 // IsUnknown returns false for all known variants of SortField and true otherwise.
 func (e SortField) IsUnknown() bool {
 	switch e.val {
-	case SortField_TITLE, SortField_CREATED_AT:
+	case SortField_TITLE, SortField_CREATED_AT, SortField_USER_DEFINED:
 		return false
 	}
 	return true
@@ -122,6 +240,8 @@ func (e *SortField) UnmarshalText(data []byte) error {
 		*e = New_SortField(SortField_TITLE)
 	case "CREATED_AT":
 		*e = New_SortField(SortField_CREATED_AT)
+	case "USER_DEFINED":
+		*e = New_SortField(SortField_USER_DEFINED)
 	}
 	return nil
 }

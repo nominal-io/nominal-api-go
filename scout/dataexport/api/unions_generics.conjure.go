@@ -70,15 +70,25 @@ func (u *ExportFormatWithT[T]) Accept(ctx context.Context, v ExportFormatVisitor
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
+	case "arrow":
+		if u.arrow == nil {
+			return result, fmt.Errorf("field \"arrow\" is required")
+		}
+		return v.VisitArrow(ctx, *u.arrow)
 	case "csv":
 		if u.csv == nil {
 			return result, fmt.Errorf("field \"csv\" is required")
 		}
 		return v.VisitCsv(ctx, *u.csv)
+	case "matfile":
+		if u.matfile == nil {
+			return result, fmt.Errorf("field \"matfile\" is required")
+		}
+		return v.VisitMatfile(ctx, *u.matfile)
 	}
 }
 
-func (u *ExportFormatWithT[T]) AcceptFuncs(csvFunc func(Csv) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ExportFormatWithT[T]) AcceptFuncs(arrowFunc func(Arrow) (T, error), csvFunc func(Csv) (T, error), matfileFunc func(Matfile) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -86,15 +96,35 @@ func (u *ExportFormatWithT[T]) AcceptFuncs(csvFunc func(Csv) (T, error), unknown
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
+	case "arrow":
+		if u.arrow == nil {
+			return result, fmt.Errorf("field \"arrow\" is required")
+		}
+		return arrowFunc(*u.arrow)
 	case "csv":
 		if u.csv == nil {
 			return result, fmt.Errorf("field \"csv\" is required")
 		}
 		return csvFunc(*u.csv)
+	case "matfile":
+		if u.matfile == nil {
+			return result, fmt.Errorf("field \"matfile\" is required")
+		}
+		return matfileFunc(*u.matfile)
 	}
 }
 
+func (u *ExportFormatWithT[T]) ArrowNoopSuccess(Arrow) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ExportFormatWithT[T]) CsvNoopSuccess(Csv) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ExportFormatWithT[T]) MatfileNoopSuccess(Matfile) (T, error) {
 	var result T
 	return result, nil
 }
@@ -105,7 +135,9 @@ func (u *ExportFormatWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type ExportFormatVisitorWithT[T any] interface {
+	VisitArrow(ctx context.Context, v Arrow) (T, error)
 	VisitCsv(ctx context.Context, v Csv) (T, error)
+	VisitMatfile(ctx context.Context, v Matfile) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

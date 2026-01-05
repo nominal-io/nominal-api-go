@@ -7,34 +7,211 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
-	api1 "github.com/nominal-io/nominal-api-go/scout/api"
-	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api3 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	"github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
 
+type AggregateValue struct {
+	typ      string
+	duration *api.Duration
+	count    *int
+}
+
+type aggregateValueDeserializer struct {
+	Type     string        `json:"type"`
+	Duration *api.Duration `json:"duration"`
+	Count    *int          `json:"count"`
+}
+
+func (u *aggregateValueDeserializer) toStruct() AggregateValue {
+	return AggregateValue{typ: u.Type, duration: u.Duration, count: u.Count}
+}
+
+func (u *AggregateValue) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "duration":
+		if u.duration == nil {
+			return nil, fmt.Errorf("field \"duration\" is required")
+		}
+		return struct {
+			Type     string       `json:"type"`
+			Duration api.Duration `json:"duration"`
+		}{Type: "duration", Duration: *u.duration}, nil
+	case "count":
+		if u.count == nil {
+			return nil, fmt.Errorf("field \"count\" is required")
+		}
+		return struct {
+			Type  string `json:"type"`
+			Count int    `json:"count"`
+		}{Type: "count", Count: *u.count}, nil
+	}
+}
+
+func (u AggregateValue) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *AggregateValue) UnmarshalJSON(data []byte) error {
+	var deser aggregateValueDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "duration":
+		if u.duration == nil {
+			return fmt.Errorf("field \"duration\" is required")
+		}
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+	}
+	return nil
+}
+
+func (u AggregateValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *AggregateValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *AggregateValue) AcceptFuncs(durationFunc func(api.Duration) error, countFunc func(int) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "duration":
+		if u.duration == nil {
+			return fmt.Errorf("field \"duration\" is required")
+		}
+		return durationFunc(*u.duration)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return countFunc(*u.count)
+	}
+}
+
+func (u *AggregateValue) DurationNoopSuccess(api.Duration) error {
+	return nil
+}
+
+func (u *AggregateValue) CountNoopSuccess(int) error {
+	return nil
+}
+
+func (u *AggregateValue) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *AggregateValue) Accept(v AggregateValueVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "duration":
+		if u.duration == nil {
+			return fmt.Errorf("field \"duration\" is required")
+		}
+		return v.VisitDuration(*u.duration)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return v.VisitCount(*u.count)
+	}
+}
+
+type AggregateValueVisitor interface {
+	VisitDuration(v api.Duration) error
+	VisitCount(v int) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *AggregateValue) AcceptWithContext(ctx context.Context, v AggregateValueVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "duration":
+		if u.duration == nil {
+			return fmt.Errorf("field \"duration\" is required")
+		}
+		return v.VisitDurationWithContext(ctx, *u.duration)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return v.VisitCountWithContext(ctx, *u.count)
+	}
+}
+
+type AggregateValueVisitorWithContext interface {
+	VisitDurationWithContext(ctx context.Context, v api.Duration) error
+	VisitCountWithContext(ctx context.Context, v int) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewAggregateValueFromDuration(v api.Duration) AggregateValue {
+	return AggregateValue{typ: "duration", duration: &v}
+}
+
+func NewAggregateValueFromCount(v int) AggregateValue {
+	return AggregateValue{typ: "count", count: &v}
+}
+
 // Describes where an event came from.
 type EventOrigin struct {
-	typ        string
-	workbook   *WorkbookEventOrigin
-	template   *TemplateEventOrigin
-	api        *ApiEventOrigin
-	dataReview *DataReviewEventOrigin
-	procedure  *ProcedureEventOrigin
+	typ                string
+	workbook           *WorkbookEventOrigin
+	template           *TemplateEventOrigin
+	api                *ApiEventOrigin
+	dataReview         *DataReviewEventOrigin
+	procedure          *ProcedureEventOrigin
+	streamingChecklist *StreamingChecklistEventOrigin
 }
 
 type eventOriginDeserializer struct {
-	Type       string                 `json:"type"`
-	Workbook   *WorkbookEventOrigin   `json:"workbook"`
-	Template   *TemplateEventOrigin   `json:"template"`
-	Api        *ApiEventOrigin        `json:"api"`
-	DataReview *DataReviewEventOrigin `json:"dataReview"`
-	Procedure  *ProcedureEventOrigin  `json:"procedure"`
+	Type               string                         `json:"type"`
+	Workbook           *WorkbookEventOrigin           `json:"workbook"`
+	Template           *TemplateEventOrigin           `json:"template"`
+	Api                *ApiEventOrigin                `json:"api"`
+	DataReview         *DataReviewEventOrigin         `json:"dataReview"`
+	Procedure          *ProcedureEventOrigin          `json:"procedure"`
+	StreamingChecklist *StreamingChecklistEventOrigin `json:"streamingChecklist"`
 }
 
 func (u *eventOriginDeserializer) toStruct() EventOrigin {
-	return EventOrigin{typ: u.Type, workbook: u.Workbook, template: u.Template, api: u.Api, dataReview: u.DataReview, procedure: u.Procedure}
+	return EventOrigin{typ: u.Type, workbook: u.Workbook, template: u.Template, api: u.Api, dataReview: u.DataReview, procedure: u.Procedure, streamingChecklist: u.StreamingChecklist}
 }
 
 func (u *EventOrigin) toSerializer() (interface{}, error) {
@@ -81,6 +258,14 @@ func (u *EventOrigin) toSerializer() (interface{}, error) {
 			Type      string               `json:"type"`
 			Procedure ProcedureEventOrigin `json:"procedure"`
 		}{Type: "procedure", Procedure: *u.procedure}, nil
+	case "streamingChecklist":
+		if u.streamingChecklist == nil {
+			return nil, fmt.Errorf("field \"streamingChecklist\" is required")
+		}
+		return struct {
+			Type               string                        `json:"type"`
+			StreamingChecklist StreamingChecklistEventOrigin `json:"streamingChecklist"`
+		}{Type: "streamingChecklist", StreamingChecklist: *u.streamingChecklist}, nil
 	}
 }
 
@@ -119,6 +304,10 @@ func (u *EventOrigin) UnmarshalJSON(data []byte) error {
 		if u.procedure == nil {
 			return fmt.Errorf("field \"procedure\" is required")
 		}
+	case "streamingChecklist":
+		if u.streamingChecklist == nil {
+			return fmt.Errorf("field \"streamingChecklist\" is required")
+		}
 	}
 	return nil
 }
@@ -139,7 +328,7 @@ func (u *EventOrigin) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *EventOrigin) AcceptFuncs(workbookFunc func(WorkbookEventOrigin) error, templateFunc func(TemplateEventOrigin) error, apiFunc func(ApiEventOrigin) error, dataReviewFunc func(DataReviewEventOrigin) error, procedureFunc func(ProcedureEventOrigin) error, unknownFunc func(string) error) error {
+func (u *EventOrigin) AcceptFuncs(workbookFunc func(WorkbookEventOrigin) error, templateFunc func(TemplateEventOrigin) error, apiFunc func(ApiEventOrigin) error, dataReviewFunc func(DataReviewEventOrigin) error, procedureFunc func(ProcedureEventOrigin) error, streamingChecklistFunc func(StreamingChecklistEventOrigin) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -171,6 +360,11 @@ func (u *EventOrigin) AcceptFuncs(workbookFunc func(WorkbookEventOrigin) error, 
 			return fmt.Errorf("field \"procedure\" is required")
 		}
 		return procedureFunc(*u.procedure)
+	case "streamingChecklist":
+		if u.streamingChecklist == nil {
+			return fmt.Errorf("field \"streamingChecklist\" is required")
+		}
+		return streamingChecklistFunc(*u.streamingChecklist)
 	}
 }
 
@@ -191,6 +385,10 @@ func (u *EventOrigin) DataReviewNoopSuccess(DataReviewEventOrigin) error {
 }
 
 func (u *EventOrigin) ProcedureNoopSuccess(ProcedureEventOrigin) error {
+	return nil
+}
+
+func (u *EventOrigin) StreamingChecklistNoopSuccess(StreamingChecklistEventOrigin) error {
 	return nil
 }
 
@@ -230,6 +428,11 @@ func (u *EventOrigin) Accept(v EventOriginVisitor) error {
 			return fmt.Errorf("field \"procedure\" is required")
 		}
 		return v.VisitProcedure(*u.procedure)
+	case "streamingChecklist":
+		if u.streamingChecklist == nil {
+			return fmt.Errorf("field \"streamingChecklist\" is required")
+		}
+		return v.VisitStreamingChecklist(*u.streamingChecklist)
 	}
 }
 
@@ -239,6 +442,7 @@ type EventOriginVisitor interface {
 	VisitApi(v ApiEventOrigin) error
 	VisitDataReview(v DataReviewEventOrigin) error
 	VisitProcedure(v ProcedureEventOrigin) error
+	VisitStreamingChecklist(v StreamingChecklistEventOrigin) error
 	VisitUnknown(typeName string) error
 }
 
@@ -274,6 +478,11 @@ func (u *EventOrigin) AcceptWithContext(ctx context.Context, v EventOriginVisito
 			return fmt.Errorf("field \"procedure\" is required")
 		}
 		return v.VisitProcedureWithContext(ctx, *u.procedure)
+	case "streamingChecklist":
+		if u.streamingChecklist == nil {
+			return fmt.Errorf("field \"streamingChecklist\" is required")
+		}
+		return v.VisitStreamingChecklistWithContext(ctx, *u.streamingChecklist)
 	}
 }
 
@@ -283,6 +492,7 @@ type EventOriginVisitorWithContext interface {
 	VisitApiWithContext(ctx context.Context, v ApiEventOrigin) error
 	VisitDataReviewWithContext(ctx context.Context, v DataReviewEventOrigin) error
 	VisitProcedureWithContext(ctx context.Context, v ProcedureEventOrigin) error
+	VisitStreamingChecklistWithContext(ctx context.Context, v StreamingChecklistEventOrigin) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -306,22 +516,26 @@ func NewEventOriginFromProcedure(v ProcedureEventOrigin) EventOrigin {
 	return EventOrigin{typ: "procedure", procedure: &v}
 }
 
+func NewEventOriginFromStreamingChecklist(v StreamingChecklistEventOrigin) EventOrigin {
+	return EventOrigin{typ: "streamingChecklist", streamingChecklist: &v}
+}
+
 type HistogramFilterQuery struct {
 	typ                string
 	searchText         *string
-	asset              *api.AssetRid
-	template           *api.TemplateRid
-	workbook           *api.NotebookRid
-	dataReview         *api.DataReviewRid
+	asset              *api1.AssetRid
+	template           *api1.TemplateRid
+	workbook           *api1.NotebookRid
+	dataReview         *api1.DataReviewRid
 	originType         *SearchEventOriginType
-	dataReviewCheck    *api.CheckRid
+	dataReviewCheck    *api1.CheckRid
 	dispositionStatus  *EventDispositionStatus
-	priority           *api1.Priority
-	assignee           *api.UserRid
+	priority           *api2.Priority
+	assignee           *api1.UserRid
 	eventType          *EventType
-	createdBy          *api.UserRid
-	label              *api2.Label
-	property           *api2.Property
+	createdBy          *api1.UserRid
+	label              *api3.Label
+	property           *api3.Property
 	and                *[]HistogramFilterQuery
 	or                 *[]HistogramFilterQuery
 	not                *HistogramFilterQuery
@@ -334,19 +548,19 @@ type HistogramFilterQuery struct {
 type histogramFilterQueryDeserializer struct {
 	Type               string                      `json:"type"`
 	SearchText         *string                     `json:"searchText"`
-	Asset              *api.AssetRid               `json:"asset"`
-	Template           *api.TemplateRid            `json:"template"`
-	Workbook           *api.NotebookRid            `json:"workbook"`
-	DataReview         *api.DataReviewRid          `json:"dataReview"`
+	Asset              *api1.AssetRid              `json:"asset"`
+	Template           *api1.TemplateRid           `json:"template"`
+	Workbook           *api1.NotebookRid           `json:"workbook"`
+	DataReview         *api1.DataReviewRid         `json:"dataReview"`
 	OriginType         *SearchEventOriginType      `json:"originType"`
-	DataReviewCheck    *api.CheckRid               `json:"dataReviewCheck"`
+	DataReviewCheck    *api1.CheckRid              `json:"dataReviewCheck"`
 	DispositionStatus  *EventDispositionStatus     `json:"dispositionStatus"`
-	Priority           *api1.Priority              `json:"priority"`
-	Assignee           *api.UserRid                `json:"assignee"`
+	Priority           *api2.Priority              `json:"priority"`
+	Assignee           *api1.UserRid               `json:"assignee"`
 	EventType          *EventType                  `json:"eventType"`
-	CreatedBy          *api.UserRid                `json:"createdBy"`
-	Label              *api2.Label                 `json:"label"`
-	Property           *api2.Property              `json:"property"`
+	CreatedBy          *api1.UserRid               `json:"createdBy"`
+	Label              *api3.Label                 `json:"label"`
+	Property           *api3.Property              `json:"property"`
 	And                *[]HistogramFilterQuery     `json:"and"`
 	Or                 *[]HistogramFilterQuery     `json:"or"`
 	Not                *HistogramFilterQuery       `json:"not"`
@@ -377,32 +591,32 @@ func (u *HistogramFilterQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"asset\" is required")
 		}
 		return struct {
-			Type  string       `json:"type"`
-			Asset api.AssetRid `json:"asset"`
+			Type  string        `json:"type"`
+			Asset api1.AssetRid `json:"asset"`
 		}{Type: "asset", Asset: *u.asset}, nil
 	case "template":
 		if u.template == nil {
 			return nil, fmt.Errorf("field \"template\" is required")
 		}
 		return struct {
-			Type     string          `json:"type"`
-			Template api.TemplateRid `json:"template"`
+			Type     string           `json:"type"`
+			Template api1.TemplateRid `json:"template"`
 		}{Type: "template", Template: *u.template}, nil
 	case "workbook":
 		if u.workbook == nil {
 			return nil, fmt.Errorf("field \"workbook\" is required")
 		}
 		return struct {
-			Type     string          `json:"type"`
-			Workbook api.NotebookRid `json:"workbook"`
+			Type     string           `json:"type"`
+			Workbook api1.NotebookRid `json:"workbook"`
 		}{Type: "workbook", Workbook: *u.workbook}, nil
 	case "dataReview":
 		if u.dataReview == nil {
 			return nil, fmt.Errorf("field \"dataReview\" is required")
 		}
 		return struct {
-			Type       string            `json:"type"`
-			DataReview api.DataReviewRid `json:"dataReview"`
+			Type       string             `json:"type"`
+			DataReview api1.DataReviewRid `json:"dataReview"`
 		}{Type: "dataReview", DataReview: *u.dataReview}, nil
 	case "originType":
 		if u.originType == nil {
@@ -417,8 +631,8 @@ func (u *HistogramFilterQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"dataReviewCheck\" is required")
 		}
 		return struct {
-			Type            string       `json:"type"`
-			DataReviewCheck api.CheckRid `json:"dataReviewCheck"`
+			Type            string        `json:"type"`
+			DataReviewCheck api1.CheckRid `json:"dataReviewCheck"`
 		}{Type: "dataReviewCheck", DataReviewCheck: *u.dataReviewCheck}, nil
 	case "dispositionStatus":
 		if u.dispositionStatus == nil {
@@ -434,15 +648,15 @@ func (u *HistogramFilterQuery) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type     string        `json:"type"`
-			Priority api1.Priority `json:"priority"`
+			Priority api2.Priority `json:"priority"`
 		}{Type: "priority", Priority: *u.priority}, nil
 	case "assignee":
 		if u.assignee == nil {
 			return nil, fmt.Errorf("field \"assignee\" is required")
 		}
 		return struct {
-			Type     string      `json:"type"`
-			Assignee api.UserRid `json:"assignee"`
+			Type     string       `json:"type"`
+			Assignee api1.UserRid `json:"assignee"`
 		}{Type: "assignee", Assignee: *u.assignee}, nil
 	case "eventType":
 		if u.eventType == nil {
@@ -457,8 +671,8 @@ func (u *HistogramFilterQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"createdBy\" is required")
 		}
 		return struct {
-			Type      string      `json:"type"`
-			CreatedBy api.UserRid `json:"createdBy"`
+			Type      string       `json:"type"`
+			CreatedBy api1.UserRid `json:"createdBy"`
 		}{Type: "createdBy", CreatedBy: *u.createdBy}, nil
 	case "label":
 		if u.label == nil {
@@ -466,7 +680,7 @@ func (u *HistogramFilterQuery) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type  string     `json:"type"`
-			Label api2.Label `json:"label"`
+			Label api3.Label `json:"label"`
 		}{Type: "label", Label: *u.label}, nil
 	case "property":
 		if u.property == nil {
@@ -474,7 +688,7 @@ func (u *HistogramFilterQuery) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type     string        `json:"type"`
-			Property api2.Property `json:"property"`
+			Property api3.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
 	case "and":
 		if u.and == nil {
@@ -654,7 +868,7 @@ func (u *HistogramFilterQuery) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *HistogramFilterQuery) AcceptFuncs(searchTextFunc func(string) error, assetFunc func(api.AssetRid) error, templateFunc func(api.TemplateRid) error, workbookFunc func(api.NotebookRid) error, dataReviewFunc func(api.DataReviewRid) error, originTypeFunc func(SearchEventOriginType) error, dataReviewCheckFunc func(api.CheckRid) error, dispositionStatusFunc func(EventDispositionStatus) error, priorityFunc func(api1.Priority) error, assigneeFunc func(api.UserRid) error, eventTypeFunc func(EventType) error, createdByFunc func(api.UserRid) error, labelFunc func(api2.Label) error, propertyFunc func(api2.Property) error, andFunc func([]HistogramFilterQuery) error, orFunc func([]HistogramFilterQuery) error, notFunc func(HistogramFilterQuery) error, workspaceFunc func(rids.WorkspaceRid) error, procedureFunc func(rids.ProcedureRid) error, procedureExecutionFunc func(rids.ProcedureExecutionRid) error, stepIdFunc func(string) error, unknownFunc func(string) error) error {
+func (u *HistogramFilterQuery) AcceptFuncs(searchTextFunc func(string) error, assetFunc func(api1.AssetRid) error, templateFunc func(api1.TemplateRid) error, workbookFunc func(api1.NotebookRid) error, dataReviewFunc func(api1.DataReviewRid) error, originTypeFunc func(SearchEventOriginType) error, dataReviewCheckFunc func(api1.CheckRid) error, dispositionStatusFunc func(EventDispositionStatus) error, priorityFunc func(api2.Priority) error, assigneeFunc func(api1.UserRid) error, eventTypeFunc func(EventType) error, createdByFunc func(api1.UserRid) error, labelFunc func(api3.Label) error, propertyFunc func(api3.Property) error, andFunc func([]HistogramFilterQuery) error, orFunc func([]HistogramFilterQuery) error, notFunc func(HistogramFilterQuery) error, workspaceFunc func(rids.WorkspaceRid) error, procedureFunc func(rids.ProcedureRid) error, procedureExecutionFunc func(rids.ProcedureExecutionRid) error, stepIdFunc func(string) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -773,19 +987,19 @@ func (u *HistogramFilterQuery) SearchTextNoopSuccess(string) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) AssetNoopSuccess(api.AssetRid) error {
+func (u *HistogramFilterQuery) AssetNoopSuccess(api1.AssetRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) TemplateNoopSuccess(api.TemplateRid) error {
+func (u *HistogramFilterQuery) TemplateNoopSuccess(api1.TemplateRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) WorkbookNoopSuccess(api.NotebookRid) error {
+func (u *HistogramFilterQuery) WorkbookNoopSuccess(api1.NotebookRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) DataReviewNoopSuccess(api.DataReviewRid) error {
+func (u *HistogramFilterQuery) DataReviewNoopSuccess(api1.DataReviewRid) error {
 	return nil
 }
 
@@ -793,7 +1007,7 @@ func (u *HistogramFilterQuery) OriginTypeNoopSuccess(SearchEventOriginType) erro
 	return nil
 }
 
-func (u *HistogramFilterQuery) DataReviewCheckNoopSuccess(api.CheckRid) error {
+func (u *HistogramFilterQuery) DataReviewCheckNoopSuccess(api1.CheckRid) error {
 	return nil
 }
 
@@ -801,11 +1015,11 @@ func (u *HistogramFilterQuery) DispositionStatusNoopSuccess(EventDispositionStat
 	return nil
 }
 
-func (u *HistogramFilterQuery) PriorityNoopSuccess(api1.Priority) error {
+func (u *HistogramFilterQuery) PriorityNoopSuccess(api2.Priority) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) AssigneeNoopSuccess(api.UserRid) error {
+func (u *HistogramFilterQuery) AssigneeNoopSuccess(api1.UserRid) error {
 	return nil
 }
 
@@ -813,15 +1027,15 @@ func (u *HistogramFilterQuery) EventTypeNoopSuccess(EventType) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) CreatedByNoopSuccess(api.UserRid) error {
+func (u *HistogramFilterQuery) CreatedByNoopSuccess(api1.UserRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) LabelNoopSuccess(api2.Label) error {
+func (u *HistogramFilterQuery) LabelNoopSuccess(api3.Label) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) PropertyNoopSuccess(api2.Property) error {
+func (u *HistogramFilterQuery) PropertyNoopSuccess(api3.Property) error {
 	return nil
 }
 
@@ -974,19 +1188,19 @@ func (u *HistogramFilterQuery) Accept(v HistogramFilterQueryVisitor) error {
 
 type HistogramFilterQueryVisitor interface {
 	VisitSearchText(v string) error
-	VisitAsset(v api.AssetRid) error
-	VisitTemplate(v api.TemplateRid) error
-	VisitWorkbook(v api.NotebookRid) error
-	VisitDataReview(v api.DataReviewRid) error
+	VisitAsset(v api1.AssetRid) error
+	VisitTemplate(v api1.TemplateRid) error
+	VisitWorkbook(v api1.NotebookRid) error
+	VisitDataReview(v api1.DataReviewRid) error
 	VisitOriginType(v SearchEventOriginType) error
-	VisitDataReviewCheck(v api.CheckRid) error
+	VisitDataReviewCheck(v api1.CheckRid) error
 	VisitDispositionStatus(v EventDispositionStatus) error
-	VisitPriority(v api1.Priority) error
-	VisitAssignee(v api.UserRid) error
+	VisitPriority(v api2.Priority) error
+	VisitAssignee(v api1.UserRid) error
 	VisitEventType(v EventType) error
-	VisitCreatedBy(v api.UserRid) error
-	VisitLabel(v api2.Label) error
-	VisitProperty(v api2.Property) error
+	VisitCreatedBy(v api1.UserRid) error
+	VisitLabel(v api3.Label) error
+	VisitProperty(v api3.Property) error
 	VisitAnd(v []HistogramFilterQuery) error
 	VisitOr(v []HistogramFilterQuery) error
 	VisitNot(v HistogramFilterQuery) error
@@ -1114,19 +1328,19 @@ func (u *HistogramFilterQuery) AcceptWithContext(ctx context.Context, v Histogra
 
 type HistogramFilterQueryVisitorWithContext interface {
 	VisitSearchTextWithContext(ctx context.Context, v string) error
-	VisitAssetWithContext(ctx context.Context, v api.AssetRid) error
-	VisitTemplateWithContext(ctx context.Context, v api.TemplateRid) error
-	VisitWorkbookWithContext(ctx context.Context, v api.NotebookRid) error
-	VisitDataReviewWithContext(ctx context.Context, v api.DataReviewRid) error
+	VisitAssetWithContext(ctx context.Context, v api1.AssetRid) error
+	VisitTemplateWithContext(ctx context.Context, v api1.TemplateRid) error
+	VisitWorkbookWithContext(ctx context.Context, v api1.NotebookRid) error
+	VisitDataReviewWithContext(ctx context.Context, v api1.DataReviewRid) error
 	VisitOriginTypeWithContext(ctx context.Context, v SearchEventOriginType) error
-	VisitDataReviewCheckWithContext(ctx context.Context, v api.CheckRid) error
+	VisitDataReviewCheckWithContext(ctx context.Context, v api1.CheckRid) error
 	VisitDispositionStatusWithContext(ctx context.Context, v EventDispositionStatus) error
-	VisitPriorityWithContext(ctx context.Context, v api1.Priority) error
-	VisitAssigneeWithContext(ctx context.Context, v api.UserRid) error
+	VisitPriorityWithContext(ctx context.Context, v api2.Priority) error
+	VisitAssigneeWithContext(ctx context.Context, v api1.UserRid) error
 	VisitEventTypeWithContext(ctx context.Context, v EventType) error
-	VisitCreatedByWithContext(ctx context.Context, v api.UserRid) error
-	VisitLabelWithContext(ctx context.Context, v api2.Label) error
-	VisitPropertyWithContext(ctx context.Context, v api2.Property) error
+	VisitCreatedByWithContext(ctx context.Context, v api1.UserRid) error
+	VisitLabelWithContext(ctx context.Context, v api3.Label) error
+	VisitPropertyWithContext(ctx context.Context, v api3.Property) error
 	VisitAndWithContext(ctx context.Context, v []HistogramFilterQuery) error
 	VisitOrWithContext(ctx context.Context, v []HistogramFilterQuery) error
 	VisitNotWithContext(ctx context.Context, v HistogramFilterQuery) error
@@ -1141,19 +1355,19 @@ func NewHistogramFilterQueryFromSearchText(v string) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "searchText", searchText: &v}
 }
 
-func NewHistogramFilterQueryFromAsset(v api.AssetRid) HistogramFilterQuery {
+func NewHistogramFilterQueryFromAsset(v api1.AssetRid) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "asset", asset: &v}
 }
 
-func NewHistogramFilterQueryFromTemplate(v api.TemplateRid) HistogramFilterQuery {
+func NewHistogramFilterQueryFromTemplate(v api1.TemplateRid) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "template", template: &v}
 }
 
-func NewHistogramFilterQueryFromWorkbook(v api.NotebookRid) HistogramFilterQuery {
+func NewHistogramFilterQueryFromWorkbook(v api1.NotebookRid) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "workbook", workbook: &v}
 }
 
-func NewHistogramFilterQueryFromDataReview(v api.DataReviewRid) HistogramFilterQuery {
+func NewHistogramFilterQueryFromDataReview(v api1.DataReviewRid) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "dataReview", dataReview: &v}
 }
 
@@ -1161,7 +1375,7 @@ func NewHistogramFilterQueryFromOriginType(v SearchEventOriginType) HistogramFil
 	return HistogramFilterQuery{typ: "originType", originType: &v}
 }
 
-func NewHistogramFilterQueryFromDataReviewCheck(v api.CheckRid) HistogramFilterQuery {
+func NewHistogramFilterQueryFromDataReviewCheck(v api1.CheckRid) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "dataReviewCheck", dataReviewCheck: &v}
 }
 
@@ -1169,11 +1383,11 @@ func NewHistogramFilterQueryFromDispositionStatus(v EventDispositionStatus) Hist
 	return HistogramFilterQuery{typ: "dispositionStatus", dispositionStatus: &v}
 }
 
-func NewHistogramFilterQueryFromPriority(v api1.Priority) HistogramFilterQuery {
+func NewHistogramFilterQueryFromPriority(v api2.Priority) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "priority", priority: &v}
 }
 
-func NewHistogramFilterQueryFromAssignee(v api.UserRid) HistogramFilterQuery {
+func NewHistogramFilterQueryFromAssignee(v api1.UserRid) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "assignee", assignee: &v}
 }
 
@@ -1181,15 +1395,15 @@ func NewHistogramFilterQueryFromEventType(v EventType) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "eventType", eventType: &v}
 }
 
-func NewHistogramFilterQueryFromCreatedBy(v api.UserRid) HistogramFilterQuery {
+func NewHistogramFilterQueryFromCreatedBy(v api1.UserRid) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "createdBy", createdBy: &v}
 }
 
-func NewHistogramFilterQueryFromLabel(v api2.Label) HistogramFilterQuery {
+func NewHistogramFilterQueryFromLabel(v api3.Label) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "label", label: &v}
 }
 
-func NewHistogramFilterQueryFromProperty(v api2.Property) HistogramFilterQuery {
+func NewHistogramFilterQueryFromProperty(v api3.Property) HistogramFilterQuery {
 	return HistogramFilterQuery{typ: "property", property: &v}
 }
 
@@ -1222,69 +1436,105 @@ func NewHistogramFilterQueryFromStepId(v string) HistogramFilterQuery {
 }
 
 type SearchQuery struct {
-	typ                string
-	searchText         *string
-	after              *api2.Timestamp
-	before             *api2.Timestamp
-	advancedTimeFilter *EventTimeFilter
-	asset              *api.AssetRid
-	template           *api.TemplateRid
-	workbook           *api.NotebookRid
-	dataReview         *api.DataReviewRid
-	originType         *SearchEventOriginType
-	dataReviewCheck    *api.CheckRid
-	dispositionStatus  *EventDispositionStatus
-	priority           *api1.Priority
-	assignee           *api.UserRid
-	eventType          *EventType
-	createdBy          *api.UserRid
-	label              *api2.Label
-	property           *api2.Property
-	and                *[]SearchQuery
-	or                 *[]SearchQuery
-	not                *SearchQuery
-	workspace          *rids.WorkspaceRid
-	procedure          *rids.ProcedureRid
-	procedureExecution *rids.ProcedureExecutionRid
-	stepId             *string
+	typ                 string
+	archived            *bool
+	searchText          *string
+	after               *api3.Timestamp
+	before              *api3.Timestamp
+	advancedTimeFilter  *EventTimeFilter
+	asset               *api1.AssetRid
+	assets              *AssetsFilter
+	template            *api1.TemplateRid
+	workbook            *api1.NotebookRid
+	dataReview          *api1.DataReviewRid
+	dataReviews         *DataReviewsFilter
+	originType          *SearchEventOriginType
+	originTypes         *OriginTypesFilter
+	dataReviewCheck     *api1.CheckRid
+	dataReviewChecks    *DataReviewChecksFilter
+	dispositionStatus   *EventDispositionStatus
+	dispositionStatuses *[]EventDispositionStatus
+	priority            *api2.Priority
+	priorities          *[]api2.Priority
+	assignee            *api1.UserRid
+	assignees           *AssigneesFilter
+	eventType           *EventType
+	eventTypes          *[]EventType
+	createdBy           *api1.UserRid
+	createdByAnyOf      *[]api1.UserRid
+	label               *api3.Label
+	labels              *api1.LabelsFilter
+	property            *api3.Property
+	properties          *api1.PropertiesFilter
+	and                 *[]SearchQuery
+	or                  *[]SearchQuery
+	not                 *SearchQuery
+	workspace           *rids.WorkspaceRid
+	procedure           *rids.ProcedureRid
+	procedureExecution  *rids.ProcedureExecutionRid
+	stepId              *string
+	streamingChecklist  *api1.ChecklistRid
+	streamingCheck      *api1.CheckRid
 }
 
 type searchQueryDeserializer struct {
-	Type               string                      `json:"type"`
-	SearchText         *string                     `json:"searchText"`
-	After              *api2.Timestamp             `json:"after"`
-	Before             *api2.Timestamp             `json:"before"`
-	AdvancedTimeFilter *EventTimeFilter            `json:"advancedTimeFilter"`
-	Asset              *api.AssetRid               `json:"asset"`
-	Template           *api.TemplateRid            `json:"template"`
-	Workbook           *api.NotebookRid            `json:"workbook"`
-	DataReview         *api.DataReviewRid          `json:"dataReview"`
-	OriginType         *SearchEventOriginType      `json:"originType"`
-	DataReviewCheck    *api.CheckRid               `json:"dataReviewCheck"`
-	DispositionStatus  *EventDispositionStatus     `json:"dispositionStatus"`
-	Priority           *api1.Priority              `json:"priority"`
-	Assignee           *api.UserRid                `json:"assignee"`
-	EventType          *EventType                  `json:"eventType"`
-	CreatedBy          *api.UserRid                `json:"createdBy"`
-	Label              *api2.Label                 `json:"label"`
-	Property           *api2.Property              `json:"property"`
-	And                *[]SearchQuery              `json:"and"`
-	Or                 *[]SearchQuery              `json:"or"`
-	Not                *SearchQuery                `json:"not"`
-	Workspace          *rids.WorkspaceRid          `json:"workspace"`
-	Procedure          *rids.ProcedureRid          `json:"procedure"`
-	ProcedureExecution *rids.ProcedureExecutionRid `json:"procedureExecution"`
-	StepId             *string                     `json:"stepId"`
+	Type                string                      `json:"type"`
+	Archived            *bool                       `json:"archived"`
+	SearchText          *string                     `json:"searchText"`
+	After               *api3.Timestamp             `json:"after"`
+	Before              *api3.Timestamp             `json:"before"`
+	AdvancedTimeFilter  *EventTimeFilter            `json:"advancedTimeFilter"`
+	Asset               *api1.AssetRid              `json:"asset"`
+	Assets              *AssetsFilter               `json:"assets"`
+	Template            *api1.TemplateRid           `json:"template"`
+	Workbook            *api1.NotebookRid           `json:"workbook"`
+	DataReview          *api1.DataReviewRid         `json:"dataReview"`
+	DataReviews         *DataReviewsFilter          `json:"dataReviews"`
+	OriginType          *SearchEventOriginType      `json:"originType"`
+	OriginTypes         *OriginTypesFilter          `json:"originTypes"`
+	DataReviewCheck     *api1.CheckRid              `json:"dataReviewCheck"`
+	DataReviewChecks    *DataReviewChecksFilter     `json:"dataReviewChecks"`
+	DispositionStatus   *EventDispositionStatus     `json:"dispositionStatus"`
+	DispositionStatuses *[]EventDispositionStatus   `json:"dispositionStatuses"`
+	Priority            *api2.Priority              `json:"priority"`
+	Priorities          *[]api2.Priority            `json:"priorities"`
+	Assignee            *api1.UserRid               `json:"assignee"`
+	Assignees           *AssigneesFilter            `json:"assignees"`
+	EventType           *EventType                  `json:"eventType"`
+	EventTypes          *[]EventType                `json:"eventTypes"`
+	CreatedBy           *api1.UserRid               `json:"createdBy"`
+	CreatedByAnyOf      *[]api1.UserRid             `json:"createdByAnyOf"`
+	Label               *api3.Label                 `json:"label"`
+	Labels              *api1.LabelsFilter          `json:"labels"`
+	Property            *api3.Property              `json:"property"`
+	Properties          *api1.PropertiesFilter      `json:"properties"`
+	And                 *[]SearchQuery              `json:"and"`
+	Or                  *[]SearchQuery              `json:"or"`
+	Not                 *SearchQuery                `json:"not"`
+	Workspace           *rids.WorkspaceRid          `json:"workspace"`
+	Procedure           *rids.ProcedureRid          `json:"procedure"`
+	ProcedureExecution  *rids.ProcedureExecutionRid `json:"procedureExecution"`
+	StepId              *string                     `json:"stepId"`
+	StreamingChecklist  *api1.ChecklistRid          `json:"streamingChecklist"`
+	StreamingCheck      *api1.CheckRid              `json:"streamingCheck"`
 }
 
 func (u *searchQueryDeserializer) toStruct() SearchQuery {
-	return SearchQuery{typ: u.Type, searchText: u.SearchText, after: u.After, before: u.Before, advancedTimeFilter: u.AdvancedTimeFilter, asset: u.Asset, template: u.Template, workbook: u.Workbook, dataReview: u.DataReview, originType: u.OriginType, dataReviewCheck: u.DataReviewCheck, dispositionStatus: u.DispositionStatus, priority: u.Priority, assignee: u.Assignee, eventType: u.EventType, createdBy: u.CreatedBy, label: u.Label, property: u.Property, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, procedure: u.Procedure, procedureExecution: u.ProcedureExecution, stepId: u.StepId}
+	return SearchQuery{typ: u.Type, archived: u.Archived, searchText: u.SearchText, after: u.After, before: u.Before, advancedTimeFilter: u.AdvancedTimeFilter, asset: u.Asset, assets: u.Assets, template: u.Template, workbook: u.Workbook, dataReview: u.DataReview, dataReviews: u.DataReviews, originType: u.OriginType, originTypes: u.OriginTypes, dataReviewCheck: u.DataReviewCheck, dataReviewChecks: u.DataReviewChecks, dispositionStatus: u.DispositionStatus, dispositionStatuses: u.DispositionStatuses, priority: u.Priority, priorities: u.Priorities, assignee: u.Assignee, assignees: u.Assignees, eventType: u.EventType, eventTypes: u.EventTypes, createdBy: u.CreatedBy, createdByAnyOf: u.CreatedByAnyOf, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, procedure: u.Procedure, procedureExecution: u.ProcedureExecution, stepId: u.StepId, streamingChecklist: u.StreamingChecklist, streamingCheck: u.StreamingCheck}
 }
 
 func (u *SearchQuery) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "archived":
+		if u.archived == nil {
+			return nil, fmt.Errorf("field \"archived\" is required")
+		}
+		return struct {
+			Type     string `json:"type"`
+			Archived bool   `json:"archived"`
+		}{Type: "archived", Archived: *u.archived}, nil
 	case "searchText":
 		if u.searchText == nil {
 			return nil, fmt.Errorf("field \"searchText\" is required")
@@ -1299,7 +1549,7 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type  string         `json:"type"`
-			After api2.Timestamp `json:"after"`
+			After api3.Timestamp `json:"after"`
 		}{Type: "after", After: *u.after}, nil
 	case "before":
 		if u.before == nil {
@@ -1307,7 +1557,7 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type   string         `json:"type"`
-			Before api2.Timestamp `json:"before"`
+			Before api3.Timestamp `json:"before"`
 		}{Type: "before", Before: *u.before}, nil
 	case "advancedTimeFilter":
 		if u.advancedTimeFilter == nil {
@@ -1322,33 +1572,49 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"asset\" is required")
 		}
 		return struct {
-			Type  string       `json:"type"`
-			Asset api.AssetRid `json:"asset"`
+			Type  string        `json:"type"`
+			Asset api1.AssetRid `json:"asset"`
 		}{Type: "asset", Asset: *u.asset}, nil
+	case "assets":
+		if u.assets == nil {
+			return nil, fmt.Errorf("field \"assets\" is required")
+		}
+		return struct {
+			Type   string       `json:"type"`
+			Assets AssetsFilter `json:"assets"`
+		}{Type: "assets", Assets: *u.assets}, nil
 	case "template":
 		if u.template == nil {
 			return nil, fmt.Errorf("field \"template\" is required")
 		}
 		return struct {
-			Type     string          `json:"type"`
-			Template api.TemplateRid `json:"template"`
+			Type     string           `json:"type"`
+			Template api1.TemplateRid `json:"template"`
 		}{Type: "template", Template: *u.template}, nil
 	case "workbook":
 		if u.workbook == nil {
 			return nil, fmt.Errorf("field \"workbook\" is required")
 		}
 		return struct {
-			Type     string          `json:"type"`
-			Workbook api.NotebookRid `json:"workbook"`
+			Type     string           `json:"type"`
+			Workbook api1.NotebookRid `json:"workbook"`
 		}{Type: "workbook", Workbook: *u.workbook}, nil
 	case "dataReview":
 		if u.dataReview == nil {
 			return nil, fmt.Errorf("field \"dataReview\" is required")
 		}
 		return struct {
-			Type       string            `json:"type"`
-			DataReview api.DataReviewRid `json:"dataReview"`
+			Type       string             `json:"type"`
+			DataReview api1.DataReviewRid `json:"dataReview"`
 		}{Type: "dataReview", DataReview: *u.dataReview}, nil
+	case "dataReviews":
+		if u.dataReviews == nil {
+			return nil, fmt.Errorf("field \"dataReviews\" is required")
+		}
+		return struct {
+			Type        string            `json:"type"`
+			DataReviews DataReviewsFilter `json:"dataReviews"`
+		}{Type: "dataReviews", DataReviews: *u.dataReviews}, nil
 	case "originType":
 		if u.originType == nil {
 			return nil, fmt.Errorf("field \"originType\" is required")
@@ -1357,14 +1623,30 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type       string                `json:"type"`
 			OriginType SearchEventOriginType `json:"originType"`
 		}{Type: "originType", OriginType: *u.originType}, nil
+	case "originTypes":
+		if u.originTypes == nil {
+			return nil, fmt.Errorf("field \"originTypes\" is required")
+		}
+		return struct {
+			Type        string            `json:"type"`
+			OriginTypes OriginTypesFilter `json:"originTypes"`
+		}{Type: "originTypes", OriginTypes: *u.originTypes}, nil
 	case "dataReviewCheck":
 		if u.dataReviewCheck == nil {
 			return nil, fmt.Errorf("field \"dataReviewCheck\" is required")
 		}
 		return struct {
-			Type            string       `json:"type"`
-			DataReviewCheck api.CheckRid `json:"dataReviewCheck"`
+			Type            string        `json:"type"`
+			DataReviewCheck api1.CheckRid `json:"dataReviewCheck"`
 		}{Type: "dataReviewCheck", DataReviewCheck: *u.dataReviewCheck}, nil
+	case "dataReviewChecks":
+		if u.dataReviewChecks == nil {
+			return nil, fmt.Errorf("field \"dataReviewChecks\" is required")
+		}
+		return struct {
+			Type             string                 `json:"type"`
+			DataReviewChecks DataReviewChecksFilter `json:"dataReviewChecks"`
+		}{Type: "dataReviewChecks", DataReviewChecks: *u.dataReviewChecks}, nil
 	case "dispositionStatus":
 		if u.dispositionStatus == nil {
 			return nil, fmt.Errorf("field \"dispositionStatus\" is required")
@@ -1373,22 +1655,46 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type              string                 `json:"type"`
 			DispositionStatus EventDispositionStatus `json:"dispositionStatus"`
 		}{Type: "dispositionStatus", DispositionStatus: *u.dispositionStatus}, nil
+	case "dispositionStatuses":
+		if u.dispositionStatuses == nil {
+			return nil, fmt.Errorf("field \"dispositionStatuses\" is required")
+		}
+		return struct {
+			Type                string                   `json:"type"`
+			DispositionStatuses []EventDispositionStatus `json:"dispositionStatuses"`
+		}{Type: "dispositionStatuses", DispositionStatuses: *u.dispositionStatuses}, nil
 	case "priority":
 		if u.priority == nil {
 			return nil, fmt.Errorf("field \"priority\" is required")
 		}
 		return struct {
 			Type     string        `json:"type"`
-			Priority api1.Priority `json:"priority"`
+			Priority api2.Priority `json:"priority"`
 		}{Type: "priority", Priority: *u.priority}, nil
+	case "priorities":
+		if u.priorities == nil {
+			return nil, fmt.Errorf("field \"priorities\" is required")
+		}
+		return struct {
+			Type       string          `json:"type"`
+			Priorities []api2.Priority `json:"priorities"`
+		}{Type: "priorities", Priorities: *u.priorities}, nil
 	case "assignee":
 		if u.assignee == nil {
 			return nil, fmt.Errorf("field \"assignee\" is required")
 		}
 		return struct {
-			Type     string      `json:"type"`
-			Assignee api.UserRid `json:"assignee"`
+			Type     string       `json:"type"`
+			Assignee api1.UserRid `json:"assignee"`
 		}{Type: "assignee", Assignee: *u.assignee}, nil
+	case "assignees":
+		if u.assignees == nil {
+			return nil, fmt.Errorf("field \"assignees\" is required")
+		}
+		return struct {
+			Type      string          `json:"type"`
+			Assignees AssigneesFilter `json:"assignees"`
+		}{Type: "assignees", Assignees: *u.assignees}, nil
 	case "eventType":
 		if u.eventType == nil {
 			return nil, fmt.Errorf("field \"eventType\" is required")
@@ -1397,30 +1703,62 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type      string    `json:"type"`
 			EventType EventType `json:"eventType"`
 		}{Type: "eventType", EventType: *u.eventType}, nil
+	case "eventTypes":
+		if u.eventTypes == nil {
+			return nil, fmt.Errorf("field \"eventTypes\" is required")
+		}
+		return struct {
+			Type       string      `json:"type"`
+			EventTypes []EventType `json:"eventTypes"`
+		}{Type: "eventTypes", EventTypes: *u.eventTypes}, nil
 	case "createdBy":
 		if u.createdBy == nil {
 			return nil, fmt.Errorf("field \"createdBy\" is required")
 		}
 		return struct {
-			Type      string      `json:"type"`
-			CreatedBy api.UserRid `json:"createdBy"`
+			Type      string       `json:"type"`
+			CreatedBy api1.UserRid `json:"createdBy"`
 		}{Type: "createdBy", CreatedBy: *u.createdBy}, nil
+	case "createdByAnyOf":
+		if u.createdByAnyOf == nil {
+			return nil, fmt.Errorf("field \"createdByAnyOf\" is required")
+		}
+		return struct {
+			Type           string         `json:"type"`
+			CreatedByAnyOf []api1.UserRid `json:"createdByAnyOf"`
+		}{Type: "createdByAnyOf", CreatedByAnyOf: *u.createdByAnyOf}, nil
 	case "label":
 		if u.label == nil {
 			return nil, fmt.Errorf("field \"label\" is required")
 		}
 		return struct {
 			Type  string     `json:"type"`
-			Label api2.Label `json:"label"`
+			Label api3.Label `json:"label"`
 		}{Type: "label", Label: *u.label}, nil
+	case "labels":
+		if u.labels == nil {
+			return nil, fmt.Errorf("field \"labels\" is required")
+		}
+		return struct {
+			Type   string            `json:"type"`
+			Labels api1.LabelsFilter `json:"labels"`
+		}{Type: "labels", Labels: *u.labels}, nil
 	case "property":
 		if u.property == nil {
 			return nil, fmt.Errorf("field \"property\" is required")
 		}
 		return struct {
 			Type     string        `json:"type"`
-			Property api2.Property `json:"property"`
+			Property api3.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "properties":
+		if u.properties == nil {
+			return nil, fmt.Errorf("field \"properties\" is required")
+		}
+		return struct {
+			Type       string                `json:"type"`
+			Properties api1.PropertiesFilter `json:"properties"`
+		}{Type: "properties", Properties: *u.properties}, nil
 	case "and":
 		if u.and == nil {
 			return nil, fmt.Errorf("field \"and\" is required")
@@ -1477,6 +1815,22 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type   string `json:"type"`
 			StepId string `json:"stepId"`
 		}{Type: "stepId", StepId: *u.stepId}, nil
+	case "streamingChecklist":
+		if u.streamingChecklist == nil {
+			return nil, fmt.Errorf("field \"streamingChecklist\" is required")
+		}
+		return struct {
+			Type               string            `json:"type"`
+			StreamingChecklist api1.ChecklistRid `json:"streamingChecklist"`
+		}{Type: "streamingChecklist", StreamingChecklist: *u.streamingChecklist}, nil
+	case "streamingCheck":
+		if u.streamingCheck == nil {
+			return nil, fmt.Errorf("field \"streamingCheck\" is required")
+		}
+		return struct {
+			Type           string        `json:"type"`
+			StreamingCheck api1.CheckRid `json:"streamingCheck"`
+		}{Type: "streamingCheck", StreamingCheck: *u.streamingCheck}, nil
 	}
 }
 
@@ -1495,6 +1849,10 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
+		}
 	case "searchText":
 		if u.searchText == nil {
 			return fmt.Errorf("field \"searchText\" is required")
@@ -1515,6 +1873,10 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.asset == nil {
 			return fmt.Errorf("field \"asset\" is required")
 		}
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
 	case "template":
 		if u.template == nil {
 			return fmt.Errorf("field \"template\" is required")
@@ -1527,41 +1889,81 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.dataReview == nil {
 			return fmt.Errorf("field \"dataReview\" is required")
 		}
+	case "dataReviews":
+		if u.dataReviews == nil {
+			return fmt.Errorf("field \"dataReviews\" is required")
+		}
 	case "originType":
 		if u.originType == nil {
 			return fmt.Errorf("field \"originType\" is required")
+		}
+	case "originTypes":
+		if u.originTypes == nil {
+			return fmt.Errorf("field \"originTypes\" is required")
 		}
 	case "dataReviewCheck":
 		if u.dataReviewCheck == nil {
 			return fmt.Errorf("field \"dataReviewCheck\" is required")
 		}
+	case "dataReviewChecks":
+		if u.dataReviewChecks == nil {
+			return fmt.Errorf("field \"dataReviewChecks\" is required")
+		}
 	case "dispositionStatus":
 		if u.dispositionStatus == nil {
 			return fmt.Errorf("field \"dispositionStatus\" is required")
+		}
+	case "dispositionStatuses":
+		if u.dispositionStatuses == nil {
+			return fmt.Errorf("field \"dispositionStatuses\" is required")
 		}
 	case "priority":
 		if u.priority == nil {
 			return fmt.Errorf("field \"priority\" is required")
 		}
+	case "priorities":
+		if u.priorities == nil {
+			return fmt.Errorf("field \"priorities\" is required")
+		}
 	case "assignee":
 		if u.assignee == nil {
 			return fmt.Errorf("field \"assignee\" is required")
+		}
+	case "assignees":
+		if u.assignees == nil {
+			return fmt.Errorf("field \"assignees\" is required")
 		}
 	case "eventType":
 		if u.eventType == nil {
 			return fmt.Errorf("field \"eventType\" is required")
 		}
+	case "eventTypes":
+		if u.eventTypes == nil {
+			return fmt.Errorf("field \"eventTypes\" is required")
+		}
 	case "createdBy":
 		if u.createdBy == nil {
 			return fmt.Errorf("field \"createdBy\" is required")
+		}
+	case "createdByAnyOf":
+		if u.createdByAnyOf == nil {
+			return fmt.Errorf("field \"createdByAnyOf\" is required")
 		}
 	case "label":
 		if u.label == nil {
 			return fmt.Errorf("field \"label\" is required")
 		}
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
+		}
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
 		}
 	case "and":
 		if u.and == nil {
@@ -1591,6 +1993,14 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.stepId == nil {
 			return fmt.Errorf("field \"stepId\" is required")
 		}
+	case "streamingChecklist":
+		if u.streamingChecklist == nil {
+			return fmt.Errorf("field \"streamingChecklist\" is required")
+		}
+	case "streamingCheck":
+		if u.streamingCheck == nil {
+			return fmt.Errorf("field \"streamingCheck\" is required")
+		}
 	}
 	return nil
 }
@@ -1611,13 +2021,18 @@ func (u *SearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchQuery) AcceptFuncs(searchTextFunc func(string) error, afterFunc func(api2.Timestamp) error, beforeFunc func(api2.Timestamp) error, advancedTimeFilterFunc func(EventTimeFilter) error, assetFunc func(api.AssetRid) error, templateFunc func(api.TemplateRid) error, workbookFunc func(api.NotebookRid) error, dataReviewFunc func(api.DataReviewRid) error, originTypeFunc func(SearchEventOriginType) error, dataReviewCheckFunc func(api.CheckRid) error, dispositionStatusFunc func(EventDispositionStatus) error, priorityFunc func(api1.Priority) error, assigneeFunc func(api.UserRid) error, eventTypeFunc func(EventType) error, createdByFunc func(api.UserRid) error, labelFunc func(api2.Label) error, propertyFunc func(api2.Property) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, procedureFunc func(rids.ProcedureRid) error, procedureExecutionFunc func(rids.ProcedureExecutionRid) error, stepIdFunc func(string) error, unknownFunc func(string) error) error {
+func (u *SearchQuery) AcceptFuncs(archivedFunc func(bool) error, searchTextFunc func(string) error, afterFunc func(api3.Timestamp) error, beforeFunc func(api3.Timestamp) error, advancedTimeFilterFunc func(EventTimeFilter) error, assetFunc func(api1.AssetRid) error, assetsFunc func(AssetsFilter) error, templateFunc func(api1.TemplateRid) error, workbookFunc func(api1.NotebookRid) error, dataReviewFunc func(api1.DataReviewRid) error, dataReviewsFunc func(DataReviewsFilter) error, originTypeFunc func(SearchEventOriginType) error, originTypesFunc func(OriginTypesFilter) error, dataReviewCheckFunc func(api1.CheckRid) error, dataReviewChecksFunc func(DataReviewChecksFilter) error, dispositionStatusFunc func(EventDispositionStatus) error, dispositionStatusesFunc func([]EventDispositionStatus) error, priorityFunc func(api2.Priority) error, prioritiesFunc func([]api2.Priority) error, assigneeFunc func(api1.UserRid) error, assigneesFunc func(AssigneesFilter) error, eventTypeFunc func(EventType) error, eventTypesFunc func([]EventType) error, createdByFunc func(api1.UserRid) error, createdByAnyOfFunc func([]api1.UserRid) error, labelFunc func(api3.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api3.Property) error, propertiesFunc func(api1.PropertiesFilter) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, procedureFunc func(rids.ProcedureRid) error, procedureExecutionFunc func(rids.ProcedureExecutionRid) error, stepIdFunc func(string) error, streamingChecklistFunc func(api1.ChecklistRid) error, streamingCheckFunc func(api1.CheckRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
+		}
+		return archivedFunc(*u.archived)
 	case "searchText":
 		if u.searchText == nil {
 			return fmt.Errorf("field \"searchText\" is required")
@@ -1643,6 +2058,11 @@ func (u *SearchQuery) AcceptFuncs(searchTextFunc func(string) error, afterFunc f
 			return fmt.Errorf("field \"asset\" is required")
 		}
 		return assetFunc(*u.asset)
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
+		return assetsFunc(*u.assets)
 	case "template":
 		if u.template == nil {
 			return fmt.Errorf("field \"template\" is required")
@@ -1658,51 +2078,101 @@ func (u *SearchQuery) AcceptFuncs(searchTextFunc func(string) error, afterFunc f
 			return fmt.Errorf("field \"dataReview\" is required")
 		}
 		return dataReviewFunc(*u.dataReview)
+	case "dataReviews":
+		if u.dataReviews == nil {
+			return fmt.Errorf("field \"dataReviews\" is required")
+		}
+		return dataReviewsFunc(*u.dataReviews)
 	case "originType":
 		if u.originType == nil {
 			return fmt.Errorf("field \"originType\" is required")
 		}
 		return originTypeFunc(*u.originType)
+	case "originTypes":
+		if u.originTypes == nil {
+			return fmt.Errorf("field \"originTypes\" is required")
+		}
+		return originTypesFunc(*u.originTypes)
 	case "dataReviewCheck":
 		if u.dataReviewCheck == nil {
 			return fmt.Errorf("field \"dataReviewCheck\" is required")
 		}
 		return dataReviewCheckFunc(*u.dataReviewCheck)
+	case "dataReviewChecks":
+		if u.dataReviewChecks == nil {
+			return fmt.Errorf("field \"dataReviewChecks\" is required")
+		}
+		return dataReviewChecksFunc(*u.dataReviewChecks)
 	case "dispositionStatus":
 		if u.dispositionStatus == nil {
 			return fmt.Errorf("field \"dispositionStatus\" is required")
 		}
 		return dispositionStatusFunc(*u.dispositionStatus)
+	case "dispositionStatuses":
+		if u.dispositionStatuses == nil {
+			return fmt.Errorf("field \"dispositionStatuses\" is required")
+		}
+		return dispositionStatusesFunc(*u.dispositionStatuses)
 	case "priority":
 		if u.priority == nil {
 			return fmt.Errorf("field \"priority\" is required")
 		}
 		return priorityFunc(*u.priority)
+	case "priorities":
+		if u.priorities == nil {
+			return fmt.Errorf("field \"priorities\" is required")
+		}
+		return prioritiesFunc(*u.priorities)
 	case "assignee":
 		if u.assignee == nil {
 			return fmt.Errorf("field \"assignee\" is required")
 		}
 		return assigneeFunc(*u.assignee)
+	case "assignees":
+		if u.assignees == nil {
+			return fmt.Errorf("field \"assignees\" is required")
+		}
+		return assigneesFunc(*u.assignees)
 	case "eventType":
 		if u.eventType == nil {
 			return fmt.Errorf("field \"eventType\" is required")
 		}
 		return eventTypeFunc(*u.eventType)
+	case "eventTypes":
+		if u.eventTypes == nil {
+			return fmt.Errorf("field \"eventTypes\" is required")
+		}
+		return eventTypesFunc(*u.eventTypes)
 	case "createdBy":
 		if u.createdBy == nil {
 			return fmt.Errorf("field \"createdBy\" is required")
 		}
 		return createdByFunc(*u.createdBy)
+	case "createdByAnyOf":
+		if u.createdByAnyOf == nil {
+			return fmt.Errorf("field \"createdByAnyOf\" is required")
+		}
+		return createdByAnyOfFunc(*u.createdByAnyOf)
 	case "label":
 		if u.label == nil {
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -1738,18 +2208,32 @@ func (u *SearchQuery) AcceptFuncs(searchTextFunc func(string) error, afterFunc f
 			return fmt.Errorf("field \"stepId\" is required")
 		}
 		return stepIdFunc(*u.stepId)
+	case "streamingChecklist":
+		if u.streamingChecklist == nil {
+			return fmt.Errorf("field \"streamingChecklist\" is required")
+		}
+		return streamingChecklistFunc(*u.streamingChecklist)
+	case "streamingCheck":
+		if u.streamingCheck == nil {
+			return fmt.Errorf("field \"streamingCheck\" is required")
+		}
+		return streamingCheckFunc(*u.streamingCheck)
 	}
+}
+
+func (u *SearchQuery) ArchivedNoopSuccess(bool) error {
+	return nil
 }
 
 func (u *SearchQuery) SearchTextNoopSuccess(string) error {
 	return nil
 }
 
-func (u *SearchQuery) AfterNoopSuccess(api2.Timestamp) error {
+func (u *SearchQuery) AfterNoopSuccess(api3.Timestamp) error {
 	return nil
 }
 
-func (u *SearchQuery) BeforeNoopSuccess(api2.Timestamp) error {
+func (u *SearchQuery) BeforeNoopSuccess(api3.Timestamp) error {
 	return nil
 }
 
@@ -1757,19 +2241,27 @@ func (u *SearchQuery) AdvancedTimeFilterNoopSuccess(EventTimeFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) AssetNoopSuccess(api.AssetRid) error {
+func (u *SearchQuery) AssetNoopSuccess(api1.AssetRid) error {
 	return nil
 }
 
-func (u *SearchQuery) TemplateNoopSuccess(api.TemplateRid) error {
+func (u *SearchQuery) AssetsNoopSuccess(AssetsFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) WorkbookNoopSuccess(api.NotebookRid) error {
+func (u *SearchQuery) TemplateNoopSuccess(api1.TemplateRid) error {
 	return nil
 }
 
-func (u *SearchQuery) DataReviewNoopSuccess(api.DataReviewRid) error {
+func (u *SearchQuery) WorkbookNoopSuccess(api1.NotebookRid) error {
+	return nil
+}
+
+func (u *SearchQuery) DataReviewNoopSuccess(api1.DataReviewRid) error {
+	return nil
+}
+
+func (u *SearchQuery) DataReviewsNoopSuccess(DataReviewsFilter) error {
 	return nil
 }
 
@@ -1777,7 +2269,15 @@ func (u *SearchQuery) OriginTypeNoopSuccess(SearchEventOriginType) error {
 	return nil
 }
 
-func (u *SearchQuery) DataReviewCheckNoopSuccess(api.CheckRid) error {
+func (u *SearchQuery) OriginTypesNoopSuccess(OriginTypesFilter) error {
+	return nil
+}
+
+func (u *SearchQuery) DataReviewCheckNoopSuccess(api1.CheckRid) error {
+	return nil
+}
+
+func (u *SearchQuery) DataReviewChecksNoopSuccess(DataReviewChecksFilter) error {
 	return nil
 }
 
@@ -1785,11 +2285,23 @@ func (u *SearchQuery) DispositionStatusNoopSuccess(EventDispositionStatus) error
 	return nil
 }
 
-func (u *SearchQuery) PriorityNoopSuccess(api1.Priority) error {
+func (u *SearchQuery) DispositionStatusesNoopSuccess([]EventDispositionStatus) error {
 	return nil
 }
 
-func (u *SearchQuery) AssigneeNoopSuccess(api.UserRid) error {
+func (u *SearchQuery) PriorityNoopSuccess(api2.Priority) error {
+	return nil
+}
+
+func (u *SearchQuery) PrioritiesNoopSuccess([]api2.Priority) error {
+	return nil
+}
+
+func (u *SearchQuery) AssigneeNoopSuccess(api1.UserRid) error {
+	return nil
+}
+
+func (u *SearchQuery) AssigneesNoopSuccess(AssigneesFilter) error {
 	return nil
 }
 
@@ -1797,15 +2309,31 @@ func (u *SearchQuery) EventTypeNoopSuccess(EventType) error {
 	return nil
 }
 
-func (u *SearchQuery) CreatedByNoopSuccess(api.UserRid) error {
+func (u *SearchQuery) EventTypesNoopSuccess([]EventType) error {
 	return nil
 }
 
-func (u *SearchQuery) LabelNoopSuccess(api2.Label) error {
+func (u *SearchQuery) CreatedByNoopSuccess(api1.UserRid) error {
 	return nil
 }
 
-func (u *SearchQuery) PropertyNoopSuccess(api2.Property) error {
+func (u *SearchQuery) CreatedByAnyOfNoopSuccess([]api1.UserRid) error {
+	return nil
+}
+
+func (u *SearchQuery) LabelNoopSuccess(api3.Label) error {
+	return nil
+}
+
+func (u *SearchQuery) LabelsNoopSuccess(api1.LabelsFilter) error {
+	return nil
+}
+
+func (u *SearchQuery) PropertyNoopSuccess(api3.Property) error {
+	return nil
+}
+
+func (u *SearchQuery) PropertiesNoopSuccess(api1.PropertiesFilter) error {
 	return nil
 }
 
@@ -1837,6 +2365,14 @@ func (u *SearchQuery) StepIdNoopSuccess(string) error {
 	return nil
 }
 
+func (u *SearchQuery) StreamingChecklistNoopSuccess(api1.ChecklistRid) error {
+	return nil
+}
+
+func (u *SearchQuery) StreamingCheckNoopSuccess(api1.CheckRid) error {
+	return nil
+}
+
 func (u *SearchQuery) ErrorOnUnknown(typeName string) error {
 	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
@@ -1848,6 +2384,11 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
+		}
+		return v.VisitArchived(*u.archived)
 	case "searchText":
 		if u.searchText == nil {
 			return fmt.Errorf("field \"searchText\" is required")
@@ -1873,6 +2414,11 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"asset\" is required")
 		}
 		return v.VisitAsset(*u.asset)
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
+		return v.VisitAssets(*u.assets)
 	case "template":
 		if u.template == nil {
 			return fmt.Errorf("field \"template\" is required")
@@ -1888,51 +2434,101 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"dataReview\" is required")
 		}
 		return v.VisitDataReview(*u.dataReview)
+	case "dataReviews":
+		if u.dataReviews == nil {
+			return fmt.Errorf("field \"dataReviews\" is required")
+		}
+		return v.VisitDataReviews(*u.dataReviews)
 	case "originType":
 		if u.originType == nil {
 			return fmt.Errorf("field \"originType\" is required")
 		}
 		return v.VisitOriginType(*u.originType)
+	case "originTypes":
+		if u.originTypes == nil {
+			return fmt.Errorf("field \"originTypes\" is required")
+		}
+		return v.VisitOriginTypes(*u.originTypes)
 	case "dataReviewCheck":
 		if u.dataReviewCheck == nil {
 			return fmt.Errorf("field \"dataReviewCheck\" is required")
 		}
 		return v.VisitDataReviewCheck(*u.dataReviewCheck)
+	case "dataReviewChecks":
+		if u.dataReviewChecks == nil {
+			return fmt.Errorf("field \"dataReviewChecks\" is required")
+		}
+		return v.VisitDataReviewChecks(*u.dataReviewChecks)
 	case "dispositionStatus":
 		if u.dispositionStatus == nil {
 			return fmt.Errorf("field \"dispositionStatus\" is required")
 		}
 		return v.VisitDispositionStatus(*u.dispositionStatus)
+	case "dispositionStatuses":
+		if u.dispositionStatuses == nil {
+			return fmt.Errorf("field \"dispositionStatuses\" is required")
+		}
+		return v.VisitDispositionStatuses(*u.dispositionStatuses)
 	case "priority":
 		if u.priority == nil {
 			return fmt.Errorf("field \"priority\" is required")
 		}
 		return v.VisitPriority(*u.priority)
+	case "priorities":
+		if u.priorities == nil {
+			return fmt.Errorf("field \"priorities\" is required")
+		}
+		return v.VisitPriorities(*u.priorities)
 	case "assignee":
 		if u.assignee == nil {
 			return fmt.Errorf("field \"assignee\" is required")
 		}
 		return v.VisitAssignee(*u.assignee)
+	case "assignees":
+		if u.assignees == nil {
+			return fmt.Errorf("field \"assignees\" is required")
+		}
+		return v.VisitAssignees(*u.assignees)
 	case "eventType":
 		if u.eventType == nil {
 			return fmt.Errorf("field \"eventType\" is required")
 		}
 		return v.VisitEventType(*u.eventType)
+	case "eventTypes":
+		if u.eventTypes == nil {
+			return fmt.Errorf("field \"eventTypes\" is required")
+		}
+		return v.VisitEventTypes(*u.eventTypes)
 	case "createdBy":
 		if u.createdBy == nil {
 			return fmt.Errorf("field \"createdBy\" is required")
 		}
 		return v.VisitCreatedBy(*u.createdBy)
+	case "createdByAnyOf":
+		if u.createdByAnyOf == nil {
+			return fmt.Errorf("field \"createdByAnyOf\" is required")
+		}
+		return v.VisitCreatedByAnyOf(*u.createdByAnyOf)
 	case "label":
 		if u.label == nil {
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(*u.properties)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -1968,27 +2564,49 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"stepId\" is required")
 		}
 		return v.VisitStepId(*u.stepId)
+	case "streamingChecklist":
+		if u.streamingChecklist == nil {
+			return fmt.Errorf("field \"streamingChecklist\" is required")
+		}
+		return v.VisitStreamingChecklist(*u.streamingChecklist)
+	case "streamingCheck":
+		if u.streamingCheck == nil {
+			return fmt.Errorf("field \"streamingCheck\" is required")
+		}
+		return v.VisitStreamingCheck(*u.streamingCheck)
 	}
 }
 
 type SearchQueryVisitor interface {
+	VisitArchived(v bool) error
 	VisitSearchText(v string) error
-	VisitAfter(v api2.Timestamp) error
-	VisitBefore(v api2.Timestamp) error
+	VisitAfter(v api3.Timestamp) error
+	VisitBefore(v api3.Timestamp) error
 	VisitAdvancedTimeFilter(v EventTimeFilter) error
-	VisitAsset(v api.AssetRid) error
-	VisitTemplate(v api.TemplateRid) error
-	VisitWorkbook(v api.NotebookRid) error
-	VisitDataReview(v api.DataReviewRid) error
+	VisitAsset(v api1.AssetRid) error
+	VisitAssets(v AssetsFilter) error
+	VisitTemplate(v api1.TemplateRid) error
+	VisitWorkbook(v api1.NotebookRid) error
+	VisitDataReview(v api1.DataReviewRid) error
+	VisitDataReviews(v DataReviewsFilter) error
 	VisitOriginType(v SearchEventOriginType) error
-	VisitDataReviewCheck(v api.CheckRid) error
+	VisitOriginTypes(v OriginTypesFilter) error
+	VisitDataReviewCheck(v api1.CheckRid) error
+	VisitDataReviewChecks(v DataReviewChecksFilter) error
 	VisitDispositionStatus(v EventDispositionStatus) error
-	VisitPriority(v api1.Priority) error
-	VisitAssignee(v api.UserRid) error
+	VisitDispositionStatuses(v []EventDispositionStatus) error
+	VisitPriority(v api2.Priority) error
+	VisitPriorities(v []api2.Priority) error
+	VisitAssignee(v api1.UserRid) error
+	VisitAssignees(v AssigneesFilter) error
 	VisitEventType(v EventType) error
-	VisitCreatedBy(v api.UserRid) error
-	VisitLabel(v api2.Label) error
-	VisitProperty(v api2.Property) error
+	VisitEventTypes(v []EventType) error
+	VisitCreatedBy(v api1.UserRid) error
+	VisitCreatedByAnyOf(v []api1.UserRid) error
+	VisitLabel(v api3.Label) error
+	VisitLabels(v api1.LabelsFilter) error
+	VisitProperty(v api3.Property) error
+	VisitProperties(v api1.PropertiesFilter) error
 	VisitAnd(v []SearchQuery) error
 	VisitOr(v []SearchQuery) error
 	VisitNot(v SearchQuery) error
@@ -1996,6 +2614,8 @@ type SearchQueryVisitor interface {
 	VisitProcedure(v rids.ProcedureRid) error
 	VisitProcedureExecution(v rids.ProcedureExecutionRid) error
 	VisitStepId(v string) error
+	VisitStreamingChecklist(v api1.ChecklistRid) error
+	VisitStreamingCheck(v api1.CheckRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2006,6 +2626,11 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
+		}
+		return v.VisitArchivedWithContext(ctx, *u.archived)
 	case "searchText":
 		if u.searchText == nil {
 			return fmt.Errorf("field \"searchText\" is required")
@@ -2031,6 +2656,11 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"asset\" is required")
 		}
 		return v.VisitAssetWithContext(ctx, *u.asset)
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
+		return v.VisitAssetsWithContext(ctx, *u.assets)
 	case "template":
 		if u.template == nil {
 			return fmt.Errorf("field \"template\" is required")
@@ -2046,51 +2676,101 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"dataReview\" is required")
 		}
 		return v.VisitDataReviewWithContext(ctx, *u.dataReview)
+	case "dataReviews":
+		if u.dataReviews == nil {
+			return fmt.Errorf("field \"dataReviews\" is required")
+		}
+		return v.VisitDataReviewsWithContext(ctx, *u.dataReviews)
 	case "originType":
 		if u.originType == nil {
 			return fmt.Errorf("field \"originType\" is required")
 		}
 		return v.VisitOriginTypeWithContext(ctx, *u.originType)
+	case "originTypes":
+		if u.originTypes == nil {
+			return fmt.Errorf("field \"originTypes\" is required")
+		}
+		return v.VisitOriginTypesWithContext(ctx, *u.originTypes)
 	case "dataReviewCheck":
 		if u.dataReviewCheck == nil {
 			return fmt.Errorf("field \"dataReviewCheck\" is required")
 		}
 		return v.VisitDataReviewCheckWithContext(ctx, *u.dataReviewCheck)
+	case "dataReviewChecks":
+		if u.dataReviewChecks == nil {
+			return fmt.Errorf("field \"dataReviewChecks\" is required")
+		}
+		return v.VisitDataReviewChecksWithContext(ctx, *u.dataReviewChecks)
 	case "dispositionStatus":
 		if u.dispositionStatus == nil {
 			return fmt.Errorf("field \"dispositionStatus\" is required")
 		}
 		return v.VisitDispositionStatusWithContext(ctx, *u.dispositionStatus)
+	case "dispositionStatuses":
+		if u.dispositionStatuses == nil {
+			return fmt.Errorf("field \"dispositionStatuses\" is required")
+		}
+		return v.VisitDispositionStatusesWithContext(ctx, *u.dispositionStatuses)
 	case "priority":
 		if u.priority == nil {
 			return fmt.Errorf("field \"priority\" is required")
 		}
 		return v.VisitPriorityWithContext(ctx, *u.priority)
+	case "priorities":
+		if u.priorities == nil {
+			return fmt.Errorf("field \"priorities\" is required")
+		}
+		return v.VisitPrioritiesWithContext(ctx, *u.priorities)
 	case "assignee":
 		if u.assignee == nil {
 			return fmt.Errorf("field \"assignee\" is required")
 		}
 		return v.VisitAssigneeWithContext(ctx, *u.assignee)
+	case "assignees":
+		if u.assignees == nil {
+			return fmt.Errorf("field \"assignees\" is required")
+		}
+		return v.VisitAssigneesWithContext(ctx, *u.assignees)
 	case "eventType":
 		if u.eventType == nil {
 			return fmt.Errorf("field \"eventType\" is required")
 		}
 		return v.VisitEventTypeWithContext(ctx, *u.eventType)
+	case "eventTypes":
+		if u.eventTypes == nil {
+			return fmt.Errorf("field \"eventTypes\" is required")
+		}
+		return v.VisitEventTypesWithContext(ctx, *u.eventTypes)
 	case "createdBy":
 		if u.createdBy == nil {
 			return fmt.Errorf("field \"createdBy\" is required")
 		}
 		return v.VisitCreatedByWithContext(ctx, *u.createdBy)
+	case "createdByAnyOf":
+		if u.createdByAnyOf == nil {
+			return fmt.Errorf("field \"createdByAnyOf\" is required")
+		}
+		return v.VisitCreatedByAnyOfWithContext(ctx, *u.createdByAnyOf)
 	case "label":
 		if u.label == nil {
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabelWithContext(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabelsWithContext(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitPropertiesWithContext(ctx, *u.properties)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -2126,27 +2806,49 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"stepId\" is required")
 		}
 		return v.VisitStepIdWithContext(ctx, *u.stepId)
+	case "streamingChecklist":
+		if u.streamingChecklist == nil {
+			return fmt.Errorf("field \"streamingChecklist\" is required")
+		}
+		return v.VisitStreamingChecklistWithContext(ctx, *u.streamingChecklist)
+	case "streamingCheck":
+		if u.streamingCheck == nil {
+			return fmt.Errorf("field \"streamingCheck\" is required")
+		}
+		return v.VisitStreamingCheckWithContext(ctx, *u.streamingCheck)
 	}
 }
 
 type SearchQueryVisitorWithContext interface {
+	VisitArchivedWithContext(ctx context.Context, v bool) error
 	VisitSearchTextWithContext(ctx context.Context, v string) error
-	VisitAfterWithContext(ctx context.Context, v api2.Timestamp) error
-	VisitBeforeWithContext(ctx context.Context, v api2.Timestamp) error
+	VisitAfterWithContext(ctx context.Context, v api3.Timestamp) error
+	VisitBeforeWithContext(ctx context.Context, v api3.Timestamp) error
 	VisitAdvancedTimeFilterWithContext(ctx context.Context, v EventTimeFilter) error
-	VisitAssetWithContext(ctx context.Context, v api.AssetRid) error
-	VisitTemplateWithContext(ctx context.Context, v api.TemplateRid) error
-	VisitWorkbookWithContext(ctx context.Context, v api.NotebookRid) error
-	VisitDataReviewWithContext(ctx context.Context, v api.DataReviewRid) error
+	VisitAssetWithContext(ctx context.Context, v api1.AssetRid) error
+	VisitAssetsWithContext(ctx context.Context, v AssetsFilter) error
+	VisitTemplateWithContext(ctx context.Context, v api1.TemplateRid) error
+	VisitWorkbookWithContext(ctx context.Context, v api1.NotebookRid) error
+	VisitDataReviewWithContext(ctx context.Context, v api1.DataReviewRid) error
+	VisitDataReviewsWithContext(ctx context.Context, v DataReviewsFilter) error
 	VisitOriginTypeWithContext(ctx context.Context, v SearchEventOriginType) error
-	VisitDataReviewCheckWithContext(ctx context.Context, v api.CheckRid) error
+	VisitOriginTypesWithContext(ctx context.Context, v OriginTypesFilter) error
+	VisitDataReviewCheckWithContext(ctx context.Context, v api1.CheckRid) error
+	VisitDataReviewChecksWithContext(ctx context.Context, v DataReviewChecksFilter) error
 	VisitDispositionStatusWithContext(ctx context.Context, v EventDispositionStatus) error
-	VisitPriorityWithContext(ctx context.Context, v api1.Priority) error
-	VisitAssigneeWithContext(ctx context.Context, v api.UserRid) error
+	VisitDispositionStatusesWithContext(ctx context.Context, v []EventDispositionStatus) error
+	VisitPriorityWithContext(ctx context.Context, v api2.Priority) error
+	VisitPrioritiesWithContext(ctx context.Context, v []api2.Priority) error
+	VisitAssigneeWithContext(ctx context.Context, v api1.UserRid) error
+	VisitAssigneesWithContext(ctx context.Context, v AssigneesFilter) error
 	VisitEventTypeWithContext(ctx context.Context, v EventType) error
-	VisitCreatedByWithContext(ctx context.Context, v api.UserRid) error
-	VisitLabelWithContext(ctx context.Context, v api2.Label) error
-	VisitPropertyWithContext(ctx context.Context, v api2.Property) error
+	VisitEventTypesWithContext(ctx context.Context, v []EventType) error
+	VisitCreatedByWithContext(ctx context.Context, v api1.UserRid) error
+	VisitCreatedByAnyOfWithContext(ctx context.Context, v []api1.UserRid) error
+	VisitLabelWithContext(ctx context.Context, v api3.Label) error
+	VisitLabelsWithContext(ctx context.Context, v api1.LabelsFilter) error
+	VisitPropertyWithContext(ctx context.Context, v api3.Property) error
+	VisitPropertiesWithContext(ctx context.Context, v api1.PropertiesFilter) error
 	VisitAndWithContext(ctx context.Context, v []SearchQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchQuery) error
 	VisitNotWithContext(ctx context.Context, v SearchQuery) error
@@ -2154,18 +2856,24 @@ type SearchQueryVisitorWithContext interface {
 	VisitProcedureWithContext(ctx context.Context, v rids.ProcedureRid) error
 	VisitProcedureExecutionWithContext(ctx context.Context, v rids.ProcedureExecutionRid) error
 	VisitStepIdWithContext(ctx context.Context, v string) error
+	VisitStreamingChecklistWithContext(ctx context.Context, v api1.ChecklistRid) error
+	VisitStreamingCheckWithContext(ctx context.Context, v api1.CheckRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewSearchQueryFromArchived(v bool) SearchQuery {
+	return SearchQuery{typ: "archived", archived: &v}
 }
 
 func NewSearchQueryFromSearchText(v string) SearchQuery {
 	return SearchQuery{typ: "searchText", searchText: &v}
 }
 
-func NewSearchQueryFromAfter(v api2.Timestamp) SearchQuery {
+func NewSearchQueryFromAfter(v api3.Timestamp) SearchQuery {
 	return SearchQuery{typ: "after", after: &v}
 }
 
-func NewSearchQueryFromBefore(v api2.Timestamp) SearchQuery {
+func NewSearchQueryFromBefore(v api3.Timestamp) SearchQuery {
 	return SearchQuery{typ: "before", before: &v}
 }
 
@@ -2173,56 +2881,100 @@ func NewSearchQueryFromAdvancedTimeFilter(v EventTimeFilter) SearchQuery {
 	return SearchQuery{typ: "advancedTimeFilter", advancedTimeFilter: &v}
 }
 
-func NewSearchQueryFromAsset(v api.AssetRid) SearchQuery {
+func NewSearchQueryFromAsset(v api1.AssetRid) SearchQuery {
 	return SearchQuery{typ: "asset", asset: &v}
 }
 
-func NewSearchQueryFromTemplate(v api.TemplateRid) SearchQuery {
+func NewSearchQueryFromAssets(v AssetsFilter) SearchQuery {
+	return SearchQuery{typ: "assets", assets: &v}
+}
+
+func NewSearchQueryFromTemplate(v api1.TemplateRid) SearchQuery {
 	return SearchQuery{typ: "template", template: &v}
 }
 
-func NewSearchQueryFromWorkbook(v api.NotebookRid) SearchQuery {
+func NewSearchQueryFromWorkbook(v api1.NotebookRid) SearchQuery {
 	return SearchQuery{typ: "workbook", workbook: &v}
 }
 
-func NewSearchQueryFromDataReview(v api.DataReviewRid) SearchQuery {
+func NewSearchQueryFromDataReview(v api1.DataReviewRid) SearchQuery {
 	return SearchQuery{typ: "dataReview", dataReview: &v}
+}
+
+func NewSearchQueryFromDataReviews(v DataReviewsFilter) SearchQuery {
+	return SearchQuery{typ: "dataReviews", dataReviews: &v}
 }
 
 func NewSearchQueryFromOriginType(v SearchEventOriginType) SearchQuery {
 	return SearchQuery{typ: "originType", originType: &v}
 }
 
-func NewSearchQueryFromDataReviewCheck(v api.CheckRid) SearchQuery {
+func NewSearchQueryFromOriginTypes(v OriginTypesFilter) SearchQuery {
+	return SearchQuery{typ: "originTypes", originTypes: &v}
+}
+
+func NewSearchQueryFromDataReviewCheck(v api1.CheckRid) SearchQuery {
 	return SearchQuery{typ: "dataReviewCheck", dataReviewCheck: &v}
+}
+
+func NewSearchQueryFromDataReviewChecks(v DataReviewChecksFilter) SearchQuery {
+	return SearchQuery{typ: "dataReviewChecks", dataReviewChecks: &v}
 }
 
 func NewSearchQueryFromDispositionStatus(v EventDispositionStatus) SearchQuery {
 	return SearchQuery{typ: "dispositionStatus", dispositionStatus: &v}
 }
 
-func NewSearchQueryFromPriority(v api1.Priority) SearchQuery {
+func NewSearchQueryFromDispositionStatuses(v []EventDispositionStatus) SearchQuery {
+	return SearchQuery{typ: "dispositionStatuses", dispositionStatuses: &v}
+}
+
+func NewSearchQueryFromPriority(v api2.Priority) SearchQuery {
 	return SearchQuery{typ: "priority", priority: &v}
 }
 
-func NewSearchQueryFromAssignee(v api.UserRid) SearchQuery {
+func NewSearchQueryFromPriorities(v []api2.Priority) SearchQuery {
+	return SearchQuery{typ: "priorities", priorities: &v}
+}
+
+func NewSearchQueryFromAssignee(v api1.UserRid) SearchQuery {
 	return SearchQuery{typ: "assignee", assignee: &v}
+}
+
+func NewSearchQueryFromAssignees(v AssigneesFilter) SearchQuery {
+	return SearchQuery{typ: "assignees", assignees: &v}
 }
 
 func NewSearchQueryFromEventType(v EventType) SearchQuery {
 	return SearchQuery{typ: "eventType", eventType: &v}
 }
 
-func NewSearchQueryFromCreatedBy(v api.UserRid) SearchQuery {
+func NewSearchQueryFromEventTypes(v []EventType) SearchQuery {
+	return SearchQuery{typ: "eventTypes", eventTypes: &v}
+}
+
+func NewSearchQueryFromCreatedBy(v api1.UserRid) SearchQuery {
 	return SearchQuery{typ: "createdBy", createdBy: &v}
 }
 
-func NewSearchQueryFromLabel(v api2.Label) SearchQuery {
+func NewSearchQueryFromCreatedByAnyOf(v []api1.UserRid) SearchQuery {
+	return SearchQuery{typ: "createdByAnyOf", createdByAnyOf: &v}
+}
+
+func NewSearchQueryFromLabel(v api3.Label) SearchQuery {
 	return SearchQuery{typ: "label", label: &v}
 }
 
-func NewSearchQueryFromProperty(v api2.Property) SearchQuery {
+func NewSearchQueryFromLabels(v api1.LabelsFilter) SearchQuery {
+	return SearchQuery{typ: "labels", labels: &v}
+}
+
+func NewSearchQueryFromProperty(v api3.Property) SearchQuery {
 	return SearchQuery{typ: "property", property: &v}
+}
+
+func NewSearchQueryFromProperties(v api1.PropertiesFilter) SearchQuery {
+	return SearchQuery{typ: "properties", properties: &v}
 }
 
 func NewSearchQueryFromAnd(v []SearchQuery) SearchQuery {
@@ -2251,4 +3003,147 @@ func NewSearchQueryFromProcedureExecution(v rids.ProcedureExecutionRid) SearchQu
 
 func NewSearchQueryFromStepId(v string) SearchQuery {
 	return SearchQuery{typ: "stepId", stepId: &v}
+}
+
+func NewSearchQueryFromStreamingChecklist(v api1.ChecklistRid) SearchQuery {
+	return SearchQuery{typ: "streamingChecklist", streamingChecklist: &v}
+}
+
+func NewSearchQueryFromStreamingCheck(v api1.CheckRid) SearchQuery {
+	return SearchQuery{typ: "streamingCheck", streamingCheck: &v}
+}
+
+type WorkbookDataAssociation struct {
+	typ               string
+	timeSeriesChannel *TimeSeriesChannelAssociation
+}
+
+type workbookDataAssociationDeserializer struct {
+	Type              string                        `json:"type"`
+	TimeSeriesChannel *TimeSeriesChannelAssociation `json:"timeSeriesChannel"`
+}
+
+func (u *workbookDataAssociationDeserializer) toStruct() WorkbookDataAssociation {
+	return WorkbookDataAssociation{typ: u.Type, timeSeriesChannel: u.TimeSeriesChannel}
+}
+
+func (u *WorkbookDataAssociation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "timeSeriesChannel":
+		if u.timeSeriesChannel == nil {
+			return nil, fmt.Errorf("field \"timeSeriesChannel\" is required")
+		}
+		return struct {
+			Type              string                       `json:"type"`
+			TimeSeriesChannel TimeSeriesChannelAssociation `json:"timeSeriesChannel"`
+		}{Type: "timeSeriesChannel", TimeSeriesChannel: *u.timeSeriesChannel}, nil
+	}
+}
+
+func (u WorkbookDataAssociation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *WorkbookDataAssociation) UnmarshalJSON(data []byte) error {
+	var deser workbookDataAssociationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "timeSeriesChannel":
+		if u.timeSeriesChannel == nil {
+			return fmt.Errorf("field \"timeSeriesChannel\" is required")
+		}
+	}
+	return nil
+}
+
+func (u WorkbookDataAssociation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *WorkbookDataAssociation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *WorkbookDataAssociation) AcceptFuncs(timeSeriesChannelFunc func(TimeSeriesChannelAssociation) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "timeSeriesChannel":
+		if u.timeSeriesChannel == nil {
+			return fmt.Errorf("field \"timeSeriesChannel\" is required")
+		}
+		return timeSeriesChannelFunc(*u.timeSeriesChannel)
+	}
+}
+
+func (u *WorkbookDataAssociation) TimeSeriesChannelNoopSuccess(TimeSeriesChannelAssociation) error {
+	return nil
+}
+
+func (u *WorkbookDataAssociation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *WorkbookDataAssociation) Accept(v WorkbookDataAssociationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "timeSeriesChannel":
+		if u.timeSeriesChannel == nil {
+			return fmt.Errorf("field \"timeSeriesChannel\" is required")
+		}
+		return v.VisitTimeSeriesChannel(*u.timeSeriesChannel)
+	}
+}
+
+type WorkbookDataAssociationVisitor interface {
+	VisitTimeSeriesChannel(v TimeSeriesChannelAssociation) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *WorkbookDataAssociation) AcceptWithContext(ctx context.Context, v WorkbookDataAssociationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "timeSeriesChannel":
+		if u.timeSeriesChannel == nil {
+			return fmt.Errorf("field \"timeSeriesChannel\" is required")
+		}
+		return v.VisitTimeSeriesChannelWithContext(ctx, *u.timeSeriesChannel)
+	}
+}
+
+type WorkbookDataAssociationVisitorWithContext interface {
+	VisitTimeSeriesChannelWithContext(ctx context.Context, v TimeSeriesChannelAssociation) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewWorkbookDataAssociationFromTimeSeriesChannel(v TimeSeriesChannelAssociation) WorkbookDataAssociation {
+	return WorkbookDataAssociation{typ: "timeSeriesChannel", timeSeriesChannel: &v}
 }

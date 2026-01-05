@@ -49,10 +49,15 @@ func (u *AggregationTypeWithT[T]) Accept(ctx context.Context, v AggregationTypeV
 			return result, fmt.Errorf("field \"count\" is required")
 		}
 		return v.VisitCount(ctx, *u.count)
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return result, fmt.Errorf("field \"rootMeanSquare\" is required")
+		}
+		return v.VisitRootMeanSquare(ctx, *u.rootMeanSquare)
 	}
 }
 
-func (u *AggregationTypeWithT[T]) AcceptFuncs(maxFunc func(Max) (T, error), minFunc func(Min) (T, error), meanFunc func(Mean) (T, error), standardDeviationFunc func(StandardDeviation) (T, error), countFunc func(Count) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *AggregationTypeWithT[T]) AcceptFuncs(maxFunc func(Max) (T, error), minFunc func(Min) (T, error), meanFunc func(Mean) (T, error), standardDeviationFunc func(StandardDeviation) (T, error), countFunc func(Count) (T, error), rootMeanSquareFunc func(RootMeanSquare) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -85,6 +90,11 @@ func (u *AggregationTypeWithT[T]) AcceptFuncs(maxFunc func(Max) (T, error), minF
 			return result, fmt.Errorf("field \"count\" is required")
 		}
 		return countFunc(*u.count)
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return result, fmt.Errorf("field \"rootMeanSquare\" is required")
+		}
+		return rootMeanSquareFunc(*u.rootMeanSquare)
 	}
 }
 
@@ -113,6 +123,11 @@ func (u *AggregationTypeWithT[T]) CountNoopSuccess(Count) (T, error) {
 	return result, nil
 }
 
+func (u *AggregationTypeWithT[T]) RootMeanSquareNoopSuccess(RootMeanSquare) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *AggregationTypeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -124,6 +139,7 @@ type AggregationTypeVisitorWithT[T any] interface {
 	VisitMean(ctx context.Context, v Mean) (T, error)
 	VisitStandardDeviation(ctx context.Context, v StandardDeviation) (T, error)
 	VisitCount(ctx context.Context, v Count) (T, error)
+	VisitRootMeanSquare(ctx context.Context, v RootMeanSquare) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

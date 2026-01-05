@@ -254,6 +254,76 @@ func (c *containerizedExtractorServiceClientWithTokenProvider) UnarchiveContaine
 	return c.client.UnarchiveContainerizedExtractor(ctx, bearertoken.Token(token), extractorRidArg)
 }
 
+// Public API for querying ingest jobs.
+type IngestJobServiceClient interface {
+	// Returns a single ingest job by RID. Does not include the full ingest request details.
+	GetIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (IngestJob, error)
+}
+
+type ingestJobServiceClient struct {
+	client httpclient.Client
+}
+
+func NewIngestJobServiceClient(client httpclient.Client) IngestJobServiceClient {
+	return &ingestJobServiceClient{client: client}
+}
+
+func (c *ingestJobServiceClient) GetIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (IngestJob, error) {
+	var defaultReturnVal IngestJob
+	var returnVal *IngestJob
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIngestJob"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-job/%s", url.PathEscape(fmt.Sprint(ingestJobRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getIngestJob failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getIngestJob response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+// Public API for querying ingest jobs.
+type IngestJobServiceClientWithAuth interface {
+	// Returns a single ingest job by RID. Does not include the full ingest request details.
+	GetIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error)
+}
+
+func NewIngestJobServiceClientWithAuth(client IngestJobServiceClient, authHeader bearertoken.Token) IngestJobServiceClientWithAuth {
+	return &ingestJobServiceClientWithAuth{client: client, authHeader: authHeader}
+}
+
+type ingestJobServiceClientWithAuth struct {
+	client     IngestJobServiceClient
+	authHeader bearertoken.Token
+}
+
+func (c *ingestJobServiceClientWithAuth) GetIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error) {
+	return c.client.GetIngestJob(ctx, c.authHeader, ingestJobRidArg)
+}
+
+func NewIngestJobServiceClientWithTokenProvider(client IngestJobServiceClient, tokenProvider httpclient.TokenProvider) IngestJobServiceClientWithAuth {
+	return &ingestJobServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
+}
+
+type ingestJobServiceClientWithTokenProvider struct {
+	client        IngestJobServiceClient
+	tokenProvider httpclient.TokenProvider
+}
+
+func (c *ingestJobServiceClientWithTokenProvider) GetIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error) {
+	var defaultReturnVal IngestJob
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetIngestJob(ctx, bearertoken.Token(token), ingestJobRidArg)
+}
+
 // The Ingest Service handles the data ingestion into Nominal/Clickhouse.
 type IngestServiceClient interface {
 	/*
@@ -267,22 +337,6 @@ type IngestServiceClient interface {
 	   Returns the same response format as the /ingest endpoint.
 	*/
 	RerunIngest(ctx context.Context, authHeader bearertoken.Token, requestArg RerunIngestRequest) (IngestResponse, error)
-	// Deprecated: Replaced by ingest.
-	DeprecatedTriggerIngest(ctx context.Context, authHeader bearertoken.Token, triggerIngestArg DeprecatedTriggerIngest) (TriggeredIngest, error)
-	/*
-	   Triggers an ingest job for the given data source.
-	   The ingest job will be processed asynchronously.
-
-	   Deprecated: Replaced by ingest.
-	*/
-	TriggerIngest(ctx context.Context, authHeader bearertoken.Token, triggerIngestArg TriggerIngest) (TriggeredIngest, error)
-	/*
-	   Triggers an ingest job of a new file, allowing either creating a new dataset or uploading to an
-	   existing one.
-
-	   Deprecated: Replaced by ingest.
-	*/
-	TriggerFileIngest(ctx context.Context, authHeader bearertoken.Token, triggerIngestArg TriggerFileIngest) (TriggeredIngest, error)
 	// Creates a run and ingests data sources to be added to the run.
 	IngestRun(ctx context.Context, authHeader bearertoken.Token, requestArg IngestRunRequest) (IngestRunResponse, error)
 	/*
@@ -291,12 +345,6 @@ type IngestServiceClient interface {
 	   Deprecated: Replaced by ingest.
 	*/
 	IngestVideo(ctx context.Context, authHeader bearertoken.Token, ingestVideoArg IngestVideoRequest) (IngestVideoResponse, error)
-	/*
-	   Ingests data from mcap files in the S3 Nominal upload bucket.
-
-	   Deprecated: Replaced by ingest.
-	*/
-	IngestMcap(ctx context.Context, authHeader bearertoken.Token, ingestVideoArg IngestMcapRequest) (IngestMcapResponse, error)
 	/*
 	   Re-ingests data from provided source datasets into either an existing target dataset, or a new one.
 	   Only supported for CSV and Parquet dataset files.
@@ -362,66 +410,6 @@ func (c *ingestServiceClient) RerunIngest(ctx context.Context, authHeader bearer
 	return *returnVal, nil
 }
 
-func (c *ingestServiceClient) DeprecatedTriggerIngest(ctx context.Context, authHeader bearertoken.Token, triggerIngestArg DeprecatedTriggerIngest) (TriggeredIngest, error) {
-	var defaultReturnVal TriggeredIngest
-	var returnVal *TriggeredIngest
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeprecatedTriggerIngest"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/trigger-ingest"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(triggerIngestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "deprecatedTriggerIngest failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "deprecatedTriggerIngest response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *ingestServiceClient) TriggerIngest(ctx context.Context, authHeader bearertoken.Token, triggerIngestArg TriggerIngest) (TriggeredIngest, error) {
-	var defaultReturnVal TriggeredIngest
-	var returnVal *TriggeredIngest
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("TriggerIngest"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/trigger-ingest-v2"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(triggerIngestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "triggerIngest failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "triggerIngest response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *ingestServiceClient) TriggerFileIngest(ctx context.Context, authHeader bearertoken.Token, triggerIngestArg TriggerFileIngest) (TriggeredIngest, error) {
-	var defaultReturnVal TriggeredIngest
-	var returnVal *TriggeredIngest
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("TriggerFileIngest"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/trigger-file-ingest"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(triggerIngestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "triggerFileIngest failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "triggerFileIngest response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
 func (c *ingestServiceClient) IngestRun(ctx context.Context, authHeader bearertoken.Token, requestArg IngestRunRequest) (IngestRunResponse, error) {
 	var defaultReturnVal IngestRunResponse
 	var returnVal *IngestRunResponse
@@ -458,26 +446,6 @@ func (c *ingestServiceClient) IngestVideo(ctx context.Context, authHeader bearer
 	}
 	if returnVal == nil {
 		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "ingestVideo response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *ingestServiceClient) IngestMcap(ctx context.Context, authHeader bearertoken.Token, ingestVideoArg IngestMcapRequest) (IngestMcapResponse, error) {
-	var defaultReturnVal IngestMcapResponse
-	var returnVal *IngestMcapResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("IngestMcap"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-mcap"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(ingestVideoArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "ingestMcap failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "ingestMcap response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -528,22 +496,6 @@ type IngestServiceClientWithAuth interface {
 	   Returns the same response format as the /ingest endpoint.
 	*/
 	RerunIngest(ctx context.Context, requestArg RerunIngestRequest) (IngestResponse, error)
-	// Deprecated: Replaced by ingest.
-	DeprecatedTriggerIngest(ctx context.Context, triggerIngestArg DeprecatedTriggerIngest) (TriggeredIngest, error)
-	/*
-	   Triggers an ingest job for the given data source.
-	   The ingest job will be processed asynchronously.
-
-	   Deprecated: Replaced by ingest.
-	*/
-	TriggerIngest(ctx context.Context, triggerIngestArg TriggerIngest) (TriggeredIngest, error)
-	/*
-	   Triggers an ingest job of a new file, allowing either creating a new dataset or uploading to an
-	   existing one.
-
-	   Deprecated: Replaced by ingest.
-	*/
-	TriggerFileIngest(ctx context.Context, triggerIngestArg TriggerFileIngest) (TriggeredIngest, error)
 	// Creates a run and ingests data sources to be added to the run.
 	IngestRun(ctx context.Context, requestArg IngestRunRequest) (IngestRunResponse, error)
 	/*
@@ -552,12 +504,6 @@ type IngestServiceClientWithAuth interface {
 	   Deprecated: Replaced by ingest.
 	*/
 	IngestVideo(ctx context.Context, ingestVideoArg IngestVideoRequest) (IngestVideoResponse, error)
-	/*
-	   Ingests data from mcap files in the S3 Nominal upload bucket.
-
-	   Deprecated: Replaced by ingest.
-	*/
-	IngestMcap(ctx context.Context, ingestVideoArg IngestMcapRequest) (IngestMcapResponse, error)
 	/*
 	   Re-ingests data from provided source datasets into either an existing target dataset, or a new one.
 	   Only supported for CSV and Parquet dataset files.
@@ -592,28 +538,12 @@ func (c *ingestServiceClientWithAuth) RerunIngest(ctx context.Context, requestAr
 	return c.client.RerunIngest(ctx, c.authHeader, requestArg)
 }
 
-func (c *ingestServiceClientWithAuth) DeprecatedTriggerIngest(ctx context.Context, triggerIngestArg DeprecatedTriggerIngest) (TriggeredIngest, error) {
-	return c.client.DeprecatedTriggerIngest(ctx, c.authHeader, triggerIngestArg)
-}
-
-func (c *ingestServiceClientWithAuth) TriggerIngest(ctx context.Context, triggerIngestArg TriggerIngest) (TriggeredIngest, error) {
-	return c.client.TriggerIngest(ctx, c.authHeader, triggerIngestArg)
-}
-
-func (c *ingestServiceClientWithAuth) TriggerFileIngest(ctx context.Context, triggerIngestArg TriggerFileIngest) (TriggeredIngest, error) {
-	return c.client.TriggerFileIngest(ctx, c.authHeader, triggerIngestArg)
-}
-
 func (c *ingestServiceClientWithAuth) IngestRun(ctx context.Context, requestArg IngestRunRequest) (IngestRunResponse, error) {
 	return c.client.IngestRun(ctx, c.authHeader, requestArg)
 }
 
 func (c *ingestServiceClientWithAuth) IngestVideo(ctx context.Context, ingestVideoArg IngestVideoRequest) (IngestVideoResponse, error) {
 	return c.client.IngestVideo(ctx, c.authHeader, ingestVideoArg)
-}
-
-func (c *ingestServiceClientWithAuth) IngestMcap(ctx context.Context, ingestVideoArg IngestMcapRequest) (IngestMcapResponse, error) {
-	return c.client.IngestMcap(ctx, c.authHeader, ingestVideoArg)
 }
 
 func (c *ingestServiceClientWithAuth) ReingestFromDatasets(ctx context.Context, requestArg ReingestDatasetsRequest) (ReingestDatasetsResponse, error) {
@@ -651,33 +581,6 @@ func (c *ingestServiceClientWithTokenProvider) RerunIngest(ctx context.Context, 
 	return c.client.RerunIngest(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *ingestServiceClientWithTokenProvider) DeprecatedTriggerIngest(ctx context.Context, triggerIngestArg DeprecatedTriggerIngest) (TriggeredIngest, error) {
-	var defaultReturnVal TriggeredIngest
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.DeprecatedTriggerIngest(ctx, bearertoken.Token(token), triggerIngestArg)
-}
-
-func (c *ingestServiceClientWithTokenProvider) TriggerIngest(ctx context.Context, triggerIngestArg TriggerIngest) (TriggeredIngest, error) {
-	var defaultReturnVal TriggeredIngest
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.TriggerIngest(ctx, bearertoken.Token(token), triggerIngestArg)
-}
-
-func (c *ingestServiceClientWithTokenProvider) TriggerFileIngest(ctx context.Context, triggerIngestArg TriggerFileIngest) (TriggeredIngest, error) {
-	var defaultReturnVal TriggeredIngest
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.TriggerFileIngest(ctx, bearertoken.Token(token), triggerIngestArg)
-}
-
 func (c *ingestServiceClientWithTokenProvider) IngestRun(ctx context.Context, requestArg IngestRunRequest) (IngestRunResponse, error) {
 	var defaultReturnVal IngestRunResponse
 	token, err := c.tokenProvider(ctx)
@@ -696,15 +599,6 @@ func (c *ingestServiceClientWithTokenProvider) IngestVideo(ctx context.Context, 
 	return c.client.IngestVideo(ctx, bearertoken.Token(token), ingestVideoArg)
 }
 
-func (c *ingestServiceClientWithTokenProvider) IngestMcap(ctx context.Context, ingestVideoArg IngestMcapRequest) (IngestMcapResponse, error) {
-	var defaultReturnVal IngestMcapResponse
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.IngestMcap(ctx, bearertoken.Token(token), ingestVideoArg)
-}
-
 func (c *ingestServiceClientWithTokenProvider) ReingestFromDatasets(ctx context.Context, requestArg ReingestDatasetsRequest) (ReingestDatasetsResponse, error) {
 	var defaultReturnVal ReingestDatasetsResponse
 	token, err := c.tokenProvider(ctx)
@@ -720,4 +614,148 @@ func (c *ingestServiceClientWithTokenProvider) DeleteFile(ctx context.Context, d
 		return err
 	}
 	return c.client.DeleteFile(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg)
+}
+
+// Internal API for managing ingest jobs. This service is filtered out from public documentation.
+type InternalIngestJobServiceClient interface {
+	// Creates an ingest job, returning a RID for the job.
+	CreateIngestJob(ctx context.Context, authHeader bearertoken.Token, createIngestJobRequestArg CreateIngestJobRequest) (IngestJobRid, error)
+	// Returns a single ingest job by RID with full details including the ingest request.
+	GetIngestJobInternal(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (InternalIngestJob, error)
+	// Updates the status of an ingest job.
+	UpdateIngestJobStatus(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid, statusArg IngestJobStatus) (IngestJobStatus, error)
+}
+
+type internalIngestJobServiceClient struct {
+	client httpclient.Client
+}
+
+func NewInternalIngestJobServiceClient(client httpclient.Client) InternalIngestJobServiceClient {
+	return &internalIngestJobServiceClient{client: client}
+}
+
+func (c *internalIngestJobServiceClient) CreateIngestJob(ctx context.Context, authHeader bearertoken.Token, createIngestJobRequestArg CreateIngestJobRequest) (IngestJobRid, error) {
+	var defaultReturnVal IngestJobRid
+	var returnVal *IngestJobRid
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateIngestJob"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/internal/ingest/v1/ingest-job"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(createIngestJobRequestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createIngestJob failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createIngestJob response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *internalIngestJobServiceClient) GetIngestJobInternal(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (InternalIngestJob, error) {
+	var defaultReturnVal InternalIngestJob
+	var returnVal *InternalIngestJob
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIngestJobInternal"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/internal/ingest/v1/ingest-job/%s", url.PathEscape(fmt.Sprint(ingestJobRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getIngestJobInternal failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getIngestJobInternal response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *internalIngestJobServiceClient) UpdateIngestJobStatus(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid, statusArg IngestJobStatus) (IngestJobStatus, error) {
+	var defaultReturnVal IngestJobStatus
+	var returnVal *IngestJobStatus
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateIngestJobStatus"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/internal/ingest/v1/ingest-job/%s/status", url.PathEscape(fmt.Sprint(ingestJobRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(statusArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateIngestJobStatus failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateIngestJobStatus response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+// Internal API for managing ingest jobs. This service is filtered out from public documentation.
+type InternalIngestJobServiceClientWithAuth interface {
+	// Creates an ingest job, returning a RID for the job.
+	CreateIngestJob(ctx context.Context, createIngestJobRequestArg CreateIngestJobRequest) (IngestJobRid, error)
+	// Returns a single ingest job by RID with full details including the ingest request.
+	GetIngestJobInternal(ctx context.Context, ingestJobRidArg IngestJobRid) (InternalIngestJob, error)
+	// Updates the status of an ingest job.
+	UpdateIngestJobStatus(ctx context.Context, ingestJobRidArg IngestJobRid, statusArg IngestJobStatus) (IngestJobStatus, error)
+}
+
+func NewInternalIngestJobServiceClientWithAuth(client InternalIngestJobServiceClient, authHeader bearertoken.Token) InternalIngestJobServiceClientWithAuth {
+	return &internalIngestJobServiceClientWithAuth{client: client, authHeader: authHeader}
+}
+
+type internalIngestJobServiceClientWithAuth struct {
+	client     InternalIngestJobServiceClient
+	authHeader bearertoken.Token
+}
+
+func (c *internalIngestJobServiceClientWithAuth) CreateIngestJob(ctx context.Context, createIngestJobRequestArg CreateIngestJobRequest) (IngestJobRid, error) {
+	return c.client.CreateIngestJob(ctx, c.authHeader, createIngestJobRequestArg)
+}
+
+func (c *internalIngestJobServiceClientWithAuth) GetIngestJobInternal(ctx context.Context, ingestJobRidArg IngestJobRid) (InternalIngestJob, error) {
+	return c.client.GetIngestJobInternal(ctx, c.authHeader, ingestJobRidArg)
+}
+
+func (c *internalIngestJobServiceClientWithAuth) UpdateIngestJobStatus(ctx context.Context, ingestJobRidArg IngestJobRid, statusArg IngestJobStatus) (IngestJobStatus, error) {
+	return c.client.UpdateIngestJobStatus(ctx, c.authHeader, ingestJobRidArg, statusArg)
+}
+
+func NewInternalIngestJobServiceClientWithTokenProvider(client InternalIngestJobServiceClient, tokenProvider httpclient.TokenProvider) InternalIngestJobServiceClientWithAuth {
+	return &internalIngestJobServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
+}
+
+type internalIngestJobServiceClientWithTokenProvider struct {
+	client        InternalIngestJobServiceClient
+	tokenProvider httpclient.TokenProvider
+}
+
+func (c *internalIngestJobServiceClientWithTokenProvider) CreateIngestJob(ctx context.Context, createIngestJobRequestArg CreateIngestJobRequest) (IngestJobRid, error) {
+	var defaultReturnVal IngestJobRid
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.CreateIngestJob(ctx, bearertoken.Token(token), createIngestJobRequestArg)
+}
+
+func (c *internalIngestJobServiceClientWithTokenProvider) GetIngestJobInternal(ctx context.Context, ingestJobRidArg IngestJobRid) (InternalIngestJob, error) {
+	var defaultReturnVal InternalIngestJob
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetIngestJobInternal(ctx, bearertoken.Token(token), ingestJobRidArg)
+}
+
+func (c *internalIngestJobServiceClientWithTokenProvider) UpdateIngestJobStatus(ctx context.Context, ingestJobRidArg IngestJobRid, statusArg IngestJobStatus) (IngestJobStatus, error) {
+	var defaultReturnVal IngestJobStatus
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.UpdateIngestJobStatus(ctx, bearertoken.Token(token), ingestJobRidArg, statusArg)
 }

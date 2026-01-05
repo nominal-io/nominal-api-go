@@ -14,8 +14,6 @@ import (
 
 // This service provides internal APIs related to modules.
 type InternalModuleServiceClient interface {
-	// Returns the resolved module definitions for the requested ModuleApplication.
-	BatchGetResolvedModuleDefinitions(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetResolvedModuleDefinitionsRequest) (BatchGetResolvedModuleDefinitionsResponse, error)
 	// Returns the module definition for the given module reference.
 	BatchGetUnresolvedModuleDefinition(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetUnresolvedModuleDefinitionsRequest) (BatchGetUnresolvedModuleDefinitionsResponse, error)
 }
@@ -26,26 +24,6 @@ type internalModuleServiceClient struct {
 
 func NewInternalModuleServiceClient(client httpclient.Client) InternalModuleServiceClient {
 	return &internalModuleServiceClient{client: client}
-}
-
-func (c *internalModuleServiceClient) BatchGetResolvedModuleDefinitions(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetResolvedModuleDefinitionsRequest) (BatchGetResolvedModuleDefinitionsResponse, error) {
-	var defaultReturnVal BatchGetResolvedModuleDefinitionsResponse
-	var returnVal *BatchGetResolvedModuleDefinitionsResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetResolvedModuleDefinitions"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/internal/scout/v2/module/resolved-module/batch-get"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGetResolvedModuleDefinitions failed")
-	}
-	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGetResolvedModuleDefinitions response cannot be nil")
-	}
-	return *returnVal, nil
 }
 
 func (c *internalModuleServiceClient) BatchGetUnresolvedModuleDefinition(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetUnresolvedModuleDefinitionsRequest) (BatchGetUnresolvedModuleDefinitionsResponse, error) {
@@ -70,8 +48,6 @@ func (c *internalModuleServiceClient) BatchGetUnresolvedModuleDefinition(ctx con
 
 // This service provides internal APIs related to modules.
 type InternalModuleServiceClientWithAuth interface {
-	// Returns the resolved module definitions for the requested ModuleApplication.
-	BatchGetResolvedModuleDefinitions(ctx context.Context, requestArg BatchGetResolvedModuleDefinitionsRequest) (BatchGetResolvedModuleDefinitionsResponse, error)
 	// Returns the module definition for the given module reference.
 	BatchGetUnresolvedModuleDefinition(ctx context.Context, requestArg BatchGetUnresolvedModuleDefinitionsRequest) (BatchGetUnresolvedModuleDefinitionsResponse, error)
 }
@@ -85,10 +61,6 @@ type internalModuleServiceClientWithAuth struct {
 	authHeader bearertoken.Token
 }
 
-func (c *internalModuleServiceClientWithAuth) BatchGetResolvedModuleDefinitions(ctx context.Context, requestArg BatchGetResolvedModuleDefinitionsRequest) (BatchGetResolvedModuleDefinitionsResponse, error) {
-	return c.client.BatchGetResolvedModuleDefinitions(ctx, c.authHeader, requestArg)
-}
-
 func (c *internalModuleServiceClientWithAuth) BatchGetUnresolvedModuleDefinition(ctx context.Context, requestArg BatchGetUnresolvedModuleDefinitionsRequest) (BatchGetUnresolvedModuleDefinitionsResponse, error) {
 	return c.client.BatchGetUnresolvedModuleDefinition(ctx, c.authHeader, requestArg)
 }
@@ -100,15 +72,6 @@ func NewInternalModuleServiceClientWithTokenProvider(client InternalModuleServic
 type internalModuleServiceClientWithTokenProvider struct {
 	client        InternalModuleServiceClient
 	tokenProvider httpclient.TokenProvider
-}
-
-func (c *internalModuleServiceClientWithTokenProvider) BatchGetResolvedModuleDefinitions(ctx context.Context, requestArg BatchGetResolvedModuleDefinitionsRequest) (BatchGetResolvedModuleDefinitionsResponse, error) {
-	var defaultReturnVal BatchGetResolvedModuleDefinitionsResponse
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return defaultReturnVal, err
-	}
-	return c.client.BatchGetResolvedModuleDefinitions(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *internalModuleServiceClientWithTokenProvider) BatchGetUnresolvedModuleDefinition(ctx context.Context, requestArg BatchGetUnresolvedModuleDefinitionsRequest) (BatchGetUnresolvedModuleDefinitionsResponse, error) {

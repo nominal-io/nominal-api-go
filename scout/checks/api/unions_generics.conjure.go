@@ -12,6 +12,7 @@ import (
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 )
 
@@ -191,11 +192,21 @@ func (u *ChecklistSearchQueryWithT[T]) Accept(ctx context.Context, v ChecklistSe
 			return result, fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return result, fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return result, fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(ctx, *u.properties)
 	case "authorRid":
 		if u.authorRid == nil {
 			return result, fmt.Errorf("field \"authorRid\" is required")
@@ -221,10 +232,25 @@ func (u *ChecklistSearchQueryWithT[T]) Accept(ctx context.Context, v ChecklistSe
 			return result, fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspace(ctx, *u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return result, fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return v.VisitAuthorIsCurrentUser(ctx, *u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return result, fmt.Errorf("field \"authorRids\" is required")
+		}
+		return v.VisitAuthorRids(ctx, *u.authorRids)
+	case "isArchived":
+		if u.isArchived == nil {
+			return result, fmt.Errorf("field \"isArchived\" is required")
+		}
+		return v.VisitIsArchived(ctx, *u.isArchived)
 	}
 }
 
-func (u *ChecklistSearchQueryWithT[T]) AcceptFuncs(andFunc func([]ChecklistSearchQuery) (T, error), orFunc func([]ChecklistSearchQuery) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api.Label) (T, error), propertyFunc func(api.Property) (T, error), authorRidFunc func(api1.UserRid) (T, error), assigneeRidFunc func(api1.UserRid) (T, error), isPublishedFunc func(bool) (T, error), notFunc func(ChecklistSearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ChecklistSearchQueryWithT[T]) AcceptFuncs(andFunc func([]ChecklistSearchQuery) (T, error), orFunc func([]ChecklistSearchQuery) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api.Label) (T, error), labelsFunc func(api1.LabelsFilter) (T, error), propertyFunc func(api.Property) (T, error), propertiesFunc func(api1.PropertiesFilter) (T, error), authorRidFunc func(api1.UserRid) (T, error), assigneeRidFunc func(api1.UserRid) (T, error), isPublishedFunc func(bool) (T, error), notFunc func(ChecklistSearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), authorIsCurrentUserFunc func(bool) (T, error), authorRidsFunc func([]api1.UserRid) (T, error), isArchivedFunc func(bool) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -252,11 +278,21 @@ func (u *ChecklistSearchQueryWithT[T]) AcceptFuncs(andFunc func([]ChecklistSearc
 			return result, fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return result, fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return result, fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "authorRid":
 		if u.authorRid == nil {
 			return result, fmt.Errorf("field \"authorRid\" is required")
@@ -282,6 +318,21 @@ func (u *ChecklistSearchQueryWithT[T]) AcceptFuncs(andFunc func([]ChecklistSearc
 			return result, fmt.Errorf("field \"workspace\" is required")
 		}
 		return workspaceFunc(*u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return result, fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return authorIsCurrentUserFunc(*u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return result, fmt.Errorf("field \"authorRids\" is required")
+		}
+		return authorRidsFunc(*u.authorRids)
+	case "isArchived":
+		if u.isArchived == nil {
+			return result, fmt.Errorf("field \"isArchived\" is required")
+		}
+		return isArchivedFunc(*u.isArchived)
 	}
 }
 
@@ -305,7 +356,17 @@ func (u *ChecklistSearchQueryWithT[T]) LabelNoopSuccess(api.Label) (T, error) {
 	return result, nil
 }
 
+func (u *ChecklistSearchQueryWithT[T]) LabelsNoopSuccess(api1.LabelsFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ChecklistSearchQueryWithT[T]) PropertyNoopSuccess(api.Property) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ChecklistSearchQueryWithT[T]) PropertiesNoopSuccess(api1.PropertiesFilter) (T, error) {
 	var result T
 	return result, nil
 }
@@ -335,6 +396,21 @@ func (u *ChecklistSearchQueryWithT[T]) WorkspaceNoopSuccess(rids.WorkspaceRid) (
 	return result, nil
 }
 
+func (u *ChecklistSearchQueryWithT[T]) AuthorIsCurrentUserNoopSuccess(bool) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ChecklistSearchQueryWithT[T]) AuthorRidsNoopSuccess([]api1.UserRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ChecklistSearchQueryWithT[T]) IsArchivedNoopSuccess(bool) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ChecklistSearchQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -345,12 +421,17 @@ type ChecklistSearchQueryVisitorWithT[T any] interface {
 	VisitOr(ctx context.Context, v []ChecklistSearchQuery) (T, error)
 	VisitSearchText(ctx context.Context, v string) (T, error)
 	VisitLabel(ctx context.Context, v api.Label) (T, error)
+	VisitLabels(ctx context.Context, v api1.LabelsFilter) (T, error)
 	VisitProperty(ctx context.Context, v api.Property) (T, error)
+	VisitProperties(ctx context.Context, v api1.PropertiesFilter) (T, error)
 	VisitAuthorRid(ctx context.Context, v api1.UserRid) (T, error)
 	VisitAssigneeRid(ctx context.Context, v api1.UserRid) (T, error)
 	VisitIsPublished(ctx context.Context, v bool) (T, error)
 	VisitNot(ctx context.Context, v ChecklistSearchQuery) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
+	VisitAuthorIsCurrentUser(ctx context.Context, v bool) (T, error)
+	VisitAuthorRids(ctx context.Context, v []api1.UserRid) (T, error)
+	VisitIsArchived(ctx context.Context, v bool) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -431,7 +512,7 @@ func (u *FunctionNodeWithT[T]) Accept(ctx context.Context, v FunctionNodeVisitor
 	}
 }
 
-func (u *FunctionNodeWithT[T]) AcceptFuncs(enumFunc func(api2.EnumSeries) (T, error), numericFunc func(api2.NumericSeries) (T, error), rangesFunc func(api2.RangeSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *FunctionNodeWithT[T]) AcceptFuncs(enumFunc func(api11.EnumSeries) (T, error), numericFunc func(api11.NumericSeries) (T, error), rangesFunc func(api11.RangeSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -457,17 +538,17 @@ func (u *FunctionNodeWithT[T]) AcceptFuncs(enumFunc func(api2.EnumSeries) (T, er
 	}
 }
 
-func (u *FunctionNodeWithT[T]) EnumNoopSuccess(api2.EnumSeries) (T, error) {
+func (u *FunctionNodeWithT[T]) EnumNoopSuccess(api11.EnumSeries) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *FunctionNodeWithT[T]) NumericNoopSuccess(api2.NumericSeries) (T, error) {
+func (u *FunctionNodeWithT[T]) NumericNoopSuccess(api11.NumericSeries) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *FunctionNodeWithT[T]) RangesNoopSuccess(api2.RangeSeries) (T, error) {
+func (u *FunctionNodeWithT[T]) RangesNoopSuccess(api11.RangeSeries) (T, error) {
 	var result T
 	return result, nil
 }
@@ -478,9 +559,9 @@ func (u *FunctionNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type FunctionNodeVisitorWithT[T any] interface {
-	VisitEnum(ctx context.Context, v api2.EnumSeries) (T, error)
-	VisitNumeric(ctx context.Context, v api2.NumericSeries) (T, error)
-	VisitRanges(ctx context.Context, v api2.RangeSeries) (T, error)
+	VisitEnum(ctx context.Context, v api11.EnumSeries) (T, error)
+	VisitNumeric(ctx context.Context, v api11.NumericSeries) (T, error)
+	VisitRanges(ctx context.Context, v api11.RangeSeries) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

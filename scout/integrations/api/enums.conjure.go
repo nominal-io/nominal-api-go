@@ -6,6 +6,66 @@ import (
 	"strings"
 )
 
+type AlertType struct {
+	val AlertType_Value
+}
+
+type AlertType_Value string
+
+const (
+	AlertType_INVALID  AlertType_Value = "INVALID"
+	AlertType_FAILURE  AlertType_Value = "FAILURE"
+	AlertType_RECOVERY AlertType_Value = "RECOVERY"
+	AlertType_UNKNOWN  AlertType_Value = "UNKNOWN"
+)
+
+// AlertType_Values returns all known variants of AlertType.
+func AlertType_Values() []AlertType_Value {
+	return []AlertType_Value{AlertType_INVALID, AlertType_FAILURE, AlertType_RECOVERY}
+}
+
+func New_AlertType(value AlertType_Value) AlertType {
+	return AlertType{val: value}
+}
+
+// IsUnknown returns false for all known variants of AlertType and true otherwise.
+func (e AlertType) IsUnknown() bool {
+	switch e.val {
+	case AlertType_INVALID, AlertType_FAILURE, AlertType_RECOVERY:
+		return false
+	}
+	return true
+}
+
+func (e AlertType) Value() AlertType_Value {
+	if e.IsUnknown() {
+		return AlertType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e AlertType) String() string {
+	return string(e.val)
+}
+
+func (e AlertType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *AlertType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_AlertType(AlertType_Value(v))
+	case "INVALID":
+		*e = New_AlertType(AlertType_INVALID)
+	case "FAILURE":
+		*e = New_AlertType(AlertType_FAILURE)
+	case "RECOVERY":
+		*e = New_AlertType(AlertType_RECOVERY)
+	}
+	return nil
+}
+
 // Specifies a type of notification to filter.
 type NotificationFilter struct {
 	val NotificationFilter_Value

@@ -14,35 +14,45 @@ import (
 )
 
 type SearchTemplatesQuery struct {
-	typ         string
-	and         *[]SearchTemplatesQuery
-	or          *[]SearchTemplatesQuery
-	exactMatch  *string
-	searchText  *string
-	label       *api.Label
-	property    *api.Property
-	createdBy   *api1.UserRid
-	isArchived  *bool
-	isPublished *bool
-	workspace   *rids.WorkspaceRid
+	typ                 string
+	and                 *[]SearchTemplatesQuery
+	or                  *[]SearchTemplatesQuery
+	not                 *SearchTemplatesQuery
+	exactMatch          *string
+	searchText          *string
+	label               *api.Label
+	labels              *api1.LabelsFilter
+	property            *api.Property
+	properties          *api1.PropertiesFilter
+	createdBy           *api1.UserRid
+	isArchived          *bool
+	isPublished         *bool
+	workspace           *rids.WorkspaceRid
+	authorIsCurrentUser *bool
+	authorRids          *[]api1.UserRid
 }
 
 type searchTemplatesQueryDeserializer struct {
-	Type        string                  `json:"type"`
-	And         *[]SearchTemplatesQuery `json:"and"`
-	Or          *[]SearchTemplatesQuery `json:"or"`
-	ExactMatch  *string                 `json:"exactMatch"`
-	SearchText  *string                 `json:"searchText"`
-	Label       *api.Label              `json:"label"`
-	Property    *api.Property           `json:"property"`
-	CreatedBy   *api1.UserRid           `json:"createdBy"`
-	IsArchived  *bool                   `json:"isArchived"`
-	IsPublished *bool                   `json:"isPublished"`
-	Workspace   *rids.WorkspaceRid      `json:"workspace"`
+	Type                string                  `json:"type"`
+	And                 *[]SearchTemplatesQuery `json:"and"`
+	Or                  *[]SearchTemplatesQuery `json:"or"`
+	Not                 *SearchTemplatesQuery   `json:"not"`
+	ExactMatch          *string                 `json:"exactMatch"`
+	SearchText          *string                 `json:"searchText"`
+	Label               *api.Label              `json:"label"`
+	Labels              *api1.LabelsFilter      `json:"labels"`
+	Property            *api.Property           `json:"property"`
+	Properties          *api1.PropertiesFilter  `json:"properties"`
+	CreatedBy           *api1.UserRid           `json:"createdBy"`
+	IsArchived          *bool                   `json:"isArchived"`
+	IsPublished         *bool                   `json:"isPublished"`
+	Workspace           *rids.WorkspaceRid      `json:"workspace"`
+	AuthorIsCurrentUser *bool                   `json:"authorIsCurrentUser"`
+	AuthorRids          *[]api1.UserRid         `json:"authorRids"`
 }
 
 func (u *searchTemplatesQueryDeserializer) toStruct() SearchTemplatesQuery {
-	return SearchTemplatesQuery{typ: u.Type, and: u.And, or: u.Or, exactMatch: u.ExactMatch, searchText: u.SearchText, label: u.Label, property: u.Property, createdBy: u.CreatedBy, isArchived: u.IsArchived, isPublished: u.IsPublished, workspace: u.Workspace}
+	return SearchTemplatesQuery{typ: u.Type, and: u.And, or: u.Or, not: u.Not, exactMatch: u.ExactMatch, searchText: u.SearchText, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, createdBy: u.CreatedBy, isArchived: u.IsArchived, isPublished: u.IsPublished, workspace: u.Workspace, authorIsCurrentUser: u.AuthorIsCurrentUser, authorRids: u.AuthorRids}
 }
 
 func (u *SearchTemplatesQuery) toSerializer() (interface{}, error) {
@@ -65,6 +75,14 @@ func (u *SearchTemplatesQuery) toSerializer() (interface{}, error) {
 			Type string                 `json:"type"`
 			Or   []SearchTemplatesQuery `json:"or"`
 		}{Type: "or", Or: *u.or}, nil
+	case "not":
+		if u.not == nil {
+			return nil, fmt.Errorf("field \"not\" is required")
+		}
+		return struct {
+			Type string               `json:"type"`
+			Not  SearchTemplatesQuery `json:"not"`
+		}{Type: "not", Not: *u.not}, nil
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return nil, fmt.Errorf("field \"exactMatch\" is required")
@@ -89,6 +107,14 @@ func (u *SearchTemplatesQuery) toSerializer() (interface{}, error) {
 			Type  string    `json:"type"`
 			Label api.Label `json:"label"`
 		}{Type: "label", Label: *u.label}, nil
+	case "labels":
+		if u.labels == nil {
+			return nil, fmt.Errorf("field \"labels\" is required")
+		}
+		return struct {
+			Type   string            `json:"type"`
+			Labels api1.LabelsFilter `json:"labels"`
+		}{Type: "labels", Labels: *u.labels}, nil
 	case "property":
 		if u.property == nil {
 			return nil, fmt.Errorf("field \"property\" is required")
@@ -97,6 +123,14 @@ func (u *SearchTemplatesQuery) toSerializer() (interface{}, error) {
 			Type     string       `json:"type"`
 			Property api.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "properties":
+		if u.properties == nil {
+			return nil, fmt.Errorf("field \"properties\" is required")
+		}
+		return struct {
+			Type       string                `json:"type"`
+			Properties api1.PropertiesFilter `json:"properties"`
+		}{Type: "properties", Properties: *u.properties}, nil
 	case "createdBy":
 		if u.createdBy == nil {
 			return nil, fmt.Errorf("field \"createdBy\" is required")
@@ -129,6 +163,22 @@ func (u *SearchTemplatesQuery) toSerializer() (interface{}, error) {
 			Type      string            `json:"type"`
 			Workspace rids.WorkspaceRid `json:"workspace"`
 		}{Type: "workspace", Workspace: *u.workspace}, nil
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return nil, fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return struct {
+			Type                string `json:"type"`
+			AuthorIsCurrentUser bool   `json:"authorIsCurrentUser"`
+		}{Type: "authorIsCurrentUser", AuthorIsCurrentUser: *u.authorIsCurrentUser}, nil
+	case "authorRids":
+		if u.authorRids == nil {
+			return nil, fmt.Errorf("field \"authorRids\" is required")
+		}
+		return struct {
+			Type       string         `json:"type"`
+			AuthorRids []api1.UserRid `json:"authorRids"`
+		}{Type: "authorRids", AuthorRids: *u.authorRids}, nil
 	}
 }
 
@@ -155,6 +205,10 @@ func (u *SearchTemplatesQuery) UnmarshalJSON(data []byte) error {
 		if u.or == nil {
 			return fmt.Errorf("field \"or\" is required")
 		}
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -167,9 +221,17 @@ func (u *SearchTemplatesQuery) UnmarshalJSON(data []byte) error {
 		if u.label == nil {
 			return fmt.Errorf("field \"label\" is required")
 		}
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
+		}
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
 		}
 	case "createdBy":
 		if u.createdBy == nil {
@@ -186,6 +248,14 @@ func (u *SearchTemplatesQuery) UnmarshalJSON(data []byte) error {
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
+		}
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
 		}
 	}
 	return nil
@@ -207,7 +277,7 @@ func (u *SearchTemplatesQuery) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchTemplatesQuery) AcceptFuncs(andFunc func([]SearchTemplatesQuery) error, orFunc func([]SearchTemplatesQuery) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, labelFunc func(api.Label) error, propertyFunc func(api.Property) error, createdByFunc func(api1.UserRid) error, isArchivedFunc func(bool) error, isPublishedFunc func(bool) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *SearchTemplatesQuery) AcceptFuncs(andFunc func([]SearchTemplatesQuery) error, orFunc func([]SearchTemplatesQuery) error, notFunc func(SearchTemplatesQuery) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, labelFunc func(api.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api.Property) error, propertiesFunc func(api1.PropertiesFilter) error, createdByFunc func(api1.UserRid) error, isArchivedFunc func(bool) error, isPublishedFunc func(bool) error, workspaceFunc func(rids.WorkspaceRid) error, authorIsCurrentUserFunc func(bool) error, authorRidsFunc func([]api1.UserRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -224,6 +294,11 @@ func (u *SearchTemplatesQuery) AcceptFuncs(andFunc func([]SearchTemplatesQuery) 
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return orFunc(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -239,11 +314,21 @@ func (u *SearchTemplatesQuery) AcceptFuncs(andFunc func([]SearchTemplatesQuery) 
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "createdBy":
 		if u.createdBy == nil {
 			return fmt.Errorf("field \"createdBy\" is required")
@@ -264,6 +349,16 @@ func (u *SearchTemplatesQuery) AcceptFuncs(andFunc func([]SearchTemplatesQuery) 
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return workspaceFunc(*u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return authorIsCurrentUserFunc(*u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
+		}
+		return authorRidsFunc(*u.authorRids)
 	}
 }
 
@@ -272,6 +367,10 @@ func (u *SearchTemplatesQuery) AndNoopSuccess([]SearchTemplatesQuery) error {
 }
 
 func (u *SearchTemplatesQuery) OrNoopSuccess([]SearchTemplatesQuery) error {
+	return nil
+}
+
+func (u *SearchTemplatesQuery) NotNoopSuccess(SearchTemplatesQuery) error {
 	return nil
 }
 
@@ -287,7 +386,15 @@ func (u *SearchTemplatesQuery) LabelNoopSuccess(api.Label) error {
 	return nil
 }
 
+func (u *SearchTemplatesQuery) LabelsNoopSuccess(api1.LabelsFilter) error {
+	return nil
+}
+
 func (u *SearchTemplatesQuery) PropertyNoopSuccess(api.Property) error {
+	return nil
+}
+
+func (u *SearchTemplatesQuery) PropertiesNoopSuccess(api1.PropertiesFilter) error {
 	return nil
 }
 
@@ -304,6 +411,14 @@ func (u *SearchTemplatesQuery) IsPublishedNoopSuccess(bool) error {
 }
 
 func (u *SearchTemplatesQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+	return nil
+}
+
+func (u *SearchTemplatesQuery) AuthorIsCurrentUserNoopSuccess(bool) error {
+	return nil
+}
+
+func (u *SearchTemplatesQuery) AuthorRidsNoopSuccess([]api1.UserRid) error {
 	return nil
 }
 
@@ -328,6 +443,11 @@ func (u *SearchTemplatesQuery) Accept(v SearchTemplatesQueryVisitor) error {
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOr(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(*u.not)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -343,11 +463,21 @@ func (u *SearchTemplatesQuery) Accept(v SearchTemplatesQueryVisitor) error {
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(*u.properties)
 	case "createdBy":
 		if u.createdBy == nil {
 			return fmt.Errorf("field \"createdBy\" is required")
@@ -368,20 +498,35 @@ func (u *SearchTemplatesQuery) Accept(v SearchTemplatesQueryVisitor) error {
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspace(*u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return v.VisitAuthorIsCurrentUser(*u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
+		}
+		return v.VisitAuthorRids(*u.authorRids)
 	}
 }
 
 type SearchTemplatesQueryVisitor interface {
 	VisitAnd(v []SearchTemplatesQuery) error
 	VisitOr(v []SearchTemplatesQuery) error
+	VisitNot(v SearchTemplatesQuery) error
 	VisitExactMatch(v string) error
 	VisitSearchText(v string) error
 	VisitLabel(v api.Label) error
+	VisitLabels(v api1.LabelsFilter) error
 	VisitProperty(v api.Property) error
+	VisitProperties(v api1.PropertiesFilter) error
 	VisitCreatedBy(v api1.UserRid) error
 	VisitIsArchived(v bool) error
 	VisitIsPublished(v bool) error
 	VisitWorkspace(v rids.WorkspaceRid) error
+	VisitAuthorIsCurrentUser(v bool) error
+	VisitAuthorRids(v []api1.UserRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -402,6 +547,11 @@ func (u *SearchTemplatesQuery) AcceptWithContext(ctx context.Context, v SearchTe
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOrWithContext(ctx, *u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNotWithContext(ctx, *u.not)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -417,11 +567,21 @@ func (u *SearchTemplatesQuery) AcceptWithContext(ctx context.Context, v SearchTe
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabelWithContext(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabelsWithContext(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitPropertiesWithContext(ctx, *u.properties)
 	case "createdBy":
 		if u.createdBy == nil {
 			return fmt.Errorf("field \"createdBy\" is required")
@@ -442,20 +602,35 @@ func (u *SearchTemplatesQuery) AcceptWithContext(ctx context.Context, v SearchTe
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return v.VisitAuthorIsCurrentUserWithContext(ctx, *u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
+		}
+		return v.VisitAuthorRidsWithContext(ctx, *u.authorRids)
 	}
 }
 
 type SearchTemplatesQueryVisitorWithContext interface {
 	VisitAndWithContext(ctx context.Context, v []SearchTemplatesQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchTemplatesQuery) error
+	VisitNotWithContext(ctx context.Context, v SearchTemplatesQuery) error
 	VisitExactMatchWithContext(ctx context.Context, v string) error
 	VisitSearchTextWithContext(ctx context.Context, v string) error
 	VisitLabelWithContext(ctx context.Context, v api.Label) error
+	VisitLabelsWithContext(ctx context.Context, v api1.LabelsFilter) error
 	VisitPropertyWithContext(ctx context.Context, v api.Property) error
+	VisitPropertiesWithContext(ctx context.Context, v api1.PropertiesFilter) error
 	VisitCreatedByWithContext(ctx context.Context, v api1.UserRid) error
 	VisitIsArchivedWithContext(ctx context.Context, v bool) error
 	VisitIsPublishedWithContext(ctx context.Context, v bool) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
+	VisitAuthorIsCurrentUserWithContext(ctx context.Context, v bool) error
+	VisitAuthorRidsWithContext(ctx context.Context, v []api1.UserRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -465,6 +640,10 @@ func NewSearchTemplatesQueryFromAnd(v []SearchTemplatesQuery) SearchTemplatesQue
 
 func NewSearchTemplatesQueryFromOr(v []SearchTemplatesQuery) SearchTemplatesQuery {
 	return SearchTemplatesQuery{typ: "or", or: &v}
+}
+
+func NewSearchTemplatesQueryFromNot(v SearchTemplatesQuery) SearchTemplatesQuery {
+	return SearchTemplatesQuery{typ: "not", not: &v}
 }
 
 func NewSearchTemplatesQueryFromExactMatch(v string) SearchTemplatesQuery {
@@ -479,8 +658,16 @@ func NewSearchTemplatesQueryFromLabel(v api.Label) SearchTemplatesQuery {
 	return SearchTemplatesQuery{typ: "label", label: &v}
 }
 
+func NewSearchTemplatesQueryFromLabels(v api1.LabelsFilter) SearchTemplatesQuery {
+	return SearchTemplatesQuery{typ: "labels", labels: &v}
+}
+
 func NewSearchTemplatesQueryFromProperty(v api.Property) SearchTemplatesQuery {
 	return SearchTemplatesQuery{typ: "property", property: &v}
+}
+
+func NewSearchTemplatesQueryFromProperties(v api1.PropertiesFilter) SearchTemplatesQuery {
+	return SearchTemplatesQuery{typ: "properties", properties: &v}
 }
 
 func NewSearchTemplatesQueryFromCreatedBy(v api1.UserRid) SearchTemplatesQuery {
@@ -497,4 +684,12 @@ func NewSearchTemplatesQueryFromIsPublished(v bool) SearchTemplatesQuery {
 
 func NewSearchTemplatesQueryFromWorkspace(v rids.WorkspaceRid) SearchTemplatesQuery {
 	return SearchTemplatesQuery{typ: "workspace", workspace: &v}
+}
+
+func NewSearchTemplatesQueryFromAuthorIsCurrentUser(v bool) SearchTemplatesQuery {
+	return SearchTemplatesQuery{typ: "authorIsCurrentUser", authorIsCurrentUser: &v}
+}
+
+func NewSearchTemplatesQueryFromAuthorRids(v []api1.UserRid) SearchTemplatesQuery {
+	return SearchTemplatesQuery{typ: "authorRids", authorRids: &v}
 }

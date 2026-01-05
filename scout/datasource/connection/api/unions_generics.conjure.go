@@ -11,6 +11,87 @@ import (
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 )
 
+type ApiScrapingConfigWithT[T any] ApiScrapingConfig
+
+func (u *ApiScrapingConfigWithT[T]) Accept(ctx context.Context, v ApiScrapingConfigVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "allChannels":
+		if u.allChannels == nil {
+			return result, fmt.Errorf("field \"allChannels\" is required")
+		}
+		return v.VisitAllChannels(ctx, *u.allChannels)
+	case "channelAllowList":
+		if u.channelAllowList == nil {
+			return result, fmt.Errorf("field \"channelAllowList\" is required")
+		}
+		return v.VisitChannelAllowList(ctx, *u.channelAllowList)
+	case "channelBlockList":
+		if u.channelBlockList == nil {
+			return result, fmt.Errorf("field \"channelBlockList\" is required")
+		}
+		return v.VisitChannelBlockList(ctx, *u.channelBlockList)
+	}
+}
+
+func (u *ApiScrapingConfigWithT[T]) AcceptFuncs(allChannelsFunc func(AllChannelsConnectionsScrapingConfig) (T, error), channelAllowListFunc func(ChannelAllowListConnectionsScrapingConfig) (T, error), channelBlockListFunc func(ChannelBlockListConnectionsScrapingConfig) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "allChannels":
+		if u.allChannels == nil {
+			return result, fmt.Errorf("field \"allChannels\" is required")
+		}
+		return allChannelsFunc(*u.allChannels)
+	case "channelAllowList":
+		if u.channelAllowList == nil {
+			return result, fmt.Errorf("field \"channelAllowList\" is required")
+		}
+		return channelAllowListFunc(*u.channelAllowList)
+	case "channelBlockList":
+		if u.channelBlockList == nil {
+			return result, fmt.Errorf("field \"channelBlockList\" is required")
+		}
+		return channelBlockListFunc(*u.channelBlockList)
+	}
+}
+
+func (u *ApiScrapingConfigWithT[T]) AllChannelsNoopSuccess(AllChannelsConnectionsScrapingConfig) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ApiScrapingConfigWithT[T]) ChannelAllowListNoopSuccess(ChannelAllowListConnectionsScrapingConfig) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ApiScrapingConfigWithT[T]) ChannelBlockListNoopSuccess(ChannelBlockListConnectionsScrapingConfig) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ApiScrapingConfigWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ApiScrapingConfigVisitorWithT[T any] interface {
+	VisitAllChannels(ctx context.Context, v AllChannelsConnectionsScrapingConfig) (T, error)
+	VisitChannelAllowList(ctx context.Context, v ChannelAllowListConnectionsScrapingConfig) (T, error)
+	VisitChannelBlockList(ctx context.Context, v ChannelBlockListConnectionsScrapingConfig) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type ConnectionDetailsWithT[T any] ConnectionDetails
 
 func (u *ConnectionDetailsWithT[T]) Accept(ctx context.Context, v ConnectionDetailsVisitorWithT[T]) (T, error) {
@@ -56,10 +137,15 @@ func (u *ConnectionDetailsWithT[T]) Accept(ctx context.Context, v ConnectionDeta
 			return result, fmt.Errorf("field \"bigQuery\" is required")
 		}
 		return v.VisitBigQuery(ctx, *u.bigQuery)
+	case "api":
+		if u.api == nil {
+			return result, fmt.Errorf("field \"api\" is required")
+		}
+		return v.VisitApi(ctx, *u.api)
 	}
 }
 
-func (u *ConnectionDetailsWithT[T]) AcceptFuncs(timescaleFunc func(TimescaleConnectionDetails) (T, error), influxFunc func(Influx2ConnectionDetails) (T, error), influx1Func func(Influx1ConnectionDetails) (T, error), nominalFunc func(NominalConnectionDetails) (T, error), timestreamFunc func(TimestreamConnectionDetails) (T, error), visualCrossingFunc func(VisualCrossingConnectionDetails) (T, error), bigQueryFunc func(BigQueryConnectionDetails) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ConnectionDetailsWithT[T]) AcceptFuncs(timescaleFunc func(TimescaleConnectionDetails) (T, error), influxFunc func(Influx2ConnectionDetails) (T, error), influx1Func func(Influx1ConnectionDetails) (T, error), nominalFunc func(NominalConnectionDetails) (T, error), timestreamFunc func(TimestreamConnectionDetails) (T, error), visualCrossingFunc func(VisualCrossingConnectionDetails) (T, error), bigQueryFunc func(BigQueryConnectionDetails) (T, error), apiFunc func(ApiConnectionDetails) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -102,6 +188,11 @@ func (u *ConnectionDetailsWithT[T]) AcceptFuncs(timescaleFunc func(TimescaleConn
 			return result, fmt.Errorf("field \"bigQuery\" is required")
 		}
 		return bigQueryFunc(*u.bigQuery)
+	case "api":
+		if u.api == nil {
+			return result, fmt.Errorf("field \"api\" is required")
+		}
+		return apiFunc(*u.api)
 	}
 }
 
@@ -140,6 +231,11 @@ func (u *ConnectionDetailsWithT[T]) BigQueryNoopSuccess(BigQueryConnectionDetail
 	return result, nil
 }
 
+func (u *ConnectionDetailsWithT[T]) ApiNoopSuccess(ApiConnectionDetails) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ConnectionDetailsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -153,6 +249,7 @@ type ConnectionDetailsVisitorWithT[T any] interface {
 	VisitTimestream(ctx context.Context, v TimestreamConnectionDetails) (T, error)
 	VisitVisualCrossing(ctx context.Context, v VisualCrossingConnectionDetails) (T, error)
 	VisitBigQuery(ctx context.Context, v BigQueryConnectionDetails) (T, error)
+	VisitApi(ctx context.Context, v ApiConnectionDetails) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -553,10 +650,15 @@ func (u *ScrapingConfigWithT[T]) Accept(ctx context.Context, v ScrapingConfigVis
 			return result, fmt.Errorf("field \"bigQuery\" is required")
 		}
 		return v.VisitBigQuery(ctx, *u.bigQuery)
+	case "api":
+		if u.api == nil {
+			return result, fmt.Errorf("field \"api\" is required")
+		}
+		return v.VisitApi(ctx, *u.api)
 	}
 }
 
-func (u *ScrapingConfigWithT[T]) AcceptFuncs(influxFunc func(InfluxScrapingConfig) (T, error), nominalFunc func(NominalScrapingConfig) (T, error), timestreamFunc func(TimestreamScrapingConfig) (T, error), timescaleFunc func(PivotedTimescaleScrapingConfig) (T, error), visualCrossingFunc func(VisualCrossingScrapingConfig) (T, error), bigQueryFunc func(BigQueryScrapingConfig) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ScrapingConfigWithT[T]) AcceptFuncs(influxFunc func(InfluxScrapingConfig) (T, error), nominalFunc func(NominalScrapingConfig) (T, error), timestreamFunc func(TimestreamScrapingConfig) (T, error), timescaleFunc func(PivotedTimescaleScrapingConfig) (T, error), visualCrossingFunc func(VisualCrossingScrapingConfig) (T, error), bigQueryFunc func(BigQueryScrapingConfig) (T, error), apiFunc func(ApiScrapingConfig) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -594,6 +696,11 @@ func (u *ScrapingConfigWithT[T]) AcceptFuncs(influxFunc func(InfluxScrapingConfi
 			return result, fmt.Errorf("field \"bigQuery\" is required")
 		}
 		return bigQueryFunc(*u.bigQuery)
+	case "api":
+		if u.api == nil {
+			return result, fmt.Errorf("field \"api\" is required")
+		}
+		return apiFunc(*u.api)
 	}
 }
 
@@ -627,6 +734,11 @@ func (u *ScrapingConfigWithT[T]) BigQueryNoopSuccess(BigQueryScrapingConfig) (T,
 	return result, nil
 }
 
+func (u *ScrapingConfigWithT[T]) ApiNoopSuccess(ApiScrapingConfig) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ScrapingConfigWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -639,6 +751,7 @@ type ScrapingConfigVisitorWithT[T any] interface {
 	VisitTimescale(ctx context.Context, v PivotedTimescaleScrapingConfig) (T, error)
 	VisitVisualCrossing(ctx context.Context, v VisualCrossingScrapingConfig) (T, error)
 	VisitBigQuery(ctx context.Context, v BigQueryScrapingConfig) (T, error)
+	VisitApi(ctx context.Context, v ApiScrapingConfig) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

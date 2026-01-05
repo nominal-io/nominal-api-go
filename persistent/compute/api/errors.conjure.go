@@ -17,6 +17,154 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+type invalidClientMessage struct{}
+
+func (o invalidClientMessage) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidClientMessage) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidClientMessage returns new instance of InvalidClientMessage error.
+func NewInvalidClientMessage() *InvalidClientMessage {
+	return &InvalidClientMessage{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidClientMessage: invalidClientMessage{}}
+}
+
+// WrapWithInvalidClientMessage returns new instance of InvalidClientMessage error wrapping an existing error.
+func WrapWithInvalidClientMessage(err error) *InvalidClientMessage {
+	return &InvalidClientMessage{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidClientMessage: invalidClientMessage{}}
+}
+
+// InvalidClientMessage is an error type.
+// Could not parse client message.
+type InvalidClientMessage struct {
+	errorInstanceID uuid.UUID
+	invalidClientMessage
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidClientMessage returns true if err is an instance of InvalidClientMessage.
+func IsInvalidClientMessage(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidClientMessage)
+	return ok
+}
+
+func (e *InvalidClientMessage) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT PersistentCompute:InvalidClientMessage (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidClientMessage) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidClientMessage) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidClientMessage) Message() string {
+	return "INVALID_ARGUMENT PersistentCompute:InvalidClientMessage"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidClientMessage) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidClientMessage) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidClientMessage) Name() string {
+	return "PersistentCompute:InvalidClientMessage"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidClientMessage) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidClientMessage) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidClientMessage) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidClientMessage) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidClientMessage) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidClientMessage) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidClientMessage) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidClientMessage)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "PersistentCompute:InvalidClientMessage", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidClientMessage) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidClientMessage
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidClientMessage = parameters
+	return nil
+}
+
 type invalidComputation struct {
 	InvalidTypes []InvalidComputationType `json:"invalidTypes"`
 }
@@ -806,6 +954,156 @@ func (e *TooManyPointsForSingleSeries) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type unavailableResultConfiguration struct {
+	Reason UnavailableResultConfigurationReason `json:"reason"`
+}
+
+func (o unavailableResultConfiguration) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *unavailableResultConfiguration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewUnavailableResultConfiguration returns new instance of UnavailableResultConfiguration error.
+func NewUnavailableResultConfiguration(reasonArg UnavailableResultConfigurationReason) *UnavailableResultConfiguration {
+	return &UnavailableResultConfiguration{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), unavailableResultConfiguration: unavailableResultConfiguration{Reason: reasonArg}}
+}
+
+// WrapWithUnavailableResultConfiguration returns new instance of UnavailableResultConfiguration error wrapping an existing error.
+func WrapWithUnavailableResultConfiguration(err error, reasonArg UnavailableResultConfigurationReason) *UnavailableResultConfiguration {
+	return &UnavailableResultConfiguration{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, unavailableResultConfiguration: unavailableResultConfiguration{Reason: reasonArg}}
+}
+
+// UnavailableResultConfiguration is an error type.
+// ResultConfiguration is incompatible with the requested compute.
+type UnavailableResultConfiguration struct {
+	errorInstanceID uuid.UUID
+	unavailableResultConfiguration
+	cause error
+	stack werror.StackTrace
+}
+
+// IsUnavailableResultConfiguration returns true if err is an instance of UnavailableResultConfiguration.
+func IsUnavailableResultConfiguration(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*UnavailableResultConfiguration)
+	return ok
+}
+
+func (e *UnavailableResultConfiguration) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT PersistentCompute:UnavailableResultConfiguration (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *UnavailableResultConfiguration) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *UnavailableResultConfiguration) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *UnavailableResultConfiguration) Message() string {
+	return "INVALID_ARGUMENT PersistentCompute:UnavailableResultConfiguration"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *UnavailableResultConfiguration) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *UnavailableResultConfiguration) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *UnavailableResultConfiguration) Name() string {
+	return "PersistentCompute:UnavailableResultConfiguration"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *UnavailableResultConfiguration) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *UnavailableResultConfiguration) Parameters() map[string]interface{} {
+	return map[string]interface{}{"reason": e.Reason}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *UnavailableResultConfiguration) safeParams() map[string]interface{} {
+	return map[string]interface{}{"reason": e.Reason, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UnavailableResultConfiguration) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *UnavailableResultConfiguration) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UnavailableResultConfiguration) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e UnavailableResultConfiguration) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.unavailableResultConfiguration)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "PersistentCompute:UnavailableResultConfiguration", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *UnavailableResultConfiguration) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters unavailableResultConfiguration
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.unavailableResultConfiguration = parameters
+	return nil
+}
+
 type unsupportedGranularity struct{}
 
 func (o unsupportedGranularity) MarshalYAML() (interface{}, error) {
@@ -1397,11 +1695,13 @@ func (e *WindowWithLookBackTooLarge) UnmarshalJSON(data []byte) error {
 }
 
 func init() {
+	conjureerrors.RegisterErrorType("PersistentCompute:InvalidClientMessage", reflect.TypeOf(InvalidClientMessage{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:InvalidComputation", reflect.TypeOf(InvalidComputation{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:NonNominalStorageLocator", reflect.TypeOf(NonNominalStorageLocator{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:PermissionDenied", reflect.TypeOf(PermissionDenied{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:TooManyPoints", reflect.TypeOf(TooManyPoints{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:TooManyPointsForSingleSeries", reflect.TypeOf(TooManyPointsForSingleSeries{}))
+	conjureerrors.RegisterErrorType("PersistentCompute:UnavailableResultConfiguration", reflect.TypeOf(UnavailableResultConfiguration{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:UnsupportedGranularity", reflect.TypeOf(UnsupportedGranularity{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:WindowNegative", reflect.TypeOf(WindowNegative{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:WindowTooLarge", reflect.TypeOf(WindowTooLarge{}))

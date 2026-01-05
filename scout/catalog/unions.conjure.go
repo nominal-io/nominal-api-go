@@ -8,6 +8,7 @@ import (
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/datasource"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
@@ -224,6 +225,142 @@ func NewAbsoluteTimestampFromEpochOfTimeUnit(v EpochTimestamp) AbsoluteTimestamp
 
 func NewAbsoluteTimestampFromCustomFormat(v CustomTimestamp) AbsoluteTimestamp {
 	return AbsoluteTimestamp{typ: "customFormat", customFormat: &v}
+}
+
+// Metadata specific to different file types stored in datasets.
+type DatasetFileMetadata struct {
+	typ   string
+	video *datasource.VideoFileMetadata
+}
+
+type datasetFileMetadataDeserializer struct {
+	Type  string                        `json:"type"`
+	Video *datasource.VideoFileMetadata `json:"video"`
+}
+
+func (u *datasetFileMetadataDeserializer) toStruct() DatasetFileMetadata {
+	return DatasetFileMetadata{typ: u.Type, video: u.Video}
+}
+
+func (u *DatasetFileMetadata) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "video":
+		if u.video == nil {
+			return nil, fmt.Errorf("field \"video\" is required")
+		}
+		return struct {
+			Type  string                       `json:"type"`
+			Video datasource.VideoFileMetadata `json:"video"`
+		}{Type: "video", Video: *u.video}, nil
+	}
+}
+
+func (u DatasetFileMetadata) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *DatasetFileMetadata) UnmarshalJSON(data []byte) error {
+	var deser datasetFileMetadataDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
+	}
+	return nil
+}
+
+func (u DatasetFileMetadata) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *DatasetFileMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *DatasetFileMetadata) AcceptFuncs(videoFunc func(datasource.VideoFileMetadata) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
+		return videoFunc(*u.video)
+	}
+}
+
+func (u *DatasetFileMetadata) VideoNoopSuccess(datasource.VideoFileMetadata) error {
+	return nil
+}
+
+func (u *DatasetFileMetadata) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *DatasetFileMetadata) Accept(v DatasetFileMetadataVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
+		return v.VisitVideo(*u.video)
+	}
+}
+
+type DatasetFileMetadataVisitor interface {
+	VisitVideo(v datasource.VideoFileMetadata) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *DatasetFileMetadata) AcceptWithContext(ctx context.Context, v DatasetFileMetadataVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
+		return v.VisitVideoWithContext(ctx, *u.video)
+	}
+}
+
+type DatasetFileMetadataVisitorWithContext interface {
+	VisitVideoWithContext(ctx context.Context, v datasource.VideoFileMetadata) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewDatasetFileMetadataFromVideo(v datasource.VideoFileMetadata) DatasetFileMetadata {
+	return DatasetFileMetadata{typ: "video", video: &v}
 }
 
 type Handle struct {

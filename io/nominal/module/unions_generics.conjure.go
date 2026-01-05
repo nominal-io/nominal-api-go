@@ -9,9 +9,8 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api1 "github.com/nominal-io/nominal-api-go/modules/api"
-	"github.com/nominal-io/nominal-api-go/scout/compute/api"
-	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	"github.com/nominal-io/nominal-api-go/scout/compute/api1"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 )
 
 type FunctionNodeWithT[T any] FunctionNode
@@ -42,7 +41,7 @@ func (u *FunctionNodeWithT[T]) Accept(ctx context.Context, v FunctionNodeVisitor
 	}
 }
 
-func (u *FunctionNodeWithT[T]) AcceptFuncs(enumFunc func(api.EnumSeries) (T, error), numericFunc func(api.NumericSeries) (T, error), rangesFunc func(api.RangeSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *FunctionNodeWithT[T]) AcceptFuncs(enumFunc func(api1.EnumSeries) (T, error), numericFunc func(api1.NumericSeries) (T, error), rangesFunc func(api1.RangeSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -68,17 +67,17 @@ func (u *FunctionNodeWithT[T]) AcceptFuncs(enumFunc func(api.EnumSeries) (T, err
 	}
 }
 
-func (u *FunctionNodeWithT[T]) EnumNoopSuccess(api.EnumSeries) (T, error) {
+func (u *FunctionNodeWithT[T]) EnumNoopSuccess(api1.EnumSeries) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *FunctionNodeWithT[T]) NumericNoopSuccess(api.NumericSeries) (T, error) {
+func (u *FunctionNodeWithT[T]) NumericNoopSuccess(api1.NumericSeries) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *FunctionNodeWithT[T]) RangesNoopSuccess(api.RangeSeries) (T, error) {
+func (u *FunctionNodeWithT[T]) RangesNoopSuccess(api1.RangeSeries) (T, error) {
 	var result T
 	return result, nil
 }
@@ -89,9 +88,9 @@ func (u *FunctionNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type FunctionNodeVisitorWithT[T any] interface {
-	VisitEnum(ctx context.Context, v api.EnumSeries) (T, error)
-	VisitNumeric(ctx context.Context, v api.NumericSeries) (T, error)
-	VisitRanges(ctx context.Context, v api.RangeSeries) (T, error)
+	VisitEnum(ctx context.Context, v api1.EnumSeries) (T, error)
+	VisitNumeric(ctx context.Context, v api1.NumericSeries) (T, error)
+	VisitRanges(ctx context.Context, v api1.RangeSeries) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -110,10 +109,15 @@ func (u *RequestModuleRefWithT[T]) Accept(ctx context.Context, v RequestModuleRe
 			return result, fmt.Errorf("field \"name\" is required")
 		}
 		return v.VisitName(ctx, *u.name)
+	case "rid":
+		if u.rid == nil {
+			return result, fmt.Errorf("field \"rid\" is required")
+		}
+		return v.VisitRid(ctx, *u.rid)
 	}
 }
 
-func (u *RequestModuleRefWithT[T]) AcceptFuncs(nameFunc func(RequestModuleNameRef) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *RequestModuleRefWithT[T]) AcceptFuncs(nameFunc func(RequestModuleNameRef) (T, error), ridFunc func(RequestModuleRidRef) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -126,10 +130,20 @@ func (u *RequestModuleRefWithT[T]) AcceptFuncs(nameFunc func(RequestModuleNameRe
 			return result, fmt.Errorf("field \"name\" is required")
 		}
 		return nameFunc(*u.name)
+	case "rid":
+		if u.rid == nil {
+			return result, fmt.Errorf("field \"rid\" is required")
+		}
+		return ridFunc(*u.rid)
 	}
 }
 
 func (u *RequestModuleRefWithT[T]) NameNoopSuccess(RequestModuleNameRef) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *RequestModuleRefWithT[T]) RidNoopSuccess(RequestModuleRidRef) (T, error) {
 	var result T
 	return result, nil
 }
@@ -141,135 +155,7 @@ func (u *RequestModuleRefWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type RequestModuleRefVisitorWithT[T any] interface {
 	VisitName(ctx context.Context, v RequestModuleNameRef) (T, error)
-	VisitUnknown(ctx context.Context, typ string) (T, error)
-}
-
-type SearchModuleApplicationsQueryWithT[T any] SearchModuleApplicationsQuery
-
-func (u *SearchModuleApplicationsQueryWithT[T]) Accept(ctx context.Context, v SearchModuleApplicationsQueryVisitorWithT[T]) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(ctx, u.typ)
-	case "moduleRid":
-		if u.moduleRid == nil {
-			return result, fmt.Errorf("field \"moduleRid\" is required")
-		}
-		return v.VisitModuleRid(ctx, *u.moduleRid)
-	case "assetRid":
-		if u.assetRid == nil {
-			return result, fmt.Errorf("field \"assetRid\" is required")
-		}
-		return v.VisitAssetRid(ctx, *u.assetRid)
-	case "workspace":
-		if u.workspace == nil {
-			return result, fmt.Errorf("field \"workspace\" is required")
-		}
-		return v.VisitWorkspace(ctx, *u.workspace)
-	case "and":
-		if u.and == nil {
-			return result, fmt.Errorf("field \"and\" is required")
-		}
-		return v.VisitAnd(ctx, *u.and)
-	case "or":
-		if u.or == nil {
-			return result, fmt.Errorf("field \"or\" is required")
-		}
-		return v.VisitOr(ctx, *u.or)
-	case "not":
-		if u.not == nil {
-			return result, fmt.Errorf("field \"not\" is required")
-		}
-		return v.VisitNot(ctx, *u.not)
-	}
-}
-
-func (u *SearchModuleApplicationsQueryWithT[T]) AcceptFuncs(moduleRidFunc func(api1.ModuleRid) (T, error), assetRidFunc func(api2.AssetRid) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), andFunc func([]SearchModuleApplicationsQuery) (T, error), orFunc func([]SearchModuleApplicationsQuery) (T, error), notFunc func(SearchModuleApplicationsQuery) (T, error), unknownFunc func(string) (T, error)) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "moduleRid":
-		if u.moduleRid == nil {
-			return result, fmt.Errorf("field \"moduleRid\" is required")
-		}
-		return moduleRidFunc(*u.moduleRid)
-	case "assetRid":
-		if u.assetRid == nil {
-			return result, fmt.Errorf("field \"assetRid\" is required")
-		}
-		return assetRidFunc(*u.assetRid)
-	case "workspace":
-		if u.workspace == nil {
-			return result, fmt.Errorf("field \"workspace\" is required")
-		}
-		return workspaceFunc(*u.workspace)
-	case "and":
-		if u.and == nil {
-			return result, fmt.Errorf("field \"and\" is required")
-		}
-		return andFunc(*u.and)
-	case "or":
-		if u.or == nil {
-			return result, fmt.Errorf("field \"or\" is required")
-		}
-		return orFunc(*u.or)
-	case "not":
-		if u.not == nil {
-			return result, fmt.Errorf("field \"not\" is required")
-		}
-		return notFunc(*u.not)
-	}
-}
-
-func (u *SearchModuleApplicationsQueryWithT[T]) ModuleRidNoopSuccess(api1.ModuleRid) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *SearchModuleApplicationsQueryWithT[T]) AssetRidNoopSuccess(api2.AssetRid) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *SearchModuleApplicationsQueryWithT[T]) WorkspaceNoopSuccess(rids.WorkspaceRid) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *SearchModuleApplicationsQueryWithT[T]) AndNoopSuccess([]SearchModuleApplicationsQuery) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *SearchModuleApplicationsQueryWithT[T]) OrNoopSuccess([]SearchModuleApplicationsQuery) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *SearchModuleApplicationsQueryWithT[T]) NotNoopSuccess(SearchModuleApplicationsQuery) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *SearchModuleApplicationsQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
-	var result T
-	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-type SearchModuleApplicationsQueryVisitorWithT[T any] interface {
-	VisitModuleRid(ctx context.Context, v api1.ModuleRid) (T, error)
-	VisitAssetRid(ctx context.Context, v api2.AssetRid) (T, error)
-	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
-	VisitAnd(ctx context.Context, v []SearchModuleApplicationsQuery) (T, error)
-	VisitOr(ctx context.Context, v []SearchModuleApplicationsQuery) (T, error)
-	VisitNot(ctx context.Context, v SearchModuleApplicationsQuery) (T, error)
+	VisitRid(ctx context.Context, v RequestModuleRidRef) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -321,7 +207,7 @@ func (u *SearchModulesQueryWithT[T]) Accept(ctx context.Context, v SearchModules
 	}
 }
 
-func (u *SearchModulesQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), createdByFunc func(api2.UserRid) (T, error), lastUpdatedByFunc func(api2.UserRid) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), andFunc func([]SearchModulesQuery) (T, error), orFunc func([]SearchModulesQuery) (T, error), notFunc func(SearchModulesQuery) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchModulesQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), createdByFunc func(api.UserRid) (T, error), lastUpdatedByFunc func(api.UserRid) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), andFunc func([]SearchModulesQuery) (T, error), orFunc func([]SearchModulesQuery) (T, error), notFunc func(SearchModulesQuery) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -372,12 +258,12 @@ func (u *SearchModulesQueryWithT[T]) SearchTextNoopSuccess(string) (T, error) {
 	return result, nil
 }
 
-func (u *SearchModulesQueryWithT[T]) CreatedByNoopSuccess(api2.UserRid) (T, error) {
+func (u *SearchModulesQueryWithT[T]) CreatedByNoopSuccess(api.UserRid) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *SearchModulesQueryWithT[T]) LastUpdatedByNoopSuccess(api2.UserRid) (T, error) {
+func (u *SearchModulesQueryWithT[T]) LastUpdatedByNoopSuccess(api.UserRid) (T, error) {
 	var result T
 	return result, nil
 }
@@ -409,8 +295,8 @@ func (u *SearchModulesQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) 
 
 type SearchModulesQueryVisitorWithT[T any] interface {
 	VisitSearchText(ctx context.Context, v string) (T, error)
-	VisitCreatedBy(ctx context.Context, v api2.UserRid) (T, error)
-	VisitLastUpdatedBy(ctx context.Context, v api2.UserRid) (T, error)
+	VisitCreatedBy(ctx context.Context, v api.UserRid) (T, error)
+	VisitLastUpdatedBy(ctx context.Context, v api.UserRid) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
 	VisitAnd(ctx context.Context, v []SearchModulesQuery) (T, error)
 	VisitOr(ctx context.Context, v []SearchModulesQuery) (T, error)

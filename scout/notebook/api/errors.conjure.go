@@ -1871,6 +1871,155 @@ func (e *SearchNotebooksLimitExceeded) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type snapshotNotFound struct {
+	SnapshotRid api.SnapshotRid `json:"snapshotRid"`
+}
+
+func (o snapshotNotFound) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *snapshotNotFound) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewSnapshotNotFound returns new instance of SnapshotNotFound error.
+func NewSnapshotNotFound(snapshotRidArg api.SnapshotRid) *SnapshotNotFound {
+	return &SnapshotNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), snapshotNotFound: snapshotNotFound{SnapshotRid: snapshotRidArg}}
+}
+
+// WrapWithSnapshotNotFound returns new instance of SnapshotNotFound error wrapping an existing error.
+func WrapWithSnapshotNotFound(err error, snapshotRidArg api.SnapshotRid) *SnapshotNotFound {
+	return &SnapshotNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, snapshotNotFound: snapshotNotFound{SnapshotRid: snapshotRidArg}}
+}
+
+// SnapshotNotFound is an error type.
+type SnapshotNotFound struct {
+	errorInstanceID uuid.UUID
+	snapshotNotFound
+	cause error
+	stack werror.StackTrace
+}
+
+// IsSnapshotNotFound returns true if err is an instance of SnapshotNotFound.
+func IsSnapshotNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*SnapshotNotFound)
+	return ok
+}
+
+func (e *SnapshotNotFound) Error() string {
+	return fmt.Sprintf("NOT_FOUND Scout:SnapshotNotFound (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *SnapshotNotFound) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *SnapshotNotFound) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *SnapshotNotFound) Message() string {
+	return "NOT_FOUND Scout:SnapshotNotFound"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *SnapshotNotFound) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *SnapshotNotFound) Code() errors.ErrorCode {
+	return errors.NotFound
+}
+
+// Name returns an error name identifying error type.
+func (e *SnapshotNotFound) Name() string {
+	return "Scout:SnapshotNotFound"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *SnapshotNotFound) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *SnapshotNotFound) Parameters() map[string]interface{} {
+	return map[string]interface{}{"snapshotRid": e.SnapshotRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *SnapshotNotFound) safeParams() map[string]interface{} {
+	return map[string]interface{}{"snapshotRid": e.SnapshotRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *SnapshotNotFound) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *SnapshotNotFound) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *SnapshotNotFound) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e SnapshotNotFound) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.snapshotNotFound)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Scout:SnapshotNotFound", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *SnapshotNotFound) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters snapshotNotFound
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.snapshotNotFound = parameters
+	return nil
+}
+
 type updateNotebookTagsFailed struct {
 	NotebookRid api.NotebookRid `json:"notebookRid"`
 }
@@ -2033,5 +2182,6 @@ func init() {
 	conjureerrors.RegisterErrorType("Scout:SaveNotebookFailed", reflect.TypeOf(SaveNotebookFailed{}))
 	conjureerrors.RegisterErrorType("Scout:SearchNotebooksFailed", reflect.TypeOf(SearchNotebooksFailed{}))
 	conjureerrors.RegisterErrorType("Scout:SearchNotebooksLimitExceeded", reflect.TypeOf(SearchNotebooksLimitExceeded{}))
+	conjureerrors.RegisterErrorType("Scout:SnapshotNotFound", reflect.TypeOf(SnapshotNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:UpdateNotebookTagsFailed", reflect.TypeOf(UpdateNotebookTagsFailed{}))
 }

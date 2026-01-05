@@ -68,6 +68,61 @@ func (o *CreateSecretRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type DecryptedSecret struct {
+	Rid            SecretRid                              `json:"rid"`
+	Name           string                                 `json:"name"`
+	Description    string                                 `json:"description"`
+	DecryptedValue string                                 `json:"decryptedValue"`
+	CreatedBy      rid.ResourceIdentifier                 `json:"createdBy"`
+	Properties     map[api.PropertyName]api.PropertyValue `json:"properties"`
+	Labels         []api.Label                            `json:"labels"`
+	CreatedAt      datetime.DateTime                      `json:"createdAt"`
+	IsArchived     bool                                   `json:"isArchived"`
+}
+
+func (o DecryptedSecret) MarshalJSON() ([]byte, error) {
+	if o.Properties == nil {
+		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+	}
+	if o.Labels == nil {
+		o.Labels = make([]api.Label, 0)
+	}
+	type _tmpDecryptedSecret DecryptedSecret
+	return safejson.Marshal(_tmpDecryptedSecret(o))
+}
+
+func (o *DecryptedSecret) UnmarshalJSON(data []byte) error {
+	type _tmpDecryptedSecret DecryptedSecret
+	var rawDecryptedSecret _tmpDecryptedSecret
+	if err := safejson.Unmarshal(data, &rawDecryptedSecret); err != nil {
+		return err
+	}
+	if rawDecryptedSecret.Properties == nil {
+		rawDecryptedSecret.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+	}
+	if rawDecryptedSecret.Labels == nil {
+		rawDecryptedSecret.Labels = make([]api.Label, 0)
+	}
+	*o = DecryptedSecret(rawDecryptedSecret)
+	return nil
+}
+
+func (o DecryptedSecret) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DecryptedSecret) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type GetSecretsRequest struct {
 	SecretRids []SecretRid `json:"secretRids"`
 }
@@ -294,10 +349,11 @@ func (o *SortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type UpdateSecretRequest struct {
-	Name        *string                                 `json:"name,omitempty"`
-	Description *string                                 `json:"description,omitempty"`
-	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
-	Labels      *[]api.Label                            `json:"labels,omitempty"`
+	Name           *string                                 `json:"name,omitempty"`
+	Description    *string                                 `json:"description,omitempty"`
+	Properties     *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
+	Labels         *[]api.Label                            `json:"labels,omitempty"`
+	DecryptedValue *string                                 `json:"decryptedValue,omitempty"`
 }
 
 func (o UpdateSecretRequest) MarshalYAML() (interface{}, error) {

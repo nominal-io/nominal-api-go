@@ -83,10 +83,20 @@ func (u *IngestStatusV2WithT[T]) Accept(ctx context.Context, v IngestStatusV2Vis
 			return result, fmt.Errorf("field \"inProgress\" is required")
 		}
 		return v.VisitInProgress(ctx, *u.inProgress)
+	case "deletionInProgress":
+		if u.deletionInProgress == nil {
+			return result, fmt.Errorf("field \"deletionInProgress\" is required")
+		}
+		return v.VisitDeletionInProgress(ctx, *u.deletionInProgress)
+	case "deleted":
+		if u.deleted == nil {
+			return result, fmt.Errorf("field \"deleted\" is required")
+		}
+		return v.VisitDeleted(ctx, *u.deleted)
 	}
 }
 
-func (u *IngestStatusV2WithT[T]) AcceptFuncs(successFunc func(SuccessResult) (T, error), errorFunc func(ErrorResult) (T, error), inProgressFunc func(InProgressResult) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IngestStatusV2WithT[T]) AcceptFuncs(successFunc func(SuccessResult) (T, error), errorFunc func(ErrorResult) (T, error), inProgressFunc func(InProgressResult) (T, error), deletionInProgressFunc func(DeletionInProgress) (T, error), deletedFunc func(Deleted) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -109,6 +119,16 @@ func (u *IngestStatusV2WithT[T]) AcceptFuncs(successFunc func(SuccessResult) (T,
 			return result, fmt.Errorf("field \"inProgress\" is required")
 		}
 		return inProgressFunc(*u.inProgress)
+	case "deletionInProgress":
+		if u.deletionInProgress == nil {
+			return result, fmt.Errorf("field \"deletionInProgress\" is required")
+		}
+		return deletionInProgressFunc(*u.deletionInProgress)
+	case "deleted":
+		if u.deleted == nil {
+			return result, fmt.Errorf("field \"deleted\" is required")
+		}
+		return deletedFunc(*u.deleted)
 	}
 }
 
@@ -127,6 +147,16 @@ func (u *IngestStatusV2WithT[T]) InProgressNoopSuccess(InProgressResult) (T, err
 	return result, nil
 }
 
+func (u *IngestStatusV2WithT[T]) DeletionInProgressNoopSuccess(DeletionInProgress) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestStatusV2WithT[T]) DeletedNoopSuccess(Deleted) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *IngestStatusV2WithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -136,6 +166,8 @@ type IngestStatusV2VisitorWithT[T any] interface {
 	VisitSuccess(ctx context.Context, v SuccessResult) (T, error)
 	VisitError(ctx context.Context, v ErrorResult) (T, error)
 	VisitInProgress(ctx context.Context, v InProgressResult) (T, error)
+	VisitDeletionInProgress(ctx context.Context, v DeletionInProgress) (T, error)
+	VisitDeleted(ctx context.Context, v Deleted) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

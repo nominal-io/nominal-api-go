@@ -29,10 +29,20 @@ func (u *CreateIntegrationDetailsWithT[T]) Accept(ctx context.Context, v CreateI
 			return result, fmt.Errorf("field \"createOpsgenieIntegrationDetails\" is required")
 		}
 		return v.VisitCreateOpsgenieIntegrationDetails(ctx, *u.createOpsgenieIntegrationDetails)
+	case "createTeamsWebhookIntegrationDetails":
+		if u.createTeamsWebhookIntegrationDetails == nil {
+			return result, fmt.Errorf("field \"createTeamsWebhookIntegrationDetails\" is required")
+		}
+		return v.VisitCreateTeamsWebhookIntegrationDetails(ctx, *u.createTeamsWebhookIntegrationDetails)
+	case "createPagerDutyIntegrationDetails":
+		if u.createPagerDutyIntegrationDetails == nil {
+			return result, fmt.Errorf("field \"createPagerDutyIntegrationDetails\" is required")
+		}
+		return v.VisitCreatePagerDutyIntegrationDetails(ctx, *u.createPagerDutyIntegrationDetails)
 	}
 }
 
-func (u *CreateIntegrationDetailsWithT[T]) AcceptFuncs(createSimpleWebhookDetailsFunc func(CreateSimpleWebhookDetails) (T, error), createOpsgenieIntegrationDetailsFunc func(CreateOpsgenieIntegrationDetails) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *CreateIntegrationDetailsWithT[T]) AcceptFuncs(createSimpleWebhookDetailsFunc func(CreateSimpleWebhookDetails) (T, error), createOpsgenieIntegrationDetailsFunc func(CreateOpsgenieIntegrationDetails) (T, error), createTeamsWebhookIntegrationDetailsFunc func(CreateTeamsWebhookIntegrationDetails) (T, error), createPagerDutyIntegrationDetailsFunc func(CreatePagerDutyIntegrationDetails) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -50,6 +60,16 @@ func (u *CreateIntegrationDetailsWithT[T]) AcceptFuncs(createSimpleWebhookDetail
 			return result, fmt.Errorf("field \"createOpsgenieIntegrationDetails\" is required")
 		}
 		return createOpsgenieIntegrationDetailsFunc(*u.createOpsgenieIntegrationDetails)
+	case "createTeamsWebhookIntegrationDetails":
+		if u.createTeamsWebhookIntegrationDetails == nil {
+			return result, fmt.Errorf("field \"createTeamsWebhookIntegrationDetails\" is required")
+		}
+		return createTeamsWebhookIntegrationDetailsFunc(*u.createTeamsWebhookIntegrationDetails)
+	case "createPagerDutyIntegrationDetails":
+		if u.createPagerDutyIntegrationDetails == nil {
+			return result, fmt.Errorf("field \"createPagerDutyIntegrationDetails\" is required")
+		}
+		return createPagerDutyIntegrationDetailsFunc(*u.createPagerDutyIntegrationDetails)
 	}
 }
 
@@ -63,6 +83,16 @@ func (u *CreateIntegrationDetailsWithT[T]) CreateOpsgenieIntegrationDetailsNoopS
 	return result, nil
 }
 
+func (u *CreateIntegrationDetailsWithT[T]) CreateTeamsWebhookIntegrationDetailsNoopSuccess(CreateTeamsWebhookIntegrationDetails) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CreateIntegrationDetailsWithT[T]) CreatePagerDutyIntegrationDetailsNoopSuccess(CreatePagerDutyIntegrationDetails) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *CreateIntegrationDetailsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -71,6 +101,8 @@ func (u *CreateIntegrationDetailsWithT[T]) ErrorOnUnknown(typeName string) (T, e
 type CreateIntegrationDetailsVisitorWithT[T any] interface {
 	VisitCreateSimpleWebhookDetails(ctx context.Context, v CreateSimpleWebhookDetails) (T, error)
 	VisitCreateOpsgenieIntegrationDetails(ctx context.Context, v CreateOpsgenieIntegrationDetails) (T, error)
+	VisitCreateTeamsWebhookIntegrationDetails(ctx context.Context, v CreateTeamsWebhookIntegrationDetails) (T, error)
+	VisitCreatePagerDutyIntegrationDetails(ctx context.Context, v CreatePagerDutyIntegrationDetails) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -99,10 +131,20 @@ func (u *IntegrationDetailsWithT[T]) Accept(ctx context.Context, v IntegrationDe
 			return result, fmt.Errorf("field \"simpleWebhookIntegration\" is required")
 		}
 		return v.VisitSimpleWebhookIntegration(ctx, *u.simpleWebhookIntegration)
+	case "teamsWebhookIntegration":
+		if u.teamsWebhookIntegration == nil {
+			return result, fmt.Errorf("field \"teamsWebhookIntegration\" is required")
+		}
+		return v.VisitTeamsWebhookIntegration(ctx, *u.teamsWebhookIntegration)
+	case "pagerDutyIntegration":
+		if u.pagerDutyIntegration == nil {
+			return result, fmt.Errorf("field \"pagerDutyIntegration\" is required")
+		}
+		return v.VisitPagerDutyIntegration(ctx, *u.pagerDutyIntegration)
 	}
 }
 
-func (u *IntegrationDetailsWithT[T]) AcceptFuncs(slackWebhookIntegrationFunc func(SlackWebhookIntegration) (T, error), opsgenieIntegrationFunc func(OpsgenieIntegration) (T, error), simpleWebhookIntegrationFunc func(SimpleWebhookIntegration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IntegrationDetailsWithT[T]) AcceptFuncs(slackWebhookIntegrationFunc func(SlackWebhookIntegration) (T, error), opsgenieIntegrationFunc func(OpsgenieIntegration) (T, error), simpleWebhookIntegrationFunc func(SimpleWebhookIntegration) (T, error), teamsWebhookIntegrationFunc func(TeamsWebhookIntegration) (T, error), pagerDutyIntegrationFunc func(PagerDutyIntegration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -125,6 +167,16 @@ func (u *IntegrationDetailsWithT[T]) AcceptFuncs(slackWebhookIntegrationFunc fun
 			return result, fmt.Errorf("field \"simpleWebhookIntegration\" is required")
 		}
 		return simpleWebhookIntegrationFunc(*u.simpleWebhookIntegration)
+	case "teamsWebhookIntegration":
+		if u.teamsWebhookIntegration == nil {
+			return result, fmt.Errorf("field \"teamsWebhookIntegration\" is required")
+		}
+		return teamsWebhookIntegrationFunc(*u.teamsWebhookIntegration)
+	case "pagerDutyIntegration":
+		if u.pagerDutyIntegration == nil {
+			return result, fmt.Errorf("field \"pagerDutyIntegration\" is required")
+		}
+		return pagerDutyIntegrationFunc(*u.pagerDutyIntegration)
 	}
 }
 
@@ -143,6 +195,16 @@ func (u *IntegrationDetailsWithT[T]) SimpleWebhookIntegrationNoopSuccess(SimpleW
 	return result, nil
 }
 
+func (u *IntegrationDetailsWithT[T]) TeamsWebhookIntegrationNoopSuccess(TeamsWebhookIntegration) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IntegrationDetailsWithT[T]) PagerDutyIntegrationNoopSuccess(PagerDutyIntegration) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *IntegrationDetailsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -152,5 +214,169 @@ type IntegrationDetailsVisitorWithT[T any] interface {
 	VisitSlackWebhookIntegration(ctx context.Context, v SlackWebhookIntegration) (T, error)
 	VisitOpsgenieIntegration(ctx context.Context, v OpsgenieIntegration) (T, error)
 	VisitSimpleWebhookIntegration(ctx context.Context, v SimpleWebhookIntegration) (T, error)
+	VisitTeamsWebhookIntegration(ctx context.Context, v TeamsWebhookIntegration) (T, error)
+	VisitPagerDutyIntegration(ctx context.Context, v PagerDutyIntegration) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type MessageFieldsWithT[T any] MessageFields
+
+func (u *MessageFieldsWithT[T]) Accept(ctx context.Context, v MessageFieldsVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "alert":
+		if u.alert == nil {
+			return result, fmt.Errorf("field \"alert\" is required")
+		}
+		return v.VisitAlert(ctx, *u.alert)
+	case "resolutionError":
+		if u.resolutionError == nil {
+			return result, fmt.Errorf("field \"resolutionError\" is required")
+		}
+		return v.VisitResolutionError(ctx, *u.resolutionError)
+	}
+}
+
+func (u *MessageFieldsWithT[T]) AcceptFuncs(alertFunc func(AlertMessageFields) (T, error), resolutionErrorFunc func(ResolutionFailureMessageFields) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "alert":
+		if u.alert == nil {
+			return result, fmt.Errorf("field \"alert\" is required")
+		}
+		return alertFunc(*u.alert)
+	case "resolutionError":
+		if u.resolutionError == nil {
+			return result, fmt.Errorf("field \"resolutionError\" is required")
+		}
+		return resolutionErrorFunc(*u.resolutionError)
+	}
+}
+
+func (u *MessageFieldsWithT[T]) AlertNoopSuccess(AlertMessageFields) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *MessageFieldsWithT[T]) ResolutionErrorNoopSuccess(ResolutionFailureMessageFields) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *MessageFieldsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type MessageFieldsVisitorWithT[T any] interface {
+	VisitAlert(ctx context.Context, v AlertMessageFields) (T, error)
+	VisitResolutionError(ctx context.Context, v ResolutionFailureMessageFields) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type UpdateIntegrationDetailsWithT[T any] UpdateIntegrationDetails
+
+func (u *UpdateIntegrationDetailsWithT[T]) Accept(ctx context.Context, v UpdateIntegrationDetailsVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "simpleWebhook":
+		if u.simpleWebhook == nil {
+			return result, fmt.Errorf("field \"simpleWebhook\" is required")
+		}
+		return v.VisitSimpleWebhook(ctx, *u.simpleWebhook)
+	case "opsgenieIntegration":
+		if u.opsgenieIntegration == nil {
+			return result, fmt.Errorf("field \"opsgenieIntegration\" is required")
+		}
+		return v.VisitOpsgenieIntegration(ctx, *u.opsgenieIntegration)
+	case "teamsWebhook":
+		if u.teamsWebhook == nil {
+			return result, fmt.Errorf("field \"teamsWebhook\" is required")
+		}
+		return v.VisitTeamsWebhook(ctx, *u.teamsWebhook)
+	case "pagerDuty":
+		if u.pagerDuty == nil {
+			return result, fmt.Errorf("field \"pagerDuty\" is required")
+		}
+		return v.VisitPagerDuty(ctx, *u.pagerDuty)
+	}
+}
+
+func (u *UpdateIntegrationDetailsWithT[T]) AcceptFuncs(simpleWebhookFunc func(UpdateSimpleWebhookDetails) (T, error), opsgenieIntegrationFunc func(UpdateOpsgenieIntegrationDetails) (T, error), teamsWebhookFunc func(UpdateTeamsWebhookIntegrationDetails) (T, error), pagerDutyFunc func(UpdatePagerDutyIntegrationDetails) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "simpleWebhook":
+		if u.simpleWebhook == nil {
+			return result, fmt.Errorf("field \"simpleWebhook\" is required")
+		}
+		return simpleWebhookFunc(*u.simpleWebhook)
+	case "opsgenieIntegration":
+		if u.opsgenieIntegration == nil {
+			return result, fmt.Errorf("field \"opsgenieIntegration\" is required")
+		}
+		return opsgenieIntegrationFunc(*u.opsgenieIntegration)
+	case "teamsWebhook":
+		if u.teamsWebhook == nil {
+			return result, fmt.Errorf("field \"teamsWebhook\" is required")
+		}
+		return teamsWebhookFunc(*u.teamsWebhook)
+	case "pagerDuty":
+		if u.pagerDuty == nil {
+			return result, fmt.Errorf("field \"pagerDuty\" is required")
+		}
+		return pagerDutyFunc(*u.pagerDuty)
+	}
+}
+
+func (u *UpdateIntegrationDetailsWithT[T]) SimpleWebhookNoopSuccess(UpdateSimpleWebhookDetails) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *UpdateIntegrationDetailsWithT[T]) OpsgenieIntegrationNoopSuccess(UpdateOpsgenieIntegrationDetails) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *UpdateIntegrationDetailsWithT[T]) TeamsWebhookNoopSuccess(UpdateTeamsWebhookIntegrationDetails) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *UpdateIntegrationDetailsWithT[T]) PagerDutyNoopSuccess(UpdatePagerDutyIntegrationDetails) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *UpdateIntegrationDetailsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type UpdateIntegrationDetailsVisitorWithT[T any] interface {
+	VisitSimpleWebhook(ctx context.Context, v UpdateSimpleWebhookDetails) (T, error)
+	VisitOpsgenieIntegration(ctx context.Context, v UpdateOpsgenieIntegrationDetails) (T, error)
+	VisitTeamsWebhook(ctx context.Context, v UpdateTeamsWebhookIntegrationDetails) (T, error)
+	VisitPagerDuty(ctx context.Context, v UpdatePagerDutyIntegrationDetails) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

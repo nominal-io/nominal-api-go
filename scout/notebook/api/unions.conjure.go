@@ -189,43 +189,59 @@ func NewNotebookDataScopeFromAssetRids(v []api1.AssetRid) NotebookDataScope {
 }
 
 type SearchNotebooksQuery struct {
-	typ            string
-	and            *[]SearchNotebooksQuery
-	or             *[]SearchNotebooksQuery
-	exactMatch     *string
-	searchText     *string
-	label          *api2.Label
-	property       *api2.Property
-	assetRid       *api1.AssetRid
-	exactAssetRids *[]api1.AssetRid
-	authorRid      *api1.UserRid
-	runRid         *api.RunRid
-	notebookType   *NotebookType
-	draftState     *bool
-	archived       *bool
-	workspace      *rids.WorkspaceRid
+	typ                 string
+	and                 *[]SearchNotebooksQuery
+	or                  *[]SearchNotebooksQuery
+	not                 *SearchNotebooksQuery
+	exactMatch          *string
+	searchText          *string
+	label               *api2.Label
+	labels              *api1.LabelsFilter
+	property            *api2.Property
+	properties          *api1.PropertiesFilter
+	assetRid            *api1.AssetRid
+	assetRids           *AssetsFilter
+	exactAssetRids      *[]api1.AssetRid
+	authorRid           *api1.UserRid
+	runRid              *api.RunRid
+	runRids             *RunsFilter
+	notebookType        *NotebookType
+	notebookTypes       *NotebookTypesFilter
+	draftState          *bool
+	archived            *bool
+	workspace           *rids.WorkspaceRid
+	authorIsCurrentUser *bool
+	authorRids          *[]api1.UserRid
 }
 
 type searchNotebooksQueryDeserializer struct {
-	Type           string                  `json:"type"`
-	And            *[]SearchNotebooksQuery `json:"and"`
-	Or             *[]SearchNotebooksQuery `json:"or"`
-	ExactMatch     *string                 `json:"exactMatch"`
-	SearchText     *string                 `json:"searchText"`
-	Label          *api2.Label             `json:"label"`
-	Property       *api2.Property          `json:"property"`
-	AssetRid       *api1.AssetRid          `json:"assetRid"`
-	ExactAssetRids *[]api1.AssetRid        `json:"exactAssetRids"`
-	AuthorRid      *api1.UserRid           `json:"authorRid"`
-	RunRid         *api.RunRid             `json:"runRid"`
-	NotebookType   *NotebookType           `json:"notebookType"`
-	DraftState     *bool                   `json:"draftState"`
-	Archived       *bool                   `json:"archived"`
-	Workspace      *rids.WorkspaceRid      `json:"workspace"`
+	Type                string                  `json:"type"`
+	And                 *[]SearchNotebooksQuery `json:"and"`
+	Or                  *[]SearchNotebooksQuery `json:"or"`
+	Not                 *SearchNotebooksQuery   `json:"not"`
+	ExactMatch          *string                 `json:"exactMatch"`
+	SearchText          *string                 `json:"searchText"`
+	Label               *api2.Label             `json:"label"`
+	Labels              *api1.LabelsFilter      `json:"labels"`
+	Property            *api2.Property          `json:"property"`
+	Properties          *api1.PropertiesFilter  `json:"properties"`
+	AssetRid            *api1.AssetRid          `json:"assetRid"`
+	AssetRids           *AssetsFilter           `json:"assetRids"`
+	ExactAssetRids      *[]api1.AssetRid        `json:"exactAssetRids"`
+	AuthorRid           *api1.UserRid           `json:"authorRid"`
+	RunRid              *api.RunRid             `json:"runRid"`
+	RunRids             *RunsFilter             `json:"runRids"`
+	NotebookType        *NotebookType           `json:"notebookType"`
+	NotebookTypes       *NotebookTypesFilter    `json:"notebookTypes"`
+	DraftState          *bool                   `json:"draftState"`
+	Archived            *bool                   `json:"archived"`
+	Workspace           *rids.WorkspaceRid      `json:"workspace"`
+	AuthorIsCurrentUser *bool                   `json:"authorIsCurrentUser"`
+	AuthorRids          *[]api1.UserRid         `json:"authorRids"`
 }
 
 func (u *searchNotebooksQueryDeserializer) toStruct() SearchNotebooksQuery {
-	return SearchNotebooksQuery{typ: u.Type, and: u.And, or: u.Or, exactMatch: u.ExactMatch, searchText: u.SearchText, label: u.Label, property: u.Property, assetRid: u.AssetRid, exactAssetRids: u.ExactAssetRids, authorRid: u.AuthorRid, runRid: u.RunRid, notebookType: u.NotebookType, draftState: u.DraftState, archived: u.Archived, workspace: u.Workspace}
+	return SearchNotebooksQuery{typ: u.Type, and: u.And, or: u.Or, not: u.Not, exactMatch: u.ExactMatch, searchText: u.SearchText, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, assetRid: u.AssetRid, assetRids: u.AssetRids, exactAssetRids: u.ExactAssetRids, authorRid: u.AuthorRid, runRid: u.RunRid, runRids: u.RunRids, notebookType: u.NotebookType, notebookTypes: u.NotebookTypes, draftState: u.DraftState, archived: u.Archived, workspace: u.Workspace, authorIsCurrentUser: u.AuthorIsCurrentUser, authorRids: u.AuthorRids}
 }
 
 func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
@@ -248,6 +264,14 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			Type string                 `json:"type"`
 			Or   []SearchNotebooksQuery `json:"or"`
 		}{Type: "or", Or: *u.or}, nil
+	case "not":
+		if u.not == nil {
+			return nil, fmt.Errorf("field \"not\" is required")
+		}
+		return struct {
+			Type string               `json:"type"`
+			Not  SearchNotebooksQuery `json:"not"`
+		}{Type: "not", Not: *u.not}, nil
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return nil, fmt.Errorf("field \"exactMatch\" is required")
@@ -272,6 +296,14 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			Type  string     `json:"type"`
 			Label api2.Label `json:"label"`
 		}{Type: "label", Label: *u.label}, nil
+	case "labels":
+		if u.labels == nil {
+			return nil, fmt.Errorf("field \"labels\" is required")
+		}
+		return struct {
+			Type   string            `json:"type"`
+			Labels api1.LabelsFilter `json:"labels"`
+		}{Type: "labels", Labels: *u.labels}, nil
 	case "property":
 		if u.property == nil {
 			return nil, fmt.Errorf("field \"property\" is required")
@@ -280,6 +312,14 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			Type     string        `json:"type"`
 			Property api2.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "properties":
+		if u.properties == nil {
+			return nil, fmt.Errorf("field \"properties\" is required")
+		}
+		return struct {
+			Type       string                `json:"type"`
+			Properties api1.PropertiesFilter `json:"properties"`
+		}{Type: "properties", Properties: *u.properties}, nil
 	case "assetRid":
 		if u.assetRid == nil {
 			return nil, fmt.Errorf("field \"assetRid\" is required")
@@ -288,6 +328,14 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			Type     string        `json:"type"`
 			AssetRid api1.AssetRid `json:"assetRid"`
 		}{Type: "assetRid", AssetRid: *u.assetRid}, nil
+	case "assetRids":
+		if u.assetRids == nil {
+			return nil, fmt.Errorf("field \"assetRids\" is required")
+		}
+		return struct {
+			Type      string       `json:"type"`
+			AssetRids AssetsFilter `json:"assetRids"`
+		}{Type: "assetRids", AssetRids: *u.assetRids}, nil
 	case "exactAssetRids":
 		if u.exactAssetRids == nil {
 			return nil, fmt.Errorf("field \"exactAssetRids\" is required")
@@ -312,6 +360,14 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			Type   string     `json:"type"`
 			RunRid api.RunRid `json:"runRid"`
 		}{Type: "runRid", RunRid: *u.runRid}, nil
+	case "runRids":
+		if u.runRids == nil {
+			return nil, fmt.Errorf("field \"runRids\" is required")
+		}
+		return struct {
+			Type    string     `json:"type"`
+			RunRids RunsFilter `json:"runRids"`
+		}{Type: "runRids", RunRids: *u.runRids}, nil
 	case "notebookType":
 		if u.notebookType == nil {
 			return nil, fmt.Errorf("field \"notebookType\" is required")
@@ -320,6 +376,14 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			Type         string       `json:"type"`
 			NotebookType NotebookType `json:"notebookType"`
 		}{Type: "notebookType", NotebookType: *u.notebookType}, nil
+	case "notebookTypes":
+		if u.notebookTypes == nil {
+			return nil, fmt.Errorf("field \"notebookTypes\" is required")
+		}
+		return struct {
+			Type          string              `json:"type"`
+			NotebookTypes NotebookTypesFilter `json:"notebookTypes"`
+		}{Type: "notebookTypes", NotebookTypes: *u.notebookTypes}, nil
 	case "draftState":
 		if u.draftState == nil {
 			return nil, fmt.Errorf("field \"draftState\" is required")
@@ -344,6 +408,22 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			Type      string            `json:"type"`
 			Workspace rids.WorkspaceRid `json:"workspace"`
 		}{Type: "workspace", Workspace: *u.workspace}, nil
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return nil, fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return struct {
+			Type                string `json:"type"`
+			AuthorIsCurrentUser bool   `json:"authorIsCurrentUser"`
+		}{Type: "authorIsCurrentUser", AuthorIsCurrentUser: *u.authorIsCurrentUser}, nil
+	case "authorRids":
+		if u.authorRids == nil {
+			return nil, fmt.Errorf("field \"authorRids\" is required")
+		}
+		return struct {
+			Type       string         `json:"type"`
+			AuthorRids []api1.UserRid `json:"authorRids"`
+		}{Type: "authorRids", AuthorRids: *u.authorRids}, nil
 	}
 }
 
@@ -370,6 +450,10 @@ func (u *SearchNotebooksQuery) UnmarshalJSON(data []byte) error {
 		if u.or == nil {
 			return fmt.Errorf("field \"or\" is required")
 		}
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -382,13 +466,25 @@ func (u *SearchNotebooksQuery) UnmarshalJSON(data []byte) error {
 		if u.label == nil {
 			return fmt.Errorf("field \"label\" is required")
 		}
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
 	case "assetRid":
 		if u.assetRid == nil {
 			return fmt.Errorf("field \"assetRid\" is required")
+		}
+	case "assetRids":
+		if u.assetRids == nil {
+			return fmt.Errorf("field \"assetRids\" is required")
 		}
 	case "exactAssetRids":
 		if u.exactAssetRids == nil {
@@ -402,9 +498,17 @@ func (u *SearchNotebooksQuery) UnmarshalJSON(data []byte) error {
 		if u.runRid == nil {
 			return fmt.Errorf("field \"runRid\" is required")
 		}
+	case "runRids":
+		if u.runRids == nil {
+			return fmt.Errorf("field \"runRids\" is required")
+		}
 	case "notebookType":
 		if u.notebookType == nil {
 			return fmt.Errorf("field \"notebookType\" is required")
+		}
+	case "notebookTypes":
+		if u.notebookTypes == nil {
+			return fmt.Errorf("field \"notebookTypes\" is required")
 		}
 	case "draftState":
 		if u.draftState == nil {
@@ -417,6 +521,14 @@ func (u *SearchNotebooksQuery) UnmarshalJSON(data []byte) error {
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
+		}
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
 		}
 	}
 	return nil
@@ -438,7 +550,7 @@ func (u *SearchNotebooksQuery) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchNotebooksQuery) AcceptFuncs(andFunc func([]SearchNotebooksQuery) error, orFunc func([]SearchNotebooksQuery) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, labelFunc func(api2.Label) error, propertyFunc func(api2.Property) error, assetRidFunc func(api1.AssetRid) error, exactAssetRidsFunc func([]api1.AssetRid) error, authorRidFunc func(api1.UserRid) error, runRidFunc func(api.RunRid) error, notebookTypeFunc func(NotebookType) error, draftStateFunc func(bool) error, archivedFunc func(bool) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *SearchNotebooksQuery) AcceptFuncs(andFunc func([]SearchNotebooksQuery) error, orFunc func([]SearchNotebooksQuery) error, notFunc func(SearchNotebooksQuery) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, labelFunc func(api2.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api2.Property) error, propertiesFunc func(api1.PropertiesFilter) error, assetRidFunc func(api1.AssetRid) error, assetRidsFunc func(AssetsFilter) error, exactAssetRidsFunc func([]api1.AssetRid) error, authorRidFunc func(api1.UserRid) error, runRidFunc func(api.RunRid) error, runRidsFunc func(RunsFilter) error, notebookTypeFunc func(NotebookType) error, notebookTypesFunc func(NotebookTypesFilter) error, draftStateFunc func(bool) error, archivedFunc func(bool) error, workspaceFunc func(rids.WorkspaceRid) error, authorIsCurrentUserFunc func(bool) error, authorRidsFunc func([]api1.UserRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -455,6 +567,11 @@ func (u *SearchNotebooksQuery) AcceptFuncs(andFunc func([]SearchNotebooksQuery) 
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return orFunc(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -470,16 +587,31 @@ func (u *SearchNotebooksQuery) AcceptFuncs(andFunc func([]SearchNotebooksQuery) 
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "assetRid":
 		if u.assetRid == nil {
 			return fmt.Errorf("field \"assetRid\" is required")
 		}
 		return assetRidFunc(*u.assetRid)
+	case "assetRids":
+		if u.assetRids == nil {
+			return fmt.Errorf("field \"assetRids\" is required")
+		}
+		return assetRidsFunc(*u.assetRids)
 	case "exactAssetRids":
 		if u.exactAssetRids == nil {
 			return fmt.Errorf("field \"exactAssetRids\" is required")
@@ -495,11 +627,21 @@ func (u *SearchNotebooksQuery) AcceptFuncs(andFunc func([]SearchNotebooksQuery) 
 			return fmt.Errorf("field \"runRid\" is required")
 		}
 		return runRidFunc(*u.runRid)
+	case "runRids":
+		if u.runRids == nil {
+			return fmt.Errorf("field \"runRids\" is required")
+		}
+		return runRidsFunc(*u.runRids)
 	case "notebookType":
 		if u.notebookType == nil {
 			return fmt.Errorf("field \"notebookType\" is required")
 		}
 		return notebookTypeFunc(*u.notebookType)
+	case "notebookTypes":
+		if u.notebookTypes == nil {
+			return fmt.Errorf("field \"notebookTypes\" is required")
+		}
+		return notebookTypesFunc(*u.notebookTypes)
 	case "draftState":
 		if u.draftState == nil {
 			return fmt.Errorf("field \"draftState\" is required")
@@ -515,6 +657,16 @@ func (u *SearchNotebooksQuery) AcceptFuncs(andFunc func([]SearchNotebooksQuery) 
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return workspaceFunc(*u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return authorIsCurrentUserFunc(*u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
+		}
+		return authorRidsFunc(*u.authorRids)
 	}
 }
 
@@ -523,6 +675,10 @@ func (u *SearchNotebooksQuery) AndNoopSuccess([]SearchNotebooksQuery) error {
 }
 
 func (u *SearchNotebooksQuery) OrNoopSuccess([]SearchNotebooksQuery) error {
+	return nil
+}
+
+func (u *SearchNotebooksQuery) NotNoopSuccess(SearchNotebooksQuery) error {
 	return nil
 }
 
@@ -538,11 +694,23 @@ func (u *SearchNotebooksQuery) LabelNoopSuccess(api2.Label) error {
 	return nil
 }
 
+func (u *SearchNotebooksQuery) LabelsNoopSuccess(api1.LabelsFilter) error {
+	return nil
+}
+
 func (u *SearchNotebooksQuery) PropertyNoopSuccess(api2.Property) error {
 	return nil
 }
 
+func (u *SearchNotebooksQuery) PropertiesNoopSuccess(api1.PropertiesFilter) error {
+	return nil
+}
+
 func (u *SearchNotebooksQuery) AssetRidNoopSuccess(api1.AssetRid) error {
+	return nil
+}
+
+func (u *SearchNotebooksQuery) AssetRidsNoopSuccess(AssetsFilter) error {
 	return nil
 }
 
@@ -558,7 +726,15 @@ func (u *SearchNotebooksQuery) RunRidNoopSuccess(api.RunRid) error {
 	return nil
 }
 
+func (u *SearchNotebooksQuery) RunRidsNoopSuccess(RunsFilter) error {
+	return nil
+}
+
 func (u *SearchNotebooksQuery) NotebookTypeNoopSuccess(NotebookType) error {
+	return nil
+}
+
+func (u *SearchNotebooksQuery) NotebookTypesNoopSuccess(NotebookTypesFilter) error {
 	return nil
 }
 
@@ -571,6 +747,14 @@ func (u *SearchNotebooksQuery) ArchivedNoopSuccess(bool) error {
 }
 
 func (u *SearchNotebooksQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+	return nil
+}
+
+func (u *SearchNotebooksQuery) AuthorIsCurrentUserNoopSuccess(bool) error {
+	return nil
+}
+
+func (u *SearchNotebooksQuery) AuthorRidsNoopSuccess([]api1.UserRid) error {
 	return nil
 }
 
@@ -595,6 +779,11 @@ func (u *SearchNotebooksQuery) Accept(v SearchNotebooksQueryVisitor) error {
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOr(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(*u.not)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -610,16 +799,31 @@ func (u *SearchNotebooksQuery) Accept(v SearchNotebooksQueryVisitor) error {
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(*u.properties)
 	case "assetRid":
 		if u.assetRid == nil {
 			return fmt.Errorf("field \"assetRid\" is required")
 		}
 		return v.VisitAssetRid(*u.assetRid)
+	case "assetRids":
+		if u.assetRids == nil {
+			return fmt.Errorf("field \"assetRids\" is required")
+		}
+		return v.VisitAssetRids(*u.assetRids)
 	case "exactAssetRids":
 		if u.exactAssetRids == nil {
 			return fmt.Errorf("field \"exactAssetRids\" is required")
@@ -635,11 +839,21 @@ func (u *SearchNotebooksQuery) Accept(v SearchNotebooksQueryVisitor) error {
 			return fmt.Errorf("field \"runRid\" is required")
 		}
 		return v.VisitRunRid(*u.runRid)
+	case "runRids":
+		if u.runRids == nil {
+			return fmt.Errorf("field \"runRids\" is required")
+		}
+		return v.VisitRunRids(*u.runRids)
 	case "notebookType":
 		if u.notebookType == nil {
 			return fmt.Errorf("field \"notebookType\" is required")
 		}
 		return v.VisitNotebookType(*u.notebookType)
+	case "notebookTypes":
+		if u.notebookTypes == nil {
+			return fmt.Errorf("field \"notebookTypes\" is required")
+		}
+		return v.VisitNotebookTypes(*u.notebookTypes)
 	case "draftState":
 		if u.draftState == nil {
 			return fmt.Errorf("field \"draftState\" is required")
@@ -655,24 +869,42 @@ func (u *SearchNotebooksQuery) Accept(v SearchNotebooksQueryVisitor) error {
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspace(*u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return v.VisitAuthorIsCurrentUser(*u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
+		}
+		return v.VisitAuthorRids(*u.authorRids)
 	}
 }
 
 type SearchNotebooksQueryVisitor interface {
 	VisitAnd(v []SearchNotebooksQuery) error
 	VisitOr(v []SearchNotebooksQuery) error
+	VisitNot(v SearchNotebooksQuery) error
 	VisitExactMatch(v string) error
 	VisitSearchText(v string) error
 	VisitLabel(v api2.Label) error
+	VisitLabels(v api1.LabelsFilter) error
 	VisitProperty(v api2.Property) error
+	VisitProperties(v api1.PropertiesFilter) error
 	VisitAssetRid(v api1.AssetRid) error
+	VisitAssetRids(v AssetsFilter) error
 	VisitExactAssetRids(v []api1.AssetRid) error
 	VisitAuthorRid(v api1.UserRid) error
 	VisitRunRid(v api.RunRid) error
+	VisitRunRids(v RunsFilter) error
 	VisitNotebookType(v NotebookType) error
+	VisitNotebookTypes(v NotebookTypesFilter) error
 	VisitDraftState(v bool) error
 	VisitArchived(v bool) error
 	VisitWorkspace(v rids.WorkspaceRid) error
+	VisitAuthorIsCurrentUser(v bool) error
+	VisitAuthorRids(v []api1.UserRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -693,6 +925,11 @@ func (u *SearchNotebooksQuery) AcceptWithContext(ctx context.Context, v SearchNo
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOrWithContext(ctx, *u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNotWithContext(ctx, *u.not)
 	case "exactMatch":
 		if u.exactMatch == nil {
 			return fmt.Errorf("field \"exactMatch\" is required")
@@ -708,16 +945,31 @@ func (u *SearchNotebooksQuery) AcceptWithContext(ctx context.Context, v SearchNo
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabelWithContext(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabelsWithContext(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitPropertiesWithContext(ctx, *u.properties)
 	case "assetRid":
 		if u.assetRid == nil {
 			return fmt.Errorf("field \"assetRid\" is required")
 		}
 		return v.VisitAssetRidWithContext(ctx, *u.assetRid)
+	case "assetRids":
+		if u.assetRids == nil {
+			return fmt.Errorf("field \"assetRids\" is required")
+		}
+		return v.VisitAssetRidsWithContext(ctx, *u.assetRids)
 	case "exactAssetRids":
 		if u.exactAssetRids == nil {
 			return fmt.Errorf("field \"exactAssetRids\" is required")
@@ -733,11 +985,21 @@ func (u *SearchNotebooksQuery) AcceptWithContext(ctx context.Context, v SearchNo
 			return fmt.Errorf("field \"runRid\" is required")
 		}
 		return v.VisitRunRidWithContext(ctx, *u.runRid)
+	case "runRids":
+		if u.runRids == nil {
+			return fmt.Errorf("field \"runRids\" is required")
+		}
+		return v.VisitRunRidsWithContext(ctx, *u.runRids)
 	case "notebookType":
 		if u.notebookType == nil {
 			return fmt.Errorf("field \"notebookType\" is required")
 		}
 		return v.VisitNotebookTypeWithContext(ctx, *u.notebookType)
+	case "notebookTypes":
+		if u.notebookTypes == nil {
+			return fmt.Errorf("field \"notebookTypes\" is required")
+		}
+		return v.VisitNotebookTypesWithContext(ctx, *u.notebookTypes)
 	case "draftState":
 		if u.draftState == nil {
 			return fmt.Errorf("field \"draftState\" is required")
@@ -753,24 +1015,42 @@ func (u *SearchNotebooksQuery) AcceptWithContext(ctx context.Context, v SearchNo
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
+	case "authorIsCurrentUser":
+		if u.authorIsCurrentUser == nil {
+			return fmt.Errorf("field \"authorIsCurrentUser\" is required")
+		}
+		return v.VisitAuthorIsCurrentUserWithContext(ctx, *u.authorIsCurrentUser)
+	case "authorRids":
+		if u.authorRids == nil {
+			return fmt.Errorf("field \"authorRids\" is required")
+		}
+		return v.VisitAuthorRidsWithContext(ctx, *u.authorRids)
 	}
 }
 
 type SearchNotebooksQueryVisitorWithContext interface {
 	VisitAndWithContext(ctx context.Context, v []SearchNotebooksQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchNotebooksQuery) error
+	VisitNotWithContext(ctx context.Context, v SearchNotebooksQuery) error
 	VisitExactMatchWithContext(ctx context.Context, v string) error
 	VisitSearchTextWithContext(ctx context.Context, v string) error
 	VisitLabelWithContext(ctx context.Context, v api2.Label) error
+	VisitLabelsWithContext(ctx context.Context, v api1.LabelsFilter) error
 	VisitPropertyWithContext(ctx context.Context, v api2.Property) error
+	VisitPropertiesWithContext(ctx context.Context, v api1.PropertiesFilter) error
 	VisitAssetRidWithContext(ctx context.Context, v api1.AssetRid) error
+	VisitAssetRidsWithContext(ctx context.Context, v AssetsFilter) error
 	VisitExactAssetRidsWithContext(ctx context.Context, v []api1.AssetRid) error
 	VisitAuthorRidWithContext(ctx context.Context, v api1.UserRid) error
 	VisitRunRidWithContext(ctx context.Context, v api.RunRid) error
+	VisitRunRidsWithContext(ctx context.Context, v RunsFilter) error
 	VisitNotebookTypeWithContext(ctx context.Context, v NotebookType) error
+	VisitNotebookTypesWithContext(ctx context.Context, v NotebookTypesFilter) error
 	VisitDraftStateWithContext(ctx context.Context, v bool) error
 	VisitArchivedWithContext(ctx context.Context, v bool) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
+	VisitAuthorIsCurrentUserWithContext(ctx context.Context, v bool) error
+	VisitAuthorRidsWithContext(ctx context.Context, v []api1.UserRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -780,6 +1060,10 @@ func NewSearchNotebooksQueryFromAnd(v []SearchNotebooksQuery) SearchNotebooksQue
 
 func NewSearchNotebooksQueryFromOr(v []SearchNotebooksQuery) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "or", or: &v}
+}
+
+func NewSearchNotebooksQueryFromNot(v SearchNotebooksQuery) SearchNotebooksQuery {
+	return SearchNotebooksQuery{typ: "not", not: &v}
 }
 
 func NewSearchNotebooksQueryFromExactMatch(v string) SearchNotebooksQuery {
@@ -794,12 +1078,24 @@ func NewSearchNotebooksQueryFromLabel(v api2.Label) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "label", label: &v}
 }
 
+func NewSearchNotebooksQueryFromLabels(v api1.LabelsFilter) SearchNotebooksQuery {
+	return SearchNotebooksQuery{typ: "labels", labels: &v}
+}
+
 func NewSearchNotebooksQueryFromProperty(v api2.Property) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "property", property: &v}
 }
 
+func NewSearchNotebooksQueryFromProperties(v api1.PropertiesFilter) SearchNotebooksQuery {
+	return SearchNotebooksQuery{typ: "properties", properties: &v}
+}
+
 func NewSearchNotebooksQueryFromAssetRid(v api1.AssetRid) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "assetRid", assetRid: &v}
+}
+
+func NewSearchNotebooksQueryFromAssetRids(v AssetsFilter) SearchNotebooksQuery {
+	return SearchNotebooksQuery{typ: "assetRids", assetRids: &v}
 }
 
 func NewSearchNotebooksQueryFromExactAssetRids(v []api1.AssetRid) SearchNotebooksQuery {
@@ -814,8 +1110,16 @@ func NewSearchNotebooksQueryFromRunRid(v api.RunRid) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "runRid", runRid: &v}
 }
 
+func NewSearchNotebooksQueryFromRunRids(v RunsFilter) SearchNotebooksQuery {
+	return SearchNotebooksQuery{typ: "runRids", runRids: &v}
+}
+
 func NewSearchNotebooksQueryFromNotebookType(v NotebookType) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "notebookType", notebookType: &v}
+}
+
+func NewSearchNotebooksQueryFromNotebookTypes(v NotebookTypesFilter) SearchNotebooksQuery {
+	return SearchNotebooksQuery{typ: "notebookTypes", notebookTypes: &v}
 }
 
 func NewSearchNotebooksQueryFromDraftState(v bool) SearchNotebooksQuery {
@@ -828,4 +1132,12 @@ func NewSearchNotebooksQueryFromArchived(v bool) SearchNotebooksQuery {
 
 func NewSearchNotebooksQueryFromWorkspace(v rids.WorkspaceRid) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "workspace", workspace: &v}
+}
+
+func NewSearchNotebooksQueryFromAuthorIsCurrentUser(v bool) SearchNotebooksQuery {
+	return SearchNotebooksQuery{typ: "authorIsCurrentUser", authorIsCurrentUser: &v}
+}
+
+func NewSearchNotebooksQueryFromAuthorRids(v []api1.UserRid) SearchNotebooksQuery {
+	return SearchNotebooksQuery{typ: "authorRids", authorRids: &v}
 }

@@ -4,21 +4,64 @@ package api
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api4 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api5 "github.com/nominal-io/nominal-api-go/scout/api"
-	api2 "github.com/nominal-io/nominal-api-go/scout/layout/api"
-	"github.com/nominal-io/nominal-api-go/scout/rids/api"
-	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
-	api3 "github.com/nominal-io/nominal-api-go/scout/workbookcommon/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/layout/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/workbookcommon/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// for an exact match, use the exactAssetRids filter
+type AssetsFilter struct {
+	Operator api.SetOperator `json:"operator"`
+	Assets   []api1.AssetRid `json:"assets"`
+}
+
+func (o AssetsFilter) MarshalJSON() ([]byte, error) {
+	if o.Assets == nil {
+		o.Assets = make([]api1.AssetRid, 0)
+	}
+	type _tmpAssetsFilter AssetsFilter
+	return safejson.Marshal(_tmpAssetsFilter(o))
+}
+
+func (o *AssetsFilter) UnmarshalJSON(data []byte) error {
+	type _tmpAssetsFilter AssetsFilter
+	var rawAssetsFilter _tmpAssetsFilter
+	if err := safejson.Unmarshal(data, &rawAssetsFilter); err != nil {
+		return err
+	}
+	if rawAssetsFilter.Assets == nil {
+		rawAssetsFilter.Assets = make([]api1.AssetRid, 0)
+	}
+	*o = AssetsFilter(rawAssetsFilter)
+	return nil
+}
+
+func (o AssetsFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AssetsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ChartWithOverlays struct {
-	Rid      api.VizId   `json:"rid"`
-	Version  api.Version `json:"version"`
-	Overlays interface{} `json:"overlays"`
+	Rid      api1.VizId   `json:"rid"`
+	Version  api1.Version `json:"version"`
+	Overlays interface{}  `json:"overlays"`
 }
 
 func (o ChartWithOverlays) MarshalYAML() (interface{}, error) {
@@ -47,16 +90,16 @@ type CreateNotebookRequest struct {
 	// Deprecated: charts are now stored in contentV2
 	Charts *[]ChartWithOverlays `json:"charts,omitempty"`
 	// deprecated. Use dataScope instead
-	RunRid *api1.RunRid `conjure-docs:"deprecated. Use dataScope instead" json:"runRid,omitempty"`
+	RunRid *api2.RunRid `conjure-docs:"deprecated. Use dataScope instead" json:"runRid,omitempty"`
 	// Optional for back-compatibility.
 	DataScope *NotebookDataScope  `conjure-docs:"Optional for back-compatibility." json:"dataScope,omitempty"`
-	Layout    api2.WorkbookLayout `json:"layout"`
+	Layout    api3.WorkbookLayout `json:"layout"`
 	// Deprecated: use contentV2 instead
-	Content *api3.WorkbookContent `json:"content,omitempty"`
+	Content *api4.WorkbookContent `json:"content,omitempty"`
 	// Optional for backcompatibility
-	ContentV2 *api3.UnifiedWorkbookContent `conjure-docs:"Optional for backcompatibility" json:"contentV2,omitempty"`
+	ContentV2 *api4.UnifiedWorkbookContent `conjure-docs:"Optional for backcompatibility" json:"contentV2,omitempty"`
 	// Field to pin events to a workbook on creation.
-	EventRefs []api3.EventReference `conjure-docs:"Field to pin events to a workbook on creation." json:"eventRefs"`
+	EventRefs []api4.EventReference `conjure-docs:"Field to pin events to a workbook on creation." json:"eventRefs"`
 	/*
 	   Field to pin check alerts to a workbook on creation.
 	   Any specified CheckAlertReference will be added to the workbook along with it's corresponding EventReference.
@@ -64,7 +107,7 @@ type CreateNotebookRequest struct {
 	   Deprecated: CheckAlerts are no longer supported and will be removed in the future.
 	   Use eventRefs to pin events to workbooks instead.
 	*/
-	CheckAlertRefs *[]api3.CheckAlertReference `conjure-docs:"Field to pin check alerts to a workbook on creation.\nAny specified CheckAlertReference will be added to the workbook along with it's corresponding EventReference." json:"checkAlertRefs,omitempty"`
+	CheckAlertRefs *[]api4.CheckAlertReference `conjure-docs:"Field to pin check alerts to a workbook on creation.\nAny specified CheckAlertReference will be added to the workbook along with it's corresponding EventReference." json:"checkAlertRefs,omitempty"`
 	/*
 	   The workspace in which to create the workbook. If not provided, the workbook will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
@@ -74,7 +117,7 @@ type CreateNotebookRequest struct {
 
 func (o CreateNotebookRequest) MarshalJSON() ([]byte, error) {
 	if o.EventRefs == nil {
-		o.EventRefs = make([]api3.EventReference, 0)
+		o.EventRefs = make([]api4.EventReference, 0)
 	}
 	type _tmpCreateNotebookRequest CreateNotebookRequest
 	return safejson.Marshal(_tmpCreateNotebookRequest(o))
@@ -87,7 +130,7 @@ func (o *CreateNotebookRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateNotebookRequest.EventRefs == nil {
-		rawCreateNotebookRequest.EventRefs = make([]api3.EventReference, 0)
+		rawCreateNotebookRequest.EventRefs = make([]api4.EventReference, 0)
 	}
 	*o = CreateNotebookRequest(rawCreateNotebookRequest)
 	return nil
@@ -110,16 +153,16 @@ func (o *CreateNotebookRequest) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 type GetAllLabelsAndPropertiesResponse struct {
-	Properties map[api4.PropertyName][]api4.PropertyValue `json:"properties"`
-	Labels     []api4.Label                               `json:"labels"`
+	Properties map[api.PropertyName][]api.PropertyValue `json:"properties"`
+	Labels     []api.Label                              `json:"labels"`
 }
 
 func (o GetAllLabelsAndPropertiesResponse) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api4.PropertyName][]api4.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName][]api.PropertyValue, 0)
 	}
 	if o.Labels == nil {
-		o.Labels = make([]api4.Label, 0)
+		o.Labels = make([]api.Label, 0)
 	}
 	type _tmpGetAllLabelsAndPropertiesResponse GetAllLabelsAndPropertiesResponse
 	return safejson.Marshal(_tmpGetAllLabelsAndPropertiesResponse(o))
@@ -132,10 +175,10 @@ func (o *GetAllLabelsAndPropertiesResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawGetAllLabelsAndPropertiesResponse.Properties == nil {
-		rawGetAllLabelsAndPropertiesResponse.Properties = make(map[api4.PropertyName][]api4.PropertyValue, 0)
+		rawGetAllLabelsAndPropertiesResponse.Properties = make(map[api.PropertyName][]api.PropertyValue, 0)
 	}
 	if rawGetAllLabelsAndPropertiesResponse.Labels == nil {
-		rawGetAllLabelsAndPropertiesResponse.Labels = make([]api4.Label, 0)
+		rawGetAllLabelsAndPropertiesResponse.Labels = make([]api.Label, 0)
 	}
 	*o = GetAllLabelsAndPropertiesResponse(rawGetAllLabelsAndPropertiesResponse)
 	return nil
@@ -157,10 +200,76 @@ func (o *GetAllLabelsAndPropertiesResponse) UnmarshalYAML(unmarshal func(interfa
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type GetSnapshotHistoryRequest struct {
+	// The RID of the workbook to get snapshots for.
+	Rid api1.NotebookRid `conjure-docs:"The RID of the workbook to get snapshots for." json:"rid"`
+	// Defaults to 100. Will throw if larger than 1000.
+	PageSize      *int       `conjure-docs:"Defaults to 100. Will throw if larger than 1000." json:"pageSize,omitempty"`
+	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
+}
+
+func (o GetSnapshotHistoryRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetSnapshotHistoryRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetSnapshotHistoryResponse struct {
+	Snapshots     []SnapshotSummary `json:"snapshots"`
+	NextPageToken *api.Token        `json:"nextPageToken,omitempty"`
+}
+
+func (o GetSnapshotHistoryResponse) MarshalJSON() ([]byte, error) {
+	if o.Snapshots == nil {
+		o.Snapshots = make([]SnapshotSummary, 0)
+	}
+	type _tmpGetSnapshotHistoryResponse GetSnapshotHistoryResponse
+	return safejson.Marshal(_tmpGetSnapshotHistoryResponse(o))
+}
+
+func (o *GetSnapshotHistoryResponse) UnmarshalJSON(data []byte) error {
+	type _tmpGetSnapshotHistoryResponse GetSnapshotHistoryResponse
+	var rawGetSnapshotHistoryResponse _tmpGetSnapshotHistoryResponse
+	if err := safejson.Unmarshal(data, &rawGetSnapshotHistoryResponse); err != nil {
+		return err
+	}
+	if rawGetSnapshotHistoryResponse.Snapshots == nil {
+		rawGetSnapshotHistoryResponse.Snapshots = make([]SnapshotSummary, 0)
+	}
+	*o = GetSnapshotHistoryResponse(rawGetSnapshotHistoryResponse)
+	return nil
+}
+
+func (o GetSnapshotHistoryResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetSnapshotHistoryResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Lock struct {
 	IsLocked     bool               `json:"isLocked"`
 	UpdatedAt    *datetime.DateTime `json:"updatedAt,omitempty"`
-	UpdatedByRid *api.UserRid       `json:"updatedByRid,omitempty"`
+	UpdatedByRid *api1.UserRid      `json:"updatedByRid,omitempty"`
 }
 
 func (o Lock) MarshalYAML() (interface{}, error) {
@@ -180,29 +289,29 @@ func (o *Lock) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type Notebook struct {
-	Rid               api.NotebookRid   `json:"rid"`
-	SnapshotRid       api.SnapshotRid   `json:"snapshotRid"`
-	SnapshotAuthorRid api.UserRid       `json:"snapshotAuthorRid"`
+	Rid               api1.NotebookRid  `json:"rid"`
+	SnapshotRid       api1.SnapshotRid  `json:"snapshotRid"`
+	SnapshotAuthorRid api1.UserRid      `json:"snapshotAuthorRid"`
 	SnapshotCreatedAt datetime.DateTime `json:"snapshotCreatedAt"`
 	Metadata          NotebookMetadata  `json:"metadata"`
 	StateAsJson       string            `json:"stateAsJson"`
 	// Deprecated: charts are now stored in contentV2
 	Charts *[]ChartWithOverlays `json:"charts,omitempty"`
-	Layout api2.WorkbookLayout  `json:"layout"`
+	Layout api3.WorkbookLayout  `json:"layout"`
 	// Deprecated: use contentV2 instead
-	Content   *api3.WorkbookContent       `json:"content,omitempty"`
-	ContentV2 api3.UnifiedWorkbookContent `json:"contentV2"`
-	EventRefs []api3.EventReference       `json:"eventRefs"`
+	Content   *api4.WorkbookContent       `json:"content,omitempty"`
+	ContentV2 api4.UnifiedWorkbookContent `json:"contentV2"`
+	EventRefs []api4.EventReference       `json:"eventRefs"`
 	/*
 	   Deprecated: CheckAlerts are no longer supported and will be removed in the future.
 	   Use eventRefs to pin events to workbooks instead.
 	*/
-	CheckAlertRefs *[]api3.CheckAlertReference `json:"checkAlertRefs,omitempty"`
+	CheckAlertRefs *[]api4.CheckAlertReference `json:"checkAlertRefs,omitempty"`
 }
 
 func (o Notebook) MarshalJSON() ([]byte, error) {
 	if o.EventRefs == nil {
-		o.EventRefs = make([]api3.EventReference, 0)
+		o.EventRefs = make([]api4.EventReference, 0)
 	}
 	type _tmpNotebook Notebook
 	return safejson.Marshal(_tmpNotebook(o))
@@ -215,7 +324,7 @@ func (o *Notebook) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNotebook.EventRefs == nil {
-		rawNotebook.EventRefs = make([]api3.EventReference, 0)
+		rawNotebook.EventRefs = make([]api4.EventReference, 0)
 	}
 	*o = Notebook(rawNotebook)
 	return nil
@@ -239,26 +348,28 @@ func (o *Notebook) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type NotebookMetadata struct {
 	// deprecated. Use dataScope instead
-	RunRid       *api1.RunRid                             `conjure-docs:"deprecated. Use dataScope instead" json:"runRid,omitempty"`
-	DataScope    NotebookDataScope                        `json:"dataScope"`
-	NotebookType NotebookType                             `json:"notebookType"`
-	Title        string                                   `json:"title"`
-	Description  string                                   `json:"description"`
-	IsDraft      bool                                     `json:"isDraft"`
-	IsArchived   bool                                     `json:"isArchived"`
-	Lock         Lock                                     `json:"lock"`
-	CreatedByRid api.UserRid                              `json:"createdByRid"`
-	CreatedAt    datetime.DateTime                        `json:"createdAt"`
-	Properties   map[api4.PropertyName]api4.PropertyValue `json:"properties"`
-	Labels       []api4.Label                             `json:"labels"`
+	RunRid       *api2.RunRid      `conjure-docs:"deprecated. Use dataScope instead" json:"runRid,omitempty"`
+	DataScope    NotebookDataScope `json:"dataScope"`
+	NotebookType NotebookType      `json:"notebookType"`
+	Title        string            `json:"title"`
+	Description  string            `json:"description"`
+	IsDraft      bool              `json:"isDraft"`
+	IsArchived   bool              `json:"isArchived"`
+	Lock         Lock              `json:"lock"`
+	CreatedByRid api1.UserRid      `json:"createdByRid"`
+	CreatedAt    datetime.DateTime `json:"createdAt"`
+	// The timestamp when the workbook was last updated
+	UpdatedAt  *datetime.DateTime                     `conjure-docs:"The timestamp when the workbook was last updated" json:"updatedAt,omitempty"`
+	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
+	Labels     []api.Label                            `json:"labels"`
 }
 
 func (o NotebookMetadata) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api4.PropertyName]api4.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
 	}
 	if o.Labels == nil {
-		o.Labels = make([]api4.Label, 0)
+		o.Labels = make([]api.Label, 0)
 	}
 	type _tmpNotebookMetadata NotebookMetadata
 	return safejson.Marshal(_tmpNotebookMetadata(o))
@@ -271,10 +382,10 @@ func (o *NotebookMetadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNotebookMetadata.Properties == nil {
-		rawNotebookMetadata.Properties = make(map[api4.PropertyName]api4.PropertyValue, 0)
+		rawNotebookMetadata.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
 	}
 	if rawNotebookMetadata.Labels == nil {
-		rawNotebookMetadata.Labels = make([]api4.Label, 0)
+		rawNotebookMetadata.Labels = make([]api.Label, 0)
 	}
 	*o = NotebookMetadata(rawNotebookMetadata)
 	return nil
@@ -297,7 +408,7 @@ func (o *NotebookMetadata) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type NotebookMetadataWithRid struct {
-	Rid      api.NotebookRid  `json:"rid"`
+	Rid      api1.NotebookRid `json:"rid"`
 	Metadata NotebookMetadata `json:"metadata"`
 }
 
@@ -317,6 +428,90 @@ func (o *NotebookMetadataWithRid) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// returns notebooks that match any of the provided notebook types
+type NotebookTypesFilter struct {
+	Types []NotebookType `json:"types"`
+}
+
+func (o NotebookTypesFilter) MarshalJSON() ([]byte, error) {
+	if o.Types == nil {
+		o.Types = make([]NotebookType, 0)
+	}
+	type _tmpNotebookTypesFilter NotebookTypesFilter
+	return safejson.Marshal(_tmpNotebookTypesFilter(o))
+}
+
+func (o *NotebookTypesFilter) UnmarshalJSON(data []byte) error {
+	type _tmpNotebookTypesFilter NotebookTypesFilter
+	var rawNotebookTypesFilter _tmpNotebookTypesFilter
+	if err := safejson.Unmarshal(data, &rawNotebookTypesFilter); err != nil {
+		return err
+	}
+	if rawNotebookTypesFilter.Types == nil {
+		rawNotebookTypesFilter.Types = make([]NotebookType, 0)
+	}
+	*o = NotebookTypesFilter(rawNotebookTypesFilter)
+	return nil
+}
+
+func (o NotebookTypesFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NotebookTypesFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type RunsFilter struct {
+	Operator api.SetOperator `json:"operator"`
+	Runs     []api2.RunRid   `json:"runs"`
+}
+
+func (o RunsFilter) MarshalJSON() ([]byte, error) {
+	if o.Runs == nil {
+		o.Runs = make([]api2.RunRid, 0)
+	}
+	type _tmpRunsFilter RunsFilter
+	return safejson.Marshal(_tmpRunsFilter(o))
+}
+
+func (o *RunsFilter) UnmarshalJSON(data []byte) error {
+	type _tmpRunsFilter RunsFilter
+	var rawRunsFilter _tmpRunsFilter
+	if err := safejson.Unmarshal(data, &rawRunsFilter); err != nil {
+		return err
+	}
+	if rawRunsFilter.Runs == nil {
+		rawRunsFilter.Runs = make([]api2.RunRid, 0)
+	}
+	*o = RunsFilter(rawRunsFilter)
+	return nil
+}
+
+func (o RunsFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RunsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type SearchNotebooksRequest struct {
 	Query SearchNotebooksQuery `json:"query"`
 	// Soon to be deprecated. Compose a draftState filter within SearchNotebooksQuery instead
@@ -324,8 +519,8 @@ type SearchNotebooksRequest struct {
 	// Soon to be deprecated. Compose an archived filter within SearchNotebooksQuery instead
 	ShowArchived *bool `conjure-docs:"Soon to be deprecated. Compose an archived filter within SearchNotebooksQuery instead" json:"showArchived,omitempty"`
 	// UPDATED_AT descending by default
-	SortBy        *SortBy     `conjure-docs:"UPDATED_AT descending by default" json:"sortBy,omitempty"`
-	NextPageToken *api4.Token `json:"nextPageToken,omitempty"`
+	SortBy        *SortBy    `conjure-docs:"UPDATED_AT descending by default" json:"sortBy,omitempty"`
+	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
 	// Defaults to 100. Will throw if larger than 1000.
 	PageSize *int `conjure-docs:"Defaults to 100. Will throw if larger than 1000." json:"pageSize,omitempty"`
 }
@@ -348,7 +543,7 @@ func (o *SearchNotebooksRequest) UnmarshalYAML(unmarshal func(interface{}) error
 
 type SearchNotebooksResponse struct {
 	Results       []NotebookMetadataWithRid `json:"results"`
-	NextPageToken *api4.Token               `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token                `json:"nextPageToken,omitempty"`
 }
 
 func (o SearchNotebooksResponse) MarshalJSON() ([]byte, error) {
@@ -388,6 +583,29 @@ func (o *SearchNotebooksResponse) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type SnapshotSummary struct {
+	Rid         api1.SnapshotRid  `json:"rid"`
+	NotebookRid api1.NotebookRid  `json:"notebookRid"`
+	AuthorRid   api1.UserRid      `json:"authorRid"`
+	CreatedAt   datetime.DateTime `json:"createdAt"`
+}
+
+func (o SnapshotSummary) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SnapshotSummary) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type SortBy struct {
 	IsDescending bool        `json:"isDescending"`
 	Field        SortByField `json:"field"`
@@ -412,11 +630,11 @@ func (o *SortBy) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type UpdateNotebookMetadataRequest struct {
 	Title *string `json:"title,omitempty"`
 	// Optional for backcompatibility.
-	DataScope   *NotebookDataScope                        `conjure-docs:"Optional for backcompatibility." json:"dataScope,omitempty"`
-	Description *string                                   `json:"description,omitempty"`
-	Properties  *map[api4.PropertyName]api4.PropertyValue `json:"properties,omitempty"`
-	Labels      *[]api4.Label                             `json:"labels,omitempty"`
-	IsDraft     *bool                                     `json:"isDraft,omitempty"`
+	DataScope   *NotebookDataScope                      `conjure-docs:"Optional for backcompatibility." json:"dataScope,omitempty"`
+	Description *string                                 `json:"description,omitempty"`
+	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
+	Labels      *[]api.Label                            `json:"labels,omitempty"`
+	IsDraft     *bool                                   `json:"isDraft,omitempty"`
 }
 
 func (o UpdateNotebookMetadataRequest) MarshalYAML() (interface{}, error) {
@@ -439,18 +657,18 @@ type UpdateNotebookRequest struct {
 	StateAsJson string `json:"stateAsJson"`
 	// Deprecated: charts are now stored in contentV2
 	Charts *[]ChartWithOverlays `json:"charts,omitempty"`
-	Layout api2.WorkbookLayout  `json:"layout"`
+	Layout api3.WorkbookLayout  `json:"layout"`
 	// Deprecated: use contentV2 instead
-	Content *api3.WorkbookContent `json:"content,omitempty"`
+	Content *api4.WorkbookContent `json:"content,omitempty"`
 	// Optional for backcompatibility
-	ContentV2 *api3.UnifiedWorkbookContent `conjure-docs:"Optional for backcompatibility" json:"contentV2,omitempty"`
+	ContentV2 *api4.UnifiedWorkbookContent `conjure-docs:"Optional for backcompatibility" json:"contentV2,omitempty"`
 	/*
 	   If provided, will only update the notebook if the latest snapshot matches the provided snapshot rid,
 	   and throws SaveNotebookConflict otherwise.
 	*/
-	LatestSnapshotRid *api.SnapshotRid `conjure-docs:"If provided, will only update the notebook if the latest snapshot matches the provided snapshot rid,\nand throws SaveNotebookConflict otherwise." json:"latestSnapshotRid,omitempty"`
+	LatestSnapshotRid *api1.SnapshotRid `conjure-docs:"If provided, will only update the notebook if the latest snapshot matches the provided snapshot rid,\nand throws SaveNotebookConflict otherwise." json:"latestSnapshotRid,omitempty"`
 	// Replace existing pinned events on the workbook.
-	EventRefs []api3.EventReference `conjure-docs:"Replace existing pinned events on the workbook." json:"eventRefs"`
+	EventRefs []api4.EventReference `conjure-docs:"Replace existing pinned events on the workbook." json:"eventRefs"`
 	/*
 	   Field to pin check alerts to a workbook on creation.
 	   If not provided, will keep the set of check alerts on the workbook unchanged.
@@ -460,12 +678,12 @@ type UpdateNotebookRequest struct {
 	   Deprecated: CheckAlerts are no longer supported and will be removed in the future.
 	   Use eventRefs to pin events to workbooks instead.
 	*/
-	CheckAlertRefs *[]api3.CheckAlertReference `conjure-docs:"Field to pin check alerts to a workbook on creation.\nIf not provided, will keep the set of check alerts on the workbook unchanged.\nProviding an empty set will remove all check alerts from the workbook.\nAny specified CheckAlertReference will be added to the workbook along with it's corresponding EventReference." json:"checkAlertRefs,omitempty"`
+	CheckAlertRefs *[]api4.CheckAlertReference `conjure-docs:"Field to pin check alerts to a workbook on creation.\nIf not provided, will keep the set of check alerts on the workbook unchanged.\nProviding an empty set will remove all check alerts from the workbook.\nAny specified CheckAlertReference will be added to the workbook along with it's corresponding EventReference." json:"checkAlertRefs,omitempty"`
 }
 
 func (o UpdateNotebookRequest) MarshalJSON() ([]byte, error) {
 	if o.EventRefs == nil {
-		o.EventRefs = make([]api3.EventReference, 0)
+		o.EventRefs = make([]api4.EventReference, 0)
 	}
 	type _tmpUpdateNotebookRequest UpdateNotebookRequest
 	return safejson.Marshal(_tmpUpdateNotebookRequest(o))
@@ -478,7 +696,7 @@ func (o *UpdateNotebookRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawUpdateNotebookRequest.EventRefs == nil {
-		rawUpdateNotebookRequest.EventRefs = make([]api3.EventReference, 0)
+		rawUpdateNotebookRequest.EventRefs = make([]api4.EventReference, 0)
 	}
 	*o = UpdateNotebookRequest(rawUpdateNotebookRequest)
 	return nil

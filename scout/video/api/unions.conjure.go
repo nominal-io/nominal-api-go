@@ -1161,6 +1161,184 @@ func NewUpdateIngestStatusFromInProgress(v api.Empty) UpdateIngestStatus {
 	return UpdateIngestStatus{typ: "inProgress", inProgress: &v}
 }
 
+/*
+Union type for referencing a video channel. Allows querying video data via
+datasource/channel, asset data scopes, or run data scopes.
+*/
+type VideoChannelSeries struct {
+	typ        string
+	dataSource *VideoDataSourceChannel
+	asset      *VideoAssetChannel
+}
+
+type videoChannelSeriesDeserializer struct {
+	Type       string                  `json:"type"`
+	DataSource *VideoDataSourceChannel `json:"dataSource"`
+	Asset      *VideoAssetChannel      `json:"asset"`
+}
+
+func (u *videoChannelSeriesDeserializer) toStruct() VideoChannelSeries {
+	return VideoChannelSeries{typ: u.Type, dataSource: u.DataSource, asset: u.Asset}
+}
+
+func (u *VideoChannelSeries) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "dataSource":
+		if u.dataSource == nil {
+			return nil, fmt.Errorf("field \"dataSource\" is required")
+		}
+		return struct {
+			Type       string                 `json:"type"`
+			DataSource VideoDataSourceChannel `json:"dataSource"`
+		}{Type: "dataSource", DataSource: *u.dataSource}, nil
+	case "asset":
+		if u.asset == nil {
+			return nil, fmt.Errorf("field \"asset\" is required")
+		}
+		return struct {
+			Type  string            `json:"type"`
+			Asset VideoAssetChannel `json:"asset"`
+		}{Type: "asset", Asset: *u.asset}, nil
+	}
+}
+
+func (u VideoChannelSeries) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *VideoChannelSeries) UnmarshalJSON(data []byte) error {
+	var deser videoChannelSeriesDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "dataSource":
+		if u.dataSource == nil {
+			return fmt.Errorf("field \"dataSource\" is required")
+		}
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+	}
+	return nil
+}
+
+func (u VideoChannelSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *VideoChannelSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *VideoChannelSeries) AcceptFuncs(dataSourceFunc func(VideoDataSourceChannel) error, assetFunc func(VideoAssetChannel) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "dataSource":
+		if u.dataSource == nil {
+			return fmt.Errorf("field \"dataSource\" is required")
+		}
+		return dataSourceFunc(*u.dataSource)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return assetFunc(*u.asset)
+	}
+}
+
+func (u *VideoChannelSeries) DataSourceNoopSuccess(VideoDataSourceChannel) error {
+	return nil
+}
+
+func (u *VideoChannelSeries) AssetNoopSuccess(VideoAssetChannel) error {
+	return nil
+}
+
+func (u *VideoChannelSeries) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *VideoChannelSeries) Accept(v VideoChannelSeriesVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "dataSource":
+		if u.dataSource == nil {
+			return fmt.Errorf("field \"dataSource\" is required")
+		}
+		return v.VisitDataSource(*u.dataSource)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAsset(*u.asset)
+	}
+}
+
+type VideoChannelSeriesVisitor interface {
+	VisitDataSource(v VideoDataSourceChannel) error
+	VisitAsset(v VideoAssetChannel) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *VideoChannelSeries) AcceptWithContext(ctx context.Context, v VideoChannelSeriesVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "dataSource":
+		if u.dataSource == nil {
+			return fmt.Errorf("field \"dataSource\" is required")
+		}
+		return v.VisitDataSourceWithContext(ctx, *u.dataSource)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAssetWithContext(ctx, *u.asset)
+	}
+}
+
+type VideoChannelSeriesVisitorWithContext interface {
+	VisitDataSourceWithContext(ctx context.Context, v VideoDataSourceChannel) error
+	VisitAssetWithContext(ctx context.Context, v VideoAssetChannel) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewVideoChannelSeriesFromDataSource(v VideoDataSourceChannel) VideoChannelSeries {
+	return VideoChannelSeries{typ: "dataSource", dataSource: &v}
+}
+
+func NewVideoChannelSeriesFromAsset(v VideoAssetChannel) VideoChannelSeries {
+	return VideoChannelSeries{typ: "asset", asset: &v}
+}
+
 type VideoFileIngestStatus struct {
 	typ        string
 	success    *SuccessIngestStatus

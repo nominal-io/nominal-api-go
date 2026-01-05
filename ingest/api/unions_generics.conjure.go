@@ -544,30 +544,15 @@ func (u *IngestJobRequestWithT[T]) Accept(ctx context.Context, v IngestJobReques
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
-	case "ingestMcap":
-		if u.ingestMcap == nil {
-			return result, fmt.Errorf("field \"ingestMcap\" is required")
-		}
-		return v.VisitIngestMcap(ctx, *u.ingestMcap)
-	case "triggerFileIngest":
-		if u.triggerFileIngest == nil {
-			return result, fmt.Errorf("field \"triggerFileIngest\" is required")
-		}
-		return v.VisitTriggerFileIngest(ctx, *u.triggerFileIngest)
 	case "ingestRequest":
 		if u.ingestRequest == nil {
 			return result, fmt.Errorf("field \"ingestRequest\" is required")
 		}
 		return v.VisitIngestRequest(ctx, *u.ingestRequest)
-	case "triggerIngest":
-		if u.triggerIngest == nil {
-			return result, fmt.Errorf("field \"triggerIngest\" is required")
-		}
-		return v.VisitTriggerIngest(ctx, *u.triggerIngest)
 	}
 }
 
-func (u *IngestJobRequestWithT[T]) AcceptFuncs(ingestMcapFunc func(IngestMcapRequest) (T, error), triggerFileIngestFunc func(TriggerFileIngest) (T, error), ingestRequestFunc func(IngestRequest) (T, error), triggerIngestFunc func(TriggerIngest) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IngestJobRequestWithT[T]) AcceptFuncs(ingestRequestFunc func(IngestRequest) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -575,45 +560,15 @@ func (u *IngestJobRequestWithT[T]) AcceptFuncs(ingestMcapFunc func(IngestMcapReq
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "ingestMcap":
-		if u.ingestMcap == nil {
-			return result, fmt.Errorf("field \"ingestMcap\" is required")
-		}
-		return ingestMcapFunc(*u.ingestMcap)
-	case "triggerFileIngest":
-		if u.triggerFileIngest == nil {
-			return result, fmt.Errorf("field \"triggerFileIngest\" is required")
-		}
-		return triggerFileIngestFunc(*u.triggerFileIngest)
 	case "ingestRequest":
 		if u.ingestRequest == nil {
 			return result, fmt.Errorf("field \"ingestRequest\" is required")
 		}
 		return ingestRequestFunc(*u.ingestRequest)
-	case "triggerIngest":
-		if u.triggerIngest == nil {
-			return result, fmt.Errorf("field \"triggerIngest\" is required")
-		}
-		return triggerIngestFunc(*u.triggerIngest)
 	}
 }
 
-func (u *IngestJobRequestWithT[T]) IngestMcapNoopSuccess(IngestMcapRequest) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *IngestJobRequestWithT[T]) TriggerFileIngestNoopSuccess(TriggerFileIngest) (T, error) {
-	var result T
-	return result, nil
-}
-
 func (u *IngestJobRequestWithT[T]) IngestRequestNoopSuccess(IngestRequest) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *IngestJobRequestWithT[T]) TriggerIngestNoopSuccess(TriggerIngest) (T, error) {
 	var result T
 	return result, nil
 }
@@ -624,10 +579,7 @@ func (u *IngestJobRequestWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type IngestJobRequestVisitorWithT[T any] interface {
-	VisitIngestMcap(ctx context.Context, v IngestMcapRequest) (T, error)
-	VisitTriggerFileIngest(ctx context.Context, v TriggerFileIngest) (T, error)
 	VisitIngestRequest(ctx context.Context, v IngestRequest) (T, error)
-	VisitTriggerIngest(ctx context.Context, v TriggerIngest) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -812,10 +764,15 @@ func (u *IngestSourceWithT[T]) Accept(ctx context.Context, v IngestSourceVisitor
 			return result, fmt.Errorf("field \"gcs\" is required")
 		}
 		return v.VisitGcs(ctx, *u.gcs)
+	case "presignedFile":
+		if u.presignedFile == nil {
+			return result, fmt.Errorf("field \"presignedFile\" is required")
+		}
+		return v.VisitPresignedFile(ctx, *u.presignedFile)
 	}
 }
 
-func (u *IngestSourceWithT[T]) AcceptFuncs(s3Func func(S3IngestSource) (T, error), gcsFunc func(GcsIngestSource) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IngestSourceWithT[T]) AcceptFuncs(s3Func func(S3IngestSource) (T, error), gcsFunc func(GcsIngestSource) (T, error), presignedFileFunc func(PresignedFileIngestSource) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -833,6 +790,11 @@ func (u *IngestSourceWithT[T]) AcceptFuncs(s3Func func(S3IngestSource) (T, error
 			return result, fmt.Errorf("field \"gcs\" is required")
 		}
 		return gcsFunc(*u.gcs)
+	case "presignedFile":
+		if u.presignedFile == nil {
+			return result, fmt.Errorf("field \"presignedFile\" is required")
+		}
+		return presignedFileFunc(*u.presignedFile)
 	}
 }
 
@@ -846,6 +808,11 @@ func (u *IngestSourceWithT[T]) GcsNoopSuccess(GcsIngestSource) (T, error) {
 	return result, nil
 }
 
+func (u *IngestSourceWithT[T]) PresignedFileNoopSuccess(PresignedFileIngestSource) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *IngestSourceWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -854,6 +821,7 @@ func (u *IngestSourceWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type IngestSourceVisitorWithT[T any] interface {
 	VisitS3(ctx context.Context, v S3IngestSource) (T, error)
 	VisitGcs(ctx context.Context, v GcsIngestSource) (T, error)
+	VisitPresignedFile(ctx context.Context, v PresignedFileIngestSource) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

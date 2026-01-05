@@ -67,15 +67,17 @@ type IngestStatus struct {
 type IngestStatus_Value string
 
 const (
-	IngestStatus_IN_PROGRESS IngestStatus_Value = "IN_PROGRESS"
-	IngestStatus_COMPLETED   IngestStatus_Value = "COMPLETED"
-	IngestStatus_FAILED      IngestStatus_Value = "FAILED"
-	IngestStatus_UNKNOWN     IngestStatus_Value = "UNKNOWN"
+	IngestStatus_IN_PROGRESS          IngestStatus_Value = "IN_PROGRESS"
+	IngestStatus_COMPLETED            IngestStatus_Value = "COMPLETED"
+	IngestStatus_FAILED               IngestStatus_Value = "FAILED"
+	IngestStatus_DELETION_IN_PROGRESS IngestStatus_Value = "DELETION_IN_PROGRESS"
+	IngestStatus_DELETED              IngestStatus_Value = "DELETED"
+	IngestStatus_UNKNOWN              IngestStatus_Value = "UNKNOWN"
 )
 
 // IngestStatus_Values returns all known variants of IngestStatus.
 func IngestStatus_Values() []IngestStatus_Value {
-	return []IngestStatus_Value{IngestStatus_IN_PROGRESS, IngestStatus_COMPLETED, IngestStatus_FAILED}
+	return []IngestStatus_Value{IngestStatus_IN_PROGRESS, IngestStatus_COMPLETED, IngestStatus_FAILED, IngestStatus_DELETION_IN_PROGRESS, IngestStatus_DELETED}
 }
 
 func New_IngestStatus(value IngestStatus_Value) IngestStatus {
@@ -85,7 +87,7 @@ func New_IngestStatus(value IngestStatus_Value) IngestStatus {
 // IsUnknown returns false for all known variants of IngestStatus and true otherwise.
 func (e IngestStatus) IsUnknown() bool {
 	switch e.val {
-	case IngestStatus_IN_PROGRESS, IngestStatus_COMPLETED, IngestStatus_FAILED:
+	case IngestStatus_IN_PROGRESS, IngestStatus_COMPLETED, IngestStatus_FAILED, IngestStatus_DELETION_IN_PROGRESS, IngestStatus_DELETED:
 		return false
 	}
 	return true
@@ -116,6 +118,10 @@ func (e *IngestStatus) UnmarshalText(data []byte) error {
 		*e = New_IngestStatus(IngestStatus_COMPLETED)
 	case "FAILED":
 		*e = New_IngestStatus(IngestStatus_FAILED)
+	case "DELETION_IN_PROGRESS":
+		*e = New_IngestStatus(IngestStatus_DELETION_IN_PROGRESS)
+	case "DELETED":
+		*e = New_IngestStatus(IngestStatus_DELETED)
 	}
 	return nil
 }

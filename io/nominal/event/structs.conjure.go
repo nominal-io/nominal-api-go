@@ -4,14 +4,97 @@ package event
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/api"
-	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 	"github.com/palantir/pkg/uuid"
 )
+
+type AggregateEventsRequest struct {
+	Query          SearchQuery     `json:"query"`
+	AggregateTypes []AggregateType `json:"aggregateTypes"`
+}
+
+func (o AggregateEventsRequest) MarshalJSON() ([]byte, error) {
+	if o.AggregateTypes == nil {
+		o.AggregateTypes = make([]AggregateType, 0)
+	}
+	type _tmpAggregateEventsRequest AggregateEventsRequest
+	return safejson.Marshal(_tmpAggregateEventsRequest(o))
+}
+
+func (o *AggregateEventsRequest) UnmarshalJSON(data []byte) error {
+	type _tmpAggregateEventsRequest AggregateEventsRequest
+	var rawAggregateEventsRequest _tmpAggregateEventsRequest
+	if err := safejson.Unmarshal(data, &rawAggregateEventsRequest); err != nil {
+		return err
+	}
+	if rawAggregateEventsRequest.AggregateTypes == nil {
+		rawAggregateEventsRequest.AggregateTypes = make([]AggregateType, 0)
+	}
+	*o = AggregateEventsRequest(rawAggregateEventsRequest)
+	return nil
+}
+
+func (o AggregateEventsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AggregateEventsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type AggregateEventsResponse struct {
+	Values map[AggregateType]AggregateValue `json:"values"`
+}
+
+func (o AggregateEventsResponse) MarshalJSON() ([]byte, error) {
+	if o.Values == nil {
+		o.Values = make(map[AggregateType]AggregateValue, 0)
+	}
+	type _tmpAggregateEventsResponse AggregateEventsResponse
+	return safejson.Marshal(_tmpAggregateEventsResponse(o))
+}
+
+func (o *AggregateEventsResponse) UnmarshalJSON(data []byte) error {
+	type _tmpAggregateEventsResponse AggregateEventsResponse
+	var rawAggregateEventsResponse _tmpAggregateEventsResponse
+	if err := safejson.Unmarshal(data, &rawAggregateEventsResponse); err != nil {
+		return err
+	}
+	if rawAggregateEventsResponse.Values == nil {
+		rawAggregateEventsResponse.Values = make(map[AggregateType]AggregateValue, 0)
+	}
+	*o = AggregateEventsResponse(rawAggregateEventsResponse)
+	return nil
+}
+
+func (o AggregateEventsResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AggregateEventsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
 
 type ApiEventOrigin struct{}
 
@@ -44,6 +127,172 @@ func (o ArchiveEvent) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ArchiveEvent) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type AssetsFilter struct {
+	Operator api.SetOperator `json:"operator"`
+	Assets   []api1.AssetRid `json:"assets"`
+}
+
+func (o AssetsFilter) MarshalJSON() ([]byte, error) {
+	if o.Assets == nil {
+		o.Assets = make([]api1.AssetRid, 0)
+	}
+	type _tmpAssetsFilter AssetsFilter
+	return safejson.Marshal(_tmpAssetsFilter(o))
+}
+
+func (o *AssetsFilter) UnmarshalJSON(data []byte) error {
+	type _tmpAssetsFilter AssetsFilter
+	var rawAssetsFilter _tmpAssetsFilter
+	if err := safejson.Unmarshal(data, &rawAssetsFilter); err != nil {
+		return err
+	}
+	if rawAssetsFilter.Assets == nil {
+		rawAssetsFilter.Assets = make([]api1.AssetRid, 0)
+	}
+	*o = AssetsFilter(rawAssetsFilter)
+	return nil
+}
+
+func (o AssetsFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AssetsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type AssigneesFilter struct {
+	Operator  api.SetOperator `json:"operator"`
+	Assignees []api1.UserRid  `json:"assignees"`
+}
+
+func (o AssigneesFilter) MarshalJSON() ([]byte, error) {
+	if o.Assignees == nil {
+		o.Assignees = make([]api1.UserRid, 0)
+	}
+	type _tmpAssigneesFilter AssigneesFilter
+	return safejson.Marshal(_tmpAssigneesFilter(o))
+}
+
+func (o *AssigneesFilter) UnmarshalJSON(data []byte) error {
+	type _tmpAssigneesFilter AssigneesFilter
+	var rawAssigneesFilter _tmpAssigneesFilter
+	if err := safejson.Unmarshal(data, &rawAssigneesFilter); err != nil {
+		return err
+	}
+	if rawAssigneesFilter.Assignees == nil {
+		rawAssigneesFilter.Assignees = make([]api1.UserRid, 0)
+	}
+	*o = AssigneesFilter(rawAssigneesFilter)
+	return nil
+}
+
+func (o AssigneesFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AssigneesFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BatchAggregateEventsRequest struct {
+	Requests []AggregateEventsRequest `json:"requests"`
+}
+
+func (o BatchAggregateEventsRequest) MarshalJSON() ([]byte, error) {
+	if o.Requests == nil {
+		o.Requests = make([]AggregateEventsRequest, 0)
+	}
+	type _tmpBatchAggregateEventsRequest BatchAggregateEventsRequest
+	return safejson.Marshal(_tmpBatchAggregateEventsRequest(o))
+}
+
+func (o *BatchAggregateEventsRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchAggregateEventsRequest BatchAggregateEventsRequest
+	var rawBatchAggregateEventsRequest _tmpBatchAggregateEventsRequest
+	if err := safejson.Unmarshal(data, &rawBatchAggregateEventsRequest); err != nil {
+		return err
+	}
+	if rawBatchAggregateEventsRequest.Requests == nil {
+		rawBatchAggregateEventsRequest.Requests = make([]AggregateEventsRequest, 0)
+	}
+	*o = BatchAggregateEventsRequest(rawBatchAggregateEventsRequest)
+	return nil
+}
+
+func (o BatchAggregateEventsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchAggregateEventsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BatchAggregateEventsResponse struct {
+	Responses []AggregateEventsResponse `json:"responses"`
+}
+
+func (o BatchAggregateEventsResponse) MarshalJSON() ([]byte, error) {
+	if o.Responses == nil {
+		o.Responses = make([]AggregateEventsResponse, 0)
+	}
+	type _tmpBatchAggregateEventsResponse BatchAggregateEventsResponse
+	return safejson.Marshal(_tmpBatchAggregateEventsResponse(o))
+}
+
+func (o *BatchAggregateEventsResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchAggregateEventsResponse BatchAggregateEventsResponse
+	var rawBatchAggregateEventsResponse _tmpBatchAggregateEventsResponse
+	if err := safejson.Unmarshal(data, &rawBatchAggregateEventsResponse); err != nil {
+		return err
+	}
+	if rawBatchAggregateEventsResponse.Responses == nil {
+		rawBatchAggregateEventsResponse.Responses = make([]AggregateEventsResponse, 0)
+	}
+	*o = BatchAggregateEventsResponse(rawBatchAggregateEventsResponse)
+	return nil
+}
+
+func (o BatchAggregateEventsResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchAggregateEventsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -217,8 +466,8 @@ func (o *BatchUpdateEventResponse) UnmarshalYAML(unmarshal func(interface{}) err
 
 type CheckOriginMetadata struct {
 	CheckEvaluationRid  rids.AutomaticCheckEvaluationRid `json:"checkEvaluationRid"`
-	CheckRid            api.CheckRid                     `json:"checkRid"`
-	CheckLineageRid     api.CheckLineageRid              `json:"checkLineageRid"`
+	CheckRid            api1.CheckRid                    `json:"checkRid"`
+	CheckLineageRid     api1.CheckLineageRid             `json:"checkLineageRid"`
 	ImplementationIndex *int                             `json:"implementationIndex,omitempty"`
 }
 
@@ -240,32 +489,32 @@ func (o *CheckOriginMetadata) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 type CreateEvent struct {
 	// Must contain at least one asset rid.
-	AssetRids []api.AssetRid `conjure-docs:"Must contain at least one asset rid." json:"assetRids"`
+	AssetRids []api1.AssetRid `conjure-docs:"Must contain at least one asset rid." json:"assetRids"`
 	// If empty, will default to set<EventOrigin.api>.
-	Origins   []EventOrigin  `conjure-docs:"If empty, will default to set<EventOrigin.api>." json:"origins"`
-	Timestamp api1.Timestamp `json:"timestamp"`
-	Duration  api2.Duration  `json:"duration"`
-	Name      string         `json:"name"`
+	Origins   []EventOrigin `conjure-docs:"If empty, will default to set<EventOrigin.api>." json:"origins"`
+	Timestamp api.Timestamp `json:"timestamp"`
+	Duration  api2.Duration `json:"duration"`
+	Name      string        `json:"name"`
 	// If not provided, will default to an empty string.
-	Description *string                                  `conjure-docs:"If not provided, will default to an empty string." json:"description,omitempty"`
-	Type        EventType                                `json:"type"`
-	Labels      []api1.Label                             `json:"labels"`
-	Properties  map[api1.PropertyName]api1.PropertyValue `json:"properties"`
-	Disposition *EventDisposition                        `json:"disposition,omitempty"`
+	Description *string                                `conjure-docs:"If not provided, will default to an empty string." json:"description,omitempty"`
+	Type        EventType                              `json:"type"`
+	Labels      []api.Label                            `json:"labels"`
+	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
+	Disposition *EventDisposition                      `json:"disposition,omitempty"`
 }
 
 func (o CreateEvent) MarshalJSON() ([]byte, error) {
 	if o.AssetRids == nil {
-		o.AssetRids = make([]api.AssetRid, 0)
+		o.AssetRids = make([]api1.AssetRid, 0)
 	}
 	if o.Origins == nil {
 		o.Origins = make([]EventOrigin, 0)
 	}
 	if o.Labels == nil {
-		o.Labels = make([]api1.Label, 0)
+		o.Labels = make([]api.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
 	}
 	type _tmpCreateEvent CreateEvent
 	return safejson.Marshal(_tmpCreateEvent(o))
@@ -278,16 +527,16 @@ func (o *CreateEvent) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateEvent.AssetRids == nil {
-		rawCreateEvent.AssetRids = make([]api.AssetRid, 0)
+		rawCreateEvent.AssetRids = make([]api1.AssetRid, 0)
 	}
 	if rawCreateEvent.Origins == nil {
 		rawCreateEvent.Origins = make([]EventOrigin, 0)
 	}
 	if rawCreateEvent.Labels == nil {
-		rawCreateEvent.Labels = make([]api1.Label, 0)
+		rawCreateEvent.Labels = make([]api.Label, 0)
 	}
 	if rawCreateEvent.Properties == nil {
-		rawCreateEvent.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		rawCreateEvent.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
 	}
 	*o = CreateEvent(rawCreateEvent)
 	return nil
@@ -309,8 +558,49 @@ func (o *CreateEvent) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type DataReviewChecksFilter struct {
+	DataReviewChecks []api1.CheckRid `json:"dataReviewChecks"`
+}
+
+func (o DataReviewChecksFilter) MarshalJSON() ([]byte, error) {
+	if o.DataReviewChecks == nil {
+		o.DataReviewChecks = make([]api1.CheckRid, 0)
+	}
+	type _tmpDataReviewChecksFilter DataReviewChecksFilter
+	return safejson.Marshal(_tmpDataReviewChecksFilter(o))
+}
+
+func (o *DataReviewChecksFilter) UnmarshalJSON(data []byte) error {
+	type _tmpDataReviewChecksFilter DataReviewChecksFilter
+	var rawDataReviewChecksFilter _tmpDataReviewChecksFilter
+	if err := safejson.Unmarshal(data, &rawDataReviewChecksFilter); err != nil {
+		return err
+	}
+	if rawDataReviewChecksFilter.DataReviewChecks == nil {
+		rawDataReviewChecksFilter.DataReviewChecks = make([]api1.CheckRid, 0)
+	}
+	*o = DataReviewChecksFilter(rawDataReviewChecksFilter)
+	return nil
+}
+
+func (o DataReviewChecksFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DataReviewChecksFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type DataReviewEventOrigin struct {
-	DataReviewRid api.DataReviewRid `json:"dataReviewRid"`
+	DataReviewRid api1.DataReviewRid `json:"dataReviewRid"`
 	// Metadata about the check that created this event.
 	CheckMetadata CheckOriginMetadata `conjure-docs:"Metadata about the check that created this event." json:"checkMetadata"`
 }
@@ -331,42 +621,83 @@ func (o *DataReviewEventOrigin) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type DataReviewsFilter struct {
+	DataReviews []api1.DataReviewRid `json:"dataReviews"`
+}
+
+func (o DataReviewsFilter) MarshalJSON() ([]byte, error) {
+	if o.DataReviews == nil {
+		o.DataReviews = make([]api1.DataReviewRid, 0)
+	}
+	type _tmpDataReviewsFilter DataReviewsFilter
+	return safejson.Marshal(_tmpDataReviewsFilter(o))
+}
+
+func (o *DataReviewsFilter) UnmarshalJSON(data []byte) error {
+	type _tmpDataReviewsFilter DataReviewsFilter
+	var rawDataReviewsFilter _tmpDataReviewsFilter
+	if err := safejson.Unmarshal(data, &rawDataReviewsFilter); err != nil {
+		return err
+	}
+	if rawDataReviewsFilter.DataReviews == nil {
+		rawDataReviewsFilter.DataReviews = make([]api1.DataReviewRid, 0)
+	}
+	*o = DataReviewsFilter(rawDataReviewsFilter)
+	return nil
+}
+
+func (o DataReviewsFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DataReviewsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Event struct {
 	// Deprecated: This field is deprecated. Use the rid field instead.
 	Uuid uuid.UUID     `json:"uuid"`
 	Rid  rids.EventRid `json:"rid"`
 	// A set of asset rids associated with the event.
-	AssetRids []api.AssetRid `conjure-docs:"A set of asset rids associated with the event." json:"assetRids"`
+	AssetRids []api1.AssetRid `conjure-docs:"A set of asset rids associated with the event." json:"assetRids"`
 	// A set of origins associated with the event.
-	Origins     []EventOrigin                            `conjure-docs:"A set of origins associated with the event." json:"origins"`
-	Timestamp   api1.Timestamp                           `json:"timestamp"`
-	Duration    api2.Duration                            `json:"duration"`
-	Name        string                                   `json:"name"`
-	Description string                                   `json:"description"`
-	Type        EventType                                `json:"type"`
-	Labels      []api1.Label                             `json:"labels"`
-	Properties  map[api1.PropertyName]api1.PropertyValue `json:"properties"`
-	IsArchived  bool                                     `json:"isArchived"`
+	Origins     []EventOrigin                          `conjure-docs:"A set of origins associated with the event." json:"origins"`
+	Timestamp   api.Timestamp                          `json:"timestamp"`
+	Duration    api2.Duration                          `json:"duration"`
+	Name        string                                 `json:"name"`
+	Description string                                 `json:"description"`
+	Type        EventType                              `json:"type"`
+	Labels      []api.Label                            `json:"labels"`
+	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
+	IsArchived  bool                                   `json:"isArchived"`
 	/*
 	   The user who created the event.
 	   This field may be missing for legacy events.
 	*/
-	CreatedBy   *api.UserRid      `conjure-docs:"The user who created the event.\nThis field may be missing for legacy events." json:"createdBy,omitempty"`
+	CreatedBy   *api1.UserRid     `conjure-docs:"The user who created the event.\nThis field may be missing for legacy events." json:"createdBy,omitempty"`
 	Disposition *EventDisposition `json:"disposition,omitempty"`
 }
 
 func (o Event) MarshalJSON() ([]byte, error) {
 	if o.AssetRids == nil {
-		o.AssetRids = make([]api.AssetRid, 0)
+		o.AssetRids = make([]api1.AssetRid, 0)
 	}
 	if o.Origins == nil {
 		o.Origins = make([]EventOrigin, 0)
 	}
 	if o.Labels == nil {
-		o.Labels = make([]api1.Label, 0)
+		o.Labels = make([]api.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
 	}
 	type _tmpEvent Event
 	return safejson.Marshal(_tmpEvent(o))
@@ -379,16 +710,16 @@ func (o *Event) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawEvent.AssetRids == nil {
-		rawEvent.AssetRids = make([]api.AssetRid, 0)
+		rawEvent.AssetRids = make([]api1.AssetRid, 0)
 	}
 	if rawEvent.Origins == nil {
 		rawEvent.Origins = make([]EventOrigin, 0)
 	}
 	if rawEvent.Labels == nil {
-		rawEvent.Labels = make([]api1.Label, 0)
+		rawEvent.Labels = make([]api.Label, 0)
 	}
 	if rawEvent.Properties == nil {
-		rawEvent.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		rawEvent.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
 	}
 	*o = Event(rawEvent)
 	return nil
@@ -417,12 +748,12 @@ This is used to track the disposition status of an event.
 type EventDisposition struct {
 	Priority  api3.Priority         `json:"priority"`
 	State     api3.DispositionState `json:"state"`
-	Assignees []api.UserRid         `json:"assignees"`
+	Assignees []api1.UserRid        `json:"assignees"`
 }
 
 func (o EventDisposition) MarshalJSON() ([]byte, error) {
 	if o.Assignees == nil {
-		o.Assignees = make([]api.UserRid, 0)
+		o.Assignees = make([]api1.UserRid, 0)
 	}
 	type _tmpEventDisposition EventDisposition
 	return safejson.Marshal(_tmpEventDisposition(o))
@@ -435,7 +766,7 @@ func (o *EventDisposition) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawEventDisposition.Assignees == nil {
-		rawEventDisposition.Assignees = make([]api.UserRid, 0)
+		rawEventDisposition.Assignees = make([]api1.UserRid, 0)
 	}
 	*o = EventDisposition(rawEventDisposition)
 	return nil
@@ -458,7 +789,7 @@ func (o *EventDisposition) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type EventTimeFilter struct {
-	Timestamp          api1.Timestamp           `json:"timestamp"`
+	Timestamp          api.Timestamp            `json:"timestamp"`
 	TimestampCondition EventTimeFilterCondition `json:"timestampCondition"`
 }
 
@@ -479,9 +810,9 @@ func (o *EventTimeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 type EventsHistogramBucket struct {
-	StartInclusive api1.Timestamp `json:"startInclusive"`
-	EndExclusive   api1.Timestamp `json:"endExclusive"`
-	Count          int            `json:"count"`
+	StartInclusive api.Timestamp `json:"startInclusive"`
+	EndExclusive   api.Timestamp `json:"endExclusive"`
+	Count          int           `json:"count"`
 }
 
 func (o EventsHistogramBucket) MarshalYAML() (interface{}, error) {
@@ -501,15 +832,15 @@ func (o *EventsHistogramBucket) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 type EventsHistogramRequest struct {
-	StartInclusive api1.Timestamp `json:"startInclusive"`
-	EndExclusive   api1.Timestamp `json:"endExclusive"`
+	StartInclusive api.Timestamp `json:"startInclusive"`
+	EndExclusive   api.Timestamp `json:"endExclusive"`
 	// The query to filter the events to be included in the histogram.
 	FilterQuery *HistogramFilterQuery `conjure-docs:"The query to filter the events to be included in the histogram." json:"filterQuery,omitempty"`
 	/*
 	   Filters search on check alerts based on the archived statuses provided.
 	   Default is NOT_ARCHIVED only if none are provided.
 	*/
-	ArchivedStatuses *[]api1.ArchivedStatus `conjure-docs:"Filters search on check alerts based on the archived statuses provided. \nDefault is NOT_ARCHIVED only if none are provided." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api.ArchivedStatus `conjure-docs:"Filters search on check alerts based on the archived statuses provided. \nDefault is NOT_ARCHIVED only if none are provided." json:"archivedStatuses,omitempty"`
 	/*
 	   Defaults to 100. Throws if larger than 1_000.
 	   The resulting histogram may have fewer bins than requested if the requested time window is too small.
@@ -641,6 +972,48 @@ func (o *ListPropertiesAndLabelsRequest) UnmarshalYAML(unmarshal func(interface{
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type OriginTypesFilter struct {
+	Operator    api.SetOperator         `json:"operator"`
+	OriginTypes []SearchEventOriginType `json:"originTypes"`
+}
+
+func (o OriginTypesFilter) MarshalJSON() ([]byte, error) {
+	if o.OriginTypes == nil {
+		o.OriginTypes = make([]SearchEventOriginType, 0)
+	}
+	type _tmpOriginTypesFilter OriginTypesFilter
+	return safejson.Marshal(_tmpOriginTypesFilter(o))
+}
+
+func (o *OriginTypesFilter) UnmarshalJSON(data []byte) error {
+	type _tmpOriginTypesFilter OriginTypesFilter
+	var rawOriginTypesFilter _tmpOriginTypesFilter
+	if err := safejson.Unmarshal(data, &rawOriginTypesFilter); err != nil {
+		return err
+	}
+	if rawOriginTypesFilter.OriginTypes == nil {
+		rawOriginTypesFilter.OriginTypes = make([]SearchEventOriginType, 0)
+	}
+	*o = OriginTypesFilter(rawOriginTypesFilter)
+	return nil
+}
+
+func (o OriginTypesFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OriginTypesFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ProcedureEventOrigin struct {
 	ProcedureExecutionRid rids.ProcedureExecutionRid `json:"procedureExecutionRid"`
 	ProcedureRid          rids.ProcedureRid          `json:"procedureRid"`
@@ -667,10 +1040,10 @@ type SearchEventsRequest struct {
 	Sort SortOptions `json:"sort"`
 	// Will reject page sizes greater than 10k.
 	PageSize      int         `conjure-docs:"Will reject page sizes greater than 10k." json:"pageSize"`
-	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token  `json:"nextPageToken,omitempty"`
 	Query         SearchQuery `json:"query"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived events in search.
-	ArchivedStatuses *[]api1.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived events in search." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived events in search." json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchEventsRequest) MarshalYAML() (interface{}, error) {
@@ -690,8 +1063,8 @@ func (o *SearchEventsRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 }
 
 type SearchEventsResponse struct {
-	Results       []Event     `json:"results"`
-	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
+	Results       []Event    `json:"results"`
+	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
 }
 
 func (o SearchEventsResponse) MarshalJSON() ([]byte, error) {
@@ -752,8 +1125,52 @@ func (o *SortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type StreamingCheckOriginMetadata struct {
+	CheckRid            api1.CheckRid        `json:"checkRid"`
+	CheckLineageRid     api1.CheckLineageRid `json:"checkLineageRid"`
+	ImplementationIndex *int                 `json:"implementationIndex,omitempty"`
+}
+
+func (o StreamingCheckOriginMetadata) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StreamingCheckOriginMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type StreamingChecklistEventOrigin struct {
+	ChecklistRid api1.ChecklistRid `json:"checklistRid"`
+	// Metadata about the check that created this event.
+	CheckMetadata StreamingCheckOriginMetadata `conjure-docs:"Metadata about the check that created this event." json:"checkMetadata"`
+}
+
+func (o StreamingChecklistEventOrigin) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StreamingChecklistEventOrigin) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type TemplateEventOrigin struct {
-	Rid api.TemplateRid `json:"rid"`
+	Rid api1.TemplateRid `json:"rid"`
 }
 
 func (o TemplateEventOrigin) MarshalYAML() (interface{}, error) {
@@ -765,6 +1182,29 @@ func (o TemplateEventOrigin) MarshalYAML() (interface{}, error) {
 }
 
 func (o *TemplateEventOrigin) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A singular time series to associate the event with.
+type TimeSeriesChannelAssociation struct {
+	VariableName string `json:"variableName"`
+	// If this variable is grouped, the tags within the groupings this event should associate with
+	Tags *map[string]string `conjure-docs:"If this variable is grouped, the tags within the groupings this event should associate with" json:"tags,omitempty"`
+}
+
+func (o TimeSeriesChannelAssociation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TimeSeriesChannelAssociation) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -809,14 +1249,14 @@ type UpdateEvent struct {
 	   If provided, will replace the existing asset rids.
 	   If provided, must contain at least one asset rid.
 	*/
-	AssetRids   *[]api.AssetRid                           `conjure-docs:"If provided, will replace the existing asset rids.\nIf provided, must contain at least one asset rid." json:"assetRids,omitempty"`
-	Timestamp   *api1.Timestamp                           `json:"timestamp,omitempty"`
-	Duration    *api2.Duration                            `json:"duration,omitempty"`
-	Name        *string                                   `json:"name,omitempty"`
-	Description *string                                   `json:"description,omitempty"`
-	Type        *EventType                                `json:"type,omitempty"`
-	Labels      *[]api1.Label                             `json:"labels,omitempty"`
-	Properties  *map[api1.PropertyName]api1.PropertyValue `json:"properties,omitempty"`
+	AssetRids   *[]api1.AssetRid                        `conjure-docs:"If provided, will replace the existing asset rids.\nIf provided, must contain at least one asset rid." json:"assetRids,omitempty"`
+	Timestamp   *api.Timestamp                          `json:"timestamp,omitempty"`
+	Duration    *api2.Duration                          `json:"duration,omitempty"`
+	Name        *string                                 `json:"name,omitempty"`
+	Description *string                                 `json:"description,omitempty"`
+	Type        *EventType                              `json:"type,omitempty"`
+	Labels      *[]api.Label                            `json:"labels,omitempty"`
+	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
 }
 
 func (o UpdateEvent) MarshalYAML() (interface{}, error) {
@@ -841,14 +1281,14 @@ type UpdateEventRequest struct {
 	   If provided, will replace the existing asset rids.
 	   If provided, must contain at least one asset rid.
 	*/
-	AssetRids   *[]api.AssetRid                           `conjure-docs:"If provided, will replace the existing asset rids.\nIf provided, must contain at least one asset rid." json:"assetRids,omitempty"`
-	Timestamp   *api1.Timestamp                           `json:"timestamp,omitempty"`
-	Duration    *api2.Duration                            `json:"duration,omitempty"`
-	Name        *string                                   `json:"name,omitempty"`
-	Description *string                                   `json:"description,omitempty"`
-	Type        *EventType                                `json:"type,omitempty"`
-	Labels      *[]api1.Label                             `json:"labels,omitempty"`
-	Properties  *map[api1.PropertyName]api1.PropertyValue `json:"properties,omitempty"`
+	AssetRids   *[]api1.AssetRid                        `conjure-docs:"If provided, will replace the existing asset rids.\nIf provided, must contain at least one asset rid." json:"assetRids,omitempty"`
+	Timestamp   *api.Timestamp                          `json:"timestamp,omitempty"`
+	Duration    *api2.Duration                          `json:"duration,omitempty"`
+	Name        *string                                 `json:"name,omitempty"`
+	Description *string                                 `json:"description,omitempty"`
+	Type        *EventType                              `json:"type,omitempty"`
+	Labels      *[]api.Label                            `json:"labels,omitempty"`
+	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
 }
 
 func (o UpdateEventRequest) MarshalYAML() (interface{}, error) {
@@ -868,7 +1308,9 @@ func (o *UpdateEventRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 type WorkbookEventOrigin struct {
-	Rid api.NotebookRid `json:"rid"`
+	Rid api1.NotebookRid `json:"rid"`
+	// Data visualizations to associate this event with
+	Data *[]WorkbookDataAssociation `conjure-docs:"Data visualizations to associate this event with" json:"data,omitempty"`
 }
 
 func (o WorkbookEventOrigin) MarshalYAML() (interface{}, error) {

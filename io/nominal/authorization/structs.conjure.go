@@ -146,10 +146,14 @@ func (o *GetAccessTokenFromApiKeyRequest) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+We accept an OIDC ID token issued by a trusted identity provider as proof of authentication.
+The ID token is validated and exchanged for a Nominal access token.
+This ID token should generally be short lived since it is fungible with a Nominal access token
+via this endpoint.
+*/
 type GetAccessTokenRequest struct {
 	IdToken string `json:"idToken"`
-	// The access token's audience must be for the Nominal API.
-	AccessToken string `conjure-docs:"The access token's audience must be for the Nominal API." json:"accessToken"`
 }
 
 func (o GetAccessTokenRequest) MarshalYAML() (interface{}, error) {
@@ -292,6 +296,149 @@ func (o ListApiKeyResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ListApiKeyResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type OktaRegistrationEventData struct {
+	UserProfile OktaRegistrationUserProfile `json:"userProfile"`
+}
+
+func (o OktaRegistrationEventData) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OktaRegistrationEventData) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type OktaRegistrationRequest struct {
+	RequestType string                    `json:"requestType"`
+	Data        OktaRegistrationEventData `json:"data"`
+}
+
+func (o OktaRegistrationRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OktaRegistrationRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type OktaRegistrationResponse struct {
+	Commands []OktaUpdateActionCommand `json:"commands"`
+}
+
+func (o OktaRegistrationResponse) MarshalJSON() ([]byte, error) {
+	if o.Commands == nil {
+		o.Commands = make([]OktaUpdateActionCommand, 0)
+	}
+	type _tmpOktaRegistrationResponse OktaRegistrationResponse
+	return safejson.Marshal(_tmpOktaRegistrationResponse(o))
+}
+
+func (o *OktaRegistrationResponse) UnmarshalJSON(data []byte) error {
+	type _tmpOktaRegistrationResponse OktaRegistrationResponse
+	var rawOktaRegistrationResponse _tmpOktaRegistrationResponse
+	if err := safejson.Unmarshal(data, &rawOktaRegistrationResponse); err != nil {
+		return err
+	}
+	if rawOktaRegistrationResponse.Commands == nil {
+		rawOktaRegistrationResponse.Commands = make([]OktaUpdateActionCommand, 0)
+	}
+	*o = OktaRegistrationResponse(rawOktaRegistrationResponse)
+	return nil
+}
+
+func (o OktaRegistrationResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OktaRegistrationResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type OktaRegistrationUserProfile struct {
+	Email string `json:"email"`
+}
+
+func (o OktaRegistrationUserProfile) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OktaRegistrationUserProfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type OktaUpdateActionCommand struct {
+	Type  string                `json:"type"`
+	Value OktaUpdateActionValue `json:"value"`
+}
+
+func (o OktaUpdateActionCommand) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OktaUpdateActionCommand) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type OktaUpdateActionValue struct {
+	Registration OktaRegistrationStatus `json:"registration"`
+}
+
+func (o OktaUpdateActionValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OktaUpdateActionValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

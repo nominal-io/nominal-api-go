@@ -147,23 +147,35 @@ func NewExportChannelsFromTimeDomain(v ExportTimeDomainChannels) ExportChannels 
 }
 
 type ExportFormat struct {
-	typ string
-	csv *Csv
+	typ     string
+	arrow   *Arrow
+	csv     *Csv
+	matfile *Matfile
 }
 
 type exportFormatDeserializer struct {
-	Type string `json:"type"`
-	Csv  *Csv   `json:"csv"`
+	Type    string   `json:"type"`
+	Arrow   *Arrow   `json:"arrow"`
+	Csv     *Csv     `json:"csv"`
+	Matfile *Matfile `json:"matfile"`
 }
 
 func (u *exportFormatDeserializer) toStruct() ExportFormat {
-	return ExportFormat{typ: u.Type, csv: u.Csv}
+	return ExportFormat{typ: u.Type, arrow: u.Arrow, csv: u.Csv, matfile: u.Matfile}
 }
 
 func (u *ExportFormat) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "arrow":
+		if u.arrow == nil {
+			return nil, fmt.Errorf("field \"arrow\" is required")
+		}
+		return struct {
+			Type  string `json:"type"`
+			Arrow Arrow  `json:"arrow"`
+		}{Type: "arrow", Arrow: *u.arrow}, nil
 	case "csv":
 		if u.csv == nil {
 			return nil, fmt.Errorf("field \"csv\" is required")
@@ -172,6 +184,14 @@ func (u *ExportFormat) toSerializer() (interface{}, error) {
 			Type string `json:"type"`
 			Csv  Csv    `json:"csv"`
 		}{Type: "csv", Csv: *u.csv}, nil
+	case "matfile":
+		if u.matfile == nil {
+			return nil, fmt.Errorf("field \"matfile\" is required")
+		}
+		return struct {
+			Type    string  `json:"type"`
+			Matfile Matfile `json:"matfile"`
+		}{Type: "matfile", Matfile: *u.matfile}, nil
 	}
 }
 
@@ -190,9 +210,17 @@ func (u *ExportFormat) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
+	case "arrow":
+		if u.arrow == nil {
+			return fmt.Errorf("field \"arrow\" is required")
+		}
 	case "csv":
 		if u.csv == nil {
 			return fmt.Errorf("field \"csv\" is required")
+		}
+	case "matfile":
+		if u.matfile == nil {
+			return fmt.Errorf("field \"matfile\" is required")
 		}
 	}
 	return nil
@@ -214,22 +242,40 @@ func (u *ExportFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ExportFormat) AcceptFuncs(csvFunc func(Csv) error, unknownFunc func(string) error) error {
+func (u *ExportFormat) AcceptFuncs(arrowFunc func(Arrow) error, csvFunc func(Csv) error, matfileFunc func(Matfile) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
+	case "arrow":
+		if u.arrow == nil {
+			return fmt.Errorf("field \"arrow\" is required")
+		}
+		return arrowFunc(*u.arrow)
 	case "csv":
 		if u.csv == nil {
 			return fmt.Errorf("field \"csv\" is required")
 		}
 		return csvFunc(*u.csv)
+	case "matfile":
+		if u.matfile == nil {
+			return fmt.Errorf("field \"matfile\" is required")
+		}
+		return matfileFunc(*u.matfile)
 	}
 }
 
+func (u *ExportFormat) ArrowNoopSuccess(Arrow) error {
+	return nil
+}
+
 func (u *ExportFormat) CsvNoopSuccess(Csv) error {
+	return nil
+}
+
+func (u *ExportFormat) MatfileNoopSuccess(Matfile) error {
 	return nil
 }
 
@@ -244,16 +290,28 @@ func (u *ExportFormat) Accept(v ExportFormatVisitor) error {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
+	case "arrow":
+		if u.arrow == nil {
+			return fmt.Errorf("field \"arrow\" is required")
+		}
+		return v.VisitArrow(*u.arrow)
 	case "csv":
 		if u.csv == nil {
 			return fmt.Errorf("field \"csv\" is required")
 		}
 		return v.VisitCsv(*u.csv)
+	case "matfile":
+		if u.matfile == nil {
+			return fmt.Errorf("field \"matfile\" is required")
+		}
+		return v.VisitMatfile(*u.matfile)
 	}
 }
 
 type ExportFormatVisitor interface {
+	VisitArrow(v Arrow) error
 	VisitCsv(v Csv) error
+	VisitMatfile(v Matfile) error
 	VisitUnknown(typeName string) error
 }
 
@@ -264,21 +322,41 @@ func (u *ExportFormat) AcceptWithContext(ctx context.Context, v ExportFormatVisi
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "arrow":
+		if u.arrow == nil {
+			return fmt.Errorf("field \"arrow\" is required")
+		}
+		return v.VisitArrowWithContext(ctx, *u.arrow)
 	case "csv":
 		if u.csv == nil {
 			return fmt.Errorf("field \"csv\" is required")
 		}
 		return v.VisitCsvWithContext(ctx, *u.csv)
+	case "matfile":
+		if u.matfile == nil {
+			return fmt.Errorf("field \"matfile\" is required")
+		}
+		return v.VisitMatfileWithContext(ctx, *u.matfile)
 	}
 }
 
 type ExportFormatVisitorWithContext interface {
+	VisitArrowWithContext(ctx context.Context, v Arrow) error
 	VisitCsvWithContext(ctx context.Context, v Csv) error
+	VisitMatfileWithContext(ctx context.Context, v Matfile) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewExportFormatFromArrow(v Arrow) ExportFormat {
+	return ExportFormat{typ: "arrow", arrow: &v}
 }
 
 func NewExportFormatFromCsv(v Csv) ExportFormat {
 	return ExportFormat{typ: "csv", csv: &v}
+}
+
+func NewExportFormatFromMatfile(v Matfile) ExportFormat {
+	return ExportFormat{typ: "matfile", matfile: &v}
 }
 
 // How to handle timestamps that are not aligned.

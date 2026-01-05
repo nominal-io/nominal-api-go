@@ -5,11 +5,38 @@ package api
 import (
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
+
+// Defines the append results from the websocket.
+type AppendOnlyConfig struct {
+	/*
+	   Specifies whether the returned results should be decimated.
+	   If this is false, the client may receive a `SubscriptionCreationError` if the data rate is too high
+	   and responses must be decimated.
+	*/
+	DecimateResults bool `conjure-docs:"Specifies whether the returned results should be decimated.\nIf this is false, the client may receive a \"SubscriptionCreationError\" if the data rate is too high\nand responses must be decimated." json:"decimateResults"`
+}
+
+func (o AppendOnlyConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AppendOnlyConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
 
 /*
 An append result won't cover the full `StreamingComputeNodeRequest#windowWidth` but rather just a smaller
@@ -37,6 +64,30 @@ func (o AppendResult) MarshalYAML() (interface{}, error) {
 }
 
 func (o *AppendResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+This will be sent if there is an error processing a `ClientMessage`. Note: This won't automatically close
+the connection. The client can continue sending `ClientMessage`s after receiving this error.
+*/
+type ClientMessageError struct {
+	Error api.SerializableError `json:"error"`
+}
+
+func (o ClientMessageError) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ClientMessageError) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -227,9 +278,9 @@ A templatized version of `ComputeNodeRequest` where the end of the range will tr
 the start of the range tracks `windowWidth` time ago.
 */
 type StreamingComputeNodeRequest struct {
-	Node        api1.ComputableNode `json:"node"`
-	WindowWidth api2.Duration       `json:"windowWidth"`
-	Context     api1.Context        `json:"context"`
+	Node        api11.ComputableNode `json:"node"`
+	WindowWidth api2.Duration        `json:"windowWidth"`
+	Context     api11.Context        `json:"context"`
 }
 
 func (o StreamingComputeNodeRequest) MarshalYAML() (interface{}, error) {
@@ -349,8 +400,15 @@ type SubscriptionOptions struct {
 	   adding new sub-types to `ComputeNodeAppendResponse` without breaking clients that haven't upgraded yet
 	   and haven't yet added support for them, we default this to `false` and make clients opt-in as soon as they
 	   implement support.
+
+	   Deprecated: Use `resultConfiguration` instead.
 	*/
 	AllowAppends *bool `conjure-docs:"Can be set to \"false\" by the client to indicate that it doesn't support appends for this subscription\nand always wants to receive full results. Defaults to \"false\" if not set.\nThe expectation is that clients should implement support for appends for any of the results covered in\n\"ComputeNodeAppendResponse\" and set this to \"true\" as quickly as possible. However, in order to support \nadding new sub-types to \"ComputeNodeAppendResponse\" without breaking clients that haven't upgraded yet \nand haven't yet added support for them, we default this to \"false\" and make clients opt-in as soon as they\nimplement support." json:"allowAppends,omitempty"`
+	/*
+	   Defines the results that are sent for this subscription. If not set, falls back to the behavior
+	   defined by `allowAppends`.
+	*/
+	ResultConfiguration *ResultConfiguration `conjure-docs:"Defines the results that are sent for this subscription. If not set, falls back to the behavior \ndefined by \"allowAppends\"." json:"resultConfiguration,omitempty"`
 }
 
 func (o SubscriptionOptions) MarshalYAML() (interface{}, error) {

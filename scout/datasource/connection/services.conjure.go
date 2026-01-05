@@ -118,8 +118,14 @@ type ConnectionServiceClient interface {
 	GetConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid) (api.Connection, error)
 	// Gets a set of connections by their RIDs.
 	GetConnections(ctx context.Context, authHeader bearertoken.Token, ridsArg []api.ConnectionRid) ([]api.Connection, error)
-	// Lists all connections.
+	/*
+	   Lists all connections.
+
+	   Deprecated: Use listConnectionsV2 for paginated results.
+	*/
 	ListConnections(ctx context.Context, authHeader bearertoken.Token, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid) ([]api.Connection, error)
+	// Lists connections with pagination. Returns connections ordered by creation time descending.
+	ListConnectionsV2(ctx context.Context, authHeader bearertoken.Token, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error)
 	// Archives a connection, which simply tags the connection for a client to filter.
 	ArchiveConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid) error
 	// Undoes the archiving of a connection.
@@ -272,6 +278,39 @@ func (c *connectionServiceClient) ListConnections(ctx context.Context, authHeade
 	return returnVal, nil
 }
 
+func (c *connectionServiceClient) ListConnectionsV2(ctx context.Context, authHeader bearertoken.Token, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error) {
+	var defaultReturnVal api.ListConnectionsResponse
+	var returnVal *api.ListConnectionsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListConnectionsV2"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v2/connections"))
+	queryParams := make(url.Values)
+	if includeArchivedArg != nil {
+		queryParams.Set("includeArchived", fmt.Sprint(*includeArchivedArg))
+	}
+	for _, v := range workspacesArg {
+		queryParams.Add("workspaces", fmt.Sprint(v))
+	}
+	if pageSizeArg != nil {
+		queryParams.Set("pageSize", fmt.Sprint(*pageSizeArg))
+	}
+	if nextPageTokenArg != nil {
+		queryParams.Set("nextPageToken", fmt.Sprint(*nextPageTokenArg))
+	}
+	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "listConnectionsV2 failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "listConnectionsV2 response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *connectionServiceClient) ArchiveConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveConnection"))
@@ -320,8 +359,14 @@ type ConnectionServiceClientWithAuth interface {
 	GetConnection(ctx context.Context, ridArg api.ConnectionRid) (api.Connection, error)
 	// Gets a set of connections by their RIDs.
 	GetConnections(ctx context.Context, ridsArg []api.ConnectionRid) ([]api.Connection, error)
-	// Lists all connections.
+	/*
+	   Lists all connections.
+
+	   Deprecated: Use listConnectionsV2 for paginated results.
+	*/
 	ListConnections(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid) ([]api.Connection, error)
+	// Lists connections with pagination. Returns connections ordered by creation time descending.
+	ListConnectionsV2(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error)
 	// Archives a connection, which simply tags the connection for a client to filter.
 	ArchiveConnection(ctx context.Context, ridArg api.ConnectionRid) error
 	// Undoes the archiving of a connection.
@@ -363,6 +408,10 @@ func (c *connectionServiceClientWithAuth) GetConnections(ctx context.Context, ri
 
 func (c *connectionServiceClientWithAuth) ListConnections(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid) ([]api.Connection, error) {
 	return c.client.ListConnections(ctx, c.authHeader, includeArchivedArg, workspacesArg)
+}
+
+func (c *connectionServiceClientWithAuth) ListConnectionsV2(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error) {
+	return c.client.ListConnectionsV2(ctx, c.authHeader, includeArchivedArg, workspacesArg, pageSizeArg, nextPageTokenArg)
 }
 
 func (c *connectionServiceClientWithAuth) ArchiveConnection(ctx context.Context, ridArg api.ConnectionRid) error {
@@ -442,6 +491,15 @@ func (c *connectionServiceClientWithTokenProvider) ListConnections(ctx context.C
 		return defaultReturnVal, err
 	}
 	return c.client.ListConnections(ctx, bearertoken.Token(token), includeArchivedArg, workspacesArg)
+}
+
+func (c *connectionServiceClientWithTokenProvider) ListConnectionsV2(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error) {
+	var defaultReturnVal api.ListConnectionsResponse
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.ListConnectionsV2(ctx, bearertoken.Token(token), includeArchivedArg, workspacesArg, pageSizeArg, nextPageTokenArg)
 }
 
 func (c *connectionServiceClientWithTokenProvider) ArchiveConnection(ctx context.Context, ridArg api.ConnectionRid) error {

@@ -69,6 +69,72 @@ func (e *DataSourceType) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type PresetTimeframeDuration struct {
+	val PresetTimeframeDuration_Value
+}
+
+type PresetTimeframeDuration_Value string
+
+const (
+	PresetTimeframeDuration_ALL_TIME   PresetTimeframeDuration_Value = "ALL_TIME"
+	PresetTimeframeDuration_LAST_DAY   PresetTimeframeDuration_Value = "LAST_DAY"
+	PresetTimeframeDuration_LAST_WEEK  PresetTimeframeDuration_Value = "LAST_WEEK"
+	PresetTimeframeDuration_LAST_MONTH PresetTimeframeDuration_Value = "LAST_MONTH"
+	PresetTimeframeDuration_LAST_YEAR  PresetTimeframeDuration_Value = "LAST_YEAR"
+	PresetTimeframeDuration_UNKNOWN    PresetTimeframeDuration_Value = "UNKNOWN"
+)
+
+// PresetTimeframeDuration_Values returns all known variants of PresetTimeframeDuration.
+func PresetTimeframeDuration_Values() []PresetTimeframeDuration_Value {
+	return []PresetTimeframeDuration_Value{PresetTimeframeDuration_ALL_TIME, PresetTimeframeDuration_LAST_DAY, PresetTimeframeDuration_LAST_WEEK, PresetTimeframeDuration_LAST_MONTH, PresetTimeframeDuration_LAST_YEAR}
+}
+
+func New_PresetTimeframeDuration(value PresetTimeframeDuration_Value) PresetTimeframeDuration {
+	return PresetTimeframeDuration{val: value}
+}
+
+// IsUnknown returns false for all known variants of PresetTimeframeDuration and true otherwise.
+func (e PresetTimeframeDuration) IsUnknown() bool {
+	switch e.val {
+	case PresetTimeframeDuration_ALL_TIME, PresetTimeframeDuration_LAST_DAY, PresetTimeframeDuration_LAST_WEEK, PresetTimeframeDuration_LAST_MONTH, PresetTimeframeDuration_LAST_YEAR:
+		return false
+	}
+	return true
+}
+
+func (e PresetTimeframeDuration) Value() PresetTimeframeDuration_Value {
+	if e.IsUnknown() {
+		return PresetTimeframeDuration_UNKNOWN
+	}
+	return e.val
+}
+
+func (e PresetTimeframeDuration) String() string {
+	return string(e.val)
+}
+
+func (e PresetTimeframeDuration) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *PresetTimeframeDuration) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_PresetTimeframeDuration(PresetTimeframeDuration_Value(v))
+	case "ALL_TIME":
+		*e = New_PresetTimeframeDuration(PresetTimeframeDuration_ALL_TIME)
+	case "LAST_DAY":
+		*e = New_PresetTimeframeDuration(PresetTimeframeDuration_LAST_DAY)
+	case "LAST_WEEK":
+		*e = New_PresetTimeframeDuration(PresetTimeframeDuration_LAST_WEEK)
+	case "LAST_MONTH":
+		*e = New_PresetTimeframeDuration(PresetTimeframeDuration_LAST_MONTH)
+	case "LAST_YEAR":
+		*e = New_PresetTimeframeDuration(PresetTimeframeDuration_LAST_YEAR)
+	}
+	return nil
+}
+
 type RunDataReviewEvaluationStatus struct {
 	val RunDataReviewEvaluationStatus_Value
 }
@@ -152,6 +218,7 @@ type SortField_Value string
 
 const (
 	SortField_NAME                 SortField_Value = "NAME"
+	SortField_ID                   SortField_Value = "ID"
 	SortField_CREATED_AT           SortField_Value = "CREATED_AT"
 	SortField_START_TIME           SortField_Value = "START_TIME"
 	SortField_END_TIME             SortField_Value = "END_TIME"
@@ -161,7 +228,7 @@ const (
 
 // SortField_Values returns all known variants of SortField.
 func SortField_Values() []SortField_Value {
-	return []SortField_Value{SortField_NAME, SortField_CREATED_AT, SortField_START_TIME, SortField_END_TIME, SortField_PENDING_CHECK_ALERTS}
+	return []SortField_Value{SortField_NAME, SortField_ID, SortField_CREATED_AT, SortField_START_TIME, SortField_END_TIME, SortField_PENDING_CHECK_ALERTS}
 }
 
 func New_SortField(value SortField_Value) SortField {
@@ -171,7 +238,7 @@ func New_SortField(value SortField_Value) SortField {
 // IsUnknown returns false for all known variants of SortField and true otherwise.
 func (e SortField) IsUnknown() bool {
 	switch e.val {
-	case SortField_NAME, SortField_CREATED_AT, SortField_START_TIME, SortField_END_TIME, SortField_PENDING_CHECK_ALERTS:
+	case SortField_NAME, SortField_ID, SortField_CREATED_AT, SortField_START_TIME, SortField_END_TIME, SortField_PENDING_CHECK_ALERTS:
 		return false
 	}
 	return true
@@ -198,6 +265,8 @@ func (e *SortField) UnmarshalText(data []byte) error {
 		*e = New_SortField(SortField_Value(v))
 	case "NAME":
 		*e = New_SortField(SortField_NAME)
+	case "ID":
+		*e = New_SortField(SortField_ID)
 	case "CREATED_AT":
 		*e = New_SortField(SortField_CREATED_AT)
 	case "START_TIME":

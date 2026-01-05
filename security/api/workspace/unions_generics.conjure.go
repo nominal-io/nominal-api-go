@@ -60,6 +60,55 @@ type PreferredRefNameConfigurationVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type ProcedureSettingsWithT[T any] ProcedureSettings
+
+func (u *ProcedureSettingsWithT[T]) Accept(ctx context.Context, v ProcedureSettingsVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *ProcedureSettingsWithT[T]) AcceptFuncs(v1Func func(ProcedureSettingsV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ProcedureSettingsWithT[T]) V1NoopSuccess(ProcedureSettingsV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureSettingsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ProcedureSettingsVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v ProcedureSettingsV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type UpdateOrRemoveWorkspaceDisplayNameWithT[T any] UpdateOrRemoveWorkspaceDisplayName
 
 func (u *UpdateOrRemoveWorkspaceDisplayNameWithT[T]) Accept(ctx context.Context, v UpdateOrRemoveWorkspaceDisplayNameVisitorWithT[T]) (T, error) {

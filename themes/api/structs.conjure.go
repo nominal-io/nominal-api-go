@@ -75,6 +75,10 @@ type ChartThemeContentV1 struct {
 	LegendFontColor HexColor `conjure-docs:"Font color of the legend." json:"legendFontColor"`
 	// Where on the chart the legend should be placed.
 	LegendPlacement LegendPlacement `conjure-docs:"Where on the chart the legend should be placed." json:"legendPlacement"`
+	// Whether rows will be separated.
+	RowGapEnabled bool `conjure-docs:"Whether rows will be separated." json:"rowGapEnabled"`
+	// The size of the row gap.
+	RowGapSize *int `conjure-docs:"The size of the row gap." json:"rowGapSize,omitempty"`
 	// The relative width of the chart export.
 	AspectRatioWidth int `conjure-docs:"The relative width of the chart export." json:"aspectRatioWidth"`
 	// The relative height of the chart export.
@@ -159,6 +163,8 @@ type TimeSeriesChartThemeV1 struct {
 	YAxisTitleFontSize int `conjure-docs:"The font size of the y-axis labels." json:"yAxisTitleFontSize"`
 	// The font size of the y-axis ticks.
 	YAxisTickFontSize int `conjure-docs:"The font size of the y-axis ticks." json:"yAxisTickFontSize"`
+	// The line thickness in px of the threshold line.
+	ThresholdLineWidth *int `conjure-docs:"The line thickness in px of the threshold line." json:"thresholdLineWidth,omitempty"`
 }
 
 func (o TimeSeriesChartThemeV1) MarshalYAML() (interface{}, error) {

@@ -11,6 +11,49 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
+type ApiLocator struct {
+	Channel api.Channel                  `json:"channel"`
+	Tags    map[api.TagName]api.TagValue `json:"tags"`
+	Type    ApiType                      `json:"type"`
+}
+
+func (o ApiLocator) MarshalJSON() ([]byte, error) {
+	if o.Tags == nil {
+		o.Tags = make(map[api.TagName]api.TagValue, 0)
+	}
+	type _tmpApiLocator ApiLocator
+	return safejson.Marshal(_tmpApiLocator(o))
+}
+
+func (o *ApiLocator) UnmarshalJSON(data []byte) error {
+	type _tmpApiLocator ApiLocator
+	var rawApiLocator _tmpApiLocator
+	if err := safejson.Unmarshal(data, &rawApiLocator); err != nil {
+		return err
+	}
+	if rawApiLocator.Tags == nil {
+		rawApiLocator.Tags = make(map[api.TagName]api.TagValue, 0)
+	}
+	*o = ApiLocator(rawApiLocator)
+	return nil
+}
+
+func (o ApiLocator) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ApiLocator) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type BatchCreateLogicalSeriesRequest struct {
 	Requests []CreateLogicalSeries `json:"requests"`
 }
@@ -371,59 +414,6 @@ func (o CreateLogicalSeries) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CreateLogicalSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// Deprecated in favor of CsvLocatorV2
-type CsvLocator struct {
-	S3Path api.S3Path `json:"s3Path"`
-	Index  int        `json:"index"`
-	/*
-	   If empty, defaults to false. This refers to whether the CSV was ingested using legacy format where the timestamp
-	   and values are split into two separate arrow files.
-	*/
-	UsesLegacyFormat *bool `conjure-docs:"If empty, defaults to false. This refers to whether the CSV was ingested using legacy format where the timestamp\nand values are split into two separate arrow files." json:"usesLegacyFormat,omitempty"`
-	// The handle of the x series to use for this logical series.
-	XSeriesHandle *string `conjure-docs:"The handle of the x series to use for this logical series." json:"xSeriesHandle,omitempty"`
-	// The handle of the y series to use for this logical series.
-	YSeriesHandle *string `conjure-docs:"The handle of the y series to use for this logical series." json:"ySeriesHandle,omitempty"`
-}
-
-func (o CsvLocator) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *CsvLocator) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type CsvLocatorV2 struct {
-	S3Path    api.S3Path `json:"s3Path"`
-	Index     int        `json:"index"`
-	TimeIndex int        `json:"timeIndex"`
-}
-
-func (o CsvLocatorV2) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *CsvLocatorV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

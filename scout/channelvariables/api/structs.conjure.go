@@ -4,6 +4,7 @@ package api
 
 import (
 	"github.com/nominal-io/nominal-api-go/scout/compute/api"
+	"github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -33,8 +34,8 @@ func (o *ChannelVariable) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 type ComputeNodeWithContext struct {
-	ComputeNode api.ComputeNode `json:"computeNode"`
-	Context     WorkbookContext `json:"context"`
+	ComputeNode api1.ComputeNode `json:"computeNode"`
+	Context     WorkbookContext  `json:"context"`
 }
 
 func (o ComputeNodeWithContext) MarshalYAML() (interface{}, error) {

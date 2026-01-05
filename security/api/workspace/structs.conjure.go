@@ -10,6 +10,52 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+type ProcedureSettingsV1 struct {
+	/*
+	   A list of procedures that are elevated to the workspace-level.
+	   They will be available for execution in a top-level context, rather
+	   than just from the procedure details page.
+	*/
+	WorkspaceProcedures []rids.ProcedureRid `conjure-docs:"A list of procedures that are elevated to the workspace-level.\nThey will be available for execution in a top-level context, rather\nthan just from the procedure details page." json:"workspaceProcedures"`
+}
+
+func (o ProcedureSettingsV1) MarshalJSON() ([]byte, error) {
+	if o.WorkspaceProcedures == nil {
+		o.WorkspaceProcedures = make([]rids.ProcedureRid, 0)
+	}
+	type _tmpProcedureSettingsV1 ProcedureSettingsV1
+	return safejson.Marshal(_tmpProcedureSettingsV1(o))
+}
+
+func (o *ProcedureSettingsV1) UnmarshalJSON(data []byte) error {
+	type _tmpProcedureSettingsV1 ProcedureSettingsV1
+	var rawProcedureSettingsV1 _tmpProcedureSettingsV1
+	if err := safejson.Unmarshal(data, &rawProcedureSettingsV1); err != nil {
+		return err
+	}
+	if rawProcedureSettingsV1.WorkspaceProcedures == nil {
+		rawProcedureSettingsV1.WorkspaceProcedures = make([]rids.ProcedureRid, 0)
+	}
+	*o = ProcedureSettingsV1(rawProcedureSettingsV1)
+	return nil
+}
+
+func (o ProcedureSettingsV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ProcedureSettingsV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // The request to remove a field from a workspace.
 type RemoveType struct{}
 
@@ -78,7 +124,8 @@ func (o *Workspace) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type WorkspaceSettings struct {
-	RefNames *PreferredRefNameConfiguration `json:"refNames,omitempty"`
+	RefNames   *PreferredRefNameConfiguration `json:"refNames,omitempty"`
+	Procedures *ProcedureSettings             `json:"procedures,omitempty"`
 }
 
 func (o WorkspaceSettings) MarshalYAML() (interface{}, error) {

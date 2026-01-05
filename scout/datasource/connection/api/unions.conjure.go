@@ -11,6 +11,220 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// This config is used to scrape data from an external connections service.
+type ApiScrapingConfig struct {
+	typ              string
+	allChannels      *AllChannelsConnectionsScrapingConfig
+	channelAllowList *ChannelAllowListConnectionsScrapingConfig
+	channelBlockList *ChannelBlockListConnectionsScrapingConfig
+}
+
+type apiScrapingConfigDeserializer struct {
+	Type             string                                     `json:"type"`
+	AllChannels      *AllChannelsConnectionsScrapingConfig      `json:"allChannels"`
+	ChannelAllowList *ChannelAllowListConnectionsScrapingConfig `json:"channelAllowList"`
+	ChannelBlockList *ChannelBlockListConnectionsScrapingConfig `json:"channelBlockList"`
+}
+
+func (u *apiScrapingConfigDeserializer) toStruct() ApiScrapingConfig {
+	return ApiScrapingConfig{typ: u.Type, allChannels: u.AllChannels, channelAllowList: u.ChannelAllowList, channelBlockList: u.ChannelBlockList}
+}
+
+func (u *ApiScrapingConfig) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "allChannels":
+		if u.allChannels == nil {
+			return nil, fmt.Errorf("field \"allChannels\" is required")
+		}
+		return struct {
+			Type        string                               `json:"type"`
+			AllChannels AllChannelsConnectionsScrapingConfig `json:"allChannels"`
+		}{Type: "allChannels", AllChannels: *u.allChannels}, nil
+	case "channelAllowList":
+		if u.channelAllowList == nil {
+			return nil, fmt.Errorf("field \"channelAllowList\" is required")
+		}
+		return struct {
+			Type             string                                    `json:"type"`
+			ChannelAllowList ChannelAllowListConnectionsScrapingConfig `json:"channelAllowList"`
+		}{Type: "channelAllowList", ChannelAllowList: *u.channelAllowList}, nil
+	case "channelBlockList":
+		if u.channelBlockList == nil {
+			return nil, fmt.Errorf("field \"channelBlockList\" is required")
+		}
+		return struct {
+			Type             string                                    `json:"type"`
+			ChannelBlockList ChannelBlockListConnectionsScrapingConfig `json:"channelBlockList"`
+		}{Type: "channelBlockList", ChannelBlockList: *u.channelBlockList}, nil
+	}
+}
+
+func (u ApiScrapingConfig) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ApiScrapingConfig) UnmarshalJSON(data []byte) error {
+	var deser apiScrapingConfigDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "allChannels":
+		if u.allChannels == nil {
+			return fmt.Errorf("field \"allChannels\" is required")
+		}
+	case "channelAllowList":
+		if u.channelAllowList == nil {
+			return fmt.Errorf("field \"channelAllowList\" is required")
+		}
+	case "channelBlockList":
+		if u.channelBlockList == nil {
+			return fmt.Errorf("field \"channelBlockList\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ApiScrapingConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ApiScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ApiScrapingConfig) AcceptFuncs(allChannelsFunc func(AllChannelsConnectionsScrapingConfig) error, channelAllowListFunc func(ChannelAllowListConnectionsScrapingConfig) error, channelBlockListFunc func(ChannelBlockListConnectionsScrapingConfig) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "allChannels":
+		if u.allChannels == nil {
+			return fmt.Errorf("field \"allChannels\" is required")
+		}
+		return allChannelsFunc(*u.allChannels)
+	case "channelAllowList":
+		if u.channelAllowList == nil {
+			return fmt.Errorf("field \"channelAllowList\" is required")
+		}
+		return channelAllowListFunc(*u.channelAllowList)
+	case "channelBlockList":
+		if u.channelBlockList == nil {
+			return fmt.Errorf("field \"channelBlockList\" is required")
+		}
+		return channelBlockListFunc(*u.channelBlockList)
+	}
+}
+
+func (u *ApiScrapingConfig) AllChannelsNoopSuccess(AllChannelsConnectionsScrapingConfig) error {
+	return nil
+}
+
+func (u *ApiScrapingConfig) ChannelAllowListNoopSuccess(ChannelAllowListConnectionsScrapingConfig) error {
+	return nil
+}
+
+func (u *ApiScrapingConfig) ChannelBlockListNoopSuccess(ChannelBlockListConnectionsScrapingConfig) error {
+	return nil
+}
+
+func (u *ApiScrapingConfig) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ApiScrapingConfig) Accept(v ApiScrapingConfigVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "allChannels":
+		if u.allChannels == nil {
+			return fmt.Errorf("field \"allChannels\" is required")
+		}
+		return v.VisitAllChannels(*u.allChannels)
+	case "channelAllowList":
+		if u.channelAllowList == nil {
+			return fmt.Errorf("field \"channelAllowList\" is required")
+		}
+		return v.VisitChannelAllowList(*u.channelAllowList)
+	case "channelBlockList":
+		if u.channelBlockList == nil {
+			return fmt.Errorf("field \"channelBlockList\" is required")
+		}
+		return v.VisitChannelBlockList(*u.channelBlockList)
+	}
+}
+
+type ApiScrapingConfigVisitor interface {
+	VisitAllChannels(v AllChannelsConnectionsScrapingConfig) error
+	VisitChannelAllowList(v ChannelAllowListConnectionsScrapingConfig) error
+	VisitChannelBlockList(v ChannelBlockListConnectionsScrapingConfig) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ApiScrapingConfig) AcceptWithContext(ctx context.Context, v ApiScrapingConfigVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "allChannels":
+		if u.allChannels == nil {
+			return fmt.Errorf("field \"allChannels\" is required")
+		}
+		return v.VisitAllChannelsWithContext(ctx, *u.allChannels)
+	case "channelAllowList":
+		if u.channelAllowList == nil {
+			return fmt.Errorf("field \"channelAllowList\" is required")
+		}
+		return v.VisitChannelAllowListWithContext(ctx, *u.channelAllowList)
+	case "channelBlockList":
+		if u.channelBlockList == nil {
+			return fmt.Errorf("field \"channelBlockList\" is required")
+		}
+		return v.VisitChannelBlockListWithContext(ctx, *u.channelBlockList)
+	}
+}
+
+type ApiScrapingConfigVisitorWithContext interface {
+	VisitAllChannelsWithContext(ctx context.Context, v AllChannelsConnectionsScrapingConfig) error
+	VisitChannelAllowListWithContext(ctx context.Context, v ChannelAllowListConnectionsScrapingConfig) error
+	VisitChannelBlockListWithContext(ctx context.Context, v ChannelBlockListConnectionsScrapingConfig) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewApiScrapingConfigFromAllChannels(v AllChannelsConnectionsScrapingConfig) ApiScrapingConfig {
+	return ApiScrapingConfig{typ: "allChannels", allChannels: &v}
+}
+
+func NewApiScrapingConfigFromChannelAllowList(v ChannelAllowListConnectionsScrapingConfig) ApiScrapingConfig {
+	return ApiScrapingConfig{typ: "channelAllowList", channelAllowList: &v}
+}
+
+func NewApiScrapingConfigFromChannelBlockList(v ChannelBlockListConnectionsScrapingConfig) ApiScrapingConfig {
+	return ApiScrapingConfig{typ: "channelBlockList", channelBlockList: &v}
+}
+
 type ConnectionDetails struct {
 	typ            string
 	timescale      *TimescaleConnectionDetails
@@ -20,6 +234,7 @@ type ConnectionDetails struct {
 	timestream     *TimestreamConnectionDetails
 	visualCrossing *VisualCrossingConnectionDetails
 	bigQuery       *BigQueryConnectionDetails
+	api            *ApiConnectionDetails
 }
 
 type connectionDetailsDeserializer struct {
@@ -31,10 +246,11 @@ type connectionDetailsDeserializer struct {
 	Timestream     *TimestreamConnectionDetails     `json:"timestream"`
 	VisualCrossing *VisualCrossingConnectionDetails `json:"visualCrossing"`
 	BigQuery       *BigQueryConnectionDetails       `json:"bigQuery"`
+	Api            *ApiConnectionDetails            `json:"api"`
 }
 
 func (u *connectionDetailsDeserializer) toStruct() ConnectionDetails {
-	return ConnectionDetails{typ: u.Type, timescale: u.Timescale, influx: u.Influx, influx1: u.Influx1, nominal: u.Nominal, timestream: u.Timestream, visualCrossing: u.VisualCrossing, bigQuery: u.BigQuery}
+	return ConnectionDetails{typ: u.Type, timescale: u.Timescale, influx: u.Influx, influx1: u.Influx1, nominal: u.Nominal, timestream: u.Timestream, visualCrossing: u.VisualCrossing, bigQuery: u.BigQuery, api: u.Api}
 }
 
 func (u *ConnectionDetails) toSerializer() (interface{}, error) {
@@ -97,6 +313,14 @@ func (u *ConnectionDetails) toSerializer() (interface{}, error) {
 			Type     string                    `json:"type"`
 			BigQuery BigQueryConnectionDetails `json:"bigQuery"`
 		}{Type: "bigQuery", BigQuery: *u.bigQuery}, nil
+	case "api":
+		if u.api == nil {
+			return nil, fmt.Errorf("field \"api\" is required")
+		}
+		return struct {
+			Type string               `json:"type"`
+			Api  ApiConnectionDetails `json:"api"`
+		}{Type: "api", Api: *u.api}, nil
 	}
 }
 
@@ -143,6 +367,10 @@ func (u *ConnectionDetails) UnmarshalJSON(data []byte) error {
 		if u.bigQuery == nil {
 			return fmt.Errorf("field \"bigQuery\" is required")
 		}
+	case "api":
+		if u.api == nil {
+			return fmt.Errorf("field \"api\" is required")
+		}
 	}
 	return nil
 }
@@ -163,7 +391,7 @@ func (u *ConnectionDetails) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ConnectionDetails) AcceptFuncs(timescaleFunc func(TimescaleConnectionDetails) error, influxFunc func(Influx2ConnectionDetails) error, influx1Func func(Influx1ConnectionDetails) error, nominalFunc func(NominalConnectionDetails) error, timestreamFunc func(TimestreamConnectionDetails) error, visualCrossingFunc func(VisualCrossingConnectionDetails) error, bigQueryFunc func(BigQueryConnectionDetails) error, unknownFunc func(string) error) error {
+func (u *ConnectionDetails) AcceptFuncs(timescaleFunc func(TimescaleConnectionDetails) error, influxFunc func(Influx2ConnectionDetails) error, influx1Func func(Influx1ConnectionDetails) error, nominalFunc func(NominalConnectionDetails) error, timestreamFunc func(TimestreamConnectionDetails) error, visualCrossingFunc func(VisualCrossingConnectionDetails) error, bigQueryFunc func(BigQueryConnectionDetails) error, apiFunc func(ApiConnectionDetails) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -205,6 +433,11 @@ func (u *ConnectionDetails) AcceptFuncs(timescaleFunc func(TimescaleConnectionDe
 			return fmt.Errorf("field \"bigQuery\" is required")
 		}
 		return bigQueryFunc(*u.bigQuery)
+	case "api":
+		if u.api == nil {
+			return fmt.Errorf("field \"api\" is required")
+		}
+		return apiFunc(*u.api)
 	}
 }
 
@@ -233,6 +466,10 @@ func (u *ConnectionDetails) VisualCrossingNoopSuccess(VisualCrossingConnectionDe
 }
 
 func (u *ConnectionDetails) BigQueryNoopSuccess(BigQueryConnectionDetails) error {
+	return nil
+}
+
+func (u *ConnectionDetails) ApiNoopSuccess(ApiConnectionDetails) error {
 	return nil
 }
 
@@ -282,6 +519,11 @@ func (u *ConnectionDetails) Accept(v ConnectionDetailsVisitor) error {
 			return fmt.Errorf("field \"bigQuery\" is required")
 		}
 		return v.VisitBigQuery(*u.bigQuery)
+	case "api":
+		if u.api == nil {
+			return fmt.Errorf("field \"api\" is required")
+		}
+		return v.VisitApi(*u.api)
 	}
 }
 
@@ -293,6 +535,7 @@ type ConnectionDetailsVisitor interface {
 	VisitTimestream(v TimestreamConnectionDetails) error
 	VisitVisualCrossing(v VisualCrossingConnectionDetails) error
 	VisitBigQuery(v BigQueryConnectionDetails) error
+	VisitApi(v ApiConnectionDetails) error
 	VisitUnknown(typeName string) error
 }
 
@@ -338,6 +581,11 @@ func (u *ConnectionDetails) AcceptWithContext(ctx context.Context, v ConnectionD
 			return fmt.Errorf("field \"bigQuery\" is required")
 		}
 		return v.VisitBigQueryWithContext(ctx, *u.bigQuery)
+	case "api":
+		if u.api == nil {
+			return fmt.Errorf("field \"api\" is required")
+		}
+		return v.VisitApiWithContext(ctx, *u.api)
 	}
 }
 
@@ -349,6 +597,7 @@ type ConnectionDetailsVisitorWithContext interface {
 	VisitTimestreamWithContext(ctx context.Context, v TimestreamConnectionDetails) error
 	VisitVisualCrossingWithContext(ctx context.Context, v VisualCrossingConnectionDetails) error
 	VisitBigQueryWithContext(ctx context.Context, v BigQueryConnectionDetails) error
+	VisitApiWithContext(ctx context.Context, v ApiConnectionDetails) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -378,6 +627,10 @@ func NewConnectionDetailsFromVisualCrossing(v VisualCrossingConnectionDetails) C
 
 func NewConnectionDetailsFromBigQuery(v BigQueryConnectionDetails) ConnectionDetails {
 	return ConnectionDetails{typ: "bigQuery", bigQuery: &v}
+}
+
+func NewConnectionDetailsFromApi(v ApiConnectionDetails) ConnectionDetails {
+	return ConnectionDetails{typ: "api", api: &v}
 }
 
 type HeaderValue struct {
@@ -1336,6 +1589,7 @@ type ScrapingConfig struct {
 	timescale      *PivotedTimescaleScrapingConfig
 	visualCrossing *VisualCrossingScrapingConfig
 	bigQuery       *BigQueryScrapingConfig
+	api            *ApiScrapingConfig
 }
 
 type scrapingConfigDeserializer struct {
@@ -1346,10 +1600,11 @@ type scrapingConfigDeserializer struct {
 	Timescale      *PivotedTimescaleScrapingConfig `json:"timescale"`
 	VisualCrossing *VisualCrossingScrapingConfig   `json:"visualCrossing"`
 	BigQuery       *BigQueryScrapingConfig         `json:"bigQuery"`
+	Api            *ApiScrapingConfig              `json:"api"`
 }
 
 func (u *scrapingConfigDeserializer) toStruct() ScrapingConfig {
-	return ScrapingConfig{typ: u.Type, influx: u.Influx, nominal: u.Nominal, timestream: u.Timestream, timescale: u.Timescale, visualCrossing: u.VisualCrossing, bigQuery: u.BigQuery}
+	return ScrapingConfig{typ: u.Type, influx: u.Influx, nominal: u.Nominal, timestream: u.Timestream, timescale: u.Timescale, visualCrossing: u.VisualCrossing, bigQuery: u.BigQuery, api: u.Api}
 }
 
 func (u *ScrapingConfig) toSerializer() (interface{}, error) {
@@ -1404,6 +1659,14 @@ func (u *ScrapingConfig) toSerializer() (interface{}, error) {
 			Type     string                 `json:"type"`
 			BigQuery BigQueryScrapingConfig `json:"bigQuery"`
 		}{Type: "bigQuery", BigQuery: *u.bigQuery}, nil
+	case "api":
+		if u.api == nil {
+			return nil, fmt.Errorf("field \"api\" is required")
+		}
+		return struct {
+			Type string            `json:"type"`
+			Api  ApiScrapingConfig `json:"api"`
+		}{Type: "api", Api: *u.api}, nil
 	}
 }
 
@@ -1446,6 +1709,10 @@ func (u *ScrapingConfig) UnmarshalJSON(data []byte) error {
 		if u.bigQuery == nil {
 			return fmt.Errorf("field \"bigQuery\" is required")
 		}
+	case "api":
+		if u.api == nil {
+			return fmt.Errorf("field \"api\" is required")
+		}
 	}
 	return nil
 }
@@ -1466,7 +1733,7 @@ func (u *ScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ScrapingConfig) AcceptFuncs(influxFunc func(InfluxScrapingConfig) error, nominalFunc func(NominalScrapingConfig) error, timestreamFunc func(TimestreamScrapingConfig) error, timescaleFunc func(PivotedTimescaleScrapingConfig) error, visualCrossingFunc func(VisualCrossingScrapingConfig) error, bigQueryFunc func(BigQueryScrapingConfig) error, unknownFunc func(string) error) error {
+func (u *ScrapingConfig) AcceptFuncs(influxFunc func(InfluxScrapingConfig) error, nominalFunc func(NominalScrapingConfig) error, timestreamFunc func(TimestreamScrapingConfig) error, timescaleFunc func(PivotedTimescaleScrapingConfig) error, visualCrossingFunc func(VisualCrossingScrapingConfig) error, bigQueryFunc func(BigQueryScrapingConfig) error, apiFunc func(ApiScrapingConfig) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1503,6 +1770,11 @@ func (u *ScrapingConfig) AcceptFuncs(influxFunc func(InfluxScrapingConfig) error
 			return fmt.Errorf("field \"bigQuery\" is required")
 		}
 		return bigQueryFunc(*u.bigQuery)
+	case "api":
+		if u.api == nil {
+			return fmt.Errorf("field \"api\" is required")
+		}
+		return apiFunc(*u.api)
 	}
 }
 
@@ -1527,6 +1799,10 @@ func (u *ScrapingConfig) VisualCrossingNoopSuccess(VisualCrossingScrapingConfig)
 }
 
 func (u *ScrapingConfig) BigQueryNoopSuccess(BigQueryScrapingConfig) error {
+	return nil
+}
+
+func (u *ScrapingConfig) ApiNoopSuccess(ApiScrapingConfig) error {
 	return nil
 }
 
@@ -1571,6 +1847,11 @@ func (u *ScrapingConfig) Accept(v ScrapingConfigVisitor) error {
 			return fmt.Errorf("field \"bigQuery\" is required")
 		}
 		return v.VisitBigQuery(*u.bigQuery)
+	case "api":
+		if u.api == nil {
+			return fmt.Errorf("field \"api\" is required")
+		}
+		return v.VisitApi(*u.api)
 	}
 }
 
@@ -1581,6 +1862,7 @@ type ScrapingConfigVisitor interface {
 	VisitTimescale(v PivotedTimescaleScrapingConfig) error
 	VisitVisualCrossing(v VisualCrossingScrapingConfig) error
 	VisitBigQuery(v BigQueryScrapingConfig) error
+	VisitApi(v ApiScrapingConfig) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1621,6 +1903,11 @@ func (u *ScrapingConfig) AcceptWithContext(ctx context.Context, v ScrapingConfig
 			return fmt.Errorf("field \"bigQuery\" is required")
 		}
 		return v.VisitBigQueryWithContext(ctx, *u.bigQuery)
+	case "api":
+		if u.api == nil {
+			return fmt.Errorf("field \"api\" is required")
+		}
+		return v.VisitApiWithContext(ctx, *u.api)
 	}
 }
 
@@ -1631,6 +1918,7 @@ type ScrapingConfigVisitorWithContext interface {
 	VisitTimescaleWithContext(ctx context.Context, v PivotedTimescaleScrapingConfig) error
 	VisitVisualCrossingWithContext(ctx context.Context, v VisualCrossingScrapingConfig) error
 	VisitBigQueryWithContext(ctx context.Context, v BigQueryScrapingConfig) error
+	VisitApiWithContext(ctx context.Context, v ApiScrapingConfig) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1656,6 +1944,10 @@ func NewScrapingConfigFromVisualCrossing(v VisualCrossingScrapingConfig) Scrapin
 
 func NewScrapingConfigFromBigQuery(v BigQueryScrapingConfig) ScrapingConfig {
 	return ScrapingConfig{typ: "bigQuery", bigQuery: &v}
+}
+
+func NewScrapingConfigFromApi(v ApiScrapingConfig) ScrapingConfig {
+	return ScrapingConfig{typ: "api", api: &v}
 }
 
 type TimescaleScrapingFilter struct {

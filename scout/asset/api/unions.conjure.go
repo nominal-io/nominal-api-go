@@ -18,29 +18,37 @@ type SearchAssetsQuery struct {
 	searchText     *string
 	exactSubstring *string
 	label          *api.Label
+	labels         *api1.LabelsFilter
 	property       *api.Property
+	properties     *api1.PropertiesFilter
 	typeRid        *api1.TypeRid
+	assetTypes     *AssetTypesFilter
+	isStaged       *bool
+	archived       *bool
 	and            *[]SearchAssetsQuery
 	or             *[]SearchAssetsQuery
-	isStaged       *bool
 	workspace      *rids.WorkspaceRid
 }
 
 type searchAssetsQueryDeserializer struct {
-	Type           string               `json:"type"`
-	SearchText     *string              `json:"searchText"`
-	ExactSubstring *string              `json:"exactSubstring"`
-	Label          *api.Label           `json:"label"`
-	Property       *api.Property        `json:"property"`
-	TypeRid        *api1.TypeRid        `json:"typeRid"`
-	And            *[]SearchAssetsQuery `json:"and"`
-	Or             *[]SearchAssetsQuery `json:"or"`
-	IsStaged       *bool                `json:"isStaged"`
-	Workspace      *rids.WorkspaceRid   `json:"workspace"`
+	Type           string                 `json:"type"`
+	SearchText     *string                `json:"searchText"`
+	ExactSubstring *string                `json:"exactSubstring"`
+	Label          *api.Label             `json:"label"`
+	Labels         *api1.LabelsFilter     `json:"labels"`
+	Property       *api.Property          `json:"property"`
+	Properties     *api1.PropertiesFilter `json:"properties"`
+	TypeRid        *api1.TypeRid          `json:"typeRid"`
+	AssetTypes     *AssetTypesFilter      `json:"assetTypes"`
+	IsStaged       *bool                  `json:"isStaged"`
+	Archived       *bool                  `json:"archived"`
+	And            *[]SearchAssetsQuery   `json:"and"`
+	Or             *[]SearchAssetsQuery   `json:"or"`
+	Workspace      *rids.WorkspaceRid     `json:"workspace"`
 }
 
 func (u *searchAssetsQueryDeserializer) toStruct() SearchAssetsQuery {
-	return SearchAssetsQuery{typ: u.Type, searchText: u.SearchText, exactSubstring: u.ExactSubstring, label: u.Label, property: u.Property, typeRid: u.TypeRid, and: u.And, or: u.Or, isStaged: u.IsStaged, workspace: u.Workspace}
+	return SearchAssetsQuery{typ: u.Type, searchText: u.SearchText, exactSubstring: u.ExactSubstring, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, typeRid: u.TypeRid, assetTypes: u.AssetTypes, isStaged: u.IsStaged, archived: u.Archived, and: u.And, or: u.Or, workspace: u.Workspace}
 }
 
 func (u *SearchAssetsQuery) toSerializer() (interface{}, error) {
@@ -71,6 +79,14 @@ func (u *SearchAssetsQuery) toSerializer() (interface{}, error) {
 			Type  string    `json:"type"`
 			Label api.Label `json:"label"`
 		}{Type: "label", Label: *u.label}, nil
+	case "labels":
+		if u.labels == nil {
+			return nil, fmt.Errorf("field \"labels\" is required")
+		}
+		return struct {
+			Type   string            `json:"type"`
+			Labels api1.LabelsFilter `json:"labels"`
+		}{Type: "labels", Labels: *u.labels}, nil
 	case "property":
 		if u.property == nil {
 			return nil, fmt.Errorf("field \"property\" is required")
@@ -79,6 +95,14 @@ func (u *SearchAssetsQuery) toSerializer() (interface{}, error) {
 			Type     string       `json:"type"`
 			Property api.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "properties":
+		if u.properties == nil {
+			return nil, fmt.Errorf("field \"properties\" is required")
+		}
+		return struct {
+			Type       string                `json:"type"`
+			Properties api1.PropertiesFilter `json:"properties"`
+		}{Type: "properties", Properties: *u.properties}, nil
 	case "typeRid":
 		if u.typeRid == nil {
 			return nil, fmt.Errorf("field \"typeRid\" is required")
@@ -87,6 +111,30 @@ func (u *SearchAssetsQuery) toSerializer() (interface{}, error) {
 			Type    string       `json:"type"`
 			TypeRid api1.TypeRid `json:"typeRid"`
 		}{Type: "typeRid", TypeRid: *u.typeRid}, nil
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return nil, fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return struct {
+			Type       string           `json:"type"`
+			AssetTypes AssetTypesFilter `json:"assetTypes"`
+		}{Type: "assetTypes", AssetTypes: *u.assetTypes}, nil
+	case "isStaged":
+		if u.isStaged == nil {
+			return nil, fmt.Errorf("field \"isStaged\" is required")
+		}
+		return struct {
+			Type     string `json:"type"`
+			IsStaged bool   `json:"isStaged"`
+		}{Type: "isStaged", IsStaged: *u.isStaged}, nil
+	case "archived":
+		if u.archived == nil {
+			return nil, fmt.Errorf("field \"archived\" is required")
+		}
+		return struct {
+			Type     string `json:"type"`
+			Archived bool   `json:"archived"`
+		}{Type: "archived", Archived: *u.archived}, nil
 	case "and":
 		if u.and == nil {
 			return nil, fmt.Errorf("field \"and\" is required")
@@ -103,14 +151,6 @@ func (u *SearchAssetsQuery) toSerializer() (interface{}, error) {
 			Type string              `json:"type"`
 			Or   []SearchAssetsQuery `json:"or"`
 		}{Type: "or", Or: *u.or}, nil
-	case "isStaged":
-		if u.isStaged == nil {
-			return nil, fmt.Errorf("field \"isStaged\" is required")
-		}
-		return struct {
-			Type     string `json:"type"`
-			IsStaged bool   `json:"isStaged"`
-		}{Type: "isStaged", IsStaged: *u.isStaged}, nil
 	case "workspace":
 		if u.workspace == nil {
 			return nil, fmt.Errorf("field \"workspace\" is required")
@@ -149,13 +189,33 @@ func (u *SearchAssetsQuery) UnmarshalJSON(data []byte) error {
 		if u.label == nil {
 			return fmt.Errorf("field \"label\" is required")
 		}
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
 	case "typeRid":
 		if u.typeRid == nil {
 			return fmt.Errorf("field \"typeRid\" is required")
+		}
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
+	case "isStaged":
+		if u.isStaged == nil {
+			return fmt.Errorf("field \"isStaged\" is required")
+		}
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
 		}
 	case "and":
 		if u.and == nil {
@@ -164,10 +224,6 @@ func (u *SearchAssetsQuery) UnmarshalJSON(data []byte) error {
 	case "or":
 		if u.or == nil {
 			return fmt.Errorf("field \"or\" is required")
-		}
-	case "isStaged":
-		if u.isStaged == nil {
-			return fmt.Errorf("field \"isStaged\" is required")
 		}
 	case "workspace":
 		if u.workspace == nil {
@@ -193,7 +249,7 @@ func (u *SearchAssetsQuery) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exactSubstringFunc func(string) error, labelFunc func(api.Label) error, propertyFunc func(api.Property) error, typeRidFunc func(api1.TypeRid) error, andFunc func([]SearchAssetsQuery) error, orFunc func([]SearchAssetsQuery) error, isStagedFunc func(bool) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exactSubstringFunc func(string) error, labelFunc func(api.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api.Property) error, propertiesFunc func(api1.PropertiesFilter) error, typeRidFunc func(api1.TypeRid) error, assetTypesFunc func(AssetTypesFilter) error, isStagedFunc func(bool) error, archivedFunc func(bool) error, andFunc func([]SearchAssetsQuery) error, orFunc func([]SearchAssetsQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -215,16 +271,41 @@ func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exact
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "typeRid":
 		if u.typeRid == nil {
 			return fmt.Errorf("field \"typeRid\" is required")
 		}
 		return typeRidFunc(*u.typeRid)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return assetTypesFunc(*u.assetTypes)
+	case "isStaged":
+		if u.isStaged == nil {
+			return fmt.Errorf("field \"isStaged\" is required")
+		}
+		return isStagedFunc(*u.isStaged)
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
+		}
+		return archivedFunc(*u.archived)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -235,11 +316,6 @@ func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exact
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return orFunc(*u.or)
-	case "isStaged":
-		if u.isStaged == nil {
-			return fmt.Errorf("field \"isStaged\" is required")
-		}
-		return isStagedFunc(*u.isStaged)
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -260,11 +336,31 @@ func (u *SearchAssetsQuery) LabelNoopSuccess(api.Label) error {
 	return nil
 }
 
+func (u *SearchAssetsQuery) LabelsNoopSuccess(api1.LabelsFilter) error {
+	return nil
+}
+
 func (u *SearchAssetsQuery) PropertyNoopSuccess(api.Property) error {
 	return nil
 }
 
+func (u *SearchAssetsQuery) PropertiesNoopSuccess(api1.PropertiesFilter) error {
+	return nil
+}
+
 func (u *SearchAssetsQuery) TypeRidNoopSuccess(api1.TypeRid) error {
+	return nil
+}
+
+func (u *SearchAssetsQuery) AssetTypesNoopSuccess(AssetTypesFilter) error {
+	return nil
+}
+
+func (u *SearchAssetsQuery) IsStagedNoopSuccess(bool) error {
+	return nil
+}
+
+func (u *SearchAssetsQuery) ArchivedNoopSuccess(bool) error {
 	return nil
 }
 
@@ -273,10 +369,6 @@ func (u *SearchAssetsQuery) AndNoopSuccess([]SearchAssetsQuery) error {
 }
 
 func (u *SearchAssetsQuery) OrNoopSuccess([]SearchAssetsQuery) error {
-	return nil
-}
-
-func (u *SearchAssetsQuery) IsStagedNoopSuccess(bool) error {
 	return nil
 }
 
@@ -310,16 +402,41 @@ func (u *SearchAssetsQuery) Accept(v SearchAssetsQueryVisitor) error {
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(*u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(*u.properties)
 	case "typeRid":
 		if u.typeRid == nil {
 			return fmt.Errorf("field \"typeRid\" is required")
 		}
 		return v.VisitTypeRid(*u.typeRid)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return v.VisitAssetTypes(*u.assetTypes)
+	case "isStaged":
+		if u.isStaged == nil {
+			return fmt.Errorf("field \"isStaged\" is required")
+		}
+		return v.VisitIsStaged(*u.isStaged)
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
+		}
+		return v.VisitArchived(*u.archived)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -330,11 +447,6 @@ func (u *SearchAssetsQuery) Accept(v SearchAssetsQueryVisitor) error {
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOr(*u.or)
-	case "isStaged":
-		if u.isStaged == nil {
-			return fmt.Errorf("field \"isStaged\" is required")
-		}
-		return v.VisitIsStaged(*u.isStaged)
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -347,11 +459,15 @@ type SearchAssetsQueryVisitor interface {
 	VisitSearchText(v string) error
 	VisitExactSubstring(v string) error
 	VisitLabel(v api.Label) error
+	VisitLabels(v api1.LabelsFilter) error
 	VisitProperty(v api.Property) error
+	VisitProperties(v api1.PropertiesFilter) error
 	VisitTypeRid(v api1.TypeRid) error
+	VisitAssetTypes(v AssetTypesFilter) error
+	VisitIsStaged(v bool) error
+	VisitArchived(v bool) error
 	VisitAnd(v []SearchAssetsQuery) error
 	VisitOr(v []SearchAssetsQuery) error
-	VisitIsStaged(v bool) error
 	VisitWorkspace(v rids.WorkspaceRid) error
 	VisitUnknown(typeName string) error
 }
@@ -378,16 +494,41 @@ func (u *SearchAssetsQuery) AcceptWithContext(ctx context.Context, v SearchAsset
 			return fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabelWithContext(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabelsWithContext(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitPropertiesWithContext(ctx, *u.properties)
 	case "typeRid":
 		if u.typeRid == nil {
 			return fmt.Errorf("field \"typeRid\" is required")
 		}
 		return v.VisitTypeRidWithContext(ctx, *u.typeRid)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return v.VisitAssetTypesWithContext(ctx, *u.assetTypes)
+	case "isStaged":
+		if u.isStaged == nil {
+			return fmt.Errorf("field \"isStaged\" is required")
+		}
+		return v.VisitIsStagedWithContext(ctx, *u.isStaged)
+	case "archived":
+		if u.archived == nil {
+			return fmt.Errorf("field \"archived\" is required")
+		}
+		return v.VisitArchivedWithContext(ctx, *u.archived)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -398,11 +539,6 @@ func (u *SearchAssetsQuery) AcceptWithContext(ctx context.Context, v SearchAsset
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOrWithContext(ctx, *u.or)
-	case "isStaged":
-		if u.isStaged == nil {
-			return fmt.Errorf("field \"isStaged\" is required")
-		}
-		return v.VisitIsStagedWithContext(ctx, *u.isStaged)
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -415,11 +551,15 @@ type SearchAssetsQueryVisitorWithContext interface {
 	VisitSearchTextWithContext(ctx context.Context, v string) error
 	VisitExactSubstringWithContext(ctx context.Context, v string) error
 	VisitLabelWithContext(ctx context.Context, v api.Label) error
+	VisitLabelsWithContext(ctx context.Context, v api1.LabelsFilter) error
 	VisitPropertyWithContext(ctx context.Context, v api.Property) error
+	VisitPropertiesWithContext(ctx context.Context, v api1.PropertiesFilter) error
 	VisitTypeRidWithContext(ctx context.Context, v api1.TypeRid) error
+	VisitAssetTypesWithContext(ctx context.Context, v AssetTypesFilter) error
+	VisitIsStagedWithContext(ctx context.Context, v bool) error
+	VisitArchivedWithContext(ctx context.Context, v bool) error
 	VisitAndWithContext(ctx context.Context, v []SearchAssetsQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchAssetsQuery) error
-	VisitIsStagedWithContext(ctx context.Context, v bool) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
@@ -436,12 +576,32 @@ func NewSearchAssetsQueryFromLabel(v api.Label) SearchAssetsQuery {
 	return SearchAssetsQuery{typ: "label", label: &v}
 }
 
+func NewSearchAssetsQueryFromLabels(v api1.LabelsFilter) SearchAssetsQuery {
+	return SearchAssetsQuery{typ: "labels", labels: &v}
+}
+
 func NewSearchAssetsQueryFromProperty(v api.Property) SearchAssetsQuery {
 	return SearchAssetsQuery{typ: "property", property: &v}
 }
 
+func NewSearchAssetsQueryFromProperties(v api1.PropertiesFilter) SearchAssetsQuery {
+	return SearchAssetsQuery{typ: "properties", properties: &v}
+}
+
 func NewSearchAssetsQueryFromTypeRid(v api1.TypeRid) SearchAssetsQuery {
 	return SearchAssetsQuery{typ: "typeRid", typeRid: &v}
+}
+
+func NewSearchAssetsQueryFromAssetTypes(v AssetTypesFilter) SearchAssetsQuery {
+	return SearchAssetsQuery{typ: "assetTypes", assetTypes: &v}
+}
+
+func NewSearchAssetsQueryFromIsStaged(v bool) SearchAssetsQuery {
+	return SearchAssetsQuery{typ: "isStaged", isStaged: &v}
+}
+
+func NewSearchAssetsQueryFromArchived(v bool) SearchAssetsQuery {
+	return SearchAssetsQuery{typ: "archived", archived: &v}
 }
 
 func NewSearchAssetsQueryFromAnd(v []SearchAssetsQuery) SearchAssetsQuery {
@@ -450,10 +610,6 @@ func NewSearchAssetsQueryFromAnd(v []SearchAssetsQuery) SearchAssetsQuery {
 
 func NewSearchAssetsQueryFromOr(v []SearchAssetsQuery) SearchAssetsQuery {
 	return SearchAssetsQuery{typ: "or", or: &v}
-}
-
-func NewSearchAssetsQueryFromIsStaged(v bool) SearchAssetsQuery {
-	return SearchAssetsQuery{typ: "isStaged", isStaged: &v}
 }
 
 func NewSearchAssetsQueryFromWorkspace(v rids.WorkspaceRid) SearchAssetsQuery {
@@ -792,14 +948,14 @@ func NewSearchTypesQueryFromConfiguredDatasource(v rids.DataSourceRid) SearchTyp
 
 type SortKey struct {
 	typ      string
-	field    *SortField
+	field    *AssetSortField
 	property *SortProperty
 }
 
 type sortKeyDeserializer struct {
-	Type     string        `json:"type"`
-	Field    *SortField    `json:"field"`
-	Property *SortProperty `json:"property"`
+	Type     string          `json:"type"`
+	Field    *AssetSortField `json:"field"`
+	Property *SortProperty   `json:"property"`
 }
 
 func (u *sortKeyDeserializer) toStruct() SortKey {
@@ -815,8 +971,8 @@ func (u *SortKey) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"field\" is required")
 		}
 		return struct {
-			Type  string    `json:"type"`
-			Field SortField `json:"field"`
+			Type  string         `json:"type"`
+			Field AssetSortField `json:"field"`
 		}{Type: "field", Field: *u.field}, nil
 	case "property":
 		if u.property == nil {
@@ -872,7 +1028,7 @@ func (u *SortKey) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SortKey) AcceptFuncs(fieldFunc func(SortField) error, propertyFunc func(SortProperty) error, unknownFunc func(string) error) error {
+func (u *SortKey) AcceptFuncs(fieldFunc func(AssetSortField) error, propertyFunc func(SortProperty) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -892,7 +1048,7 @@ func (u *SortKey) AcceptFuncs(fieldFunc func(SortField) error, propertyFunc func
 	}
 }
 
-func (u *SortKey) FieldNoopSuccess(SortField) error {
+func (u *SortKey) FieldNoopSuccess(AssetSortField) error {
 	return nil
 }
 
@@ -925,7 +1081,7 @@ func (u *SortKey) Accept(v SortKeyVisitor) error {
 }
 
 type SortKeyVisitor interface {
-	VisitField(v SortField) error
+	VisitField(v AssetSortField) error
 	VisitProperty(v SortProperty) error
 	VisitUnknown(typeName string) error
 }
@@ -951,12 +1107,12 @@ func (u *SortKey) AcceptWithContext(ctx context.Context, v SortKeyVisitorWithCon
 }
 
 type SortKeyVisitorWithContext interface {
-	VisitFieldWithContext(ctx context.Context, v SortField) error
+	VisitFieldWithContext(ctx context.Context, v AssetSortField) error
 	VisitPropertyWithContext(ctx context.Context, v SortProperty) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewSortKeyFromField(v SortField) SortKey {
+func NewSortKeyFromField(v AssetSortField) SortKey {
 	return SortKey{typ: "field", field: &v}
 }
 

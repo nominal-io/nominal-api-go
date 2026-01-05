@@ -169,10 +169,15 @@ func (u *ColumnValuesWithT[T]) Accept(ctx context.Context, v ColumnValuesVisitor
 			return result, fmt.Errorf("field \"arrays\" is required")
 		}
 		return v.VisitArrays(ctx, *u.arrays)
+	case "structs":
+		if u.structs == nil {
+			return result, fmt.Errorf("field \"structs\" is required")
+		}
+		return v.VisitStructs(ctx, *u.structs)
 	}
 }
 
-func (u *ColumnValuesWithT[T]) AcceptFuncs(stringsFunc func([]string) (T, error), doublesFunc func([]float64) (T, error), intsFunc func([]int) (T, error), arraysFunc func(ArraysValues) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ColumnValuesWithT[T]) AcceptFuncs(stringsFunc func([]string) (T, error), doublesFunc func([]float64) (T, error), intsFunc func([]int) (T, error), arraysFunc func(ArraysValues) (T, error), structsFunc func([]string) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -200,6 +205,11 @@ func (u *ColumnValuesWithT[T]) AcceptFuncs(stringsFunc func([]string) (T, error)
 			return result, fmt.Errorf("field \"arrays\" is required")
 		}
 		return arraysFunc(*u.arrays)
+	case "structs":
+		if u.structs == nil {
+			return result, fmt.Errorf("field \"structs\" is required")
+		}
+		return structsFunc(*u.structs)
 	}
 }
 
@@ -223,6 +233,11 @@ func (u *ColumnValuesWithT[T]) ArraysNoopSuccess(ArraysValues) (T, error) {
 	return result, nil
 }
 
+func (u *ColumnValuesWithT[T]) StructsNoopSuccess([]string) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ColumnValuesWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -233,6 +248,7 @@ type ColumnValuesVisitorWithT[T any] interface {
 	VisitDoubles(ctx context.Context, v []float64) (T, error)
 	VisitInts(ctx context.Context, v []int) (T, error)
 	VisitArrays(ctx context.Context, v ArraysValues) (T, error)
+	VisitStructs(ctx context.Context, v []string) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -266,15 +282,25 @@ func (u *PointsWithT[T]) Accept(ctx context.Context, v PointsVisitorWithT[T]) (T
 			return result, fmt.Errorf("field \"int\" is required")
 		}
 		return v.VisitInt(ctx, *u.int)
+	case "uint64":
+		if u.uint64 == nil {
+			return result, fmt.Errorf("field \"uint64\" is required")
+		}
+		return v.VisitUint64(ctx, *u.uint64)
 	case "array":
 		if u.array == nil {
 			return result, fmt.Errorf("field \"array\" is required")
 		}
 		return v.VisitArray(ctx, *u.array)
+	case "struct":
+		if u.struct_ == nil {
+			return result, fmt.Errorf("field \"struct\" is required")
+		}
+		return v.VisitStruct(ctx, *u.struct_)
 	}
 }
 
-func (u *PointsWithT[T]) AcceptFuncs(stringFunc func([]StringPoint) (T, error), doubleFunc func([]DoublePoint) (T, error), logFunc func([]LogPoint) (T, error), intFunc func([]IntPoint) (T, error), arrayFunc func(ArrayPoints) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *PointsWithT[T]) AcceptFuncs(stringFunc func([]StringPoint) (T, error), doubleFunc func([]DoublePoint) (T, error), logFunc func([]LogPoint) (T, error), intFunc func([]IntPoint) (T, error), uint64Func func([]Uint64Point) (T, error), arrayFunc func(ArrayPoints) (T, error), struct_Func func([]StructPoint) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -302,11 +328,21 @@ func (u *PointsWithT[T]) AcceptFuncs(stringFunc func([]StringPoint) (T, error), 
 			return result, fmt.Errorf("field \"int\" is required")
 		}
 		return intFunc(*u.int)
+	case "uint64":
+		if u.uint64 == nil {
+			return result, fmt.Errorf("field \"uint64\" is required")
+		}
+		return uint64Func(*u.uint64)
 	case "array":
 		if u.array == nil {
 			return result, fmt.Errorf("field \"array\" is required")
 		}
 		return arrayFunc(*u.array)
+	case "struct":
+		if u.struct_ == nil {
+			return result, fmt.Errorf("field \"struct\" is required")
+		}
+		return struct_Func(*u.struct_)
 	}
 }
 
@@ -330,7 +366,17 @@ func (u *PointsWithT[T]) IntNoopSuccess([]IntPoint) (T, error) {
 	return result, nil
 }
 
+func (u *PointsWithT[T]) Uint64NoopSuccess([]Uint64Point) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *PointsWithT[T]) ArrayNoopSuccess(ArrayPoints) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PointsWithT[T]) StructNoopSuccess([]StructPoint) (T, error) {
 	var result T
 	return result, nil
 }
@@ -345,7 +391,9 @@ type PointsVisitorWithT[T any] interface {
 	VisitDouble(ctx context.Context, v []DoublePoint) (T, error)
 	VisitLog(ctx context.Context, v []LogPoint) (T, error)
 	VisitInt(ctx context.Context, v []IntPoint) (T, error)
+	VisitUint64(ctx context.Context, v []Uint64Point) (T, error)
 	VisitArray(ctx context.Context, v ArrayPoints) (T, error)
+	VisitStruct(ctx context.Context, v []StructPoint) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -374,10 +422,20 @@ func (u *PointsExternalWithT[T]) Accept(ctx context.Context, v PointsExternalVis
 			return result, fmt.Errorf("field \"int\" is required")
 		}
 		return v.VisitInt(ctx, *u.int)
+	case "array":
+		if u.array == nil {
+			return result, fmt.Errorf("field \"array\" is required")
+		}
+		return v.VisitArray(ctx, *u.array)
+	case "struct":
+		if u.struct_ == nil {
+			return result, fmt.Errorf("field \"struct\" is required")
+		}
+		return v.VisitStruct(ctx, *u.struct_)
 	}
 }
 
-func (u *PointsExternalWithT[T]) AcceptFuncs(stringFunc func([]StringPoint) (T, error), doubleFunc func([]DoublePoint) (T, error), intFunc func([]IntPoint) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *PointsExternalWithT[T]) AcceptFuncs(stringFunc func([]StringPoint) (T, error), doubleFunc func([]DoublePoint) (T, error), intFunc func([]IntPoint) (T, error), arrayFunc func(ArrayPoints) (T, error), struct_Func func([]StructPoint) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -400,6 +458,16 @@ func (u *PointsExternalWithT[T]) AcceptFuncs(stringFunc func([]StringPoint) (T, 
 			return result, fmt.Errorf("field \"int\" is required")
 		}
 		return intFunc(*u.int)
+	case "array":
+		if u.array == nil {
+			return result, fmt.Errorf("field \"array\" is required")
+		}
+		return arrayFunc(*u.array)
+	case "struct":
+		if u.struct_ == nil {
+			return result, fmt.Errorf("field \"struct\" is required")
+		}
+		return struct_Func(*u.struct_)
 	}
 }
 
@@ -418,6 +486,16 @@ func (u *PointsExternalWithT[T]) IntNoopSuccess([]IntPoint) (T, error) {
 	return result, nil
 }
 
+func (u *PointsExternalWithT[T]) ArrayNoopSuccess(ArrayPoints) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PointsExternalWithT[T]) StructNoopSuccess([]StructPoint) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *PointsExternalWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -427,5 +505,7 @@ type PointsExternalVisitorWithT[T any] interface {
 	VisitString(ctx context.Context, v []StringPoint) (T, error)
 	VisitDouble(ctx context.Context, v []DoublePoint) (T, error)
 	VisitInt(ctx context.Context, v []IntPoint) (T, error)
+	VisitArray(ctx context.Context, v ArrayPoints) (T, error)
+	VisitStruct(ctx context.Context, v []StructPoint) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

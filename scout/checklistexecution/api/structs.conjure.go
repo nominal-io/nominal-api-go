@@ -19,6 +19,7 @@ type AssetStreamConfiguration struct {
 	NotificationConfigurations []api.NotificationConfiguration `json:"notificationConfigurations"`
 	EvaluationDelay            api1.Duration                   `json:"evaluationDelay"`
 	RecoveryDelay              api1.Duration                   `json:"recoveryDelay"`
+	AutoCreateEvents           bool                            `json:"autoCreateEvents"`
 }
 
 func (o AssetStreamConfiguration) MarshalJSON() ([]byte, error) {
@@ -330,9 +331,10 @@ type CheckLiveStatusResponse struct {
 	CheckRid api2.CheckRid `json:"checkRid"`
 	/*
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
+	   assetRid: common.AssetRid
 	   The check implementation index will correspond to the implementation index of the check condition.
 	*/
-	CheckParameterIndex *int `conjure-docs:"Checks can define a single range computation which can evaluate over multiple implementations of a context.\nThe check implementation index will correspond to the implementation index of the check condition." json:"checkParameterIndex,omitempty"`
+	CheckParameterIndex *int `conjure-docs:"Checks can define a single range computation which can evaluate over multiple implementations of a context.\nassetRid: common.AssetRid\nThe check implementation index will correspond to the implementation index of the check condition." json:"checkParameterIndex,omitempty"`
 }
 
 func (o CheckLiveStatusResponse) MarshalYAML() (interface{}, error) {
@@ -425,6 +427,12 @@ type ExecuteChecklistForAssetsRequest struct {
 	   Minimum value is 15 seconds.
 	*/
 	RecoveryDelay api1.Duration `conjure-docs:"Specifies the minimum amount of time that must pass before a check can recover from a failure.\nMinimum value is 15 seconds." json:"recoveryDelay"`
+	/*
+	   The option to automatically create events for check status changes.
+	   If true, events will be created when checks fail and recover.
+	   Defaults to false if not specified.
+	*/
+	AutoCreateEvents *bool `conjure-docs:"The option to automatically create events for check status changes.\nIf true, events will be created when checks fail and recover.\nDefaults to false if not specified." json:"autoCreateEvents,omitempty"`
 }
 
 func (o ExecuteChecklistForAssetsRequest) MarshalJSON() ([]byte, error) {

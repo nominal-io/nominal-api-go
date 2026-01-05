@@ -11,7 +11,6 @@ import (
 	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
 	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api3 "github.com/nominal-io/nominal-api-go/modules/api"
-	api4 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/units/api"
 	"github.com/nominal-io/nominal-api-go/storage/series/api"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-contract/errors"
@@ -1246,156 +1245,6 @@ func (e *CurveUnequalInputLength) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type derivedSeriesHasWrongType struct {
-	ExpectedType  string        `json:"expectedType"`
-	DerivedSeries DerivedSeries `json:"derivedSeries"`
-}
-
-func (o derivedSeriesHasWrongType) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *derivedSeriesHasWrongType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewDerivedSeriesHasWrongType returns new instance of DerivedSeriesHasWrongType error.
-func NewDerivedSeriesHasWrongType(expectedTypeArg string, derivedSeriesArg DerivedSeries) *DerivedSeriesHasWrongType {
-	return &DerivedSeriesHasWrongType{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), derivedSeriesHasWrongType: derivedSeriesHasWrongType{ExpectedType: expectedTypeArg, DerivedSeries: derivedSeriesArg}}
-}
-
-// WrapWithDerivedSeriesHasWrongType returns new instance of DerivedSeriesHasWrongType error wrapping an existing error.
-func WrapWithDerivedSeriesHasWrongType(err error, expectedTypeArg string, derivedSeriesArg DerivedSeries) *DerivedSeriesHasWrongType {
-	return &DerivedSeriesHasWrongType{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, derivedSeriesHasWrongType: derivedSeriesHasWrongType{ExpectedType: expectedTypeArg, DerivedSeries: derivedSeriesArg}}
-}
-
-// DerivedSeriesHasWrongType is an error type.
-type DerivedSeriesHasWrongType struct {
-	errorInstanceID uuid.UUID
-	derivedSeriesHasWrongType
-	cause error
-	stack werror.StackTrace
-}
-
-// IsDerivedSeriesHasWrongType returns true if err is an instance of DerivedSeriesHasWrongType.
-func IsDerivedSeriesHasWrongType(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*DerivedSeriesHasWrongType)
-	return ok
-}
-
-func (e *DerivedSeriesHasWrongType) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Compute:DerivedSeriesHasWrongType (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *DerivedSeriesHasWrongType) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *DerivedSeriesHasWrongType) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *DerivedSeriesHasWrongType) Message() string {
-	return "INVALID_ARGUMENT Compute:DerivedSeriesHasWrongType"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *DerivedSeriesHasWrongType) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *DerivedSeriesHasWrongType) Code() errors.ErrorCode {
-	return errors.InvalidArgument
-}
-
-// Name returns an error name identifying error type.
-func (e *DerivedSeriesHasWrongType) Name() string {
-	return "Compute:DerivedSeriesHasWrongType"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *DerivedSeriesHasWrongType) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *DerivedSeriesHasWrongType) Parameters() map[string]interface{} {
-	return map[string]interface{}{"expectedType": e.ExpectedType, "derivedSeries": e.DerivedSeries}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *DerivedSeriesHasWrongType) safeParams() map[string]interface{} {
-	return map[string]interface{}{"expectedType": e.ExpectedType, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *DerivedSeriesHasWrongType) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *DerivedSeriesHasWrongType) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"derivedSeries": e.DerivedSeries}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *DerivedSeriesHasWrongType) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e DerivedSeriesHasWrongType) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.derivedSeriesHasWrongType)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:DerivedSeriesHasWrongType", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *DerivedSeriesHasWrongType) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters derivedSeriesHasWrongType
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.derivedSeriesHasWrongType = parameters
-	return nil
-}
-
 type duplicateTimestamp struct {
 	Timestamp api2.Timestamp `json:"timestamp"`
 }
@@ -1542,6 +1391,302 @@ func (e *DuplicateTimestamp) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.duplicateTimestamp = parameters
+	return nil
+}
+
+type emptyInput struct{}
+
+func (o emptyInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *emptyInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewEmptyInput returns new instance of EmptyInput error.
+func NewEmptyInput() *EmptyInput {
+	return &EmptyInput{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), emptyInput: emptyInput{}}
+}
+
+// WrapWithEmptyInput returns new instance of EmptyInput error wrapping an existing error.
+func WrapWithEmptyInput(err error) *EmptyInput {
+	return &EmptyInput{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, emptyInput: emptyInput{}}
+}
+
+// EmptyInput is an error type.
+// At least one input must be provided.
+type EmptyInput struct {
+	errorInstanceID uuid.UUID
+	emptyInput
+	cause error
+	stack werror.StackTrace
+}
+
+// IsEmptyInput returns true if err is an instance of EmptyInput.
+func IsEmptyInput(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*EmptyInput)
+	return ok
+}
+
+func (e *EmptyInput) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:EmptyInput (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *EmptyInput) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *EmptyInput) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *EmptyInput) Message() string {
+	return "INVALID_ARGUMENT Compute:EmptyInput"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *EmptyInput) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *EmptyInput) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *EmptyInput) Name() string {
+	return "Compute:EmptyInput"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *EmptyInput) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *EmptyInput) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *EmptyInput) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *EmptyInput) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *EmptyInput) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *EmptyInput) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e EmptyInput) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.emptyInput)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:EmptyInput", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *EmptyInput) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters emptyInput
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.emptyInput = parameters
+	return nil
+}
+
+type emptySet struct{}
+
+func (o emptySet) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *emptySet) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewEmptySet returns new instance of EmptySet error.
+func NewEmptySet() *EmptySet {
+	return &EmptySet{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), emptySet: emptySet{}}
+}
+
+// WrapWithEmptySet returns new instance of EmptySet error wrapping an existing error.
+func WrapWithEmptySet(err error) *EmptySet {
+	return &EmptySet{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, emptySet: emptySet{}}
+}
+
+// EmptySet is an error type.
+// The provided set must contain at least one element.
+type EmptySet struct {
+	errorInstanceID uuid.UUID
+	emptySet
+	cause error
+	stack werror.StackTrace
+}
+
+// IsEmptySet returns true if err is an instance of EmptySet.
+func IsEmptySet(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*EmptySet)
+	return ok
+}
+
+func (e *EmptySet) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:EmptySet (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *EmptySet) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *EmptySet) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *EmptySet) Message() string {
+	return "INVALID_ARGUMENT Compute:EmptySet"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *EmptySet) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *EmptySet) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *EmptySet) Name() string {
+	return "Compute:EmptySet"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *EmptySet) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *EmptySet) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *EmptySet) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *EmptySet) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *EmptySet) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *EmptySet) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e EmptySet) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.emptySet)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:EmptySet", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *EmptySet) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters emptySet
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.emptySet = parameters
 	return nil
 }
 
@@ -1997,9 +2142,11 @@ func (e *ExternalDatabaseGatewayTimeout) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type fftWindowEmpty struct{}
+type externalDatabaseSocketTimeout struct {
+	Type string `json:"type"`
+}
 
-func (o fftWindowEmpty) MarshalYAML() (interface{}, error) {
+func (o externalDatabaseSocketTimeout) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -2007,7 +2154,7 @@ func (o fftWindowEmpty) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *fftWindowEmpty) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *externalDatabaseSocketTimeout) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2015,88 +2162,88 @@ func (o *fftWindowEmpty) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewFftWindowEmpty returns new instance of FftWindowEmpty error.
-func NewFftWindowEmpty() *FftWindowEmpty {
-	return &FftWindowEmpty{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), fftWindowEmpty: fftWindowEmpty{}}
+// NewExternalDatabaseSocketTimeout returns new instance of ExternalDatabaseSocketTimeout error.
+func NewExternalDatabaseSocketTimeout(typeArg string) *ExternalDatabaseSocketTimeout {
+	return &ExternalDatabaseSocketTimeout{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), externalDatabaseSocketTimeout: externalDatabaseSocketTimeout{Type: typeArg}}
 }
 
-// WrapWithFftWindowEmpty returns new instance of FftWindowEmpty error wrapping an existing error.
-func WrapWithFftWindowEmpty(err error) *FftWindowEmpty {
-	return &FftWindowEmpty{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, fftWindowEmpty: fftWindowEmpty{}}
+// WrapWithExternalDatabaseSocketTimeout returns new instance of ExternalDatabaseSocketTimeout error wrapping an existing error.
+func WrapWithExternalDatabaseSocketTimeout(err error, typeArg string) *ExternalDatabaseSocketTimeout {
+	return &ExternalDatabaseSocketTimeout{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, externalDatabaseSocketTimeout: externalDatabaseSocketTimeout{Type: typeArg}}
 }
 
-// FftWindowEmpty is an error type.
-// The selected window for the FFT is empty. Try again with a larger time range.
-type FftWindowEmpty struct {
+// ExternalDatabaseSocketTimeout is an error type.
+// A socket timeout was encountered while trying to fetch data from the external database.
+type ExternalDatabaseSocketTimeout struct {
 	errorInstanceID uuid.UUID
-	fftWindowEmpty
+	externalDatabaseSocketTimeout
 	cause error
 	stack werror.StackTrace
 }
 
-// IsFftWindowEmpty returns true if err is an instance of FftWindowEmpty.
-func IsFftWindowEmpty(err error) bool {
+// IsExternalDatabaseSocketTimeout returns true if err is an instance of ExternalDatabaseSocketTimeout.
+func IsExternalDatabaseSocketTimeout(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*FftWindowEmpty)
+	_, ok := errors.GetConjureError(err).(*ExternalDatabaseSocketTimeout)
 	return ok
 }
 
-func (e *FftWindowEmpty) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Compute:FftWindowEmpty (%s)", e.errorInstanceID)
+func (e *ExternalDatabaseSocketTimeout) Error() string {
+	return fmt.Sprintf("CUSTOM_SERVER ExternalDatabase:ExternalDatabaseSocketTimeout (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *FftWindowEmpty) Cause() error {
+func (e *ExternalDatabaseSocketTimeout) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *FftWindowEmpty) StackTrace() werror.StackTrace {
+func (e *ExternalDatabaseSocketTimeout) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *FftWindowEmpty) Message() string {
-	return "INVALID_ARGUMENT Compute:FftWindowEmpty"
+func (e *ExternalDatabaseSocketTimeout) Message() string {
+	return "CUSTOM_SERVER ExternalDatabase:ExternalDatabaseSocketTimeout"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *FftWindowEmpty) Format(state fmt.State, verb rune) {
+func (e *ExternalDatabaseSocketTimeout) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *FftWindowEmpty) Code() errors.ErrorCode {
-	return errors.InvalidArgument
+func (e *ExternalDatabaseSocketTimeout) Code() errors.ErrorCode {
+	return errors.CustomServer
 }
 
 // Name returns an error name identifying error type.
-func (e *FftWindowEmpty) Name() string {
-	return "Compute:FftWindowEmpty"
+func (e *ExternalDatabaseSocketTimeout) Name() string {
+	return "ExternalDatabase:ExternalDatabaseSocketTimeout"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *FftWindowEmpty) InstanceID() uuid.UUID {
+func (e *ExternalDatabaseSocketTimeout) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *FftWindowEmpty) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *ExternalDatabaseSocketTimeout) Parameters() map[string]interface{} {
+	return map[string]interface{}{"type": e.Type}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *FftWindowEmpty) safeParams() map[string]interface{} {
-	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+func (e *ExternalDatabaseSocketTimeout) safeParams() map[string]interface{} {
+	return map[string]interface{}{"type": e.Type, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *FftWindowEmpty) SafeParams() map[string]interface{} {
+func (e *ExternalDatabaseSocketTimeout) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -2107,13 +2254,13 @@ func (e *FftWindowEmpty) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *FftWindowEmpty) unsafeParams() map[string]interface{} {
+func (e *ExternalDatabaseSocketTimeout) unsafeParams() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *FftWindowEmpty) UnsafeParams() map[string]interface{} {
+func (e *ExternalDatabaseSocketTimeout) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -2123,31 +2270,31 @@ func (e *FftWindowEmpty) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e FftWindowEmpty) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.fftWindowEmpty)
+func (e ExternalDatabaseSocketTimeout) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.externalDatabaseSocketTimeout)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:FftWindowEmpty", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.CustomServer, ErrorName: "ExternalDatabase:ExternalDatabaseSocketTimeout", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *FftWindowEmpty) UnmarshalJSON(data []byte) error {
+func (e *ExternalDatabaseSocketTimeout) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters fftWindowEmpty
+	var parameters externalDatabaseSocketTimeout
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.fftWindowEmpty = parameters
+	e.externalDatabaseSocketTimeout = parameters
 	return nil
 }
 
-type fftWindowTooLarge struct{}
+type frequencyDomainWindowEmpty struct{}
 
-func (o fftWindowTooLarge) MarshalYAML() (interface{}, error) {
+func (o frequencyDomainWindowEmpty) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -2155,7 +2302,7 @@ func (o fftWindowTooLarge) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *fftWindowTooLarge) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *frequencyDomainWindowEmpty) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2163,88 +2310,88 @@ func (o *fftWindowTooLarge) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewFftWindowTooLarge returns new instance of FftWindowTooLarge error.
-func NewFftWindowTooLarge() *FftWindowTooLarge {
-	return &FftWindowTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), fftWindowTooLarge: fftWindowTooLarge{}}
+// NewFrequencyDomainWindowEmpty returns new instance of FrequencyDomainWindowEmpty error.
+func NewFrequencyDomainWindowEmpty() *FrequencyDomainWindowEmpty {
+	return &FrequencyDomainWindowEmpty{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), frequencyDomainWindowEmpty: frequencyDomainWindowEmpty{}}
 }
 
-// WrapWithFftWindowTooLarge returns new instance of FftWindowTooLarge error wrapping an existing error.
-func WrapWithFftWindowTooLarge(err error) *FftWindowTooLarge {
-	return &FftWindowTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, fftWindowTooLarge: fftWindowTooLarge{}}
+// WrapWithFrequencyDomainWindowEmpty returns new instance of FrequencyDomainWindowEmpty error wrapping an existing error.
+func WrapWithFrequencyDomainWindowEmpty(err error) *FrequencyDomainWindowEmpty {
+	return &FrequencyDomainWindowEmpty{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, frequencyDomainWindowEmpty: frequencyDomainWindowEmpty{}}
 }
 
-// FftWindowTooLarge is an error type.
-// The selected window for the FFT is too large. Try again with a smaller time range.
-type FftWindowTooLarge struct {
+// FrequencyDomainWindowEmpty is an error type.
+// The selected window for the frequency domain is empty. Try again with a larger time range.
+type FrequencyDomainWindowEmpty struct {
 	errorInstanceID uuid.UUID
-	fftWindowTooLarge
+	frequencyDomainWindowEmpty
 	cause error
 	stack werror.StackTrace
 }
 
-// IsFftWindowTooLarge returns true if err is an instance of FftWindowTooLarge.
-func IsFftWindowTooLarge(err error) bool {
+// IsFrequencyDomainWindowEmpty returns true if err is an instance of FrequencyDomainWindowEmpty.
+func IsFrequencyDomainWindowEmpty(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*FftWindowTooLarge)
+	_, ok := errors.GetConjureError(err).(*FrequencyDomainWindowEmpty)
 	return ok
 }
 
-func (e *FftWindowTooLarge) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Compute:FftWindowTooLarge (%s)", e.errorInstanceID)
+func (e *FrequencyDomainWindowEmpty) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:FrequencyDomainWindowEmpty (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *FftWindowTooLarge) Cause() error {
+func (e *FrequencyDomainWindowEmpty) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *FftWindowTooLarge) StackTrace() werror.StackTrace {
+func (e *FrequencyDomainWindowEmpty) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *FftWindowTooLarge) Message() string {
-	return "INVALID_ARGUMENT Compute:FftWindowTooLarge"
+func (e *FrequencyDomainWindowEmpty) Message() string {
+	return "INVALID_ARGUMENT Compute:FrequencyDomainWindowEmpty"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *FftWindowTooLarge) Format(state fmt.State, verb rune) {
+func (e *FrequencyDomainWindowEmpty) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *FftWindowTooLarge) Code() errors.ErrorCode {
+func (e *FrequencyDomainWindowEmpty) Code() errors.ErrorCode {
 	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
-func (e *FftWindowTooLarge) Name() string {
-	return "Compute:FftWindowTooLarge"
+func (e *FrequencyDomainWindowEmpty) Name() string {
+	return "Compute:FrequencyDomainWindowEmpty"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *FftWindowTooLarge) InstanceID() uuid.UUID {
+func (e *FrequencyDomainWindowEmpty) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *FftWindowTooLarge) Parameters() map[string]interface{} {
+func (e *FrequencyDomainWindowEmpty) Parameters() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *FftWindowTooLarge) safeParams() map[string]interface{} {
+func (e *FrequencyDomainWindowEmpty) safeParams() map[string]interface{} {
 	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *FftWindowTooLarge) SafeParams() map[string]interface{} {
+func (e *FrequencyDomainWindowEmpty) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -2255,13 +2402,13 @@ func (e *FftWindowTooLarge) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *FftWindowTooLarge) unsafeParams() map[string]interface{} {
+func (e *FrequencyDomainWindowEmpty) unsafeParams() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *FftWindowTooLarge) UnsafeParams() map[string]interface{} {
+func (e *FrequencyDomainWindowEmpty) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -2271,25 +2418,173 @@ func (e *FftWindowTooLarge) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e FftWindowTooLarge) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.fftWindowTooLarge)
+func (e FrequencyDomainWindowEmpty) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.frequencyDomainWindowEmpty)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:FftWindowTooLarge", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:FrequencyDomainWindowEmpty", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *FftWindowTooLarge) UnmarshalJSON(data []byte) error {
+func (e *FrequencyDomainWindowEmpty) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters fftWindowTooLarge
+	var parameters frequencyDomainWindowEmpty
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.fftWindowTooLarge = parameters
+	e.frequencyDomainWindowEmpty = parameters
+	return nil
+}
+
+type frequencyDomainWindowTooLarge struct{}
+
+func (o frequencyDomainWindowTooLarge) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *frequencyDomainWindowTooLarge) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewFrequencyDomainWindowTooLarge returns new instance of FrequencyDomainWindowTooLarge error.
+func NewFrequencyDomainWindowTooLarge() *FrequencyDomainWindowTooLarge {
+	return &FrequencyDomainWindowTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), frequencyDomainWindowTooLarge: frequencyDomainWindowTooLarge{}}
+}
+
+// WrapWithFrequencyDomainWindowTooLarge returns new instance of FrequencyDomainWindowTooLarge error wrapping an existing error.
+func WrapWithFrequencyDomainWindowTooLarge(err error) *FrequencyDomainWindowTooLarge {
+	return &FrequencyDomainWindowTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, frequencyDomainWindowTooLarge: frequencyDomainWindowTooLarge{}}
+}
+
+// FrequencyDomainWindowTooLarge is an error type.
+// The selected window for the frequency domain is too large. Try again with a smaller time range.
+type FrequencyDomainWindowTooLarge struct {
+	errorInstanceID uuid.UUID
+	frequencyDomainWindowTooLarge
+	cause error
+	stack werror.StackTrace
+}
+
+// IsFrequencyDomainWindowTooLarge returns true if err is an instance of FrequencyDomainWindowTooLarge.
+func IsFrequencyDomainWindowTooLarge(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*FrequencyDomainWindowTooLarge)
+	return ok
+}
+
+func (e *FrequencyDomainWindowTooLarge) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:FrequencyDomainWindowTooLarge (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *FrequencyDomainWindowTooLarge) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *FrequencyDomainWindowTooLarge) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *FrequencyDomainWindowTooLarge) Message() string {
+	return "INVALID_ARGUMENT Compute:FrequencyDomainWindowTooLarge"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *FrequencyDomainWindowTooLarge) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *FrequencyDomainWindowTooLarge) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *FrequencyDomainWindowTooLarge) Name() string {
+	return "Compute:FrequencyDomainWindowTooLarge"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *FrequencyDomainWindowTooLarge) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *FrequencyDomainWindowTooLarge) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *FrequencyDomainWindowTooLarge) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *FrequencyDomainWindowTooLarge) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *FrequencyDomainWindowTooLarge) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *FrequencyDomainWindowTooLarge) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e FrequencyDomainWindowTooLarge) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.frequencyDomainWindowTooLarge)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:FrequencyDomainWindowTooLarge", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *FrequencyDomainWindowTooLarge) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters frequencyDomainWindowTooLarge
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.frequencyDomainWindowTooLarge = parameters
 	return nil
 }
 
@@ -2438,6 +2733,154 @@ func (e *GranularityMismatch) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.granularityMismatch = parameters
+	return nil
+}
+
+type groupByMissingTag struct{}
+
+func (o groupByMissingTag) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *groupByMissingTag) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewGroupByMissingTag returns new instance of GroupByMissingTag error.
+func NewGroupByMissingTag() *GroupByMissingTag {
+	return &GroupByMissingTag{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), groupByMissingTag: groupByMissingTag{}}
+}
+
+// WrapWithGroupByMissingTag returns new instance of GroupByMissingTag error wrapping an existing error.
+func WrapWithGroupByMissingTag(err error) *GroupByMissingTag {
+	return &GroupByMissingTag{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, groupByMissingTag: groupByMissingTag{}}
+}
+
+// GroupByMissingTag is an error type.
+// Attempted to group by a tag that does not exist.
+type GroupByMissingTag struct {
+	errorInstanceID uuid.UUID
+	groupByMissingTag
+	cause error
+	stack werror.StackTrace
+}
+
+// IsGroupByMissingTag returns true if err is an instance of GroupByMissingTag.
+func IsGroupByMissingTag(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*GroupByMissingTag)
+	return ok
+}
+
+func (e *GroupByMissingTag) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:GroupByMissingTag (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *GroupByMissingTag) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *GroupByMissingTag) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *GroupByMissingTag) Message() string {
+	return "INVALID_ARGUMENT Compute:GroupByMissingTag"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *GroupByMissingTag) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *GroupByMissingTag) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *GroupByMissingTag) Name() string {
+	return "Compute:GroupByMissingTag"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *GroupByMissingTag) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *GroupByMissingTag) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *GroupByMissingTag) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *GroupByMissingTag) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *GroupByMissingTag) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *GroupByMissingTag) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e GroupByMissingTag) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.groupByMissingTag)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:GroupByMissingTag", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *GroupByMissingTag) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters groupByMissingTag
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.groupByMissingTag = parameters
 	return nil
 }
 
@@ -2769,6 +3212,157 @@ func (e *GroupBysNotSupportedForQuery) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type invalidBitOperation struct {
+	OperationType string `json:"operationType"`
+	Value         int    `json:"value"`
+}
+
+func (o invalidBitOperation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidBitOperation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidBitOperation returns new instance of InvalidBitOperation error.
+func NewInvalidBitOperation(operationTypeArg string, valueArg int) *InvalidBitOperation {
+	return &InvalidBitOperation{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidBitOperation: invalidBitOperation{OperationType: operationTypeArg, Value: valueArg}}
+}
+
+// WrapWithInvalidBitOperation returns new instance of InvalidBitOperation error wrapping an existing error.
+func WrapWithInvalidBitOperation(err error, operationTypeArg string, valueArg int) *InvalidBitOperation {
+	return &InvalidBitOperation{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidBitOperation: invalidBitOperation{OperationType: operationTypeArg, Value: valueArg}}
+}
+
+// InvalidBitOperation is an error type.
+// The bit operation is invalid due to the index or operand being out of range. Valid range - [0, 63].
+type InvalidBitOperation struct {
+	errorInstanceID uuid.UUID
+	invalidBitOperation
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidBitOperation returns true if err is an instance of InvalidBitOperation.
+func IsInvalidBitOperation(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidBitOperation)
+	return ok
+}
+
+func (e *InvalidBitOperation) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:InvalidBitOperation (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidBitOperation) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidBitOperation) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidBitOperation) Message() string {
+	return "INVALID_ARGUMENT Compute:InvalidBitOperation"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidBitOperation) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidBitOperation) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidBitOperation) Name() string {
+	return "Compute:InvalidBitOperation"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidBitOperation) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidBitOperation) Parameters() map[string]interface{} {
+	return map[string]interface{}{"operationType": e.OperationType, "value": e.Value}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidBitOperation) safeParams() map[string]interface{} {
+	return map[string]interface{}{"operationType": e.OperationType, "value": e.Value, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidBitOperation) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidBitOperation) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidBitOperation) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidBitOperation) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidBitOperation)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:InvalidBitOperation", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidBitOperation) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidBitOperation
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidBitOperation = parameters
+	return nil
+}
+
 type invalidExpression struct {
 	Expression string `json:"expression"`
 }
@@ -2915,6 +3509,156 @@ func (e *InvalidExpression) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.invalidExpression = parameters
+	return nil
+}
+
+type invalidFieldName struct {
+	FieldName string `json:"fieldName"`
+}
+
+func (o invalidFieldName) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidFieldName) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidFieldName returns new instance of InvalidFieldName error.
+func NewInvalidFieldName(fieldNameArg string) *InvalidFieldName {
+	return &InvalidFieldName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidFieldName: invalidFieldName{FieldName: fieldNameArg}}
+}
+
+// WrapWithInvalidFieldName returns new instance of InvalidFieldName error wrapping an existing error.
+func WrapWithInvalidFieldName(err error, fieldNameArg string) *InvalidFieldName {
+	return &InvalidFieldName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidFieldName: invalidFieldName{FieldName: fieldNameArg}}
+}
+
+// InvalidFieldName is an error type.
+// Struct field names cannot contain '.'
+type InvalidFieldName struct {
+	errorInstanceID uuid.UUID
+	invalidFieldName
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidFieldName returns true if err is an instance of InvalidFieldName.
+func IsInvalidFieldName(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidFieldName)
+	return ok
+}
+
+func (e *InvalidFieldName) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:InvalidFieldName (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidFieldName) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidFieldName) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidFieldName) Message() string {
+	return "INVALID_ARGUMENT Compute:InvalidFieldName"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidFieldName) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidFieldName) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidFieldName) Name() string {
+	return "Compute:InvalidFieldName"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidFieldName) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidFieldName) Parameters() map[string]interface{} {
+	return map[string]interface{}{"fieldName": e.FieldName}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidFieldName) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidFieldName) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidFieldName) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"fieldName": e.FieldName}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidFieldName) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidFieldName) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidFieldName)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:InvalidFieldName", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidFieldName) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidFieldName
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidFieldName = parameters
 	return nil
 }
 
@@ -3521,6 +4265,156 @@ func (e *InvalidRangeNodeStartAfterViewRange) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.invalidRangeNodeStartAfterViewRange = parameters
+	return nil
+}
+
+type invalidRefpropInputCount struct {
+	InputCount int `json:"inputCount"`
+}
+
+func (o invalidRefpropInputCount) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidRefpropInputCount) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidRefpropInputCount returns new instance of InvalidRefpropInputCount error.
+func NewInvalidRefpropInputCount(inputCountArg int) *InvalidRefpropInputCount {
+	return &InvalidRefpropInputCount{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidRefpropInputCount: invalidRefpropInputCount{InputCount: inputCountArg}}
+}
+
+// WrapWithInvalidRefpropInputCount returns new instance of InvalidRefpropInputCount error wrapping an existing error.
+func WrapWithInvalidRefpropInputCount(err error, inputCountArg int) *InvalidRefpropInputCount {
+	return &InvalidRefpropInputCount{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidRefpropInputCount: invalidRefpropInputCount{InputCount: inputCountArg}}
+}
+
+// InvalidRefpropInputCount is an error type.
+// REFPROP requires exactly two input series.
+type InvalidRefpropInputCount struct {
+	errorInstanceID uuid.UUID
+	invalidRefpropInputCount
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidRefpropInputCount returns true if err is an instance of InvalidRefpropInputCount.
+func IsInvalidRefpropInputCount(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidRefpropInputCount)
+	return ok
+}
+
+func (e *InvalidRefpropInputCount) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:InvalidRefpropInputCount (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidRefpropInputCount) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidRefpropInputCount) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidRefpropInputCount) Message() string {
+	return "INVALID_ARGUMENT Compute:InvalidRefpropInputCount"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidRefpropInputCount) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidRefpropInputCount) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidRefpropInputCount) Name() string {
+	return "Compute:InvalidRefpropInputCount"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidRefpropInputCount) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidRefpropInputCount) Parameters() map[string]interface{} {
+	return map[string]interface{}{"inputCount": e.InputCount}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidRefpropInputCount) safeParams() map[string]interface{} {
+	return map[string]interface{}{"inputCount": e.InputCount, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidRefpropInputCount) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidRefpropInputCount) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidRefpropInputCount) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidRefpropInputCount) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidRefpropInputCount)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:InvalidRefpropInputCount", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidRefpropInputCount) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidRefpropInputCount
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidRefpropInputCount = parameters
 	return nil
 }
 
@@ -4423,12 +5317,14 @@ func (e *MemoryLimitExceeded) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type missingFunctionInModuleApplication struct {
-	ModuleApplicationRid api3.ModuleApplicationRid `json:"moduleApplicationRid"`
-	FunctionName         string                    `json:"functionName"`
+type missingFunctionParameter struct {
+	ModuleName    string `json:"moduleName"`
+	ModuleVersion string `json:"moduleVersion"`
+	FunctionName  string `json:"functionName"`
+	ParameterName string `json:"parameterName"`
 }
 
-func (o missingFunctionInModuleApplication) MarshalYAML() (interface{}, error) {
+func (o missingFunctionParameter) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -4436,7 +5332,7 @@ func (o missingFunctionInModuleApplication) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *missingFunctionInModuleApplication) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *missingFunctionParameter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -4444,87 +5340,241 @@ func (o *missingFunctionInModuleApplication) UnmarshalYAML(unmarshal func(interf
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewMissingFunctionInModuleApplication returns new instance of MissingFunctionInModuleApplication error.
-func NewMissingFunctionInModuleApplication(moduleApplicationRidArg api3.ModuleApplicationRid, functionNameArg string) *MissingFunctionInModuleApplication {
-	return &MissingFunctionInModuleApplication{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), missingFunctionInModuleApplication: missingFunctionInModuleApplication{ModuleApplicationRid: moduleApplicationRidArg, FunctionName: functionNameArg}}
+// NewMissingFunctionParameter returns new instance of MissingFunctionParameter error.
+func NewMissingFunctionParameter(moduleNameArg string, moduleVersionArg string, functionNameArg string, parameterNameArg string) *MissingFunctionParameter {
+	return &MissingFunctionParameter{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), missingFunctionParameter: missingFunctionParameter{ModuleName: moduleNameArg, ModuleVersion: moduleVersionArg, FunctionName: functionNameArg, ParameterName: parameterNameArg}}
 }
 
-// WrapWithMissingFunctionInModuleApplication returns new instance of MissingFunctionInModuleApplication error wrapping an existing error.
-func WrapWithMissingFunctionInModuleApplication(err error, moduleApplicationRidArg api3.ModuleApplicationRid, functionNameArg string) *MissingFunctionInModuleApplication {
-	return &MissingFunctionInModuleApplication{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, missingFunctionInModuleApplication: missingFunctionInModuleApplication{ModuleApplicationRid: moduleApplicationRidArg, FunctionName: functionNameArg}}
+// WrapWithMissingFunctionParameter returns new instance of MissingFunctionParameter error wrapping an existing error.
+func WrapWithMissingFunctionParameter(err error, moduleNameArg string, moduleVersionArg string, functionNameArg string, parameterNameArg string) *MissingFunctionParameter {
+	return &MissingFunctionParameter{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, missingFunctionParameter: missingFunctionParameter{ModuleName: moduleNameArg, ModuleVersion: moduleVersionArg, FunctionName: functionNameArg, ParameterName: parameterNameArg}}
 }
 
-// MissingFunctionInModuleApplication is an error type.
-type MissingFunctionInModuleApplication struct {
+// MissingFunctionParameter is an error type.
+// The requested module function could not be executed because a required parameter was not provided.
+type MissingFunctionParameter struct {
 	errorInstanceID uuid.UUID
-	missingFunctionInModuleApplication
+	missingFunctionParameter
 	cause error
 	stack werror.StackTrace
 }
 
-// IsMissingFunctionInModuleApplication returns true if err is an instance of MissingFunctionInModuleApplication.
-func IsMissingFunctionInModuleApplication(err error) bool {
+// IsMissingFunctionParameter returns true if err is an instance of MissingFunctionParameter.
+func IsMissingFunctionParameter(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*MissingFunctionInModuleApplication)
+	_, ok := errors.GetConjureError(err).(*MissingFunctionParameter)
 	return ok
 }
 
-func (e *MissingFunctionInModuleApplication) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Compute:MissingFunctionInModuleApplication (%s)", e.errorInstanceID)
+func (e *MissingFunctionParameter) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:MissingFunctionParameter (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *MissingFunctionInModuleApplication) Cause() error {
+func (e *MissingFunctionParameter) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *MissingFunctionInModuleApplication) StackTrace() werror.StackTrace {
+func (e *MissingFunctionParameter) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *MissingFunctionInModuleApplication) Message() string {
-	return "INVALID_ARGUMENT Compute:MissingFunctionInModuleApplication"
+func (e *MissingFunctionParameter) Message() string {
+	return "INVALID_ARGUMENT Compute:MissingFunctionParameter"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *MissingFunctionInModuleApplication) Format(state fmt.State, verb rune) {
+func (e *MissingFunctionParameter) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *MissingFunctionInModuleApplication) Code() errors.ErrorCode {
+func (e *MissingFunctionParameter) Code() errors.ErrorCode {
 	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
-func (e *MissingFunctionInModuleApplication) Name() string {
-	return "Compute:MissingFunctionInModuleApplication"
+func (e *MissingFunctionParameter) Name() string {
+	return "Compute:MissingFunctionParameter"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *MissingFunctionInModuleApplication) InstanceID() uuid.UUID {
+func (e *MissingFunctionParameter) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *MissingFunctionInModuleApplication) Parameters() map[string]interface{} {
-	return map[string]interface{}{"moduleApplicationRid": e.ModuleApplicationRid, "functionName": e.FunctionName}
+func (e *MissingFunctionParameter) Parameters() map[string]interface{} {
+	return map[string]interface{}{"moduleName": e.ModuleName, "moduleVersion": e.ModuleVersion, "functionName": e.FunctionName, "parameterName": e.ParameterName}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *MissingFunctionInModuleApplication) safeParams() map[string]interface{} {
+func (e *MissingFunctionParameter) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *MissingFunctionParameter) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *MissingFunctionParameter) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"moduleName": e.ModuleName, "moduleVersion": e.ModuleVersion, "functionName": e.FunctionName, "parameterName": e.ParameterName}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *MissingFunctionParameter) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e MissingFunctionParameter) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.missingFunctionParameter)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:MissingFunctionParameter", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *MissingFunctionParameter) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters missingFunctionParameter
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.missingFunctionParameter = parameters
+	return nil
+}
+
+type missingModuleApplication struct {
+	ModuleApplicationRid api3.ModuleApplicationRid `json:"moduleApplicationRid"`
+}
+
+func (o missingModuleApplication) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *missingModuleApplication) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewMissingModuleApplication returns new instance of MissingModuleApplication error.
+func NewMissingModuleApplication(moduleApplicationRidArg api3.ModuleApplicationRid) *MissingModuleApplication {
+	return &MissingModuleApplication{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), missingModuleApplication: missingModuleApplication{ModuleApplicationRid: moduleApplicationRidArg}}
+}
+
+// WrapWithMissingModuleApplication returns new instance of MissingModuleApplication error wrapping an existing error.
+func WrapWithMissingModuleApplication(err error, moduleApplicationRidArg api3.ModuleApplicationRid) *MissingModuleApplication {
+	return &MissingModuleApplication{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, missingModuleApplication: missingModuleApplication{ModuleApplicationRid: moduleApplicationRidArg}}
+}
+
+// MissingModuleApplication is an error type.
+/*
+The requested module application could not be found.
+This may be because the reference is incorrect or the application is unavailable in the current execution context.
+*/
+type MissingModuleApplication struct {
+	errorInstanceID uuid.UUID
+	missingModuleApplication
+	cause error
+	stack werror.StackTrace
+}
+
+// IsMissingModuleApplication returns true if err is an instance of MissingModuleApplication.
+func IsMissingModuleApplication(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*MissingModuleApplication)
+	return ok
+}
+
+func (e *MissingModuleApplication) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:MissingModuleApplication (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *MissingModuleApplication) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *MissingModuleApplication) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *MissingModuleApplication) Message() string {
+	return "INVALID_ARGUMENT Compute:MissingModuleApplication"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *MissingModuleApplication) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *MissingModuleApplication) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *MissingModuleApplication) Name() string {
+	return "Compute:MissingModuleApplication"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *MissingModuleApplication) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *MissingModuleApplication) Parameters() map[string]interface{} {
+	return map[string]interface{}{"moduleApplicationRid": e.ModuleApplicationRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *MissingModuleApplication) safeParams() map[string]interface{} {
 	return map[string]interface{}{"moduleApplicationRid": e.ModuleApplicationRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *MissingFunctionInModuleApplication) SafeParams() map[string]interface{} {
+func (e *MissingModuleApplication) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -4535,463 +5585,13 @@ func (e *MissingFunctionInModuleApplication) SafeParams() map[string]interface{}
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *MissingFunctionInModuleApplication) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"functionName": e.FunctionName}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *MissingFunctionInModuleApplication) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e MissingFunctionInModuleApplication) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.missingFunctionInModuleApplication)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:MissingFunctionInModuleApplication", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *MissingFunctionInModuleApplication) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters missingFunctionInModuleApplication
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.missingFunctionInModuleApplication = parameters
-	return nil
-}
-
-type missingModuleVariable struct {
-	VariableName VariableName `json:"variableName"`
-	Context      *Context     `json:"context,omitempty"`
-}
-
-func (o missingModuleVariable) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *missingModuleVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewMissingModuleVariable returns new instance of MissingModuleVariable error.
-func NewMissingModuleVariable(variableNameArg VariableName, contextArg *Context) *MissingModuleVariable {
-	return &MissingModuleVariable{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), missingModuleVariable: missingModuleVariable{VariableName: variableNameArg, Context: contextArg}}
-}
-
-// WrapWithMissingModuleVariable returns new instance of MissingModuleVariable error wrapping an existing error.
-func WrapWithMissingModuleVariable(err error, variableNameArg VariableName, contextArg *Context) *MissingModuleVariable {
-	return &MissingModuleVariable{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, missingModuleVariable: missingModuleVariable{VariableName: variableNameArg, Context: contextArg}}
-}
-
-// MissingModuleVariable is an error type.
-type MissingModuleVariable struct {
-	errorInstanceID uuid.UUID
-	missingModuleVariable
-	cause error
-	stack werror.StackTrace
-}
-
-// IsMissingModuleVariable returns true if err is an instance of MissingModuleVariable.
-func IsMissingModuleVariable(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*MissingModuleVariable)
-	return ok
-}
-
-func (e *MissingModuleVariable) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Compute:MissingModuleVariable (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *MissingModuleVariable) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *MissingModuleVariable) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *MissingModuleVariable) Message() string {
-	return "INVALID_ARGUMENT Compute:MissingModuleVariable"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *MissingModuleVariable) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *MissingModuleVariable) Code() errors.ErrorCode {
-	return errors.InvalidArgument
-}
-
-// Name returns an error name identifying error type.
-func (e *MissingModuleVariable) Name() string {
-	return "Compute:MissingModuleVariable"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *MissingModuleVariable) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *MissingModuleVariable) Parameters() map[string]interface{} {
-	return map[string]interface{}{"variableName": e.VariableName, "context": e.Context}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *MissingModuleVariable) safeParams() map[string]interface{} {
-	return map[string]interface{}{"variableName": e.VariableName, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *MissingModuleVariable) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *MissingModuleVariable) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"context": e.Context}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *MissingModuleVariable) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e MissingModuleVariable) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.missingModuleVariable)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:MissingModuleVariable", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *MissingModuleVariable) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters missingModuleVariable
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.missingModuleVariable = parameters
-	return nil
-}
-
-type missingVariable struct {
-	VariableName VariableName `json:"variableName"`
-	Context      *Context     `json:"context,omitempty"`
-}
-
-func (o missingVariable) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *missingVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewMissingVariable returns new instance of MissingVariable error.
-func NewMissingVariable(variableNameArg VariableName, contextArg *Context) *MissingVariable {
-	return &MissingVariable{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), missingVariable: missingVariable{VariableName: variableNameArg, Context: contextArg}}
-}
-
-// WrapWithMissingVariable returns new instance of MissingVariable error wrapping an existing error.
-func WrapWithMissingVariable(err error, variableNameArg VariableName, contextArg *Context) *MissingVariable {
-	return &MissingVariable{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, missingVariable: missingVariable{VariableName: variableNameArg, Context: contextArg}}
-}
-
-// MissingVariable is an error type.
-type MissingVariable struct {
-	errorInstanceID uuid.UUID
-	missingVariable
-	cause error
-	stack werror.StackTrace
-}
-
-// IsMissingVariable returns true if err is an instance of MissingVariable.
-func IsMissingVariable(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*MissingVariable)
-	return ok
-}
-
-func (e *MissingVariable) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Compute:MissingVariable (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *MissingVariable) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *MissingVariable) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *MissingVariable) Message() string {
-	return "INVALID_ARGUMENT Compute:MissingVariable"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *MissingVariable) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *MissingVariable) Code() errors.ErrorCode {
-	return errors.InvalidArgument
-}
-
-// Name returns an error name identifying error type.
-func (e *MissingVariable) Name() string {
-	return "Compute:MissingVariable"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *MissingVariable) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *MissingVariable) Parameters() map[string]interface{} {
-	return map[string]interface{}{"variableName": e.VariableName, "context": e.Context}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *MissingVariable) safeParams() map[string]interface{} {
-	return map[string]interface{}{"variableName": e.VariableName, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *MissingVariable) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *MissingVariable) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"context": e.Context}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *MissingVariable) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e MissingVariable) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.missingVariable)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:MissingVariable", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *MissingVariable) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters missingVariable
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.missingVariable = parameters
-	return nil
-}
-
-type nonPositiveDuration struct {
-	Duration api4.Duration `json:"duration"`
-}
-
-func (o nonPositiveDuration) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *nonPositiveDuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewNonPositiveDuration returns new instance of NonPositiveDuration error.
-func NewNonPositiveDuration(durationArg api4.Duration) *NonPositiveDuration {
-	return &NonPositiveDuration{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), nonPositiveDuration: nonPositiveDuration{Duration: durationArg}}
-}
-
-// WrapWithNonPositiveDuration returns new instance of NonPositiveDuration error wrapping an existing error.
-func WrapWithNonPositiveDuration(err error, durationArg api4.Duration) *NonPositiveDuration {
-	return &NonPositiveDuration{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, nonPositiveDuration: nonPositiveDuration{Duration: durationArg}}
-}
-
-// NonPositiveDuration is an error type.
-// Duration must be strictly positive.
-type NonPositiveDuration struct {
-	errorInstanceID uuid.UUID
-	nonPositiveDuration
-	cause error
-	stack werror.StackTrace
-}
-
-// IsNonPositiveDuration returns true if err is an instance of NonPositiveDuration.
-func IsNonPositiveDuration(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*NonPositiveDuration)
-	return ok
-}
-
-func (e *NonPositiveDuration) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Compute:NonPositiveDuration (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *NonPositiveDuration) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *NonPositiveDuration) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *NonPositiveDuration) Message() string {
-	return "INVALID_ARGUMENT Compute:NonPositiveDuration"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *NonPositiveDuration) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *NonPositiveDuration) Code() errors.ErrorCode {
-	return errors.InvalidArgument
-}
-
-// Name returns an error name identifying error type.
-func (e *NonPositiveDuration) Name() string {
-	return "Compute:NonPositiveDuration"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *NonPositiveDuration) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *NonPositiveDuration) Parameters() map[string]interface{} {
-	return map[string]interface{}{"duration": e.Duration}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *NonPositiveDuration) safeParams() map[string]interface{} {
-	return map[string]interface{}{"duration": e.Duration, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *NonPositiveDuration) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *NonPositiveDuration) unsafeParams() map[string]interface{} {
+func (e *MissingModuleApplication) unsafeParams() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *NonPositiveDuration) UnsafeParams() map[string]interface{} {
+func (e *MissingModuleApplication) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -5001,33 +5601,35 @@ func (e *NonPositiveDuration) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e NonPositiveDuration) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.nonPositiveDuration)
+func (e MissingModuleApplication) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.missingModuleApplication)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:NonPositiveDuration", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:MissingModuleApplication", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *NonPositiveDuration) UnmarshalJSON(data []byte) error {
+func (e *MissingModuleApplication) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters nonPositiveDuration
+	var parameters missingModuleApplication
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.nonPositiveDuration = parameters
+	e.missingModuleApplication = parameters
 	return nil
 }
 
-type nonPositiveResampleInterval struct {
-	ResampleInterval api4.Duration `json:"resampleInterval"`
+type missingModuleFunction struct {
+	ModuleName    string `json:"moduleName"`
+	ModuleVersion string `json:"moduleVersion"`
+	FunctionName  string `json:"functionName"`
 }
 
-func (o nonPositiveResampleInterval) MarshalYAML() (interface{}, error) {
+func (o missingModuleFunction) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -5035,7 +5637,7 @@ func (o nonPositiveResampleInterval) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *nonPositiveResampleInterval) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *missingModuleFunction) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -5043,88 +5645,91 @@ func (o *nonPositiveResampleInterval) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewNonPositiveResampleInterval returns new instance of NonPositiveResampleInterval error.
-func NewNonPositiveResampleInterval(resampleIntervalArg api4.Duration) *NonPositiveResampleInterval {
-	return &NonPositiveResampleInterval{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), nonPositiveResampleInterval: nonPositiveResampleInterval{ResampleInterval: resampleIntervalArg}}
+// NewMissingModuleFunction returns new instance of MissingModuleFunction error.
+func NewMissingModuleFunction(moduleNameArg string, moduleVersionArg string, functionNameArg string) *MissingModuleFunction {
+	return &MissingModuleFunction{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), missingModuleFunction: missingModuleFunction{ModuleName: moduleNameArg, ModuleVersion: moduleVersionArg, FunctionName: functionNameArg}}
 }
 
-// WrapWithNonPositiveResampleInterval returns new instance of NonPositiveResampleInterval error wrapping an existing error.
-func WrapWithNonPositiveResampleInterval(err error, resampleIntervalArg api4.Duration) *NonPositiveResampleInterval {
-	return &NonPositiveResampleInterval{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, nonPositiveResampleInterval: nonPositiveResampleInterval{ResampleInterval: resampleIntervalArg}}
+// WrapWithMissingModuleFunction returns new instance of MissingModuleFunction error wrapping an existing error.
+func WrapWithMissingModuleFunction(err error, moduleNameArg string, moduleVersionArg string, functionNameArg string) *MissingModuleFunction {
+	return &MissingModuleFunction{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, missingModuleFunction: missingModuleFunction{ModuleName: moduleNameArg, ModuleVersion: moduleVersionArg, FunctionName: functionNameArg}}
 }
 
-// NonPositiveResampleInterval is an error type.
-// The resample interval must be strictly positive.
-type NonPositiveResampleInterval struct {
+// MissingModuleFunction is an error type.
+/*
+The requested module function could not be found.
+This may be because the reference is incorrect or the function is unavailable in the current execution context.
+*/
+type MissingModuleFunction struct {
 	errorInstanceID uuid.UUID
-	nonPositiveResampleInterval
+	missingModuleFunction
 	cause error
 	stack werror.StackTrace
 }
 
-// IsNonPositiveResampleInterval returns true if err is an instance of NonPositiveResampleInterval.
-func IsNonPositiveResampleInterval(err error) bool {
+// IsMissingModuleFunction returns true if err is an instance of MissingModuleFunction.
+func IsMissingModuleFunction(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*NonPositiveResampleInterval)
+	_, ok := errors.GetConjureError(err).(*MissingModuleFunction)
 	return ok
 }
 
-func (e *NonPositiveResampleInterval) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Compute:NonPositiveResampleInterval (%s)", e.errorInstanceID)
+func (e *MissingModuleFunction) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:MissingModuleFunction (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *NonPositiveResampleInterval) Cause() error {
+func (e *MissingModuleFunction) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *NonPositiveResampleInterval) StackTrace() werror.StackTrace {
+func (e *MissingModuleFunction) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *NonPositiveResampleInterval) Message() string {
-	return "INVALID_ARGUMENT Compute:NonPositiveResampleInterval"
+func (e *MissingModuleFunction) Message() string {
+	return "INVALID_ARGUMENT Compute:MissingModuleFunction"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *NonPositiveResampleInterval) Format(state fmt.State, verb rune) {
+func (e *MissingModuleFunction) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *NonPositiveResampleInterval) Code() errors.ErrorCode {
+func (e *MissingModuleFunction) Code() errors.ErrorCode {
 	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
-func (e *NonPositiveResampleInterval) Name() string {
-	return "Compute:NonPositiveResampleInterval"
+func (e *MissingModuleFunction) Name() string {
+	return "Compute:MissingModuleFunction"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *NonPositiveResampleInterval) InstanceID() uuid.UUID {
+func (e *MissingModuleFunction) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *NonPositiveResampleInterval) Parameters() map[string]interface{} {
-	return map[string]interface{}{"resampleInterval": e.ResampleInterval}
+func (e *MissingModuleFunction) Parameters() map[string]interface{} {
+	return map[string]interface{}{"moduleName": e.ModuleName, "moduleVersion": e.ModuleVersion, "functionName": e.FunctionName}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *NonPositiveResampleInterval) safeParams() map[string]interface{} {
-	return map[string]interface{}{"resampleInterval": e.ResampleInterval, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+func (e *MissingModuleFunction) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *NonPositiveResampleInterval) SafeParams() map[string]interface{} {
+func (e *MissingModuleFunction) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -5135,13 +5740,13 @@ func (e *NonPositiveResampleInterval) SafeParams() map[string]interface{} {
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *NonPositiveResampleInterval) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+func (e *MissingModuleFunction) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"moduleName": e.ModuleName, "moduleVersion": e.ModuleVersion, "functionName": e.FunctionName}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *NonPositiveResampleInterval) UnsafeParams() map[string]interface{} {
+func (e *MissingModuleFunction) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -5151,25 +5756,25 @@ func (e *NonPositiveResampleInterval) UnsafeParams() map[string]interface{} {
 	return unsafeParams
 }
 
-func (e NonPositiveResampleInterval) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.nonPositiveResampleInterval)
+func (e MissingModuleFunction) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.missingModuleFunction)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:NonPositiveResampleInterval", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:MissingModuleFunction", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *NonPositiveResampleInterval) UnmarshalJSON(data []byte) error {
+func (e *MissingModuleFunction) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters nonPositiveResampleInterval
+	var parameters missingModuleFunction
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.nonPositiveResampleInterval = parameters
+	e.missingModuleFunction = parameters
 	return nil
 }
 
@@ -5941,13 +6546,11 @@ func (e *QueryRangeTooLarge) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type resolutionIntervalTooSmallForRange struct {
-	RequestedResolution api4.Duration  `json:"requestedResolution"`
-	Start               api2.Timestamp `json:"start"`
-	End                 api2.Timestamp `json:"end"`
+type refpropInputTooLarge struct {
+	AlignedSeriesSize int `json:"alignedSeriesSize"`
 }
 
-func (o resolutionIntervalTooSmallForRange) MarshalYAML() (interface{}, error) {
+func (o refpropInputTooLarge) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -5955,7 +6558,7 @@ func (o resolutionIntervalTooSmallForRange) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *resolutionIntervalTooSmallForRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *refpropInputTooLarge) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -5963,87 +6566,88 @@ func (o *resolutionIntervalTooSmallForRange) UnmarshalYAML(unmarshal func(interf
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// NewResolutionIntervalTooSmallForRange returns new instance of ResolutionIntervalTooSmallForRange error.
-func NewResolutionIntervalTooSmallForRange(requestedResolutionArg api4.Duration, startArg api2.Timestamp, endArg api2.Timestamp) *ResolutionIntervalTooSmallForRange {
-	return &ResolutionIntervalTooSmallForRange{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), resolutionIntervalTooSmallForRange: resolutionIntervalTooSmallForRange{RequestedResolution: requestedResolutionArg, Start: startArg, End: endArg}}
+// NewRefpropInputTooLarge returns new instance of RefpropInputTooLarge error.
+func NewRefpropInputTooLarge(alignedSeriesSizeArg int) *RefpropInputTooLarge {
+	return &RefpropInputTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), refpropInputTooLarge: refpropInputTooLarge{AlignedSeriesSize: alignedSeriesSizeArg}}
 }
 
-// WrapWithResolutionIntervalTooSmallForRange returns new instance of ResolutionIntervalTooSmallForRange error wrapping an existing error.
-func WrapWithResolutionIntervalTooSmallForRange(err error, requestedResolutionArg api4.Duration, startArg api2.Timestamp, endArg api2.Timestamp) *ResolutionIntervalTooSmallForRange {
-	return &ResolutionIntervalTooSmallForRange{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, resolutionIntervalTooSmallForRange: resolutionIntervalTooSmallForRange{RequestedResolution: requestedResolutionArg, Start: startArg, End: endArg}}
+// WrapWithRefpropInputTooLarge returns new instance of RefpropInputTooLarge error wrapping an existing error.
+func WrapWithRefpropInputTooLarge(err error, alignedSeriesSizeArg int) *RefpropInputTooLarge {
+	return &RefpropInputTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, refpropInputTooLarge: refpropInputTooLarge{AlignedSeriesSize: alignedSeriesSizeArg}}
 }
 
-// ResolutionIntervalTooSmallForRange is an error type.
-type ResolutionIntervalTooSmallForRange struct {
+// RefpropInputTooLarge is an error type.
+// The number of points in the REFPROP inputs is too large.
+type RefpropInputTooLarge struct {
 	errorInstanceID uuid.UUID
-	resolutionIntervalTooSmallForRange
+	refpropInputTooLarge
 	cause error
 	stack werror.StackTrace
 }
 
-// IsResolutionIntervalTooSmallForRange returns true if err is an instance of ResolutionIntervalTooSmallForRange.
-func IsResolutionIntervalTooSmallForRange(err error) bool {
+// IsRefpropInputTooLarge returns true if err is an instance of RefpropInputTooLarge.
+func IsRefpropInputTooLarge(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := errors.GetConjureError(err).(*ResolutionIntervalTooSmallForRange)
+	_, ok := errors.GetConjureError(err).(*RefpropInputTooLarge)
 	return ok
 }
 
-func (e *ResolutionIntervalTooSmallForRange) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Compute:ResolutionIntervalTooSmallForRange (%s)", e.errorInstanceID)
+func (e *RefpropInputTooLarge) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:RefpropInputTooLarge (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
 // Note that cause is not serialized and sent over the wire.
-func (e *ResolutionIntervalTooSmallForRange) Cause() error {
+func (e *RefpropInputTooLarge) Cause() error {
 	return e.cause
 }
 
 // StackTrace returns the StackTrace for the error, or nil if none.
 // Note that stack traces are not serialized and sent over the wire.
-func (e *ResolutionIntervalTooSmallForRange) StackTrace() werror.StackTrace {
+func (e *RefpropInputTooLarge) StackTrace() werror.StackTrace {
 	return e.stack
 }
 
 // Message returns the message body for the error.
-func (e *ResolutionIntervalTooSmallForRange) Message() string {
-	return "INVALID_ARGUMENT Compute:ResolutionIntervalTooSmallForRange"
+func (e *RefpropInputTooLarge) Message() string {
+	return "INVALID_ARGUMENT Compute:RefpropInputTooLarge"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *ResolutionIntervalTooSmallForRange) Format(state fmt.State, verb rune) {
+func (e *RefpropInputTooLarge) Format(state fmt.State, verb rune) {
 	werror.Format(e, e.safeParams(), state, verb)
 }
 
 // Code returns an enum describing error category.
-func (e *ResolutionIntervalTooSmallForRange) Code() errors.ErrorCode {
+func (e *RefpropInputTooLarge) Code() errors.ErrorCode {
 	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
-func (e *ResolutionIntervalTooSmallForRange) Name() string {
-	return "Compute:ResolutionIntervalTooSmallForRange"
+func (e *RefpropInputTooLarge) Name() string {
+	return "Compute:RefpropInputTooLarge"
 }
 
 // InstanceID returns unique identifier of this particular error instance.
-func (e *ResolutionIntervalTooSmallForRange) InstanceID() uuid.UUID {
+func (e *RefpropInputTooLarge) InstanceID() uuid.UUID {
 	return e.errorInstanceID
 }
 
 // Parameters returns a set of named parameters detailing this particular error instance.
-func (e *ResolutionIntervalTooSmallForRange) Parameters() map[string]interface{} {
-	return map[string]interface{}{"requestedResolution": e.RequestedResolution, "start": e.Start, "end": e.End}
+func (e *RefpropInputTooLarge) Parameters() map[string]interface{} {
+	return map[string]interface{}{"alignedSeriesSize": e.AlignedSeriesSize}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *ResolutionIntervalTooSmallForRange) safeParams() map[string]interface{} {
-	return map[string]interface{}{"requestedResolution": e.RequestedResolution, "start": e.Start, "end": e.End, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+func (e *RefpropInputTooLarge) safeParams() map[string]interface{} {
+	return map[string]interface{}{"alignedSeriesSize": e.AlignedSeriesSize, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *ResolutionIntervalTooSmallForRange) SafeParams() map[string]interface{} {
+func (e *RefpropInputTooLarge) SafeParams() map[string]interface{} {
 	safeParams, _ := werror.ParamsFromError(e.cause)
 	for k, v := range e.safeParams() {
 		if _, exists := safeParams[k]; !exists {
@@ -6054,13 +6658,13 @@ func (e *ResolutionIntervalTooSmallForRange) SafeParams() map[string]interface{}
 }
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *ResolutionIntervalTooSmallForRange) unsafeParams() map[string]interface{} {
+func (e *RefpropInputTooLarge) unsafeParams() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
 // any underlying causes.
-func (e *ResolutionIntervalTooSmallForRange) UnsafeParams() map[string]interface{} {
+func (e *RefpropInputTooLarge) UnsafeParams() map[string]interface{} {
 	_, unsafeParams := werror.ParamsFromError(e.cause)
 	for k, v := range e.unsafeParams() {
 		if _, exists := unsafeParams[k]; !exists {
@@ -6070,25 +6674,478 @@ func (e *ResolutionIntervalTooSmallForRange) UnsafeParams() map[string]interface
 	return unsafeParams
 }
 
-func (e ResolutionIntervalTooSmallForRange) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.resolutionIntervalTooSmallForRange)
+func (e RefpropInputTooLarge) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.refpropInputTooLarge)
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:ResolutionIntervalTooSmallForRange", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:RefpropInputTooLarge", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
-func (e *ResolutionIntervalTooSmallForRange) UnmarshalJSON(data []byte) error {
+func (e *RefpropInputTooLarge) UnmarshalJSON(data []byte) error {
 	var serializableError errors.SerializableError
 	if err := safejson.Unmarshal(data, &serializableError); err != nil {
 		return err
 	}
-	var parameters resolutionIntervalTooSmallForRange
+	var parameters refpropInputTooLarge
 	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
 		return err
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.resolutionIntervalTooSmallForRange = parameters
+	e.refpropInputTooLarge = parameters
+	return nil
+}
+
+type refpropOutputPropertyIsInput struct {
+	OutputProperty string `json:"outputProperty"`
+	FirstProperty  string `json:"firstProperty"`
+	SecondProperty string `json:"secondProperty"`
+}
+
+func (o refpropOutputPropertyIsInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *refpropOutputPropertyIsInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewRefpropOutputPropertyIsInput returns new instance of RefpropOutputPropertyIsInput error.
+func NewRefpropOutputPropertyIsInput(outputPropertyArg string, firstPropertyArg string, secondPropertyArg string) *RefpropOutputPropertyIsInput {
+	return &RefpropOutputPropertyIsInput{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), refpropOutputPropertyIsInput: refpropOutputPropertyIsInput{OutputProperty: outputPropertyArg, FirstProperty: firstPropertyArg, SecondProperty: secondPropertyArg}}
+}
+
+// WrapWithRefpropOutputPropertyIsInput returns new instance of RefpropOutputPropertyIsInput error wrapping an existing error.
+func WrapWithRefpropOutputPropertyIsInput(err error, outputPropertyArg string, firstPropertyArg string, secondPropertyArg string) *RefpropOutputPropertyIsInput {
+	return &RefpropOutputPropertyIsInput{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, refpropOutputPropertyIsInput: refpropOutputPropertyIsInput{OutputProperty: outputPropertyArg, FirstProperty: firstPropertyArg, SecondProperty: secondPropertyArg}}
+}
+
+// RefpropOutputPropertyIsInput is an error type.
+// The output property cannot be one of the input properties for REFPROP.
+type RefpropOutputPropertyIsInput struct {
+	errorInstanceID uuid.UUID
+	refpropOutputPropertyIsInput
+	cause error
+	stack werror.StackTrace
+}
+
+// IsRefpropOutputPropertyIsInput returns true if err is an instance of RefpropOutputPropertyIsInput.
+func IsRefpropOutputPropertyIsInput(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*RefpropOutputPropertyIsInput)
+	return ok
+}
+
+func (e *RefpropOutputPropertyIsInput) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:RefpropOutputPropertyIsInput (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *RefpropOutputPropertyIsInput) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *RefpropOutputPropertyIsInput) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *RefpropOutputPropertyIsInput) Message() string {
+	return "INVALID_ARGUMENT Compute:RefpropOutputPropertyIsInput"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *RefpropOutputPropertyIsInput) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *RefpropOutputPropertyIsInput) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *RefpropOutputPropertyIsInput) Name() string {
+	return "Compute:RefpropOutputPropertyIsInput"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *RefpropOutputPropertyIsInput) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *RefpropOutputPropertyIsInput) Parameters() map[string]interface{} {
+	return map[string]interface{}{"outputProperty": e.OutputProperty, "firstProperty": e.FirstProperty, "secondProperty": e.SecondProperty}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *RefpropOutputPropertyIsInput) safeParams() map[string]interface{} {
+	return map[string]interface{}{"outputProperty": e.OutputProperty, "firstProperty": e.FirstProperty, "secondProperty": e.SecondProperty, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *RefpropOutputPropertyIsInput) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *RefpropOutputPropertyIsInput) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *RefpropOutputPropertyIsInput) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e RefpropOutputPropertyIsInput) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.refpropOutputPropertyIsInput)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:RefpropOutputPropertyIsInput", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *RefpropOutputPropertyIsInput) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters refpropOutputPropertyIsInput
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.refpropOutputPropertyIsInput = parameters
+	return nil
+}
+
+type requestedRowsLimitExceeded struct {
+	MaxRowsReturned int `json:"maxRowsReturned"`
+}
+
+func (o requestedRowsLimitExceeded) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *requestedRowsLimitExceeded) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewRequestedRowsLimitExceeded returns new instance of RequestedRowsLimitExceeded error.
+func NewRequestedRowsLimitExceeded(maxRowsReturnedArg int) *RequestedRowsLimitExceeded {
+	return &RequestedRowsLimitExceeded{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), requestedRowsLimitExceeded: requestedRowsLimitExceeded{MaxRowsReturned: maxRowsReturnedArg}}
+}
+
+// WrapWithRequestedRowsLimitExceeded returns new instance of RequestedRowsLimitExceeded error wrapping an existing error.
+func WrapWithRequestedRowsLimitExceeded(err error, maxRowsReturnedArg int) *RequestedRowsLimitExceeded {
+	return &RequestedRowsLimitExceeded{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, requestedRowsLimitExceeded: requestedRowsLimitExceeded{MaxRowsReturned: maxRowsReturnedArg}}
+}
+
+// RequestedRowsLimitExceeded is an error type.
+// The maximum number of points that can be returned is 10,000.
+type RequestedRowsLimitExceeded struct {
+	errorInstanceID uuid.UUID
+	requestedRowsLimitExceeded
+	cause error
+	stack werror.StackTrace
+}
+
+// IsRequestedRowsLimitExceeded returns true if err is an instance of RequestedRowsLimitExceeded.
+func IsRequestedRowsLimitExceeded(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*RequestedRowsLimitExceeded)
+	return ok
+}
+
+func (e *RequestedRowsLimitExceeded) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:RequestedRowsLimitExceeded (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *RequestedRowsLimitExceeded) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *RequestedRowsLimitExceeded) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *RequestedRowsLimitExceeded) Message() string {
+	return "INVALID_ARGUMENT Compute:RequestedRowsLimitExceeded"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *RequestedRowsLimitExceeded) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *RequestedRowsLimitExceeded) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *RequestedRowsLimitExceeded) Name() string {
+	return "Compute:RequestedRowsLimitExceeded"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *RequestedRowsLimitExceeded) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *RequestedRowsLimitExceeded) Parameters() map[string]interface{} {
+	return map[string]interface{}{"maxRowsReturned": e.MaxRowsReturned}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *RequestedRowsLimitExceeded) safeParams() map[string]interface{} {
+	return map[string]interface{}{"maxRowsReturned": e.MaxRowsReturned, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *RequestedRowsLimitExceeded) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *RequestedRowsLimitExceeded) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *RequestedRowsLimitExceeded) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e RequestedRowsLimitExceeded) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.requestedRowsLimitExceeded)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:RequestedRowsLimitExceeded", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *RequestedRowsLimitExceeded) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters requestedRowsLimitExceeded
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.requestedRowsLimitExceeded = parameters
+	return nil
+}
+
+type resampleDefaultValueTypeMismatchesSeriesType struct {
+	DefaultValueType string `json:"defaultValueType"`
+	ExpectedType     string `json:"expectedType"`
+}
+
+func (o resampleDefaultValueTypeMismatchesSeriesType) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *resampleDefaultValueTypeMismatchesSeriesType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewResampleDefaultValueTypeMismatchesSeriesType returns new instance of ResampleDefaultValueTypeMismatchesSeriesType error.
+func NewResampleDefaultValueTypeMismatchesSeriesType(defaultValueTypeArg string, expectedTypeArg string) *ResampleDefaultValueTypeMismatchesSeriesType {
+	return &ResampleDefaultValueTypeMismatchesSeriesType{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), resampleDefaultValueTypeMismatchesSeriesType: resampleDefaultValueTypeMismatchesSeriesType{DefaultValueType: defaultValueTypeArg, ExpectedType: expectedTypeArg}}
+}
+
+// WrapWithResampleDefaultValueTypeMismatchesSeriesType returns new instance of ResampleDefaultValueTypeMismatchesSeriesType error wrapping an existing error.
+func WrapWithResampleDefaultValueTypeMismatchesSeriesType(err error, defaultValueTypeArg string, expectedTypeArg string) *ResampleDefaultValueTypeMismatchesSeriesType {
+	return &ResampleDefaultValueTypeMismatchesSeriesType{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, resampleDefaultValueTypeMismatchesSeriesType: resampleDefaultValueTypeMismatchesSeriesType{DefaultValueType: defaultValueTypeArg, ExpectedType: expectedTypeArg}}
+}
+
+// ResampleDefaultValueTypeMismatchesSeriesType is an error type.
+// The default value provided for resampling does not match the type of the series being resampled.
+type ResampleDefaultValueTypeMismatchesSeriesType struct {
+	errorInstanceID uuid.UUID
+	resampleDefaultValueTypeMismatchesSeriesType
+	cause error
+	stack werror.StackTrace
+}
+
+// IsResampleDefaultValueTypeMismatchesSeriesType returns true if err is an instance of ResampleDefaultValueTypeMismatchesSeriesType.
+func IsResampleDefaultValueTypeMismatchesSeriesType(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ResampleDefaultValueTypeMismatchesSeriesType)
+	return ok
+}
+
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:ResampleDefaultValueTypeMismatchesSeriesType (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) Message() string {
+	return "INVALID_ARGUMENT Compute:ResampleDefaultValueTypeMismatchesSeriesType"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) Name() string {
+	return "Compute:ResampleDefaultValueTypeMismatchesSeriesType"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) Parameters() map[string]interface{} {
+	return map[string]interface{}{"defaultValueType": e.DefaultValueType, "expectedType": e.ExpectedType}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) safeParams() map[string]interface{} {
+	return map[string]interface{}{"defaultValueType": e.DefaultValueType, "expectedType": e.ExpectedType, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ResampleDefaultValueTypeMismatchesSeriesType) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.resampleDefaultValueTypeMismatchesSeriesType)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:ResampleDefaultValueTypeMismatchesSeriesType", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ResampleDefaultValueTypeMismatchesSeriesType) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters resampleDefaultValueTypeMismatchesSeriesType
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.resampleDefaultValueTypeMismatchesSeriesType = parameters
 	return nil
 }
 
@@ -7156,6 +8213,157 @@ func (e *TimeoutExceeded) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type tooFewInputs struct {
+	RequiredInputCount int `json:"requiredInputCount"`
+	ProvidedInputCount int `json:"providedInputCount"`
+}
+
+func (o tooFewInputs) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *tooFewInputs) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewTooFewInputs returns new instance of TooFewInputs error.
+func NewTooFewInputs(requiredInputCountArg int, providedInputCountArg int) *TooFewInputs {
+	return &TooFewInputs{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooFewInputs: tooFewInputs{RequiredInputCount: requiredInputCountArg, ProvidedInputCount: providedInputCountArg}}
+}
+
+// WrapWithTooFewInputs returns new instance of TooFewInputs error wrapping an existing error.
+func WrapWithTooFewInputs(err error, requiredInputCountArg int, providedInputCountArg int) *TooFewInputs {
+	return &TooFewInputs{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooFewInputs: tooFewInputs{RequiredInputCount: requiredInputCountArg, ProvidedInputCount: providedInputCountArg}}
+}
+
+// TooFewInputs is an error type.
+// The operation requires more input series than were provided.
+type TooFewInputs struct {
+	errorInstanceID uuid.UUID
+	tooFewInputs
+	cause error
+	stack werror.StackTrace
+}
+
+// IsTooFewInputs returns true if err is an instance of TooFewInputs.
+func IsTooFewInputs(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*TooFewInputs)
+	return ok
+}
+
+func (e *TooFewInputs) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:TooFewInputs (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *TooFewInputs) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *TooFewInputs) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *TooFewInputs) Message() string {
+	return "INVALID_ARGUMENT Compute:TooFewInputs"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *TooFewInputs) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *TooFewInputs) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *TooFewInputs) Name() string {
+	return "Compute:TooFewInputs"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *TooFewInputs) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *TooFewInputs) Parameters() map[string]interface{} {
+	return map[string]interface{}{"requiredInputCount": e.RequiredInputCount, "providedInputCount": e.ProvidedInputCount}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *TooFewInputs) safeParams() map[string]interface{} {
+	return map[string]interface{}{"requiredInputCount": e.RequiredInputCount, "providedInputCount": e.ProvidedInputCount, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooFewInputs) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *TooFewInputs) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooFewInputs) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e TooFewInputs) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.tooFewInputs)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:TooFewInputs", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *TooFewInputs) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters tooFewInputs
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.tooFewInputs = parameters
+	return nil
+}
+
 type tooManyBuckets struct{}
 
 func (o tooManyBuckets) MarshalYAML() (interface{}, error) {
@@ -7309,6 +8517,7 @@ func (e *TooManyBuckets) UnmarshalJSON(data []byte) error {
 
 type tooManyCategories struct {
 	NumCategories int `json:"numCategories"`
+	MaxAllowed    int `json:"maxAllowed"`
 }
 
 func (o tooManyCategories) MarshalYAML() (interface{}, error) {
@@ -7328,17 +8537,17 @@ func (o *tooManyCategories) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 // NewTooManyCategories returns new instance of TooManyCategories error.
-func NewTooManyCategories(numCategoriesArg int) *TooManyCategories {
-	return &TooManyCategories{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooManyCategories: tooManyCategories{NumCategories: numCategoriesArg}}
+func NewTooManyCategories(numCategoriesArg int, maxAllowedArg int) *TooManyCategories {
+	return &TooManyCategories{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooManyCategories: tooManyCategories{NumCategories: numCategoriesArg, MaxAllowed: maxAllowedArg}}
 }
 
 // WrapWithTooManyCategories returns new instance of TooManyCategories error wrapping an existing error.
-func WrapWithTooManyCategories(err error, numCategoriesArg int) *TooManyCategories {
-	return &TooManyCategories{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooManyCategories: tooManyCategories{NumCategories: numCategoriesArg}}
+func WrapWithTooManyCategories(err error, numCategoriesArg int, maxAllowedArg int) *TooManyCategories {
+	return &TooManyCategories{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooManyCategories: tooManyCategories{NumCategories: numCategoriesArg, MaxAllowed: maxAllowedArg}}
 }
 
 // TooManyCategories is an error type.
-// An enum series has more categories than the max allowed (200).
+// An enum series has more categories than the max allowed.
 type TooManyCategories struct {
 	errorInstanceID uuid.UUID
 	tooManyCategories
@@ -7398,12 +8607,12 @@ func (e *TooManyCategories) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *TooManyCategories) Parameters() map[string]interface{} {
-	return map[string]interface{}{"numCategories": e.NumCategories}
+	return map[string]interface{}{"numCategories": e.NumCategories, "maxAllowed": e.MaxAllowed}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *TooManyCategories) safeParams() map[string]interface{} {
-	return map[string]interface{}{"numCategories": e.NumCategories, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"numCategories": e.NumCategories, "maxAllowed": e.MaxAllowed, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -8350,6 +9559,159 @@ func (e *TooManySubrequests) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type unexpectedTimeout struct {
+	QueryId uuid.UUID `json:"queryId"`
+}
+
+func (o unexpectedTimeout) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *unexpectedTimeout) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewUnexpectedTimeout returns new instance of UnexpectedTimeout error.
+func NewUnexpectedTimeout(queryIdArg uuid.UUID) *UnexpectedTimeout {
+	return &UnexpectedTimeout{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), unexpectedTimeout: unexpectedTimeout{QueryId: queryIdArg}}
+}
+
+// WrapWithUnexpectedTimeout returns new instance of UnexpectedTimeout error wrapping an existing error.
+func WrapWithUnexpectedTimeout(err error, queryIdArg uuid.UUID) *UnexpectedTimeout {
+	return &UnexpectedTimeout{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, unexpectedTimeout: unexpectedTimeout{QueryId: queryIdArg}}
+}
+
+// UnexpectedTimeout is an error type.
+/*
+An unexpected timeout occurred when executing a query. This indicates an internal error
+where the query may have succeeded but the response did not reach the client.
+*/
+type UnexpectedTimeout struct {
+	errorInstanceID uuid.UUID
+	unexpectedTimeout
+	cause error
+	stack werror.StackTrace
+}
+
+// IsUnexpectedTimeout returns true if err is an instance of UnexpectedTimeout.
+func IsUnexpectedTimeout(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*UnexpectedTimeout)
+	return ok
+}
+
+func (e *UnexpectedTimeout) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:UnexpectedTimeout (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *UnexpectedTimeout) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *UnexpectedTimeout) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *UnexpectedTimeout) Message() string {
+	return "INVALID_ARGUMENT Compute:UnexpectedTimeout"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *UnexpectedTimeout) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *UnexpectedTimeout) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *UnexpectedTimeout) Name() string {
+	return "Compute:UnexpectedTimeout"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *UnexpectedTimeout) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *UnexpectedTimeout) Parameters() map[string]interface{} {
+	return map[string]interface{}{"queryId": e.QueryId}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *UnexpectedTimeout) safeParams() map[string]interface{} {
+	return map[string]interface{}{"queryId": e.QueryId, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UnexpectedTimeout) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *UnexpectedTimeout) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UnexpectedTimeout) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e UnexpectedTimeout) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.unexpectedTimeout)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:UnexpectedTimeout", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *UnexpectedTimeout) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters unexpectedTimeout
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.unexpectedTimeout = parameters
+	return nil
+}
+
 type unitConversionInvalid struct {
 	InputUnit  api1.UnitSymbol `json:"inputUnit"`
 	OutputUnit api1.UnitSymbol `json:"outputUnit"`
@@ -8501,6 +9863,157 @@ func (e *UnitConversionInvalid) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.unitConversionInvalid = parameters
+	return nil
+}
+
+type unsupportedRefpropProperty struct {
+	Property     string `json:"property"`
+	PropertyType string `json:"propertyType"`
+}
+
+func (o unsupportedRefpropProperty) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *unsupportedRefpropProperty) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewUnsupportedRefpropProperty returns new instance of UnsupportedRefpropProperty error.
+func NewUnsupportedRefpropProperty(propertyArg string, propertyTypeArg string) *UnsupportedRefpropProperty {
+	return &UnsupportedRefpropProperty{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), unsupportedRefpropProperty: unsupportedRefpropProperty{Property: propertyArg, PropertyType: propertyTypeArg}}
+}
+
+// WrapWithUnsupportedRefpropProperty returns new instance of UnsupportedRefpropProperty error wrapping an existing error.
+func WrapWithUnsupportedRefpropProperty(err error, propertyArg string, propertyTypeArg string) *UnsupportedRefpropProperty {
+	return &UnsupportedRefpropProperty{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, unsupportedRefpropProperty: unsupportedRefpropProperty{Property: propertyArg, PropertyType: propertyTypeArg}}
+}
+
+// UnsupportedRefpropProperty is an error type.
+// The specified REFPROP property is not supported or not available in the current configuration.
+type UnsupportedRefpropProperty struct {
+	errorInstanceID uuid.UUID
+	unsupportedRefpropProperty
+	cause error
+	stack werror.StackTrace
+}
+
+// IsUnsupportedRefpropProperty returns true if err is an instance of UnsupportedRefpropProperty.
+func IsUnsupportedRefpropProperty(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*UnsupportedRefpropProperty)
+	return ok
+}
+
+func (e *UnsupportedRefpropProperty) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:UnsupportedRefpropProperty (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *UnsupportedRefpropProperty) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *UnsupportedRefpropProperty) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *UnsupportedRefpropProperty) Message() string {
+	return "INVALID_ARGUMENT Compute:UnsupportedRefpropProperty"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *UnsupportedRefpropProperty) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *UnsupportedRefpropProperty) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *UnsupportedRefpropProperty) Name() string {
+	return "Compute:UnsupportedRefpropProperty"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *UnsupportedRefpropProperty) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *UnsupportedRefpropProperty) Parameters() map[string]interface{} {
+	return map[string]interface{}{"property": e.Property, "propertyType": e.PropertyType}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *UnsupportedRefpropProperty) safeParams() map[string]interface{} {
+	return map[string]interface{}{"property": e.Property, "propertyType": e.PropertyType, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UnsupportedRefpropProperty) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *UnsupportedRefpropProperty) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UnsupportedRefpropProperty) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e UnsupportedRefpropProperty) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.unsupportedRefpropProperty)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:UnsupportedRefpropProperty", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *UnsupportedRefpropProperty) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters unsupportedRefpropProperty
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.unsupportedRefpropProperty = parameters
 	return nil
 }
 
@@ -8663,38 +10176,45 @@ func init() {
 	conjureerrors.RegisterErrorType("Compute:ConverterOutputUnitNotFound", reflect.TypeOf(ConverterOutputUnitNotFound{}))
 	conjureerrors.RegisterErrorType("Compute:CurveInvalidNegativeInputs", reflect.TypeOf(CurveInvalidNegativeInputs{}))
 	conjureerrors.RegisterErrorType("Compute:CurveUnequalInputLength", reflect.TypeOf(CurveUnequalInputLength{}))
-	conjureerrors.RegisterErrorType("Compute:DerivedSeriesHasWrongType", reflect.TypeOf(DerivedSeriesHasWrongType{}))
 	conjureerrors.RegisterErrorType("Compute:DuplicateTimestamp", reflect.TypeOf(DuplicateTimestamp{}))
+	conjureerrors.RegisterErrorType("Compute:EmptyInput", reflect.TypeOf(EmptyInput{}))
+	conjureerrors.RegisterErrorType("Compute:EmptySet", reflect.TypeOf(EmptySet{}))
 	conjureerrors.RegisterErrorType("Compute:ExponentialCurveInputTooLarge", reflect.TypeOf(ExponentialCurveInputTooLarge{}))
 	conjureerrors.RegisterErrorType("ExternalDatabase:ExternalDatabaseBadGateway", reflect.TypeOf(ExternalDatabaseBadGateway{}))
 	conjureerrors.RegisterErrorType("ExternalDatabase:ExternalDatabaseGatewayTimeout", reflect.TypeOf(ExternalDatabaseGatewayTimeout{}))
-	conjureerrors.RegisterErrorType("Compute:FftWindowEmpty", reflect.TypeOf(FftWindowEmpty{}))
-	conjureerrors.RegisterErrorType("Compute:FftWindowTooLarge", reflect.TypeOf(FftWindowTooLarge{}))
+	conjureerrors.RegisterErrorType("ExternalDatabase:ExternalDatabaseSocketTimeout", reflect.TypeOf(ExternalDatabaseSocketTimeout{}))
+	conjureerrors.RegisterErrorType("Compute:FrequencyDomainWindowEmpty", reflect.TypeOf(FrequencyDomainWindowEmpty{}))
+	conjureerrors.RegisterErrorType("Compute:FrequencyDomainWindowTooLarge", reflect.TypeOf(FrequencyDomainWindowTooLarge{}))
 	conjureerrors.RegisterErrorType("Compute:GranularityMismatch", reflect.TypeOf(GranularityMismatch{}))
+	conjureerrors.RegisterErrorType("Compute:GroupByMissingTag", reflect.TypeOf(GroupByMissingTag{}))
 	conjureerrors.RegisterErrorType("Compute:GroupByTagsNotSubset", reflect.TypeOf(GroupByTagsNotSubset{}))
 	conjureerrors.RegisterErrorType("Compute:GroupBysNotSupportedForQuery", reflect.TypeOf(GroupBysNotSupportedForQuery{}))
+	conjureerrors.RegisterErrorType("Compute:InvalidBitOperation", reflect.TypeOf(InvalidBitOperation{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidExpression", reflect.TypeOf(InvalidExpression{}))
+	conjureerrors.RegisterErrorType("Compute:InvalidFieldName", reflect.TypeOf(InvalidFieldName{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidLiteralRange", reflect.TypeOf(InvalidLiteralRange{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidNumericOutputFields", reflect.TypeOf(InvalidNumericOutputFields{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidPlotType", reflect.TypeOf(InvalidPlotType{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidRangeNodeStartAfterViewRange", reflect.TypeOf(InvalidRangeNodeStartAfterViewRange{}))
+	conjureerrors.RegisterErrorType("Compute:InvalidRefpropInputCount", reflect.TypeOf(InvalidRefpropInputCount{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidSeriesLocator", reflect.TypeOf(InvalidSeriesLocator{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidTagFilterConfiguration", reflect.TypeOf(InvalidTagFilterConfiguration{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidTimeUnit", reflect.TypeOf(InvalidTimeUnit{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidValueMap", reflect.TypeOf(InvalidValueMap{}))
 	conjureerrors.RegisterErrorType("Compute:MaxQuerySizeExceeded", reflect.TypeOf(MaxQuerySizeExceeded{}))
 	conjureerrors.RegisterErrorType("Compute:MemoryLimitExceeded", reflect.TypeOf(MemoryLimitExceeded{}))
-	conjureerrors.RegisterErrorType("Compute:MissingFunctionInModuleApplication", reflect.TypeOf(MissingFunctionInModuleApplication{}))
-	conjureerrors.RegisterErrorType("Compute:MissingModuleVariable", reflect.TypeOf(MissingModuleVariable{}))
-	conjureerrors.RegisterErrorType("Compute:MissingVariable", reflect.TypeOf(MissingVariable{}))
-	conjureerrors.RegisterErrorType("Compute:NonPositiveDuration", reflect.TypeOf(NonPositiveDuration{}))
-	conjureerrors.RegisterErrorType("Compute:NonPositiveResampleInterval", reflect.TypeOf(NonPositiveResampleInterval{}))
+	conjureerrors.RegisterErrorType("Compute:MissingFunctionParameter", reflect.TypeOf(MissingFunctionParameter{}))
+	conjureerrors.RegisterErrorType("Compute:MissingModuleApplication", reflect.TypeOf(MissingModuleApplication{}))
+	conjureerrors.RegisterErrorType("Compute:MissingModuleFunction", reflect.TypeOf(MissingModuleFunction{}))
 	conjureerrors.RegisterErrorType("Compute:NotAuthorized", reflect.TypeOf(NotAuthorized{}))
 	conjureerrors.RegisterErrorType("Compute:NotEnoughPointsForCurve", reflect.TypeOf(NotEnoughPointsForCurve{}))
 	conjureerrors.RegisterErrorType("Compute:OverlappingLiteralRanges", reflect.TypeOf(OverlappingLiteralRanges{}))
 	conjureerrors.RegisterErrorType("Compute:PicosRangeTooLarge", reflect.TypeOf(PicosRangeTooLarge{}))
 	conjureerrors.RegisterErrorType("Compute:QueryRangeTooLarge", reflect.TypeOf(QueryRangeTooLarge{}))
-	conjureerrors.RegisterErrorType("Compute:ResolutionIntervalTooSmallForRange", reflect.TypeOf(ResolutionIntervalTooSmallForRange{}))
+	conjureerrors.RegisterErrorType("Compute:RefpropInputTooLarge", reflect.TypeOf(RefpropInputTooLarge{}))
+	conjureerrors.RegisterErrorType("Compute:RefpropOutputPropertyIsInput", reflect.TypeOf(RefpropOutputPropertyIsInput{}))
+	conjureerrors.RegisterErrorType("Compute:RequestedRowsLimitExceeded", reflect.TypeOf(RequestedRowsLimitExceeded{}))
+	conjureerrors.RegisterErrorType("Compute:ResampleDefaultValueTypeMismatchesSeriesType", reflect.TypeOf(ResampleDefaultValueTypeMismatchesSeriesType{}))
 	conjureerrors.RegisterErrorType("Compute:RowLimitExceeded", reflect.TypeOf(RowLimitExceeded{}))
 	conjureerrors.RegisterErrorType("Compute:SignalFilterInvalidCutoffBand", reflect.TypeOf(SignalFilterInvalidCutoffBand{}))
 	conjureerrors.RegisterErrorType("Compute:SignalFilterInvalidCutoffFrequency", reflect.TypeOf(SignalFilterInvalidCutoffFrequency{}))
@@ -8702,6 +10222,7 @@ func init() {
 	conjureerrors.RegisterErrorType("Compute:SignalFilterNonPositiveCutoffFrequency", reflect.TypeOf(SignalFilterNonPositiveCutoffFrequency{}))
 	conjureerrors.RegisterErrorType("Compute:SignalFilterNotEnoughData", reflect.TypeOf(SignalFilterNotEnoughData{}))
 	conjureerrors.RegisterErrorType("Compute:TimeoutExceeded", reflect.TypeOf(TimeoutExceeded{}))
+	conjureerrors.RegisterErrorType("Compute:TooFewInputs", reflect.TypeOf(TooFewInputs{}))
 	conjureerrors.RegisterErrorType("Compute:TooManyBuckets", reflect.TypeOf(TooManyBuckets{}))
 	conjureerrors.RegisterErrorType("Compute:TooManyCategories", reflect.TypeOf(TooManyCategories{}))
 	conjureerrors.RegisterErrorType("Compute:TooManyEvents", reflect.TypeOf(TooManyEvents{}))
@@ -8710,6 +10231,8 @@ func init() {
 	conjureerrors.RegisterErrorType("Compute:TooManyRanges", reflect.TypeOf(TooManyRanges{}))
 	conjureerrors.RegisterErrorType("Compute:TooManyResamplePoints", reflect.TypeOf(TooManyResamplePoints{}))
 	conjureerrors.RegisterErrorType("Compute:TooManySubrequests", reflect.TypeOf(TooManySubrequests{}))
+	conjureerrors.RegisterErrorType("Compute:UnexpectedTimeout", reflect.TypeOf(UnexpectedTimeout{}))
 	conjureerrors.RegisterErrorType("Compute:UnitConversionInvalid", reflect.TypeOf(UnitConversionInvalid{}))
+	conjureerrors.RegisterErrorType("Compute:UnsupportedRefpropProperty", reflect.TypeOf(UnsupportedRefpropProperty{}))
 	conjureerrors.RegisterErrorType("Compute:VariableHasWrongType", reflect.TypeOf(VariableHasWrongType{}))
 }

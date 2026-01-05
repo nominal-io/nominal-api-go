@@ -1105,6 +1105,300 @@ func (e *EmptyMultipartUpload) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type failedToDownloadFile struct{}
+
+func (o failedToDownloadFile) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *failedToDownloadFile) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewFailedToDownloadFile returns new instance of FailedToDownloadFile error.
+func NewFailedToDownloadFile() *FailedToDownloadFile {
+	return &FailedToDownloadFile{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), failedToDownloadFile: failedToDownloadFile{}}
+}
+
+// WrapWithFailedToDownloadFile returns new instance of FailedToDownloadFile error wrapping an existing error.
+func WrapWithFailedToDownloadFile(err error) *FailedToDownloadFile {
+	return &FailedToDownloadFile{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, failedToDownloadFile: failedToDownloadFile{}}
+}
+
+// FailedToDownloadFile is an error type.
+type FailedToDownloadFile struct {
+	errorInstanceID uuid.UUID
+	failedToDownloadFile
+	cause error
+	stack werror.StackTrace
+}
+
+// IsFailedToDownloadFile returns true if err is an instance of FailedToDownloadFile.
+func IsFailedToDownloadFile(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*FailedToDownloadFile)
+	return ok
+}
+
+func (e *FailedToDownloadFile) Error() string {
+	return fmt.Sprintf("INTERNAL IngestService:FailedToDownloadFile (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *FailedToDownloadFile) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *FailedToDownloadFile) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *FailedToDownloadFile) Message() string {
+	return "INTERNAL IngestService:FailedToDownloadFile"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *FailedToDownloadFile) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *FailedToDownloadFile) Code() errors.ErrorCode {
+	return errors.Internal
+}
+
+// Name returns an error name identifying error type.
+func (e *FailedToDownloadFile) Name() string {
+	return "IngestService:FailedToDownloadFile"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *FailedToDownloadFile) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *FailedToDownloadFile) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *FailedToDownloadFile) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *FailedToDownloadFile) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *FailedToDownloadFile) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *FailedToDownloadFile) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e FailedToDownloadFile) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.failedToDownloadFile)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Internal, ErrorName: "IngestService:FailedToDownloadFile", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *FailedToDownloadFile) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters failedToDownloadFile
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.failedToDownloadFile = parameters
+	return nil
+}
+
+type failedToDownloadFileUserError struct{}
+
+func (o failedToDownloadFileUserError) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *failedToDownloadFileUserError) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewFailedToDownloadFileUserError returns new instance of FailedToDownloadFileUserError error.
+func NewFailedToDownloadFileUserError() *FailedToDownloadFileUserError {
+	return &FailedToDownloadFileUserError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), failedToDownloadFileUserError: failedToDownloadFileUserError{}}
+}
+
+// WrapWithFailedToDownloadFileUserError returns new instance of FailedToDownloadFileUserError error wrapping an existing error.
+func WrapWithFailedToDownloadFileUserError(err error) *FailedToDownloadFileUserError {
+	return &FailedToDownloadFileUserError{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, failedToDownloadFileUserError: failedToDownloadFileUserError{}}
+}
+
+// FailedToDownloadFileUserError is an error type.
+type FailedToDownloadFileUserError struct {
+	errorInstanceID uuid.UUID
+	failedToDownloadFileUserError
+	cause error
+	stack werror.StackTrace
+}
+
+// IsFailedToDownloadFileUserError returns true if err is an instance of FailedToDownloadFileUserError.
+func IsFailedToDownloadFileUserError(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*FailedToDownloadFileUserError)
+	return ok
+}
+
+func (e *FailedToDownloadFileUserError) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT IngestService:FailedToDownloadFileUserError (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *FailedToDownloadFileUserError) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *FailedToDownloadFileUserError) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *FailedToDownloadFileUserError) Message() string {
+	return "INVALID_ARGUMENT IngestService:FailedToDownloadFileUserError"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *FailedToDownloadFileUserError) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *FailedToDownloadFileUserError) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *FailedToDownloadFileUserError) Name() string {
+	return "IngestService:FailedToDownloadFileUserError"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *FailedToDownloadFileUserError) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *FailedToDownloadFileUserError) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *FailedToDownloadFileUserError) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *FailedToDownloadFileUserError) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *FailedToDownloadFileUserError) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *FailedToDownloadFileUserError) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e FailedToDownloadFileUserError) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.failedToDownloadFileUserError)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "IngestService:FailedToDownloadFileUserError", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *FailedToDownloadFileUserError) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters failedToDownloadFileUserError
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.failedToDownloadFileUserError = parameters
+	return nil
+}
+
 type frameCountTimestampsMismatch struct{}
 
 func (o frameCountTimestampsMismatch) MarshalYAML() (interface{}, error) {
@@ -3038,6 +3332,155 @@ func (e *InvalidS3Path) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type invalidUrl struct {
+	Url string `json:"url"`
+}
+
+func (o invalidUrl) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidUrl) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidUrl returns new instance of InvalidUrl error.
+func NewInvalidUrl(urlArg string) *InvalidUrl {
+	return &InvalidUrl{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidUrl: invalidUrl{Url: urlArg}}
+}
+
+// WrapWithInvalidUrl returns new instance of InvalidUrl error wrapping an existing error.
+func WrapWithInvalidUrl(err error, urlArg string) *InvalidUrl {
+	return &InvalidUrl{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidUrl: invalidUrl{Url: urlArg}}
+}
+
+// InvalidUrl is an error type.
+type InvalidUrl struct {
+	errorInstanceID uuid.UUID
+	invalidUrl
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidUrl returns true if err is an instance of InvalidUrl.
+func IsInvalidUrl(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidUrl)
+	return ok
+}
+
+func (e *InvalidUrl) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT IngestService:InvalidUrl (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidUrl) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidUrl) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidUrl) Message() string {
+	return "INVALID_ARGUMENT IngestService:InvalidUrl"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidUrl) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidUrl) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidUrl) Name() string {
+	return "IngestService:InvalidUrl"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidUrl) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidUrl) Parameters() map[string]interface{} {
+	return map[string]interface{}{"url": e.Url}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidUrl) safeParams() map[string]interface{} {
+	return map[string]interface{}{"url": e.Url, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidUrl) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidUrl) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidUrl) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidUrl) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidUrl)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "IngestService:InvalidUrl", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidUrl) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidUrl
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidUrl = parameters
+	return nil
+}
+
 type missingMetadataForReingest struct {
 	DatasetRids []rids.DatasetRid `json:"datasetRids"`
 }
@@ -3206,6 +3649,153 @@ func (e *MissingMetadataForReingest) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.missingMetadataForReingest = parameters
+	return nil
+}
+
+type nullKey struct{}
+
+func (o nullKey) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *nullKey) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewNullKey returns new instance of NullKey error.
+func NewNullKey() *NullKey {
+	return &NullKey{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), nullKey: nullKey{}}
+}
+
+// WrapWithNullKey returns new instance of NullKey error wrapping an existing error.
+func WrapWithNullKey(err error) *NullKey {
+	return &NullKey{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, nullKey: nullKey{}}
+}
+
+// NullKey is an error type.
+type NullKey struct {
+	errorInstanceID uuid.UUID
+	nullKey
+	cause error
+	stack werror.StackTrace
+}
+
+// IsNullKey returns true if err is an instance of NullKey.
+func IsNullKey(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*NullKey)
+	return ok
+}
+
+func (e *NullKey) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT UploadService:NullKey (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *NullKey) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *NullKey) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *NullKey) Message() string {
+	return "INVALID_ARGUMENT UploadService:NullKey"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *NullKey) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *NullKey) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *NullKey) Name() string {
+	return "UploadService:NullKey"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *NullKey) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *NullKey) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *NullKey) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *NullKey) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *NullKey) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *NullKey) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e NullKey) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.nullKey)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "UploadService:NullKey", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *NullKey) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters nullKey
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.nullKey = parameters
 	return nil
 }
 
@@ -3655,6 +4245,153 @@ func (e *ReingestTooManyFiles) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.reingestTooManyFiles = parameters
+	return nil
+}
+
+type runBoundsInverted struct{}
+
+func (o runBoundsInverted) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *runBoundsInverted) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewRunBoundsInverted returns new instance of RunBoundsInverted error.
+func NewRunBoundsInverted() *RunBoundsInverted {
+	return &RunBoundsInverted{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), runBoundsInverted: runBoundsInverted{}}
+}
+
+// WrapWithRunBoundsInverted returns new instance of RunBoundsInverted error wrapping an existing error.
+func WrapWithRunBoundsInverted(err error) *RunBoundsInverted {
+	return &RunBoundsInverted{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, runBoundsInverted: runBoundsInverted{}}
+}
+
+// RunBoundsInverted is an error type.
+type RunBoundsInverted struct {
+	errorInstanceID uuid.UUID
+	runBoundsInverted
+	cause error
+	stack werror.StackTrace
+}
+
+// IsRunBoundsInverted returns true if err is an instance of RunBoundsInverted.
+func IsRunBoundsInverted(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*RunBoundsInverted)
+	return ok
+}
+
+func (e *RunBoundsInverted) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT IngestService:RunBoundsInverted (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *RunBoundsInverted) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *RunBoundsInverted) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *RunBoundsInverted) Message() string {
+	return "INVALID_ARGUMENT IngestService:RunBoundsInverted"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *RunBoundsInverted) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *RunBoundsInverted) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *RunBoundsInverted) Name() string {
+	return "IngestService:RunBoundsInverted"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *RunBoundsInverted) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *RunBoundsInverted) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *RunBoundsInverted) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *RunBoundsInverted) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *RunBoundsInverted) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *RunBoundsInverted) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e RunBoundsInverted) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.runBoundsInverted)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "IngestService:RunBoundsInverted", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *RunBoundsInverted) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters runBoundsInverted
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.runBoundsInverted = parameters
 	return nil
 }
 
@@ -4112,6 +4849,8 @@ func init() {
 	conjureerrors.RegisterErrorType("IngestService:DatasetFileNotFound", reflect.TypeOf(DatasetFileNotFound{}))
 	conjureerrors.RegisterErrorType("IngestService:DatasetNotFound", reflect.TypeOf(DatasetNotFound{}))
 	conjureerrors.RegisterErrorType("UploadService:EmptyMultipartUpload", reflect.TypeOf(EmptyMultipartUpload{}))
+	conjureerrors.RegisterErrorType("IngestService:FailedToDownloadFile", reflect.TypeOf(FailedToDownloadFile{}))
+	conjureerrors.RegisterErrorType("IngestService:FailedToDownloadFileUserError", reflect.TypeOf(FailedToDownloadFileUserError{}))
 	conjureerrors.RegisterErrorType("IngestService:FrameCountTimestampsMismatch", reflect.TypeOf(FrameCountTimestampsMismatch{}))
 	conjureerrors.RegisterErrorType("IngestService:IncompatibleConnectionTypeAndLogQuery", reflect.TypeOf(IncompatibleConnectionTypeAndLogQuery{}))
 	conjureerrors.RegisterErrorType("IngestService:IncompatibleFileForDataset", reflect.TypeOf(IncompatibleFileForDataset{}))
@@ -4125,10 +4864,13 @@ func init() {
 	conjureerrors.RegisterErrorType("ContainerizedExtractor:InvalidDefaultTag", reflect.TypeOf(InvalidDefaultTag{}))
 	conjureerrors.RegisterErrorType("ContainerizedExtractor:InvalidOutputFileFormat", reflect.TypeOf(InvalidOutputFileFormat{}))
 	conjureerrors.RegisterErrorType("IngestService:InvalidS3Path", reflect.TypeOf(InvalidS3Path{}))
+	conjureerrors.RegisterErrorType("IngestService:InvalidUrl", reflect.TypeOf(InvalidUrl{}))
 	conjureerrors.RegisterErrorType("IngestService:MissingMetadataForReingest", reflect.TypeOf(MissingMetadataForReingest{}))
+	conjureerrors.RegisterErrorType("UploadService:NullKey", reflect.TypeOf(NullKey{}))
 	conjureerrors.RegisterErrorType("IngestService:ParallelReingestIntoDatasetV1", reflect.TypeOf(ParallelReingestIntoDatasetV1{}))
 	conjureerrors.RegisterErrorType("IngestService:RecursiveReingest", reflect.TypeOf(RecursiveReingest{}))
 	conjureerrors.RegisterErrorType("IngestService:ReingestTooManyFiles", reflect.TypeOf(ReingestTooManyFiles{}))
+	conjureerrors.RegisterErrorType("IngestService:RunBoundsInverted", reflect.TypeOf(RunBoundsInverted{}))
 	conjureerrors.RegisterErrorType("IngestService:S3PathNotFound", reflect.TypeOf(S3PathNotFound{}))
 	conjureerrors.RegisterErrorType("IngestService:UnsupportedIngestSource", reflect.TypeOf(UnsupportedIngestSource{}))
 	conjureerrors.RegisterErrorType("IngestService:UnsupportedRequestTypeForReIngest", reflect.TypeOf(UnsupportedRequestTypeForReIngest{}))

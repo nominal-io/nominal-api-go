@@ -149,6 +149,8 @@ type ContainerizedExtractor struct {
 	Image DockerImageSource `conjure-docs:"Container image used to run the extractor." json:"image"`
 	// The input files that this extractor requires, mapped to environment variables that store the path to the file.
 	Inputs []FileExtractionInput `conjure-docs:"The input files that this extractor requires, mapped to environment variables that store the path to the file." json:"inputs"`
+	// Describes the parameters of the extractor.
+	Parameters []FileExtractionParameter `conjure-docs:"Describes the parameters of the extractor." json:"parameters"`
 	// Additional properties associated with this extractor.
 	Properties map[api.PropertyName]api.PropertyValue `conjure-docs:"Additional properties associated with this extractor." json:"properties"`
 	// Set of labels applied to this extractor.
@@ -157,8 +159,11 @@ type ContainerizedExtractor struct {
 	CreatedAt datetime.DateTime `conjure-docs:"Timestamp when this extractor was created." json:"createdAt"`
 	// Whether this extractor is archived.
 	IsArchived bool `conjure-docs:"Whether this extractor is archived." json:"isArchived"`
-	// Metadata about the intermediate parquet this extractor will produce
-	TimestampMetadata TimestampMetadata `conjure-docs:"Metadata about the intermediate parquet this extractor will produce" json:"timestampMetadata"`
+	/*
+	   Metadata about the intermediate parquet this extractor will produce.
+	   If not set, timestamp metadata must be provided at ingest time.
+	*/
+	TimestampMetadata *TimestampMetadata `conjure-docs:"Metadata about the intermediate parquet this extractor will produce.\nIf not set, timestamp metadata must be provided at ingest time." json:"timestampMetadata,omitempty"`
 	// The format of the output file. Currently only "parquet", "csv", "parquet.tar" are supported
 	OutputFileFormat FileOutputFormat `conjure-docs:"The format of the output file. Currently only \"parquet\", \"csv\", \"parquet.tar\" are supported" json:"outputFileFormat"`
 }
@@ -166,6 +171,9 @@ type ContainerizedExtractor struct {
 func (o ContainerizedExtractor) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
 		o.Inputs = make([]FileExtractionInput, 0)
+	}
+	if o.Parameters == nil {
+		o.Parameters = make([]FileExtractionParameter, 0)
 	}
 	if o.Properties == nil {
 		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
@@ -185,6 +193,9 @@ func (o *ContainerizedExtractor) UnmarshalJSON(data []byte) error {
 	}
 	if rawContainerizedExtractor.Inputs == nil {
 		rawContainerizedExtractor.Inputs = make([]FileExtractionInput, 0)
+	}
+	if rawContainerizedExtractor.Parameters == nil {
+		rawContainerizedExtractor.Parameters = make([]FileExtractionParameter, 0)
 	}
 	if rawContainerizedExtractor.Properties == nil {
 		rawContainerizedExtractor.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
@@ -213,15 +224,25 @@ func (o *ContainerizedExtractor) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 type ContainerizedOpts struct {
-	Sources      map[EnvironmentVariable]IngestSource `json:"sources"`
-	ExtractorRid ContainerizedExtractorRid            `json:"extractorRid"`
-	Tag          *string                              `json:"tag,omitempty"`
-	Target       DatasetIngestTarget                  `json:"target"`
+	Sources           map[EnvironmentVariable]IngestSource `json:"sources"`
+	Arguments         map[EnvironmentVariable]string       `json:"arguments"`
+	ExtractorRid      ContainerizedExtractorRid            `json:"extractorRid"`
+	TimestampMetadata *TimestampMetadata                   `json:"timestampMetadata,omitempty"`
+	Tag               *string                              `json:"tag,omitempty"`
+	Target            DatasetIngestTarget                  `json:"target"`
+	// Specifies a tag set to apply to all data in the file.
+	AdditionalFileTags map[api.TagName]api.TagValue `conjure-docs:"Specifies a tag set to apply to all data in the file." json:"additionalFileTags"`
 }
 
 func (o ContainerizedOpts) MarshalJSON() ([]byte, error) {
 	if o.Sources == nil {
 		o.Sources = make(map[EnvironmentVariable]IngestSource, 0)
+	}
+	if o.Arguments == nil {
+		o.Arguments = make(map[EnvironmentVariable]string, 0)
+	}
+	if o.AdditionalFileTags == nil {
+		o.AdditionalFileTags = make(map[api.TagName]api.TagValue, 0)
 	}
 	type _tmpContainerizedOpts ContainerizedOpts
 	return safejson.Marshal(_tmpContainerizedOpts(o))
@@ -236,6 +257,12 @@ func (o *ContainerizedOpts) UnmarshalJSON(data []byte) error {
 	if rawContainerizedOpts.Sources == nil {
 		rawContainerizedOpts.Sources = make(map[EnvironmentVariable]IngestSource, 0)
 	}
+	if rawContainerizedOpts.Arguments == nil {
+		rawContainerizedOpts.Arguments = make(map[EnvironmentVariable]string, 0)
+	}
+	if rawContainerizedOpts.AdditionalFileTags == nil {
+		rawContainerizedOpts.AdditionalFileTags = make(map[api.TagName]api.TagValue, 0)
+	}
 	*o = ContainerizedOpts(rawContainerizedOpts)
 	return nil
 }
@@ -249,6 +276,28 @@ func (o ContainerizedOpts) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ContainerizedOpts) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Request to create a new ingest job.
+type CreateIngestJobRequest struct {
+	WorkspaceRid     rids.WorkspaceRid `json:"workspaceRid"`
+	IngestJobRequest IngestJobRequest  `json:"ingestJobRequest"`
+}
+
+func (o CreateIngestJobRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CreateIngestJobRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -314,6 +363,8 @@ func (o *CustomTimestamp) UnmarshalYAML(unmarshal func(interface{}) error) error
 type DataflashOpts struct {
 	Source IngestSource        `json:"source"`
 	Target DatasetIngestTarget `json:"target"`
+	// Specifies a tag set to apply to all data in the file.
+	AdditionalFileTags *map[api.TagName]api.TagValue `conjure-docs:"Specifies a tag set to apply to all data in the file." json:"additionalFileTags,omitempty"`
 }
 
 func (o DataflashOpts) MarshalYAML() (interface{}, error) {
@@ -390,76 +441,6 @@ func (o DeprecatedNewCsv) MarshalYAML() (interface{}, error) {
 }
 
 func (o *DeprecatedNewCsv) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type DeprecatedTimestampMetadata struct {
-	SeriesName string `json:"seriesName"`
-	IsAbsolute bool   `json:"isAbsolute"`
-}
-
-func (o DeprecatedTimestampMetadata) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *DeprecatedTimestampMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type DeprecatedTriggerIngest struct {
-	Source            IngestSource                 `json:"source"`
-	Properties        map[string]string            `json:"properties"`
-	DatasetName       *string                      `json:"datasetName,omitempty"`
-	TimestampMetadata *DeprecatedTimestampMetadata `json:"timestampMetadata,omitempty"`
-	/*
-	   The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for
-	   the user's organization, if the default workspace for the organization is configured.
-	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
-}
-
-func (o DeprecatedTriggerIngest) MarshalJSON() ([]byte, error) {
-	if o.Properties == nil {
-		o.Properties = make(map[string]string, 0)
-	}
-	type _tmpDeprecatedTriggerIngest DeprecatedTriggerIngest
-	return safejson.Marshal(_tmpDeprecatedTriggerIngest(o))
-}
-
-func (o *DeprecatedTriggerIngest) UnmarshalJSON(data []byte) error {
-	type _tmpDeprecatedTriggerIngest DeprecatedTriggerIngest
-	var rawDeprecatedTriggerIngest _tmpDeprecatedTriggerIngest
-	if err := safejson.Unmarshal(data, &rawDeprecatedTriggerIngest); err != nil {
-		return err
-	}
-	if rawDeprecatedTriggerIngest.Properties == nil {
-		rawDeprecatedTriggerIngest.Properties = make(map[string]string, 0)
-	}
-	*o = DeprecatedTriggerIngest(rawDeprecatedTriggerIngest)
-	return nil
-}
-
-func (o DeprecatedTriggerIngest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *DeprecatedTriggerIngest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -617,6 +598,34 @@ func (o *FileExtractionInput) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Defines an input parameter to be provided to the extractor.
+type FileExtractionParameter struct {
+	// The environment variable that stores the argument
+	EnvironmentVariable EnvironmentVariable `conjure-docs:"The environment variable that stores the argument" json:"environmentVariable"`
+	// Name of the parameter which users will be prompted with
+	Name string `conjure-docs:"Name of the parameter which users will be prompted with" json:"name"`
+	// Description of the parameter which users will be prompted with
+	Description *string `conjure-docs:"Description of the parameter which users will be prompted with" json:"description,omitempty"`
+	// Whether the parameter is required for the extractor to run.
+	Required *bool `conjure-docs:"Whether the parameter is required for the extractor to run." json:"required,omitempty"`
+}
+
+func (o FileExtractionParameter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FileExtractionParameter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type GcsIngestSource struct {
 	Path string `json:"path"`
 }
@@ -720,7 +729,7 @@ func (o *GetContainerizedExtractorsResponse) UnmarshalYAML(unmarshal func(interf
 }
 
 type IngestDatasetFileDetails struct {
-	DatasetFileId uuid.UUID       `json:"datasetFileId"`
+	DatasetFileId *uuid.UUID      `json:"datasetFileId,omitempty"`
 	DatasetRid    rids.DatasetRid `json:"datasetRid"`
 }
 
@@ -740,14 +749,14 @@ func (o *IngestDatasetFileDetails) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Ingest job information
 type IngestJob struct {
-	IngestJobRid     IngestJobRid     `json:"ingestJobRid"`
-	Status           IngestJobStatus  `json:"status"`
-	IngestJobRequest IngestJobRequest `json:"ingestJobRequest"`
-	OriginFiles      *[]string        `json:"originFiles,omitempty"`
-	CreatedBy        uuid.UUID        `json:"createdBy"`
-	OrgUuid          uuid.UUID        `json:"orgUuid"`
-	IngestType       IngestType       `json:"ingestType"`
+	IngestJobRid IngestJobRid    `json:"ingestJobRid"`
+	Status       IngestJobStatus `json:"status"`
+	OriginFiles  *[]string       `json:"originFiles,omitempty"`
+	CreatedBy    uuid.UUID       `json:"createdBy"`
+	OrgUuid      uuid.UUID       `json:"orgUuid"`
+	IngestType   IngestType      `json:"ingestType"`
 }
 
 func (o IngestJob) MarshalYAML() (interface{}, error) {
@@ -1291,6 +1300,33 @@ func (o *InitiateMultipartUploadResponse) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Internal ingest job information including the full ingest request details.
+type InternalIngestJob struct {
+	IngestJobRid     IngestJobRid     `json:"ingestJobRid"`
+	Status           IngestJobStatus  `json:"status"`
+	IngestJobRequest IngestJobRequest `json:"ingestJobRequest"`
+	OriginFiles      *[]string        `json:"originFiles,omitempty"`
+	CreatedBy        uuid.UUID        `json:"createdBy"`
+	OrgUuid          uuid.UUID        `json:"orgUuid"`
+	IngestType       IngestType       `json:"ingestType"`
+}
+
+func (o InternalIngestJob) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *InternalIngestJob) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Iso8601Timestamp struct{}
 
 func (o Iso8601Timestamp) MarshalYAML() (interface{}, error) {
@@ -1426,6 +1462,8 @@ type McapProtobufTimeseriesOpts struct {
 	Target        DatasetIngestTarget `json:"target"`
 	ChannelFilter McapChannels        `json:"channelFilter"`
 	TimestampType McapTimestampType   `json:"timestampType"`
+	// Specifies a tag set to apply to all data in the file.
+	AdditionalFileTags *map[api.TagName]api.TagValue `conjure-docs:"Specifies a tag set to apply to all data in the file." json:"additionalFileTags,omitempty"`
 }
 
 func (o McapProtobufTimeseriesOpts) MarshalYAML() (interface{}, error) {
@@ -1768,6 +1806,26 @@ func (o *PartWithSize) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type PresignedFileIngestSource struct {
+	Url string `json:"url"`
+}
+
+func (o PresignedFileIngestSource) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PresignedFileIngestSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type PublicAuthentication struct{}
 
 func (o PublicAuthentication) MarshalYAML() (interface{}, error) {
@@ -1791,13 +1849,18 @@ type RegisterContainerizedExtractorRequest struct {
 	Description *string           `json:"description,omitempty"`
 	Image       DockerImageSource `json:"image"`
 	// payload must match input defined in containerized extraction
-	Inputs     []FileExtractionInput                  `conjure-docs:"payload must match input defined in containerized extraction" json:"inputs"`
+	Inputs []FileExtractionInput `conjure-docs:"payload must match input defined in containerized extraction" json:"inputs"`
+	// Describes the parameters of the extractor.
+	Parameters []FileExtractionParameter              `conjure-docs:"Describes the parameters of the extractor." json:"parameters"`
 	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
 	Labels     []api.Label                            `json:"labels"`
 	// The workspace in which to create the extractor
 	Workspace rids.WorkspaceRid `conjure-docs:"The workspace in which to create the extractor" json:"workspace"`
-	// Metadata about the intermediate parquet this extractor will produce
-	TimestampMetadata TimestampMetadata `conjure-docs:"Metadata about the intermediate parquet this extractor will produce" json:"timestampMetadata"`
+	/*
+	   Metadata about the intermediate parquet this extractor will produce.
+	   If not set, timestamp metadata must be provided at ingest time.
+	*/
+	TimestampMetadata *TimestampMetadata `conjure-docs:"Metadata about the intermediate parquet this extractor will produce.\nIf not set, timestamp metadata must be provided at ingest time." json:"timestampMetadata,omitempty"`
 	// The format of the output file. Currently only "parquet", "csv", "parquet.tar" are supported
 	OutputFileFormat *FileOutputFormat `conjure-docs:"The format of the output file. Currently only \"parquet\", \"csv\", \"parquet.tar\" are supported" json:"outputFileFormat,omitempty"`
 }
@@ -1805,6 +1868,9 @@ type RegisterContainerizedExtractorRequest struct {
 func (o RegisterContainerizedExtractorRequest) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
 		o.Inputs = make([]FileExtractionInput, 0)
+	}
+	if o.Parameters == nil {
+		o.Parameters = make([]FileExtractionParameter, 0)
 	}
 	if o.Properties == nil {
 		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
@@ -1824,6 +1890,9 @@ func (o *RegisterContainerizedExtractorRequest) UnmarshalJSON(data []byte) error
 	}
 	if rawRegisterContainerizedExtractorRequest.Inputs == nil {
 		rawRegisterContainerizedExtractorRequest.Inputs = make([]FileExtractionInput, 0)
+	}
+	if rawRegisterContainerizedExtractorRequest.Parameters == nil {
+		rawRegisterContainerizedExtractorRequest.Parameters = make([]FileExtractionParameter, 0)
 	}
 	if rawRegisterContainerizedExtractorRequest.Properties == nil {
 		rawRegisterContainerizedExtractorRequest.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
@@ -2142,27 +2211,6 @@ func (o *SignPartResponse) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type SkipRowsConfig struct {
-	HeaderRowIndex    int `json:"headerRowIndex"`
-	DataStartRowIndex int `json:"dataStartRowIndex"`
-}
-
-func (o SkipRowsConfig) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *SkipRowsConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type TagDetails struct {
 	Tags       []string `json:"tags"`
 	DefaultTag string   `json:"defaultTag"`
@@ -2272,128 +2320,17 @@ func (o *TimestampMetadata) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type TriggerFileIngest struct {
-	/*
-	   Source data for the ingest. Supported file types include:
-	     * CSV (*.csv)
-	     * Compressed CSV (*.csv.gz)
-	     * Parquet (*.parquet)
-	     * Parquet archives (*.parquet.tar, *.parquet.tar.gz, *.parquet.zip).
-	         Note that timestamp column must have the same name and format across files.
-	         Non parquet files will be ignored.
-	         Each file can contribute to the overall schema, but conflicting types will fail the ingest.
-	         Conflicting values (same timestamp, column) across files will be de-conflicted based on archive file ordering (first point taken)
-	*/
-	Source         IngestSource         `conjure-docs:"Source data for the ingest. Supported file types include:\n  * CSV (*.csv)\n  * Compressed CSV (*.csv.gz)\n  * Parquet (*.parquet)\n  * Parquet archives (*.parquet.tar, *.parquet.tar.gz, *.parquet.zip).\n      Note that timestamp column must have the same name and format across files.\n      Non parquet files will be ignored.\n      Each file can contribute to the overall schema, but conflicting types will fail the ingest.\n      Conflicting values (same timestamp, column) across files will be de-conflicted based on archive file ordering (first point taken)" json:"source"`
-	SourceMetadata IngestSourceMetadata `json:"sourceMetadata"`
-	Destination    IngestDestination    `json:"destination"`
-}
-
-func (o TriggerFileIngest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *TriggerFileIngest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type TriggerIngest struct {
-	Source             IngestSource                           `json:"source"`
-	Properties         map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels             []api.Label                            `json:"labels"`
-	DatasetName        *string                                `json:"datasetName,omitempty"`
-	DatasetDescription *string                                `json:"datasetDescription,omitempty"`
-	TimestampMetadata  *TimestampMetadata                     `json:"timestampMetadata,omitempty"`
-	// If absent, will default to a channel config that constructs a prefix tree with `.` as the delimiter.
-	ChannelConfig *ChannelConfig `conjure-docs:"If absent, will default to a channel config that constructs a prefix tree with \".\" as the delimiter." json:"channelConfig,omitempty"`
-	/*
-	   The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for
-	   the user's organization, if the default workspace for the organization is configured.
-	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
-}
-
-func (o TriggerIngest) MarshalJSON() ([]byte, error) {
-	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
-	}
-	if o.Labels == nil {
-		o.Labels = make([]api.Label, 0)
-	}
-	type _tmpTriggerIngest TriggerIngest
-	return safejson.Marshal(_tmpTriggerIngest(o))
-}
-
-func (o *TriggerIngest) UnmarshalJSON(data []byte) error {
-	type _tmpTriggerIngest TriggerIngest
-	var rawTriggerIngest _tmpTriggerIngest
-	if err := safejson.Unmarshal(data, &rawTriggerIngest); err != nil {
-		return err
-	}
-	if rawTriggerIngest.Properties == nil {
-		rawTriggerIngest.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
-	}
-	if rawTriggerIngest.Labels == nil {
-		rawTriggerIngest.Labels = make([]api.Label, 0)
-	}
-	*o = TriggerIngest(rawTriggerIngest)
-	return nil
-}
-
-func (o TriggerIngest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *TriggerIngest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type TriggeredIngest struct {
-	DatasetRid    rid.ResourceIdentifier `json:"datasetRid"`
-	DatasetFileId *uuid.UUID             `json:"datasetFileId,omitempty"`
-	AsyncHandle   *AsyncHandle           `json:"asyncHandle,omitempty"`
-}
-
-func (o TriggeredIngest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *TriggeredIngest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type UpdateContainerizedExtractorRequest struct {
 	Name              *string                                 `json:"name,omitempty"`
 	Description       *string                                 `json:"description,omitempty"`
 	Inputs            *[]FileExtractionInput                  `json:"inputs,omitempty"`
+	Parameters        *[]FileExtractionParameter              `json:"parameters,omitempty"`
 	Properties        *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
 	Labels            *[]api.Label                            `json:"labels,omitempty"`
 	TimestampMetadata *TimestampMetadata                      `json:"timestampMetadata,omitempty"`
 	OutputFileFormat  *FileOutputFormat                       `json:"outputFileFormat,omitempty"`
+	Registry          *string                                 `json:"registry,omitempty"`
+	Repository        *string                                 `json:"repository,omitempty"`
 	Tags              *[]string                               `json:"tags,omitempty"`
 	DefaultTag        *string                                 `json:"defaultTag,omitempty"`
 	Authentication    *Authentication                         `json:"authentication,omitempty"`
@@ -2514,6 +2451,51 @@ func (o VideoOpts) MarshalYAML() (interface{}, error) {
 }
 
 func (o *VideoOpts) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type VideoOptsV2 struct {
+	Source            IngestSource                    `json:"source"`
+	Target            DatasetIngestTarget             `json:"target"`
+	TimestampManifest api4.VideoFileTimestampManifest `json:"timestampManifest"`
+	Channel           api.Channel                     `json:"channel"`
+	Tags              map[api.TagName]api.TagValue    `json:"tags"`
+}
+
+func (o VideoOptsV2) MarshalJSON() ([]byte, error) {
+	if o.Tags == nil {
+		o.Tags = make(map[api.TagName]api.TagValue, 0)
+	}
+	type _tmpVideoOptsV2 VideoOptsV2
+	return safejson.Marshal(_tmpVideoOptsV2(o))
+}
+
+func (o *VideoOptsV2) UnmarshalJSON(data []byte) error {
+	type _tmpVideoOptsV2 VideoOptsV2
+	var rawVideoOptsV2 _tmpVideoOptsV2
+	if err := safejson.Unmarshal(data, &rawVideoOptsV2); err != nil {
+		return err
+	}
+	if rawVideoOptsV2.Tags == nil {
+		rawVideoOptsV2.Tags = make(map[api.TagName]api.TagValue, 0)
+	}
+	*o = VideoOptsV2(rawVideoOptsV2)
+	return nil
+}
+
+func (o VideoOptsV2) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoOptsV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

@@ -3,7 +3,8 @@
 package api
 
 import (
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/scout/compute/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -50,6 +51,69 @@ func (o *ClosedWithIgnoreAlertState) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type EventTimeFilter struct {
+	Timestamp          api.TimestampConstant    `json:"timestamp"`
+	TimestampCondition EventTimeFilterCondition `json:"timestampCondition"`
+}
+
+func (o EventTimeFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EventTimeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type LabelsFilter struct {
+	Operator api1.SetOperator `json:"operator"`
+	Labels   []api1.Label     `json:"labels"`
+}
+
+func (o LabelsFilter) MarshalJSON() ([]byte, error) {
+	if o.Labels == nil {
+		o.Labels = make([]api1.Label, 0)
+	}
+	type _tmpLabelsFilter LabelsFilter
+	return safejson.Marshal(_tmpLabelsFilter(o))
+}
+
+func (o *LabelsFilter) UnmarshalJSON(data []byte) error {
+	type _tmpLabelsFilter LabelsFilter
+	var rawLabelsFilter _tmpLabelsFilter
+	if err := safejson.Unmarshal(data, &rawLabelsFilter); err != nil {
+		return err
+	}
+	if rawLabelsFilter.Labels == nil {
+		rawLabelsFilter.Labels = make([]api1.Label, 0)
+	}
+	*o = LabelsFilter(rawLabelsFilter)
+	return nil
+}
+
+func (o LabelsFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LabelsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type PendingReviewAlertState struct{}
 
 func (o PendingReviewAlertState) MarshalYAML() (interface{}, error) {
@@ -68,10 +132,73 @@ func (o *PendingReviewAlertState) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type PropertiesFilter struct {
+	Name   api1.PropertyName    `json:"name"`
+	Values []api1.PropertyValue `json:"values"`
+}
+
+func (o PropertiesFilter) MarshalJSON() ([]byte, error) {
+	if o.Values == nil {
+		o.Values = make([]api1.PropertyValue, 0)
+	}
+	type _tmpPropertiesFilter PropertiesFilter
+	return safejson.Marshal(_tmpPropertiesFilter(o))
+}
+
+func (o *PropertiesFilter) UnmarshalJSON(data []byte) error {
+	type _tmpPropertiesFilter PropertiesFilter
+	var rawPropertiesFilter _tmpPropertiesFilter
+	if err := safejson.Unmarshal(data, &rawPropertiesFilter); err != nil {
+		return err
+	}
+	if rawPropertiesFilter.Values == nil {
+		rawPropertiesFilter.Values = make([]api1.PropertyValue, 0)
+	}
+	*o = PropertiesFilter(rawPropertiesFilter)
+	return nil
+}
+
+func (o PropertiesFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PropertiesFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type Property struct {
+	Name  api.StringConstant `json:"name"`
+	Value api.StringConstant `json:"value"`
+}
+
+func (o Property) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Property) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Represents a time duration with a unit for user-facing display
 type UserDuration struct {
-	Duration float64      `json:"duration"`
-	Unit     api.TimeUnit `json:"unit"`
+	Duration float64       `json:"duration"`
+	Unit     api1.TimeUnit `json:"unit"`
 }
 
 func (o UserDuration) MarshalYAML() (interface{}, error) {

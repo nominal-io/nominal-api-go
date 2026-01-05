@@ -10,70 +10,6 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type CachedSeries struct {
-	LogicalSeriesRid api.LogicalSeriesRid `json:"logicalSeriesRid"`
-	StartTimestamp   api.Timestamp        `json:"startTimestamp"`
-	EndTimestamp     api.Timestamp        `json:"endTimestamp"`
-	SeriesDataType   api.SeriesDataType   `json:"seriesDataType"`
-}
-
-func (o CachedSeries) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *CachedSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type CachedSeriesResponse struct {
-	CachedSeries []CachedSeries `json:"cachedSeries"`
-}
-
-func (o CachedSeriesResponse) MarshalJSON() ([]byte, error) {
-	if o.CachedSeries == nil {
-		o.CachedSeries = make([]CachedSeries, 0)
-	}
-	type _tmpCachedSeriesResponse CachedSeriesResponse
-	return safejson.Marshal(_tmpCachedSeriesResponse(o))
-}
-
-func (o *CachedSeriesResponse) UnmarshalJSON(data []byte) error {
-	type _tmpCachedSeriesResponse CachedSeriesResponse
-	var rawCachedSeriesResponse _tmpCachedSeriesResponse
-	if err := safejson.Unmarshal(data, &rawCachedSeriesResponse); err != nil {
-		return err
-	}
-	if rawCachedSeriesResponse.CachedSeries == nil {
-		rawCachedSeriesResponse.CachedSeries = make([]CachedSeries, 0)
-	}
-	*o = CachedSeriesResponse(rawCachedSeriesResponse)
-	return nil
-}
-
-func (o CachedSeriesResponse) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *CachedSeriesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type Chunk struct {
 	Rid              rids.ChunkRid        `json:"rid"`
 	Type             ChunkType            `json:"type"`
@@ -96,47 +32,6 @@ func (o Chunk) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Chunk) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type CreateCachedSeriesRequest struct {
-	SeriesToCache []CachedSeries `json:"seriesToCache"`
-}
-
-func (o CreateCachedSeriesRequest) MarshalJSON() ([]byte, error) {
-	if o.SeriesToCache == nil {
-		o.SeriesToCache = make([]CachedSeries, 0)
-	}
-	type _tmpCreateCachedSeriesRequest CreateCachedSeriesRequest
-	return safejson.Marshal(_tmpCreateCachedSeriesRequest(o))
-}
-
-func (o *CreateCachedSeriesRequest) UnmarshalJSON(data []byte) error {
-	type _tmpCreateCachedSeriesRequest CreateCachedSeriesRequest
-	var rawCreateCachedSeriesRequest _tmpCreateCachedSeriesRequest
-	if err := safejson.Unmarshal(data, &rawCreateCachedSeriesRequest); err != nil {
-		return err
-	}
-	if rawCreateCachedSeriesRequest.SeriesToCache == nil {
-		rawCreateCachedSeriesRequest.SeriesToCache = make([]CachedSeries, 0)
-	}
-	*o = CreateCachedSeriesRequest(rawCreateCachedSeriesRequest)
-	return nil
-}
-
-func (o CreateCachedSeriesRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *CreateCachedSeriesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -309,47 +204,6 @@ func (o DeleteChunksResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *DeleteChunksResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type GetCachedSeriesRequest struct {
-	LogicalSeriesRids []api.LogicalSeriesRid `json:"logicalSeriesRids"`
-}
-
-func (o GetCachedSeriesRequest) MarshalJSON() ([]byte, error) {
-	if o.LogicalSeriesRids == nil {
-		o.LogicalSeriesRids = make([]api.LogicalSeriesRid, 0)
-	}
-	type _tmpGetCachedSeriesRequest GetCachedSeriesRequest
-	return safejson.Marshal(_tmpGetCachedSeriesRequest(o))
-}
-
-func (o *GetCachedSeriesRequest) UnmarshalJSON(data []byte) error {
-	type _tmpGetCachedSeriesRequest GetCachedSeriesRequest
-	var rawGetCachedSeriesRequest _tmpGetCachedSeriesRequest
-	if err := safejson.Unmarshal(data, &rawGetCachedSeriesRequest); err != nil {
-		return err
-	}
-	if rawGetCachedSeriesRequest.LogicalSeriesRids == nil {
-		rawGetCachedSeriesRequest.LogicalSeriesRids = make([]api.LogicalSeriesRid, 0)
-	}
-	*o = GetCachedSeriesRequest(rawGetCachedSeriesRequest)
-	return nil
-}
-
-func (o GetCachedSeriesRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *GetCachedSeriesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

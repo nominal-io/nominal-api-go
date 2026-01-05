@@ -429,41 +429,7 @@ func (a *NotebookRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type ProcedureExecutionRid rid.ResourceIdentifier
-
-func (a ProcedureExecutionRid) String() string {
-	return rid.ResourceIdentifier(a).String()
-}
-
-func (a ProcedureExecutionRid) MarshalText() ([]byte, error) {
-	return rid.ResourceIdentifier(a).MarshalText()
-}
-
-func (a *ProcedureExecutionRid) UnmarshalText(data []byte) error {
-	var rawProcedureExecutionRid rid.ResourceIdentifier
-	if err := rawProcedureExecutionRid.UnmarshalText(data); err != nil {
-		return err
-	}
-	*a = ProcedureExecutionRid(rawProcedureExecutionRid)
-	return nil
-}
-
-func (a ProcedureExecutionRid) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(a)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (a *ProcedureExecutionRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&a)
-}
-
+type RunRefName string
 type SavedViewRid rid.ResourceIdentifier
 
 func (a SavedViewRid) String() string {

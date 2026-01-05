@@ -54,6 +54,17 @@ type DataSourceServiceClient interface {
 	   specified, as all tag values are returned.
 	*/
 	GetTagValuesForDataSource(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetTagValuesForDataSourceRequest) (map[api1.TagName][]api1.TagValue, error)
+	/*
+	   Paged endpoint returning the set of all tag keys that are available for the specified channel given an
+	   initial set of filters.
+	   If any tag filters are supplied, their tag keys are omitted from the result.
+	*/
+	GetAvailableTagKeys(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error)
+	/*
+	   Paged endpoint returning the set of all tag values that are available for the specified tag and datasource
+	   given an initial set of filters.
+	*/
+	GetAvailableTagValues(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error)
 }
 
 type dataSourceServiceClient struct {
@@ -223,6 +234,46 @@ func (c *dataSourceServiceClient) GetTagValuesForDataSource(ctx context.Context,
 	return returnVal, nil
 }
 
+func (c *dataSourceServiceClient) GetAvailableTagKeys(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error) {
+	var defaultReturnVal api.GetAvailableTagKeysResponse
+	var returnVal *api.GetAvailableTagKeysResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAvailableTagKeys"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/%s/get-tag-keys", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAvailableTagKeys failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAvailableTagKeys response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *dataSourceServiceClient) GetAvailableTagValues(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error) {
+	var defaultReturnVal api.GetAvailableTagValuesResponse
+	var returnVal *api.GetAvailableTagValuesResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAvailableTagValues"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/%s/get-tag-values", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAvailableTagValues failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAvailableTagValues response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 /*
 Data sources are data input to runs, including databases, CSV, video, and streaming data. They contain channels that represent the series data.
 The DataSource Service is responsible for indexing and searching channels across data sources.
@@ -261,6 +312,17 @@ type DataSourceServiceClientWithAuth interface {
 	   specified, as all tag values are returned.
 	*/
 	GetTagValuesForDataSource(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetTagValuesForDataSourceRequest) (map[api1.TagName][]api1.TagValue, error)
+	/*
+	   Paged endpoint returning the set of all tag keys that are available for the specified channel given an
+	   initial set of filters.
+	   If any tag filters are supplied, their tag keys are omitted from the result.
+	*/
+	GetAvailableTagKeys(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error)
+	/*
+	   Paged endpoint returning the set of all tag values that are available for the specified tag and datasource
+	   given an initial set of filters.
+	*/
+	GetAvailableTagValues(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error)
 }
 
 func NewDataSourceServiceClientWithAuth(client DataSourceServiceClient, authHeader bearertoken.Token) DataSourceServiceClientWithAuth {
@@ -302,6 +364,14 @@ func (c *dataSourceServiceClientWithAuth) GetDataScopeBounds(ctx context.Context
 
 func (c *dataSourceServiceClientWithAuth) GetTagValuesForDataSource(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetTagValuesForDataSourceRequest) (map[api1.TagName][]api1.TagValue, error) {
 	return c.client.GetTagValuesForDataSource(ctx, c.authHeader, dataSourceRidArg, requestArg)
+}
+
+func (c *dataSourceServiceClientWithAuth) GetAvailableTagKeys(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error) {
+	return c.client.GetAvailableTagKeys(ctx, c.authHeader, dataSourceRidArg, requestArg)
+}
+
+func (c *dataSourceServiceClientWithAuth) GetAvailableTagValues(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error) {
+	return c.client.GetAvailableTagValues(ctx, c.authHeader, dataSourceRidArg, requestArg)
 }
 
 func NewDataSourceServiceClientWithTokenProvider(client DataSourceServiceClient, tokenProvider httpclient.TokenProvider) DataSourceServiceClientWithAuth {
@@ -383,4 +453,22 @@ func (c *dataSourceServiceClientWithTokenProvider) GetTagValuesForDataSource(ctx
 		return defaultReturnVal, err
 	}
 	return c.client.GetTagValuesForDataSource(ctx, bearertoken.Token(token), dataSourceRidArg, requestArg)
+}
+
+func (c *dataSourceServiceClientWithTokenProvider) GetAvailableTagKeys(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error) {
+	var defaultReturnVal api.GetAvailableTagKeysResponse
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetAvailableTagKeys(ctx, bearertoken.Token(token), dataSourceRidArg, requestArg)
+}
+
+func (c *dataSourceServiceClientWithTokenProvider) GetAvailableTagValues(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error) {
+	var defaultReturnVal api.GetAvailableTagValuesResponse
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetAvailableTagValues(ctx, bearertoken.Token(token), dataSourceRidArg, requestArg)
 }

@@ -63,6 +63,8 @@ type CatalogServiceClient interface {
 	// Undoes the archiving of a dataset.
 	UnarchiveDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier) error
 	GetAllPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (AllPropertiesAndLabelsResponse, error)
+	// Returns the log dataset RID for the specified workspace if configured and accessible to the caller.
+	GetLogDatasetForWorkspace(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid) (*rids.DatasetRid, error)
 }
 
 type catalogServiceClient struct {
@@ -557,6 +559,21 @@ func (c *catalogServiceClient) GetAllPropertiesAndLabels(ctx context.Context, au
 	return *returnVal, nil
 }
 
+func (c *catalogServiceClient) GetLogDatasetForWorkspace(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid) (*rids.DatasetRid, error) {
+	var returnVal *rids.DatasetRid
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetLogDatasetForWorkspace"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/workspaces/%s/log-dataset", url.PathEscape(fmt.Sprint(workspaceRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "getLogDatasetForWorkspace failed")
+	}
+	return returnVal, nil
+}
+
 /*
 The Catalog Service provides the ability to query for information about Datasets that are stored in
 the Nominal platform. A Dataset is the Nominal representation of data that has been uploaded to Nominal via
@@ -602,6 +619,8 @@ type CatalogServiceClientWithAuth interface {
 	// Undoes the archiving of a dataset.
 	UnarchiveDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier) error
 	GetAllPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (AllPropertiesAndLabelsResponse, error)
+	// Returns the log dataset RID for the specified workspace if configured and accessible to the caller.
+	GetLogDatasetForWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (*rids.DatasetRid, error)
 }
 
 func NewCatalogServiceClientWithAuth(client CatalogServiceClient, authHeader bearertoken.Token) CatalogServiceClientWithAuth {
@@ -711,6 +730,10 @@ func (c *catalogServiceClientWithAuth) UnarchiveDataset(ctx context.Context, dat
 
 func (c *catalogServiceClientWithAuth) GetAllPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (AllPropertiesAndLabelsResponse, error) {
 	return c.client.GetAllPropertiesAndLabels(ctx, c.authHeader, workspacesArg)
+}
+
+func (c *catalogServiceClientWithAuth) GetLogDatasetForWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (*rids.DatasetRid, error) {
+	return c.client.GetLogDatasetForWorkspace(ctx, c.authHeader, workspaceRidArg)
 }
 
 func NewCatalogServiceClientWithTokenProvider(client CatalogServiceClient, tokenProvider httpclient.TokenProvider) CatalogServiceClientWithAuth {
@@ -943,4 +966,13 @@ func (c *catalogServiceClientWithTokenProvider) GetAllPropertiesAndLabels(ctx co
 		return defaultReturnVal, err
 	}
 	return c.client.GetAllPropertiesAndLabels(ctx, bearertoken.Token(token), workspacesArg)
+}
+
+func (c *catalogServiceClientWithTokenProvider) GetLogDatasetForWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (*rids.DatasetRid, error) {
+	var defaultReturnVal *rids.DatasetRid
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetLogDatasetForWorkspace(ctx, bearertoken.Token(token), workspaceRidArg)
 }

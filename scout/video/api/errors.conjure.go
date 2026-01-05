@@ -16,6 +16,156 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+type invalidChannelSpecification struct {
+	Message string `json:"message"`
+}
+
+func (o invalidChannelSpecification) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidChannelSpecification) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidChannelSpecification returns new instance of InvalidChannelSpecification error.
+func NewInvalidChannelSpecification(messageArg string) *InvalidChannelSpecification {
+	return &InvalidChannelSpecification{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidChannelSpecification: invalidChannelSpecification{Message: messageArg}}
+}
+
+// WrapWithInvalidChannelSpecification returns new instance of InvalidChannelSpecification error wrapping an existing error.
+func WrapWithInvalidChannelSpecification(err error, messageArg string) *InvalidChannelSpecification {
+	return &InvalidChannelSpecification{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidChannelSpecification: invalidChannelSpecification{Message: messageArg}}
+}
+
+// InvalidChannelSpecification is an error type.
+// Invalid channel specification (e.g., mutually exclusive parameters provided)
+type InvalidChannelSpecification struct {
+	errorInstanceID uuid.UUID
+	invalidChannelSpecification
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidChannelSpecification returns true if err is an instance of InvalidChannelSpecification.
+func IsInvalidChannelSpecification(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidChannelSpecification)
+	return ok
+}
+
+func (e *InvalidChannelSpecification) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Video:InvalidChannelSpecification (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidChannelSpecification) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidChannelSpecification) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidChannelSpecification) Message() string {
+	return "INVALID_ARGUMENT Video:InvalidChannelSpecification"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidChannelSpecification) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidChannelSpecification) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidChannelSpecification) Name() string {
+	return "Video:InvalidChannelSpecification"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidChannelSpecification) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidChannelSpecification) Parameters() map[string]interface{} {
+	return map[string]interface{}{"message": e.Message}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidChannelSpecification) safeParams() map[string]interface{} {
+	return map[string]interface{}{"message": e.Message, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidChannelSpecification) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidChannelSpecification) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidChannelSpecification) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidChannelSpecification) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidChannelSpecification)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Video:InvalidChannelSpecification", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidChannelSpecification) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidChannelSpecification
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidChannelSpecification = parameters
+	return nil
+}
+
 type invalidFileShiftScaleRequest struct {
 	VideoFileRid rids.VideoFileRid `json:"videoFileRid"`
 }
@@ -466,6 +616,779 @@ func (e *InvalidSourceVideo) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.invalidSourceVideo = parameters
+	return nil
+}
+
+type invalidTags struct {
+	Tags string `json:"tags"`
+}
+
+func (o invalidTags) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidTags) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidTags returns new instance of InvalidTags error.
+func NewInvalidTags(tagsArg string) *InvalidTags {
+	return &InvalidTags{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidTags: invalidTags{Tags: tagsArg}}
+}
+
+// WrapWithInvalidTags returns new instance of InvalidTags error wrapping an existing error.
+func WrapWithInvalidTags(err error, tagsArg string) *InvalidTags {
+	return &InvalidTags{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidTags: invalidTags{Tags: tagsArg}}
+}
+
+// InvalidTags is an error type.
+// The provided tags parameter is not valid JSON
+type InvalidTags struct {
+	errorInstanceID uuid.UUID
+	invalidTags
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidTags returns true if err is an instance of InvalidTags.
+func IsInvalidTags(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidTags)
+	return ok
+}
+
+func (e *InvalidTags) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Video:InvalidTags (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidTags) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidTags) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidTags) Message() string {
+	return "INVALID_ARGUMENT Video:InvalidTags"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidTags) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidTags) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidTags) Name() string {
+	return "Video:InvalidTags"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidTags) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidTags) Parameters() map[string]interface{} {
+	return map[string]interface{}{"tags": e.Tags}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidTags) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidTags) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidTags) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"tags": e.Tags}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidTags) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidTags) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidTags)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Video:InvalidTags", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidTags) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidTags
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidTags = parameters
+	return nil
+}
+
+type invalidTimestamp struct {
+	Timestamp string `json:"timestamp"`
+}
+
+func (o invalidTimestamp) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidTimestamp) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidTimestamp returns new instance of InvalidTimestamp error.
+func NewInvalidTimestamp(timestampArg string) *InvalidTimestamp {
+	return &InvalidTimestamp{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidTimestamp: invalidTimestamp{Timestamp: timestampArg}}
+}
+
+// WrapWithInvalidTimestamp returns new instance of InvalidTimestamp error wrapping an existing error.
+func WrapWithInvalidTimestamp(err error, timestampArg string) *InvalidTimestamp {
+	return &InvalidTimestamp{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidTimestamp: invalidTimestamp{Timestamp: timestampArg}}
+}
+
+// InvalidTimestamp is an error type.
+// The provided timestamp string is not in valid ISO-8601 format
+type InvalidTimestamp struct {
+	errorInstanceID uuid.UUID
+	invalidTimestamp
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidTimestamp returns true if err is an instance of InvalidTimestamp.
+func IsInvalidTimestamp(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidTimestamp)
+	return ok
+}
+
+func (e *InvalidTimestamp) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Video:InvalidTimestamp (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidTimestamp) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidTimestamp) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidTimestamp) Message() string {
+	return "INVALID_ARGUMENT Video:InvalidTimestamp"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidTimestamp) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidTimestamp) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidTimestamp) Name() string {
+	return "Video:InvalidTimestamp"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidTimestamp) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidTimestamp) Parameters() map[string]interface{} {
+	return map[string]interface{}{"timestamp": e.Timestamp}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidTimestamp) safeParams() map[string]interface{} {
+	return map[string]interface{}{"timestamp": e.Timestamp, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidTimestamp) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidTimestamp) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidTimestamp) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidTimestamp) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidTimestamp)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Video:InvalidTimestamp", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidTimestamp) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidTimestamp
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidTimestamp = parameters
+	return nil
+}
+
+type missingTimestampBoundPair struct {
+	HasStart bool `json:"hasStart"`
+	HasEnd   bool `json:"hasEnd"`
+}
+
+func (o missingTimestampBoundPair) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *missingTimestampBoundPair) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewMissingTimestampBoundPair returns new instance of MissingTimestampBoundPair error.
+func NewMissingTimestampBoundPair(hasStartArg bool, hasEndArg bool) *MissingTimestampBoundPair {
+	return &MissingTimestampBoundPair{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), missingTimestampBoundPair: missingTimestampBoundPair{HasStart: hasStartArg, HasEnd: hasEndArg}}
+}
+
+// WrapWithMissingTimestampBoundPair returns new instance of MissingTimestampBoundPair error wrapping an existing error.
+func WrapWithMissingTimestampBoundPair(err error, hasStartArg bool, hasEndArg bool) *MissingTimestampBoundPair {
+	return &MissingTimestampBoundPair{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, missingTimestampBoundPair: missingTimestampBoundPair{HasStart: hasStartArg, HasEnd: hasEndArg}}
+}
+
+// MissingTimestampBoundPair is an error type.
+// Both start and end timestamp bounds must be provided together, or neither. Either provide both bounds or neither.
+type MissingTimestampBoundPair struct {
+	errorInstanceID uuid.UUID
+	missingTimestampBoundPair
+	cause error
+	stack werror.StackTrace
+}
+
+// IsMissingTimestampBoundPair returns true if err is an instance of MissingTimestampBoundPair.
+func IsMissingTimestampBoundPair(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*MissingTimestampBoundPair)
+	return ok
+}
+
+func (e *MissingTimestampBoundPair) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Video:MissingTimestampBoundPair (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *MissingTimestampBoundPair) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *MissingTimestampBoundPair) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *MissingTimestampBoundPair) Message() string {
+	return "INVALID_ARGUMENT Video:MissingTimestampBoundPair"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *MissingTimestampBoundPair) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *MissingTimestampBoundPair) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *MissingTimestampBoundPair) Name() string {
+	return "Video:MissingTimestampBoundPair"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *MissingTimestampBoundPair) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *MissingTimestampBoundPair) Parameters() map[string]interface{} {
+	return map[string]interface{}{"hasStart": e.HasStart, "hasEnd": e.HasEnd}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *MissingTimestampBoundPair) safeParams() map[string]interface{} {
+	return map[string]interface{}{"hasStart": e.HasStart, "hasEnd": e.HasEnd, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *MissingTimestampBoundPair) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *MissingTimestampBoundPair) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *MissingTimestampBoundPair) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e MissingTimestampBoundPair) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.missingTimestampBoundPair)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Video:MissingTimestampBoundPair", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *MissingTimestampBoundPair) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters missingTimestampBoundPair
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.missingTimestampBoundPair = parameters
+	return nil
+}
+
+type noSegmentsInBounds struct {
+	VideoRid        rids.VideoRid `json:"videoRid"`
+	RequestedBounds Bounds        `json:"requestedBounds"`
+}
+
+func (o noSegmentsInBounds) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *noSegmentsInBounds) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewNoSegmentsInBounds returns new instance of NoSegmentsInBounds error.
+func NewNoSegmentsInBounds(videoRidArg rids.VideoRid, requestedBoundsArg Bounds) *NoSegmentsInBounds {
+	return &NoSegmentsInBounds{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), noSegmentsInBounds: noSegmentsInBounds{VideoRid: videoRidArg, RequestedBounds: requestedBoundsArg}}
+}
+
+// WrapWithNoSegmentsInBounds returns new instance of NoSegmentsInBounds error wrapping an existing error.
+func WrapWithNoSegmentsInBounds(err error, videoRidArg rids.VideoRid, requestedBoundsArg Bounds) *NoSegmentsInBounds {
+	return &NoSegmentsInBounds{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, noSegmentsInBounds: noSegmentsInBounds{VideoRid: videoRidArg, RequestedBounds: requestedBoundsArg}}
+}
+
+// NoSegmentsInBounds is an error type.
+// The requested time bounds do not overlap with any video segments.
+type NoSegmentsInBounds struct {
+	errorInstanceID uuid.UUID
+	noSegmentsInBounds
+	cause error
+	stack werror.StackTrace
+}
+
+// IsNoSegmentsInBounds returns true if err is an instance of NoSegmentsInBounds.
+func IsNoSegmentsInBounds(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*NoSegmentsInBounds)
+	return ok
+}
+
+func (e *NoSegmentsInBounds) Error() string {
+	return fmt.Sprintf("NOT_FOUND Video:NoSegmentsInBounds (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *NoSegmentsInBounds) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *NoSegmentsInBounds) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *NoSegmentsInBounds) Message() string {
+	return "NOT_FOUND Video:NoSegmentsInBounds"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *NoSegmentsInBounds) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *NoSegmentsInBounds) Code() errors.ErrorCode {
+	return errors.NotFound
+}
+
+// Name returns an error name identifying error type.
+func (e *NoSegmentsInBounds) Name() string {
+	return "Video:NoSegmentsInBounds"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *NoSegmentsInBounds) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *NoSegmentsInBounds) Parameters() map[string]interface{} {
+	return map[string]interface{}{"videoRid": e.VideoRid, "requestedBounds": e.RequestedBounds}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *NoSegmentsInBounds) safeParams() map[string]interface{} {
+	return map[string]interface{}{"videoRid": e.VideoRid, "requestedBounds": e.RequestedBounds, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *NoSegmentsInBounds) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *NoSegmentsInBounds) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *NoSegmentsInBounds) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e NoSegmentsInBounds) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.noSegmentsInBounds)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Video:NoSegmentsInBounds", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *NoSegmentsInBounds) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters noSegmentsInBounds
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.noSegmentsInBounds = parameters
+	return nil
+}
+
+type notAuthorized struct {
+	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids"`
+}
+
+func (o notAuthorized) MarshalJSON() ([]byte, error) {
+	if o.DataSourceRids == nil {
+		o.DataSourceRids = make([]rids.DataSourceRid, 0)
+	}
+	type _tmpnotAuthorized notAuthorized
+	return safejson.Marshal(_tmpnotAuthorized(o))
+}
+
+func (o *notAuthorized) UnmarshalJSON(data []byte) error {
+	type _tmpnotAuthorized notAuthorized
+	var rawnotAuthorized _tmpnotAuthorized
+	if err := safejson.Unmarshal(data, &rawnotAuthorized); err != nil {
+		return err
+	}
+	if rawnotAuthorized.DataSourceRids == nil {
+		rawnotAuthorized.DataSourceRids = make([]rids.DataSourceRid, 0)
+	}
+	*o = notAuthorized(rawnotAuthorized)
+	return nil
+}
+
+func (o notAuthorized) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *notAuthorized) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewNotAuthorized returns new instance of NotAuthorized error.
+func NewNotAuthorized(dataSourceRidsArg []rids.DataSourceRid) *NotAuthorized {
+	return &NotAuthorized{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), notAuthorized: notAuthorized{DataSourceRids: dataSourceRidsArg}}
+}
+
+// WrapWithNotAuthorized returns new instance of NotAuthorized error wrapping an existing error.
+func WrapWithNotAuthorized(err error, dataSourceRidsArg []rids.DataSourceRid) *NotAuthorized {
+	return &NotAuthorized{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, notAuthorized: notAuthorized{DataSourceRids: dataSourceRidsArg}}
+}
+
+// NotAuthorized is an error type.
+// User is not authorized to read data from the requested datasources.
+type NotAuthorized struct {
+	errorInstanceID uuid.UUID
+	notAuthorized
+	cause error
+	stack werror.StackTrace
+}
+
+// IsNotAuthorized returns true if err is an instance of NotAuthorized.
+func IsNotAuthorized(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*NotAuthorized)
+	return ok
+}
+
+func (e *NotAuthorized) Error() string {
+	return fmt.Sprintf("PERMISSION_DENIED Video:NotAuthorized (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *NotAuthorized) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *NotAuthorized) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *NotAuthorized) Message() string {
+	return "PERMISSION_DENIED Video:NotAuthorized"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *NotAuthorized) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *NotAuthorized) Code() errors.ErrorCode {
+	return errors.PermissionDenied
+}
+
+// Name returns an error name identifying error type.
+func (e *NotAuthorized) Name() string {
+	return "Video:NotAuthorized"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *NotAuthorized) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *NotAuthorized) Parameters() map[string]interface{} {
+	return map[string]interface{}{"dataSourceRids": e.DataSourceRids}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *NotAuthorized) safeParams() map[string]interface{} {
+	return map[string]interface{}{"dataSourceRids": e.DataSourceRids, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *NotAuthorized) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *NotAuthorized) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *NotAuthorized) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e NotAuthorized) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.notAuthorized)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.PermissionDenied, ErrorName: "Video:NotAuthorized", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *NotAuthorized) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters notAuthorized
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.notAuthorized = parameters
 	return nil
 }
 
@@ -1102,6 +2025,7 @@ func WrapWithVideoIngestNotComplete(err error, videoRidArg rids.VideoRid) *Video
 }
 
 // VideoIngestNotComplete is an error type.
+// Video has no segments available. The video may still be processing or ingest has not started.
 type VideoIngestNotComplete struct {
 	errorInstanceID uuid.UUID
 	videoIngestNotComplete
@@ -1119,7 +2043,7 @@ func IsVideoIngestNotComplete(err error) bool {
 }
 
 func (e *VideoIngestNotComplete) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Video:VideoIngestNotComplete (%s)", e.errorInstanceID)
+	return fmt.Sprintf("FAILED_PRECONDITION Video:VideoIngestNotComplete (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
@@ -1136,7 +2060,7 @@ func (e *VideoIngestNotComplete) StackTrace() werror.StackTrace {
 
 // Message returns the message body for the error.
 func (e *VideoIngestNotComplete) Message() string {
-	return "INVALID_ARGUMENT Video:VideoIngestNotComplete"
+	return "FAILED_PRECONDITION Video:VideoIngestNotComplete"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
@@ -1146,7 +2070,7 @@ func (e *VideoIngestNotComplete) Format(state fmt.State, verb rune) {
 
 // Code returns an enum describing error category.
 func (e *VideoIngestNotComplete) Code() errors.ErrorCode {
-	return errors.InvalidArgument
+	return errors.FailedPrecondition
 }
 
 // Name returns an error name identifying error type.
@@ -1203,7 +2127,7 @@ func (e VideoIngestNotComplete) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Video:VideoIngestNotComplete", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.FailedPrecondition, ErrorName: "Video:VideoIngestNotComplete", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
 func (e *VideoIngestNotComplete) UnmarshalJSON(data []byte) error {
@@ -1370,9 +2294,15 @@ func (e *VideoNotFound) UnmarshalJSON(data []byte) error {
 }
 
 func init() {
+	conjureerrors.RegisterErrorType("Video:InvalidChannelSpecification", reflect.TypeOf(InvalidChannelSpecification{}))
 	conjureerrors.RegisterErrorType("Video:InvalidFileShiftScaleRequest", reflect.TypeOf(InvalidFileShiftScaleRequest{}))
 	conjureerrors.RegisterErrorType("Video:InvalidShiftScaleRequest", reflect.TypeOf(InvalidShiftScaleRequest{}))
 	conjureerrors.RegisterErrorType("VideoSegmenter:InvalidSourceVideo", reflect.TypeOf(InvalidSourceVideo{}))
+	conjureerrors.RegisterErrorType("Video:InvalidTags", reflect.TypeOf(InvalidTags{}))
+	conjureerrors.RegisterErrorType("Video:InvalidTimestamp", reflect.TypeOf(InvalidTimestamp{}))
+	conjureerrors.RegisterErrorType("Video:MissingTimestampBoundPair", reflect.TypeOf(MissingTimestampBoundPair{}))
+	conjureerrors.RegisterErrorType("Video:NoSegmentsInBounds", reflect.TypeOf(NoSegmentsInBounds{}))
+	conjureerrors.RegisterErrorType("Video:NotAuthorized", reflect.TypeOf(NotAuthorized{}))
 	conjureerrors.RegisterErrorType("Video:SegmentConflict", reflect.TypeOf(SegmentConflict{}))
 	conjureerrors.RegisterErrorType("Video:SegmentNotFound", reflect.TypeOf(SegmentNotFound{}))
 	conjureerrors.RegisterErrorType("Video:VideoFileIngestNotComplete", reflect.TypeOf(VideoFileIngestNotComplete{}))

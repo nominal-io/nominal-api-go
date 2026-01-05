@@ -11,19 +11,23 @@ import (
 )
 
 type CreateIntegrationDetails struct {
-	typ                              string
-	createSimpleWebhookDetails       *CreateSimpleWebhookDetails
-	createOpsgenieIntegrationDetails *CreateOpsgenieIntegrationDetails
+	typ                                  string
+	createSimpleWebhookDetails           *CreateSimpleWebhookDetails
+	createOpsgenieIntegrationDetails     *CreateOpsgenieIntegrationDetails
+	createTeamsWebhookIntegrationDetails *CreateTeamsWebhookIntegrationDetails
+	createPagerDutyIntegrationDetails    *CreatePagerDutyIntegrationDetails
 }
 
 type createIntegrationDetailsDeserializer struct {
-	Type                             string                            `json:"type"`
-	CreateSimpleWebhookDetails       *CreateSimpleWebhookDetails       `json:"createSimpleWebhookDetails"`
-	CreateOpsgenieIntegrationDetails *CreateOpsgenieIntegrationDetails `json:"createOpsgenieIntegrationDetails"`
+	Type                                 string                                `json:"type"`
+	CreateSimpleWebhookDetails           *CreateSimpleWebhookDetails           `json:"createSimpleWebhookDetails"`
+	CreateOpsgenieIntegrationDetails     *CreateOpsgenieIntegrationDetails     `json:"createOpsgenieIntegrationDetails"`
+	CreateTeamsWebhookIntegrationDetails *CreateTeamsWebhookIntegrationDetails `json:"createTeamsWebhookIntegrationDetails"`
+	CreatePagerDutyIntegrationDetails    *CreatePagerDutyIntegrationDetails    `json:"createPagerDutyIntegrationDetails"`
 }
 
 func (u *createIntegrationDetailsDeserializer) toStruct() CreateIntegrationDetails {
-	return CreateIntegrationDetails{typ: u.Type, createSimpleWebhookDetails: u.CreateSimpleWebhookDetails, createOpsgenieIntegrationDetails: u.CreateOpsgenieIntegrationDetails}
+	return CreateIntegrationDetails{typ: u.Type, createSimpleWebhookDetails: u.CreateSimpleWebhookDetails, createOpsgenieIntegrationDetails: u.CreateOpsgenieIntegrationDetails, createTeamsWebhookIntegrationDetails: u.CreateTeamsWebhookIntegrationDetails, createPagerDutyIntegrationDetails: u.CreatePagerDutyIntegrationDetails}
 }
 
 func (u *CreateIntegrationDetails) toSerializer() (interface{}, error) {
@@ -46,6 +50,22 @@ func (u *CreateIntegrationDetails) toSerializer() (interface{}, error) {
 			Type                             string                           `json:"type"`
 			CreateOpsgenieIntegrationDetails CreateOpsgenieIntegrationDetails `json:"createOpsgenieIntegrationDetails"`
 		}{Type: "createOpsgenieIntegrationDetails", CreateOpsgenieIntegrationDetails: *u.createOpsgenieIntegrationDetails}, nil
+	case "createTeamsWebhookIntegrationDetails":
+		if u.createTeamsWebhookIntegrationDetails == nil {
+			return nil, fmt.Errorf("field \"createTeamsWebhookIntegrationDetails\" is required")
+		}
+		return struct {
+			Type                                 string                               `json:"type"`
+			CreateTeamsWebhookIntegrationDetails CreateTeamsWebhookIntegrationDetails `json:"createTeamsWebhookIntegrationDetails"`
+		}{Type: "createTeamsWebhookIntegrationDetails", CreateTeamsWebhookIntegrationDetails: *u.createTeamsWebhookIntegrationDetails}, nil
+	case "createPagerDutyIntegrationDetails":
+		if u.createPagerDutyIntegrationDetails == nil {
+			return nil, fmt.Errorf("field \"createPagerDutyIntegrationDetails\" is required")
+		}
+		return struct {
+			Type                              string                            `json:"type"`
+			CreatePagerDutyIntegrationDetails CreatePagerDutyIntegrationDetails `json:"createPagerDutyIntegrationDetails"`
+		}{Type: "createPagerDutyIntegrationDetails", CreatePagerDutyIntegrationDetails: *u.createPagerDutyIntegrationDetails}, nil
 	}
 }
 
@@ -72,6 +92,14 @@ func (u *CreateIntegrationDetails) UnmarshalJSON(data []byte) error {
 		if u.createOpsgenieIntegrationDetails == nil {
 			return fmt.Errorf("field \"createOpsgenieIntegrationDetails\" is required")
 		}
+	case "createTeamsWebhookIntegrationDetails":
+		if u.createTeamsWebhookIntegrationDetails == nil {
+			return fmt.Errorf("field \"createTeamsWebhookIntegrationDetails\" is required")
+		}
+	case "createPagerDutyIntegrationDetails":
+		if u.createPagerDutyIntegrationDetails == nil {
+			return fmt.Errorf("field \"createPagerDutyIntegrationDetails\" is required")
+		}
 	}
 	return nil
 }
@@ -92,7 +120,7 @@ func (u *CreateIntegrationDetails) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *CreateIntegrationDetails) AcceptFuncs(createSimpleWebhookDetailsFunc func(CreateSimpleWebhookDetails) error, createOpsgenieIntegrationDetailsFunc func(CreateOpsgenieIntegrationDetails) error, unknownFunc func(string) error) error {
+func (u *CreateIntegrationDetails) AcceptFuncs(createSimpleWebhookDetailsFunc func(CreateSimpleWebhookDetails) error, createOpsgenieIntegrationDetailsFunc func(CreateOpsgenieIntegrationDetails) error, createTeamsWebhookIntegrationDetailsFunc func(CreateTeamsWebhookIntegrationDetails) error, createPagerDutyIntegrationDetailsFunc func(CreatePagerDutyIntegrationDetails) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -109,6 +137,16 @@ func (u *CreateIntegrationDetails) AcceptFuncs(createSimpleWebhookDetailsFunc fu
 			return fmt.Errorf("field \"createOpsgenieIntegrationDetails\" is required")
 		}
 		return createOpsgenieIntegrationDetailsFunc(*u.createOpsgenieIntegrationDetails)
+	case "createTeamsWebhookIntegrationDetails":
+		if u.createTeamsWebhookIntegrationDetails == nil {
+			return fmt.Errorf("field \"createTeamsWebhookIntegrationDetails\" is required")
+		}
+		return createTeamsWebhookIntegrationDetailsFunc(*u.createTeamsWebhookIntegrationDetails)
+	case "createPagerDutyIntegrationDetails":
+		if u.createPagerDutyIntegrationDetails == nil {
+			return fmt.Errorf("field \"createPagerDutyIntegrationDetails\" is required")
+		}
+		return createPagerDutyIntegrationDetailsFunc(*u.createPagerDutyIntegrationDetails)
 	}
 }
 
@@ -117,6 +155,14 @@ func (u *CreateIntegrationDetails) CreateSimpleWebhookDetailsNoopSuccess(CreateS
 }
 
 func (u *CreateIntegrationDetails) CreateOpsgenieIntegrationDetailsNoopSuccess(CreateOpsgenieIntegrationDetails) error {
+	return nil
+}
+
+func (u *CreateIntegrationDetails) CreateTeamsWebhookIntegrationDetailsNoopSuccess(CreateTeamsWebhookIntegrationDetails) error {
+	return nil
+}
+
+func (u *CreateIntegrationDetails) CreatePagerDutyIntegrationDetailsNoopSuccess(CreatePagerDutyIntegrationDetails) error {
 	return nil
 }
 
@@ -141,12 +187,24 @@ func (u *CreateIntegrationDetails) Accept(v CreateIntegrationDetailsVisitor) err
 			return fmt.Errorf("field \"createOpsgenieIntegrationDetails\" is required")
 		}
 		return v.VisitCreateOpsgenieIntegrationDetails(*u.createOpsgenieIntegrationDetails)
+	case "createTeamsWebhookIntegrationDetails":
+		if u.createTeamsWebhookIntegrationDetails == nil {
+			return fmt.Errorf("field \"createTeamsWebhookIntegrationDetails\" is required")
+		}
+		return v.VisitCreateTeamsWebhookIntegrationDetails(*u.createTeamsWebhookIntegrationDetails)
+	case "createPagerDutyIntegrationDetails":
+		if u.createPagerDutyIntegrationDetails == nil {
+			return fmt.Errorf("field \"createPagerDutyIntegrationDetails\" is required")
+		}
+		return v.VisitCreatePagerDutyIntegrationDetails(*u.createPagerDutyIntegrationDetails)
 	}
 }
 
 type CreateIntegrationDetailsVisitor interface {
 	VisitCreateSimpleWebhookDetails(v CreateSimpleWebhookDetails) error
 	VisitCreateOpsgenieIntegrationDetails(v CreateOpsgenieIntegrationDetails) error
+	VisitCreateTeamsWebhookIntegrationDetails(v CreateTeamsWebhookIntegrationDetails) error
+	VisitCreatePagerDutyIntegrationDetails(v CreatePagerDutyIntegrationDetails) error
 	VisitUnknown(typeName string) error
 }
 
@@ -167,12 +225,24 @@ func (u *CreateIntegrationDetails) AcceptWithContext(ctx context.Context, v Crea
 			return fmt.Errorf("field \"createOpsgenieIntegrationDetails\" is required")
 		}
 		return v.VisitCreateOpsgenieIntegrationDetailsWithContext(ctx, *u.createOpsgenieIntegrationDetails)
+	case "createTeamsWebhookIntegrationDetails":
+		if u.createTeamsWebhookIntegrationDetails == nil {
+			return fmt.Errorf("field \"createTeamsWebhookIntegrationDetails\" is required")
+		}
+		return v.VisitCreateTeamsWebhookIntegrationDetailsWithContext(ctx, *u.createTeamsWebhookIntegrationDetails)
+	case "createPagerDutyIntegrationDetails":
+		if u.createPagerDutyIntegrationDetails == nil {
+			return fmt.Errorf("field \"createPagerDutyIntegrationDetails\" is required")
+		}
+		return v.VisitCreatePagerDutyIntegrationDetailsWithContext(ctx, *u.createPagerDutyIntegrationDetails)
 	}
 }
 
 type CreateIntegrationDetailsVisitorWithContext interface {
 	VisitCreateSimpleWebhookDetailsWithContext(ctx context.Context, v CreateSimpleWebhookDetails) error
 	VisitCreateOpsgenieIntegrationDetailsWithContext(ctx context.Context, v CreateOpsgenieIntegrationDetails) error
+	VisitCreateTeamsWebhookIntegrationDetailsWithContext(ctx context.Context, v CreateTeamsWebhookIntegrationDetails) error
+	VisitCreatePagerDutyIntegrationDetailsWithContext(ctx context.Context, v CreatePagerDutyIntegrationDetails) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -184,11 +254,21 @@ func NewCreateIntegrationDetailsFromCreateOpsgenieIntegrationDetails(v CreateOps
 	return CreateIntegrationDetails{typ: "createOpsgenieIntegrationDetails", createOpsgenieIntegrationDetails: &v}
 }
 
+func NewCreateIntegrationDetailsFromCreateTeamsWebhookIntegrationDetails(v CreateTeamsWebhookIntegrationDetails) CreateIntegrationDetails {
+	return CreateIntegrationDetails{typ: "createTeamsWebhookIntegrationDetails", createTeamsWebhookIntegrationDetails: &v}
+}
+
+func NewCreateIntegrationDetailsFromCreatePagerDutyIntegrationDetails(v CreatePagerDutyIntegrationDetails) CreateIntegrationDetails {
+	return CreateIntegrationDetails{typ: "createPagerDutyIntegrationDetails", createPagerDutyIntegrationDetails: &v}
+}
+
 type IntegrationDetails struct {
 	typ                      string
 	slackWebhookIntegration  *SlackWebhookIntegration
 	opsgenieIntegration      *OpsgenieIntegration
 	simpleWebhookIntegration *SimpleWebhookIntegration
+	teamsWebhookIntegration  *TeamsWebhookIntegration
+	pagerDutyIntegration     *PagerDutyIntegration
 }
 
 type integrationDetailsDeserializer struct {
@@ -196,10 +276,12 @@ type integrationDetailsDeserializer struct {
 	SlackWebhookIntegration  *SlackWebhookIntegration  `json:"slackWebhookIntegration"`
 	OpsgenieIntegration      *OpsgenieIntegration      `json:"opsgenieIntegration"`
 	SimpleWebhookIntegration *SimpleWebhookIntegration `json:"simpleWebhookIntegration"`
+	TeamsWebhookIntegration  *TeamsWebhookIntegration  `json:"teamsWebhookIntegration"`
+	PagerDutyIntegration     *PagerDutyIntegration     `json:"pagerDutyIntegration"`
 }
 
 func (u *integrationDetailsDeserializer) toStruct() IntegrationDetails {
-	return IntegrationDetails{typ: u.Type, slackWebhookIntegration: u.SlackWebhookIntegration, opsgenieIntegration: u.OpsgenieIntegration, simpleWebhookIntegration: u.SimpleWebhookIntegration}
+	return IntegrationDetails{typ: u.Type, slackWebhookIntegration: u.SlackWebhookIntegration, opsgenieIntegration: u.OpsgenieIntegration, simpleWebhookIntegration: u.SimpleWebhookIntegration, teamsWebhookIntegration: u.TeamsWebhookIntegration, pagerDutyIntegration: u.PagerDutyIntegration}
 }
 
 func (u *IntegrationDetails) toSerializer() (interface{}, error) {
@@ -230,6 +312,22 @@ func (u *IntegrationDetails) toSerializer() (interface{}, error) {
 			Type                     string                   `json:"type"`
 			SimpleWebhookIntegration SimpleWebhookIntegration `json:"simpleWebhookIntegration"`
 		}{Type: "simpleWebhookIntegration", SimpleWebhookIntegration: *u.simpleWebhookIntegration}, nil
+	case "teamsWebhookIntegration":
+		if u.teamsWebhookIntegration == nil {
+			return nil, fmt.Errorf("field \"teamsWebhookIntegration\" is required")
+		}
+		return struct {
+			Type                    string                  `json:"type"`
+			TeamsWebhookIntegration TeamsWebhookIntegration `json:"teamsWebhookIntegration"`
+		}{Type: "teamsWebhookIntegration", TeamsWebhookIntegration: *u.teamsWebhookIntegration}, nil
+	case "pagerDutyIntegration":
+		if u.pagerDutyIntegration == nil {
+			return nil, fmt.Errorf("field \"pagerDutyIntegration\" is required")
+		}
+		return struct {
+			Type                 string               `json:"type"`
+			PagerDutyIntegration PagerDutyIntegration `json:"pagerDutyIntegration"`
+		}{Type: "pagerDutyIntegration", PagerDutyIntegration: *u.pagerDutyIntegration}, nil
 	}
 }
 
@@ -260,6 +358,14 @@ func (u *IntegrationDetails) UnmarshalJSON(data []byte) error {
 		if u.simpleWebhookIntegration == nil {
 			return fmt.Errorf("field \"simpleWebhookIntegration\" is required")
 		}
+	case "teamsWebhookIntegration":
+		if u.teamsWebhookIntegration == nil {
+			return fmt.Errorf("field \"teamsWebhookIntegration\" is required")
+		}
+	case "pagerDutyIntegration":
+		if u.pagerDutyIntegration == nil {
+			return fmt.Errorf("field \"pagerDutyIntegration\" is required")
+		}
 	}
 	return nil
 }
@@ -280,7 +386,7 @@ func (u *IntegrationDetails) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *IntegrationDetails) AcceptFuncs(slackWebhookIntegrationFunc func(SlackWebhookIntegration) error, opsgenieIntegrationFunc func(OpsgenieIntegration) error, simpleWebhookIntegrationFunc func(SimpleWebhookIntegration) error, unknownFunc func(string) error) error {
+func (u *IntegrationDetails) AcceptFuncs(slackWebhookIntegrationFunc func(SlackWebhookIntegration) error, opsgenieIntegrationFunc func(OpsgenieIntegration) error, simpleWebhookIntegrationFunc func(SimpleWebhookIntegration) error, teamsWebhookIntegrationFunc func(TeamsWebhookIntegration) error, pagerDutyIntegrationFunc func(PagerDutyIntegration) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -302,6 +408,16 @@ func (u *IntegrationDetails) AcceptFuncs(slackWebhookIntegrationFunc func(SlackW
 			return fmt.Errorf("field \"simpleWebhookIntegration\" is required")
 		}
 		return simpleWebhookIntegrationFunc(*u.simpleWebhookIntegration)
+	case "teamsWebhookIntegration":
+		if u.teamsWebhookIntegration == nil {
+			return fmt.Errorf("field \"teamsWebhookIntegration\" is required")
+		}
+		return teamsWebhookIntegrationFunc(*u.teamsWebhookIntegration)
+	case "pagerDutyIntegration":
+		if u.pagerDutyIntegration == nil {
+			return fmt.Errorf("field \"pagerDutyIntegration\" is required")
+		}
+		return pagerDutyIntegrationFunc(*u.pagerDutyIntegration)
 	}
 }
 
@@ -314,6 +430,14 @@ func (u *IntegrationDetails) OpsgenieIntegrationNoopSuccess(OpsgenieIntegration)
 }
 
 func (u *IntegrationDetails) SimpleWebhookIntegrationNoopSuccess(SimpleWebhookIntegration) error {
+	return nil
+}
+
+func (u *IntegrationDetails) TeamsWebhookIntegrationNoopSuccess(TeamsWebhookIntegration) error {
+	return nil
+}
+
+func (u *IntegrationDetails) PagerDutyIntegrationNoopSuccess(PagerDutyIntegration) error {
 	return nil
 }
 
@@ -343,6 +467,16 @@ func (u *IntegrationDetails) Accept(v IntegrationDetailsVisitor) error {
 			return fmt.Errorf("field \"simpleWebhookIntegration\" is required")
 		}
 		return v.VisitSimpleWebhookIntegration(*u.simpleWebhookIntegration)
+	case "teamsWebhookIntegration":
+		if u.teamsWebhookIntegration == nil {
+			return fmt.Errorf("field \"teamsWebhookIntegration\" is required")
+		}
+		return v.VisitTeamsWebhookIntegration(*u.teamsWebhookIntegration)
+	case "pagerDutyIntegration":
+		if u.pagerDutyIntegration == nil {
+			return fmt.Errorf("field \"pagerDutyIntegration\" is required")
+		}
+		return v.VisitPagerDutyIntegration(*u.pagerDutyIntegration)
 	}
 }
 
@@ -350,6 +484,8 @@ type IntegrationDetailsVisitor interface {
 	VisitSlackWebhookIntegration(v SlackWebhookIntegration) error
 	VisitOpsgenieIntegration(v OpsgenieIntegration) error
 	VisitSimpleWebhookIntegration(v SimpleWebhookIntegration) error
+	VisitTeamsWebhookIntegration(v TeamsWebhookIntegration) error
+	VisitPagerDutyIntegration(v PagerDutyIntegration) error
 	VisitUnknown(typeName string) error
 }
 
@@ -375,6 +511,16 @@ func (u *IntegrationDetails) AcceptWithContext(ctx context.Context, v Integratio
 			return fmt.Errorf("field \"simpleWebhookIntegration\" is required")
 		}
 		return v.VisitSimpleWebhookIntegrationWithContext(ctx, *u.simpleWebhookIntegration)
+	case "teamsWebhookIntegration":
+		if u.teamsWebhookIntegration == nil {
+			return fmt.Errorf("field \"teamsWebhookIntegration\" is required")
+		}
+		return v.VisitTeamsWebhookIntegrationWithContext(ctx, *u.teamsWebhookIntegration)
+	case "pagerDutyIntegration":
+		if u.pagerDutyIntegration == nil {
+			return fmt.Errorf("field \"pagerDutyIntegration\" is required")
+		}
+		return v.VisitPagerDutyIntegrationWithContext(ctx, *u.pagerDutyIntegration)
 	}
 }
 
@@ -382,6 +528,8 @@ type IntegrationDetailsVisitorWithContext interface {
 	VisitSlackWebhookIntegrationWithContext(ctx context.Context, v SlackWebhookIntegration) error
 	VisitOpsgenieIntegrationWithContext(ctx context.Context, v OpsgenieIntegration) error
 	VisitSimpleWebhookIntegrationWithContext(ctx context.Context, v SimpleWebhookIntegration) error
+	VisitTeamsWebhookIntegrationWithContext(ctx context.Context, v TeamsWebhookIntegration) error
+	VisitPagerDutyIntegrationWithContext(ctx context.Context, v PagerDutyIntegration) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -395,4 +543,438 @@ func NewIntegrationDetailsFromOpsgenieIntegration(v OpsgenieIntegration) Integra
 
 func NewIntegrationDetailsFromSimpleWebhookIntegration(v SimpleWebhookIntegration) IntegrationDetails {
 	return IntegrationDetails{typ: "simpleWebhookIntegration", simpleWebhookIntegration: &v}
+}
+
+func NewIntegrationDetailsFromTeamsWebhookIntegration(v TeamsWebhookIntegration) IntegrationDetails {
+	return IntegrationDetails{typ: "teamsWebhookIntegration", teamsWebhookIntegration: &v}
+}
+
+func NewIntegrationDetailsFromPagerDutyIntegration(v PagerDutyIntegration) IntegrationDetails {
+	return IntegrationDetails{typ: "pagerDutyIntegration", pagerDutyIntegration: &v}
+}
+
+type MessageFields struct {
+	typ             string
+	alert           *AlertMessageFields
+	resolutionError *ResolutionFailureMessageFields
+}
+
+type messageFieldsDeserializer struct {
+	Type            string                          `json:"type"`
+	Alert           *AlertMessageFields             `json:"alert"`
+	ResolutionError *ResolutionFailureMessageFields `json:"resolutionError"`
+}
+
+func (u *messageFieldsDeserializer) toStruct() MessageFields {
+	return MessageFields{typ: u.Type, alert: u.Alert, resolutionError: u.ResolutionError}
+}
+
+func (u *MessageFields) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "alert":
+		if u.alert == nil {
+			return nil, fmt.Errorf("field \"alert\" is required")
+		}
+		return struct {
+			Type  string             `json:"type"`
+			Alert AlertMessageFields `json:"alert"`
+		}{Type: "alert", Alert: *u.alert}, nil
+	case "resolutionError":
+		if u.resolutionError == nil {
+			return nil, fmt.Errorf("field \"resolutionError\" is required")
+		}
+		return struct {
+			Type            string                         `json:"type"`
+			ResolutionError ResolutionFailureMessageFields `json:"resolutionError"`
+		}{Type: "resolutionError", ResolutionError: *u.resolutionError}, nil
+	}
+}
+
+func (u MessageFields) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *MessageFields) UnmarshalJSON(data []byte) error {
+	var deser messageFieldsDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "alert":
+		if u.alert == nil {
+			return fmt.Errorf("field \"alert\" is required")
+		}
+	case "resolutionError":
+		if u.resolutionError == nil {
+			return fmt.Errorf("field \"resolutionError\" is required")
+		}
+	}
+	return nil
+}
+
+func (u MessageFields) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *MessageFields) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *MessageFields) AcceptFuncs(alertFunc func(AlertMessageFields) error, resolutionErrorFunc func(ResolutionFailureMessageFields) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "alert":
+		if u.alert == nil {
+			return fmt.Errorf("field \"alert\" is required")
+		}
+		return alertFunc(*u.alert)
+	case "resolutionError":
+		if u.resolutionError == nil {
+			return fmt.Errorf("field \"resolutionError\" is required")
+		}
+		return resolutionErrorFunc(*u.resolutionError)
+	}
+}
+
+func (u *MessageFields) AlertNoopSuccess(AlertMessageFields) error {
+	return nil
+}
+
+func (u *MessageFields) ResolutionErrorNoopSuccess(ResolutionFailureMessageFields) error {
+	return nil
+}
+
+func (u *MessageFields) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *MessageFields) Accept(v MessageFieldsVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "alert":
+		if u.alert == nil {
+			return fmt.Errorf("field \"alert\" is required")
+		}
+		return v.VisitAlert(*u.alert)
+	case "resolutionError":
+		if u.resolutionError == nil {
+			return fmt.Errorf("field \"resolutionError\" is required")
+		}
+		return v.VisitResolutionError(*u.resolutionError)
+	}
+}
+
+type MessageFieldsVisitor interface {
+	VisitAlert(v AlertMessageFields) error
+	VisitResolutionError(v ResolutionFailureMessageFields) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *MessageFields) AcceptWithContext(ctx context.Context, v MessageFieldsVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "alert":
+		if u.alert == nil {
+			return fmt.Errorf("field \"alert\" is required")
+		}
+		return v.VisitAlertWithContext(ctx, *u.alert)
+	case "resolutionError":
+		if u.resolutionError == nil {
+			return fmt.Errorf("field \"resolutionError\" is required")
+		}
+		return v.VisitResolutionErrorWithContext(ctx, *u.resolutionError)
+	}
+}
+
+type MessageFieldsVisitorWithContext interface {
+	VisitAlertWithContext(ctx context.Context, v AlertMessageFields) error
+	VisitResolutionErrorWithContext(ctx context.Context, v ResolutionFailureMessageFields) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewMessageFieldsFromAlert(v AlertMessageFields) MessageFields {
+	return MessageFields{typ: "alert", alert: &v}
+}
+
+func NewMessageFieldsFromResolutionError(v ResolutionFailureMessageFields) MessageFields {
+	return MessageFields{typ: "resolutionError", resolutionError: &v}
+}
+
+type UpdateIntegrationDetails struct {
+	typ                 string
+	simpleWebhook       *UpdateSimpleWebhookDetails
+	opsgenieIntegration *UpdateOpsgenieIntegrationDetails
+	teamsWebhook        *UpdateTeamsWebhookIntegrationDetails
+	pagerDuty           *UpdatePagerDutyIntegrationDetails
+}
+
+type updateIntegrationDetailsDeserializer struct {
+	Type                string                                `json:"type"`
+	SimpleWebhook       *UpdateSimpleWebhookDetails           `json:"simpleWebhook"`
+	OpsgenieIntegration *UpdateOpsgenieIntegrationDetails     `json:"opsgenieIntegration"`
+	TeamsWebhook        *UpdateTeamsWebhookIntegrationDetails `json:"teamsWebhook"`
+	PagerDuty           *UpdatePagerDutyIntegrationDetails    `json:"pagerDuty"`
+}
+
+func (u *updateIntegrationDetailsDeserializer) toStruct() UpdateIntegrationDetails {
+	return UpdateIntegrationDetails{typ: u.Type, simpleWebhook: u.SimpleWebhook, opsgenieIntegration: u.OpsgenieIntegration, teamsWebhook: u.TeamsWebhook, pagerDuty: u.PagerDuty}
+}
+
+func (u *UpdateIntegrationDetails) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "simpleWebhook":
+		if u.simpleWebhook == nil {
+			return nil, fmt.Errorf("field \"simpleWebhook\" is required")
+		}
+		return struct {
+			Type          string                     `json:"type"`
+			SimpleWebhook UpdateSimpleWebhookDetails `json:"simpleWebhook"`
+		}{Type: "simpleWebhook", SimpleWebhook: *u.simpleWebhook}, nil
+	case "opsgenieIntegration":
+		if u.opsgenieIntegration == nil {
+			return nil, fmt.Errorf("field \"opsgenieIntegration\" is required")
+		}
+		return struct {
+			Type                string                           `json:"type"`
+			OpsgenieIntegration UpdateOpsgenieIntegrationDetails `json:"opsgenieIntegration"`
+		}{Type: "opsgenieIntegration", OpsgenieIntegration: *u.opsgenieIntegration}, nil
+	case "teamsWebhook":
+		if u.teamsWebhook == nil {
+			return nil, fmt.Errorf("field \"teamsWebhook\" is required")
+		}
+		return struct {
+			Type         string                               `json:"type"`
+			TeamsWebhook UpdateTeamsWebhookIntegrationDetails `json:"teamsWebhook"`
+		}{Type: "teamsWebhook", TeamsWebhook: *u.teamsWebhook}, nil
+	case "pagerDuty":
+		if u.pagerDuty == nil {
+			return nil, fmt.Errorf("field \"pagerDuty\" is required")
+		}
+		return struct {
+			Type      string                            `json:"type"`
+			PagerDuty UpdatePagerDutyIntegrationDetails `json:"pagerDuty"`
+		}{Type: "pagerDuty", PagerDuty: *u.pagerDuty}, nil
+	}
+}
+
+func (u UpdateIntegrationDetails) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *UpdateIntegrationDetails) UnmarshalJSON(data []byte) error {
+	var deser updateIntegrationDetailsDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "simpleWebhook":
+		if u.simpleWebhook == nil {
+			return fmt.Errorf("field \"simpleWebhook\" is required")
+		}
+	case "opsgenieIntegration":
+		if u.opsgenieIntegration == nil {
+			return fmt.Errorf("field \"opsgenieIntegration\" is required")
+		}
+	case "teamsWebhook":
+		if u.teamsWebhook == nil {
+			return fmt.Errorf("field \"teamsWebhook\" is required")
+		}
+	case "pagerDuty":
+		if u.pagerDuty == nil {
+			return fmt.Errorf("field \"pagerDuty\" is required")
+		}
+	}
+	return nil
+}
+
+func (u UpdateIntegrationDetails) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *UpdateIntegrationDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *UpdateIntegrationDetails) AcceptFuncs(simpleWebhookFunc func(UpdateSimpleWebhookDetails) error, opsgenieIntegrationFunc func(UpdateOpsgenieIntegrationDetails) error, teamsWebhookFunc func(UpdateTeamsWebhookIntegrationDetails) error, pagerDutyFunc func(UpdatePagerDutyIntegrationDetails) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "simpleWebhook":
+		if u.simpleWebhook == nil {
+			return fmt.Errorf("field \"simpleWebhook\" is required")
+		}
+		return simpleWebhookFunc(*u.simpleWebhook)
+	case "opsgenieIntegration":
+		if u.opsgenieIntegration == nil {
+			return fmt.Errorf("field \"opsgenieIntegration\" is required")
+		}
+		return opsgenieIntegrationFunc(*u.opsgenieIntegration)
+	case "teamsWebhook":
+		if u.teamsWebhook == nil {
+			return fmt.Errorf("field \"teamsWebhook\" is required")
+		}
+		return teamsWebhookFunc(*u.teamsWebhook)
+	case "pagerDuty":
+		if u.pagerDuty == nil {
+			return fmt.Errorf("field \"pagerDuty\" is required")
+		}
+		return pagerDutyFunc(*u.pagerDuty)
+	}
+}
+
+func (u *UpdateIntegrationDetails) SimpleWebhookNoopSuccess(UpdateSimpleWebhookDetails) error {
+	return nil
+}
+
+func (u *UpdateIntegrationDetails) OpsgenieIntegrationNoopSuccess(UpdateOpsgenieIntegrationDetails) error {
+	return nil
+}
+
+func (u *UpdateIntegrationDetails) TeamsWebhookNoopSuccess(UpdateTeamsWebhookIntegrationDetails) error {
+	return nil
+}
+
+func (u *UpdateIntegrationDetails) PagerDutyNoopSuccess(UpdatePagerDutyIntegrationDetails) error {
+	return nil
+}
+
+func (u *UpdateIntegrationDetails) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *UpdateIntegrationDetails) Accept(v UpdateIntegrationDetailsVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "simpleWebhook":
+		if u.simpleWebhook == nil {
+			return fmt.Errorf("field \"simpleWebhook\" is required")
+		}
+		return v.VisitSimpleWebhook(*u.simpleWebhook)
+	case "opsgenieIntegration":
+		if u.opsgenieIntegration == nil {
+			return fmt.Errorf("field \"opsgenieIntegration\" is required")
+		}
+		return v.VisitOpsgenieIntegration(*u.opsgenieIntegration)
+	case "teamsWebhook":
+		if u.teamsWebhook == nil {
+			return fmt.Errorf("field \"teamsWebhook\" is required")
+		}
+		return v.VisitTeamsWebhook(*u.teamsWebhook)
+	case "pagerDuty":
+		if u.pagerDuty == nil {
+			return fmt.Errorf("field \"pagerDuty\" is required")
+		}
+		return v.VisitPagerDuty(*u.pagerDuty)
+	}
+}
+
+type UpdateIntegrationDetailsVisitor interface {
+	VisitSimpleWebhook(v UpdateSimpleWebhookDetails) error
+	VisitOpsgenieIntegration(v UpdateOpsgenieIntegrationDetails) error
+	VisitTeamsWebhook(v UpdateTeamsWebhookIntegrationDetails) error
+	VisitPagerDuty(v UpdatePagerDutyIntegrationDetails) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *UpdateIntegrationDetails) AcceptWithContext(ctx context.Context, v UpdateIntegrationDetailsVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "simpleWebhook":
+		if u.simpleWebhook == nil {
+			return fmt.Errorf("field \"simpleWebhook\" is required")
+		}
+		return v.VisitSimpleWebhookWithContext(ctx, *u.simpleWebhook)
+	case "opsgenieIntegration":
+		if u.opsgenieIntegration == nil {
+			return fmt.Errorf("field \"opsgenieIntegration\" is required")
+		}
+		return v.VisitOpsgenieIntegrationWithContext(ctx, *u.opsgenieIntegration)
+	case "teamsWebhook":
+		if u.teamsWebhook == nil {
+			return fmt.Errorf("field \"teamsWebhook\" is required")
+		}
+		return v.VisitTeamsWebhookWithContext(ctx, *u.teamsWebhook)
+	case "pagerDuty":
+		if u.pagerDuty == nil {
+			return fmt.Errorf("field \"pagerDuty\" is required")
+		}
+		return v.VisitPagerDutyWithContext(ctx, *u.pagerDuty)
+	}
+}
+
+type UpdateIntegrationDetailsVisitorWithContext interface {
+	VisitSimpleWebhookWithContext(ctx context.Context, v UpdateSimpleWebhookDetails) error
+	VisitOpsgenieIntegrationWithContext(ctx context.Context, v UpdateOpsgenieIntegrationDetails) error
+	VisitTeamsWebhookWithContext(ctx context.Context, v UpdateTeamsWebhookIntegrationDetails) error
+	VisitPagerDutyWithContext(ctx context.Context, v UpdatePagerDutyIntegrationDetails) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewUpdateIntegrationDetailsFromSimpleWebhook(v UpdateSimpleWebhookDetails) UpdateIntegrationDetails {
+	return UpdateIntegrationDetails{typ: "simpleWebhook", simpleWebhook: &v}
+}
+
+func NewUpdateIntegrationDetailsFromOpsgenieIntegration(v UpdateOpsgenieIntegrationDetails) UpdateIntegrationDetails {
+	return UpdateIntegrationDetails{typ: "opsgenieIntegration", opsgenieIntegration: &v}
+}
+
+func NewUpdateIntegrationDetailsFromTeamsWebhook(v UpdateTeamsWebhookIntegrationDetails) UpdateIntegrationDetails {
+	return UpdateIntegrationDetails{typ: "teamsWebhook", teamsWebhook: &v}
+}
+
+func NewUpdateIntegrationDetailsFromPagerDuty(v UpdatePagerDutyIntegrationDetails) UpdateIntegrationDetails {
+	return UpdateIntegrationDetails{typ: "pagerDuty", pagerDuty: &v}
 }

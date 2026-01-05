@@ -598,6 +598,63 @@ func (e *LineStyleV1) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type MagnitudeAndPhaseDisplayMode struct {
+	val MagnitudeAndPhaseDisplayMode_Value
+}
+
+type MagnitudeAndPhaseDisplayMode_Value string
+
+const (
+	MagnitudeAndPhaseDisplayMode_MAGNITUDE MagnitudeAndPhaseDisplayMode_Value = "MAGNITUDE"
+	MagnitudeAndPhaseDisplayMode_PHASE     MagnitudeAndPhaseDisplayMode_Value = "PHASE"
+	MagnitudeAndPhaseDisplayMode_UNKNOWN   MagnitudeAndPhaseDisplayMode_Value = "UNKNOWN"
+)
+
+// MagnitudeAndPhaseDisplayMode_Values returns all known variants of MagnitudeAndPhaseDisplayMode.
+func MagnitudeAndPhaseDisplayMode_Values() []MagnitudeAndPhaseDisplayMode_Value {
+	return []MagnitudeAndPhaseDisplayMode_Value{MagnitudeAndPhaseDisplayMode_MAGNITUDE, MagnitudeAndPhaseDisplayMode_PHASE}
+}
+
+func New_MagnitudeAndPhaseDisplayMode(value MagnitudeAndPhaseDisplayMode_Value) MagnitudeAndPhaseDisplayMode {
+	return MagnitudeAndPhaseDisplayMode{val: value}
+}
+
+// IsUnknown returns false for all known variants of MagnitudeAndPhaseDisplayMode and true otherwise.
+func (e MagnitudeAndPhaseDisplayMode) IsUnknown() bool {
+	switch e.val {
+	case MagnitudeAndPhaseDisplayMode_MAGNITUDE, MagnitudeAndPhaseDisplayMode_PHASE:
+		return false
+	}
+	return true
+}
+
+func (e MagnitudeAndPhaseDisplayMode) Value() MagnitudeAndPhaseDisplayMode_Value {
+	if e.IsUnknown() {
+		return MagnitudeAndPhaseDisplayMode_UNKNOWN
+	}
+	return e.val
+}
+
+func (e MagnitudeAndPhaseDisplayMode) String() string {
+	return string(e.val)
+}
+
+func (e MagnitudeAndPhaseDisplayMode) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *MagnitudeAndPhaseDisplayMode) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_MagnitudeAndPhaseDisplayMode(MagnitudeAndPhaseDisplayMode_Value(v))
+	case "MAGNITUDE":
+		*e = New_MagnitudeAndPhaseDisplayMode(MagnitudeAndPhaseDisplayMode_MAGNITUDE)
+	case "PHASE":
+		*e = New_MagnitudeAndPhaseDisplayMode(MagnitudeAndPhaseDisplayMode_PHASE)
+	}
+	return nil
+}
+
 type NumberFormatDisplayOption struct {
 	val NumberFormatDisplayOption_Value
 }
@@ -605,15 +662,16 @@ type NumberFormatDisplayOption struct {
 type NumberFormatDisplayOption_Value string
 
 const (
-	NumberFormatDisplayOption_SUCCINCT NumberFormatDisplayOption_Value = "SUCCINCT"
-	NumberFormatDisplayOption_LOCALE   NumberFormatDisplayOption_Value = "LOCALE"
-	NumberFormatDisplayOption_PLAIN    NumberFormatDisplayOption_Value = "PLAIN"
-	NumberFormatDisplayOption_UNKNOWN  NumberFormatDisplayOption_Value = "UNKNOWN"
+	NumberFormatDisplayOption_SCIENTIFIC NumberFormatDisplayOption_Value = "SCIENTIFIC"
+	NumberFormatDisplayOption_SUCCINCT   NumberFormatDisplayOption_Value = "SUCCINCT"
+	NumberFormatDisplayOption_LOCALE     NumberFormatDisplayOption_Value = "LOCALE"
+	NumberFormatDisplayOption_PLAIN      NumberFormatDisplayOption_Value = "PLAIN"
+	NumberFormatDisplayOption_UNKNOWN    NumberFormatDisplayOption_Value = "UNKNOWN"
 )
 
 // NumberFormatDisplayOption_Values returns all known variants of NumberFormatDisplayOption.
 func NumberFormatDisplayOption_Values() []NumberFormatDisplayOption_Value {
-	return []NumberFormatDisplayOption_Value{NumberFormatDisplayOption_SUCCINCT, NumberFormatDisplayOption_LOCALE, NumberFormatDisplayOption_PLAIN}
+	return []NumberFormatDisplayOption_Value{NumberFormatDisplayOption_SCIENTIFIC, NumberFormatDisplayOption_SUCCINCT, NumberFormatDisplayOption_LOCALE, NumberFormatDisplayOption_PLAIN}
 }
 
 func New_NumberFormatDisplayOption(value NumberFormatDisplayOption_Value) NumberFormatDisplayOption {
@@ -623,7 +681,7 @@ func New_NumberFormatDisplayOption(value NumberFormatDisplayOption_Value) Number
 // IsUnknown returns false for all known variants of NumberFormatDisplayOption and true otherwise.
 func (e NumberFormatDisplayOption) IsUnknown() bool {
 	switch e.val {
-	case NumberFormatDisplayOption_SUCCINCT, NumberFormatDisplayOption_LOCALE, NumberFormatDisplayOption_PLAIN:
+	case NumberFormatDisplayOption_SCIENTIFIC, NumberFormatDisplayOption_SUCCINCT, NumberFormatDisplayOption_LOCALE, NumberFormatDisplayOption_PLAIN:
 		return false
 	}
 	return true
@@ -648,6 +706,8 @@ func (e *NumberFormatDisplayOption) UnmarshalText(data []byte) error {
 	switch v := strings.ToUpper(string(data)); v {
 	default:
 		*e = New_NumberFormatDisplayOption(NumberFormatDisplayOption_Value(v))
+	case "SCIENTIFIC":
+		*e = New_NumberFormatDisplayOption(NumberFormatDisplayOption_SCIENTIFIC)
 	case "SUCCINCT":
 		*e = New_NumberFormatDisplayOption(NumberFormatDisplayOption_SUCCINCT)
 	case "LOCALE":

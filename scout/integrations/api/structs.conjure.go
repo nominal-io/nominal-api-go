@@ -4,6 +4,7 @@ package api
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
+	"github.com/nominal-io/nominal-api-go/io/nominal/event"
 	api1 "github.com/nominal-io/nominal-api-go/scout/api"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/datetime"
@@ -11,6 +12,63 @@ import (
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
+
+type AlertMessageFields struct {
+	AssetTitle       string              `json:"assetTitle"`
+	CheckTitle       string              `json:"checkTitle"`
+	CheckDescription string              `json:"checkDescription"`
+	ChecklistTitle   string              `json:"checklistTitle"`
+	AssetRid         api.AssetRid        `json:"assetRid"`
+	CheckLineageRid  api.CheckLineageRid `json:"checkLineageRid"`
+	// Appended to the end of the message as a button (if supported) or as a text hyperlink.
+	WorkbookUrl *string `conjure-docs:"Appended to the end of the message as a button (if supported) or as a text hyperlink." json:"workbookUrl,omitempty"`
+	// Appended to the end of the message as a button (if supported) or as a text hyperlink.
+	AlertUrl *string `conjure-docs:"Appended to the end of the message as a button (if supported) or as a text hyperlink." json:"alertUrl,omitempty"`
+	// Will be prefixed in title and indicated by an icon.
+	EventType event.EventType `conjure-docs:"Will be prefixed in title and indicated by an icon." json:"eventType"`
+	Priority  api1.Priority   `json:"priority"`
+	// Currently exposed as 'tags' on the frontend to match Opsgenie naming. Used by some integrations to filter/route messages.
+	Labels []string `conjure-docs:"Currently exposed as 'tags' on the frontend to match Opsgenie naming. Used by some integrations to filter/route messages." json:"labels"`
+	// Determines execution status of the alert, between success, failure, and execution error.
+	AlertType AlertType `conjure-docs:"Determines execution status of the alert, between success, failure, and execution error." json:"alertType"`
+}
+
+func (o AlertMessageFields) MarshalJSON() ([]byte, error) {
+	if o.Labels == nil {
+		o.Labels = make([]string, 0)
+	}
+	type _tmpAlertMessageFields AlertMessageFields
+	return safejson.Marshal(_tmpAlertMessageFields(o))
+}
+
+func (o *AlertMessageFields) UnmarshalJSON(data []byte) error {
+	type _tmpAlertMessageFields AlertMessageFields
+	var rawAlertMessageFields _tmpAlertMessageFields
+	if err := safejson.Unmarshal(data, &rawAlertMessageFields); err != nil {
+		return err
+	}
+	if rawAlertMessageFields.Labels == nil {
+		rawAlertMessageFields.Labels = make([]string, 0)
+	}
+	*o = AlertMessageFields(rawAlertMessageFields)
+	return nil
+}
+
+func (o AlertMessageFields) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AlertMessageFields) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
 
 type CreateIntegrationRequest struct {
 	Name                     string                   `json:"name"`
@@ -60,6 +118,26 @@ func (o *CreateOpsgenieIntegrationDetails) UnmarshalYAML(unmarshal func(interfac
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type CreatePagerDutyIntegrationDetails struct {
+	RoutingKey string `json:"routingKey"`
+}
+
+func (o CreatePagerDutyIntegrationDetails) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CreatePagerDutyIntegrationDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type CreateSimpleWebhookDetails struct {
 	Webhook string `json:"webhook"`
 }
@@ -73,6 +151,26 @@ func (o CreateSimpleWebhookDetails) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CreateSimpleWebhookDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type CreateTeamsWebhookIntegrationDetails struct {
+	Webhook string `json:"webhook"`
+}
+
+func (o CreateTeamsWebhookIntegrationDetails) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CreateTeamsWebhookIntegrationDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -120,6 +218,27 @@ func (o Integration) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Integration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type InternalSendMessageRequest struct {
+	IntegrationRid IntegrationRid `json:"integrationRid"`
+	Message        MessageFields  `json:"message"`
+}
+
+func (o InternalSendMessageRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *InternalSendMessageRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -188,6 +307,72 @@ func (o OpsgenieIntegration) MarshalYAML() (interface{}, error) {
 }
 
 func (o *OpsgenieIntegration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type PagerDutyIntegration struct{}
+
+func (o PagerDutyIntegration) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PagerDutyIntegration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ResolutionFailureMessageFields struct {
+	ChecklistTitle   string           `json:"checklistTitle"`
+	AssetTitle       string           `json:"assetTitle"`
+	ChecklistRid     api.ChecklistRid `json:"checklistRid"`
+	AssetRid         api.AssetRid     `json:"assetRid"`
+	UnresolvedChecks int              `json:"unresolvedChecks"`
+	TotalChecks      int              `json:"totalChecks"`
+	// Currently exposed as 'tags' on the frontend to match Opsgenie naming. Used by some integrations to filter/route messages.
+	Labels []string `conjure-docs:"Currently exposed as 'tags' on the frontend to match Opsgenie naming. Used by some integrations to filter/route messages." json:"labels"`
+}
+
+func (o ResolutionFailureMessageFields) MarshalJSON() ([]byte, error) {
+	if o.Labels == nil {
+		o.Labels = make([]string, 0)
+	}
+	type _tmpResolutionFailureMessageFields ResolutionFailureMessageFields
+	return safejson.Marshal(_tmpResolutionFailureMessageFields(o))
+}
+
+func (o *ResolutionFailureMessageFields) UnmarshalJSON(data []byte) error {
+	type _tmpResolutionFailureMessageFields ResolutionFailureMessageFields
+	var rawResolutionFailureMessageFields _tmpResolutionFailureMessageFields
+	if err := safejson.Unmarshal(data, &rawResolutionFailureMessageFields); err != nil {
+		return err
+	}
+	if rawResolutionFailureMessageFields.Labels == nil {
+		rawResolutionFailureMessageFields.Labels = make([]string, 0)
+	}
+	*o = ResolutionFailureMessageFields(rawResolutionFailureMessageFields)
+	return nil
+}
+
+func (o ResolutionFailureMessageFields) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ResolutionFailureMessageFields) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -285,6 +470,48 @@ func (o *SlackWebhookIntegration) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type TeamsWebhookIntegration struct{}
+
+func (o TeamsWebhookIntegration) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TeamsWebhookIntegration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UpdateIntegrationDetailsRequest struct {
+	/*
+	   Includes the information needed to rotate the integration-specific secrets.
+	   Examples include unsecured webhook URL or API keys.
+	*/
+	UpdateIntegrationDetails UpdateIntegrationDetails `conjure-docs:"Includes the information needed to rotate the integration-specific secrets.\nExamples include unsecured webhook URL or API keys." json:"updateIntegrationDetails"`
+}
+
+func (o UpdateIntegrationDetailsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UpdateIntegrationDetailsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type UpdateIntegrationRequest struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -299,6 +526,87 @@ func (o UpdateIntegrationRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *UpdateIntegrationRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UpdateOpsgenieIntegrationDetails struct {
+	ApiKey string         `json:"apiKey"`
+	Region OpsgenieRegion `json:"region"`
+}
+
+func (o UpdateOpsgenieIntegrationDetails) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UpdateOpsgenieIntegrationDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UpdatePagerDutyIntegrationDetails struct {
+	RoutingKey string `json:"routingKey"`
+}
+
+func (o UpdatePagerDutyIntegrationDetails) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UpdatePagerDutyIntegrationDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UpdateSimpleWebhookDetails struct {
+	Webhook string `json:"webhook"`
+}
+
+func (o UpdateSimpleWebhookDetails) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UpdateSimpleWebhookDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UpdateTeamsWebhookIntegrationDetails struct {
+	Webhook string `json:"webhook"`
+}
+
+func (o UpdateTeamsWebhookIntegrationDetails) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UpdateTeamsWebhookIntegrationDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

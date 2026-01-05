@@ -8,7 +8,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api-go/scout/comparisonnotebook/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/comparisonnotebook/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 )
 
 type InputTypeWithT[T any] InputType
@@ -57,6 +58,71 @@ func (u *InputTypeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type InputTypeVisitorWithT[T any] interface {
 	VisitTag(ctx context.Context, v Tag) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type OffsetWithT[T any] Offset
+
+func (u *OffsetWithT[T]) Accept(ctx context.Context, v OffsetVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "custom":
+		if u.custom == nil {
+			return result, fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustom(ctx, *u.custom)
+	case "runAlign":
+		if u.runAlign == nil {
+			return result, fmt.Errorf("field \"runAlign\" is required")
+		}
+		return v.VisitRunAlign(ctx, *u.runAlign)
+	}
+}
+
+func (u *OffsetWithT[T]) AcceptFuncs(customFunc func(api.UserDuration) (T, error), runAlignFunc func(RunAlignment) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "custom":
+		if u.custom == nil {
+			return result, fmt.Errorf("field \"custom\" is required")
+		}
+		return customFunc(*u.custom)
+	case "runAlign":
+		if u.runAlign == nil {
+			return result, fmt.Errorf("field \"runAlign\" is required")
+		}
+		return runAlignFunc(*u.runAlign)
+	}
+}
+
+func (u *OffsetWithT[T]) CustomNoopSuccess(api.UserDuration) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *OffsetWithT[T]) RunAlignNoopSuccess(RunAlignment) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *OffsetWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type OffsetVisitorWithT[T any] interface {
+	VisitCustom(ctx context.Context, v api.UserDuration) (T, error)
+	VisitRunAlign(ctx context.Context, v RunAlignment) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -132,7 +198,7 @@ func (u *UnifiedWorkbookContentWithT[T]) Accept(ctx context.Context, v UnifiedWo
 	}
 }
 
-func (u *UnifiedWorkbookContentWithT[T]) AcceptFuncs(workbookFunc func(WorkbookContent) (T, error), comparisonWorkbookFunc func(api.ComparisonWorkbookContent) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UnifiedWorkbookContentWithT[T]) AcceptFuncs(workbookFunc func(WorkbookContent) (T, error), comparisonWorkbookFunc func(api1.ComparisonWorkbookContent) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -158,7 +224,7 @@ func (u *UnifiedWorkbookContentWithT[T]) WorkbookNoopSuccess(WorkbookContent) (T
 	return result, nil
 }
 
-func (u *UnifiedWorkbookContentWithT[T]) ComparisonWorkbookNoopSuccess(api.ComparisonWorkbookContent) (T, error) {
+func (u *UnifiedWorkbookContentWithT[T]) ComparisonWorkbookNoopSuccess(api1.ComparisonWorkbookContent) (T, error) {
 	var result T
 	return result, nil
 }
@@ -170,7 +236,7 @@ func (u *UnifiedWorkbookContentWithT[T]) ErrorOnUnknown(typeName string) (T, err
 
 type UnifiedWorkbookContentVisitorWithT[T any] interface {
 	VisitWorkbook(ctx context.Context, v WorkbookContent) (T, error)
-	VisitComparisonWorkbook(ctx context.Context, v api.ComparisonWorkbookContent) (T, error)
+	VisitComparisonWorkbook(ctx context.Context, v api1.ComparisonWorkbookContent) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -220,5 +286,103 @@ func (u *WorkbookInputsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type WorkbookInputsVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v WorkbookInputsV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type WorkbookOffsetsWithT[T any] WorkbookOffsets
+
+func (u *WorkbookOffsetsWithT[T]) Accept(ctx context.Context, v WorkbookOffsetsVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *WorkbookOffsetsWithT[T]) AcceptFuncs(v1Func func(WorkbookOffsetsV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *WorkbookOffsetsWithT[T]) V1NoopSuccess(WorkbookOffsetsV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookOffsetsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type WorkbookOffsetsVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v WorkbookOffsetsV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type WorkbookTimeSettingsWithT[T any] WorkbookTimeSettings
+
+func (u *WorkbookTimeSettingsWithT[T]) Accept(ctx context.Context, v WorkbookTimeSettingsVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *WorkbookTimeSettingsWithT[T]) AcceptFuncs(v1Func func(WorkbookTimeSettingsV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *WorkbookTimeSettingsWithT[T]) V1NoopSuccess(WorkbookTimeSettingsV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookTimeSettingsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type WorkbookTimeSettingsVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v WorkbookTimeSettingsV1) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

@@ -14,6 +14,7 @@ type ChannelLocator struct {
 	Channel       api.Channel                  `json:"channel"`
 	Tags          map[api.TagName]api.TagValue `json:"tags"`
 	Asset         *api1.AssetRefName           `json:"asset,omitempty"`
+	Run           *api1.RunRefName             `json:"run,omitempty"`
 }
 
 func (o ChannelLocator) MarshalJSON() ([]byte, error) {

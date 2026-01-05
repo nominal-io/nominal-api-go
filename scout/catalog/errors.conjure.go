@@ -9,7 +9,6 @@ import (
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/datasource"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-contract/errors"
 	"github.com/palantir/pkg/rid"
@@ -1537,8 +1536,7 @@ func (e *GranularityMismatch) UnmarshalJSON(data []byte) error {
 }
 
 type invalidStateForAddingAdditionalFile struct {
-	State             *api.IngestStatusV2 `json:"state,omitempty"`
-	TimestampMetadata *TimestampMetadata  `json:"timestampMetadata,omitempty"`
+	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
 }
 
 func (o invalidStateForAddingAdditionalFile) MarshalYAML() (interface{}, error) {
@@ -1558,13 +1556,13 @@ func (o *invalidStateForAddingAdditionalFile) UnmarshalYAML(unmarshal func(inter
 }
 
 // NewInvalidStateForAddingAdditionalFile returns new instance of InvalidStateForAddingAdditionalFile error.
-func NewInvalidStateForAddingAdditionalFile(stateArg *api.IngestStatusV2, timestampMetadataArg *TimestampMetadata) *InvalidStateForAddingAdditionalFile {
-	return &InvalidStateForAddingAdditionalFile{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidStateForAddingAdditionalFile: invalidStateForAddingAdditionalFile{State: stateArg, TimestampMetadata: timestampMetadataArg}}
+func NewInvalidStateForAddingAdditionalFile(timestampMetadataArg *TimestampMetadata) *InvalidStateForAddingAdditionalFile {
+	return &InvalidStateForAddingAdditionalFile{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidStateForAddingAdditionalFile: invalidStateForAddingAdditionalFile{TimestampMetadata: timestampMetadataArg}}
 }
 
 // WrapWithInvalidStateForAddingAdditionalFile returns new instance of InvalidStateForAddingAdditionalFile error wrapping an existing error.
-func WrapWithInvalidStateForAddingAdditionalFile(err error, stateArg *api.IngestStatusV2, timestampMetadataArg *TimestampMetadata) *InvalidStateForAddingAdditionalFile {
-	return &InvalidStateForAddingAdditionalFile{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidStateForAddingAdditionalFile: invalidStateForAddingAdditionalFile{State: stateArg, TimestampMetadata: timestampMetadataArg}}
+func WrapWithInvalidStateForAddingAdditionalFile(err error, timestampMetadataArg *TimestampMetadata) *InvalidStateForAddingAdditionalFile {
+	return &InvalidStateForAddingAdditionalFile{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidStateForAddingAdditionalFile: invalidStateForAddingAdditionalFile{TimestampMetadata: timestampMetadataArg}}
 }
 
 // InvalidStateForAddingAdditionalFile is an error type.
@@ -1632,12 +1630,12 @@ func (e *InvalidStateForAddingAdditionalFile) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *InvalidStateForAddingAdditionalFile) Parameters() map[string]interface{} {
-	return map[string]interface{}{"state": e.State, "timestampMetadata": e.TimestampMetadata}
+	return map[string]interface{}{"timestampMetadata": e.TimestampMetadata}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *InvalidStateForAddingAdditionalFile) safeParams() map[string]interface{} {
-	return map[string]interface{}{"state": e.State, "timestampMetadata": e.TimestampMetadata, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"timestampMetadata": e.TimestampMetadata, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and

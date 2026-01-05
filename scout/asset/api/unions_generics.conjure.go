@@ -38,16 +38,41 @@ func (u *SearchAssetsQueryWithT[T]) Accept(ctx context.Context, v SearchAssetsQu
 			return result, fmt.Errorf("field \"label\" is required")
 		}
 		return v.VisitLabel(ctx, *u.label)
+	case "labels":
+		if u.labels == nil {
+			return result, fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(ctx, *u.labels)
 	case "property":
 		if u.property == nil {
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(ctx, *u.property)
+	case "properties":
+		if u.properties == nil {
+			return result, fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(ctx, *u.properties)
 	case "typeRid":
 		if u.typeRid == nil {
 			return result, fmt.Errorf("field \"typeRid\" is required")
 		}
 		return v.VisitTypeRid(ctx, *u.typeRid)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return result, fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return v.VisitAssetTypes(ctx, *u.assetTypes)
+	case "isStaged":
+		if u.isStaged == nil {
+			return result, fmt.Errorf("field \"isStaged\" is required")
+		}
+		return v.VisitIsStaged(ctx, *u.isStaged)
+	case "archived":
+		if u.archived == nil {
+			return result, fmt.Errorf("field \"archived\" is required")
+		}
+		return v.VisitArchived(ctx, *u.archived)
 	case "and":
 		if u.and == nil {
 			return result, fmt.Errorf("field \"and\" is required")
@@ -58,11 +83,6 @@ func (u *SearchAssetsQueryWithT[T]) Accept(ctx context.Context, v SearchAssetsQu
 			return result, fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOr(ctx, *u.or)
-	case "isStaged":
-		if u.isStaged == nil {
-			return result, fmt.Errorf("field \"isStaged\" is required")
-		}
-		return v.VisitIsStaged(ctx, *u.isStaged)
 	case "workspace":
 		if u.workspace == nil {
 			return result, fmt.Errorf("field \"workspace\" is required")
@@ -71,7 +91,7 @@ func (u *SearchAssetsQueryWithT[T]) Accept(ctx context.Context, v SearchAssetsQu
 	}
 }
 
-func (u *SearchAssetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), exactSubstringFunc func(string) (T, error), labelFunc func(api.Label) (T, error), propertyFunc func(api.Property) (T, error), typeRidFunc func(api1.TypeRid) (T, error), andFunc func([]SearchAssetsQuery) (T, error), orFunc func([]SearchAssetsQuery) (T, error), isStagedFunc func(bool) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchAssetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), exactSubstringFunc func(string) (T, error), labelFunc func(api.Label) (T, error), labelsFunc func(api1.LabelsFilter) (T, error), propertyFunc func(api.Property) (T, error), propertiesFunc func(api1.PropertiesFilter) (T, error), typeRidFunc func(api1.TypeRid) (T, error), assetTypesFunc func(AssetTypesFilter) (T, error), isStagedFunc func(bool) (T, error), archivedFunc func(bool) (T, error), andFunc func([]SearchAssetsQuery) (T, error), orFunc func([]SearchAssetsQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -94,16 +114,41 @@ func (u *SearchAssetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, 
 			return result, fmt.Errorf("field \"label\" is required")
 		}
 		return labelFunc(*u.label)
+	case "labels":
+		if u.labels == nil {
+			return result, fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
 	case "property":
 		if u.property == nil {
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "properties":
+		if u.properties == nil {
+			return result, fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
 	case "typeRid":
 		if u.typeRid == nil {
 			return result, fmt.Errorf("field \"typeRid\" is required")
 		}
 		return typeRidFunc(*u.typeRid)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return result, fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return assetTypesFunc(*u.assetTypes)
+	case "isStaged":
+		if u.isStaged == nil {
+			return result, fmt.Errorf("field \"isStaged\" is required")
+		}
+		return isStagedFunc(*u.isStaged)
+	case "archived":
+		if u.archived == nil {
+			return result, fmt.Errorf("field \"archived\" is required")
+		}
+		return archivedFunc(*u.archived)
 	case "and":
 		if u.and == nil {
 			return result, fmt.Errorf("field \"and\" is required")
@@ -114,11 +159,6 @@ func (u *SearchAssetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, 
 			return result, fmt.Errorf("field \"or\" is required")
 		}
 		return orFunc(*u.or)
-	case "isStaged":
-		if u.isStaged == nil {
-			return result, fmt.Errorf("field \"isStaged\" is required")
-		}
-		return isStagedFunc(*u.isStaged)
 	case "workspace":
 		if u.workspace == nil {
 			return result, fmt.Errorf("field \"workspace\" is required")
@@ -142,12 +182,37 @@ func (u *SearchAssetsQueryWithT[T]) LabelNoopSuccess(api.Label) (T, error) {
 	return result, nil
 }
 
+func (u *SearchAssetsQueryWithT[T]) LabelsNoopSuccess(api1.LabelsFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchAssetsQueryWithT[T]) PropertyNoopSuccess(api.Property) (T, error) {
 	var result T
 	return result, nil
 }
 
+func (u *SearchAssetsQueryWithT[T]) PropertiesNoopSuccess(api1.PropertiesFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchAssetsQueryWithT[T]) TypeRidNoopSuccess(api1.TypeRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchAssetsQueryWithT[T]) AssetTypesNoopSuccess(AssetTypesFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchAssetsQueryWithT[T]) IsStagedNoopSuccess(bool) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchAssetsQueryWithT[T]) ArchivedNoopSuccess(bool) (T, error) {
 	var result T
 	return result, nil
 }
@@ -158,11 +223,6 @@ func (u *SearchAssetsQueryWithT[T]) AndNoopSuccess([]SearchAssetsQuery) (T, erro
 }
 
 func (u *SearchAssetsQueryWithT[T]) OrNoopSuccess([]SearchAssetsQuery) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *SearchAssetsQueryWithT[T]) IsStagedNoopSuccess(bool) (T, error) {
 	var result T
 	return result, nil
 }
@@ -181,11 +241,15 @@ type SearchAssetsQueryVisitorWithT[T any] interface {
 	VisitSearchText(ctx context.Context, v string) (T, error)
 	VisitExactSubstring(ctx context.Context, v string) (T, error)
 	VisitLabel(ctx context.Context, v api.Label) (T, error)
+	VisitLabels(ctx context.Context, v api1.LabelsFilter) (T, error)
 	VisitProperty(ctx context.Context, v api.Property) (T, error)
+	VisitProperties(ctx context.Context, v api1.PropertiesFilter) (T, error)
 	VisitTypeRid(ctx context.Context, v api1.TypeRid) (T, error)
+	VisitAssetTypes(ctx context.Context, v AssetTypesFilter) (T, error)
+	VisitIsStaged(ctx context.Context, v bool) (T, error)
+	VisitArchived(ctx context.Context, v bool) (T, error)
 	VisitAnd(ctx context.Context, v []SearchAssetsQuery) (T, error)
 	VisitOr(ctx context.Context, v []SearchAssetsQuery) (T, error)
-	VisitIsStaged(ctx context.Context, v bool) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
@@ -342,7 +406,7 @@ func (u *SortKeyWithT[T]) Accept(ctx context.Context, v SortKeyVisitorWithT[T]) 
 	}
 }
 
-func (u *SortKeyWithT[T]) AcceptFuncs(fieldFunc func(SortField) (T, error), propertyFunc func(SortProperty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SortKeyWithT[T]) AcceptFuncs(fieldFunc func(AssetSortField) (T, error), propertyFunc func(SortProperty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -363,7 +427,7 @@ func (u *SortKeyWithT[T]) AcceptFuncs(fieldFunc func(SortField) (T, error), prop
 	}
 }
 
-func (u *SortKeyWithT[T]) FieldNoopSuccess(SortField) (T, error) {
+func (u *SortKeyWithT[T]) FieldNoopSuccess(AssetSortField) (T, error) {
 	var result T
 	return result, nil
 }
@@ -379,7 +443,7 @@ func (u *SortKeyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type SortKeyVisitorWithT[T any] interface {
-	VisitField(ctx context.Context, v SortField) (T, error)
+	VisitField(ctx context.Context, v AssetSortField) (T, error)
 	VisitProperty(ctx context.Context, v SortProperty) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

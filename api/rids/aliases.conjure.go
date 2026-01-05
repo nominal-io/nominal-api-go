@@ -8,6 +8,42 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// Unique resource identifier for an ongoing thread of conversation with the Nominal LLM Agent.
+type AiConversationRid rid.ResourceIdentifier
+
+func (a AiConversationRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a AiConversationRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *AiConversationRid) UnmarshalText(data []byte) error {
+	var rawAiConversationRid rid.ResourceIdentifier
+	if err := rawAiConversationRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = AiConversationRid(rawAiConversationRid)
+	return nil
+}
+
+func (a AiConversationRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *AiConversationRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
 // Unique resource identifier for an Attachment
 type AttachmentRid rid.ResourceIdentifier
 
@@ -112,6 +148,78 @@ func (a ChunkRid) MarshalYAML() (interface{}, error) {
 }
 
 func (a *ChunkRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+// Unique resource identifier for a Connect App.
+type ConnectAppRid rid.ResourceIdentifier
+
+func (a ConnectAppRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a ConnectAppRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *ConnectAppRid) UnmarshalText(data []byte) error {
+	var rawConnectAppRid rid.ResourceIdentifier
+	if err := rawConnectAppRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = ConnectAppRid(rawConnectAppRid)
+	return nil
+}
+
+func (a ConnectAppRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *ConnectAppRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+// Unique resource identifier for a Data Connector.
+type DataConnectorRid rid.ResourceIdentifier
+
+func (a DataConnectorRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a DataConnectorRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *DataConnectorRid) UnmarshalText(data []byte) error {
+	var rawDataConnectorRid rid.ResourceIdentifier
+	if err := rawDataConnectorRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = DataConnectorRid(rawDataConnectorRid)
+	return nil
+}
+
+func (a DataConnectorRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *DataConnectorRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

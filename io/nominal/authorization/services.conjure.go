@@ -45,12 +45,12 @@ type AuthorizationServiceClient interface {
 	CheckAdmin(ctx context.Context, authHeader bearertoken.Token) error
 	// Checks if the email is allowed to register.
 	IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error)
+	// Checks if the email is allowed to register, following Okta "registration inline hook" API.
+	IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
-	   Provide an OIDC ID and access token to get a Nominal access token,
-	   suitable for making API requests. Its expiry will match that of the
-	   input access token, capped at 24h.
-	   Throws NotAuthorized if either token is invalid or if the OIDC provider
-	   is not known.
+	   Provide an OIDC ID token to get a Nominal access token suitable for making API requests.
+	   Its expiry will match that of the input ID token, capped at 24h. TODO(MGMT-933): reduce this duration.
+	   Throws NotAuthorized if the ID token is invalid or if the OIDC provider is not known.
 	*/
 	GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error)
 	/*
@@ -154,6 +154,25 @@ func (c *authorizationServiceClient) IsEmailAllowed(ctx context.Context, request
 	}
 	if returnVal == nil {
 		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "isEmailAllowed response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *authorizationServiceClient) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
+	var defaultReturnVal OktaRegistrationResponse
+	var returnVal *OktaRegistrationResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("IsEmailAllowedOkta"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/is-email-allowed-okta"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "isEmailAllowedOkta failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "isEmailAllowedOkta response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -280,12 +299,12 @@ type AuthorizationServiceClientWithAuth interface {
 	CheckAdmin(ctx context.Context) error
 	// Checks if the email is allowed to register.
 	IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error)
+	// Checks if the email is allowed to register, following Okta "registration inline hook" API.
+	IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
-	   Provide an OIDC ID and access token to get a Nominal access token,
-	   suitable for making API requests. Its expiry will match that of the
-	   input access token, capped at 24h.
-	   Throws NotAuthorized if either token is invalid or if the OIDC provider
-	   is not known.
+	   Provide an OIDC ID token to get a Nominal access token suitable for making API requests.
+	   Its expiry will match that of the input ID token, capped at 24h. TODO(MGMT-933): reduce this duration.
+	   Throws NotAuthorized if the ID token is invalid or if the OIDC provider is not known.
 	*/
 	GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error)
 	/*
@@ -328,6 +347,10 @@ func (c *authorizationServiceClientWithAuth) CheckAdmin(ctx context.Context) err
 
 func (c *authorizationServiceClientWithAuth) IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error) {
 	return c.client.IsEmailAllowed(ctx, requestArg)
+}
+
+func (c *authorizationServiceClientWithAuth) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
+	return c.client.IsEmailAllowedOkta(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithAuth) GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error) {
@@ -395,6 +418,10 @@ func (c *authorizationServiceClientWithTokenProvider) CheckAdmin(ctx context.Con
 
 func (c *authorizationServiceClientWithTokenProvider) IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error) {
 	return c.client.IsEmailAllowed(ctx, requestArg)
+}
+
+func (c *authorizationServiceClientWithTokenProvider) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
+	return c.client.IsEmailAllowedOkta(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithTokenProvider) GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error) {

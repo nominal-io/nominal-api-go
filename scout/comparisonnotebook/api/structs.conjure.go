@@ -3,10 +3,10 @@
 package api
 
 import (
-	api4 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api3 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/api"
 	"github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
-	api3 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
@@ -504,7 +504,7 @@ func (o *ComparisonWorkbookContext) UnmarshalYAML(unmarshal func(interface{}) er
 }
 
 type ComputeNodeWithContext struct {
-	ComputeNode api3.ComputeNode          `json:"computeNode"`
+	ComputeNode api11.ComputeNode         `json:"computeNode"`
 	Context     ComparisonWorkbookContext `json:"context"`
 	// Deprecated: migrated into visualization definitions.
 	SupplementalContext SupplementalComparisonWorkbookContext `json:"supplementalContext"`
@@ -666,6 +666,24 @@ func (o *RangeAggregationDefinition) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type RootMeanSquare struct{}
+
+func (o RootMeanSquare) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RootMeanSquare) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // specifies the axes configurations for a given x and y axis.
 type ScatterPlotValueAxes struct {
 	XAxis api.ValueAxis `json:"xAxis"`
@@ -707,8 +725,8 @@ func (o *StandardDeviation) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 type TimestampedRange struct {
-	Start *api4.Timestamp `json:"start,omitempty"`
-	End   *api4.Timestamp `json:"end,omitempty"`
+	Start *api3.Timestamp `json:"start,omitempty"`
+	End   *api3.Timestamp `json:"end,omitempty"`
 }
 
 func (o TimestampedRange) MarshalYAML() (interface{}, error) {

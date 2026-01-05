@@ -181,12 +181,12 @@ func (o *BatchGetDataScopeBoundsResponse) UnmarshalYAML(unmarshal func(interface
 }
 
 type ChannelMetadata struct {
-	Name        api.Channel                          `json:"name"`
-	DataSource  rids.DataSourceRid                   `json:"dataSource"`
-	Unit        *api1.Unit                           `json:"unit,omitempty"`
-	Description *string                              `json:"description,omitempty"`
-	DataType    *api.SeriesDataType                  `json:"dataType,omitempty"`
-	SeriesRid   SeriesArchetypeRidOrLogicalSeriesRid `json:"seriesRid"`
+	Name        api.Channel                         `json:"name"`
+	DataSource  rids.DataSourceRid                  `json:"dataSource"`
+	Unit        *api1.Unit                          `json:"unit,omitempty"`
+	Description *string                             `json:"description,omitempty"`
+	DataType    *api.SeriesDataType                 `json:"dataType,omitempty"`
+	SeriesRid   SeriesMetadataRidOrLogicalSeriesRid `json:"seriesRid"`
 }
 
 func (o ChannelMetadata) MarshalYAML() (interface{}, error) {
@@ -444,6 +444,136 @@ func (o DataSourcePrefixNode) MarshalYAML() (interface{}, error) {
 }
 
 func (o *DataSourcePrefixNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetAvailableTagKeysRequest struct {
+	Filters       TagSearchFilters `json:"filters"`
+	NextPageToken *api.TagName     `json:"nextPageToken,omitempty"`
+	PageSize      *int             `json:"pageSize,omitempty"`
+}
+
+func (o GetAvailableTagKeysRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetAvailableTagKeysRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetAvailableTagKeysResponse struct {
+	Results       []api.TagName `json:"results"`
+	NextPageToken *api.TagName  `json:"nextPageToken,omitempty"`
+}
+
+func (o GetAvailableTagKeysResponse) MarshalJSON() ([]byte, error) {
+	if o.Results == nil {
+		o.Results = make([]api.TagName, 0)
+	}
+	type _tmpGetAvailableTagKeysResponse GetAvailableTagKeysResponse
+	return safejson.Marshal(_tmpGetAvailableTagKeysResponse(o))
+}
+
+func (o *GetAvailableTagKeysResponse) UnmarshalJSON(data []byte) error {
+	type _tmpGetAvailableTagKeysResponse GetAvailableTagKeysResponse
+	var rawGetAvailableTagKeysResponse _tmpGetAvailableTagKeysResponse
+	if err := safejson.Unmarshal(data, &rawGetAvailableTagKeysResponse); err != nil {
+		return err
+	}
+	if rawGetAvailableTagKeysResponse.Results == nil {
+		rawGetAvailableTagKeysResponse.Results = make([]api.TagName, 0)
+	}
+	*o = GetAvailableTagKeysResponse(rawGetAvailableTagKeysResponse)
+	return nil
+}
+
+func (o GetAvailableTagKeysResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetAvailableTagKeysResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetAvailableTagValuesRequest struct {
+	Filters       TagSearchFilters `json:"filters"`
+	TagName       api.TagName      `json:"tagName"`
+	NextPageToken *api.TagValue    `json:"nextPageToken,omitempty"`
+	// Defaults to 1000. Will throw if larger than 10000.
+	PageSize *int `conjure-docs:"Defaults to 1000. Will throw if larger than 10000." json:"pageSize,omitempty"`
+}
+
+func (o GetAvailableTagValuesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetAvailableTagValuesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetAvailableTagValuesResponse struct {
+	Results       []api.TagValue `json:"results"`
+	NextPageToken *api.TagValue  `json:"nextPageToken,omitempty"`
+}
+
+func (o GetAvailableTagValuesResponse) MarshalJSON() ([]byte, error) {
+	if o.Results == nil {
+		o.Results = make([]api.TagValue, 0)
+	}
+	type _tmpGetAvailableTagValuesResponse GetAvailableTagValuesResponse
+	return safejson.Marshal(_tmpGetAvailableTagValuesResponse(o))
+}
+
+func (o *GetAvailableTagValuesResponse) UnmarshalJSON(data []byte) error {
+	type _tmpGetAvailableTagValuesResponse GetAvailableTagValuesResponse
+	var rawGetAvailableTagValuesResponse _tmpGetAvailableTagValuesResponse
+	if err := safejson.Unmarshal(data, &rawGetAvailableTagValuesResponse); err != nil {
+		return err
+	}
+	if rawGetAvailableTagValuesResponse.Results == nil {
+		rawGetAvailableTagValuesResponse.Results = make([]api.TagValue, 0)
+	}
+	*o = GetAvailableTagValuesResponse(rawGetAvailableTagValuesResponse)
+	return nil
+}
+
+func (o GetAvailableTagValuesResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetAvailableTagValuesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -911,6 +1041,56 @@ func (o SearchHierarchicalChannelsResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SearchHierarchicalChannelsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Filters to use when searching for available tag names and values in paged endpoints.
+All filters are optional.
+*/
+type TagSearchFilters struct {
+	// Optional, defaults to all channels in datasource.
+	Channel *api.Channel `conjure-docs:"Optional, defaults to all channels in datasource." json:"channel,omitempty"`
+	// Optional, defaults to no tag filter.
+	TagFilters map[api.TagName]api.TagValue `conjure-docs:"Optional, defaults to no tag filter." json:"tagFilters"`
+	// Optional, defaults to no range filter.
+	Range *api.Range `conjure-docs:"Optional, defaults to no range filter." json:"range,omitempty"`
+}
+
+func (o TagSearchFilters) MarshalJSON() ([]byte, error) {
+	if o.TagFilters == nil {
+		o.TagFilters = make(map[api.TagName]api.TagValue, 0)
+	}
+	type _tmpTagSearchFilters TagSearchFilters
+	return safejson.Marshal(_tmpTagSearchFilters(o))
+}
+
+func (o *TagSearchFilters) UnmarshalJSON(data []byte) error {
+	type _tmpTagSearchFilters TagSearchFilters
+	var rawTagSearchFilters _tmpTagSearchFilters
+	if err := safejson.Unmarshal(data, &rawTagSearchFilters); err != nil {
+		return err
+	}
+	if rawTagSearchFilters.TagFilters == nil {
+		rawTagSearchFilters.TagFilters = make(map[api.TagName]api.TagValue, 0)
+	}
+	*o = TagSearchFilters(rawTagSearchFilters)
+	return nil
+}
+
+func (o TagSearchFilters) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TagSearchFilters) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

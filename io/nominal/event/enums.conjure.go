@@ -6,6 +6,63 @@ import (
 	"strings"
 )
 
+type AggregateType struct {
+	val AggregateType_Value
+}
+
+type AggregateType_Value string
+
+const (
+	AggregateType_TOTAL_DURATION AggregateType_Value = "TOTAL_DURATION"
+	AggregateType_TOTAL_COUNT    AggregateType_Value = "TOTAL_COUNT"
+	AggregateType_UNKNOWN        AggregateType_Value = "UNKNOWN"
+)
+
+// AggregateType_Values returns all known variants of AggregateType.
+func AggregateType_Values() []AggregateType_Value {
+	return []AggregateType_Value{AggregateType_TOTAL_DURATION, AggregateType_TOTAL_COUNT}
+}
+
+func New_AggregateType(value AggregateType_Value) AggregateType {
+	return AggregateType{val: value}
+}
+
+// IsUnknown returns false for all known variants of AggregateType and true otherwise.
+func (e AggregateType) IsUnknown() bool {
+	switch e.val {
+	case AggregateType_TOTAL_DURATION, AggregateType_TOTAL_COUNT:
+		return false
+	}
+	return true
+}
+
+func (e AggregateType) Value() AggregateType_Value {
+	if e.IsUnknown() {
+		return AggregateType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e AggregateType) String() string {
+	return string(e.val)
+}
+
+func (e AggregateType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *AggregateType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_AggregateType(AggregateType_Value(v))
+	case "TOTAL_DURATION":
+		*e = New_AggregateType(AggregateType_TOTAL_DURATION)
+	case "TOTAL_COUNT":
+		*e = New_AggregateType(AggregateType_TOTAL_COUNT)
+	}
+	return nil
+}
+
 type EventDispositionStatus struct {
 	val EventDispositionStatus_Value
 }
@@ -214,17 +271,18 @@ type SearchEventOriginType struct {
 type SearchEventOriginType_Value string
 
 const (
-	SearchEventOriginType_WORKBOOK    SearchEventOriginType_Value = "WORKBOOK"
-	SearchEventOriginType_TEMPLATE    SearchEventOriginType_Value = "TEMPLATE"
-	SearchEventOriginType_API         SearchEventOriginType_Value = "API"
-	SearchEventOriginType_DATA_REVIEW SearchEventOriginType_Value = "DATA_REVIEW"
-	SearchEventOriginType_PROCEDURE   SearchEventOriginType_Value = "PROCEDURE"
-	SearchEventOriginType_UNKNOWN     SearchEventOriginType_Value = "UNKNOWN"
+	SearchEventOriginType_WORKBOOK            SearchEventOriginType_Value = "WORKBOOK"
+	SearchEventOriginType_TEMPLATE            SearchEventOriginType_Value = "TEMPLATE"
+	SearchEventOriginType_API                 SearchEventOriginType_Value = "API"
+	SearchEventOriginType_DATA_REVIEW         SearchEventOriginType_Value = "DATA_REVIEW"
+	SearchEventOriginType_PROCEDURE           SearchEventOriginType_Value = "PROCEDURE"
+	SearchEventOriginType_STREAMING_CHECKLIST SearchEventOriginType_Value = "STREAMING_CHECKLIST"
+	SearchEventOriginType_UNKNOWN             SearchEventOriginType_Value = "UNKNOWN"
 )
 
 // SearchEventOriginType_Values returns all known variants of SearchEventOriginType.
 func SearchEventOriginType_Values() []SearchEventOriginType_Value {
-	return []SearchEventOriginType_Value{SearchEventOriginType_WORKBOOK, SearchEventOriginType_TEMPLATE, SearchEventOriginType_API, SearchEventOriginType_DATA_REVIEW, SearchEventOriginType_PROCEDURE}
+	return []SearchEventOriginType_Value{SearchEventOriginType_WORKBOOK, SearchEventOriginType_TEMPLATE, SearchEventOriginType_API, SearchEventOriginType_DATA_REVIEW, SearchEventOriginType_PROCEDURE, SearchEventOriginType_STREAMING_CHECKLIST}
 }
 
 func New_SearchEventOriginType(value SearchEventOriginType_Value) SearchEventOriginType {
@@ -234,7 +292,7 @@ func New_SearchEventOriginType(value SearchEventOriginType_Value) SearchEventOri
 // IsUnknown returns false for all known variants of SearchEventOriginType and true otherwise.
 func (e SearchEventOriginType) IsUnknown() bool {
 	switch e.val {
-	case SearchEventOriginType_WORKBOOK, SearchEventOriginType_TEMPLATE, SearchEventOriginType_API, SearchEventOriginType_DATA_REVIEW, SearchEventOriginType_PROCEDURE:
+	case SearchEventOriginType_WORKBOOK, SearchEventOriginType_TEMPLATE, SearchEventOriginType_API, SearchEventOriginType_DATA_REVIEW, SearchEventOriginType_PROCEDURE, SearchEventOriginType_STREAMING_CHECKLIST:
 		return false
 	}
 	return true
@@ -269,6 +327,8 @@ func (e *SearchEventOriginType) UnmarshalText(data []byte) error {
 		*e = New_SearchEventOriginType(SearchEventOriginType_DATA_REVIEW)
 	case "PROCEDURE":
 		*e = New_SearchEventOriginType(SearchEventOriginType_PROCEDURE)
+	case "STREAMING_CHECKLIST":
+		*e = New_SearchEventOriginType(SearchEventOriginType_STREAMING_CHECKLIST)
 	}
 	return nil
 }

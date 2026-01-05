@@ -54,6 +54,13 @@ type EventServiceClient interface {
 	BatchUnarchiveEvent(ctx context.Context, authHeader bearertoken.Token, requestArg []rids.EventRid) error
 	// Searches for events that match the given filters.
 	SearchEvents(ctx context.Context, authHeader bearertoken.Token, requestArg SearchEventsRequest) (SearchEventsResponse, error)
+	// Searches for events matching the given filter and aggregates them based on the requested functions.
+	AggregateEvents(ctx context.Context, authHeader bearertoken.Token, requestArg AggregateEventsRequest) (AggregateEventsResponse, error)
+	/*
+	   Searches for events matching the given filter and aggregates them based on the requested functions.
+	   Returns a list of responses in same order as the batched requests.
+	*/
+	BatchAggregateEvents(ctx context.Context, authHeader bearertoken.Token, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error)
 	// Gets a histogram of events that match the given filters.
 	GetEventsHistogram(ctx context.Context, authHeader bearertoken.Token, requestArg EventsHistogramRequest) (EventsHistogramResponse, error)
 	// Lists the properties and labels of all events in the provided workspaces.
@@ -248,6 +255,46 @@ func (c *eventServiceClient) SearchEvents(ctx context.Context, authHeader bearer
 	return *returnVal, nil
 }
 
+func (c *eventServiceClient) AggregateEvents(ctx context.Context, authHeader bearertoken.Token, requestArg AggregateEventsRequest) (AggregateEventsResponse, error) {
+	var defaultReturnVal AggregateEventsResponse
+	var returnVal *AggregateEventsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("AggregateEvents"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/aggregate-events"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "aggregateEvents failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "aggregateEvents response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *eventServiceClient) BatchAggregateEvents(ctx context.Context, authHeader bearertoken.Token, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error) {
+	var defaultReturnVal BatchAggregateEventsResponse
+	var returnVal *BatchAggregateEventsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchAggregateEvents"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/aggregate-events/batch"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchAggregateEvents failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchAggregateEvents response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *eventServiceClient) GetEventsHistogram(ctx context.Context, authHeader bearertoken.Token, requestArg EventsHistogramRequest) (EventsHistogramResponse, error) {
 	var defaultReturnVal EventsHistogramResponse
 	var returnVal *EventsHistogramResponse
@@ -328,6 +375,13 @@ type EventServiceClientWithAuth interface {
 	BatchUnarchiveEvent(ctx context.Context, requestArg []rids.EventRid) error
 	// Searches for events that match the given filters.
 	SearchEvents(ctx context.Context, requestArg SearchEventsRequest) (SearchEventsResponse, error)
+	// Searches for events matching the given filter and aggregates them based on the requested functions.
+	AggregateEvents(ctx context.Context, requestArg AggregateEventsRequest) (AggregateEventsResponse, error)
+	/*
+	   Searches for events matching the given filter and aggregates them based on the requested functions.
+	   Returns a list of responses in same order as the batched requests.
+	*/
+	BatchAggregateEvents(ctx context.Context, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error)
 	// Gets a histogram of events that match the given filters.
 	GetEventsHistogram(ctx context.Context, requestArg EventsHistogramRequest) (EventsHistogramResponse, error)
 	// Lists the properties and labels of all events in the provided workspaces.
@@ -381,6 +435,14 @@ func (c *eventServiceClientWithAuth) BatchUnarchiveEvent(ctx context.Context, re
 
 func (c *eventServiceClientWithAuth) SearchEvents(ctx context.Context, requestArg SearchEventsRequest) (SearchEventsResponse, error) {
 	return c.client.SearchEvents(ctx, c.authHeader, requestArg)
+}
+
+func (c *eventServiceClientWithAuth) AggregateEvents(ctx context.Context, requestArg AggregateEventsRequest) (AggregateEventsResponse, error) {
+	return c.client.AggregateEvents(ctx, c.authHeader, requestArg)
+}
+
+func (c *eventServiceClientWithAuth) BatchAggregateEvents(ctx context.Context, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error) {
+	return c.client.BatchAggregateEvents(ctx, c.authHeader, requestArg)
 }
 
 func (c *eventServiceClientWithAuth) GetEventsHistogram(ctx context.Context, requestArg EventsHistogramRequest) (EventsHistogramResponse, error) {
@@ -485,6 +547,24 @@ func (c *eventServiceClientWithTokenProvider) SearchEvents(ctx context.Context, 
 		return defaultReturnVal, err
 	}
 	return c.client.SearchEvents(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *eventServiceClientWithTokenProvider) AggregateEvents(ctx context.Context, requestArg AggregateEventsRequest) (AggregateEventsResponse, error) {
+	var defaultReturnVal AggregateEventsResponse
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.AggregateEvents(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *eventServiceClientWithTokenProvider) BatchAggregateEvents(ctx context.Context, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error) {
+	var defaultReturnVal BatchAggregateEventsResponse
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.BatchAggregateEvents(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) GetEventsHistogram(ctx context.Context, requestArg EventsHistogramRequest) (EventsHistogramResponse, error) {

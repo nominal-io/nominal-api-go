@@ -630,9 +630,157 @@ func (e *SlackIntegrationNotAvailable) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type unsupportedOperationForIntegration struct{}
+
+func (o unsupportedOperationForIntegration) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *unsupportedOperationForIntegration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewUnsupportedOperationForIntegration returns new instance of UnsupportedOperationForIntegration error.
+func NewUnsupportedOperationForIntegration() *UnsupportedOperationForIntegration {
+	return &UnsupportedOperationForIntegration{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), unsupportedOperationForIntegration: unsupportedOperationForIntegration{}}
+}
+
+// WrapWithUnsupportedOperationForIntegration returns new instance of UnsupportedOperationForIntegration error wrapping an existing error.
+func WrapWithUnsupportedOperationForIntegration(err error) *UnsupportedOperationForIntegration {
+	return &UnsupportedOperationForIntegration{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, unsupportedOperationForIntegration: unsupportedOperationForIntegration{}}
+}
+
+// UnsupportedOperationForIntegration is an error type.
+type UnsupportedOperationForIntegration struct {
+	errorInstanceID uuid.UUID
+	unsupportedOperationForIntegration
+	cause error
+	stack werror.StackTrace
+}
+
+// IsUnsupportedOperationForIntegration returns true if err is an instance of UnsupportedOperationForIntegration.
+func IsUnsupportedOperationForIntegration(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*UnsupportedOperationForIntegration)
+	return ok
+}
+
+func (e *UnsupportedOperationForIntegration) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:UnsupportedOperationForIntegration (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *UnsupportedOperationForIntegration) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *UnsupportedOperationForIntegration) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *UnsupportedOperationForIntegration) Message() string {
+	return "INVALID_ARGUMENT Scout:UnsupportedOperationForIntegration"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *UnsupportedOperationForIntegration) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *UnsupportedOperationForIntegration) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *UnsupportedOperationForIntegration) Name() string {
+	return "Scout:UnsupportedOperationForIntegration"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *UnsupportedOperationForIntegration) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *UnsupportedOperationForIntegration) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *UnsupportedOperationForIntegration) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UnsupportedOperationForIntegration) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *UnsupportedOperationForIntegration) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *UnsupportedOperationForIntegration) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e UnsupportedOperationForIntegration) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.unsupportedOperationForIntegration)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:UnsupportedOperationForIntegration", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *UnsupportedOperationForIntegration) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters unsupportedOperationForIntegration
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.unsupportedOperationForIntegration = parameters
+	return nil
+}
+
 func init() {
 	conjureerrors.RegisterErrorType("Scout:IntegrationNotFound", reflect.TypeOf(IntegrationNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:IntegrationTokenNotFound", reflect.TypeOf(IntegrationTokenNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:IntegrationsNotFound", reflect.TypeOf(IntegrationsNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:SlackIntegrationNotAvailable", reflect.TypeOf(SlackIntegrationNotAvailable{}))
+	conjureerrors.RegisterErrorType("Scout:UnsupportedOperationForIntegration", reflect.TypeOf(UnsupportedOperationForIntegration{}))
 }
