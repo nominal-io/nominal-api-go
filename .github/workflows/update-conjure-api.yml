@@ -16,9 +16,6 @@ concurrency:
 jobs:
   update-and-check:
     runs-on: ubuntu-latest
-    outputs:
-      has_changes: ${{ steps.check_changes.outputs.has_changes }}
-      commit_sha: ${{ steps.push_branch.outputs.commit_sha }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -151,148 +148,33 @@ jobs:
             echo "Created new PR"
           fi
 
-      - name: Summary for nominal-api-go
+      - name: Get Token for cross-repo dispatch
+        id: get_actions_token
+        if: steps.check_changes.outputs.has_changes == 'true'
+        uses: nominal-io/workflow-application-token-action@d17e3a9a36850ea89f35db16c1067dd2b68ee343 # v4.0.1
+        with:
+          application_id: ${{ secrets.NOMBOT_APP_ID }}
+          application_private_key: ${{ secrets.NOMBOT_PRIVATE_KEY }}
+          organization: "nominal-io"
+          permissions: "actions: write, contents: read"
+          revoke_token: true
+
+      - name: Trigger dispatch for grafana-plugin repository
+        if: steps.check_changes.outputs.has_changes == 'true'
+        uses: benc-uk/workflow-dispatch@e2e5e9a103e331dad343f381a29e654aea3cf8fc # 1.2.0
+        with:
+          workflow: update-nominal-api-go.yml
+          repo: nominal-io/grafana-plugin
+          token: ${{ steps.get_actions_token.outputs.token }}
+          ref: main
+
+      - name: Summary
         run: |
           if [ "${{ steps.check_changes.outputs.has_changes }}" == "true" ]; then
-            echo "### nominal-api-go Update Complete" >> $GITHUB_STEP_SUMMARY
+            echo "### Update Complete" >> $GITHUB_STEP_SUMMARY
             echo "Generated Go code has been updated and a PR has been created/updated." >> $GITHUB_STEP_SUMMARY
-            echo "Commit SHA: \`${{ steps.push_branch.outputs.commit_sha }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "Dispatched update to grafana-plugin to update its nominal-api-go dependency." >> $GITHUB_STEP_SUMMARY
           else
-            echo "### nominal-api-go: No Changes" >> $GITHUB_STEP_SUMMARY
+            echo "### No Changes" >> $GITHUB_STEP_SUMMARY
             echo "The generated Go code is already up to date with the latest Conjure IR." >> $GITHUB_STEP_SUMMARY
-          fi
-
-  update-grafana-plugin:
-    needs: update-and-check
-    if: needs.update-and-check.outputs.has_changes == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.25"
-
-      - name: Clone grafana-plugin repository
-        env:
-          GH_TOKEN: ${{ secrets.NOMBOT_CLASSIC_PERSONAL_ACCESS_TOKEN }}
-        run: |
-          git clone https://x-access-token:${GH_TOKEN}@github.com/nominal-io/grafana-plugin.git grafana-plugin
-          cd grafana-plugin
-          git config user.name "nombot"
-          git config user.email "nombot@nominal.io"
-          echo "Cloned grafana-plugin repository"
-
-      - name: Configure git for private repos
-        run: |
-          git config --global url."https://${{ secrets.NOMBOT_CLASSIC_PERSONAL_ACCESS_TOKEN }}@github.com/nominal-io/".insteadOf "https://github.com/nominal-io/"
-
-      - name: Update vendored nominal-api-go
-        working-directory: grafana-plugin
-        env:
-          GOPRIVATE: "github.com/nominal-io/*"
-          GONOPROXY: "github.com/nominal-io/*"
-          GONOSUMDB: "github.com/nominal-io/*"
-        run: |
-          echo "Updating vendored nominal-api-go to commit ${{ needs.update-and-check.outputs.commit_sha }}..."
-          go get github.com/nominal-io/nominal-api-go@${{ needs.update-and-check.outputs.commit_sha }}
-          go mod tidy
-          go mod vendor
-          echo "Vendor update complete"
-
-      - name: Check for changes in grafana-plugin
-        id: check_grafana_changes
-        working-directory: grafana-plugin
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "Changes detected in grafana-plugin:"
-            git status --short
-            # Get the vendored version for PR title
-            VENDORED_VERSION=$(grep "github.com/nominal-io/nominal-api-go" go.mod | awk '{print $2}')
-            echo "vendored_version=$VENDORED_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "No changes detected in grafana-plugin"
-          fi
-
-      - name: Create or update branch in grafana-plugin
-        if: steps.check_grafana_changes.outputs.has_changes == 'true'
-        working-directory: grafana-plugin
-        run: |
-          if git ls-remote --exit-code --heads origin nombot/update-vendored-api; then
-            echo "Branch exists, fetching and checking out..."
-            git fetch origin nombot/update-vendored-api
-            git checkout nombot/update-vendored-api
-            git reset --hard main
-          else
-            echo "Branch doesn't exist, creating from main..."
-            git checkout -b nombot/update-vendored-api
-          fi
-
-      - name: Commit changes to grafana-plugin
-        if: steps.check_grafana_changes.outputs.has_changes == 'true'
-        working-directory: grafana-plugin
-        run: |
-          git add go.mod go.sum vendor/
-          git commit -m "chore: update vendored nominal-api-go to ${{ steps.check_grafana_changes.outputs.vendored_version }}
-
-          Automated update triggered by scout release.
-          Source commit: nominal-io/nominal-api-go@${{ needs.update-and-check.outputs.commit_sha }}
-          Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-      - name: Push branch to grafana-plugin
-        if: steps.check_grafana_changes.outputs.has_changes == 'true'
-        working-directory: grafana-plugin
-        run: |
-          git push origin nombot/update-vendored-api --force-with-lease
-          echo "Pushed nombot/update-vendored-api branch"
-
-      - name: Create/update PR for grafana-plugin
-        if: steps.check_grafana_changes.outputs.has_changes == 'true'
-        working-directory: grafana-plugin
-        env:
-          GH_TOKEN: ${{ secrets.NOMBOT_CLASSIC_PERSONAL_ACCESS_TOKEN }}
-        run: |
-          existing_pr=$(gh pr list --head nombot/update-vendored-api --base main --json number --jq '.[0].number')
-
-          pr_body="Updates the vendored nominal-api-go dependency to the latest version.
-
-          This PR was automatically created by the update-conjure-api workflow in nominal-api-go, triggered by a new scout release.
-
-          ### Changes
-          - Updated \`github.com/nominal-io/nominal-api-go\` to \`${{ steps.check_grafana_changes.outputs.vendored_version }}\`
-          - Source commit: [nominal-io/nominal-api-go@${{ needs.update-and-check.outputs.commit_sha }}](https://github.com/nominal-io/nominal-api-go/commit/${{ needs.update-and-check.outputs.commit_sha }})
-          - Ran \`go mod tidy\` and \`go mod vendor\`
-
-          ### Review
-          Please review the vendored code changes and merge if they look correct.
-
-          **Note**: This PR should be merged after the corresponding [nominal-api-go PR](https://github.com/nominal-io/nominal-api-go/pulls?q=is%3Apr+head%3Anombot%2Fupdate-conjure-api) is merged."
-
-          if [ -n "$existing_pr" ]; then
-            echo "PR #$existing_pr already exists, updating..."
-            gh pr edit "$existing_pr" \
-              --title "chore: update vendored nominal-api-go to ${{ steps.check_grafana_changes.outputs.vendored_version }}" \
-              --body "$pr_body" \
-              --add-reviewer "leundai"
-            echo "Updated PR #$existing_pr"
-          else
-            echo "Creating new PR..."
-            gh pr create \
-              --title "chore: update vendored nominal-api-go to ${{ steps.check_grafana_changes.outputs.vendored_version }}" \
-              --body "$pr_body" \
-              --head "nombot/update-vendored-api" \
-              --base main \
-              --reviewer "leundai"
-            echo "Created new PR"
-          fi
-
-      - name: Summary for grafana-plugin
-        run: |
-          if [ "${{ steps.check_grafana_changes.outputs.has_changes }}" == "true" ]; then
-            echo "### grafana-plugin Update Complete" >> $GITHUB_STEP_SUMMARY
-            echo "Vendored nominal-api-go has been updated to \`${{ steps.check_grafana_changes.outputs.vendored_version }}\` and a PR has been created/updated." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### grafana-plugin: No Changes" >> $GITHUB_STEP_SUMMARY
-            echo "The vendored nominal-api-go is already up to date." >> $GITHUB_STEP_SUMMARY
           fi
