@@ -34,10 +34,20 @@ jobs:
           java-version: "21"
           distribution: "corretto"
 
-      - name: Clone scout repository
+      - name: Checkout scout repository
+        uses: actions/checkout@v4
+        with:
+          repository: nominal-io/scout
+          ref: main
+          path: scout
+          token: ${{ secrets.NOMBOT_CLASSIC_PERSONAL_ACCESS_TOKEN }}
+
+      - name: Setup scout directory structure
         run: |
-          git clone https://github.com/nominal-io/scout.git ../scout
-          echo "Cloned scout repository"
+          # The conjure-plugin.yml expects scout at ../scout relative to the repo
+          # Create a symlink to match the expected path
+          ln -s $GITHUB_WORKSPACE/scout ../scout
+          echo "Created symlink for scout at ../scout"
 
       - name: Compile Conjure IR
         run: |
