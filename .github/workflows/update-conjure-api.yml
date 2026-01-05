@@ -1,0 +1,153 @@
+name: Update Conjure API
+
+on:
+  # This is triggered by https://github.com/nominal-io/scout/blob/main/.github/workflows/npm-publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
+concurrency:
+  group: update-conjure-api
+  cancel-in-progress: true
+
+jobs:
+  update-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.NOMBOT_CLASSIC_PERSONAL_ACCESS_TOKEN }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "corretto"
+
+      - name: Clone scout repository
+        run: |
+          git clone https://github.com/nominal-io/scout.git ../scout
+          echo "Cloned scout repository"
+
+      - name: Compile Conjure IR
+        run: |
+          cd ../scout
+          ./gradlew scout-service-api:compileIr --no-daemon
+          echo "Compiled Conjure IR"
+
+      - name: Update godel
+        run: |
+          ./godelw update
+          echo "Updated godel"
+
+      - name: Generate Go code from Conjure
+        run: |
+          ./godelw conjure
+          echo "Generated Go code from Conjure"
+
+      - name: Tidy and build
+        run: |
+          go mod tidy
+          go build ./...
+          echo "Build successful"
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git status --short
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          fi
+
+      - name: Configure git identity
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "nombot"
+          git config user.email "nombot@nominal.io"
+
+      - name: Create or update branch
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          # Check if branch exists remotely
+          if git ls-remote --exit-code --heads origin nombot/update-conjure-api; then
+            echo "Branch exists, fetching and checking out..."
+            git fetch origin nombot/update-conjure-api
+            git checkout nombot/update-conjure-api
+            git reset --hard main
+          else
+            echo "Branch doesn't exist, creating from main..."
+            git checkout -b nombot/update-conjure-api
+          fi
+
+      - name: Commit changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git add -A
+          git commit -m "chore: update generated Go code from Conjure IR
+
+          Automated update triggered by scout release.
+          Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: Push branch and create/update PR
+        if: steps.check_changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.NOMBOT_CLASSIC_PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Push branch
+          git push origin nombot/update-conjure-api --force-with-lease
+          echo "Pushed nombot/update-conjure-api branch"
+
+          # Check if PR exists
+          existing_pr=$(gh pr list --head nombot/update-conjure-api --base main --json number --jq '.[0].number')
+
+          pr_body="Updates the generated Go client code from the latest Conjure IR in scout.
+
+          This PR was automatically created by the update-conjure-api workflow triggered by a new scout release.
+
+          ### Changes
+          - Regenerated Go code from latest \`scout-service-api.conjure.json\`
+          - Ran \`go mod tidy\` and \`go build ./...\` to verify build
+
+          ### Review
+          Please review the generated code changes and merge if they look correct."
+
+          if [ -n "$existing_pr" ]; then
+            echo "PR #$existing_pr already exists, updating..."
+            gh pr edit "$existing_pr" \
+              --title "chore: update generated Go code from Conjure IR" \
+              --body "$pr_body"
+            echo "Updated PR #$existing_pr"
+          else
+            echo "Creating new PR..."
+            gh pr create \
+              --title "chore: update generated Go code from Conjure IR" \
+              --body "$pr_body" \
+              --head "nombot/update-conjure-api" \
+              --base main
+            echo "Created new PR"
+          fi
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.check_changes.outputs.has_changes }}" == "true" ]; then
+            echo "### Update Complete" >> $GITHUB_STEP_SUMMARY
+            echo "Generated Go code has been updated and a PR has been created/updated." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### No Changes" >> $GITHUB_STEP_SUMMARY
+            echo "The generated Go code is already up to date with the latest Conjure IR." >> $GITHUB_STEP_SUMMARY
+          fi
