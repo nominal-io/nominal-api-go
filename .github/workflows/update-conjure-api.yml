@@ -3,28 +3,17 @@ name: Update Conjure API
 on:
   # This is triggered by https://github.com/nominal-io/scout/blob/main/.github/workflows/npm-publish.yml
   workflow_dispatch:
-  # Dispatch to grafana-plugin when changes are merged to main
-  push:
-    branches:
-      - main
-    paths:
-      - "**/*.conjure.go"
-      - "go.mod"
-      - "go.sum"
 
 permissions:
   contents: write
   pull-requests: write
-  actions: read
 
 concurrency:
   group: update-conjure-api
   cancel-in-progress: true
 
 jobs:
-  # Job 1: Regenerate Go code from Conjure IR (only on workflow_dispatch)
   update-and-check:
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -163,37 +152,8 @@ jobs:
           if [ "${{ steps.check_changes.outputs.has_changes }}" == "true" ]; then
             echo "### Update Complete" >> $GITHUB_STEP_SUMMARY
             echo "Generated Go code has been updated and a PR has been created/updated." >> $GITHUB_STEP_SUMMARY
-            echo "Once the PR is merged to main, grafana-plugin will be notified to update its dependency." >> $GITHUB_STEP_SUMMARY
+            echo "Downstream repos (e.g., grafana-plugin) will be updated via Renovate." >> $GITHUB_STEP_SUMMARY
           else
             echo "### No Changes" >> $GITHUB_STEP_SUMMARY
             echo "The generated Go code is already up to date with the latest Conjure IR." >> $GITHUB_STEP_SUMMARY
           fi
-
-  # Job 2: Dispatch to grafana-plugin when changes are merged to main
-  dispatch-to-grafana-plugin:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get Token for cross-repo dispatch
-        id: get_actions_token
-        uses: nominal-io/workflow-application-token-action@d17e3a9a36850ea89f35db16c1067dd2b68ee343 # v4.0.1
-        with:
-          application_id: ${{ secrets.NOMBOT_APP_ID }}
-          application_private_key: ${{ secrets.NOMBOT_PRIVATE_KEY }}
-          organization: "nominal-io"
-          permissions: "actions: write, contents: read"
-          revoke_token: true
-
-      - name: Trigger dispatch for grafana-plugin repository
-        uses: benc-uk/workflow-dispatch@e2e5e9a103e331dad343f381a29e654aea3cf8fc # 1.2.0
-        with:
-          workflow: update-nominal-api-go.yml
-          repo: nominal-io/grafana-plugin
-          token: ${{ steps.get_actions_token.outputs.token }}
-          ref: main
-
-      - name: Summary
-        run: |
-          echo "### Dispatch Complete" >> $GITHUB_STEP_SUMMARY
-          echo "Triggered grafana-plugin to update its nominal-api-go dependency." >> $GITHUB_STEP_SUMMARY
-          echo "Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
