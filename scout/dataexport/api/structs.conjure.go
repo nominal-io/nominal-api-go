@@ -142,6 +142,26 @@ func (o *ExportTimeDomainChannels) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type GeneratePresignedLinkResponse struct {
+	PresignedUrl PresignedUrl `json:"presignedUrl"`
+}
+
+func (o GeneratePresignedLinkResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeneratePresignedLinkResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Iso8601TimestampFormat struct{}
 
 func (o Iso8601TimestampFormat) MarshalYAML() (interface{}, error) {
@@ -194,6 +214,26 @@ func (o NoneStrategy) MarshalYAML() (interface{}, error) {
 }
 
 func (o *NoneStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type PresignedUrl struct {
+	Url string `json:"url"`
+}
+
+func (o PresignedUrl) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PresignedUrl) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
