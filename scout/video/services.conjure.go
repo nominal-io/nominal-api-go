@@ -564,6 +564,8 @@ type VideoSegmentServiceClient interface {
 	CreateVideoFileSegments(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, videoFileRidArg rids.VideoFileRid, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
 	// Creates segments for a video stream. Similar to createVideoFileSegments but for streaming video.
 	CreateVideoStreamSegments(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, streamUuidArg uuid.UUID, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
+	// Creates segments for a dataset file video. Used for channel-based video ingestion.
+	CreateDatasetFileSegments(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateDatasetFileSegmentsRequest) (api.CreateSegmentsResponse, error)
 	// Returns metadata for the segment within a video containing the requested absolute timestamp.
 	GetSegmentByTimestamp(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error)
 }
@@ -630,6 +632,26 @@ func (c *videoSegmentServiceClient) CreateVideoStreamSegments(ctx context.Contex
 	return *returnVal, nil
 }
 
+func (c *videoSegmentServiceClient) CreateDatasetFileSegments(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateDatasetFileSegmentsRequest) (api.CreateSegmentsResponse, error) {
+	var defaultReturnVal api.CreateSegmentsResponse
+	var returnVal *api.CreateSegmentsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateDatasetFileSegments"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/dataset-files/create-segments"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createDatasetFileSegments failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createDatasetFileSegments response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *videoSegmentServiceClient) GetSegmentByTimestamp(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error) {
 	var returnVal *api.Segment
 	var requestParams []httpclient.RequestParam
@@ -656,6 +678,8 @@ type VideoSegmentServiceClientWithAuth interface {
 	CreateVideoFileSegments(ctx context.Context, videoRidArg rids.VideoRid, videoFileRidArg rids.VideoFileRid, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
 	// Creates segments for a video stream. Similar to createVideoFileSegments but for streaming video.
 	CreateVideoStreamSegments(ctx context.Context, videoRidArg rids.VideoRid, streamUuidArg uuid.UUID, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
+	// Creates segments for a dataset file video. Used for channel-based video ingestion.
+	CreateDatasetFileSegments(ctx context.Context, requestArg api.CreateDatasetFileSegmentsRequest) (api.CreateSegmentsResponse, error)
 	// Returns metadata for the segment within a video containing the requested absolute timestamp.
 	GetSegmentByTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error)
 }
@@ -679,6 +703,10 @@ func (c *videoSegmentServiceClientWithAuth) CreateVideoFileSegments(ctx context.
 
 func (c *videoSegmentServiceClientWithAuth) CreateVideoStreamSegments(ctx context.Context, videoRidArg rids.VideoRid, streamUuidArg uuid.UUID, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error) {
 	return c.client.CreateVideoStreamSegments(ctx, c.authHeader, videoRidArg, streamUuidArg, requestArg)
+}
+
+func (c *videoSegmentServiceClientWithAuth) CreateDatasetFileSegments(ctx context.Context, requestArg api.CreateDatasetFileSegmentsRequest) (api.CreateSegmentsResponse, error) {
+	return c.client.CreateDatasetFileSegments(ctx, c.authHeader, requestArg)
 }
 
 func (c *videoSegmentServiceClientWithAuth) GetSegmentByTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error) {
@@ -718,6 +746,15 @@ func (c *videoSegmentServiceClientWithTokenProvider) CreateVideoStreamSegments(c
 		return defaultReturnVal, err
 	}
 	return c.client.CreateVideoStreamSegments(ctx, bearertoken.Token(token), videoRidArg, streamUuidArg, requestArg)
+}
+
+func (c *videoSegmentServiceClientWithTokenProvider) CreateDatasetFileSegments(ctx context.Context, requestArg api.CreateDatasetFileSegmentsRequest) (api.CreateSegmentsResponse, error) {
+	var defaultReturnVal api.CreateSegmentsResponse
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.CreateDatasetFileSegments(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoSegmentServiceClientWithTokenProvider) GetSegmentByTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error) {

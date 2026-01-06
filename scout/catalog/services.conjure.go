@@ -47,6 +47,11 @@ type CatalogServiceClient interface {
 	GetOriginFileUris(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) ([]OriginFileUri, error)
 	MarkFileIngestSuccessful(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestSuccessful) (DatasetFile, error)
 	MarkFileIngestError(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestError) (DatasetFile, error)
+	/*
+	   Updates file-type-specific metadata for a dataset file. Currently used to update video segment metadata
+	   after video segmentation is complete.
+	*/
+	UpdateDatasetFileMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg DatasetFileMetadata) (DatasetFile, error)
 	UpdateDatasetMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg UpdateDatasetMetadata) (EnrichedDataset, error)
 	UpdateBounds(ctx context.Context, authHeader bearertoken.Token, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (EnrichedDataset, error)
 	/*
@@ -449,6 +454,26 @@ func (c *catalogServiceClient) MarkFileIngestError(ctx context.Context, authHead
 	return *returnVal, nil
 }
 
+func (c *catalogServiceClient) UpdateDatasetFileMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg DatasetFileMetadata) (DatasetFile, error) {
+	var defaultReturnVal DatasetFile
+	var returnVal *DatasetFile
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateDatasetFileMetadata"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/file/%s/metadata", url.PathEscape(fmt.Sprint(datasetRidArg)), url.PathEscape(fmt.Sprint(fileIdArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(metadataArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateDatasetFileMetadata failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateDatasetFileMetadata response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *catalogServiceClient) UpdateDatasetMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg UpdateDatasetMetadata) (EnrichedDataset, error) {
 	var defaultReturnVal EnrichedDataset
 	var returnVal *EnrichedDataset
@@ -603,6 +628,11 @@ type CatalogServiceClientWithAuth interface {
 	GetOriginFileUris(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) ([]OriginFileUri, error)
 	MarkFileIngestSuccessful(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestSuccessful) (DatasetFile, error)
 	MarkFileIngestError(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestError) (DatasetFile, error)
+	/*
+	   Updates file-type-specific metadata for a dataset file. Currently used to update video segment metadata
+	   after video segmentation is complete.
+	*/
+	UpdateDatasetFileMetadata(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg DatasetFileMetadata) (DatasetFile, error)
 	UpdateDatasetMetadata(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg UpdateDatasetMetadata) (EnrichedDataset, error)
 	UpdateBounds(ctx context.Context, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (EnrichedDataset, error)
 	/*
@@ -706,6 +736,10 @@ func (c *catalogServiceClientWithAuth) MarkFileIngestSuccessful(ctx context.Cont
 
 func (c *catalogServiceClientWithAuth) MarkFileIngestError(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestError) (DatasetFile, error) {
 	return c.client.MarkFileIngestError(ctx, c.authHeader, datasetRidArg, fileIdArg, requestArg)
+}
+
+func (c *catalogServiceClientWithAuth) UpdateDatasetFileMetadata(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg DatasetFileMetadata) (DatasetFile, error) {
+	return c.client.UpdateDatasetFileMetadata(ctx, c.authHeader, datasetRidArg, fileIdArg, metadataArg)
 }
 
 func (c *catalogServiceClientWithAuth) UpdateDatasetMetadata(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg UpdateDatasetMetadata) (EnrichedDataset, error) {
@@ -914,6 +948,15 @@ func (c *catalogServiceClientWithTokenProvider) MarkFileIngestError(ctx context.
 		return defaultReturnVal, err
 	}
 	return c.client.MarkFileIngestError(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg, requestArg)
+}
+
+func (c *catalogServiceClientWithTokenProvider) UpdateDatasetFileMetadata(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg DatasetFileMetadata) (DatasetFile, error) {
+	var defaultReturnVal DatasetFile
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.UpdateDatasetFileMetadata(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg, metadataArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) UpdateDatasetMetadata(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg UpdateDatasetMetadata) (EnrichedDataset, error) {

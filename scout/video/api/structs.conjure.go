@@ -35,6 +35,52 @@ func (o *Bounds) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Request to create segments for a dataset file video. Used for channel-based video ingestion.
+type CreateDatasetFileSegmentsRequest struct {
+	VideoRid      rids.VideoRid   `json:"videoRid"`
+	DatasetRid    rids.DatasetRid `json:"datasetRid"`
+	DatasetFileId uuid.UUID       `json:"datasetFileId"`
+	Requests      []CreateSegment `json:"requests"`
+	SeriesUuid    uuid.UUID       `json:"seriesUuid"`
+}
+
+func (o CreateDatasetFileSegmentsRequest) MarshalJSON() ([]byte, error) {
+	if o.Requests == nil {
+		o.Requests = make([]CreateSegment, 0)
+	}
+	type _tmpCreateDatasetFileSegmentsRequest CreateDatasetFileSegmentsRequest
+	return safejson.Marshal(_tmpCreateDatasetFileSegmentsRequest(o))
+}
+
+func (o *CreateDatasetFileSegmentsRequest) UnmarshalJSON(data []byte) error {
+	type _tmpCreateDatasetFileSegmentsRequest CreateDatasetFileSegmentsRequest
+	var rawCreateDatasetFileSegmentsRequest _tmpCreateDatasetFileSegmentsRequest
+	if err := safejson.Unmarshal(data, &rawCreateDatasetFileSegmentsRequest); err != nil {
+		return err
+	}
+	if rawCreateDatasetFileSegmentsRequest.Requests == nil {
+		rawCreateDatasetFileSegmentsRequest.Requests = make([]CreateSegment, 0)
+	}
+	*o = CreateDatasetFileSegmentsRequest(rawCreateDatasetFileSegmentsRequest)
+	return nil
+}
+
+func (o CreateDatasetFileSegmentsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CreateDatasetFileSegmentsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type CreateSegment struct {
 	DataHandle api.Handle `json:"dataHandle"`
 	// The average frame rate (FPS) of the segment calculated as total frames / duration in seconds.

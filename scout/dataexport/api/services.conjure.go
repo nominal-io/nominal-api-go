@@ -17,6 +17,8 @@ import (
 type DataExportServiceClient interface {
 	// Required permissions matches those required to compute the channels via the compute API.
 	ExportChannelData(ctx context.Context, authHeader bearertoken.Token, requestArg ExportDataRequest) (io.ReadCloser, error)
+	// Required permissions matches those required to compute the channels via the compute API.
+	GenerateExportChannelDataPresignedLink(ctx context.Context, authHeader bearertoken.Token, requestArg ExportDataRequest) (GeneratePresignedLinkResponse, error)
 }
 
 type dataExportServiceClient struct {
@@ -43,10 +45,32 @@ func (c *dataExportServiceClient) ExportChannelData(ctx context.Context, authHea
 	return resp.Body, nil
 }
 
+func (c *dataExportServiceClient) GenerateExportChannelDataPresignedLink(ctx context.Context, authHeader bearertoken.Token, requestArg ExportDataRequest) (GeneratePresignedLinkResponse, error) {
+	var defaultReturnVal GeneratePresignedLinkResponse
+	var returnVal *GeneratePresignedLinkResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GenerateExportChannelDataPresignedLink"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/export/v1/generateExportPresignedLink"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "generateExportChannelDataPresignedLink failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "generateExportChannelDataPresignedLink response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 // Provides functionality for exporting data from Scout.
 type DataExportServiceClientWithAuth interface {
 	// Required permissions matches those required to compute the channels via the compute API.
 	ExportChannelData(ctx context.Context, requestArg ExportDataRequest) (io.ReadCloser, error)
+	// Required permissions matches those required to compute the channels via the compute API.
+	GenerateExportChannelDataPresignedLink(ctx context.Context, requestArg ExportDataRequest) (GeneratePresignedLinkResponse, error)
 }
 
 func NewDataExportServiceClientWithAuth(client DataExportServiceClient, authHeader bearertoken.Token) DataExportServiceClientWithAuth {
@@ -60,6 +84,10 @@ type dataExportServiceClientWithAuth struct {
 
 func (c *dataExportServiceClientWithAuth) ExportChannelData(ctx context.Context, requestArg ExportDataRequest) (io.ReadCloser, error) {
 	return c.client.ExportChannelData(ctx, c.authHeader, requestArg)
+}
+
+func (c *dataExportServiceClientWithAuth) GenerateExportChannelDataPresignedLink(ctx context.Context, requestArg ExportDataRequest) (GeneratePresignedLinkResponse, error) {
+	return c.client.GenerateExportChannelDataPresignedLink(ctx, c.authHeader, requestArg)
 }
 
 func NewDataExportServiceClientWithTokenProvider(client DataExportServiceClient, tokenProvider httpclient.TokenProvider) DataExportServiceClientWithAuth {
@@ -78,4 +106,13 @@ func (c *dataExportServiceClientWithTokenProvider) ExportChannelData(ctx context
 		return defaultReturnVal, err
 	}
 	return c.client.ExportChannelData(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *dataExportServiceClientWithTokenProvider) GenerateExportChannelDataPresignedLink(ctx context.Context, requestArg ExportDataRequest) (GeneratePresignedLinkResponse, error) {
+	var defaultReturnVal GeneratePresignedLinkResponse
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GenerateExportChannelDataPresignedLink(ctx, bearertoken.Token(token), requestArg)
 }
