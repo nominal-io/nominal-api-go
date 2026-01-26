@@ -6,8 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
-	api1 "github.com/nominal-io/nominal-api-go/timeseries/logicalseries/api"
+	"github.com/nominal-io/nominal-api-go/timeseries/logicalseries/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -1019,6 +1018,7 @@ func NewEnumArraySeriesNodeFromRaw(v ResolvedSeries) EnumArraySeriesNode {
 
 type EnumSeriesNode struct {
 	typ                  string
+	literal              *LiteralEnumSeriesNode
 	raw                  *RawEnumSeriesNode
 	resample             *EnumResampleSeriesNode
 	timeRangeFilter      *EnumTimeRangeFilterSeriesNode
@@ -1029,11 +1029,11 @@ type EnumSeriesNode struct {
 	valueMap             *ValueMapSeriesNode
 	arraySelect          *SelectIndexFromEnumArraySeriesNode
 	extractFromStruct    *ExtractEnumFromStructSeriesNode
-	eventAggregation     *EventsEnumSeriesNode
 }
 
 type enumSeriesNodeDeserializer struct {
 	Type                 string                              `json:"type"`
+	Literal              *LiteralEnumSeriesNode              `json:"literal"`
 	Raw                  *RawEnumSeriesNode                  `json:"raw"`
 	Resample             *EnumResampleSeriesNode             `json:"resample"`
 	TimeRangeFilter      *EnumTimeRangeFilterSeriesNode      `json:"timeRangeFilter"`
@@ -1044,17 +1044,24 @@ type enumSeriesNodeDeserializer struct {
 	ValueMap             *ValueMapSeriesNode                 `json:"valueMap"`
 	ArraySelect          *SelectIndexFromEnumArraySeriesNode `json:"arraySelect"`
 	ExtractFromStruct    *ExtractEnumFromStructSeriesNode    `json:"extractFromStruct"`
-	EventAggregation     *EventsEnumSeriesNode               `json:"eventAggregation"`
 }
 
 func (u *enumSeriesNodeDeserializer) toStruct() EnumSeriesNode {
-	return EnumSeriesNode{typ: u.Type, raw: u.Raw, resample: u.Resample, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, union: u.Union, aggregate: u.Aggregate, filterTransformation: u.FilterTransformation, valueMap: u.ValueMap, arraySelect: u.ArraySelect, extractFromStruct: u.ExtractFromStruct, eventAggregation: u.EventAggregation}
+	return EnumSeriesNode{typ: u.Type, literal: u.Literal, raw: u.Raw, resample: u.Resample, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, union: u.Union, aggregate: u.Aggregate, filterTransformation: u.FilterTransformation, valueMap: u.ValueMap, arraySelect: u.ArraySelect, extractFromStruct: u.ExtractFromStruct}
 }
 
 func (u *EnumSeriesNode) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "literal":
+		if u.literal == nil {
+			return nil, fmt.Errorf("field \"literal\" is required")
+		}
+		return struct {
+			Type    string                `json:"type"`
+			Literal LiteralEnumSeriesNode `json:"literal"`
+		}{Type: "literal", Literal: *u.literal}, nil
 	case "raw":
 		if u.raw == nil {
 			return nil, fmt.Errorf("field \"raw\" is required")
@@ -1135,14 +1142,6 @@ func (u *EnumSeriesNode) toSerializer() (interface{}, error) {
 			Type              string                          `json:"type"`
 			ExtractFromStruct ExtractEnumFromStructSeriesNode `json:"extractFromStruct"`
 		}{Type: "extractFromStruct", ExtractFromStruct: *u.extractFromStruct}, nil
-	case "eventAggregation":
-		if u.eventAggregation == nil {
-			return nil, fmt.Errorf("field \"eventAggregation\" is required")
-		}
-		return struct {
-			Type             string               `json:"type"`
-			EventAggregation EventsEnumSeriesNode `json:"eventAggregation"`
-		}{Type: "eventAggregation", EventAggregation: *u.eventAggregation}, nil
 	}
 }
 
@@ -1161,6 +1160,10 @@ func (u *EnumSeriesNode) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -1201,10 +1204,6 @@ func (u *EnumSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
-	case "eventAggregation":
-		if u.eventAggregation == nil {
-			return fmt.Errorf("field \"eventAggregation\" is required")
-		}
 	}
 	return nil
 }
@@ -1225,13 +1224,18 @@ func (u *EnumSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *EnumSeriesNode) AcceptFuncs(rawFunc func(RawEnumSeriesNode) error, resampleFunc func(EnumResampleSeriesNode) error, timeRangeFilterFunc func(EnumTimeRangeFilterSeriesNode) error, timeShiftFunc func(EnumTimeShiftSeriesNode) error, unionFunc func(EnumUnionSeriesNode) error, aggregateFunc func(AggregateEnumSeriesNode) error, filterTransformationFunc func(EnumFilterTransformationSeriesNode) error, valueMapFunc func(ValueMapSeriesNode) error, arraySelectFunc func(SelectIndexFromEnumArraySeriesNode) error, extractFromStructFunc func(ExtractEnumFromStructSeriesNode) error, eventAggregationFunc func(EventsEnumSeriesNode) error, unknownFunc func(string) error) error {
+func (u *EnumSeriesNode) AcceptFuncs(literalFunc func(LiteralEnumSeriesNode) error, rawFunc func(RawEnumSeriesNode) error, resampleFunc func(EnumResampleSeriesNode) error, timeRangeFilterFunc func(EnumTimeRangeFilterSeriesNode) error, timeShiftFunc func(EnumTimeShiftSeriesNode) error, unionFunc func(EnumUnionSeriesNode) error, aggregateFunc func(AggregateEnumSeriesNode) error, filterTransformationFunc func(EnumFilterTransformationSeriesNode) error, valueMapFunc func(ValueMapSeriesNode) error, arraySelectFunc func(SelectIndexFromEnumArraySeriesNode) error, extractFromStructFunc func(ExtractEnumFromStructSeriesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+		return literalFunc(*u.literal)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -1282,12 +1286,11 @@ func (u *EnumSeriesNode) AcceptFuncs(rawFunc func(RawEnumSeriesNode) error, resa
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return extractFromStructFunc(*u.extractFromStruct)
-	case "eventAggregation":
-		if u.eventAggregation == nil {
-			return fmt.Errorf("field \"eventAggregation\" is required")
-		}
-		return eventAggregationFunc(*u.eventAggregation)
 	}
+}
+
+func (u *EnumSeriesNode) LiteralNoopSuccess(LiteralEnumSeriesNode) error {
+	return nil
 }
 
 func (u *EnumSeriesNode) RawNoopSuccess(RawEnumSeriesNode) error {
@@ -1330,10 +1333,6 @@ func (u *EnumSeriesNode) ExtractFromStructNoopSuccess(ExtractEnumFromStructSerie
 	return nil
 }
 
-func (u *EnumSeriesNode) EventAggregationNoopSuccess(EventsEnumSeriesNode) error {
-	return nil
-}
-
 func (u *EnumSeriesNode) ErrorOnUnknown(typeName string) error {
 	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
@@ -1345,6 +1344,11 @@ func (u *EnumSeriesNode) Accept(v EnumSeriesNodeVisitor) error {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+		return v.VisitLiteral(*u.literal)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -1395,15 +1399,11 @@ func (u *EnumSeriesNode) Accept(v EnumSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStruct(*u.extractFromStruct)
-	case "eventAggregation":
-		if u.eventAggregation == nil {
-			return fmt.Errorf("field \"eventAggregation\" is required")
-		}
-		return v.VisitEventAggregation(*u.eventAggregation)
 	}
 }
 
 type EnumSeriesNodeVisitor interface {
+	VisitLiteral(v LiteralEnumSeriesNode) error
 	VisitRaw(v RawEnumSeriesNode) error
 	VisitResample(v EnumResampleSeriesNode) error
 	VisitTimeRangeFilter(v EnumTimeRangeFilterSeriesNode) error
@@ -1414,7 +1414,6 @@ type EnumSeriesNodeVisitor interface {
 	VisitValueMap(v ValueMapSeriesNode) error
 	VisitArraySelect(v SelectIndexFromEnumArraySeriesNode) error
 	VisitExtractFromStruct(v ExtractEnumFromStructSeriesNode) error
-	VisitEventAggregation(v EventsEnumSeriesNode) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1425,6 +1424,11 @@ func (u *EnumSeriesNode) AcceptWithContext(ctx context.Context, v EnumSeriesNode
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+		return v.VisitLiteralWithContext(ctx, *u.literal)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -1475,15 +1479,11 @@ func (u *EnumSeriesNode) AcceptWithContext(ctx context.Context, v EnumSeriesNode
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStructWithContext(ctx, *u.extractFromStruct)
-	case "eventAggregation":
-		if u.eventAggregation == nil {
-			return fmt.Errorf("field \"eventAggregation\" is required")
-		}
-		return v.VisitEventAggregationWithContext(ctx, *u.eventAggregation)
 	}
 }
 
 type EnumSeriesNodeVisitorWithContext interface {
+	VisitLiteralWithContext(ctx context.Context, v LiteralEnumSeriesNode) error
 	VisitRawWithContext(ctx context.Context, v RawEnumSeriesNode) error
 	VisitResampleWithContext(ctx context.Context, v EnumResampleSeriesNode) error
 	VisitTimeRangeFilterWithContext(ctx context.Context, v EnumTimeRangeFilterSeriesNode) error
@@ -1494,8 +1494,11 @@ type EnumSeriesNodeVisitorWithContext interface {
 	VisitValueMapWithContext(ctx context.Context, v ValueMapSeriesNode) error
 	VisitArraySelectWithContext(ctx context.Context, v SelectIndexFromEnumArraySeriesNode) error
 	VisitExtractFromStructWithContext(ctx context.Context, v ExtractEnumFromStructSeriesNode) error
-	VisitEventAggregationWithContext(ctx context.Context, v EventsEnumSeriesNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewEnumSeriesNodeFromLiteral(v LiteralEnumSeriesNode) EnumSeriesNode {
+	return EnumSeriesNode{typ: "literal", literal: &v}
 }
 
 func NewEnumSeriesNodeFromRaw(v RawEnumSeriesNode) EnumSeriesNode {
@@ -1536,184 +1539,6 @@ func NewEnumSeriesNodeFromArraySelect(v SelectIndexFromEnumArraySeriesNode) Enum
 
 func NewEnumSeriesNodeFromExtractFromStruct(v ExtractEnumFromStructSeriesNode) EnumSeriesNode {
 	return EnumSeriesNode{typ: "extractFromStruct", extractFromStruct: &v}
-}
-
-func NewEnumSeriesNodeFromEventAggregation(v EventsEnumSeriesNode) EnumSeriesNode {
-	return EnumSeriesNode{typ: "eventAggregation", eventAggregation: &v}
-}
-
-type EventsEnumValueSource struct {
-	typ      string
-	property *string
-	level    *api.Empty
-}
-
-type eventsEnumValueSourceDeserializer struct {
-	Type     string     `json:"type"`
-	Property *string    `json:"property"`
-	Level    *api.Empty `json:"level"`
-}
-
-func (u *eventsEnumValueSourceDeserializer) toStruct() EventsEnumValueSource {
-	return EventsEnumValueSource{typ: u.Type, property: u.Property, level: u.Level}
-}
-
-func (u *EventsEnumValueSource) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "property":
-		if u.property == nil {
-			return nil, fmt.Errorf("field \"property\" is required")
-		}
-		return struct {
-			Type     string `json:"type"`
-			Property string `json:"property"`
-		}{Type: "property", Property: *u.property}, nil
-	case "level":
-		if u.level == nil {
-			return nil, fmt.Errorf("field \"level\" is required")
-		}
-		return struct {
-			Type  string    `json:"type"`
-			Level api.Empty `json:"level"`
-		}{Type: "level", Level: *u.level}, nil
-	}
-}
-
-func (u EventsEnumValueSource) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *EventsEnumValueSource) UnmarshalJSON(data []byte) error {
-	var deser eventsEnumValueSourceDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "property":
-		if u.property == nil {
-			return fmt.Errorf("field \"property\" is required")
-		}
-	case "level":
-		if u.level == nil {
-			return fmt.Errorf("field \"level\" is required")
-		}
-	}
-	return nil
-}
-
-func (u EventsEnumValueSource) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *EventsEnumValueSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *EventsEnumValueSource) AcceptFuncs(propertyFunc func(string) error, levelFunc func(api.Empty) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "property":
-		if u.property == nil {
-			return fmt.Errorf("field \"property\" is required")
-		}
-		return propertyFunc(*u.property)
-	case "level":
-		if u.level == nil {
-			return fmt.Errorf("field \"level\" is required")
-		}
-		return levelFunc(*u.level)
-	}
-}
-
-func (u *EventsEnumValueSource) PropertyNoopSuccess(string) error {
-	return nil
-}
-
-func (u *EventsEnumValueSource) LevelNoopSuccess(api.Empty) error {
-	return nil
-}
-
-func (u *EventsEnumValueSource) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *EventsEnumValueSource) Accept(v EventsEnumValueSourceVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
-	case "property":
-		if u.property == nil {
-			return fmt.Errorf("field \"property\" is required")
-		}
-		return v.VisitProperty(*u.property)
-	case "level":
-		if u.level == nil {
-			return fmt.Errorf("field \"level\" is required")
-		}
-		return v.VisitLevel(*u.level)
-	}
-}
-
-type EventsEnumValueSourceVisitor interface {
-	VisitProperty(v string) error
-	VisitLevel(v api.Empty) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *EventsEnumValueSource) AcceptWithContext(ctx context.Context, v EventsEnumValueSourceVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "property":
-		if u.property == nil {
-			return fmt.Errorf("field \"property\" is required")
-		}
-		return v.VisitPropertyWithContext(ctx, *u.property)
-	case "level":
-		if u.level == nil {
-			return fmt.Errorf("field \"level\" is required")
-		}
-		return v.VisitLevelWithContext(ctx, *u.level)
-	}
-}
-
-type EventsEnumValueSourceVisitorWithContext interface {
-	VisitPropertyWithContext(ctx context.Context, v string) error
-	VisitLevelWithContext(ctx context.Context, v api.Empty) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewEventsEnumValueSourceFromProperty(v string) EventsEnumValueSource {
-	return EventsEnumValueSource{typ: "property", property: &v}
-}
-
-func NewEventsEnumValueSourceFromLevel(v api.Empty) EventsEnumValueSource {
-	return EventsEnumValueSource{typ: "level", level: &v}
 }
 
 type FrequencyDomainNode struct {
@@ -4568,7 +4393,6 @@ type RangesNode struct {
 	stabilityDetection        *StabilityDetectionRangesNode
 	threshold                 *ThresholdingRangesNode
 	unionRange                *UnionRangesNode
-	eventSearch               *EventSearchNode
 	paddedRanges              *PaddedRangesNode
 }
 
@@ -4589,12 +4413,11 @@ type rangesNodeDeserializer struct {
 	StabilityDetection        *StabilityDetectionRangesNode `json:"stabilityDetection"`
 	Threshold                 *ThresholdingRangesNode       `json:"threshold"`
 	UnionRange                *UnionRangesNode              `json:"unionRange"`
-	EventSearch               *EventSearchNode              `json:"eventSearch"`
 	PaddedRanges              *PaddedRangesNode             `json:"paddedRanges"`
 }
 
 func (u *rangesNodeDeserializer) toStruct() RangesNode {
-	return RangesNode{typ: u.Type, durationFilter: u.DurationFilter, enumEquality: u.EnumEquality, enumFilter: u.EnumFilter, extrema: u.Extrema, intersectRange: u.IntersectRange, literalRanges: u.LiteralRanges, minMaxThreshold: u.MinMaxThreshold, not: u.Not, onChange: u.OnChange, rangeNumericAggregation: u.RangeNumericAggregation, seriesCrossoverRangesNode: u.SeriesCrossoverRangesNode, staleRange: u.StaleRange, stabilityDetection: u.StabilityDetection, threshold: u.Threshold, unionRange: u.UnionRange, eventSearch: u.EventSearch, paddedRanges: u.PaddedRanges}
+	return RangesNode{typ: u.Type, durationFilter: u.DurationFilter, enumEquality: u.EnumEquality, enumFilter: u.EnumFilter, extrema: u.Extrema, intersectRange: u.IntersectRange, literalRanges: u.LiteralRanges, minMaxThreshold: u.MinMaxThreshold, not: u.Not, onChange: u.OnChange, rangeNumericAggregation: u.RangeNumericAggregation, seriesCrossoverRangesNode: u.SeriesCrossoverRangesNode, staleRange: u.StaleRange, stabilityDetection: u.StabilityDetection, threshold: u.Threshold, unionRange: u.UnionRange, paddedRanges: u.PaddedRanges}
 }
 
 func (u *RangesNode) toSerializer() (interface{}, error) {
@@ -4721,14 +4544,6 @@ func (u *RangesNode) toSerializer() (interface{}, error) {
 			Type       string          `json:"type"`
 			UnionRange UnionRangesNode `json:"unionRange"`
 		}{Type: "unionRange", UnionRange: *u.unionRange}, nil
-	case "eventSearch":
-		if u.eventSearch == nil {
-			return nil, fmt.Errorf("field \"eventSearch\" is required")
-		}
-		return struct {
-			Type        string          `json:"type"`
-			EventSearch EventSearchNode `json:"eventSearch"`
-		}{Type: "eventSearch", EventSearch: *u.eventSearch}, nil
 	case "paddedRanges":
 		if u.paddedRanges == nil {
 			return nil, fmt.Errorf("field \"paddedRanges\" is required")
@@ -4815,10 +4630,6 @@ func (u *RangesNode) UnmarshalJSON(data []byte) error {
 		if u.unionRange == nil {
 			return fmt.Errorf("field \"unionRange\" is required")
 		}
-	case "eventSearch":
-		if u.eventSearch == nil {
-			return fmt.Errorf("field \"eventSearch\" is required")
-		}
 	case "paddedRanges":
 		if u.paddedRanges == nil {
 			return fmt.Errorf("field \"paddedRanges\" is required")
@@ -4843,7 +4654,7 @@ func (u *RangesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *RangesNode) AcceptFuncs(durationFilterFunc func(DurationFilterRangesNode) error, enumEqualityFunc func(EnumEqualityRangesNode) error, enumFilterFunc func(EnumFilterRangesNode) error, extremaFunc func(ExtremaRangesNode) error, intersectRangeFunc func(IntersectRangesNode) error, literalRangesFunc func(LiteralRangesNode) error, minMaxThresholdFunc func(MinMaxThresholdRangesNode) error, notFunc func(NotRangesNode) error, onChangeFunc func(OnChangeRangesNode) error, rangeNumericAggregationFunc func(RangesNumericAggregationNode) error, seriesCrossoverRangesNodeFunc func(SeriesCrossoverRangesNode) error, staleRangeFunc func(StaleRangesNode) error, stabilityDetectionFunc func(StabilityDetectionRangesNode) error, thresholdFunc func(ThresholdingRangesNode) error, unionRangeFunc func(UnionRangesNode) error, eventSearchFunc func(EventSearchNode) error, paddedRangesFunc func(PaddedRangesNode) error, unknownFunc func(string) error) error {
+func (u *RangesNode) AcceptFuncs(durationFilterFunc func(DurationFilterRangesNode) error, enumEqualityFunc func(EnumEqualityRangesNode) error, enumFilterFunc func(EnumFilterRangesNode) error, extremaFunc func(ExtremaRangesNode) error, intersectRangeFunc func(IntersectRangesNode) error, literalRangesFunc func(LiteralRangesNode) error, minMaxThresholdFunc func(MinMaxThresholdRangesNode) error, notFunc func(NotRangesNode) error, onChangeFunc func(OnChangeRangesNode) error, rangeNumericAggregationFunc func(RangesNumericAggregationNode) error, seriesCrossoverRangesNodeFunc func(SeriesCrossoverRangesNode) error, staleRangeFunc func(StaleRangesNode) error, stabilityDetectionFunc func(StabilityDetectionRangesNode) error, thresholdFunc func(ThresholdingRangesNode) error, unionRangeFunc func(UnionRangesNode) error, paddedRangesFunc func(PaddedRangesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -4925,11 +4736,6 @@ func (u *RangesNode) AcceptFuncs(durationFilterFunc func(DurationFilterRangesNod
 			return fmt.Errorf("field \"unionRange\" is required")
 		}
 		return unionRangeFunc(*u.unionRange)
-	case "eventSearch":
-		if u.eventSearch == nil {
-			return fmt.Errorf("field \"eventSearch\" is required")
-		}
-		return eventSearchFunc(*u.eventSearch)
 	case "paddedRanges":
 		if u.paddedRanges == nil {
 			return fmt.Errorf("field \"paddedRanges\" is required")
@@ -4995,10 +4801,6 @@ func (u *RangesNode) ThresholdNoopSuccess(ThresholdingRangesNode) error {
 }
 
 func (u *RangesNode) UnionRangeNoopSuccess(UnionRangesNode) error {
-	return nil
-}
-
-func (u *RangesNode) EventSearchNoopSuccess(EventSearchNode) error {
 	return nil
 }
 
@@ -5092,11 +4894,6 @@ func (u *RangesNode) Accept(v RangesNodeVisitor) error {
 			return fmt.Errorf("field \"unionRange\" is required")
 		}
 		return v.VisitUnionRange(*u.unionRange)
-	case "eventSearch":
-		if u.eventSearch == nil {
-			return fmt.Errorf("field \"eventSearch\" is required")
-		}
-		return v.VisitEventSearch(*u.eventSearch)
 	case "paddedRanges":
 		if u.paddedRanges == nil {
 			return fmt.Errorf("field \"paddedRanges\" is required")
@@ -5121,7 +4918,6 @@ type RangesNodeVisitor interface {
 	VisitStabilityDetection(v StabilityDetectionRangesNode) error
 	VisitThreshold(v ThresholdingRangesNode) error
 	VisitUnionRange(v UnionRangesNode) error
-	VisitEventSearch(v EventSearchNode) error
 	VisitPaddedRanges(v PaddedRangesNode) error
 	VisitUnknown(typeName string) error
 }
@@ -5208,11 +5004,6 @@ func (u *RangesNode) AcceptWithContext(ctx context.Context, v RangesNodeVisitorW
 			return fmt.Errorf("field \"unionRange\" is required")
 		}
 		return v.VisitUnionRangeWithContext(ctx, *u.unionRange)
-	case "eventSearch":
-		if u.eventSearch == nil {
-			return fmt.Errorf("field \"eventSearch\" is required")
-		}
-		return v.VisitEventSearchWithContext(ctx, *u.eventSearch)
 	case "paddedRanges":
 		if u.paddedRanges == nil {
 			return fmt.Errorf("field \"paddedRanges\" is required")
@@ -5237,7 +5028,6 @@ type RangesNodeVisitorWithContext interface {
 	VisitStabilityDetectionWithContext(ctx context.Context, v StabilityDetectionRangesNode) error
 	VisitThresholdWithContext(ctx context.Context, v ThresholdingRangesNode) error
 	VisitUnionRangeWithContext(ctx context.Context, v UnionRangesNode) error
-	VisitEventSearchWithContext(ctx context.Context, v EventSearchNode) error
 	VisitPaddedRangesWithContext(ctx context.Context, v PaddedRangesNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
@@ -5300,10 +5090,6 @@ func NewRangesNodeFromThreshold(v ThresholdingRangesNode) RangesNode {
 
 func NewRangesNodeFromUnionRange(v UnionRangesNode) RangesNode {
 	return RangesNode{typ: "unionRange", unionRange: &v}
-}
-
-func NewRangesNodeFromEventSearch(v EventSearchNode) RangesNode {
-	return RangesNode{typ: "eventSearch", eventSearch: &v}
 }
 
 func NewRangesNodeFromPaddedRanges(v PaddedRangesNode) RangesNode {
@@ -7020,13 +6806,13 @@ func NewSignalFilterConfigurationFromBandStop(v BandStopConfiguration) SignalFil
 type StorageLocator struct {
 	typ      string
 	nominal  *NominalStorageLocator
-	external *api1.LogicalSeries
+	external *api.LogicalSeries
 }
 
 type storageLocatorDeserializer struct {
 	Type     string                 `json:"type"`
 	Nominal  *NominalStorageLocator `json:"nominal"`
-	External *api1.LogicalSeries    `json:"external"`
+	External *api.LogicalSeries     `json:"external"`
 }
 
 func (u *storageLocatorDeserializer) toStruct() StorageLocator {
@@ -7050,8 +6836,8 @@ func (u *StorageLocator) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"external\" is required")
 		}
 		return struct {
-			Type     string             `json:"type"`
-			External api1.LogicalSeries `json:"external"`
+			Type     string            `json:"type"`
+			External api.LogicalSeries `json:"external"`
 		}{Type: "external", External: *u.external}, nil
 	}
 }
@@ -7099,7 +6885,7 @@ func (u *StorageLocator) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *StorageLocator) AcceptFuncs(nominalFunc func(NominalStorageLocator) error, externalFunc func(api1.LogicalSeries) error, unknownFunc func(string) error) error {
+func (u *StorageLocator) AcceptFuncs(nominalFunc func(NominalStorageLocator) error, externalFunc func(api.LogicalSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -7123,7 +6909,7 @@ func (u *StorageLocator) NominalNoopSuccess(NominalStorageLocator) error {
 	return nil
 }
 
-func (u *StorageLocator) ExternalNoopSuccess(api1.LogicalSeries) error {
+func (u *StorageLocator) ExternalNoopSuccess(api.LogicalSeries) error {
 	return nil
 }
 
@@ -7153,7 +6939,7 @@ func (u *StorageLocator) Accept(v StorageLocatorVisitor) error {
 
 type StorageLocatorVisitor interface {
 	VisitNominal(v NominalStorageLocator) error
-	VisitExternal(v api1.LogicalSeries) error
+	VisitExternal(v api.LogicalSeries) error
 	VisitUnknown(typeName string) error
 }
 
@@ -7179,7 +6965,7 @@ func (u *StorageLocator) AcceptWithContext(ctx context.Context, v StorageLocator
 
 type StorageLocatorVisitorWithContext interface {
 	VisitNominalWithContext(ctx context.Context, v NominalStorageLocator) error
-	VisitExternalWithContext(ctx context.Context, v api1.LogicalSeries) error
+	VisitExternalWithContext(ctx context.Context, v api.LogicalSeries) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -7187,7 +6973,7 @@ func NewStorageLocatorFromNominal(v NominalStorageLocator) StorageLocator {
 	return StorageLocator{typ: "nominal", nominal: &v}
 }
 
-func NewStorageLocatorFromExternal(v api1.LogicalSeries) StorageLocator {
+func NewStorageLocatorFromExternal(v api.LogicalSeries) StorageLocator {
 	return StorageLocator{typ: "external", external: &v}
 }
 

@@ -331,10 +331,9 @@ type CheckLiveStatusResponse struct {
 	CheckRid api2.CheckRid `json:"checkRid"`
 	/*
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
-	   assetRid: common.AssetRid
 	   The check implementation index will correspond to the implementation index of the check condition.
 	*/
-	CheckParameterIndex *int `conjure-docs:"Checks can define a single range computation which can evaluate over multiple implementations of a context.\nassetRid: common.AssetRid\nThe check implementation index will correspond to the implementation index of the check condition." json:"checkParameterIndex,omitempty"`
+	CheckParameterIndex *int `conjure-docs:"Checks can define a single range computation which can evaluate over multiple implementations of a context.\nThe check implementation index will correspond to the implementation index of the check condition." json:"checkParameterIndex,omitempty"`
 }
 
 func (o CheckLiveStatusResponse) MarshalYAML() (interface{}, error) {

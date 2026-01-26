@@ -39,11 +39,18 @@ type CatalogServiceClient interface {
 	CreateDataset(ctx context.Context, authHeader bearertoken.Token, detailsArg CreateDataset) (EnrichedDataset, error)
 	// Creates a dataset if the s3 path does not exist, otherwise updates the dataset
 	CreateOrUpdateDataset(ctx context.Context, authHeader bearertoken.Token, detailsArg CreateDataset) (EnrichedDataset, error)
+	/*
+	   Creates a dataset with a specific UUID. This is useful for migrations and advanced use cases
+	   where the dataset UUID must be controlled by the caller. Throws a conflict error if a dataset
+	   with the specified UUID already exists. This endpoint is not intended for general use. Use /datasets instead to create a new dataset.
+	*/
+	CreateDatasetWithUuid(ctx context.Context, authHeader bearertoken.Token, requestArg CreateDatasetWithUuidRequest) (EnrichedDataset, error)
 	// Adds a single file to an existing dataset.
 	AddFileToDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg AddFileToDataset) (DatasetFile, error)
 	ListDatasetFiles(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error)
 	SearchDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg SearchDatasetFilesRequest) (SearchDatasetFilesResponse, error)
 	GetDatasetFileUri(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) (DatasetFileUri, error)
+	GetVideoFileUri(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (VideoFileUri, error)
 	GetOriginFileUris(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) ([]OriginFileUri, error)
 	MarkFileIngestSuccessful(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestSuccessful) (DatasetFile, error)
 	MarkFileIngestError(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestError) (DatasetFile, error)
@@ -313,6 +320,26 @@ func (c *catalogServiceClient) CreateOrUpdateDataset(ctx context.Context, authHe
 	return *returnVal, nil
 }
 
+func (c *catalogServiceClient) CreateDatasetWithUuid(ctx context.Context, authHeader bearertoken.Token, requestArg CreateDatasetWithUuidRequest) (EnrichedDataset, error) {
+	var defaultReturnVal EnrichedDataset
+	var returnVal *EnrichedDataset
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateDatasetWithUuid"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/with-uuid"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createDatasetWithUuid failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createDatasetWithUuid response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *catalogServiceClient) AddFileToDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg AddFileToDataset) (DatasetFile, error) {
 	var defaultReturnVal DatasetFile
 	var returnVal *DatasetFile
@@ -392,6 +419,25 @@ func (c *catalogServiceClient) GetDatasetFileUri(ctx context.Context, authHeader
 	}
 	if returnVal == nil {
 		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getDatasetFileUri response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *catalogServiceClient) GetVideoFileUri(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (VideoFileUri, error) {
+	var defaultReturnVal VideoFileUri
+	var returnVal *VideoFileUri
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetVideoFileUri"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/videos/%s/uri", url.PathEscape(fmt.Sprint(videoFileRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getVideoFileUri failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getVideoFileUri response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -620,11 +666,18 @@ type CatalogServiceClientWithAuth interface {
 	CreateDataset(ctx context.Context, detailsArg CreateDataset) (EnrichedDataset, error)
 	// Creates a dataset if the s3 path does not exist, otherwise updates the dataset
 	CreateOrUpdateDataset(ctx context.Context, detailsArg CreateDataset) (EnrichedDataset, error)
+	/*
+	   Creates a dataset with a specific UUID. This is useful for migrations and advanced use cases
+	   where the dataset UUID must be controlled by the caller. Throws a conflict error if a dataset
+	   with the specified UUID already exists. This endpoint is not intended for general use. Use /datasets instead to create a new dataset.
+	*/
+	CreateDatasetWithUuid(ctx context.Context, requestArg CreateDatasetWithUuidRequest) (EnrichedDataset, error)
 	// Adds a single file to an existing dataset.
 	AddFileToDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg AddFileToDataset) (DatasetFile, error)
 	ListDatasetFiles(ctx context.Context, datasetRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error)
 	SearchDatasetFiles(ctx context.Context, requestArg SearchDatasetFilesRequest) (SearchDatasetFilesResponse, error)
 	GetDatasetFileUri(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) (DatasetFileUri, error)
+	GetVideoFileUri(ctx context.Context, videoFileRidArg rids.VideoFileRid) (VideoFileUri, error)
 	GetOriginFileUris(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) ([]OriginFileUri, error)
 	MarkFileIngestSuccessful(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestSuccessful) (DatasetFile, error)
 	MarkFileIngestError(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestError) (DatasetFile, error)
@@ -710,6 +763,10 @@ func (c *catalogServiceClientWithAuth) CreateOrUpdateDataset(ctx context.Context
 	return c.client.CreateOrUpdateDataset(ctx, c.authHeader, detailsArg)
 }
 
+func (c *catalogServiceClientWithAuth) CreateDatasetWithUuid(ctx context.Context, requestArg CreateDatasetWithUuidRequest) (EnrichedDataset, error) {
+	return c.client.CreateDatasetWithUuid(ctx, c.authHeader, requestArg)
+}
+
 func (c *catalogServiceClientWithAuth) AddFileToDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg AddFileToDataset) (DatasetFile, error) {
 	return c.client.AddFileToDataset(ctx, c.authHeader, datasetRidArg, requestArg)
 }
@@ -724,6 +781,10 @@ func (c *catalogServiceClientWithAuth) SearchDatasetFiles(ctx context.Context, r
 
 func (c *catalogServiceClientWithAuth) GetDatasetFileUri(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) (DatasetFileUri, error) {
 	return c.client.GetDatasetFileUri(ctx, c.authHeader, datasetRidArg, fileIdArg)
+}
+
+func (c *catalogServiceClientWithAuth) GetVideoFileUri(ctx context.Context, videoFileRidArg rids.VideoFileRid) (VideoFileUri, error) {
+	return c.client.GetVideoFileUri(ctx, c.authHeader, videoFileRidArg)
 }
 
 func (c *catalogServiceClientWithAuth) GetOriginFileUris(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) ([]OriginFileUri, error) {
@@ -887,6 +948,15 @@ func (c *catalogServiceClientWithTokenProvider) CreateOrUpdateDataset(ctx contex
 	return c.client.CreateOrUpdateDataset(ctx, bearertoken.Token(token), detailsArg)
 }
 
+func (c *catalogServiceClientWithTokenProvider) CreateDatasetWithUuid(ctx context.Context, requestArg CreateDatasetWithUuidRequest) (EnrichedDataset, error) {
+	var defaultReturnVal EnrichedDataset
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.CreateDatasetWithUuid(ctx, bearertoken.Token(token), requestArg)
+}
+
 func (c *catalogServiceClientWithTokenProvider) AddFileToDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg AddFileToDataset) (DatasetFile, error) {
 	var defaultReturnVal DatasetFile
 	token, err := c.tokenProvider(ctx)
@@ -921,6 +991,15 @@ func (c *catalogServiceClientWithTokenProvider) GetDatasetFileUri(ctx context.Co
 		return defaultReturnVal, err
 	}
 	return c.client.GetDatasetFileUri(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg)
+}
+
+func (c *catalogServiceClientWithTokenProvider) GetVideoFileUri(ctx context.Context, videoFileRidArg rids.VideoFileRid) (VideoFileUri, error) {
+	var defaultReturnVal VideoFileUri
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetVideoFileUri(ctx, bearertoken.Token(token), videoFileRidArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetOriginFileUris(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) ([]OriginFileUri, error) {

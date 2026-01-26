@@ -623,6 +623,11 @@ func (u *IngestOptionsWithT[T]) Accept(ctx context.Context, v IngestOptionsVisit
 			return result, fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideo(ctx, *u.video)
+	case "videoV2":
+		if u.videoV2 == nil {
+			return result, fmt.Errorf("field \"videoV2\" is required")
+		}
+		return v.VisitVideoV2(ctx, *u.videoV2)
 	case "containerized":
 		if u.containerized == nil {
 			return result, fmt.Errorf("field \"containerized\" is required")
@@ -636,7 +641,7 @@ func (u *IngestOptionsWithT[T]) Accept(ctx context.Context, v IngestOptionsVisit
 	}
 }
 
-func (u *IngestOptionsWithT[T]) AcceptFuncs(dataflashFunc func(DataflashOpts) (T, error), mcapProtobufTimeseriesFunc func(McapProtobufTimeseriesOpts) (T, error), journalJsonFunc func(JournalJsonOpts) (T, error), csvFunc func(CsvOpts) (T, error), parquetFunc func(ParquetOpts) (T, error), videoFunc func(VideoOpts) (T, error), containerizedFunc func(ContainerizedOpts) (T, error), avroStreamFunc func(AvroStreamOpts) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IngestOptionsWithT[T]) AcceptFuncs(dataflashFunc func(DataflashOpts) (T, error), mcapProtobufTimeseriesFunc func(McapProtobufTimeseriesOpts) (T, error), journalJsonFunc func(JournalJsonOpts) (T, error), csvFunc func(CsvOpts) (T, error), parquetFunc func(ParquetOpts) (T, error), videoFunc func(VideoOpts) (T, error), videoV2Func func(VideoOptsV2) (T, error), containerizedFunc func(ContainerizedOpts) (T, error), avroStreamFunc func(AvroStreamOpts) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -674,6 +679,11 @@ func (u *IngestOptionsWithT[T]) AcceptFuncs(dataflashFunc func(DataflashOpts) (T
 			return result, fmt.Errorf("field \"video\" is required")
 		}
 		return videoFunc(*u.video)
+	case "videoV2":
+		if u.videoV2 == nil {
+			return result, fmt.Errorf("field \"videoV2\" is required")
+		}
+		return videoV2Func(*u.videoV2)
 	case "containerized":
 		if u.containerized == nil {
 			return result, fmt.Errorf("field \"containerized\" is required")
@@ -717,6 +727,11 @@ func (u *IngestOptionsWithT[T]) VideoNoopSuccess(VideoOpts) (T, error) {
 	return result, nil
 }
 
+func (u *IngestOptionsWithT[T]) VideoV2NoopSuccess(VideoOptsV2) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *IngestOptionsWithT[T]) ContainerizedNoopSuccess(ContainerizedOpts) (T, error) {
 	var result T
 	return result, nil
@@ -739,6 +754,7 @@ type IngestOptionsVisitorWithT[T any] interface {
 	VisitCsv(ctx context.Context, v CsvOpts) (T, error)
 	VisitParquet(ctx context.Context, v ParquetOpts) (T, error)
 	VisitVideo(ctx context.Context, v VideoOpts) (T, error)
+	VisitVideoV2(ctx context.Context, v VideoOptsV2) (T, error)
 	VisitContainerized(ctx context.Context, v ContainerizedOpts) (T, error)
 	VisitAvroStream(ctx context.Context, v AvroStreamOpts) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)

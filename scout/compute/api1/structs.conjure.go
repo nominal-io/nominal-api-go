@@ -6,7 +6,6 @@ import (
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
-	api4 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/units/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safelong"
@@ -2700,51 +2699,6 @@ func (o SeriesEqualityRanges) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SeriesEqualityRanges) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// Deprecated and should not be created by clients. Use ChannelSeries instead.
-type SeriesSpec struct {
-	Rid api.LogicalSeriesRid `json:"rid"`
-	// The offset of this series relative to the time scale in which the computation is performed.
-	Offset        *api4.Duration `conjure-docs:"The offset of this series relative to the time scale in which the computation is performed." json:"offset,omitempty"`
-	TagsToGroupBy []string       `json:"tagsToGroupBy"`
-}
-
-func (o SeriesSpec) MarshalJSON() ([]byte, error) {
-	if o.TagsToGroupBy == nil {
-		o.TagsToGroupBy = make([]string, 0)
-	}
-	type _tmpSeriesSpec SeriesSpec
-	return safejson.Marshal(_tmpSeriesSpec(o))
-}
-
-func (o *SeriesSpec) UnmarshalJSON(data []byte) error {
-	type _tmpSeriesSpec SeriesSpec
-	var rawSeriesSpec _tmpSeriesSpec
-	if err := safejson.Unmarshal(data, &rawSeriesSpec); err != nil {
-		return err
-	}
-	if rawSeriesSpec.TagsToGroupBy == nil {
-		rawSeriesSpec.TagsToGroupBy = make([]string, 0)
-	}
-	*o = SeriesSpec(rawSeriesSpec)
-	return nil
-}
-
-func (o SeriesSpec) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *SeriesSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

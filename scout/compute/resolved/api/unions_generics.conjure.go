@@ -8,8 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
-	api1 "github.com/nominal-io/nominal-api-go/timeseries/logicalseries/api"
+	"github.com/nominal-io/nominal-api-go/timeseries/logicalseries/api"
 )
 
 type ArraySeriesNodeWithT[T any] ArraySeriesNode
@@ -396,6 +395,11 @@ func (u *EnumSeriesNodeWithT[T]) Accept(ctx context.Context, v EnumSeriesNodeVis
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
+	case "literal":
+		if u.literal == nil {
+			return result, fmt.Errorf("field \"literal\" is required")
+		}
+		return v.VisitLiteral(ctx, *u.literal)
 	case "raw":
 		if u.raw == nil {
 			return result, fmt.Errorf("field \"raw\" is required")
@@ -446,15 +450,10 @@ func (u *EnumSeriesNodeWithT[T]) Accept(ctx context.Context, v EnumSeriesNodeVis
 			return result, fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStruct(ctx, *u.extractFromStruct)
-	case "eventAggregation":
-		if u.eventAggregation == nil {
-			return result, fmt.Errorf("field \"eventAggregation\" is required")
-		}
-		return v.VisitEventAggregation(ctx, *u.eventAggregation)
 	}
 }
 
-func (u *EnumSeriesNodeWithT[T]) AcceptFuncs(rawFunc func(RawEnumSeriesNode) (T, error), resampleFunc func(EnumResampleSeriesNode) (T, error), timeRangeFilterFunc func(EnumTimeRangeFilterSeriesNode) (T, error), timeShiftFunc func(EnumTimeShiftSeriesNode) (T, error), unionFunc func(EnumUnionSeriesNode) (T, error), aggregateFunc func(AggregateEnumSeriesNode) (T, error), filterTransformationFunc func(EnumFilterTransformationSeriesNode) (T, error), valueMapFunc func(ValueMapSeriesNode) (T, error), arraySelectFunc func(SelectIndexFromEnumArraySeriesNode) (T, error), extractFromStructFunc func(ExtractEnumFromStructSeriesNode) (T, error), eventAggregationFunc func(EventsEnumSeriesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *EnumSeriesNodeWithT[T]) AcceptFuncs(literalFunc func(LiteralEnumSeriesNode) (T, error), rawFunc func(RawEnumSeriesNode) (T, error), resampleFunc func(EnumResampleSeriesNode) (T, error), timeRangeFilterFunc func(EnumTimeRangeFilterSeriesNode) (T, error), timeShiftFunc func(EnumTimeShiftSeriesNode) (T, error), unionFunc func(EnumUnionSeriesNode) (T, error), aggregateFunc func(AggregateEnumSeriesNode) (T, error), filterTransformationFunc func(EnumFilterTransformationSeriesNode) (T, error), valueMapFunc func(ValueMapSeriesNode) (T, error), arraySelectFunc func(SelectIndexFromEnumArraySeriesNode) (T, error), extractFromStructFunc func(ExtractEnumFromStructSeriesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -462,6 +461,11 @@ func (u *EnumSeriesNodeWithT[T]) AcceptFuncs(rawFunc func(RawEnumSeriesNode) (T,
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
+	case "literal":
+		if u.literal == nil {
+			return result, fmt.Errorf("field \"literal\" is required")
+		}
+		return literalFunc(*u.literal)
 	case "raw":
 		if u.raw == nil {
 			return result, fmt.Errorf("field \"raw\" is required")
@@ -512,12 +516,12 @@ func (u *EnumSeriesNodeWithT[T]) AcceptFuncs(rawFunc func(RawEnumSeriesNode) (T,
 			return result, fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return extractFromStructFunc(*u.extractFromStruct)
-	case "eventAggregation":
-		if u.eventAggregation == nil {
-			return result, fmt.Errorf("field \"eventAggregation\" is required")
-		}
-		return eventAggregationFunc(*u.eventAggregation)
 	}
+}
+
+func (u *EnumSeriesNodeWithT[T]) LiteralNoopSuccess(LiteralEnumSeriesNode) (T, error) {
+	var result T
+	return result, nil
 }
 
 func (u *EnumSeriesNodeWithT[T]) RawNoopSuccess(RawEnumSeriesNode) (T, error) {
@@ -570,17 +574,13 @@ func (u *EnumSeriesNodeWithT[T]) ExtractFromStructNoopSuccess(ExtractEnumFromStr
 	return result, nil
 }
 
-func (u *EnumSeriesNodeWithT[T]) EventAggregationNoopSuccess(EventsEnumSeriesNode) (T, error) {
-	var result T
-	return result, nil
-}
-
 func (u *EnumSeriesNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
 type EnumSeriesNodeVisitorWithT[T any] interface {
+	VisitLiteral(ctx context.Context, v LiteralEnumSeriesNode) (T, error)
 	VisitRaw(ctx context.Context, v RawEnumSeriesNode) (T, error)
 	VisitResample(ctx context.Context, v EnumResampleSeriesNode) (T, error)
 	VisitTimeRangeFilter(ctx context.Context, v EnumTimeRangeFilterSeriesNode) (T, error)
@@ -591,72 +591,6 @@ type EnumSeriesNodeVisitorWithT[T any] interface {
 	VisitValueMap(ctx context.Context, v ValueMapSeriesNode) (T, error)
 	VisitArraySelect(ctx context.Context, v SelectIndexFromEnumArraySeriesNode) (T, error)
 	VisitExtractFromStruct(ctx context.Context, v ExtractEnumFromStructSeriesNode) (T, error)
-	VisitEventAggregation(ctx context.Context, v EventsEnumSeriesNode) (T, error)
-	VisitUnknown(ctx context.Context, typ string) (T, error)
-}
-
-type EventsEnumValueSourceWithT[T any] EventsEnumValueSource
-
-func (u *EventsEnumValueSourceWithT[T]) Accept(ctx context.Context, v EventsEnumValueSourceVisitorWithT[T]) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(ctx, u.typ)
-	case "property":
-		if u.property == nil {
-			return result, fmt.Errorf("field \"property\" is required")
-		}
-		return v.VisitProperty(ctx, *u.property)
-	case "level":
-		if u.level == nil {
-			return result, fmt.Errorf("field \"level\" is required")
-		}
-		return v.VisitLevel(ctx, *u.level)
-	}
-}
-
-func (u *EventsEnumValueSourceWithT[T]) AcceptFuncs(propertyFunc func(string) (T, error), levelFunc func(api.Empty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "property":
-		if u.property == nil {
-			return result, fmt.Errorf("field \"property\" is required")
-		}
-		return propertyFunc(*u.property)
-	case "level":
-		if u.level == nil {
-			return result, fmt.Errorf("field \"level\" is required")
-		}
-		return levelFunc(*u.level)
-	}
-}
-
-func (u *EventsEnumValueSourceWithT[T]) PropertyNoopSuccess(string) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *EventsEnumValueSourceWithT[T]) LevelNoopSuccess(api.Empty) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *EventsEnumValueSourceWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
-	var result T
-	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-type EventsEnumValueSourceVisitorWithT[T any] interface {
-	VisitProperty(ctx context.Context, v string) (T, error)
-	VisitLevel(ctx context.Context, v api.Empty) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1857,11 +1791,6 @@ func (u *RangesNodeWithT[T]) Accept(ctx context.Context, v RangesNodeVisitorWith
 			return result, fmt.Errorf("field \"unionRange\" is required")
 		}
 		return v.VisitUnionRange(ctx, *u.unionRange)
-	case "eventSearch":
-		if u.eventSearch == nil {
-			return result, fmt.Errorf("field \"eventSearch\" is required")
-		}
-		return v.VisitEventSearch(ctx, *u.eventSearch)
 	case "paddedRanges":
 		if u.paddedRanges == nil {
 			return result, fmt.Errorf("field \"paddedRanges\" is required")
@@ -1870,7 +1799,7 @@ func (u *RangesNodeWithT[T]) Accept(ctx context.Context, v RangesNodeVisitorWith
 	}
 }
 
-func (u *RangesNodeWithT[T]) AcceptFuncs(durationFilterFunc func(DurationFilterRangesNode) (T, error), enumEqualityFunc func(EnumEqualityRangesNode) (T, error), enumFilterFunc func(EnumFilterRangesNode) (T, error), extremaFunc func(ExtremaRangesNode) (T, error), intersectRangeFunc func(IntersectRangesNode) (T, error), literalRangesFunc func(LiteralRangesNode) (T, error), minMaxThresholdFunc func(MinMaxThresholdRangesNode) (T, error), notFunc func(NotRangesNode) (T, error), onChangeFunc func(OnChangeRangesNode) (T, error), rangeNumericAggregationFunc func(RangesNumericAggregationNode) (T, error), seriesCrossoverRangesNodeFunc func(SeriesCrossoverRangesNode) (T, error), staleRangeFunc func(StaleRangesNode) (T, error), stabilityDetectionFunc func(StabilityDetectionRangesNode) (T, error), thresholdFunc func(ThresholdingRangesNode) (T, error), unionRangeFunc func(UnionRangesNode) (T, error), eventSearchFunc func(EventSearchNode) (T, error), paddedRangesFunc func(PaddedRangesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *RangesNodeWithT[T]) AcceptFuncs(durationFilterFunc func(DurationFilterRangesNode) (T, error), enumEqualityFunc func(EnumEqualityRangesNode) (T, error), enumFilterFunc func(EnumFilterRangesNode) (T, error), extremaFunc func(ExtremaRangesNode) (T, error), intersectRangeFunc func(IntersectRangesNode) (T, error), literalRangesFunc func(LiteralRangesNode) (T, error), minMaxThresholdFunc func(MinMaxThresholdRangesNode) (T, error), notFunc func(NotRangesNode) (T, error), onChangeFunc func(OnChangeRangesNode) (T, error), rangeNumericAggregationFunc func(RangesNumericAggregationNode) (T, error), seriesCrossoverRangesNodeFunc func(SeriesCrossoverRangesNode) (T, error), staleRangeFunc func(StaleRangesNode) (T, error), stabilityDetectionFunc func(StabilityDetectionRangesNode) (T, error), thresholdFunc func(ThresholdingRangesNode) (T, error), unionRangeFunc func(UnionRangesNode) (T, error), paddedRangesFunc func(PaddedRangesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1953,11 +1882,6 @@ func (u *RangesNodeWithT[T]) AcceptFuncs(durationFilterFunc func(DurationFilterR
 			return result, fmt.Errorf("field \"unionRange\" is required")
 		}
 		return unionRangeFunc(*u.unionRange)
-	case "eventSearch":
-		if u.eventSearch == nil {
-			return result, fmt.Errorf("field \"eventSearch\" is required")
-		}
-		return eventSearchFunc(*u.eventSearch)
 	case "paddedRanges":
 		if u.paddedRanges == nil {
 			return result, fmt.Errorf("field \"paddedRanges\" is required")
@@ -2041,11 +1965,6 @@ func (u *RangesNodeWithT[T]) UnionRangeNoopSuccess(UnionRangesNode) (T, error) {
 	return result, nil
 }
 
-func (u *RangesNodeWithT[T]) EventSearchNoopSuccess(EventSearchNode) (T, error) {
-	var result T
-	return result, nil
-}
-
 func (u *RangesNodeWithT[T]) PaddedRangesNoopSuccess(PaddedRangesNode) (T, error) {
 	var result T
 	return result, nil
@@ -2072,7 +1991,6 @@ type RangesNodeVisitorWithT[T any] interface {
 	VisitStabilityDetection(ctx context.Context, v StabilityDetectionRangesNode) (T, error)
 	VisitThreshold(ctx context.Context, v ThresholdingRangesNode) (T, error)
 	VisitUnionRange(ctx context.Context, v UnionRangesNode) (T, error)
-	VisitEventSearch(ctx context.Context, v EventSearchNode) (T, error)
 	VisitPaddedRanges(ctx context.Context, v PaddedRangesNode) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
@@ -2762,7 +2680,7 @@ func (u *StorageLocatorWithT[T]) Accept(ctx context.Context, v StorageLocatorVis
 	}
 }
 
-func (u *StorageLocatorWithT[T]) AcceptFuncs(nominalFunc func(NominalStorageLocator) (T, error), externalFunc func(api1.LogicalSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *StorageLocatorWithT[T]) AcceptFuncs(nominalFunc func(NominalStorageLocator) (T, error), externalFunc func(api.LogicalSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2788,7 +2706,7 @@ func (u *StorageLocatorWithT[T]) NominalNoopSuccess(NominalStorageLocator) (T, e
 	return result, nil
 }
 
-func (u *StorageLocatorWithT[T]) ExternalNoopSuccess(api1.LogicalSeries) (T, error) {
+func (u *StorageLocatorWithT[T]) ExternalNoopSuccess(api.LogicalSeries) (T, error) {
 	var result T
 	return result, nil
 }
@@ -2800,7 +2718,7 @@ func (u *StorageLocatorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type StorageLocatorVisitorWithT[T any] interface {
 	VisitNominal(ctx context.Context, v NominalStorageLocator) (T, error)
-	VisitExternal(ctx context.Context, v api1.LogicalSeries) (T, error)
+	VisitExternal(ctx context.Context, v api.LogicalSeries) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

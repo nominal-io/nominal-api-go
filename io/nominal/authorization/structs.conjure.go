@@ -446,6 +446,54 @@ func (o *OktaUpdateActionValue) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+We accept an OIDC access token issued by a trusted identity provider to refresh a Nominal access token.
+The access token is validated and exchanged for a Nominal access token. To be used in this endpoint,
+the OIDC access token must contain an email claim.
+*/
+type RefreshAccessTokenRequest struct {
+	AccessToken string `json:"accessToken"`
+}
+
+func (o RefreshAccessTokenRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RefreshAccessTokenRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type RefreshAccessTokenResponse struct {
+	AccessToken      string            `json:"accessToken"`
+	ExpiresAtSeconds safelong.SafeLong `json:"expiresAtSeconds"`
+	UserUuid         uuid.UUID         `json:"userUuid"`
+	OrgUuid          uuid.UUID         `json:"orgUuid"`
+}
+
+func (o RefreshAccessTokenResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RefreshAccessTokenResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type RegisterInWorkspaceRequest struct {
 	ResourceRids []rid.ResourceIdentifier `json:"resourceRids"`
 	WorkspaceRid rids.WorkspaceRid        `json:"workspaceRid"`

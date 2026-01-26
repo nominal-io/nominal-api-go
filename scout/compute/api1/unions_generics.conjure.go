@@ -3003,11 +3003,6 @@ func (u *VariableValueWithT[T]) Accept(ctx context.Context, v VariableValueVisit
 			return result, fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerived(ctx, *u.derived)
-	case "series":
-		if u.series == nil {
-			return result, fmt.Errorf("field \"series\" is required")
-		}
-		return v.VisitSeries(ctx, *u.series)
 	case "string":
 		if u.string == nil {
 			return result, fmt.Errorf("field \"string\" is required")
@@ -3026,7 +3021,7 @@ func (u *VariableValueWithT[T]) Accept(ctx context.Context, v VariableValueVisit
 	}
 }
 
-func (u *VariableValueWithT[T]) AcceptFuncs(doubleFunc func(float64) (T, error), computeNodeFunc func(ComputeNodeWithContext) (T, error), durationFunc func(api1.Duration) (T, error), integerFunc func(int) (T, error), channelFunc func(api.ChannelSeries) (T, error), derivedFunc func(DerivedSeries) (T, error), seriesFunc func(SeriesSpec) (T, error), stringFunc func(string) (T, error), stringSetFunc func([]string) (T, error), timestampFunc func(api2.Timestamp) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *VariableValueWithT[T]) AcceptFuncs(doubleFunc func(float64) (T, error), computeNodeFunc func(ComputeNodeWithContext) (T, error), durationFunc func(api1.Duration) (T, error), integerFunc func(int) (T, error), channelFunc func(api.ChannelSeries) (T, error), derivedFunc func(DerivedSeries) (T, error), stringFunc func(string) (T, error), stringSetFunc func([]string) (T, error), timestampFunc func(api2.Timestamp) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -3064,11 +3059,6 @@ func (u *VariableValueWithT[T]) AcceptFuncs(doubleFunc func(float64) (T, error),
 			return result, fmt.Errorf("field \"derived\" is required")
 		}
 		return derivedFunc(*u.derived)
-	case "series":
-		if u.series == nil {
-			return result, fmt.Errorf("field \"series\" is required")
-		}
-		return seriesFunc(*u.series)
 	case "string":
 		if u.string == nil {
 			return result, fmt.Errorf("field \"string\" is required")
@@ -3117,11 +3107,6 @@ func (u *VariableValueWithT[T]) DerivedNoopSuccess(DerivedSeries) (T, error) {
 	return result, nil
 }
 
-func (u *VariableValueWithT[T]) SeriesNoopSuccess(SeriesSpec) (T, error) {
-	var result T
-	return result, nil
-}
-
 func (u *VariableValueWithT[T]) StringNoopSuccess(string) (T, error) {
 	var result T
 	return result, nil
@@ -3149,7 +3134,6 @@ type VariableValueVisitorWithT[T any] interface {
 	VisitInteger(ctx context.Context, v int) (T, error)
 	VisitChannel(ctx context.Context, v api.ChannelSeries) (T, error)
 	VisitDerived(ctx context.Context, v DerivedSeries) (T, error)
-	VisitSeries(ctx context.Context, v SeriesSpec) (T, error)
 	VisitString(ctx context.Context, v string) (T, error)
 	VisitStringSet(ctx context.Context, v []string) (T, error)
 	VisitTimestamp(ctx context.Context, v api2.Timestamp) (T, error)
