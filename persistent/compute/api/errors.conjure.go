@@ -652,6 +652,180 @@ func (e *PermissionDenied) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type pollingOnlyComputation struct {
+	PollingOnlyTypes []PollingOnlyComputationType `json:"pollingOnlyTypes"`
+}
+
+func (o pollingOnlyComputation) MarshalJSON() ([]byte, error) {
+	if o.PollingOnlyTypes == nil {
+		o.PollingOnlyTypes = make([]PollingOnlyComputationType, 0)
+	}
+	type _tmppollingOnlyComputation pollingOnlyComputation
+	return safejson.Marshal(_tmppollingOnlyComputation(o))
+}
+
+func (o *pollingOnlyComputation) UnmarshalJSON(data []byte) error {
+	type _tmppollingOnlyComputation pollingOnlyComputation
+	var rawpollingOnlyComputation _tmppollingOnlyComputation
+	if err := safejson.Unmarshal(data, &rawpollingOnlyComputation); err != nil {
+		return err
+	}
+	if rawpollingOnlyComputation.PollingOnlyTypes == nil {
+		rawpollingOnlyComputation.PollingOnlyTypes = make([]PollingOnlyComputationType, 0)
+	}
+	*o = pollingOnlyComputation(rawpollingOnlyComputation)
+	return nil
+}
+
+func (o pollingOnlyComputation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *pollingOnlyComputation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewPollingOnlyComputation returns new instance of PollingOnlyComputation error.
+func NewPollingOnlyComputation(pollingOnlyTypesArg []PollingOnlyComputationType) *PollingOnlyComputation {
+	return &PollingOnlyComputation{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), pollingOnlyComputation: pollingOnlyComputation{PollingOnlyTypes: pollingOnlyTypesArg}}
+}
+
+// WrapWithPollingOnlyComputation returns new instance of PollingOnlyComputation error wrapping an existing error.
+func WrapWithPollingOnlyComputation(err error, pollingOnlyTypesArg []PollingOnlyComputationType) *PollingOnlyComputation {
+	return &PollingOnlyComputation{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, pollingOnlyComputation: pollingOnlyComputation{PollingOnlyTypes: pollingOnlyTypesArg}}
+}
+
+// PollingOnlyComputation is an error type.
+/*
+The requested compute contains nodes that support streaming but only via polling (not WebSocket).
+The frontend should use polling mode (HTTP requests) instead of WebSocket streaming for this query.
+*/
+type PollingOnlyComputation struct {
+	errorInstanceID uuid.UUID
+	pollingOnlyComputation
+	cause error
+	stack werror.StackTrace
+}
+
+// IsPollingOnlyComputation returns true if err is an instance of PollingOnlyComputation.
+func IsPollingOnlyComputation(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*PollingOnlyComputation)
+	return ok
+}
+
+func (e *PollingOnlyComputation) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT PersistentCompute:PollingOnlyComputation (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *PollingOnlyComputation) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *PollingOnlyComputation) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *PollingOnlyComputation) Message() string {
+	return "INVALID_ARGUMENT PersistentCompute:PollingOnlyComputation"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *PollingOnlyComputation) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *PollingOnlyComputation) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *PollingOnlyComputation) Name() string {
+	return "PersistentCompute:PollingOnlyComputation"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *PollingOnlyComputation) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *PollingOnlyComputation) Parameters() map[string]interface{} {
+	return map[string]interface{}{"pollingOnlyTypes": e.PollingOnlyTypes}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *PollingOnlyComputation) safeParams() map[string]interface{} {
+	return map[string]interface{}{"pollingOnlyTypes": e.PollingOnlyTypes, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *PollingOnlyComputation) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *PollingOnlyComputation) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *PollingOnlyComputation) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e PollingOnlyComputation) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.pollingOnlyComputation)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "PersistentCompute:PollingOnlyComputation", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *PollingOnlyComputation) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters pollingOnlyComputation
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.pollingOnlyComputation = parameters
+	return nil
+}
+
 type tooManyPoints struct {
 	Limit          safelong.SafeLong  `json:"limit"`
 	TotalNumSeries *safelong.SafeLong `json:"totalNumSeries,omitempty"`
@@ -1699,6 +1873,7 @@ func init() {
 	conjureerrors.RegisterErrorType("PersistentCompute:InvalidComputation", reflect.TypeOf(InvalidComputation{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:NonNominalStorageLocator", reflect.TypeOf(NonNominalStorageLocator{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:PermissionDenied", reflect.TypeOf(PermissionDenied{}))
+	conjureerrors.RegisterErrorType("PersistentCompute:PollingOnlyComputation", reflect.TypeOf(PollingOnlyComputation{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:TooManyPoints", reflect.TypeOf(TooManyPoints{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:TooManyPointsForSingleSeries", reflect.TypeOf(TooManyPointsForSingleSeries{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:UnavailableResultConfiguration", reflect.TypeOf(UnavailableResultConfiguration{}))

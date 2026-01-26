@@ -8,8 +8,8 @@ import (
 	api2 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/comparisonrun/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/compute/api"
-	api5 "github.com/nominal-io/nominal-api-go/scout/rids/api"
-	api4 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api5 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 	"github.com/palantir/pkg/uuid"
@@ -403,6 +403,78 @@ func (o *EnumCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type EnumDisplayStyleBar struct{}
+
+func (o EnumDisplayStyleBar) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EnumDisplayStyleBar) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type EnumDisplayStyleInline struct{}
+
+func (o EnumDisplayStyleInline) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EnumDisplayStyleInline) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type EnumDisplayStyleLine struct{}
+
+func (o EnumDisplayStyleLine) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EnumDisplayStyleLine) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type EnumDisplayStyleStacked struct{}
+
+func (o EnumDisplayStyleStacked) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EnumDisplayStyleStacked) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type EnumGroupBySortCustom struct {
 	/*
 	   Specify the values in the order they should appear.
@@ -574,6 +646,28 @@ func (o FixedDecimalPlaces) MarshalYAML() (interface{}, error) {
 }
 
 func (o *FixedDecimalPlaces) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type FloatingLegendConfig struct {
+	// Whether to hide the floating legend. Defaults to false.
+	Hidden *bool          `conjure-docs:"Whether to hide the floating legend. Defaults to false." json:"hidden,omitempty"`
+	Legend FloatingLegend `json:"legend"`
+}
+
+func (o FloatingLegendConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FloatingLegendConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -937,8 +1031,9 @@ func (o *Geo3dCustomModel) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type Geo3dDefinitionV1 struct {
-	Plots []GeoPlot3d `json:"plots"`
-	Title *string     `json:"title,omitempty"`
+	Plots   []GeoPlot3d    `json:"plots"`
+	Sensors *[]Geo3dSensor `json:"sensors,omitempty"`
+	Title   *string        `json:"title,omitempty"`
 }
 
 func (o Geo3dDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -1000,6 +1095,33 @@ func (o *Geo3dOrientationPrincipalAxes) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Orientation specified as heading/pitch/roll in WGS84.
+Heading is clockwise with respect to north.
+*/
+type Geo3dOrientationStaticPrincipalAxes struct {
+	// Clockwise angle with respect to north (a.k.a. yaw).
+	Heading float64 `conjure-docs:"Clockwise angle with respect to north (a.k.a. yaw)." json:"heading"`
+	Pitch   float64 `json:"pitch"`
+	Roll    float64 `json:"roll"`
+}
+
+func (o Geo3dOrientationStaticPrincipalAxes) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dOrientationStaticPrincipalAxes) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Geo3dPositionEcef struct {
 	EcefXVariableName api2.ChannelVariableName `json:"ecefXVariableName"`
 	EcefYVariableName api2.ChannelVariableName `json:"ecefYVariableName"`
@@ -1022,6 +1144,50 @@ func (o *Geo3dPositionEcef) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type Geo3dPositionStaticEcef struct {
+	EcefX float64 `json:"ecefX"`
+	EcefY float64 `json:"ecefY"`
+	EcefZ float64 `json:"ecefZ"`
+}
+
+func (o Geo3dPositionStaticEcef) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dPositionStaticEcef) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type Geo3dPositionStaticWgs84 struct {
+	Latitude  float64  `json:"latitude"`
+	Longitude float64  `json:"longitude"`
+	Height    *float64 `json:"height,omitempty"`
+}
+
+func (o Geo3dPositionStaticWgs84) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dPositionStaticWgs84) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Geo3dPositionWgs84 struct {
 	LatitudeVariableName  api2.ChannelVariableName  `json:"latitudeVariableName"`
 	LongitudeVariableName api2.ChannelVariableName  `json:"longitudeVariableName"`
@@ -1037,6 +1203,72 @@ func (o Geo3dPositionWgs84) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Geo3dPositionWgs84) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A 3D sensor configuration for rendering/animating sensors in a 3D scene.
+type Geo3dSensor struct {
+	SensorId string `json:"sensorId"`
+	Enabled  *bool  `json:"enabled,omitempty"`
+	// The name of the sensor.
+	Name *string `conjure-docs:"The name of the sensor." json:"name,omitempty"`
+	// The position of the sensor.
+	Position Geo3dSensorPositionConfig `conjure-docs:"The position of the sensor." json:"position"`
+	// The orientation used for the sensor, e.g. nadir.
+	Orientation *Geo3dSensorOrientationConfig `conjure-docs:"The orientation used for the sensor, e.g. nadir." json:"orientation,omitempty"`
+	// The color of the sensor.
+	Color *api.HexColor `conjure-docs:"The color of the sensor." json:"color,omitempty"`
+}
+
+func (o Geo3dSensor) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dSensor) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type Geo3dSensorOrientationNadir struct{}
+
+func (o Geo3dSensorOrientationNadir) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dSensorOrientationNadir) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type Geo3dSensorOrientationZenith struct{}
+
+func (o Geo3dSensorOrientationZenith) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dSensorOrientationZenith) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1807,6 +2039,83 @@ func (o *NumericValueChannel) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type PanelBucketStrategyAuto struct{}
+
+func (o PanelBucketStrategyAuto) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PanelBucketStrategyAuto) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type PanelBucketStrategyDuration struct {
+	Duration api4.UserDuration `json:"duration"`
+}
+
+func (o PanelBucketStrategyDuration) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PanelBucketStrategyDuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type PanelBucketStrategyFixed struct {
+	BucketCount int `json:"bucketCount"`
+}
+
+func (o PanelBucketStrategyFixed) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PanelBucketStrategyFixed) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Show a separate floating legend for the series in each row of the chart.
+type PerRowFloatingLegends struct{}
+
+func (o PerRowFloatingLegends) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PerRowFloatingLegends) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type PersistAll struct{}
 
 func (o PersistAll) MarshalYAML() (interface{}, error) {
@@ -2005,6 +2314,42 @@ func (o *RangeValueChannel) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type RowIndependentPlotColoringConfiguration struct{}
+
+func (o RowIndependentPlotColoringConfiguration) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RowIndependentPlotColoringConfiguration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type RowSharedPlotColoringConfiguration struct{}
+
+func (o RowSharedPlotColoringConfiguration) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RowSharedPlotColoringConfiguration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Scatter3dTraceComputeConfig struct {
 	// Bucket computed data points by their proximity in space or in time
 	DecimationStrategy *Scatter3dDecimationStrategy `conjure-docs:"Bucket computed data points by their proximity in space or in time" json:"decimationStrategy,omitempty"`
@@ -2053,7 +2398,7 @@ func (o *StalenessCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 type StalenessConfiguration struct {
 	// The duration above which points are considered stale. By default this is 1 second.
-	Threshold api4.Duration `conjure-docs:"The duration above which points are considered stale. By default this is 1 second." json:"threshold"`
+	Threshold api5.Duration `conjure-docs:"The duration above which points are considered stale. By default this is 1 second." json:"threshold"`
 	// Whether or not to visually connect stale points, i.e. points whose distance exceeds that of the configured threshold. By default this is true.
 	ConnectStalePoints bool `conjure-docs:"Whether or not to visually connect stale points, i.e. points whose distance exceeds that of the configured threshold. By default this is true." json:"connectStalePoints"`
 }
@@ -2124,7 +2469,7 @@ type Threshold struct {
 	   Options for pinning an indicator that data was within the threshold range
 	   while streaming.
 	*/
-	Latch *ThresholdLatch `conjure-docs:"Options for pinning an indicator that data was within the threshold range \nwhile streaming." json:"latch,omitempty"`
+	Latch *ThresholdLatch `conjure-docs:"Options for pinning an indicator that data was within the threshold range\nwhile streaming." json:"latch,omitempty"`
 }
 
 func (o Threshold) MarshalYAML() (interface{}, error) {
@@ -2148,7 +2493,7 @@ NOTE this is deprecated and will be translated to NeverConnectDisconnectedValues
 This option indicates the duration below which disconnected values will always be connected with a line.
 */
 type ThresholdDisconnectedValues struct {
-	Type api4.Duration `json:"type"`
+	Type api5.Duration `json:"type"`
 }
 
 func (o ThresholdDisconnectedValues) MarshalYAML() (interface{}, error) {
@@ -2203,6 +2548,15 @@ type TimeSeriesChartDefinitionV1 struct {
 	DisconnectedValues *DisconnectedValueVisualization `conjure-docs:"Determines when disconnected values should be connected. By default, they are always connected." json:"disconnectedValues,omitempty"`
 	// Determines when to draw lines between points. By default, the staleness threshold is 1s and stale points are connected.
 	StalenessConfiguration *StalenessConfiguration `conjure-docs:"Determines when to draw lines between points. By default, the staleness threshold is 1s and stale points are connected." json:"stalenessConfiguration,omitempty"`
+	/*
+	   Configuration for coloring time series plots in this chart. By default, plots are colored
+	   independently between rows with a unique color if possible when created.
+	*/
+	PlotColoringConfiguration *PlotColoringConfiguration `conjure-docs:"Configuration for coloring time series plots in this chart. By default, plots are colored\nindependently between rows with a unique color if possible when created." json:"plotColoringConfiguration,omitempty"`
+	// Custom bucket size to use when loading data.
+	BucketStrategy *PanelBucketStrategy `conjure-docs:"Custom bucket size to use when loading data." json:"bucketStrategy,omitempty"`
+	// Config for showing floating legends in the chart. If undefined, defaults to hiding.
+	FloatingLegendsConfig *FloatingLegendConfig `conjure-docs:"Config for showing floating legends in the chart. If undefined, defaults to hiding." json:"floatingLegendsConfig,omitempty"`
 }
 
 func (o TimeSeriesChartDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -2266,11 +2620,10 @@ type TimeSeriesEnumPlot struct {
 	PersistValueOverlays PersistValueOverlay `conjure-docs:"Render certain values' full-row/full-panel color overlays\neven when not interacting with the plot" json:"persistValueOverlays"`
 	// How far to extend the overlay
 	OverlayScope OverlayScope `conjure-docs:"How far to extend the overlay" json:"overlayScope"`
-	/*
-	   Whether to display the value ranges on the same line or stagger them
-	   such that each value gets a line to itself
-	*/
-	DisplayInline bool `conjure-docs:"Whether to display the value ranges on the same line or stagger them\nsuch that each value gets a line to itself" json:"displayInline"`
+	// Deprecated: Use displayStyle instead
+	DisplayInline *bool `json:"displayInline,omitempty"`
+	// How to display the enum values on the chart
+	DisplayStyle *EnumDisplayStyle `conjure-docs:"How to display the enum values on the chart" json:"displayStyle,omitempty"`
 }
 
 func (o TimeSeriesEnumPlot) MarshalYAML() (interface{}, error) {
@@ -2811,8 +3164,8 @@ func (o *ValueTableStalenessConfig) UnmarshalYAML(unmarshal func(interface{}) er
 
 // Enhanced video panel data source to be compatible with multiple assets
 type VideoPanelDataSource struct {
-	RunRid   *api4.RunRid      `json:"runRid,omitempty"`
-	AssetRid api5.AssetRid     `json:"assetRid"`
+	RunRid   *api5.RunRid      `json:"runRid,omitempty"`
+	AssetRid api4.AssetRid     `json:"assetRid"`
 	RefName  DataSourceRefName `json:"refName"`
 }
 
@@ -2872,6 +3225,28 @@ func (o VideoVizDefinitionV1) MarshalYAML() (interface{}, error) {
 }
 
 func (o *VideoVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Stores a video as a channel locator rather than the deprecated video datasource rid.
+type VideoVizDefinitionV2 struct {
+	Title   *string            `json:"title,omitempty"`
+	Channel api.ChannelLocator `json:"channel"`
+}
+
+func (o VideoVizDefinitionV2) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoVizDefinitionV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

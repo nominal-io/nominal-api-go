@@ -54,6 +54,13 @@ type AuthorizationServiceClient interface {
 	*/
 	GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error)
 	/*
+	   Given an authenticated session, provide an OIDC access token to get a Nominal access token suitable
+	   for making API requests. Its expiry will match that of the input access token, capped at 24h. TODO(MGMT-933):
+	   reduce this duration. Throws NotAuthorized if the access token is invalid or if the OIDC provider is not
+	   known.
+	*/
+	RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error)
+	/*
 	   Provide a long-lived API key for making API requests.
 	   The API key is irretrievable after initial creation.
 	*/
@@ -196,6 +203,25 @@ func (c *authorizationServiceClient) GetAccessToken(ctx context.Context, request
 	return *returnVal, nil
 }
 
+func (c *authorizationServiceClient) RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error) {
+	var defaultReturnVal RefreshAccessTokenResponse
+	var returnVal *RefreshAccessTokenResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("RefreshAccessToken"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/refresh-access-token"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "refreshAccessToken failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "refreshAccessToken response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *authorizationServiceClient) CreateApiKey(ctx context.Context, authHeader bearertoken.Token, requestArg CreateApiKeyRequest) (CreateApiKeyResponse, error) {
 	var defaultReturnVal CreateApiKeyResponse
 	var returnVal *CreateApiKeyResponse
@@ -308,6 +334,13 @@ type AuthorizationServiceClientWithAuth interface {
 	*/
 	GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error)
 	/*
+	   Given an authenticated session, provide an OIDC access token to get a Nominal access token suitable
+	   for making API requests. Its expiry will match that of the input access token, capped at 24h. TODO(MGMT-933):
+	   reduce this duration. Throws NotAuthorized if the access token is invalid or if the OIDC provider is not
+	   known.
+	*/
+	RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error)
+	/*
 	   Provide a long-lived API key for making API requests.
 	   The API key is irretrievable after initial creation.
 	*/
@@ -355,6 +388,10 @@ func (c *authorizationServiceClientWithAuth) IsEmailAllowedOkta(ctx context.Cont
 
 func (c *authorizationServiceClientWithAuth) GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error) {
 	return c.client.GetAccessToken(ctx, requestArg)
+}
+
+func (c *authorizationServiceClientWithAuth) RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error) {
+	return c.client.RefreshAccessToken(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithAuth) CreateApiKey(ctx context.Context, requestArg CreateApiKeyRequest) (CreateApiKeyResponse, error) {
@@ -426,6 +463,10 @@ func (c *authorizationServiceClientWithTokenProvider) IsEmailAllowedOkta(ctx con
 
 func (c *authorizationServiceClientWithTokenProvider) GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error) {
 	return c.client.GetAccessToken(ctx, requestArg)
+}
+
+func (c *authorizationServiceClientWithTokenProvider) RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error) {
+	return c.client.RefreshAccessToken(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithTokenProvider) CreateApiKey(ctx context.Context, requestArg CreateApiKeyRequest) (CreateApiKeyResponse, error) {

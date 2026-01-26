@@ -8,10 +8,9 @@ import (
 	"context"
 	"fmt"
 
-	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/scout/compute/api"
-	"github.com/nominal-io/nominal-api-go/scout/compute/api1"
-	api3 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 )
 
 type CartesianNodeWithT[T any] CartesianNode
@@ -816,11 +815,6 @@ func (u *VariableValueWithT[T]) Accept(ctx context.Context, v VariableValueVisit
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
-	case "series":
-		if u.series == nil {
-			return result, fmt.Errorf("field \"series\" is required")
-		}
-		return v.VisitSeries(ctx, *u.series)
 	case "timestamp":
 		if u.timestamp == nil {
 			return result, fmt.Errorf("field \"timestamp\" is required")
@@ -829,7 +823,7 @@ func (u *VariableValueWithT[T]) Accept(ctx context.Context, v VariableValueVisit
 	}
 }
 
-func (u *VariableValueWithT[T]) AcceptFuncs(seriesFunc func(api1.SeriesSpec) (T, error), timestampFunc func(api2.Timestamp) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *VariableValueWithT[T]) AcceptFuncs(timestampFunc func(api1.Timestamp) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -837,11 +831,6 @@ func (u *VariableValueWithT[T]) AcceptFuncs(seriesFunc func(api1.SeriesSpec) (T,
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "series":
-		if u.series == nil {
-			return result, fmt.Errorf("field \"series\" is required")
-		}
-		return seriesFunc(*u.series)
 	case "timestamp":
 		if u.timestamp == nil {
 			return result, fmt.Errorf("field \"timestamp\" is required")
@@ -850,12 +839,7 @@ func (u *VariableValueWithT[T]) AcceptFuncs(seriesFunc func(api1.SeriesSpec) (T,
 	}
 }
 
-func (u *VariableValueWithT[T]) SeriesNoopSuccess(api1.SeriesSpec) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *VariableValueWithT[T]) TimestampNoopSuccess(api2.Timestamp) (T, error) {
+func (u *VariableValueWithT[T]) TimestampNoopSuccess(api1.Timestamp) (T, error) {
 	var result T
 	return result, nil
 }
@@ -866,8 +850,7 @@ func (u *VariableValueWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type VariableValueVisitorWithT[T any] interface {
-	VisitSeries(ctx context.Context, v api1.SeriesSpec) (T, error)
-	VisitTimestamp(ctx context.Context, v api2.Timestamp) (T, error)
+	VisitTimestamp(ctx context.Context, v api1.Timestamp) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -889,7 +872,7 @@ func (u *WindowWithT[T]) Accept(ctx context.Context, v WindowVisitorWithT[T]) (T
 	}
 }
 
-func (u *WindowWithT[T]) AcceptFuncs(durationFunc func(api3.Duration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *WindowWithT[T]) AcceptFuncs(durationFunc func(api2.Duration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -905,7 +888,7 @@ func (u *WindowWithT[T]) AcceptFuncs(durationFunc func(api3.Duration) (T, error)
 	}
 }
 
-func (u *WindowWithT[T]) DurationNoopSuccess(api3.Duration) (T, error) {
+func (u *WindowWithT[T]) DurationNoopSuccess(api2.Duration) (T, error) {
 	var result T
 	return result, nil
 }
@@ -916,6 +899,6 @@ func (u *WindowWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type WindowVisitorWithT[T any] interface {
-	VisitDuration(ctx context.Context, v api3.Duration) (T, error)
+	VisitDuration(ctx context.Context, v api2.Duration) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

@@ -1544,6 +1544,158 @@ func (e *SegmentConflict) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type segmentConflictV2 struct {
+	SeriesUuid     uuid.UUID `json:"seriesUuid"`
+	Segment1Bounds Bounds    `json:"segment1Bounds"`
+	Segment2Bounds Bounds    `json:"segment2Bounds"`
+}
+
+func (o segmentConflictV2) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *segmentConflictV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewSegmentConflictV2 returns new instance of SegmentConflictV2 error.
+func NewSegmentConflictV2(seriesUuidArg uuid.UUID, segment1BoundsArg Bounds, segment2BoundsArg Bounds) *SegmentConflictV2 {
+	return &SegmentConflictV2{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), segmentConflictV2: segmentConflictV2{SeriesUuid: seriesUuidArg, Segment1Bounds: segment1BoundsArg, Segment2Bounds: segment2BoundsArg}}
+}
+
+// WrapWithSegmentConflictV2 returns new instance of SegmentConflictV2 error wrapping an existing error.
+func WrapWithSegmentConflictV2(err error, seriesUuidArg uuid.UUID, segment1BoundsArg Bounds, segment2BoundsArg Bounds) *SegmentConflictV2 {
+	return &SegmentConflictV2{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, segmentConflictV2: segmentConflictV2{SeriesUuid: seriesUuidArg, Segment1Bounds: segment1BoundsArg, Segment2Bounds: segment2BoundsArg}}
+}
+
+// SegmentConflictV2 is an error type.
+// Attempting to create multiple segments with overlapping timestamps for a given series
+type SegmentConflictV2 struct {
+	errorInstanceID uuid.UUID
+	segmentConflictV2
+	cause error
+	stack werror.StackTrace
+}
+
+// IsSegmentConflictV2 returns true if err is an instance of SegmentConflictV2.
+func IsSegmentConflictV2(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*SegmentConflictV2)
+	return ok
+}
+
+func (e *SegmentConflictV2) Error() string {
+	return fmt.Sprintf("CONFLICT Video:SegmentConflictV2 (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *SegmentConflictV2) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *SegmentConflictV2) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *SegmentConflictV2) Message() string {
+	return "CONFLICT Video:SegmentConflictV2"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *SegmentConflictV2) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *SegmentConflictV2) Code() errors.ErrorCode {
+	return errors.Conflict
+}
+
+// Name returns an error name identifying error type.
+func (e *SegmentConflictV2) Name() string {
+	return "Video:SegmentConflictV2"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *SegmentConflictV2) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *SegmentConflictV2) Parameters() map[string]interface{} {
+	return map[string]interface{}{"seriesUuid": e.SeriesUuid, "segment1Bounds": e.Segment1Bounds, "segment2Bounds": e.Segment2Bounds}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *SegmentConflictV2) safeParams() map[string]interface{} {
+	return map[string]interface{}{"seriesUuid": e.SeriesUuid, "segment1Bounds": e.Segment1Bounds, "segment2Bounds": e.Segment2Bounds, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *SegmentConflictV2) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *SegmentConflictV2) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *SegmentConflictV2) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e SegmentConflictV2) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.segmentConflictV2)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Video:SegmentConflictV2", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *SegmentConflictV2) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters segmentConflictV2
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.segmentConflictV2 = parameters
+	return nil
+}
+
 type segmentNotFound struct {
 	VideoRid rids.VideoRid `json:"videoRid"`
 }
@@ -2304,6 +2456,7 @@ func init() {
 	conjureerrors.RegisterErrorType("Video:NoSegmentsInBounds", reflect.TypeOf(NoSegmentsInBounds{}))
 	conjureerrors.RegisterErrorType("Video:NotAuthorized", reflect.TypeOf(NotAuthorized{}))
 	conjureerrors.RegisterErrorType("Video:SegmentConflict", reflect.TypeOf(SegmentConflict{}))
+	conjureerrors.RegisterErrorType("Video:SegmentConflictV2", reflect.TypeOf(SegmentConflictV2{}))
 	conjureerrors.RegisterErrorType("Video:SegmentNotFound", reflect.TypeOf(SegmentNotFound{}))
 	conjureerrors.RegisterErrorType("Video:VideoFileIngestNotComplete", reflect.TypeOf(VideoFileIngestNotComplete{}))
 	conjureerrors.RegisterErrorType("Video:VideoFileNotFound", reflect.TypeOf(VideoFileNotFound{}))

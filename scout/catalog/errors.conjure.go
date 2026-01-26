@@ -1838,6 +1838,156 @@ func (e *RunNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type videoFileNotFound struct {
+	VideoFileRid rid.ResourceIdentifier `json:"videoFileRid"`
+	FileId       datasource.VideoFileId `json:"fileId"`
+}
+
+func (o videoFileNotFound) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *videoFileNotFound) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewVideoFileNotFound returns new instance of VideoFileNotFound error.
+func NewVideoFileNotFound(videoFileRidArg rid.ResourceIdentifier, fileIdArg datasource.VideoFileId) *VideoFileNotFound {
+	return &VideoFileNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), videoFileNotFound: videoFileNotFound{VideoFileRid: videoFileRidArg, FileId: fileIdArg}}
+}
+
+// WrapWithVideoFileNotFound returns new instance of VideoFileNotFound error wrapping an existing error.
+func WrapWithVideoFileNotFound(err error, videoFileRidArg rid.ResourceIdentifier, fileIdArg datasource.VideoFileId) *VideoFileNotFound {
+	return &VideoFileNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, videoFileNotFound: videoFileNotFound{VideoFileRid: videoFileRidArg, FileId: fileIdArg}}
+}
+
+// VideoFileNotFound is an error type.
+type VideoFileNotFound struct {
+	errorInstanceID uuid.UUID
+	videoFileNotFound
+	cause error
+	stack werror.StackTrace
+}
+
+// IsVideoFileNotFound returns true if err is an instance of VideoFileNotFound.
+func IsVideoFileNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*VideoFileNotFound)
+	return ok
+}
+
+func (e *VideoFileNotFound) Error() string {
+	return fmt.Sprintf("NOT_FOUND Catalog:VideoFileNotFound (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *VideoFileNotFound) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *VideoFileNotFound) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *VideoFileNotFound) Message() string {
+	return "NOT_FOUND Catalog:VideoFileNotFound"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *VideoFileNotFound) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *VideoFileNotFound) Code() errors.ErrorCode {
+	return errors.NotFound
+}
+
+// Name returns an error name identifying error type.
+func (e *VideoFileNotFound) Name() string {
+	return "Catalog:VideoFileNotFound"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *VideoFileNotFound) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *VideoFileNotFound) Parameters() map[string]interface{} {
+	return map[string]interface{}{"videoFileRid": e.VideoFileRid, "fileId": e.FileId}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *VideoFileNotFound) safeParams() map[string]interface{} {
+	return map[string]interface{}{"videoFileRid": e.VideoFileRid, "fileId": e.FileId, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *VideoFileNotFound) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *VideoFileNotFound) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *VideoFileNotFound) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e VideoFileNotFound) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.videoFileNotFound)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Catalog:VideoFileNotFound", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *VideoFileNotFound) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters videoFileNotFound
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.videoFileNotFound = parameters
+	return nil
+}
+
 func init() {
 	conjureerrors.RegisterErrorType("Catalog:CannotAddToLegacyDataset", reflect.TypeOf(CannotAddToLegacyDataset{}))
 	conjureerrors.RegisterErrorType("Catalog:ChannelNotFound", reflect.TypeOf(ChannelNotFound{}))
@@ -1851,4 +2001,5 @@ func init() {
 	conjureerrors.RegisterErrorType("Catalog:GranularityMismatch", reflect.TypeOf(GranularityMismatch{}))
 	conjureerrors.RegisterErrorType("Catalog:InvalidStateForAddingAdditionalFile", reflect.TypeOf(InvalidStateForAddingAdditionalFile{}))
 	conjureerrors.RegisterErrorType("Scout:RunNotFound", reflect.TypeOf(RunNotFound{}))
+	conjureerrors.RegisterErrorType("Catalog:VideoFileNotFound", reflect.TypeOf(VideoFileNotFound{}))
 }

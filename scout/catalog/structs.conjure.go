@@ -288,6 +288,32 @@ func (o *CreateDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Request to create a dataset with a specific UUID. Used for migrations
+where the UUID must be controlled by the caller.
+*/
+type CreateDatasetWithUuidRequest struct {
+	// The UUID to assign to the new dataset.
+	Uuid          uuid.UUID     `conjure-docs:"The UUID to assign to the new dataset." json:"uuid"`
+	CreateDataset CreateDataset `json:"createDataset"`
+}
+
+func (o CreateDatasetWithUuidRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CreateDatasetWithUuidRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type CustomTimestamp struct {
 	// The format string should be in the format of the `DateTimeFormatter` class in Java.
 	Format string `conjure-docs:"The format string should be in the format of the \"DateTimeFormatter\" class in Java." json:"format"`
@@ -326,6 +352,7 @@ type Dataset struct {
 	TimestampType  WeakTimestampType                        `json:"timestampType"`
 	AllowStreaming bool                                     `json:"allowStreaming"`
 	Granularity    api1.Granularity                         `json:"granularity"`
+	IsArchived     bool                                     `json:"isArchived"`
 }
 
 func (o Dataset) MarshalJSON() ([]byte, error) {
@@ -553,6 +580,7 @@ type EnrichedDataset struct {
 	Properties       map[api1.PropertyName]api1.PropertyValue `json:"properties"`
 	Granularity      api1.Granularity                         `json:"granularity"`
 	AllowStreaming   bool                                     `json:"allowStreaming"`
+	IsArchived       bool                                     `json:"isArchived"`
 }
 
 func (o EnrichedDataset) MarshalJSON() ([]byte, error) {
@@ -1348,6 +1376,30 @@ func (o UtcTimestamp) MarshalYAML() (interface{}, error) {
 }
 
 func (o *UtcTimestamp) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Pre-signed URI that can be used to download the original video file directly. Expires if the download has
+not been initiated within 1 minute.
+*/
+type VideoFileUri struct {
+	Uri string `json:"uri"`
+}
+
+func (o VideoFileUri) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoFileUri) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

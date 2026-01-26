@@ -29,6 +29,8 @@ type EventServiceClient interface {
 	GetEvents(ctx context.Context, authHeader bearertoken.Token, requestArg GetEvents) ([]Event, error)
 	// Gets a set of events by RID.
 	BatchGetEvents(ctx context.Context, authHeader bearertoken.Token, requestArg []rids.EventRid) ([]Event, error)
+	// Gets a filtered set of events by RID and search filters.
+	BatchFilterEvents(ctx context.Context, authHeader bearertoken.Token, requestArg BatchFilterEventsRequest) ([]Event, error)
 	/*
 	   Updates the fields of an event. Empty fields are left unchanged.
 
@@ -129,6 +131,25 @@ func (c *eventServiceClient) BatchGetEvents(ctx context.Context, authHeader bear
 	}
 	if returnVal == nil {
 		return nil, werror.ErrorWithContextParams(ctx, "batchGetEvents response cannot be nil")
+	}
+	return returnVal, nil
+}
+
+func (c *eventServiceClient) BatchFilterEvents(ctx context.Context, authHeader bearertoken.Token, requestArg BatchFilterEventsRequest) ([]Event, error) {
+	var returnVal []Event
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchFilterEvents"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/events/batch-filter-get"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "batchFilterEvents failed")
+	}
+	if returnVal == nil {
+		return nil, werror.ErrorWithContextParams(ctx, "batchFilterEvents response cannot be nil")
 	}
 	return returnVal, nil
 }
@@ -350,6 +371,8 @@ type EventServiceClientWithAuth interface {
 	GetEvents(ctx context.Context, requestArg GetEvents) ([]Event, error)
 	// Gets a set of events by RID.
 	BatchGetEvents(ctx context.Context, requestArg []rids.EventRid) ([]Event, error)
+	// Gets a filtered set of events by RID and search filters.
+	BatchFilterEvents(ctx context.Context, requestArg BatchFilterEventsRequest) ([]Event, error)
 	/*
 	   Updates the fields of an event. Empty fields are left unchanged.
 
@@ -407,6 +430,10 @@ func (c *eventServiceClientWithAuth) GetEvents(ctx context.Context, requestArg G
 
 func (c *eventServiceClientWithAuth) BatchGetEvents(ctx context.Context, requestArg []rids.EventRid) ([]Event, error) {
 	return c.client.BatchGetEvents(ctx, c.authHeader, requestArg)
+}
+
+func (c *eventServiceClientWithAuth) BatchFilterEvents(ctx context.Context, requestArg BatchFilterEventsRequest) ([]Event, error) {
+	return c.client.BatchFilterEvents(ctx, c.authHeader, requestArg)
 }
 
 func (c *eventServiceClientWithAuth) UpdateEvent(ctx context.Context, requestArg UpdateEvent) (Event, error) {
@@ -487,6 +514,15 @@ func (c *eventServiceClientWithTokenProvider) BatchGetEvents(ctx context.Context
 		return defaultReturnVal, err
 	}
 	return c.client.BatchGetEvents(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *eventServiceClientWithTokenProvider) BatchFilterEvents(ctx context.Context, requestArg BatchFilterEventsRequest) ([]Event, error) {
+	var defaultReturnVal []Event
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.BatchFilterEvents(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) UpdateEvent(ctx context.Context, requestArg UpdateEvent) (Event, error) {

@@ -1550,6 +1550,7 @@ type IngestOptions struct {
 	csv                    *CsvOpts
 	parquet                *ParquetOpts
 	video                  *VideoOpts
+	videoV2                *VideoOptsV2
 	containerized          *ContainerizedOpts
 	avroStream             *AvroStreamOpts
 }
@@ -1562,12 +1563,13 @@ type ingestOptionsDeserializer struct {
 	Csv                    *CsvOpts                    `json:"csv"`
 	Parquet                *ParquetOpts                `json:"parquet"`
 	Video                  *VideoOpts                  `json:"video"`
+	VideoV2                *VideoOptsV2                `json:"videoV2"`
 	Containerized          *ContainerizedOpts          `json:"containerized"`
 	AvroStream             *AvroStreamOpts             `json:"avroStream"`
 }
 
 func (u *ingestOptionsDeserializer) toStruct() IngestOptions {
-	return IngestOptions{typ: u.Type, dataflash: u.Dataflash, mcapProtobufTimeseries: u.McapProtobufTimeseries, journalJson: u.JournalJson, csv: u.Csv, parquet: u.Parquet, video: u.Video, containerized: u.Containerized, avroStream: u.AvroStream}
+	return IngestOptions{typ: u.Type, dataflash: u.Dataflash, mcapProtobufTimeseries: u.McapProtobufTimeseries, journalJson: u.JournalJson, csv: u.Csv, parquet: u.Parquet, video: u.Video, videoV2: u.VideoV2, containerized: u.Containerized, avroStream: u.AvroStream}
 }
 
 func (u *IngestOptions) toSerializer() (interface{}, error) {
@@ -1622,6 +1624,14 @@ func (u *IngestOptions) toSerializer() (interface{}, error) {
 			Type  string    `json:"type"`
 			Video VideoOpts `json:"video"`
 		}{Type: "video", Video: *u.video}, nil
+	case "videoV2":
+		if u.videoV2 == nil {
+			return nil, fmt.Errorf("field \"videoV2\" is required")
+		}
+		return struct {
+			Type    string      `json:"type"`
+			VideoV2 VideoOptsV2 `json:"videoV2"`
+		}{Type: "videoV2", VideoV2: *u.videoV2}, nil
 	case "containerized":
 		if u.containerized == nil {
 			return nil, fmt.Errorf("field \"containerized\" is required")
@@ -1680,6 +1690,10 @@ func (u *IngestOptions) UnmarshalJSON(data []byte) error {
 		if u.video == nil {
 			return fmt.Errorf("field \"video\" is required")
 		}
+	case "videoV2":
+		if u.videoV2 == nil {
+			return fmt.Errorf("field \"videoV2\" is required")
+		}
 	case "containerized":
 		if u.containerized == nil {
 			return fmt.Errorf("field \"containerized\" is required")
@@ -1708,7 +1722,7 @@ func (u *IngestOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *IngestOptions) AcceptFuncs(dataflashFunc func(DataflashOpts) error, mcapProtobufTimeseriesFunc func(McapProtobufTimeseriesOpts) error, journalJsonFunc func(JournalJsonOpts) error, csvFunc func(CsvOpts) error, parquetFunc func(ParquetOpts) error, videoFunc func(VideoOpts) error, containerizedFunc func(ContainerizedOpts) error, avroStreamFunc func(AvroStreamOpts) error, unknownFunc func(string) error) error {
+func (u *IngestOptions) AcceptFuncs(dataflashFunc func(DataflashOpts) error, mcapProtobufTimeseriesFunc func(McapProtobufTimeseriesOpts) error, journalJsonFunc func(JournalJsonOpts) error, csvFunc func(CsvOpts) error, parquetFunc func(ParquetOpts) error, videoFunc func(VideoOpts) error, videoV2Func func(VideoOptsV2) error, containerizedFunc func(ContainerizedOpts) error, avroStreamFunc func(AvroStreamOpts) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1745,6 +1759,11 @@ func (u *IngestOptions) AcceptFuncs(dataflashFunc func(DataflashOpts) error, mca
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return videoFunc(*u.video)
+	case "videoV2":
+		if u.videoV2 == nil {
+			return fmt.Errorf("field \"videoV2\" is required")
+		}
+		return videoV2Func(*u.videoV2)
 	case "containerized":
 		if u.containerized == nil {
 			return fmt.Errorf("field \"containerized\" is required")
@@ -1779,6 +1798,10 @@ func (u *IngestOptions) ParquetNoopSuccess(ParquetOpts) error {
 }
 
 func (u *IngestOptions) VideoNoopSuccess(VideoOpts) error {
+	return nil
+}
+
+func (u *IngestOptions) VideoV2NoopSuccess(VideoOptsV2) error {
 	return nil
 }
 
@@ -1831,6 +1854,11 @@ func (u *IngestOptions) Accept(v IngestOptionsVisitor) error {
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideo(*u.video)
+	case "videoV2":
+		if u.videoV2 == nil {
+			return fmt.Errorf("field \"videoV2\" is required")
+		}
+		return v.VisitVideoV2(*u.videoV2)
 	case "containerized":
 		if u.containerized == nil {
 			return fmt.Errorf("field \"containerized\" is required")
@@ -1851,6 +1879,7 @@ type IngestOptionsVisitor interface {
 	VisitCsv(v CsvOpts) error
 	VisitParquet(v ParquetOpts) error
 	VisitVideo(v VideoOpts) error
+	VisitVideoV2(v VideoOptsV2) error
 	VisitContainerized(v ContainerizedOpts) error
 	VisitAvroStream(v AvroStreamOpts) error
 	VisitUnknown(typeName string) error
@@ -1893,6 +1922,11 @@ func (u *IngestOptions) AcceptWithContext(ctx context.Context, v IngestOptionsVi
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideoWithContext(ctx, *u.video)
+	case "videoV2":
+		if u.videoV2 == nil {
+			return fmt.Errorf("field \"videoV2\" is required")
+		}
+		return v.VisitVideoV2WithContext(ctx, *u.videoV2)
 	case "containerized":
 		if u.containerized == nil {
 			return fmt.Errorf("field \"containerized\" is required")
@@ -1913,6 +1947,7 @@ type IngestOptionsVisitorWithContext interface {
 	VisitCsvWithContext(ctx context.Context, v CsvOpts) error
 	VisitParquetWithContext(ctx context.Context, v ParquetOpts) error
 	VisitVideoWithContext(ctx context.Context, v VideoOpts) error
+	VisitVideoV2WithContext(ctx context.Context, v VideoOptsV2) error
 	VisitContainerizedWithContext(ctx context.Context, v ContainerizedOpts) error
 	VisitAvroStreamWithContext(ctx context.Context, v AvroStreamOpts) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
@@ -1940,6 +1975,10 @@ func NewIngestOptionsFromParquet(v ParquetOpts) IngestOptions {
 
 func NewIngestOptionsFromVideo(v VideoOpts) IngestOptions {
 	return IngestOptions{typ: "video", video: &v}
+}
+
+func NewIngestOptionsFromVideoV2(v VideoOptsV2) IngestOptions {
+	return IngestOptions{typ: "videoV2", videoV2: &v}
 }
 
 func NewIngestOptionsFromContainerized(v ContainerizedOpts) IngestOptions {

@@ -575,11 +575,6 @@ func (u *JobSpecWithT[T]) Accept(ctx context.Context, v JobSpecVisitorWithT[T]) 
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
-	case "check":
-		if u.check == nil {
-			return result, fmt.Errorf("field \"check\" is required")
-		}
-		return v.VisitCheck(ctx, *u.check)
 	case "checkV2":
 		if u.checkV2 == nil {
 			return result, fmt.Errorf("field \"checkV2\" is required")
@@ -588,7 +583,7 @@ func (u *JobSpecWithT[T]) Accept(ctx context.Context, v JobSpecVisitorWithT[T]) 
 	}
 }
 
-func (u *JobSpecWithT[T]) AcceptFuncs(checkFunc func(DeprecatedCheckJobSpec) (T, error), checkV2Func func(CheckJobSpec) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -596,22 +591,12 @@ func (u *JobSpecWithT[T]) AcceptFuncs(checkFunc func(DeprecatedCheckJobSpec) (T,
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "check":
-		if u.check == nil {
-			return result, fmt.Errorf("field \"check\" is required")
-		}
-		return checkFunc(*u.check)
 	case "checkV2":
 		if u.checkV2 == nil {
 			return result, fmt.Errorf("field \"checkV2\" is required")
 		}
 		return checkV2Func(*u.checkV2)
 	}
-}
-
-func (u *JobSpecWithT[T]) CheckNoopSuccess(DeprecatedCheckJobSpec) (T, error) {
-	var result T
-	return result, nil
 }
 
 func (u *JobSpecWithT[T]) CheckV2NoopSuccess(CheckJobSpec) (T, error) {
@@ -625,7 +610,6 @@ func (u *JobSpecWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type JobSpecVisitorWithT[T any] interface {
-	VisitCheck(ctx context.Context, v DeprecatedCheckJobSpec) (T, error)
 	VisitCheckV2(ctx context.Context, v CheckJobSpec) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

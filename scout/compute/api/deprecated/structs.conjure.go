@@ -5,7 +5,6 @@ package deprecated
 import (
 	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/scout/compute/api"
-	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safelong"
@@ -91,77 +90,6 @@ func (o CartesianBounds) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CartesianBounds) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type ComputeNodeRequest struct {
-	Node    ComputableNode `json:"node"`
-	Start   api1.Timestamp `json:"start"`
-	End     api1.Timestamp `json:"end"`
-	Context Context        `json:"context"`
-}
-
-func (o ComputeNodeRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ComputeNodeRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type Context struct {
-	Variables   map[api.VariableName]api11.SeriesSpec `json:"variables"`
-	VariablesV2 map[api.VariableName]VariableValue    `json:"variablesV2"`
-}
-
-func (o Context) MarshalJSON() ([]byte, error) {
-	if o.Variables == nil {
-		o.Variables = make(map[api.VariableName]api11.SeriesSpec, 0)
-	}
-	if o.VariablesV2 == nil {
-		o.VariablesV2 = make(map[api.VariableName]VariableValue, 0)
-	}
-	type _tmpContext Context
-	return safejson.Marshal(_tmpContext(o))
-}
-
-func (o *Context) UnmarshalJSON(data []byte) error {
-	type _tmpContext Context
-	var rawContext _tmpContext
-	if err := safejson.Unmarshal(data, &rawContext); err != nil {
-		return err
-	}
-	if rawContext.Variables == nil {
-		rawContext.Variables = make(map[api.VariableName]api11.SeriesSpec, 0)
-	}
-	if rawContext.VariablesV2 == nil {
-		rawContext.VariablesV2 = make(map[api.VariableName]VariableValue, 0)
-	}
-	*o = Context(rawContext)
-	return nil
-}
-
-func (o Context) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *Context) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

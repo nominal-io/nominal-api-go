@@ -6,7 +6,6 @@ import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	api2 "github.com/nominal-io/nominal-api-go/authentication/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
-	"github.com/nominal-io/nominal-api-go/io/nominal/event"
 	api1 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	api5 "github.com/nominal-io/nominal-api-go/scout/units/api"
@@ -846,48 +845,6 @@ func (o *EnumUnionSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type EventSearchNode struct {
-	Query event.SearchQuery `json:"query"`
-}
-
-func (o EventSearchNode) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *EventSearchNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// Resolved node that queries events and emits an enum series where each value comes from a single event field.
-type EventsEnumSeriesNode struct {
-	Query       event.SearchQuery     `json:"query"`
-	ValueSource EventsEnumValueSource `json:"valueSource"`
-}
-
-func (o EventsEnumSeriesNode) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *EventsEnumSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type ExponentialCurve struct{}
 
 func (o ExponentialCurve) MarshalYAML() (interface{}, error) {
@@ -1178,6 +1135,47 @@ func (o *IntersectRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type LiteralEnumSeriesNode struct {
+	Points []api1.EnumPoint `json:"points"`
+}
+
+func (o LiteralEnumSeriesNode) MarshalJSON() ([]byte, error) {
+	if o.Points == nil {
+		o.Points = make([]api1.EnumPoint, 0)
+	}
+	type _tmpLiteralEnumSeriesNode LiteralEnumSeriesNode
+	return safejson.Marshal(_tmpLiteralEnumSeriesNode(o))
+}
+
+func (o *LiteralEnumSeriesNode) UnmarshalJSON(data []byte) error {
+	type _tmpLiteralEnumSeriesNode LiteralEnumSeriesNode
+	var rawLiteralEnumSeriesNode _tmpLiteralEnumSeriesNode
+	if err := safejson.Unmarshal(data, &rawLiteralEnumSeriesNode); err != nil {
+		return err
+	}
+	if rawLiteralEnumSeriesNode.Points == nil {
+		rawLiteralEnumSeriesNode.Points = make([]api1.EnumPoint, 0)
+	}
+	*o = LiteralEnumSeriesNode(rawLiteralEnumSeriesNode)
+	return nil
+}
+
+func (o LiteralEnumSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LiteralEnumSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type LiteralRange struct {
 	StartTimestamp *api.Timestamp `json:"startTimestamp,omitempty"`
 	EndTimestamp   *api.Timestamp `json:"endTimestamp,omitempty"`
@@ -1200,8 +1198,7 @@ func (o *LiteralRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type LiteralRangesNode struct {
-	Granularity   api.Granularity `json:"granularity"`
-	LiteralRanges []LiteralRange  `json:"literalRanges"`
+	LiteralRanges []LiteralRange `json:"literalRanges"`
 }
 
 func (o LiteralRangesNode) MarshalJSON() ([]byte, error) {
@@ -2201,10 +2198,8 @@ A resolved series is a fully-formed read on a raw set of series. The data for se
 Nominal database or externally.
 */
 type ResolvedSeries struct {
-	StorageLocator StorageLocator  `json:"storageLocator"`
-	Granularity    api.Granularity `json:"granularity"`
-	Offset         *api3.Duration  `json:"offset,omitempty"`
-	Unit           *api.Unit       `json:"unit,omitempty"`
+	StorageLocator StorageLocator `json:"storageLocator"`
+	Unit           *api.Unit      `json:"unit,omitempty"`
 }
 
 func (o ResolvedSeries) MarshalYAML() (interface{}, error) {

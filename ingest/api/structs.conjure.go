@@ -317,6 +317,33 @@ type CsvOpts struct {
 	TagColumns *map[api.TagName]api.ColumnName `conjure-docs:"A map of tag names to column names to derive the tag values from." json:"tagColumns,omitempty"`
 	// Specifies a tag set to apply to all data in the file.
 	AdditionalFileTags *map[api.TagName]api.TagValue `conjure-docs:"Specifies a tag set to apply to all data in the file." json:"additionalFileTags,omitempty"`
+	/*
+	   A set of column names to exclude from ingestion. These columns will not be
+	   ingested as channels. Useful for excluding columns that contain unsupported
+	   data types like multidimensional arrays.
+	*/
+	ExcludeColumns []api.ColumnName `conjure-docs:"A set of column names to exclude from ingestion. These columns will not be\ningested as channels. Useful for excluding columns that contain unsupported\ndata types like multidimensional arrays." json:"excludeColumns"`
+}
+
+func (o CsvOpts) MarshalJSON() ([]byte, error) {
+	if o.ExcludeColumns == nil {
+		o.ExcludeColumns = make([]api.ColumnName, 0)
+	}
+	type _tmpCsvOpts CsvOpts
+	return safejson.Marshal(_tmpCsvOpts(o))
+}
+
+func (o *CsvOpts) UnmarshalJSON(data []byte) error {
+	type _tmpCsvOpts CsvOpts
+	var rawCsvOpts _tmpCsvOpts
+	if err := safejson.Unmarshal(data, &rawCsvOpts); err != nil {
+		return err
+	}
+	if rawCsvOpts.ExcludeColumns == nil {
+		rawCsvOpts.ExcludeColumns = make([]api.ColumnName, 0)
+	}
+	*o = CsvOpts(rawCsvOpts)
+	return nil
 }
 
 func (o CsvOpts) MarshalYAML() (interface{}, error) {
@@ -1745,6 +1772,33 @@ type ParquetOpts struct {
 	   within the archive will be ingested. If field not provided, defaults to false.
 	*/
 	IsArchive *bool `conjure-docs:"If true, the file is an archive. Supported archive formats include\n.tar, .tar.gz, and .zip. Only files ending in .parquet\nwithin the archive will be ingested. If field not provided, defaults to false." json:"isArchive,omitempty"`
+	/*
+	   A set of column names to exclude from ingestion. These columns will not be
+	   ingested as channels. Useful for excluding columns that contain unsupported
+	   data types like multidimensional arrays.
+	*/
+	ExcludeColumns []api.ColumnName `conjure-docs:"A set of column names to exclude from ingestion. These columns will not be\ningested as channels. Useful for excluding columns that contain unsupported\ndata types like multidimensional arrays." json:"excludeColumns"`
+}
+
+func (o ParquetOpts) MarshalJSON() ([]byte, error) {
+	if o.ExcludeColumns == nil {
+		o.ExcludeColumns = make([]api.ColumnName, 0)
+	}
+	type _tmpParquetOpts ParquetOpts
+	return safejson.Marshal(_tmpParquetOpts(o))
+}
+
+func (o *ParquetOpts) UnmarshalJSON(data []byte) error {
+	type _tmpParquetOpts ParquetOpts
+	var rawParquetOpts _tmpParquetOpts
+	if err := safejson.Unmarshal(data, &rawParquetOpts); err != nil {
+		return err
+	}
+	if rawParquetOpts.ExcludeColumns == nil {
+		rawParquetOpts.ExcludeColumns = make([]api.ColumnName, 0)
+	}
+	*o = ParquetOpts(rawParquetOpts)
+	return nil
 }
 
 func (o ParquetOpts) MarshalYAML() (interface{}, error) {
@@ -2440,6 +2494,11 @@ type VideoOpts struct {
 	Source            IngestSource                    `json:"source"`
 	Target            VideoIngestTarget               `json:"target"`
 	TimestampManifest api4.VideoFileTimestampManifest `json:"timestampManifest"`
+	/*
+	   If true, overlapping segments from other video files within the same video will be deleted
+	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
+	*/
+	OverWriteSegments *bool `conjure-docs:"If true, overlapping segments from other video files within the same video will be deleted\nbefore inserting new segments. The cached segment metadata for affected files will be recomputed." json:"overWriteSegments,omitempty"`
 }
 
 func (o VideoOpts) MarshalYAML() (interface{}, error) {
@@ -2464,6 +2523,11 @@ type VideoOptsV2 struct {
 	TimestampManifest api4.VideoFileTimestampManifest `json:"timestampManifest"`
 	Channel           api.Channel                     `json:"channel"`
 	Tags              map[api.TagName]api.TagValue    `json:"tags"`
+	/*
+	   If true, overlapping segments from other dataset files within the same series will be deleted
+	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
+	*/
+	OverWriteSegments *bool `conjure-docs:"If true, overlapping segments from other dataset files within the same series will be deleted\nbefore inserting new segments. The cached segment metadata for affected files will be recomputed." json:"overWriteSegments,omitempty"`
 }
 
 func (o VideoOptsV2) MarshalJSON() ([]byte, error) {

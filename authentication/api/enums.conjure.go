@@ -66,6 +66,14 @@ func (e *AppearanceSetting) UnmarshalText(data []byte) error {
 	return nil
 }
 
+/*
+Tooltip modes which affect the data displayed in chart tooltips, primarily for time series charts.
+VERBOSE: Shows all the chart's plotted series in the hover tooltip.
+CONCISE: Shows only the plotted series within the row currently being hovered.
+MULTI_ROW_CONCISE: Show separate tooltips for each row, where each shows the series plotted in that row.
+SINGLE: Shows only the plotted series closest to/under the cursor.
+NONE: Hides the tooltip entirely (also affects tooltips for other chart types).
+*/
 type ChartTooltipModeSetting struct {
 	val ChartTooltipModeSetting_Value
 }
@@ -73,16 +81,17 @@ type ChartTooltipModeSetting struct {
 type ChartTooltipModeSetting_Value string
 
 const (
-	ChartTooltipModeSetting_VERBOSE ChartTooltipModeSetting_Value = "VERBOSE"
-	ChartTooltipModeSetting_CONCISE ChartTooltipModeSetting_Value = "CONCISE"
-	ChartTooltipModeSetting_SINGLE  ChartTooltipModeSetting_Value = "SINGLE"
-	ChartTooltipModeSetting_NONE    ChartTooltipModeSetting_Value = "NONE"
-	ChartTooltipModeSetting_UNKNOWN ChartTooltipModeSetting_Value = "UNKNOWN"
+	ChartTooltipModeSetting_VERBOSE           ChartTooltipModeSetting_Value = "VERBOSE"
+	ChartTooltipModeSetting_CONCISE           ChartTooltipModeSetting_Value = "CONCISE"
+	ChartTooltipModeSetting_MULTI_ROW_CONCISE ChartTooltipModeSetting_Value = "MULTI_ROW_CONCISE"
+	ChartTooltipModeSetting_SINGLE            ChartTooltipModeSetting_Value = "SINGLE"
+	ChartTooltipModeSetting_NONE              ChartTooltipModeSetting_Value = "NONE"
+	ChartTooltipModeSetting_UNKNOWN           ChartTooltipModeSetting_Value = "UNKNOWN"
 )
 
 // ChartTooltipModeSetting_Values returns all known variants of ChartTooltipModeSetting.
 func ChartTooltipModeSetting_Values() []ChartTooltipModeSetting_Value {
-	return []ChartTooltipModeSetting_Value{ChartTooltipModeSetting_VERBOSE, ChartTooltipModeSetting_CONCISE, ChartTooltipModeSetting_SINGLE, ChartTooltipModeSetting_NONE}
+	return []ChartTooltipModeSetting_Value{ChartTooltipModeSetting_VERBOSE, ChartTooltipModeSetting_CONCISE, ChartTooltipModeSetting_MULTI_ROW_CONCISE, ChartTooltipModeSetting_SINGLE, ChartTooltipModeSetting_NONE}
 }
 
 func New_ChartTooltipModeSetting(value ChartTooltipModeSetting_Value) ChartTooltipModeSetting {
@@ -92,7 +101,7 @@ func New_ChartTooltipModeSetting(value ChartTooltipModeSetting_Value) ChartToolt
 // IsUnknown returns false for all known variants of ChartTooltipModeSetting and true otherwise.
 func (e ChartTooltipModeSetting) IsUnknown() bool {
 	switch e.val {
-	case ChartTooltipModeSetting_VERBOSE, ChartTooltipModeSetting_CONCISE, ChartTooltipModeSetting_SINGLE, ChartTooltipModeSetting_NONE:
+	case ChartTooltipModeSetting_VERBOSE, ChartTooltipModeSetting_CONCISE, ChartTooltipModeSetting_MULTI_ROW_CONCISE, ChartTooltipModeSetting_SINGLE, ChartTooltipModeSetting_NONE:
 		return false
 	}
 	return true
@@ -121,6 +130,8 @@ func (e *ChartTooltipModeSetting) UnmarshalText(data []byte) error {
 		*e = New_ChartTooltipModeSetting(ChartTooltipModeSetting_VERBOSE)
 	case "CONCISE":
 		*e = New_ChartTooltipModeSetting(ChartTooltipModeSetting_CONCISE)
+	case "MULTI_ROW_CONCISE":
+		*e = New_ChartTooltipModeSetting(ChartTooltipModeSetting_MULTI_ROW_CONCISE)
 	case "SINGLE":
 		*e = New_ChartTooltipModeSetting(ChartTooltipModeSetting_SINGLE)
 	case "NONE":
