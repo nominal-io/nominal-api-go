@@ -75,12 +75,12 @@ func (o *AllowNegativeValues) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 type ArrowBucketedEnumPlot struct {
 	// The raw binary containing Arrow IPC stream for BucketedEnumPlot
-	ArrowBinary []byte `conjure-docs:"The raw binary containing Arrow IPC stream for BucketedEnumPlot" json:"arrowBinary"`
+	ArrowBinary []byte `json:"arrowBinary"`
 	/*
 	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
 	   this list represents the superset of all group by keys used across every individual channel.
 	*/
-	GroupByKeys *[]string `conjure-docs:"This field specifies the tags that the final output is grouped by. When you combine multiple channels, \nthis list represents the superset of all group by keys used across every individual channel." json:"groupByKeys,omitempty"`
+	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
 }
 
 func (o ArrowBucketedEnumPlot) MarshalYAML() (interface{}, error) {
@@ -101,12 +101,12 @@ func (o *ArrowBucketedEnumPlot) UnmarshalYAML(unmarshal func(interface{}) error)
 
 type ArrowBucketedNumericPlot struct {
 	// The raw binary containing Arrow IPC stream for BucketedNumericPlot
-	ArrowBinary []byte `conjure-docs:"The raw binary containing Arrow IPC stream for BucketedNumericPlot" json:"arrowBinary"`
+	ArrowBinary []byte `json:"arrowBinary"`
 	/*
 	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
 	   this list represents the superset of all group by keys used across every individual channel.
 	*/
-	GroupByKeys *[]string `conjure-docs:"This field specifies the tags that the final output is grouped by. When you combine multiple channels, \nthis list represents the superset of all group by keys used across every individual channel." json:"groupByKeys,omitempty"`
+	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
 }
 
 func (o ArrowBucketedNumericPlot) MarshalYAML() (interface{}, error) {
@@ -127,12 +127,12 @@ func (o *ArrowBucketedNumericPlot) UnmarshalYAML(unmarshal func(interface{}) err
 
 type ArrowBucketedStructPlot struct {
 	// The raw binary containing Arrow IPC stream for bucketed struct plot
-	ArrowBinary []byte `conjure-docs:"The raw binary containing Arrow IPC stream for bucketed struct plot" json:"arrowBinary"`
+	ArrowBinary []byte `json:"arrowBinary"`
 	/*
 	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
 	   this list represents the superset of all group by keys used across every individual channel.
 	*/
-	GroupByKeys *[]string `conjure-docs:"This field specifies the tags that the final output is grouped by. When you combine multiple channels, \nthis list represents the superset of all group by keys used across every individual channel." json:"groupByKeys,omitempty"`
+	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
 }
 
 func (o ArrowBucketedStructPlot) MarshalYAML() (interface{}, error) {
@@ -153,12 +153,12 @@ func (o *ArrowBucketedStructPlot) UnmarshalYAML(unmarshal func(interface{}) erro
 
 type ArrowEnumPlot struct {
 	// The raw binary containing Arrow IPC stream for EnumPlot
-	ArrowBinary []byte `conjure-docs:"The raw binary containing Arrow IPC stream for EnumPlot" json:"arrowBinary"`
+	ArrowBinary []byte `json:"arrowBinary"`
 	/*
 	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
 	   this list represents the superset of all group by keys used across every individual channel.
 	*/
-	GroupByKeys *[]string `conjure-docs:"This field specifies the tags that the final output is grouped by. When you combine multiple channels, \nthis list represents the superset of all group by keys used across every individual channel." json:"groupByKeys,omitempty"`
+	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
 }
 
 func (o ArrowEnumPlot) MarshalYAML() (interface{}, error) {
@@ -179,12 +179,12 @@ func (o *ArrowEnumPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type ArrowFullResolutionPlot struct {
 	// The raw binary containing Arrow IPC stream for the first n rows of a full resolution plot sorted by timestamp.
-	ArrowBinary []byte `conjure-docs:"The raw binary containing Arrow IPC stream for the first n rows of a full resolution plot sorted by timestamp." json:"arrowBinary"`
+	ArrowBinary []byte `json:"arrowBinary"`
 	/*
 	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
 	   this list represents the superset of all group by keys used across every individual channel.
 	*/
-	GroupByKeys *[]string `conjure-docs:"This field specifies the tags that the final output is grouped by. When you combine multiple channels, \nthis list represents the superset of all group by keys used across every individual channel." json:"groupByKeys,omitempty"`
+	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
 }
 
 func (o ArrowFullResolutionPlot) MarshalYAML() (interface{}, error) {
@@ -205,12 +205,12 @@ func (o *ArrowFullResolutionPlot) UnmarshalYAML(unmarshal func(interface{}) erro
 
 type ArrowNumericPlot struct {
 	// The raw binary containing Arrow IPC stream for NumericPlot
-	ArrowBinary []byte `conjure-docs:"The raw binary containing Arrow IPC stream for NumericPlot" json:"arrowBinary"`
+	ArrowBinary []byte `json:"arrowBinary"`
 	/*
 	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
 	   this list represents the superset of all group by keys used across every individual channel.
 	*/
-	GroupByKeys *[]string `conjure-docs:"This field specifies the tags that the final output is grouped by. When you combine multiple channels, \nthis list represents the superset of all group by keys used across every individual channel." json:"groupByKeys,omitempty"`
+	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
 }
 
 func (o ArrowNumericPlot) MarshalYAML() (interface{}, error) {
@@ -232,7 +232,7 @@ func (o *ArrowNumericPlot) UnmarshalYAML(unmarshal func(interface{}) error) erro
 type AssetChannel struct {
 	AssetRid StringConstant `json:"assetRid"`
 	// Used to disambiguate when multiple data scopes within this asset contain channels with the same name.
-	DataScopeName StringConstant `conjure-docs:"Used to disambiguate when multiple data scopes within this asset contain channels with the same name." json:"dataScopeName"`
+	DataScopeName StringConstant `json:"dataScopeName"`
 	Channel       StringConstant `json:"channel"`
 	// Deprecated: Use additionalTagFilters
 	AdditionalTags map[string]StringConstant `json:"additionalTags"`
@@ -241,19 +241,19 @@ type AssetChannel struct {
 	   collisions with tag keys already defined for the given Asset data scope. Only returns points that match
 	   both sets of tag filters. For log series, include arg filters here in addition to tag filters.
 	*/
-	AdditionalTagFilters *TagFilters `conjure-docs:"Tags to filter the channel by, in addition to tag filters defined for a given Asset data scope. Throws on \ncollisions with tag keys already defined for the given Asset data scope. Only returns points that match \nboth sets of tag filters. For log series, include arg filters here in addition to tag filters." json:"additionalTagFilters,omitempty"`
+	AdditionalTagFilters *TagFilters `json:"additionalTagFilters,omitempty"`
 	// Deprecated: Use groupByTags instead. Throws if both tagsToGroupBy and groupByTags are specified.
 	TagsToGroupBy []string `json:"tagsToGroupBy"`
 	/*
 	   Tags that the channel should be grouped by. If this is non-empty a grouped result will be returned
 	   with an entry for each grouping. Only one of tagsToGroupBy and groupByTags should be specified.
 	*/
-	GroupByTags []StringConstant `conjure-docs:"Tags that the channel should be grouped by. If this is non-empty a grouped result will be returned\nwith an entry for each grouping. Only one of tagsToGroupBy and groupByTags should be specified." json:"groupByTags"`
+	GroupByTags []StringConstant `json:"groupByTags"`
 }
 
 func (o AssetChannel) MarshalJSON() ([]byte, error) {
 	if o.AdditionalTags == nil {
-		o.AdditionalTags = make(map[string]StringConstant, 0)
+		o.AdditionalTags = make(map[string]StringConstant)
 	}
 	if o.TagsToGroupBy == nil {
 		o.TagsToGroupBy = make([]string, 0)
@@ -272,7 +272,7 @@ func (o *AssetChannel) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawAssetChannel.AdditionalTags == nil {
-		rawAssetChannel.AdditionalTags = make(map[string]StringConstant, 0)
+		rawAssetChannel.AdditionalTags = make(map[string]StringConstant)
 	}
 	if rawAssetChannel.TagsToGroupBy == nil {
 		rawAssetChannel.TagsToGroupBy = make([]string, 0)
@@ -654,12 +654,12 @@ indicate the index of the array that the bucket corresponds to.
 */
 type BucketedEnumArrayPlot struct {
 	// The raw binary containing Arrow IPC stream for a bucketed N-dimensional enum array plot.
-	ArrowBinary []byte `conjure-docs:"The raw binary containing Arrow IPC stream for a bucketed N-dimensional enum array plot." json:"arrowBinary"`
+	ArrowBinary []byte `json:"arrowBinary"`
 	/*
 	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
 	   this list represents the superset of all group by keys used across every individual channel.
 	*/
-	GroupByKeys *[]string `conjure-docs:"This field specifies the tags that the final output is grouped by. When you combine multiple channels, \nthis list represents the superset of all group by keys used across every individual channel." json:"groupByKeys,omitempty"`
+	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
 }
 
 func (o BucketedEnumArrayPlot) MarshalYAML() (interface{}, error) {
@@ -680,7 +680,7 @@ func (o *BucketedEnumArrayPlot) UnmarshalYAML(unmarshal func(interface{}) error)
 
 type BucketedEnumPlot struct {
 	// The end of the bucket, exclusive.
-	Timestamps []api.Timestamp `conjure-docs:"The end of the bucket, exclusive." json:"timestamps"`
+	Timestamps []api.Timestamp `json:"timestamps"`
 	Buckets    []EnumBucket    `json:"buckets"`
 	Categories []string        `json:"categories"`
 }
@@ -734,18 +734,60 @@ func (o *BucketedEnumPlot) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A bucketed/decimated frequency domain plot where multiple frequency bins have been aggregated.
+type BucketedFrequencyDomainPlot struct {
+	Buckets []FrequencyBucket `json:"buckets"`
+}
+
+func (o BucketedFrequencyDomainPlot) MarshalJSON() ([]byte, error) {
+	if o.Buckets == nil {
+		o.Buckets = make([]FrequencyBucket, 0)
+	}
+	type _tmpBucketedFrequencyDomainPlot BucketedFrequencyDomainPlot
+	return safejson.Marshal(_tmpBucketedFrequencyDomainPlot(o))
+}
+
+func (o *BucketedFrequencyDomainPlot) UnmarshalJSON(data []byte) error {
+	type _tmpBucketedFrequencyDomainPlot BucketedFrequencyDomainPlot
+	var rawBucketedFrequencyDomainPlot _tmpBucketedFrequencyDomainPlot
+	if err := safejson.Unmarshal(data, &rawBucketedFrequencyDomainPlot); err != nil {
+		return err
+	}
+	if rawBucketedFrequencyDomainPlot.Buckets == nil {
+		rawBucketedFrequencyDomainPlot.Buckets = make([]FrequencyBucket, 0)
+	}
+	*o = BucketedFrequencyDomainPlot(rawBucketedFrequencyDomainPlot)
+	return nil
+}
+
+func (o BucketedFrequencyDomainPlot) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BucketedFrequencyDomainPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 /*
 The array is flattened out into a an arrow stream of bucketed primitive results, with an extra column to
 indicate the index of the array that the bucket corresponds to.
 */
 type BucketedNumericArrayPlot struct {
 	// The raw binary containing Arrow IPC stream for a bucketed N-dimensional numeric array plot.
-	ArrowBinary []byte `conjure-docs:"The raw binary containing Arrow IPC stream for a bucketed N-dimensional numeric array plot." json:"arrowBinary"`
+	ArrowBinary []byte `json:"arrowBinary"`
 	/*
 	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
 	   this list represents the superset of all group by keys used across every individual channel.
 	*/
-	GroupByKeys *[]string `conjure-docs:"This field specifies the tags that the final output is grouped by. When you combine multiple channels, \nthis list represents the superset of all group by keys used across every individual channel." json:"groupByKeys,omitempty"`
+	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
 }
 
 func (o BucketedNumericArrayPlot) MarshalYAML() (interface{}, error) {
@@ -766,7 +808,7 @@ func (o *BucketedNumericArrayPlot) UnmarshalYAML(unmarshal func(interface{}) err
 
 type BucketedNumericPlot struct {
 	// The end of the bucket, exclusive.
-	Timestamps []api.Timestamp `conjure-docs:"The end of the bucket, exclusive." json:"timestamps"`
+	Timestamps []api.Timestamp `json:"timestamps"`
 	Buckets    []NumericBucket `json:"buckets"`
 }
 
@@ -1138,9 +1180,9 @@ type CurveFitResult struct {
 	   R^2 (coefficient of determination) for the fit curve, a normalized measure of how well the curve fits the data.
 	   Usually ranges from 0 to 1, with higher indicating better fit (points closer to fit line).
 	*/
-	R2 float64 `conjure-docs:"R^2 (coefficient of determination) for the fit curve, a normalized measure of how well the curve fits the data.\nUsually ranges from 0 to 1, with higher indicating better fit (points closer to fit line)." json:"r2"`
+	R2 float64 `json:"r2"`
 	// Description of the fit curve.
-	CurveResultDetails CurveResultDetails `conjure-docs:"Description of the fit curve." json:"curveResultDetails"`
+	CurveResultDetails CurveResultDetails `json:"curveResultDetails"`
 }
 
 func (o CurveFitResult) MarshalYAML() (interface{}, error) {
@@ -1189,19 +1231,19 @@ type DataSourceChannel struct {
 	   Tags to filter the channel by. Only returns points from the channel where tag values match the provided
 	   expression. For log series, include arg filters here in addition to tag filters.
 	*/
-	TagFilters *TagFilters `conjure-docs:"Tags to filter the channel by. Only returns points from the channel where tag values match the provided\nexpression. For log series, include arg filters here in addition to tag filters." json:"tagFilters,omitempty"`
+	TagFilters *TagFilters `json:"tagFilters,omitempty"`
 	// Deprecated: Use groupByTags instead. Throws if both tagsToGroupBy and groupByTags are specified.
 	TagsToGroupBy []string `json:"tagsToGroupBy"`
 	/*
 	   Tags that the channel should be grouped by. If this is non-empty a grouped result will be returned
 	   with an entry for each grouping. Only one of tagsToGroupBy and groupByTags should be specified.
 	*/
-	GroupByTags []StringConstant `conjure-docs:"Tags that the channel should be grouped by. If this is non-empty a grouped result will be returned\nwith an entry for each grouping. Only one of tagsToGroupBy and groupByTags should be specified." json:"groupByTags"`
+	GroupByTags []StringConstant `json:"groupByTags"`
 }
 
 func (o DataSourceChannel) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[string]StringConstant, 0)
+		o.Tags = make(map[string]StringConstant)
 	}
 	if o.TagsToGroupBy == nil {
 		o.TagsToGroupBy = make([]string, 0)
@@ -1220,7 +1262,7 @@ func (o *DataSourceChannel) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawDataSourceChannel.Tags == nil {
-		rawDataSourceChannel.Tags = make(map[string]StringConstant, 0)
+		rawDataSourceChannel.Tags = make(map[string]StringConstant)
 	}
 	if rawDataSourceChannel.TagsToGroupBy == nil {
 		rawDataSourceChannel.TagsToGroupBy = make([]string, 0)
@@ -1250,7 +1292,7 @@ func (o *DataSourceChannel) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 type DecimateWithBuckets struct {
 	// Number of points to generate in the output series.
-	Buckets int `conjure-docs:"Number of points to generate in the output series." json:"buckets"`
+	Buckets int `json:"buckets"`
 }
 
 func (o DecimateWithBuckets) MarshalYAML() (interface{}, error) {
@@ -1274,7 +1316,7 @@ type DecimateWithResolution struct {
 	   Resolution of the output series specifying time interval between decimated points.
 	   Picoseconds for picosecond-granularity dataset, nanoseconds otherwise.
 	*/
-	Resolution safelong.SafeLong `conjure-docs:"Resolution of the output series specifying time interval between decimated points.\nPicoseconds for picosecond-granularity dataset, nanoseconds otherwise." json:"resolution"`
+	Resolution safelong.SafeLong `json:"resolution"`
 }
 
 func (o DecimateWithResolution) MarshalYAML() (interface{}, error) {
@@ -1295,15 +1337,15 @@ func (o *DecimateWithResolution) UnmarshalYAML(unmarshal func(interface{}) error
 
 type EnumBucket struct {
 	// The map of values within the bucket to their frequency.
-	Histogram  map[int]safelong.SafeLong `conjure-docs:"The map of values within the bucket to their frequency." json:"histogram"`
+	Histogram  map[int]safelong.SafeLong `json:"histogram"`
 	FirstPoint CompactEnumPoint          `json:"firstPoint"`
 	// Will be empty if the bucket only has a single point.
-	LastPoint *CompactEnumPoint `conjure-docs:"Will be empty if the bucket only has a single point." json:"lastPoint,omitempty"`
+	LastPoint *CompactEnumPoint `json:"lastPoint,omitempty"`
 }
 
 func (o EnumBucket) MarshalJSON() ([]byte, error) {
 	if o.Histogram == nil {
-		o.Histogram = make(map[int]safelong.SafeLong, 0)
+		o.Histogram = make(map[int]safelong.SafeLong)
 	}
 	type _tmpEnumBucket EnumBucket
 	return safejson.Marshal(_tmpEnumBucket(o))
@@ -1316,7 +1358,7 @@ func (o *EnumBucket) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawEnumBucket.Histogram == nil {
-		rawEnumBucket.Histogram = make(map[int]safelong.SafeLong, 0)
+		rawEnumBucket.Histogram = make(map[int]safelong.SafeLong)
 	}
 	*o = EnumBucket(rawEnumBucket)
 	return nil
@@ -1371,13 +1413,13 @@ for a specific enumerated value, across all input series.
 */
 type EnumHistogramBucket struct {
 	// The value of the enum as a string
-	Value           string                                 `conjure-docs:"The value of the enum as a string" json:"value"`
+	Value           string                                 `json:"value"`
 	CountsByChannel map[VariableName]HistogramChannelCount `json:"countsByChannel"`
 }
 
 func (o EnumHistogramBucket) MarshalJSON() ([]byte, error) {
 	if o.CountsByChannel == nil {
-		o.CountsByChannel = make(map[VariableName]HistogramChannelCount, 0)
+		o.CountsByChannel = make(map[VariableName]HistogramChannelCount)
 	}
 	type _tmpEnumHistogramBucket EnumHistogramBucket
 	return safejson.Marshal(_tmpEnumHistogramBucket(o))
@@ -1390,7 +1432,7 @@ func (o *EnumHistogramBucket) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawEnumHistogramBucket.CountsByChannel == nil {
-		rawEnumHistogramBucket.CountsByChannel = make(map[VariableName]HistogramChannelCount, 0)
+		rawEnumHistogramBucket.CountsByChannel = make(map[VariableName]HistogramChannelCount)
 	}
 	*o = EnumHistogramBucket(rawEnumHistogramBucket)
 	return nil
@@ -1650,6 +1692,75 @@ func (o *ForwardFillResampleInterpolationConfiguration) UnmarshalYAML(unmarshal 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A single bucket in a bucketed frequency domain plot.
+type FrequencyBucket struct {
+	// The start frequency of this bucket (inclusive).
+	FrequencyStart float64 `json:"frequencyStart"`
+	// The end frequency of this bucket (exclusive).
+	FrequencyEnd float64 `json:"frequencyEnd"`
+	// The center frequency of this bucket.
+	FrequencyCenter float64 `json:"frequencyCenter"`
+	// The minimum amplitude value in this bucket.
+	MinAmplitude float64 `json:"minAmplitude"`
+	// The maximum amplitude value in this bucket.
+	MaxAmplitude float64 `json:"maxAmplitude"`
+	// The mean amplitude value in this bucket.
+	MeanAmplitude float64 `json:"meanAmplitude"`
+	// The number of original frequency points that were aggregated into this bucket.
+	Count safelong.SafeLong `json:"count"`
+	// The first point (lowest frequency) in this bucket.
+	FirstPoint FrequencyPoint `json:"firstPoint"`
+	// The last point (highest frequency) in this bucket. Will be empty if the bucket only has a single point.
+	LastPoint *FrequencyPoint `json:"lastPoint,omitempty"`
+}
+
+func (o FrequencyBucket) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyBucket) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type FrequencyDecimateWithBuckets struct {
+	// Target number of frequency bins/buckets.
+	Buckets int `json:"buckets"`
+	/*
+	   Optional minimum frequency bound (Hz). When set, frequencies below this value are excluded
+	   before bucketing, increasing resolution within the requested range. This bound is inclusive.
+	*/
+	MinFrequency *float64 `json:"minFrequency,omitempty"`
+	/*
+	   Optional maximum frequency bound (Hz). When set, frequencies above this value are excluded
+	   before bucketing, increasing resolution within the requested range. This bound is exclusive.
+	*/
+	MaxFrequency *float64 `json:"maxFrequency,omitempty"`
+}
+
+func (o FrequencyDecimateWithBuckets) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyDecimateWithBuckets) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type FrequencyDomainPlot struct {
 	Frequencies []float64 `json:"frequencies"`
 	Amplitudes  []float64 `json:"amplitudes"`
@@ -1801,6 +1912,28 @@ func (o FrequencyDomainPlotMagnitudeAndPhase) MarshalYAML() (interface{}, error)
 }
 
 func (o *FrequencyDomainPlotMagnitudeAndPhase) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A single point in a frequency domain plot.
+type FrequencyPoint struct {
+	Frequency float64 `json:"frequency"`
+	Amplitude float64 `json:"amplitude"`
+}
+
+func (o FrequencyPoint) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FrequencyPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2120,7 +2253,7 @@ type LogValue struct {
 
 func (o LogValue) MarshalJSON() ([]byte, error) {
 	if o.Args == nil {
-		o.Args = make(map[string]string, 0)
+		o.Args = make(map[string]string)
 	}
 	type _tmpLogValue LogValue
 	return safejson.Marshal(_tmpLogValue(o))
@@ -2133,7 +2266,7 @@ func (o *LogValue) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawLogValue.Args == nil {
-		rawLogValue.Args = make(map[string]string, 0)
+		rawLogValue.Args = make(map[string]string)
 	}
 	*o = LogValue(rawLogValue)
 	return nil
@@ -2259,10 +2392,10 @@ type NumericBucket struct {
 	Mean  float64           `json:"mean"`
 	Count safelong.SafeLong `json:"count"`
 	// The population variance of the bucket. If the bucket has only one value, this will be 0.
-	Variance   float64      `conjure-docs:"The population variance of the bucket. If the bucket has only one value, this will be 0." json:"variance"`
+	Variance   float64      `json:"variance"`
 	FirstPoint NumericPoint `json:"firstPoint"`
 	// Will be empty if the bucket only has a single point.
-	LastPoint *NumericPoint `conjure-docs:"Will be empty if the bucket only has a single point." json:"lastPoint,omitempty"`
+	LastPoint *NumericPoint `json:"lastPoint,omitempty"`
 }
 
 func (o NumericBucket) MarshalYAML() (interface{}, error) {
@@ -2314,9 +2447,9 @@ and the counts of values in that range across all input series.
 */
 type NumericHistogramBucket struct {
 	// The lower bound of the bucket, inclusive
-	LowerBound float64 `conjure-docs:"The lower bound of the bucket, inclusive" json:"lowerBound"`
+	LowerBound float64 `json:"lowerBound"`
 	// The upper bound of the bucket, exclusive
-	UpperBound      float64                                `conjure-docs:"The upper bound of the bucket, exclusive" json:"upperBound"`
+	UpperBound      float64                                `json:"upperBound"`
 	CountsByChannel map[VariableName]HistogramChannelCount `json:"countsByChannel"`
 	// Deprecated: Use countsByChannel instead
 	Buckets map[VariableName]HistogramChannelCount `json:"buckets"`
@@ -2324,10 +2457,10 @@ type NumericHistogramBucket struct {
 
 func (o NumericHistogramBucket) MarshalJSON() ([]byte, error) {
 	if o.CountsByChannel == nil {
-		o.CountsByChannel = make(map[VariableName]HistogramChannelCount, 0)
+		o.CountsByChannel = make(map[VariableName]HistogramChannelCount)
 	}
 	if o.Buckets == nil {
-		o.Buckets = make(map[VariableName]HistogramChannelCount, 0)
+		o.Buckets = make(map[VariableName]HistogramChannelCount)
 	}
 	type _tmpNumericHistogramBucket NumericHistogramBucket
 	return safejson.Marshal(_tmpNumericHistogramBucket(o))
@@ -2340,10 +2473,10 @@ func (o *NumericHistogramBucket) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNumericHistogramBucket.CountsByChannel == nil {
-		rawNumericHistogramBucket.CountsByChannel = make(map[VariableName]HistogramChannelCount, 0)
+		rawNumericHistogramBucket.CountsByChannel = make(map[VariableName]HistogramChannelCount)
 	}
 	if rawNumericHistogramBucket.Buckets == nil {
-		rawNumericHistogramBucket.Buckets = make(map[VariableName]HistogramChannelCount, 0)
+		rawNumericHistogramBucket.Buckets = make(map[VariableName]HistogramChannelCount)
 	}
 	*o = NumericHistogramBucket(rawNumericHistogramBucket)
 	return nil
@@ -2371,12 +2504,12 @@ type NumericHistogramBucketWidthAndOffset struct {
 	   are multiples of the width. If offset is specified, the left and right bounds of each bucket are
 	   shifted right by the offset value.
 	*/
-	Width DoubleConstant `conjure-docs:"The width of each bucket. If offset is not specified, the left and right bounds of each bucket\nare multiples of the width. If offset is specified, the left and right bounds of each bucket are\nshifted right by the offset value." json:"width"`
+	Width DoubleConstant `json:"width"`
 	/*
 	   The rightward shift to apply to the left and right bounds of each bucket. If not specified,
 	   the offset will be 0. The offset must be non-negative.
 	*/
-	Offset *DoubleConstant `conjure-docs:"The rightward shift to apply to the left and right bounds of each bucket. If not specified, \nthe offset will be 0. The offset must be non-negative." json:"offset,omitempty"`
+	Offset *DoubleConstant `json:"offset,omitempty"`
 }
 
 func (o NumericHistogramBucketWidthAndOffset) MarshalYAML() (interface{}, error) {
@@ -2538,7 +2671,7 @@ type PagedLogPlot struct {
 	   included in these results). May be empty if there are no further logs in the requested time range in the
 	   direction originally requested.
 	*/
-	NextPageToken *PageToken `conjure-docs:"The token to retrieve the next page of logs in the direction originally requested (exclusive - not\nincluded in these results). May be empty if there are no further logs in the requested time range in the\ndirection originally requested." json:"nextPageToken,omitempty"`
+	NextPageToken *PageToken `json:"nextPageToken,omitempty"`
 }
 
 func (o PagedLogPlot) MarshalJSON() ([]byte, error) {
@@ -2691,9 +2824,9 @@ func (o *Point3d) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type PolynomialCurve struct {
 	// The highest allowable degree of the fit polynomial.
-	Degree IntegerConstant `conjure-docs:"The highest allowable degree of the fit polynomial." json:"degree"`
+	Degree IntegerConstant `json:"degree"`
 	// The y-value at the point x (or t) = 0. If omitted, the y-intercept will also be fit to the data.
-	Intercept *DoubleConstant `conjure-docs:"The y-value at the point x (or t) = 0. If omitted, the y-intercept will also be fit to the data." json:"intercept,omitempty"`
+	Intercept *DoubleConstant `json:"intercept,omitempty"`
 }
 
 func (o PolynomialCurve) MarshalYAML() (interface{}, error) {
@@ -2849,11 +2982,11 @@ func (o *RangeAggregation) UnmarshalYAML(unmarshal func(interface{}) error) erro
 
 type RangeMap struct {
 	// Inclusive start value. If not specified, the start is the prior range's end value, or negative infinity.
-	Start *DoubleConstant `conjure-docs:"Inclusive start value. If not specified, the start is the prior range's end value, or negative infinity." json:"start,omitempty"`
+	Start *DoubleConstant `json:"start,omitempty"`
 	// Exclusive end value. If not specified, the end value is the next range's start value, or positive infinity.
-	End *DoubleConstant `conjure-docs:"Exclusive end value. If not specified, the end value is the next range's start value, or positive infinity." json:"end,omitempty"`
+	End *DoubleConstant `json:"end,omitempty"`
 	// The value to map to if the input value is within the range.
-	Output StringConstant `conjure-docs:"The value to map to if the input value is within the range." json:"output"`
+	Output StringConstant `json:"output"`
 }
 
 func (o RangeMap) MarshalYAML() (interface{}, error) {
@@ -2875,9 +3008,9 @@ func (o *RangeMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // Summary of a set of ranges
 type RangeSummary struct {
 	// The range representing the minimum start and maximum end times of the ranges.
-	Range Range `conjure-docs:"The range representing the minimum start and maximum end times of the ranges." json:"range"`
+	Range Range `json:"range"`
 	// The number of ranges found within this time range.
-	SubRangeCount int `conjure-docs:"The number of ranges found within this time range." json:"subRangeCount"`
+	SubRangeCount int `json:"subRangeCount"`
 }
 
 func (o RangeSummary) MarshalYAML() (interface{}, error) {
@@ -2986,9 +3119,9 @@ type RunChannel struct {
 	   Used to disambiguate when multiple assets within this run contain data scopes with the same name.
 	   If not specified for a run with multiple assets, an error will be thrown.
 	*/
-	AssetRid *StringConstant `conjure-docs:"Used to disambiguate when multiple assets within this run contain data scopes with the same name.\nIf not specified for a run with multiple assets, an error will be thrown." json:"assetRid,omitempty"`
+	AssetRid *StringConstant `json:"assetRid,omitempty"`
 	// Used to disambiguate when multiple data scopes within this run contain channels with the same name.
-	DataScopeName StringConstant `conjure-docs:"Used to disambiguate when multiple data scopes within this run contain channels with the same name." json:"dataScopeName"`
+	DataScopeName StringConstant `json:"dataScopeName"`
 	Channel       StringConstant `json:"channel"`
 	// Deprecated: Use additionalTagFilters
 	AdditionalTags map[string]StringConstant `json:"additionalTags"`
@@ -2997,19 +3130,19 @@ type RunChannel struct {
 	   collisions with tag keys already defined for the given Run data scope. Only returns points that match
 	   both sets of tag filters. For log series, include arg filters here in addition to tag filters.
 	*/
-	AdditionalTagFilters *TagFilters `conjure-docs:"Tags to filter the channel by, in addition to tag filters defined for a given Run data scope. Throws on \ncollisions with tag keys already defined for the given Run data scope. Only returns points that match \nboth sets of tag filters. For log series, include arg filters here in addition to tag filters." json:"additionalTagFilters,omitempty"`
+	AdditionalTagFilters *TagFilters `json:"additionalTagFilters,omitempty"`
 	// Deprecated: Use groupByTags instead. Throws if both tagsToGroupBy and groupByTags are specified.
 	TagsToGroupBy []string `json:"tagsToGroupBy"`
 	/*
 	   Tags that the channel should be grouped by. If this is non-empty a grouped result will be returned
 	   with an entry for each grouping. Only one of tagsToGroupBy and groupByTags should be specified.
 	*/
-	GroupByTags []StringConstant `conjure-docs:"Tags that the channel should be grouped by. If this is non-empty a grouped result will be returned\nwith an entry for each grouping. Only one of tagsToGroupBy and groupByTags should be specified." json:"groupByTags"`
+	GroupByTags []StringConstant `json:"groupByTags"`
 }
 
 func (o RunChannel) MarshalJSON() ([]byte, error) {
 	if o.AdditionalTags == nil {
-		o.AdditionalTags = make(map[string]StringConstant, 0)
+		o.AdditionalTags = make(map[string]StringConstant)
 	}
 	if o.TagsToGroupBy == nil {
 		o.TagsToGroupBy = make([]string, 0)
@@ -3028,7 +3161,7 @@ func (o *RunChannel) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawRunChannel.AdditionalTags == nil {
-		rawRunChannel.AdditionalTags = make(map[string]StringConstant, 0)
+		rawRunChannel.AdditionalTags = make(map[string]StringConstant)
 	}
 	if rawRunChannel.TagsToGroupBy == nil {
 		rawRunChannel.TagsToGroupBy = make([]string, 0)
@@ -3061,22 +3194,22 @@ type ScatterFitOptions struct {
 	   Inclusive lower bound on the x values to fit to. If omitted, does not set a bound
 	   (equivalent to setting this to the minimum x value among all points in the time range).
 	*/
-	MinX *DoubleConstant `conjure-docs:"Inclusive lower bound on the x values to fit to. If omitted, does not set a bound\n(equivalent to setting this to the minimum x value among all points in the time range)." json:"minX,omitempty"`
+	MinX *DoubleConstant `json:"minX,omitempty"`
 	/*
 	   Inclusive upper bound on the x values to fit to. If omitted, does not set a bound
 	   (equivalent to setting this to the maximum x value among all points in the time range).
 	*/
-	MaxX *DoubleConstant `conjure-docs:"Inclusive upper bound on the x values to fit to. If omitted, does not set a bound\n(equivalent to setting this to the maximum x value among all points in the time range)." json:"maxX,omitempty"`
+	MaxX *DoubleConstant `json:"maxX,omitempty"`
 	/*
 	   Inclusive lower bound on the y values to fit to. If omitted, does not set a bound
 	   (equivalent to setting this to the minimum y value among all points in the time range).
 	*/
-	MinY *DoubleConstant `conjure-docs:"Inclusive lower bound on the y values to fit to. If omitted, does not set a bound\n(equivalent to setting this to the minimum y value among all points in the time range)." json:"minY,omitempty"`
+	MinY *DoubleConstant `json:"minY,omitempty"`
 	/*
 	   Inclusive upper bound on the y values to fit to. If omitted, does not set a bound
 	   (equivalent to setting this to the maximum y value among all points in the time range).
 	*/
-	MaxY *DoubleConstant `conjure-docs:"Inclusive upper bound on the y values to fit to. If omitted, does not set a bound\n(equivalent to setting this to the maximum y value among all points in the time range)." json:"maxY,omitempty"`
+	MaxY *DoubleConstant `json:"maxY,omitempty"`
 }
 
 func (o ScatterFitOptions) MarshalYAML() (interface{}, error) {
@@ -3121,7 +3254,7 @@ type SinglePoint struct {
 	   Returns true if the result required downcasting to a type with less precision,
 	   for example if the input series was Int64 and the result is a Float64.
 	*/
-	PrecisionLoss bool `conjure-docs:"Returns true if the result required downcasting to a type with less precision, \nfor example if the input series was Int64 and the result is a Float64." json:"precisionLoss"`
+	PrecisionLoss bool `json:"precisionLoss"`
 }
 
 func (o SinglePoint) MarshalYAML() (interface{}, error) {
@@ -3185,19 +3318,19 @@ func (o *StandardDeviation) UnmarshalYAML(unmarshal func(interface{}) error) err
 // Options for frequency analyses that are backed by short-time Fourier transforms.
 type StftOptions struct {
 	// Window function type to use
-	Window *FftWindow `conjure-docs:"Window function type to use" json:"window,omitempty"`
+	Window *FftWindow `json:"window,omitempty"`
 	// Either DFT_EVEN or SYMMETRIC
-	WindowSymmetry *WindowSymmetry `conjure-docs:"Either DFT_EVEN or SYMMETRIC" json:"windowSymmetry,omitempty"`
+	WindowSymmetry *WindowSymmetry `json:"windowSymmetry,omitempty"`
 	// Sampling frequency of the series in Hz. If absent, will calculate using the input series.
-	SamplingFrequency *float64 `conjure-docs:"Sampling frequency of the series in Hz. If absent, will calculate using the input series." json:"samplingFrequency,omitempty"`
+	SamplingFrequency *float64 `json:"samplingFrequency,omitempty"`
 	// Number of points per window segment.
-	Nperseg *int `conjure-docs:"Number of points per window segment." json:"nperseg,omitempty"`
+	Nperseg *int `json:"nperseg,omitempty"`
 	// Number of points of overlap between windows. Must be less than nperseg.
-	Noverlap *int `conjure-docs:"Number of points of overlap between windows. Must be less than nperseg." json:"noverlap,omitempty"`
+	Noverlap *int `json:"noverlap,omitempty"`
 	// Number of points to use in the FFT. Must be greater than or equal to nperseg.
-	Nfft *int `conjure-docs:"Number of points to use in the FFT. Must be greater than or equal to nperseg." json:"nfft,omitempty"`
+	Nfft *int `json:"nfft,omitempty"`
 	// Detrend the points in each window segment. If absent, will use the default detrend for that function.
-	Detrend *DetrendType `conjure-docs:"Detrend the points in each window segment. If absent, will use the default detrend for that function." json:"detrend,omitempty"`
+	Detrend *DetrendType `json:"detrend,omitempty"`
 }
 
 func (o StftOptions) MarshalYAML() (interface{}, error) {
@@ -3308,9 +3441,9 @@ Returns a CartesianPlot.
 */
 type TemporalDecimateStrategy struct {
 	// The strategy to use for aggregating the x values in each bucket.
-	XAggregation ScatterTemporalAggregation `conjure-docs:"The strategy to use for aggregating the x values in each bucket." json:"xAggregation"`
+	XAggregation ScatterTemporalAggregation `json:"xAggregation"`
 	// The strategy to use for aggregating the y values in each bucket.
-	YAggregation ScatterTemporalAggregation `conjure-docs:"The strategy to use for aggregating the y values in each bucket." json:"yAggregation"`
+	YAggregation ScatterTemporalAggregation `json:"yAggregation"`
 }
 
 func (o TemporalDecimateStrategy) MarshalYAML() (interface{}, error) {
@@ -3331,7 +3464,7 @@ func (o *TemporalDecimateStrategy) UnmarshalYAML(unmarshal func(interface{}) err
 
 type TimeSeriesFitOptions struct {
 	// Time unit used for the timestamps to fit against. Defaults to seconds if not specified.
-	TimeUnit *api.TimeUnit `conjure-docs:"Time unit used for the timestamps to fit against. Defaults to seconds if not specified." json:"timeUnit,omitempty"`
+	TimeUnit *api.TimeUnit `json:"timeUnit,omitempty"`
 }
 
 func (o TimeSeriesFitOptions) MarshalYAML() (interface{}, error) {

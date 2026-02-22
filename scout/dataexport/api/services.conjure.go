@@ -32,13 +32,12 @@ func NewDataExportServiceClient(client httpclient.Client) DataExportServiceClien
 func (c *dataExportServiceClient) ExportChannelData(ctx context.Context, authHeader bearertoken.Token, requestArg ExportDataRequest) (io.ReadCloser, error) {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ExportChannelData"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/export/v1/export"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRawResponseBody())
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	resp, err := c.client.Do(ctx, requestParams...)
+	resp, err := c.client.Post(ctx, requestParams...)
 	if err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "exportChannelData failed")
 	}
@@ -46,21 +45,19 @@ func (c *dataExportServiceClient) ExportChannelData(ctx context.Context, authHea
 }
 
 func (c *dataExportServiceClient) GenerateExportChannelDataPresignedLink(ctx context.Context, authHeader bearertoken.Token, requestArg ExportDataRequest) (GeneratePresignedLinkResponse, error) {
-	var defaultReturnVal GeneratePresignedLinkResponse
 	var returnVal *GeneratePresignedLinkResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GenerateExportChannelDataPresignedLink"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/export/v1/generateExportPresignedLink"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "generateExportChannelDataPresignedLink failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GeneratePresignedLinkResponse), werror.WrapWithContextParams(ctx, err, "generateExportChannelDataPresignedLink failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "generateExportChannelDataPresignedLink response cannot be nil")
+		return *new(GeneratePresignedLinkResponse), werror.ErrorWithContextParams(ctx, "generateExportChannelDataPresignedLink response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -100,19 +97,17 @@ type dataExportServiceClientWithTokenProvider struct {
 }
 
 func (c *dataExportServiceClientWithTokenProvider) ExportChannelData(ctx context.Context, requestArg ExportDataRequest) (io.ReadCloser, error) {
-	var defaultReturnVal io.ReadCloser
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.ExportChannelData(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataExportServiceClientWithTokenProvider) GenerateExportChannelDataPresignedLink(ctx context.Context, requestArg ExportDataRequest) (GeneratePresignedLinkResponse, error) {
-	var defaultReturnVal GeneratePresignedLinkResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(GeneratePresignedLinkResponse), err
 	}
 	return c.client.GenerateExportChannelDataPresignedLink(ctx, bearertoken.Token(token), requestArg)
 }

@@ -82,7 +82,7 @@ func (u *Color) AcceptFuncs(hexCodeFunc func(string) error, unknownFunc func(str
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Color type")
 		}
 		return unknownFunc(u.typ)
 	case "hexCode":
@@ -93,7 +93,7 @@ func (u *Color) AcceptFuncs(hexCodeFunc func(string) error, unknownFunc func(str
 	}
 }
 
-func (u *Color) HexCodeNoopSuccess(string) error {
+func (u *Color) HexCodeNoopSuccess(_ string) error {
 	return nil
 }
 
@@ -245,7 +245,7 @@ func (u *DispositionState) AcceptFuncs(pendingReviewFunc func(PendingReviewDispo
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DispositionState type")
 		}
 		return unknownFunc(u.typ)
 	case "pendingReview":
@@ -266,15 +266,15 @@ func (u *DispositionState) AcceptFuncs(pendingReviewFunc func(PendingReviewDispo
 	}
 }
 
-func (u *DispositionState) PendingReviewNoopSuccess(PendingReviewDispositionState) error {
+func (u *DispositionState) PendingReviewNoopSuccess(_ PendingReviewDispositionState) error {
 	return nil
 }
 
-func (u *DispositionState) ClosedWithFurtherActionNoopSuccess(ClosedWithFurtherActionDispositionState) error {
+func (u *DispositionState) ClosedWithFurtherActionNoopSuccess(_ ClosedWithFurtherActionDispositionState) error {
 	return nil
 }
 
-func (u *DispositionState) ClosedWithIgnoreNoopSuccess(ClosedWithIgnoreDispositionState) error {
+func (u *DispositionState) ClosedWithIgnoreNoopSuccess(_ ClosedWithIgnoreDispositionState) error {
 	return nil
 }
 
@@ -458,7 +458,7 @@ func (u *Symbol) AcceptFuncs(iconFunc func(string) error, emojiFunc func(string)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Symbol type")
 		}
 		return unknownFunc(u.typ)
 	case "icon":
@@ -479,15 +479,15 @@ func (u *Symbol) AcceptFuncs(iconFunc func(string) error, emojiFunc func(string)
 	}
 }
 
-func (u *Symbol) IconNoopSuccess(string) error {
+func (u *Symbol) IconNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *Symbol) EmojiNoopSuccess(string) error {
+func (u *Symbol) EmojiNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *Symbol) ImageNoopSuccess(string) error {
+func (u *Symbol) ImageNoopSuccess(_ string) error {
 	return nil
 }
 

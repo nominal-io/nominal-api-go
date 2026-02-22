@@ -112,7 +112,7 @@ func (u *DetailedIngestStatus) AcceptFuncs(successFunc func(SuccessIngestStatus)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DetailedIngestStatus type")
 		}
 		return unknownFunc(u.typ)
 	case "success":
@@ -133,15 +133,15 @@ func (u *DetailedIngestStatus) AcceptFuncs(successFunc func(SuccessIngestStatus)
 	}
 }
 
-func (u *DetailedIngestStatus) SuccessNoopSuccess(SuccessIngestStatus) error {
+func (u *DetailedIngestStatus) SuccessNoopSuccess(_ SuccessIngestStatus) error {
 	return nil
 }
 
-func (u *DetailedIngestStatus) ErrorNoopSuccess(ErrorIngestStatus) error {
+func (u *DetailedIngestStatus) ErrorNoopSuccess(_ ErrorIngestStatus) error {
 	return nil
 }
 
-func (u *DetailedIngestStatus) InProgressNoopSuccess(float64) error {
+func (u *DetailedIngestStatus) InProgressNoopSuccess(_ float64) error {
 	return nil
 }
 
@@ -325,7 +325,7 @@ func (u *ScaleParameter) AcceptFuncs(trueFrameRateFunc func(float64) error, endi
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ScaleParameter type")
 		}
 		return unknownFunc(u.typ)
 	case "trueFrameRate":
@@ -346,15 +346,15 @@ func (u *ScaleParameter) AcceptFuncs(trueFrameRateFunc func(float64) error, endi
 	}
 }
 
-func (u *ScaleParameter) TrueFrameRateNoopSuccess(float64) error {
+func (u *ScaleParameter) TrueFrameRateNoopSuccess(_ float64) error {
 	return nil
 }
 
-func (u *ScaleParameter) EndingTimestampNoopSuccess(api.Timestamp) error {
+func (u *ScaleParameter) EndingTimestampNoopSuccess(_ api.Timestamp) error {
 	return nil
 }
 
-func (u *ScaleParameter) ScaleFactorNoopSuccess(float64) error {
+func (u *ScaleParameter) ScaleFactorNoopSuccess(_ float64) error {
 	return nil
 }
 
@@ -594,7 +594,7 @@ func (u *SearchVideosQuery) AcceptFuncs(searchTextFunc func(string) error, label
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchVideosQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "searchText":
@@ -635,31 +635,31 @@ func (u *SearchVideosQuery) AcceptFuncs(searchTextFunc func(string) error, label
 	}
 }
 
-func (u *SearchVideosQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchVideosQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchVideosQuery) LabelNoopSuccess(api.Label) error {
+func (u *SearchVideosQuery) LabelNoopSuccess(_ api.Label) error {
 	return nil
 }
 
-func (u *SearchVideosQuery) PropertyNoopSuccess(api.Property) error {
+func (u *SearchVideosQuery) PropertyNoopSuccess(_ api.Property) error {
 	return nil
 }
 
-func (u *SearchVideosQuery) AndNoopSuccess([]SearchVideosQuery) error {
+func (u *SearchVideosQuery) AndNoopSuccess(_ []SearchVideosQuery) error {
 	return nil
 }
 
-func (u *SearchVideosQuery) OrNoopSuccess([]SearchVideosQuery) error {
+func (u *SearchVideosQuery) OrNoopSuccess(_ []SearchVideosQuery) error {
 	return nil
 }
 
-func (u *SearchVideosQuery) IngestStatusNoopSuccess(api.IngestStatus) error {
+func (u *SearchVideosQuery) IngestStatusNoopSuccess(_ api.IngestStatus) error {
 	return nil
 }
 
-func (u *SearchVideosQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchVideosQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
@@ -885,7 +885,7 @@ func (u *SegmentTimestamps) AcceptFuncs(timestampMappingsFunc func(TimestampMapp
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SegmentTimestamps type")
 		}
 		return unknownFunc(u.typ)
 	case "timestampMappings":
@@ -896,7 +896,7 @@ func (u *SegmentTimestamps) AcceptFuncs(timestampMappingsFunc func(TimestampMapp
 	}
 }
 
-func (u *SegmentTimestamps) TimestampMappingsNoopSuccess(TimestampMappings) error {
+func (u *SegmentTimestamps) TimestampMappingsNoopSuccess(_ TimestampMappings) error {
 	return nil
 }
 
@@ -1048,7 +1048,7 @@ func (u *UpdateIngestStatus) AcceptFuncs(successFunc func(SuccessIngestStatus) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UpdateIngestStatus type")
 		}
 		return unknownFunc(u.typ)
 	case "success":
@@ -1069,15 +1069,15 @@ func (u *UpdateIngestStatus) AcceptFuncs(successFunc func(SuccessIngestStatus) e
 	}
 }
 
-func (u *UpdateIngestStatus) SuccessNoopSuccess(SuccessIngestStatus) error {
+func (u *UpdateIngestStatus) SuccessNoopSuccess(_ SuccessIngestStatus) error {
 	return nil
 }
 
-func (u *UpdateIngestStatus) ErrorNoopSuccess(ErrorIngestStatus) error {
+func (u *UpdateIngestStatus) ErrorNoopSuccess(_ ErrorIngestStatus) error {
 	return nil
 }
 
-func (u *UpdateIngestStatus) InProgressNoopSuccess(api.Empty) error {
+func (u *UpdateIngestStatus) InProgressNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
@@ -1251,7 +1251,7 @@ func (u *VideoChannelSeries) AcceptFuncs(dataSourceFunc func(VideoDataSourceChan
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VideoChannelSeries type")
 		}
 		return unknownFunc(u.typ)
 	case "dataSource":
@@ -1267,11 +1267,11 @@ func (u *VideoChannelSeries) AcceptFuncs(dataSourceFunc func(VideoDataSourceChan
 	}
 }
 
-func (u *VideoChannelSeries) DataSourceNoopSuccess(VideoDataSourceChannel) error {
+func (u *VideoChannelSeries) DataSourceNoopSuccess(_ VideoDataSourceChannel) error {
 	return nil
 }
 
-func (u *VideoChannelSeries) AssetNoopSuccess(VideoAssetChannel) error {
+func (u *VideoChannelSeries) AssetNoopSuccess(_ VideoAssetChannel) error {
 	return nil
 }
 
@@ -1439,7 +1439,7 @@ func (u *VideoFileIngestStatus) AcceptFuncs(successFunc func(SuccessIngestStatus
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VideoFileIngestStatus type")
 		}
 		return unknownFunc(u.typ)
 	case "success":
@@ -1460,15 +1460,15 @@ func (u *VideoFileIngestStatus) AcceptFuncs(successFunc func(SuccessIngestStatus
 	}
 }
 
-func (u *VideoFileIngestStatus) SuccessNoopSuccess(SuccessIngestStatus) error {
+func (u *VideoFileIngestStatus) SuccessNoopSuccess(_ SuccessIngestStatus) error {
 	return nil
 }
 
-func (u *VideoFileIngestStatus) ErrorNoopSuccess(IngestError) error {
+func (u *VideoFileIngestStatus) ErrorNoopSuccess(_ IngestError) error {
 	return nil
 }
 
-func (u *VideoFileIngestStatus) InProgressNoopSuccess(api.Empty) error {
+func (u *VideoFileIngestStatus) InProgressNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
@@ -1658,7 +1658,7 @@ func (u *VideoFileTimestampManifest) AcceptFuncs(mcapFunc func(McapTimestampMani
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VideoFileTimestampManifest type")
 		}
 		return unknownFunc(u.typ)
 	case "mcap":
@@ -1679,15 +1679,15 @@ func (u *VideoFileTimestampManifest) AcceptFuncs(mcapFunc func(McapTimestampMani
 	}
 }
 
-func (u *VideoFileTimestampManifest) McapNoopSuccess(McapTimestampManifest) error {
+func (u *VideoFileTimestampManifest) McapNoopSuccess(_ McapTimestampManifest) error {
 	return nil
 }
 
-func (u *VideoFileTimestampManifest) S3pathNoopSuccess(api.S3Path) error {
+func (u *VideoFileTimestampManifest) S3pathNoopSuccess(_ api.S3Path) error {
 	return nil
 }
 
-func (u *VideoFileTimestampManifest) NoManifestNoopSuccess(NoTimestampManifest) error {
+func (u *VideoFileTimestampManifest) NoManifestNoopSuccess(_ NoTimestampManifest) error {
 	return nil
 }
 
@@ -1871,7 +1871,7 @@ func (u *VideoIngestStatus) AcceptFuncs(readyFunc func(api.Empty) error, inProgr
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VideoIngestStatus type")
 		}
 		return unknownFunc(u.typ)
 	case "ready":
@@ -1892,15 +1892,15 @@ func (u *VideoIngestStatus) AcceptFuncs(readyFunc func(api.Empty) error, inProgr
 	}
 }
 
-func (u *VideoIngestStatus) ReadyNoopSuccess(api.Empty) error {
+func (u *VideoIngestStatus) ReadyNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
-func (u *VideoIngestStatus) InProgressNoopSuccess(api.Empty) error {
+func (u *VideoIngestStatus) InProgressNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
-func (u *VideoIngestStatus) ErrorNoopSuccess(api.Empty) error {
+func (u *VideoIngestStatus) ErrorNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
@@ -2084,7 +2084,7 @@ func (u *VideoTimestampManifest) AcceptFuncs(mcapFunc func(McapTimestampManifest
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VideoTimestampManifest type")
 		}
 		return unknownFunc(u.typ)
 	case "mcap":
@@ -2105,15 +2105,15 @@ func (u *VideoTimestampManifest) AcceptFuncs(mcapFunc func(McapTimestampManifest
 	}
 }
 
-func (u *VideoTimestampManifest) McapNoopSuccess(McapTimestampManifest) error {
+func (u *VideoTimestampManifest) McapNoopSuccess(_ McapTimestampManifest) error {
 	return nil
 }
 
-func (u *VideoTimestampManifest) S3pathsNoopSuccess([]api.S3Path) error {
+func (u *VideoTimestampManifest) S3pathsNoopSuccess(_ []api.S3Path) error {
 	return nil
 }
 
-func (u *VideoTimestampManifest) NoManifestNoopSuccess(NoTimestampManifest) error {
+func (u *VideoTimestampManifest) NoManifestNoopSuccess(_ NoTimestampManifest) error {
 	return nil
 }
 

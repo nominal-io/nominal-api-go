@@ -137,21 +137,19 @@ func NewDataReviewServiceClient(client httpclient.Client) DataReviewServiceClien
 }
 
 func (c *dataReviewServiceClient) BatchInitiate(ctx context.Context, authHeader bearertoken.Token, requestArg BatchInitiateDataReviewRequest) (BatchInitiateDataReviewResponse, error) {
-	var defaultReturnVal BatchInitiateDataReviewResponse
 	var returnVal *BatchInitiateDataReviewResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchInitiate"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/batch-initiate"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchInitiate failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchInitiateDataReviewResponse), werror.WrapWithContextParams(ctx, err, "batchInitiate failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchInitiate response cannot be nil")
+		return *new(BatchInitiateDataReviewResponse), werror.ErrorWithContextParams(ctx, "batchInitiate response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -159,71 +157,64 @@ func (c *dataReviewServiceClient) BatchInitiate(ctx context.Context, authHeader 
 func (c *dataReviewServiceClient) RerunFailedAutomaticChecks(ctx context.Context, authHeader bearertoken.Token, requestArg RerunFailedAutomaticChecksRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("RerunFailedAutomaticChecks"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/rerun-failed-automatic-checks"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "rerunFailedAutomaticChecks failed")
 	}
 	return nil
 }
 
 func (c *dataReviewServiceClient) FindDataReviews(ctx context.Context, authHeader bearertoken.Token, requestArg FindDataReviewsRequest) (DataReviewPage, error) {
-	var defaultReturnVal DataReviewPage
 	var returnVal *DataReviewPage
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("FindDataReviews"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/search"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "findDataReviews failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(DataReviewPage), werror.WrapWithContextParams(ctx, err, "findDataReviews failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "findDataReviews response cannot be nil")
+		return *new(DataReviewPage), werror.ErrorWithContextParams(ctx, "findDataReviews response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataReviewServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, dataReviewRidArg api.DataReviewRid) (DataReview, error) {
-	var defaultReturnVal DataReview
 	var returnVal *DataReview
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/%s", url.PathEscape(fmt.Sprint(dataReviewRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "get failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(DataReview), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(DataReview), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataReviewServiceClient) GetCheckAlert(ctx context.Context, authHeader bearertoken.Token, checkAlertRidArg api.CheckAlertRid) (CheckAlert, error) {
-	var defaultReturnVal CheckAlert
 	var returnVal *CheckAlert
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCheckAlert"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/check-alerts/%s", url.PathEscape(fmt.Sprint(checkAlertRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getCheckAlert failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(CheckAlert), werror.WrapWithContextParams(ctx, err, "getCheckAlert failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getCheckAlert response cannot be nil")
+		return *new(CheckAlert), werror.ErrorWithContextParams(ctx, "getCheckAlert response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -232,12 +223,11 @@ func (c *dataReviewServiceClient) GetCheckAlertsForDataReview(ctx context.Contex
 	var returnVal []CheckAlert
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCheckAlertsForDataReview"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/%s/check-alerts", url.PathEscape(fmt.Sprint(dataReviewRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getCheckAlertsForDataReview failed")
 	}
 	if returnVal == nil {
@@ -247,60 +237,54 @@ func (c *dataReviewServiceClient) GetCheckAlertsForDataReview(ctx context.Contex
 }
 
 func (c *dataReviewServiceClient) GetCheckAlertsHistogram(ctx context.Context, authHeader bearertoken.Token, requestArg CheckAlertsHistogramRequest) (CheckAlertsHistogramResponse, error) {
-	var defaultReturnVal CheckAlertsHistogramResponse
 	var returnVal *CheckAlertsHistogramResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCheckAlertsHistogram"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/check-alerts/histogram"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getCheckAlertsHistogram failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(CheckAlertsHistogramResponse), werror.WrapWithContextParams(ctx, err, "getCheckAlertsHistogram failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getCheckAlertsHistogram response cannot be nil")
+		return *new(CheckAlertsHistogramResponse), werror.ErrorWithContextParams(ctx, "getCheckAlertsHistogram response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataReviewServiceClient) SearchCheckAlerts(ctx context.Context, authHeader bearertoken.Token, requestArg SearchCheckAlertsRequest) (SearchCheckAlertsResponse, error) {
-	var defaultReturnVal SearchCheckAlertsResponse
 	var returnVal *SearchCheckAlertsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchCheckAlerts"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/check-alerts"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchCheckAlerts failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchCheckAlertsResponse), werror.WrapWithContextParams(ctx, err, "searchCheckAlerts failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchCheckAlerts response cannot be nil")
+		return *new(SearchCheckAlertsResponse), werror.ErrorWithContextParams(ctx, "searchCheckAlerts response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataReviewServiceClient) GetCheckAlertActionLog(ctx context.Context, authHeader bearertoken.Token, checkAlertRidArg api.CheckAlertRid) (CheckAlertActionLog, error) {
-	var defaultReturnVal CheckAlertActionLog
 	var returnVal *CheckAlertActionLog
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCheckAlertActionLog"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/check-alerts/%s/action-log", url.PathEscape(fmt.Sprint(checkAlertRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getCheckAlertActionLog failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(CheckAlertActionLog), werror.WrapWithContextParams(ctx, err, "getCheckAlertActionLog failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getCheckAlertActionLog response cannot be nil")
+		return *new(CheckAlertActionLog), werror.ErrorWithContextParams(ctx, "getCheckAlertActionLog response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -309,13 +293,12 @@ func (c *dataReviewServiceClient) GetCheckAlertCountsForNotebooks(ctx context.Co
 	var returnVal map[api.NotebookRid]int
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCheckAlertCountsForNotebooks"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/get-check-alert-counts-for-notebooks"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getCheckAlertCountsForNotebooks failed")
 	}
 	if returnVal == nil {
@@ -328,13 +311,12 @@ func (c *dataReviewServiceClient) GetCheckAlertStatusForNotebooks(ctx context.Co
 	var returnVal map[api.NotebookRid]*CheckAlertStatus
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCheckAlertStatusForNotebooks"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/get-check-alert-status-for-notebooks"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getCheckAlertStatusForNotebooks failed")
 	}
 	if returnVal == nil {
@@ -344,80 +326,72 @@ func (c *dataReviewServiceClient) GetCheckAlertStatusForNotebooks(ctx context.Co
 }
 
 func (c *dataReviewServiceClient) PerformCheckAlertAction(ctx context.Context, authHeader bearertoken.Token, checkAlertRidArg api.CheckAlertRid, requestArg CheckAlertAction) (CheckAlert, error) {
-	var defaultReturnVal CheckAlert
 	var returnVal *CheckAlert
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("PerformCheckAlertAction"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/check-alerts/%s", url.PathEscape(fmt.Sprint(checkAlertRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "performCheckAlertAction failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(CheckAlert), werror.WrapWithContextParams(ctx, err, "performCheckAlertAction failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "performCheckAlertAction response cannot be nil")
+		return *new(CheckAlert), werror.ErrorWithContextParams(ctx, "performCheckAlertAction response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataReviewServiceClient) BatchPerformCheckAlertAction(ctx context.Context, authHeader bearertoken.Token, requestArg BatchCheckAlertActionRequest) (BatchCheckAlertActionResponse, error) {
-	var defaultReturnVal BatchCheckAlertActionResponse
 	var returnVal *BatchCheckAlertActionResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchPerformCheckAlertAction"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/check-alerts/batch-perform-action"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchPerformCheckAlertAction failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchCheckAlertActionResponse), werror.WrapWithContextParams(ctx, err, "batchPerformCheckAlertAction failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchPerformCheckAlertAction response cannot be nil")
+		return *new(BatchCheckAlertActionResponse), werror.ErrorWithContextParams(ctx, "batchPerformCheckAlertAction response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataReviewServiceClient) BatchPerformAutomaticCheckEvaluationReviewAction(ctx context.Context, authHeader bearertoken.Token, requestArg BatchAutomaticCheckEvaluationActionRequest) (BatchAutomaticCheckEvaluationActionResponse, error) {
-	var defaultReturnVal BatchAutomaticCheckEvaluationActionResponse
 	var returnVal *BatchAutomaticCheckEvaluationActionResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchPerformAutomaticCheckEvaluationReviewAction"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/automatic-check-evaluation/batch-perform-action"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchPerformAutomaticCheckEvaluationReviewAction failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchAutomaticCheckEvaluationActionResponse), werror.WrapWithContextParams(ctx, err, "batchPerformAutomaticCheckEvaluationReviewAction failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchPerformAutomaticCheckEvaluationReviewAction response cannot be nil")
+		return *new(BatchAutomaticCheckEvaluationActionResponse), werror.ErrorWithContextParams(ctx, "batchPerformAutomaticCheckEvaluationReviewAction response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataReviewServiceClient) GetAutomaticCheckEvaluationActionLog(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AutomaticCheckEvaluationRid) (AutomaticCheckEvaluationActionLog, error) {
-	var defaultReturnVal AutomaticCheckEvaluationActionLog
 	var returnVal *AutomaticCheckEvaluationActionLog
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAutomaticCheckEvaluationActionLog"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/automatic-check-evaluation/%s/action-log", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAutomaticCheckEvaluationActionLog failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(AutomaticCheckEvaluationActionLog), werror.WrapWithContextParams(ctx, err, "getAutomaticCheckEvaluationActionLog failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAutomaticCheckEvaluationActionLog response cannot be nil")
+		return *new(AutomaticCheckEvaluationActionLog), werror.ErrorWithContextParams(ctx, "getAutomaticCheckEvaluationActionLog response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -425,51 +399,46 @@ func (c *dataReviewServiceClient) GetAutomaticCheckEvaluationActionLog(ctx conte
 func (c *dataReviewServiceClient) BatchPerformManualCheckAlertAction(ctx context.Context, authHeader bearertoken.Token, requestArg BatchManualCheckEvaluationActionRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchPerformManualCheckAlertAction"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/manual-check-evaluation/batch-perform-action"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "batchPerformManualCheckAlertAction failed")
 	}
 	return nil
 }
 
 func (c *dataReviewServiceClient) GetManualCheckEvaluationActionLog(ctx context.Context, authHeader bearertoken.Token, ridArg ManualCheckEvaluationRid) (ManualCheckEvaluationActionLog, error) {
-	var defaultReturnVal ManualCheckEvaluationActionLog
 	var returnVal *ManualCheckEvaluationActionLog
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetManualCheckEvaluationActionLog"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/manual-check-evaluation/%s/action-log", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getManualCheckEvaluationActionLog failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(ManualCheckEvaluationActionLog), werror.WrapWithContextParams(ctx, err, "getManualCheckEvaluationActionLog failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getManualCheckEvaluationActionLog response cannot be nil")
+		return *new(ManualCheckEvaluationActionLog), werror.ErrorWithContextParams(ctx, "getManualCheckEvaluationActionLog response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataReviewServiceClient) ArchiveDataReview(ctx context.Context, authHeader bearertoken.Token, dataReviewRidArg api.DataReviewRid) (bool, error) {
-	var defaultReturnVal bool
 	var returnVal *bool
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveDataReview"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/%s/archive", url.PathEscape(fmt.Sprint(dataReviewRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "archiveDataReview failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(bool), werror.WrapWithContextParams(ctx, err, "archiveDataReview failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "archiveDataReview response cannot be nil")
+		return *new(bool), werror.ErrorWithContextParams(ctx, "archiveDataReview response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -477,12 +446,11 @@ func (c *dataReviewServiceClient) ArchiveDataReview(ctx context.Context, authHea
 func (c *dataReviewServiceClient) BatchArchiveDataReview(ctx context.Context, authHeader bearertoken.Token, ridsArg []api.DataReviewRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchArchiveDataReview"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/batch-archive"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "batchArchiveDataReview failed")
 	}
 	return nil
@@ -491,32 +459,29 @@ func (c *dataReviewServiceClient) BatchArchiveDataReview(ctx context.Context, au
 func (c *dataReviewServiceClient) UnarchiveDataReview(ctx context.Context, authHeader bearertoken.Token, dataReviewRidArg api.DataReviewRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveDataReview"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/unarchive/%s", url.PathEscape(fmt.Sprint(dataReviewRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchiveDataReview failed")
 	}
 	return nil
 }
 
 func (c *dataReviewServiceClient) GetDataReviewCheckMetrics(ctx context.Context, authHeader bearertoken.Token, requestArg GetDataReviewCheckMetricsRequest) (GetDataReviewCheckMetricsResponse, error) {
-	var defaultReturnVal GetDataReviewCheckMetricsResponse
 	var returnVal *GetDataReviewCheckMetricsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDataReviewCheckMetrics"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/data-review/data-review-check-metrics"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getDataReviewCheckMetrics failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GetDataReviewCheckMetricsResponse), werror.WrapWithContextParams(ctx, err, "getDataReviewCheckMetrics failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getDataReviewCheckMetrics response cannot be nil")
+		return *new(GetDataReviewCheckMetricsResponse), werror.ErrorWithContextParams(ctx, "getDataReviewCheckMetrics response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -737,10 +702,9 @@ type dataReviewServiceClientWithTokenProvider struct {
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) BatchInitiate(ctx context.Context, requestArg BatchInitiateDataReviewRequest) (BatchInitiateDataReviewResponse, error) {
-	var defaultReturnVal BatchInitiateDataReviewResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchInitiateDataReviewResponse), err
 	}
 	return c.client.BatchInitiate(ctx, bearertoken.Token(token), requestArg)
 }
@@ -754,118 +718,105 @@ func (c *dataReviewServiceClientWithTokenProvider) RerunFailedAutomaticChecks(ct
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) FindDataReviews(ctx context.Context, requestArg FindDataReviewsRequest) (DataReviewPage, error) {
-	var defaultReturnVal DataReviewPage
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DataReviewPage), err
 	}
 	return c.client.FindDataReviews(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) Get(ctx context.Context, dataReviewRidArg api.DataReviewRid) (DataReview, error) {
-	var defaultReturnVal DataReview
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DataReview), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), dataReviewRidArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) GetCheckAlert(ctx context.Context, checkAlertRidArg api.CheckAlertRid) (CheckAlert, error) {
-	var defaultReturnVal CheckAlert
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(CheckAlert), err
 	}
 	return c.client.GetCheckAlert(ctx, bearertoken.Token(token), checkAlertRidArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) GetCheckAlertsForDataReview(ctx context.Context, dataReviewRidArg api.DataReviewRid) ([]CheckAlert, error) {
-	var defaultReturnVal []CheckAlert
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetCheckAlertsForDataReview(ctx, bearertoken.Token(token), dataReviewRidArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) GetCheckAlertsHistogram(ctx context.Context, requestArg CheckAlertsHistogramRequest) (CheckAlertsHistogramResponse, error) {
-	var defaultReturnVal CheckAlertsHistogramResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(CheckAlertsHistogramResponse), err
 	}
 	return c.client.GetCheckAlertsHistogram(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) SearchCheckAlerts(ctx context.Context, requestArg SearchCheckAlertsRequest) (SearchCheckAlertsResponse, error) {
-	var defaultReturnVal SearchCheckAlertsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(SearchCheckAlertsResponse), err
 	}
 	return c.client.SearchCheckAlerts(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) GetCheckAlertActionLog(ctx context.Context, checkAlertRidArg api.CheckAlertRid) (CheckAlertActionLog, error) {
-	var defaultReturnVal CheckAlertActionLog
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(CheckAlertActionLog), err
 	}
 	return c.client.GetCheckAlertActionLog(ctx, bearertoken.Token(token), checkAlertRidArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) GetCheckAlertCountsForNotebooks(ctx context.Context, ridsArg []api.NotebookRid) (map[api.NotebookRid]int, error) {
-	var defaultReturnVal map[api.NotebookRid]int
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetCheckAlertCountsForNotebooks(ctx, bearertoken.Token(token), ridsArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) GetCheckAlertStatusForNotebooks(ctx context.Context, ridsArg []api.NotebookRid) (map[api.NotebookRid]*CheckAlertStatus, error) {
-	var defaultReturnVal map[api.NotebookRid]*CheckAlertStatus
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetCheckAlertStatusForNotebooks(ctx, bearertoken.Token(token), ridsArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) PerformCheckAlertAction(ctx context.Context, checkAlertRidArg api.CheckAlertRid, requestArg CheckAlertAction) (CheckAlert, error) {
-	var defaultReturnVal CheckAlert
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(CheckAlert), err
 	}
 	return c.client.PerformCheckAlertAction(ctx, bearertoken.Token(token), checkAlertRidArg, requestArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) BatchPerformCheckAlertAction(ctx context.Context, requestArg BatchCheckAlertActionRequest) (BatchCheckAlertActionResponse, error) {
-	var defaultReturnVal BatchCheckAlertActionResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchCheckAlertActionResponse), err
 	}
 	return c.client.BatchPerformCheckAlertAction(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) BatchPerformAutomaticCheckEvaluationReviewAction(ctx context.Context, requestArg BatchAutomaticCheckEvaluationActionRequest) (BatchAutomaticCheckEvaluationActionResponse, error) {
-	var defaultReturnVal BatchAutomaticCheckEvaluationActionResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchAutomaticCheckEvaluationActionResponse), err
 	}
 	return c.client.BatchPerformAutomaticCheckEvaluationReviewAction(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) GetAutomaticCheckEvaluationActionLog(ctx context.Context, ridArg rids.AutomaticCheckEvaluationRid) (AutomaticCheckEvaluationActionLog, error) {
-	var defaultReturnVal AutomaticCheckEvaluationActionLog
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(AutomaticCheckEvaluationActionLog), err
 	}
 	return c.client.GetAutomaticCheckEvaluationActionLog(ctx, bearertoken.Token(token), ridArg)
 }
@@ -879,19 +830,17 @@ func (c *dataReviewServiceClientWithTokenProvider) BatchPerformManualCheckAlertA
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) GetManualCheckEvaluationActionLog(ctx context.Context, ridArg ManualCheckEvaluationRid) (ManualCheckEvaluationActionLog, error) {
-	var defaultReturnVal ManualCheckEvaluationActionLog
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ManualCheckEvaluationActionLog), err
 	}
 	return c.client.GetManualCheckEvaluationActionLog(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) ArchiveDataReview(ctx context.Context, dataReviewRidArg api.DataReviewRid) (bool, error) {
-	var defaultReturnVal bool
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(bool), err
 	}
 	return c.client.ArchiveDataReview(ctx, bearertoken.Token(token), dataReviewRidArg)
 }
@@ -913,10 +862,9 @@ func (c *dataReviewServiceClientWithTokenProvider) UnarchiveDataReview(ctx conte
 }
 
 func (c *dataReviewServiceClientWithTokenProvider) GetDataReviewCheckMetrics(ctx context.Context, requestArg GetDataReviewCheckMetricsRequest) (GetDataReviewCheckMetricsResponse, error) {
-	var defaultReturnVal GetDataReviewCheckMetricsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(GetDataReviewCheckMetricsResponse), err
 	}
 	return c.client.GetDataReviewCheckMetrics(ctx, bearertoken.Token(token), requestArg)
 }

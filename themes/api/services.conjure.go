@@ -40,7 +40,6 @@ func (c *themesServiceClient) ListChartThemes(ctx context.Context, authHeader be
 	var returnVal []ChartTheme
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListChartThemes"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/themes/v1/chart-themes"))
 	queryParams := make(url.Values)
@@ -50,7 +49,7 @@ func (c *themesServiceClient) ListChartThemes(ctx context.Context, authHeader be
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "listChartThemes failed")
 	}
 	if returnVal == nil {
@@ -60,60 +59,54 @@ func (c *themesServiceClient) ListChartThemes(ctx context.Context, authHeader be
 }
 
 func (c *themesServiceClient) GetChartTheme(ctx context.Context, authHeader bearertoken.Token, chartThemeRidArg ChartThemeRid) (ChartTheme, error) {
-	var defaultReturnVal ChartTheme
 	var returnVal *ChartTheme
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetChartTheme"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/themes/v1/chart-themes/%s", url.PathEscape(fmt.Sprint(chartThemeRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getChartTheme failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(ChartTheme), werror.WrapWithContextParams(ctx, err, "getChartTheme failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getChartTheme response cannot be nil")
+		return *new(ChartTheme), werror.ErrorWithContextParams(ctx, "getChartTheme response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *themesServiceClient) CreateChartTheme(ctx context.Context, authHeader bearertoken.Token, requestArg CreateChartThemeRequest) (ChartTheme, error) {
-	var defaultReturnVal ChartTheme
 	var returnVal *ChartTheme
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateChartTheme"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/themes/v1/chart-themes"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createChartTheme failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(ChartTheme), werror.WrapWithContextParams(ctx, err, "createChartTheme failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createChartTheme response cannot be nil")
+		return *new(ChartTheme), werror.ErrorWithContextParams(ctx, "createChartTheme response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *themesServiceClient) UpdateChartTheme(ctx context.Context, authHeader bearertoken.Token, chartThemeRidArg ChartThemeRid, requestArg UpdateChartThemeRequest) (ChartTheme, error) {
-	var defaultReturnVal ChartTheme
 	var returnVal *ChartTheme
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateChartTheme"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/themes/v1/chart-themes/%s", url.PathEscape(fmt.Sprint(chartThemeRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateChartTheme failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(ChartTheme), werror.WrapWithContextParams(ctx, err, "updateChartTheme failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateChartTheme response cannot be nil")
+		return *new(ChartTheme), werror.ErrorWithContextParams(ctx, "updateChartTheme response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -121,11 +114,10 @@ func (c *themesServiceClient) UpdateChartTheme(ctx context.Context, authHeader b
 func (c *themesServiceClient) DeleteChartTheme(ctx context.Context, authHeader bearertoken.Token, chartThemeRidArg ChartThemeRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteChartTheme"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/themes/v1/chart-themes/%s", url.PathEscape(fmt.Sprint(chartThemeRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "deleteChartTheme failed")
 	}
 	return nil
@@ -184,37 +176,33 @@ type themesServiceClientWithTokenProvider struct {
 }
 
 func (c *themesServiceClientWithTokenProvider) ListChartThemes(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]ChartTheme, error) {
-	var defaultReturnVal []ChartTheme
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.ListChartThemes(ctx, bearertoken.Token(token), workspacesArg)
 }
 
 func (c *themesServiceClientWithTokenProvider) GetChartTheme(ctx context.Context, chartThemeRidArg ChartThemeRid) (ChartTheme, error) {
-	var defaultReturnVal ChartTheme
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ChartTheme), err
 	}
 	return c.client.GetChartTheme(ctx, bearertoken.Token(token), chartThemeRidArg)
 }
 
 func (c *themesServiceClientWithTokenProvider) CreateChartTheme(ctx context.Context, requestArg CreateChartThemeRequest) (ChartTheme, error) {
-	var defaultReturnVal ChartTheme
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ChartTheme), err
 	}
 	return c.client.CreateChartTheme(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *themesServiceClientWithTokenProvider) UpdateChartTheme(ctx context.Context, chartThemeRidArg ChartThemeRid, requestArg UpdateChartThemeRequest) (ChartTheme, error) {
-	var defaultReturnVal ChartTheme
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ChartTheme), err
 	}
 	return c.client.UpdateChartTheme(ctx, bearertoken.Token(token), chartThemeRidArg, requestArg)
 }

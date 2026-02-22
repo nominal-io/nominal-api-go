@@ -98,7 +98,7 @@ func (o *AvroStreamOpts) UnmarshalYAML(unmarshal func(interface{}) error) error 
 
 type ChannelConfig struct {
 	// If set, will construct a prefix tree for channels of the dataset using the given delimiter.
-	PrefixTreeDelimiter *string `conjure-docs:"If set, will construct a prefix tree for channels of the dataset using the given delimiter." json:"prefixTreeDelimiter,omitempty"`
+	PrefixTreeDelimiter *string `json:"prefixTreeDelimiter,omitempty"`
 }
 
 func (o ChannelConfig) MarshalYAML() (interface{}, error) {
@@ -140,32 +140,32 @@ func (o *CompleteMultipartUploadResponse) UnmarshalYAML(unmarshal func(interface
 // Represents a containerized extractor that processes input files using a container.
 type ContainerizedExtractor struct {
 	// Unique resource identifier for the extractor.
-	Rid ContainerizedExtractorRid `conjure-docs:"Unique resource identifier for the extractor." json:"rid"`
+	Rid ContainerizedExtractorRid `json:"rid"`
 	// The name of the extractor as defined by the user.
-	Name string `conjure-docs:"The name of the extractor as defined by the user." json:"name"`
+	Name string `json:"name"`
 	// Optional description of the extractor.
-	Description *string `conjure-docs:"Optional description of the extractor." json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// Container image used to run the extractor.
-	Image DockerImageSource `conjure-docs:"Container image used to run the extractor." json:"image"`
+	Image DockerImageSource `json:"image"`
 	// The input files that this extractor requires, mapped to environment variables that store the path to the file.
-	Inputs []FileExtractionInput `conjure-docs:"The input files that this extractor requires, mapped to environment variables that store the path to the file." json:"inputs"`
+	Inputs []FileExtractionInput `json:"inputs"`
 	// Describes the parameters of the extractor.
-	Parameters []FileExtractionParameter `conjure-docs:"Describes the parameters of the extractor." json:"parameters"`
+	Parameters []FileExtractionParameter `json:"parameters"`
 	// Additional properties associated with this extractor.
-	Properties map[api.PropertyName]api.PropertyValue `conjure-docs:"Additional properties associated with this extractor." json:"properties"`
+	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
 	// Set of labels applied to this extractor.
-	Labels []api.Label `conjure-docs:"Set of labels applied to this extractor." json:"labels"`
+	Labels []api.Label `json:"labels"`
 	// Timestamp when this extractor was created.
-	CreatedAt datetime.DateTime `conjure-docs:"Timestamp when this extractor was created." json:"createdAt"`
+	CreatedAt datetime.DateTime `json:"createdAt"`
 	// Whether this extractor is archived.
-	IsArchived bool `conjure-docs:"Whether this extractor is archived." json:"isArchived"`
+	IsArchived bool `json:"isArchived"`
 	/*
 	   Metadata about the intermediate parquet this extractor will produce.
 	   If not set, timestamp metadata must be provided at ingest time.
 	*/
-	TimestampMetadata *TimestampMetadata `conjure-docs:"Metadata about the intermediate parquet this extractor will produce.\nIf not set, timestamp metadata must be provided at ingest time." json:"timestampMetadata,omitempty"`
+	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
 	// The format of the output file. Currently only "parquet", "csv", "parquet.tar" are supported
-	OutputFileFormat FileOutputFormat `conjure-docs:"The format of the output file. Currently only \"parquet\", \"csv\", \"parquet.tar\" are supported" json:"outputFileFormat"`
+	OutputFileFormat FileOutputFormat `json:"outputFileFormat"`
 }
 
 func (o ContainerizedExtractor) MarshalJSON() ([]byte, error) {
@@ -176,7 +176,7 @@ func (o ContainerizedExtractor) MarshalJSON() ([]byte, error) {
 		o.Parameters = make([]FileExtractionParameter, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -198,7 +198,7 @@ func (o *ContainerizedExtractor) UnmarshalJSON(data []byte) error {
 		rawContainerizedExtractor.Parameters = make([]FileExtractionParameter, 0)
 	}
 	if rawContainerizedExtractor.Properties == nil {
-		rawContainerizedExtractor.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawContainerizedExtractor.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawContainerizedExtractor.Labels == nil {
 		rawContainerizedExtractor.Labels = make([]api.Label, 0)
@@ -231,18 +231,18 @@ type ContainerizedOpts struct {
 	Tag               *string                              `json:"tag,omitempty"`
 	Target            DatasetIngestTarget                  `json:"target"`
 	// Specifies a tag set to apply to all data in the file.
-	AdditionalFileTags map[api.TagName]api.TagValue `conjure-docs:"Specifies a tag set to apply to all data in the file." json:"additionalFileTags"`
+	AdditionalFileTags map[api.TagName]api.TagValue `json:"additionalFileTags"`
 }
 
 func (o ContainerizedOpts) MarshalJSON() ([]byte, error) {
 	if o.Sources == nil {
-		o.Sources = make(map[EnvironmentVariable]IngestSource, 0)
+		o.Sources = make(map[EnvironmentVariable]IngestSource)
 	}
 	if o.Arguments == nil {
-		o.Arguments = make(map[EnvironmentVariable]string, 0)
+		o.Arguments = make(map[EnvironmentVariable]string)
 	}
 	if o.AdditionalFileTags == nil {
-		o.AdditionalFileTags = make(map[api.TagName]api.TagValue, 0)
+		o.AdditionalFileTags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpContainerizedOpts ContainerizedOpts
 	return safejson.Marshal(_tmpContainerizedOpts(o))
@@ -255,13 +255,13 @@ func (o *ContainerizedOpts) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawContainerizedOpts.Sources == nil {
-		rawContainerizedOpts.Sources = make(map[EnvironmentVariable]IngestSource, 0)
+		rawContainerizedOpts.Sources = make(map[EnvironmentVariable]IngestSource)
 	}
 	if rawContainerizedOpts.Arguments == nil {
-		rawContainerizedOpts.Arguments = make(map[EnvironmentVariable]string, 0)
+		rawContainerizedOpts.Arguments = make(map[EnvironmentVariable]string)
 	}
 	if rawContainerizedOpts.AdditionalFileTags == nil {
-		rawContainerizedOpts.AdditionalFileTags = make(map[api.TagName]api.TagValue, 0)
+		rawContainerizedOpts.AdditionalFileTags = make(map[api.TagName]api.TagValue)
 	}
 	*o = ContainerizedOpts(rawContainerizedOpts)
 	return nil
@@ -314,15 +314,15 @@ type CsvOpts struct {
 	// Deprecated: Deprecated in favor of tagColumns.
 	TagKeysFromColumns *[]api.TagName `json:"tagKeysFromColumns,omitempty"`
 	// A map of tag names to column names to derive the tag values from.
-	TagColumns *map[api.TagName]api.ColumnName `conjure-docs:"A map of tag names to column names to derive the tag values from." json:"tagColumns,omitempty"`
+	TagColumns *map[api.TagName]api.ColumnName `json:"tagColumns,omitempty"`
 	// Specifies a tag set to apply to all data in the file.
-	AdditionalFileTags *map[api.TagName]api.TagValue `conjure-docs:"Specifies a tag set to apply to all data in the file." json:"additionalFileTags,omitempty"`
+	AdditionalFileTags *map[api.TagName]api.TagValue `json:"additionalFileTags,omitempty"`
 	/*
 	   A set of column names to exclude from ingestion. These columns will not be
 	   ingested as channels. Useful for excluding columns that contain unsupported
 	   data types like multidimensional arrays.
 	*/
-	ExcludeColumns []api.ColumnName `conjure-docs:"A set of column names to exclude from ingestion. These columns will not be\ningested as channels. Useful for excluding columns that contain unsupported\ndata types like multidimensional arrays." json:"excludeColumns"`
+	ExcludeColumns []api.ColumnName `json:"excludeColumns"`
 }
 
 func (o CsvOpts) MarshalJSON() ([]byte, error) {
@@ -364,11 +364,11 @@ func (o *CsvOpts) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type CustomTimestamp struct {
 	// The format string should be in the format of the `DateTimeFormatter` class in Java.
-	Format string `conjure-docs:"The format string should be in the format of the \"DateTimeFormatter\" class in Java." json:"format"`
+	Format string `json:"format"`
 	// Default year is accepted as an optional field for cases like IRIG time format and will be overridden by year in time format.
-	DefaultYear *int `conjure-docs:"Default year is accepted as an optional field for cases like IRIG time format and will be overridden by year in time format." json:"defaultYear,omitempty"`
+	DefaultYear *int `json:"defaultYear,omitempty"`
 	// Default day of year is accepted as an optional field for cases like IRIG time format and will be overridden by day of year in time format.
-	DefaultDayOfYear *int `conjure-docs:"Default day of year is accepted as an optional field for cases like IRIG time format and will be overridden by day of year in time format." json:"defaultDayOfYear,omitempty"`
+	DefaultDayOfYear *int `json:"defaultDayOfYear,omitempty"`
 }
 
 func (o CustomTimestamp) MarshalYAML() (interface{}, error) {
@@ -391,7 +391,7 @@ type DataflashOpts struct {
 	Source IngestSource        `json:"source"`
 	Target DatasetIngestTarget `json:"target"`
 	// Specifies a tag set to apply to all data in the file.
-	AdditionalFileTags *map[api.TagName]api.TagValue `conjure-docs:"Specifies a tag set to apply to all data in the file." json:"additionalFileTags,omitempty"`
+	AdditionalFileTags *map[api.TagName]api.TagValue `json:"additionalFileTags,omitempty"`
 }
 
 func (o DataflashOpts) MarshalYAML() (interface{}, error) {
@@ -440,7 +440,7 @@ type DeprecatedNewCsv struct {
 
 func (o DeprecatedNewCsv) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[string]string, 0)
+		o.Properties = make(map[string]string)
 	}
 	type _tmpDeprecatedNewCsv DeprecatedNewCsv
 	return safejson.Marshal(_tmpDeprecatedNewCsv(o))
@@ -453,7 +453,7 @@ func (o *DeprecatedNewCsv) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawDeprecatedNewCsv.Properties == nil {
-		rawDeprecatedNewCsv.Properties = make(map[string]string, 0)
+		rawDeprecatedNewCsv.Properties = make(map[string]string)
 	}
 	*o = DeprecatedNewCsv(rawDeprecatedNewCsv)
 	return nil
@@ -478,12 +478,12 @@ func (o *DeprecatedNewCsv) UnmarshalYAML(unmarshal func(interface{}) error) erro
 // Docker container image source definition.
 type DockerImageSource struct {
 	// The container registry where the image is hosted.
-	Registry string `conjure-docs:"The container registry where the image is hosted." json:"registry"`
+	Registry string `json:"registry"`
 	// The repository name of the image.
-	Repository string     `conjure-docs:"The repository name of the image." json:"repository"`
+	Repository string     `json:"repository"`
 	TagDetails TagDetails `json:"tagDetails"`
 	// Optional authentication for accessing private container registries.
-	Authentication Authentication `conjure-docs:"Optional authentication for accessing private container registries." json:"authentication"`
+	Authentication Authentication `json:"authentication"`
 	Command        *string        `json:"command,omitempty"`
 }
 
@@ -532,7 +532,7 @@ type ExistingDatasetIngestDestination struct {
 	   and set the end time to the file's end time.
 	   For runs with existing end times, it will only expand the bounds (earliest start time, latest end time).
 	*/
-	ExpandRunBounds *[]api1.RunRid `conjure-docs:"The ingest will keep track of the range of timestamps in the ingested data and update the included\nrun's time bounds.\nFor runs with no end time (uninitialized), it will always set the start time to the file's start time\nand set the end time to the file's end time.\nFor runs with existing end times, it will only expand the bounds (earliest start time, latest end time)." json:"expandRunBounds,omitempty"`
+	ExpandRunBounds *[]api1.RunRid `json:"expandRunBounds,omitempty"`
 }
 
 func (o ExistingDatasetIngestDestination) MarshalYAML() (interface{}, error) {
@@ -553,9 +553,9 @@ func (o *ExistingDatasetIngestDestination) UnmarshalYAML(unmarshal func(interfac
 
 type ExistingVideoIngestDestination struct {
 	// RID of the video to ingest the newly created video file to.
-	VideoRid rids.VideoRid `conjure-docs:"RID of the video to ingest the newly created video file to." json:"videoRid"`
+	VideoRid rids.VideoRid `json:"videoRid"`
 	// Metadata to associate with any created video file
-	VideoFileDetails *VideoFileIngestDetails `conjure-docs:"Metadata to associate with any created video file" json:"videoFileDetails,omitempty"`
+	VideoFileDetails *VideoFileIngestDetails `json:"videoFileDetails,omitempty"`
 }
 
 func (o ExistingVideoIngestDestination) MarshalYAML() (interface{}, error) {
@@ -577,15 +577,15 @@ func (o *ExistingVideoIngestDestination) UnmarshalYAML(unmarshal func(interface{
 // Defines an input file to be provided to the extractor.
 type FileExtractionInput struct {
 	// The environment variable that stores the path to the input file.
-	EnvironmentVariable EnvironmentVariable `conjure-docs:"The environment variable that stores the path to the input file." json:"environmentVariable"`
+	EnvironmentVariable EnvironmentVariable `json:"environmentVariable"`
 	// Name of the input file which users will be prompted with
-	Name string `conjure-docs:"Name of the input file which users will be prompted with" json:"name"`
+	Name string `json:"name"`
 	// Description of the input file which users will be prompted with
-	Description *string `conjure-docs:"Description of the input file which users will be prompted with" json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// Optionally filter files for file selection
-	FileFilters []FileFilter `conjure-docs:"Optionally filter files for file selection" json:"fileFilters"`
+	FileFilters []FileFilter `json:"fileFilters"`
 	// Whether the input file is required for the extractor to run.
-	Required *bool `conjure-docs:"Whether the input file is required for the extractor to run." json:"required,omitempty"`
+	Required *bool `json:"required,omitempty"`
 }
 
 func (o FileExtractionInput) MarshalJSON() ([]byte, error) {
@@ -628,13 +628,13 @@ func (o *FileExtractionInput) UnmarshalYAML(unmarshal func(interface{}) error) e
 // Defines an input parameter to be provided to the extractor.
 type FileExtractionParameter struct {
 	// The environment variable that stores the argument
-	EnvironmentVariable EnvironmentVariable `conjure-docs:"The environment variable that stores the argument" json:"environmentVariable"`
+	EnvironmentVariable EnvironmentVariable `json:"environmentVariable"`
 	// Name of the parameter which users will be prompted with
-	Name string `conjure-docs:"Name of the parameter which users will be prompted with" json:"name"`
+	Name string `json:"name"`
 	// Description of the parameter which users will be prompted with
-	Description *string `conjure-docs:"Description of the parameter which users will be prompted with" json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// Whether the parameter is required for the extractor to run.
-	Required *bool `conjure-docs:"Whether the parameter is required for the extractor to run." json:"required,omitempty"`
+	Required *bool `json:"required,omitempty"`
 }
 
 func (o FileExtractionParameter) MarshalYAML() (interface{}, error) {
@@ -808,13 +808,13 @@ type IngestMcapRequest struct {
 	   concatenated across all the files.
 	   Note: only a single files are currently supported, this field is mostly for forward compatibility.
 	*/
-	Sources       []IngestSource      `conjure-docs:"List of files in S3 to be ingested. These should be ordered by time, as data will be ingested and\nconcatenated across all the files.\nNote: only a single files are currently supported, this field is mostly for forward compatibility." json:"sources"`
+	Sources       []IngestSource      `json:"sources"`
 	ChannelConfig []McapChannelConfig `json:"channelConfig"`
 	/*
 	   Config to define which channels in the mcap should be ingested. The default is to ingest only
 	   channels with config, otherwise the mcap may not be supported.
 	*/
-	Channels    *McapChannels                          `conjure-docs:"Config to define which channels in the mcap should be ingested. The default is to ingest only\nchannels with config, otherwise the mcap may not be supported." json:"channels,omitempty"`
+	Channels    *McapChannels                          `json:"channels,omitempty"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
 	Labels      []api.Label                            `json:"labels"`
 	Title       *string                                `json:"title,omitempty"`
@@ -824,7 +824,7 @@ type IngestMcapRequest struct {
 	   will be created in the default workspace for the user's organization, if the default
 	   workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the dataset or video. If not provided, the dataset or video\nwill be created in the default workspace for the user's organization, if the default\nworkspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o IngestMcapRequest) MarshalJSON() ([]byte, error) {
@@ -835,7 +835,7 @@ func (o IngestMcapRequest) MarshalJSON() ([]byte, error) {
 		o.ChannelConfig = make([]McapChannelConfig, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -857,7 +857,7 @@ func (o *IngestMcapRequest) UnmarshalJSON(data []byte) error {
 		rawIngestMcapRequest.ChannelConfig = make([]McapChannelConfig, 0)
 	}
 	if rawIngestMcapRequest.Properties == nil {
-		rawIngestMcapRequest.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawIngestMcapRequest.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawIngestMcapRequest.Labels == nil {
 		rawIngestMcapRequest.Labels = make([]api.Label, 0)
@@ -932,22 +932,22 @@ type IngestMetadata struct {
 	   Older datasets may have unrecoverable timestamp metadata.
 	   If unrecoverable, reingestion will throw MissingMetadataForReingest if not provided in request.
 	*/
-	TimestampMetadata *TimestampMetadata `conjure-docs:"The timestamp metadata will be recovered from the dataset files if possible.\nOlder datasets may have unrecoverable timestamp metadata.\nIf unrecoverable, reingestion will throw MissingMetadataForReingest if not provided in request." json:"timestampMetadata,omitempty"`
+	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
 	/*
 	   Channel prefix to use when reingesting the dataset.
 	   Defaults to empty string. Not recoverable from prior ingests and must be provided in request if needed.
 	*/
-	ChannelPrefix *string `conjure-docs:"Channel prefix to use when reingesting the dataset.\nDefaults to empty string. Not recoverable from prior ingests and must be provided in request if needed." json:"channelPrefix,omitempty"`
+	ChannelPrefix *string `json:"channelPrefix,omitempty"`
 	/*
 	   A map of tag names to column names to derive the tag values from.
 	   Not recoverable from prior ingests and must be provided in request if needed.
 	*/
-	TagColumns *map[api.TagName]api.ColumnName `conjure-docs:"A map of tag names to column names to derive the tag values from.\nNot recoverable from prior ingests and must be provided in request if needed." json:"tagColumns,omitempty"`
+	TagColumns *map[api.TagName]api.ColumnName `json:"tagColumns,omitempty"`
 	/*
 	   Additional tags to apply to all dataset files within the the given dataset.
 	   Not recoverable from prior ingests and must be provided in request if needed.
 	*/
-	AdditionalFileTags *map[api.TagName]api.TagValue `conjure-docs:"Additional tags to apply to all dataset files within the the given dataset.\nNot recoverable from prior ingests and must be provided in request if needed." json:"additionalFileTags,omitempty"`
+	AdditionalFileTags *map[api.TagName]api.TagValue `json:"additionalFileTags,omitempty"`
 }
 
 func (o IngestMetadata) MarshalYAML() (interface{}, error) {
@@ -968,13 +968,13 @@ func (o *IngestMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error 
 
 type IngestProgressV2 struct {
 	// Timestamp at start of ingest
-	StartTime datetime.DateTime `conjure-docs:"Timestamp at start of ingest" json:"startTime"`
+	StartTime datetime.DateTime `json:"startTime"`
 	// Timestamp at end of ingest, empty if still in progress
-	EndTime *datetime.DateTime `conjure-docs:"Timestamp at end of ingest, empty if still in progress" json:"endTime,omitempty"`
+	EndTime *datetime.DateTime `json:"endTime,omitempty"`
 	// Status of ingest, contains error if failed
-	IngestStatus api.IngestStatusV2 `conjure-docs:"Status of ingest, contains error if failed" json:"ingestStatus"`
+	IngestStatus api.IngestStatusV2 `json:"ingestStatus"`
 	// Whether ingest duration can be reliably calculated
-	Incalculable *bool `conjure-docs:"Whether ingest duration can be reliably calculated" json:"incalculable,omitempty"`
+	Incalculable *bool `json:"incalculable,omitempty"`
 }
 
 func (o IngestProgressV2) MarshalYAML() (interface{}, error) {
@@ -1057,7 +1057,7 @@ func (o *IngestRunDataSource) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 type IngestRunRequest struct {
 	// If a run with the same rid already exists, the run will be updated.
-	Rid         *rid.ResourceIdentifier                `conjure-docs:"If a run with the same rid already exists, the run will be updated." json:"rid,omitempty"`
+	Rid         *rid.ResourceIdentifier                `json:"rid,omitempty"`
 	Title       string                                 `json:"title"`
 	Description string                                 `json:"description"`
 	StartTime   UtcTimestamp                           `json:"startTime"`
@@ -1065,24 +1065,24 @@ type IngestRunRequest struct {
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
 	Labels      []api.Label                            `json:"labels"`
 	// for example, SIM, HTL, FLT
-	RunPrefix   *string                                   `conjure-docs:"for example, SIM, HTL, FLT" json:"runPrefix,omitempty"`
+	RunPrefix   *string                                   `json:"runPrefix,omitempty"`
 	DataSources map[DataSourceRefName]IngestRunDataSource `json:"dataSources"`
 	/*
 	   The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o IngestRunRequest) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
 	}
 	if o.DataSources == nil {
-		o.DataSources = make(map[DataSourceRefName]IngestRunDataSource, 0)
+		o.DataSources = make(map[DataSourceRefName]IngestRunDataSource)
 	}
 	type _tmpIngestRunRequest IngestRunRequest
 	return safejson.Marshal(_tmpIngestRunRequest(o))
@@ -1095,13 +1095,13 @@ func (o *IngestRunRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawIngestRunRequest.Properties == nil {
-		rawIngestRunRequest.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawIngestRunRequest.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawIngestRunRequest.Labels == nil {
 		rawIngestRunRequest.Labels = make([]api.Label, 0)
 	}
 	if rawIngestRunRequest.DataSources == nil {
-		rawIngestRunRequest.DataSources = make(map[DataSourceRefName]IngestRunDataSource, 0)
+		rawIngestRunRequest.DataSources = make(map[DataSourceRefName]IngestRunDataSource)
 	}
 	*o = IngestRunRequest(rawIngestRunRequest)
 	return nil
@@ -1195,7 +1195,7 @@ type IngestVideoRequest struct {
 	   The workspace in which to create the video. If not provided, the video will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the video. If not provided, the video will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o IngestVideoRequest) MarshalJSON() ([]byte, error) {
@@ -1203,7 +1203,7 @@ func (o IngestVideoRequest) MarshalJSON() ([]byte, error) {
 		o.Sources = make([]IngestSource, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -1222,7 +1222,7 @@ func (o *IngestVideoRequest) UnmarshalJSON(data []byte) error {
 		rawIngestVideoRequest.Sources = make([]IngestSource, 0)
 	}
 	if rawIngestVideoRequest.Properties == nil {
-		rawIngestVideoRequest.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawIngestVideoRequest.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawIngestVideoRequest.Labels == nil {
 		rawIngestVideoRequest.Labels = make([]api.Label, 0)
@@ -1275,18 +1275,18 @@ type InitiateMultipartUploadRequest struct {
 	   The desired name of the file in object storage. The final name will be
 	   prefixed with a timestamp to ensure uniqueness.
 	*/
-	Filename string `conjure-docs:"The desired name of the file in object storage. The final name will be\nprefixed with a timestamp to ensure uniqueness." json:"filename"`
+	Filename string `json:"filename"`
 	/*
 	   The MIME type of the file, eg "text/csv" for CSVs or "application/octet-stream"
 	   for binary files.
 	*/
-	Filetype string `conjure-docs:"The MIME type of the file, eg \"text/csv\" for CSVs or \"application/octet-stream\"\nfor binary files." json:"filetype"`
+	Filetype string `json:"filetype"`
 	/*
 	   The workspace in which to upload the file. If not provided, the file will be uploaded to
 	   the default workspace for the user's organization, if that is configured and the user
 	   has access to it.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to upload the file. If not provided, the file will be uploaded to\nthe default workspace for the user's organization, if that is configured and the user\nhas access to it." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o InitiateMultipartUploadRequest) MarshalYAML() (interface{}, error) {
@@ -1379,7 +1379,7 @@ type JournalJsonOpts struct {
 	   If provided, ingests logs to the given channel.
 	   By default, log data will be ingested to a channel named 'logs'.
 	*/
-	Channel *api.Channel `conjure-docs:"If provided, ingests logs to the given channel.\nBy default, log data will be ingested to a channel named 'logs'." json:"channel,omitempty"`
+	Channel *api.Channel `json:"channel,omitempty"`
 }
 
 func (o JournalJsonOpts) MarshalYAML() (interface{}, error) {
@@ -1465,7 +1465,7 @@ type McapIngestionOutput struct {
 	   If the destination points to a video, this will be populated with the video file
 	   populated during ingestion.
 	*/
-	VideoFileRid *rids.VideoFileRid `conjure-docs:"If the destination points to a video, this will be populated with the video file\npopulated during ingestion." json:"videoFileRid,omitempty"`
+	VideoFileRid *rids.VideoFileRid `json:"videoFileRid,omitempty"`
 }
 
 func (o McapIngestionOutput) MarshalYAML() (interface{}, error) {
@@ -1490,7 +1490,7 @@ type McapProtobufTimeseriesOpts struct {
 	ChannelFilter McapChannels        `json:"channelFilter"`
 	TimestampType McapTimestampType   `json:"timestampType"`
 	// Specifies a tag set to apply to all data in the file.
-	AdditionalFileTags *map[api.TagName]api.TagValue `conjure-docs:"Specifies a tag set to apply to all data in the file." json:"additionalFileTags,omitempty"`
+	AdditionalFileTags *map[api.TagName]api.TagValue `json:"additionalFileTags,omitempty"`
 }
 
 func (o McapProtobufTimeseriesOpts) MarshalYAML() (interface{}, error) {
@@ -1545,7 +1545,7 @@ type NewDataSource struct {
 
 func (o NewDataSource) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -1561,7 +1561,7 @@ func (o *NewDataSource) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNewDataSource.Properties == nil {
-		rawNewDataSource.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawNewDataSource.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawNewDataSource.Labels == nil {
 		rawNewDataSource.Labels = make([]api.Label, 0)
@@ -1596,17 +1596,17 @@ type NewDatasetIngestDestination struct {
 	   The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 	/*
 	   The markings to apply to the created dataset.
 	   If not provided, the dataset will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api2.MarkingRid `conjure-docs:"The markings to apply to the created dataset.\nIf not provided, the dataset will be visible to all users in the same workspace." json:"markingRids"`
+	MarkingRids []api2.MarkingRid `json:"markingRids"`
 }
 
 func (o NewDatasetIngestDestination) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -1625,7 +1625,7 @@ func (o *NewDatasetIngestDestination) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNewDatasetIngestDestination.Properties == nil {
-		rawNewDatasetIngestDestination.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawNewDatasetIngestDestination.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawNewDatasetIngestDestination.Labels == nil {
 		rawNewDatasetIngestDestination.Labels = make([]api.Label, 0)
@@ -1658,30 +1658,30 @@ type NewVideoIngestDestination struct {
 	   Title of the Video that will get created.
 	   If not provided, a name is deduced from the ingested file.
 	*/
-	Title *string `conjure-docs:"Title of the Video that will get created.\nIf not provided, a name is deduced from the ingested file." json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 	// Description that is applied to the newly created video
-	Description *string `conjure-docs:"Description that is applied to the newly created video" json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// Key-Value properties that are applied to the newly created video
-	Properties map[api.PropertyName]api.PropertyValue `conjure-docs:"Key-Value properties that are applied to the newly created video" json:"properties"`
+	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
 	// Labels that are applied to the newly created video
-	Labels []api.Label `conjure-docs:"Labels that are applied to the newly created video" json:"labels"`
+	Labels []api.Label `json:"labels"`
 	// Metadata to associate with any created video file
-	VideoFileDetails *VideoFileIngestDetails `conjure-docs:"Metadata to associate with any created video file" json:"videoFileDetails,omitempty"`
+	VideoFileDetails *VideoFileIngestDetails `json:"videoFileDetails,omitempty"`
 	/*
 	   The workspace in which to create the video. If not provided, the video will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the video. If not provided, the video will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 	/*
 	   The markings to apply to the created video.
 	   If not provided, the video will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api2.MarkingRid `conjure-docs:"The markings to apply to the created video.\nIf not provided, the video will be visible to all users in the same workspace." json:"markingRids"`
+	MarkingRids []api2.MarkingRid `json:"markingRids"`
 }
 
 func (o NewVideoIngestDestination) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -1700,7 +1700,7 @@ func (o *NewVideoIngestDestination) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNewVideoIngestDestination.Properties == nil {
-		rawNewVideoIngestDestination.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawNewVideoIngestDestination.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawNewVideoIngestDestination.Labels == nil {
 		rawNewVideoIngestDestination.Labels = make([]api.Label, 0)
@@ -1731,7 +1731,7 @@ func (o *NewVideoIngestDestination) UnmarshalYAML(unmarshal func(interface{}) er
 type NoTimestampManifest struct {
 	StartingTimestamp UtcTimestamp `json:"startingTimestamp"`
 	// A field that specifies that the frame rate of the video does not match the frame rate of the camera | i.e. a slowed down or sped up video. Can specify either the camera frame rate or the absolute end time.
-	ScaleParameter *ScaleParameter `conjure-docs:"A field that specifies that the frame rate of the video does not match the frame rate of the camera | i.e. a slowed down or sped up video. Can specify either the camera frame rate or the absolute end time." json:"scaleParameter,omitempty"`
+	ScaleParameter *ScaleParameter `json:"scaleParameter,omitempty"`
 }
 
 func (o NoTimestampManifest) MarshalYAML() (interface{}, error) {
@@ -1763,21 +1763,21 @@ type ParquetOpts struct {
 	// Deprecated: Deprecated in favor of tagColumns.
 	TagKeysFromColumns *[]api.TagName `json:"tagKeysFromColumns,omitempty"`
 	// A map of tag names to column names to derive the tag values from.
-	TagColumns *map[api.TagName]api.ColumnName `conjure-docs:"A map of tag names to column names to derive the tag values from." json:"tagColumns,omitempty"`
+	TagColumns *map[api.TagName]api.ColumnName `json:"tagColumns,omitempty"`
 	// Specifies a tag set to apply to all data in the file.
-	AdditionalFileTags *map[api.TagName]api.TagValue `conjure-docs:"Specifies a tag set to apply to all data in the file." json:"additionalFileTags,omitempty"`
+	AdditionalFileTags *map[api.TagName]api.TagValue `json:"additionalFileTags,omitempty"`
 	/*
 	   If true, the file is an archive. Supported archive formats include
 	   .tar, .tar.gz, and .zip. Only files ending in .parquet
 	   within the archive will be ingested. If field not provided, defaults to false.
 	*/
-	IsArchive *bool `conjure-docs:"If true, the file is an archive. Supported archive formats include\n.tar, .tar.gz, and .zip. Only files ending in .parquet\nwithin the archive will be ingested. If field not provided, defaults to false." json:"isArchive,omitempty"`
+	IsArchive *bool `json:"isArchive,omitempty"`
 	/*
 	   A set of column names to exclude from ingestion. These columns will not be
 	   ingested as channels. Useful for excluding columns that contain unsupported
 	   data types like multidimensional arrays.
 	*/
-	ExcludeColumns []api.ColumnName `conjure-docs:"A set of column names to exclude from ingestion. These columns will not be\ningested as channels. Useful for excluding columns that contain unsupported\ndata types like multidimensional arrays." json:"excludeColumns"`
+	ExcludeColumns []api.ColumnName `json:"excludeColumns"`
 }
 
 func (o ParquetOpts) MarshalJSON() ([]byte, error) {
@@ -1903,20 +1903,20 @@ type RegisterContainerizedExtractorRequest struct {
 	Description *string           `json:"description,omitempty"`
 	Image       DockerImageSource `json:"image"`
 	// payload must match input defined in containerized extraction
-	Inputs []FileExtractionInput `conjure-docs:"payload must match input defined in containerized extraction" json:"inputs"`
+	Inputs []FileExtractionInput `json:"inputs"`
 	// Describes the parameters of the extractor.
-	Parameters []FileExtractionParameter              `conjure-docs:"Describes the parameters of the extractor." json:"parameters"`
+	Parameters []FileExtractionParameter              `json:"parameters"`
 	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
 	Labels     []api.Label                            `json:"labels"`
 	// The workspace in which to create the extractor
-	Workspace rids.WorkspaceRid `conjure-docs:"The workspace in which to create the extractor" json:"workspace"`
+	Workspace rids.WorkspaceRid `json:"workspace"`
 	/*
 	   Metadata about the intermediate parquet this extractor will produce.
 	   If not set, timestamp metadata must be provided at ingest time.
 	*/
-	TimestampMetadata *TimestampMetadata `conjure-docs:"Metadata about the intermediate parquet this extractor will produce.\nIf not set, timestamp metadata must be provided at ingest time." json:"timestampMetadata,omitempty"`
+	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
 	// The format of the output file. Currently only "parquet", "csv", "parquet.tar" are supported
-	OutputFileFormat *FileOutputFormat `conjure-docs:"The format of the output file. Currently only \"parquet\", \"csv\", \"parquet.tar\" are supported" json:"outputFileFormat,omitempty"`
+	OutputFileFormat *FileOutputFormat `json:"outputFileFormat,omitempty"`
 }
 
 func (o RegisterContainerizedExtractorRequest) MarshalJSON() ([]byte, error) {
@@ -1927,7 +1927,7 @@ func (o RegisterContainerizedExtractorRequest) MarshalJSON() ([]byte, error) {
 		o.Parameters = make([]FileExtractionParameter, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -1949,7 +1949,7 @@ func (o *RegisterContainerizedExtractorRequest) UnmarshalJSON(data []byte) error
 		rawRegisterContainerizedExtractorRequest.Parameters = make([]FileExtractionParameter, 0)
 	}
 	if rawRegisterContainerizedExtractorRequest.Properties == nil {
-		rawRegisterContainerizedExtractorRequest.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawRegisterContainerizedExtractorRequest.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawRegisterContainerizedExtractorRequest.Labels == nil {
 		rawRegisterContainerizedExtractorRequest.Labels = make([]api.Label, 0)
@@ -2000,15 +2000,15 @@ type ReingestDatasetsRequest struct {
 	   The datasets must be of the same granularity and must only include CSV or Parquet files.
 	   Will attempt to reingest from datasets in list order.
 	*/
-	SourceDatasets []rids.DatasetRid `conjure-docs:"The datasets to reingest data from. Can only include tagless, non-streaming datasets (V1).\nThe datasets must be of the same granularity and must only include CSV or Parquet files.\nWill attempt to reingest from datasets in list order." json:"sourceDatasets"`
+	SourceDatasets []rids.DatasetRid `json:"sourceDatasets"`
 	// The dataset to ingest data into. Can either be a new dataset or an existing dataset RID.
-	TargetDataset DatasetIngestTarget `conjure-docs:"The dataset to ingest data into. Can either be a new dataset or an existing dataset RID." json:"targetDataset"`
+	TargetDataset DatasetIngestTarget `json:"targetDataset"`
 	/*
 	   Mapping of dataset to ingest metadata.
 	   Ingest metadata only needs to be provided in request if it cannot be recovered from prior ingests.
 	   See documentation on each field to determine what metadata can be auto-recovered.
 	*/
-	IngestMetadata map[rids.DatasetRid]IngestMetadata `conjure-docs:"Mapping of dataset to ingest metadata.\nIngest metadata only needs to be provided in request if it cannot be recovered from prior ingests.\nSee documentation on each field to determine what metadata can be auto-recovered." json:"ingestMetadata"`
+	IngestMetadata map[rids.DatasetRid]IngestMetadata `json:"ingestMetadata"`
 }
 
 func (o ReingestDatasetsRequest) MarshalJSON() ([]byte, error) {
@@ -2016,7 +2016,7 @@ func (o ReingestDatasetsRequest) MarshalJSON() ([]byte, error) {
 		o.SourceDatasets = make([]rids.DatasetRid, 0)
 	}
 	if o.IngestMetadata == nil {
-		o.IngestMetadata = make(map[rids.DatasetRid]IngestMetadata, 0)
+		o.IngestMetadata = make(map[rids.DatasetRid]IngestMetadata)
 	}
 	type _tmpReingestDatasetsRequest ReingestDatasetsRequest
 	return safejson.Marshal(_tmpReingestDatasetsRequest(o))
@@ -2032,7 +2032,7 @@ func (o *ReingestDatasetsRequest) UnmarshalJSON(data []byte) error {
 		rawReingestDatasetsRequest.SourceDatasets = make([]rids.DatasetRid, 0)
 	}
 	if rawReingestDatasetsRequest.IngestMetadata == nil {
-		rawReingestDatasetsRequest.IngestMetadata = make(map[rids.DatasetRid]IngestMetadata, 0)
+		rawReingestDatasetsRequest.IngestMetadata = make(map[rids.DatasetRid]IngestMetadata)
 	}
 	*o = ReingestDatasetsRequest(rawReingestDatasetsRequest)
 	return nil
@@ -2064,7 +2064,7 @@ type ReingestDatasetsResponse struct {
 
 func (o ReingestDatasetsResponse) MarshalJSON() ([]byte, error) {
 	if o.Datasets == nil {
-		o.Datasets = make(map[rids.DatasetRid]ReingestFilesMapping, 0)
+		o.Datasets = make(map[rids.DatasetRid]ReingestFilesMapping)
 	}
 	type _tmpReingestDatasetsResponse ReingestDatasetsResponse
 	return safejson.Marshal(_tmpReingestDatasetsResponse(o))
@@ -2077,7 +2077,7 @@ func (o *ReingestDatasetsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawReingestDatasetsResponse.Datasets == nil {
-		rawReingestDatasetsResponse.Datasets = make(map[rids.DatasetRid]ReingestFilesMapping, 0)
+		rawReingestDatasetsResponse.Datasets = make(map[rids.DatasetRid]ReingestFilesMapping)
 	}
 	*o = ReingestDatasetsResponse(rawReingestDatasetsResponse)
 	return nil
@@ -2106,7 +2106,7 @@ type ReingestFilesMapping struct {
 
 func (o ReingestFilesMapping) MarshalJSON() ([]byte, error) {
 	if o.FileMap == nil {
-		o.FileMap = make(map[datasource.DatasetFileId]IngestDetails, 0)
+		o.FileMap = make(map[datasource.DatasetFileId]IngestDetails)
 	}
 	type _tmpReingestFilesMapping ReingestFilesMapping
 	return safejson.Marshal(_tmpReingestFilesMapping(o))
@@ -2119,7 +2119,7 @@ func (o *ReingestFilesMapping) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawReingestFilesMapping.FileMap == nil {
-		rawReingestFilesMapping.FileMap = make(map[datasource.DatasetFileId]IngestDetails, 0)
+		rawReingestFilesMapping.FileMap = make(map[datasource.DatasetFileId]IngestDetails)
 	}
 	*o = ReingestFilesMapping(rawReingestFilesMapping)
 	return nil
@@ -2144,7 +2144,7 @@ func (o *ReingestFilesMapping) UnmarshalYAML(unmarshal func(interface{}) error) 
 type RelativeTimestamp struct {
 	TimeUnit api.TimeUnit `json:"timeUnit"`
 	// Starting timestamp to use when indexing the file. This field is required when uploading a new file to an existing dataset.
-	Offset *datetime.DateTime `conjure-docs:"Starting timestamp to use when indexing the file. This field is required when uploading a new file to an existing dataset." json:"offset,omitempty"`
+	Offset *datetime.DateTime `json:"offset,omitempty"`
 }
 
 func (o RelativeTimestamp) MarshalYAML() (interface{}, error) {
@@ -2230,7 +2230,7 @@ type SignPartResponse struct {
 
 func (o SignPartResponse) MarshalJSON() ([]byte, error) {
 	if o.Headers == nil {
-		o.Headers = make(map[string]string, 0)
+		o.Headers = make(map[string]string)
 	}
 	type _tmpSignPartResponse SignPartResponse
 	return safejson.Marshal(_tmpSignPartResponse(o))
@@ -2243,7 +2243,7 @@ func (o *SignPartResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawSignPartResponse.Headers == nil {
-		rawSignPartResponse.Headers = make(map[string]string, 0)
+		rawSignPartResponse.Headers = make(map[string]string)
 	}
 	*o = SignPartResponse(rawSignPartResponse)
 	return nil
@@ -2410,9 +2410,9 @@ func (o *UpdateContainerizedExtractorRequest) UnmarshalYAML(unmarshal func(inter
 // Username and password authentication.
 type UserAndPasswordAuthentication struct {
 	// Username for registry authentication.
-	Username string `conjure-docs:"Username for registry authentication." json:"username"`
+	Username string `json:"username"`
 	// The RID of the secret containing the password for registry authentication.
-	PasswordSecretRid api3.SecretRid `conjure-docs:"The RID of the secret containing the password for registry authentication." json:"passwordSecretRid"`
+	PasswordSecretRid api3.SecretRid `json:"passwordSecretRid"`
 }
 
 func (o UserAndPasswordAuthentication) MarshalYAML() (interface{}, error) {
@@ -2457,21 +2457,21 @@ type VideoFileIngestDetails struct {
 	   Description that is applied to the newly created video file.
 	   If not provided, defaults to the description used to create the video.
 	*/
-	FileDescription *string `conjure-docs:"Description that is applied to the newly created video file.\nIf not provided, defaults to the description used to create the video." json:"fileDescription,omitempty"`
+	FileDescription *string `json:"fileDescription,omitempty"`
 	/*
 	   Key-Value properties that are applied to the newly created video file.
 
 	   Deprecated: Field is ignored as video files do not have properties.
 	   Will be removed after 4/5/2025
 	*/
-	FileProperties *map[api.PropertyName]api.PropertyValue `conjure-docs:"Key-Value properties that are applied to the newly created video file." json:"fileProperties,omitempty"`
+	FileProperties *map[api.PropertyName]api.PropertyValue `json:"fileProperties,omitempty"`
 	/*
 	   Labels that are applied to the newly created video file.
 
 	   Deprecated: Field is ignored as video files do not have labels.
 	   Will be removed after 4/5/2025
 	*/
-	FileLabels *[]api.Label `conjure-docs:"Labels that are applied to the newly created video file." json:"fileLabels,omitempty"`
+	FileLabels *[]api.Label `json:"fileLabels,omitempty"`
 }
 
 func (o VideoFileIngestDetails) MarshalYAML() (interface{}, error) {
@@ -2498,7 +2498,7 @@ type VideoOpts struct {
 	   If true, overlapping segments from other video files within the same video will be deleted
 	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
 	*/
-	OverWriteSegments *bool `conjure-docs:"If true, overlapping segments from other video files within the same video will be deleted\nbefore inserting new segments. The cached segment metadata for affected files will be recomputed." json:"overWriteSegments,omitempty"`
+	OverWriteSegments *bool `json:"overWriteSegments,omitempty"`
 }
 
 func (o VideoOpts) MarshalYAML() (interface{}, error) {
@@ -2527,12 +2527,12 @@ type VideoOptsV2 struct {
 	   If true, overlapping segments from other dataset files within the same series will be deleted
 	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
 	*/
-	OverWriteSegments *bool `conjure-docs:"If true, overlapping segments from other dataset files within the same series will be deleted\nbefore inserting new segments. The cached segment metadata for affected files will be recomputed." json:"overWriteSegments,omitempty"`
+	OverWriteSegments *bool `json:"overWriteSegments,omitempty"`
 }
 
 func (o VideoOptsV2) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpVideoOptsV2 VideoOptsV2
 	return safejson.Marshal(_tmpVideoOptsV2(o))
@@ -2545,7 +2545,7 @@ func (o *VideoOptsV2) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawVideoOptsV2.Tags == nil {
-		rawVideoOptsV2.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawVideoOptsV2.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = VideoOptsV2(rawVideoOptsV2)
 	return nil

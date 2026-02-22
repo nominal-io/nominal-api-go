@@ -40,9 +40,9 @@ type EnsureExtractorJobCreatedRequest struct {
 	ValidatedFileInputs    []ValidatedFileInput       `json:"validatedFileInputs"`
 	MultipartUploadDetails MultipartUploadDetails     `json:"multipartUploadDetails"`
 	// Name of the Kubernetes secret to use for pulling the image, if authentication is required.
-	ImagePullSecretName *string `conjure-docs:"Name of the Kubernetes secret to use for pulling the image, if authentication is required." json:"imagePullSecretName,omitempty"`
+	ImagePullSecretName *string `json:"imagePullSecretName,omitempty"`
 	// Additional arguments to pass as environment variables to the container.
-	Arguments map[api.EnvironmentVariable]string `conjure-docs:"Additional arguments to pass as environment variables to the container." json:"arguments"`
+	Arguments map[api.EnvironmentVariable]string `json:"arguments"`
 }
 
 func (o EnsureExtractorJobCreatedRequest) MarshalJSON() ([]byte, error) {
@@ -50,7 +50,7 @@ func (o EnsureExtractorJobCreatedRequest) MarshalJSON() ([]byte, error) {
 		o.ValidatedFileInputs = make([]ValidatedFileInput, 0)
 	}
 	if o.Arguments == nil {
-		o.Arguments = make(map[api.EnvironmentVariable]string, 0)
+		o.Arguments = make(map[api.EnvironmentVariable]string)
 	}
 	type _tmpEnsureExtractorJobCreatedRequest EnsureExtractorJobCreatedRequest
 	return safejson.Marshal(_tmpEnsureExtractorJobCreatedRequest(o))
@@ -66,7 +66,7 @@ func (o *EnsureExtractorJobCreatedRequest) UnmarshalJSON(data []byte) error {
 		rawEnsureExtractorJobCreatedRequest.ValidatedFileInputs = make([]ValidatedFileInput, 0)
 	}
 	if rawEnsureExtractorJobCreatedRequest.Arguments == nil {
-		rawEnsureExtractorJobCreatedRequest.Arguments = make(map[api.EnvironmentVariable]string, 0)
+		rawEnsureExtractorJobCreatedRequest.Arguments = make(map[api.EnvironmentVariable]string)
 	}
 	*o = EnsureExtractorJobCreatedRequest(rawEnsureExtractorJobCreatedRequest)
 	return nil
@@ -328,21 +328,21 @@ type IngestDataflashResponse struct {
 	   Azure or S3-style blob locators of parquet files. Currently
 	   only a single file is supported, the list type is used for future compatibility.
 	*/
-	ParquetObjectLocators []ObjectLocator `conjure-docs:"Azure or S3-style blob locators of parquet files. Currently\nonly a single file is supported, the list type is used for future compatibility." json:"parquetObjectLocators"`
+	ParquetObjectLocators []ObjectLocator `json:"parquetObjectLocators"`
 	// The name of the column in the generated parquet file that contains the timestamp.
-	TimestampSeriesName string `conjure-docs:"The name of the column in the generated parquet file that contains the timestamp." json:"timestampSeriesName"`
+	TimestampSeriesName string `json:"timestampSeriesName"`
 	// The unit of time for the timestamp column. Can only be seconds.
-	TimeUnit TimeUnitSeconds `conjure-docs:"The unit of time for the timestamp column. Can only be seconds." json:"timeUnit"`
+	TimeUnit TimeUnitSeconds `json:"timeUnit"`
 	/*
 	   Azure or S3-style blob locator of avro file when avro processing is configured.
 	   This field is only set when the workflow is configured to write avro stream.
 	*/
-	AvroLocator *ObjectLocator `conjure-docs:"Azure or S3-style blob locator of avro file when avro processing is configured.\nThis field is only set when the workflow is configured to write avro stream." json:"avroLocator,omitempty"`
+	AvroLocator *ObjectLocator `json:"avroLocator,omitempty"`
 }
 
 func (o IngestDataflashResponse) MarshalJSON() ([]byte, error) {
 	if o.Units == nil {
-		o.Units = make(map[string]string, 0)
+		o.Units = make(map[string]string)
 	}
 	if o.ParquetObjectLocators == nil {
 		o.ParquetObjectLocators = make([]ObjectLocator, 0)
@@ -358,7 +358,7 @@ func (o *IngestDataflashResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawIngestDataflashResponse.Units == nil {
-		rawIngestDataflashResponse.Units = make(map[string]string, 0)
+		rawIngestDataflashResponse.Units = make(map[string]string)
 	}
 	if rawIngestDataflashResponse.ParquetObjectLocators == nil {
 		rawIngestDataflashResponse.ParquetObjectLocators = make([]ObjectLocator, 0)
@@ -410,7 +410,7 @@ type IngestMcapProtobufResponse struct {
 	   Azure or S3-style blob locators of parquet files. Currently
 	   only a single file is supported, the list type is used for future compatibility.
 	*/
-	ParquetObjectLocators []ObjectLocator `conjure-docs:"Azure or S3-style blob locators of parquet files. Currently\nonly a single file is supported, the list type is used for future compatibility." json:"parquetObjectLocators"`
+	ParquetObjectLocators []ObjectLocator `json:"parquetObjectLocators"`
 }
 
 func (o IngestMcapProtobufResponse) MarshalJSON() ([]byte, error) {
@@ -519,11 +519,11 @@ func (o *PresignedFileInput) UnmarshalYAML(unmarshal func(interface{}) error) er
 
 type ValidatedFileInput struct {
 	// Path to the input file in S3.
-	Handle catalog.S3Handle `conjure-docs:"Path to the input file in S3." json:"handle"`
+	Handle catalog.S3Handle `json:"handle"`
 	// Name of the file that will be placed on disk.
-	FileName string `conjure-docs:"Name of the file that will be placed on disk." json:"fileName"`
+	FileName string `json:"fileName"`
 	// Environment variable that will store the path to the file.
-	EnvVar string `conjure-docs:"Environment variable that will store the path to the file." json:"envVar"`
+	EnvVar string `json:"envVar"`
 }
 
 func (o ValidatedFileInput) MarshalYAML() (interface{}, error) {

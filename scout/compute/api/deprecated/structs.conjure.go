@@ -18,7 +18,7 @@ type ArithmeticSeriesNode struct {
 
 func (o ArithmeticSeriesNode) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[api.LocalVariableName]NumericSeriesNode, 0)
+		o.Inputs = make(map[api.LocalVariableName]NumericSeriesNode)
 	}
 	type _tmpArithmeticSeriesNode ArithmeticSeriesNode
 	return safejson.Marshal(_tmpArithmeticSeriesNode(o))
@@ -31,7 +31,7 @@ func (o *ArithmeticSeriesNode) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawArithmeticSeriesNode.Inputs == nil {
-		rawArithmeticSeriesNode.Inputs = make(map[api.LocalVariableName]NumericSeriesNode, 0)
+		rawArithmeticSeriesNode.Inputs = make(map[api.LocalVariableName]NumericSeriesNode)
 	}
 	*o = ArithmeticSeriesNode(rawArithmeticSeriesNode)
 	return nil
@@ -150,14 +150,14 @@ type EnumFilterRangesNode struct {
 
 	   Deprecated: Use persistenceWindowConfiguration instead.
 	*/
-	MinPoints *int `conjure-docs:"The minimum number of points for which this condition is satisfied. Must be non-negative. If not present,\nwill default to 1." json:"minPoints,omitempty"`
+	MinPoints *int `json:"minPoints,omitempty"`
 	/*
 	   The minimum duration for which this condition is satisfied. Must be non-negative. If not present, will
 	   default to 1 nanosecond.
 
 	   Deprecated: Use persistenceWindowConfiguration instead.
 	*/
-	MinDuration                    *api2.Duration                  `conjure-docs:"The minimum duration for which this condition is satisfied. Must be non-negative. If not present, will\ndefault to 1 nanosecond." json:"minDuration,omitempty"`
+	MinDuration                    *api2.Duration                  `json:"minDuration,omitempty"`
 	PersistenceWindowConfiguration *PersistenceWindowConfiguration `json:"persistenceWindowConfiguration,omitempty"`
 }
 
@@ -588,14 +588,14 @@ type ThresholdingRangesNode struct {
 
 	   Deprecated: Use persistenceWindowConfiguration instead.
 	*/
-	MinPoints *int `conjure-docs:"The minimum number of points for which this condition is satisfied. Must be non-negative. If not present,\nwill default to 1." json:"minPoints,omitempty"`
+	MinPoints *int `json:"minPoints,omitempty"`
 	/*
 	   The minimum duration for which this condition is satisfied. Must be non-negative. If not present, will
 	   default to 1 nanosecond.
 
 	   Deprecated: Use persistenceWindowConfiguration instead.
 	*/
-	MinDuration                    *api2.Duration                  `conjure-docs:"The minimum duration for which this condition is satisfied. Must be non-negative. If not present, will\ndefault to 1 nanosecond." json:"minDuration,omitempty"`
+	MinDuration                    *api2.Duration                  `json:"minDuration,omitempty"`
 	PersistenceWindowConfiguration *PersistenceWindowConfiguration `json:"persistenceWindowConfiguration,omitempty"`
 }
 

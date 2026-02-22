@@ -12,19 +12,19 @@ import (
 
 type CreateNominalDataSourceRequest struct {
 	// A human readable identifier. Must be unique within an organization.
-	Id          NominalDataSourceId `conjure-docs:"A human readable identifier. Must be unique within an organization." json:"id"`
+	Id          NominalDataSourceId `json:"id"`
 	Description *string             `json:"description,omitempty"`
 	/*
 	   Specifies the timestamp granularity of the datasource (i.e., picosecond or nanosecond scale).
 	   Defaults to nanosecond granularity.
 	*/
-	Granularity              *api.Granularity `conjure-docs:"Specifies the timestamp granularity of the datasource (i.e., picosecond or nanosecond scale).\nDefaults to nanosecond granularity." json:"granularity,omitempty"`
+	Granularity              *api.Granularity `json:"granularity,omitempty"`
 	InMemoryStreamingEnabled *bool            `json:"inMemoryStreamingEnabled,omitempty"`
 	/*
 	   The workspace in which to create the datasource. If not provided, the datasource will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the datasource. If not provided, the datasource will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o CreateNominalDataSourceRequest) MarshalYAML() (interface{}, error) {
@@ -52,7 +52,7 @@ type NominalDataSource struct {
 	   Returns the approximate timestamp at which data was written to the data source.
 	   Will be accurate to within 1 minute.
 	*/
-	DataLastWrittenAt        *datetime.DateTime `conjure-docs:"Returns the approximate timestamp at which data was written to the data source.\nWill be accurate to within 1 minute." json:"dataLastWrittenAt,omitempty"`
+	DataLastWrittenAt        *datetime.DateTime `json:"dataLastWrittenAt,omitempty"`
 	Granularity              api.Granularity    `json:"granularity"`
 	InMemoryStreamingEnabled *bool              `json:"inMemoryStreamingEnabled,omitempty"`
 }

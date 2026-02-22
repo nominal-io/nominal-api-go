@@ -16,7 +16,7 @@ type BatchGetChannelPrefixTreeRequest struct {
 	   When dataScopeFilters are specified, the set of data sources must match the set of data sources in
 	   DataScopeFilters#tags
 	*/
-	DataScopeFilters *DataScopeFilters `conjure-docs:"When dataScopeFilters are specified, the set of data sources must match the set of data sources in\nDataScopeFilters#tags" json:"dataScopeFilters,omitempty"`
+	DataScopeFilters *DataScopeFilters `json:"dataScopeFilters,omitempty"`
 }
 
 func (o BatchGetChannelPrefixTreeRequest) MarshalJSON() ([]byte, error) {
@@ -63,7 +63,7 @@ type BatchGetChannelPrefixTreeResponse struct {
 
 func (o BatchGetChannelPrefixTreeResponse) MarshalJSON() ([]byte, error) {
 	if o.ChannelPrefixTrees == nil {
-		o.ChannelPrefixTrees = make(map[rids.DataSourceRid]ChannelPrefixTree, 0)
+		o.ChannelPrefixTrees = make(map[rids.DataSourceRid]ChannelPrefixTree)
 	}
 	type _tmpBatchGetChannelPrefixTreeResponse BatchGetChannelPrefixTreeResponse
 	return safejson.Marshal(_tmpBatchGetChannelPrefixTreeResponse(o))
@@ -76,7 +76,7 @@ func (o *BatchGetChannelPrefixTreeResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawBatchGetChannelPrefixTreeResponse.ChannelPrefixTrees == nil {
-		rawBatchGetChannelPrefixTreeResponse.ChannelPrefixTrees = make(map[rids.DataSourceRid]ChannelPrefixTree, 0)
+		rawBatchGetChannelPrefixTreeResponse.ChannelPrefixTrees = make(map[rids.DataSourceRid]ChannelPrefixTree)
 	}
 	*o = BatchGetChannelPrefixTreeResponse(rawBatchGetChannelPrefixTreeResponse)
 	return nil
@@ -249,7 +249,7 @@ func (o *ChannelPrefixTree) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 type ChannelPrefixTreeNode struct {
 	// Should be combined with the ancestor parts and the delimiter to form the full prefix.
-	Part     string                  `conjure-docs:"Should be combined with the ancestor parts and the delimiter to form the full prefix." json:"part"`
+	Part     string                  `json:"part"`
 	Children []ChannelPrefixTreeNode `json:"children"`
 }
 
@@ -297,12 +297,12 @@ type ChannelWithAvailableTags struct {
 	   A set of tag keys and their values given the initial set of filters. The initial tag filters
 	   will be included in the map with their corresponding values.
 	*/
-	AvailableTags map[api.TagName][]api.TagValue `conjure-docs:"A set of tag keys and their values given the initial set of filters. The initial tag filters\nwill be included in the map with their corresponding values." json:"availableTags"`
+	AvailableTags map[api.TagName][]api.TagValue `json:"availableTags"`
 }
 
 func (o ChannelWithAvailableTags) MarshalJSON() ([]byte, error) {
 	if o.AvailableTags == nil {
-		o.AvailableTags = make(map[api.TagName][]api.TagValue, 0)
+		o.AvailableTags = make(map[api.TagName][]api.TagValue)
 	}
 	type _tmpChannelWithAvailableTags ChannelWithAvailableTags
 	return safejson.Marshal(_tmpChannelWithAvailableTags(o))
@@ -315,7 +315,7 @@ func (o *ChannelWithAvailableTags) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawChannelWithAvailableTags.AvailableTags == nil {
-		rawChannelWithAvailableTags.AvailableTags = make(map[api.TagName][]api.TagValue, 0)
+		rawChannelWithAvailableTags.AvailableTags = make(map[api.TagName][]api.TagValue)
 	}
 	*o = ChannelWithAvailableTags(rawChannelWithAvailableTags)
 	return nil
@@ -345,7 +345,7 @@ type ChannelWithTagFilters struct {
 
 func (o ChannelWithTagFilters) MarshalJSON() ([]byte, error) {
 	if o.TagFilters == nil {
-		o.TagFilters = make(map[api.TagName]api.TagValue, 0)
+		o.TagFilters = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpChannelWithTagFilters ChannelWithTagFilters
 	return safejson.Marshal(_tmpChannelWithTagFilters(o))
@@ -358,7 +358,7 @@ func (o *ChannelWithTagFilters) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawChannelWithTagFilters.TagFilters == nil {
-		rawChannelWithTagFilters.TagFilters = make(map[api.TagName]api.TagValue, 0)
+		rawChannelWithTagFilters.TagFilters = make(map[api.TagName]api.TagValue)
 	}
 	*o = ChannelWithTagFilters(rawChannelWithTagFilters)
 	return nil
@@ -385,16 +385,16 @@ type DataScopeFilters struct {
 	   For each data source specified as a key, search will only return channels containing a superset of the
 	   tags specified for that given datasource.
 	*/
-	Tags map[rids.DataSourceRid]map[api.TagName]api.TagValue `conjure-docs:"For each data source specified as a key, search will only return channels containing a superset of the \ntags specified for that given datasource." json:"tags"`
+	Tags map[rids.DataSourceRid]map[api.TagName]api.TagValue `json:"tags"`
 	// Will only return channels that have had new data after the specified time.
-	MinDataUpdatedTime api1.UtcTimestamp `conjure-docs:"Will only return channels that have had new data after the specified time." json:"minDataUpdatedTime"`
+	MinDataUpdatedTime api1.UtcTimestamp `json:"minDataUpdatedTime"`
 	// Will only return channels that have data before the specified time.
-	MaxDataStartTime api1.UtcTimestamp `conjure-docs:"Will only return channels that have data before the specified time." json:"maxDataStartTime"`
+	MaxDataStartTime api1.UtcTimestamp `json:"maxDataStartTime"`
 }
 
 func (o DataScopeFilters) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[rids.DataSourceRid]map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[rids.DataSourceRid]map[api.TagName]api.TagValue)
 	}
 	type _tmpDataScopeFilters DataScopeFilters
 	return safejson.Marshal(_tmpDataScopeFilters(o))
@@ -407,7 +407,7 @@ func (o *DataScopeFilters) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawDataScopeFilters.Tags == nil {
-		rawDataScopeFilters.Tags = make(map[rids.DataSourceRid]map[api.TagName]api.TagValue, 0)
+		rawDataScopeFilters.Tags = make(map[rids.DataSourceRid]map[api.TagName]api.TagValue)
 	}
 	*o = DataScopeFilters(rawDataScopeFilters)
 	return nil
@@ -431,7 +431,7 @@ func (o *DataScopeFilters) UnmarshalYAML(unmarshal func(interface{}) error) erro
 
 type DataSourcePrefixNode struct {
 	// Should be combined with the ancestor parts and the delimiter to form the full prefix.
-	Part       string             `conjure-docs:"Should be combined with the ancestor parts and the delimiter to form the full prefix." json:"part"`
+	Part       string             `json:"part"`
 	DataSource rids.DataSourceRid `json:"dataSource"`
 }
 
@@ -520,7 +520,7 @@ type GetAvailableTagValuesRequest struct {
 	TagName       api.TagName      `json:"tagName"`
 	NextPageToken *api.TagValue    `json:"nextPageToken,omitempty"`
 	// Defaults to 1000. Will throw if larger than 10000.
-	PageSize *int `conjure-docs:"Defaults to 1000. Will throw if larger than 10000." json:"pageSize,omitempty"`
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o GetAvailableTagValuesRequest) MarshalYAML() (interface{}, error) {
@@ -630,7 +630,7 @@ type GetDataScopeBoundsRequest struct {
 
 func (o GetDataScopeBoundsRequest) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpGetDataScopeBoundsRequest GetDataScopeBoundsRequest
 	return safejson.Marshal(_tmpGetDataScopeBoundsRequest(o))
@@ -643,7 +643,7 @@ func (o *GetDataScopeBoundsRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawGetDataScopeBoundsRequest.Tags == nil {
-		rawGetDataScopeBoundsRequest.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawGetDataScopeBoundsRequest.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = GetDataScopeBoundsRequest(rawGetDataScopeBoundsRequest)
 	return nil
@@ -670,7 +670,7 @@ type GetDataScopeBoundsResponse struct {
 	   If missing, the end bound is not known definitively. This can happen if the
 	   data scope corresponds to an external database or its data was not updated in the last month.
 	*/
-	EndTime *api.Timestamp `conjure-docs:"If missing, the end bound is not known definitively. This can happen if the\ndata scope corresponds to an external database or its data was not updated in the last month." json:"endTime,omitempty"`
+	EndTime *api.Timestamp `json:"endTime,omitempty"`
 }
 
 func (o GetDataScopeBoundsResponse) MarshalYAML() (interface{}, error) {
@@ -691,13 +691,15 @@ func (o *GetDataScopeBoundsResponse) UnmarshalYAML(unmarshal func(interface{}) e
 
 type GetTagValuesForDataSourceRequest struct {
 	// If empty, returns all available tag keys.
-	TagKeys *[]api.TagName `conjure-docs:"If empty, returns all available tag keys." json:"tagKeys,omitempty"`
+	TagKeys *[]api.TagName `json:"tagKeys,omitempty"`
 	/*
 	   For Nominal data sources, a time range can be provided to filter tag values to those present within the
 	   months spanned by the range. If left empty, this defaults to the last month. For external data sources,
 	   the range must not be specified, as all tag values are returned.
 	*/
-	Range *api.Range `conjure-docs:"For Nominal data sources, a time range can be provided to filter tag values to those present within the \nmonths spanned by the range. If left empty, this defaults to the last month. For external data sources, \nthe range must not be specified, as all tag values are returned." json:"range,omitempty"`
+	Range *api.Range `json:"range,omitempty"`
+	// If supplied, caps the number of values per key at the specified value.
+	MaxValuesPerKey *int `json:"maxValuesPerKey,omitempty"`
 }
 
 func (o GetTagValuesForDataSourceRequest) MarshalYAML() (interface{}, error) {
@@ -742,13 +744,15 @@ type SearchChannelsRequest struct {
 	// Deprecated: Use `searchHierarchical` instead. Will be ignored.
 	Prefix *string `json:"prefix,omitempty"`
 	// Will return only channels that contain all strings specified as exact matches (case insensitive).
-	ExactMatch  []string             `conjure-docs:"Will return only channels that contain all strings specified as exact matches (case insensitive)." json:"exactMatch"`
+	ExactMatch  []string             `json:"exactMatch"`
 	DataSources []rids.DataSourceRid `json:"dataSources"`
+	// Filter to only channels with these data types. An empty set means no filtering (all data types included).
+	DataTypes []api.SeriesDataType `json:"dataTypes"`
 	// Deprecated: Will be ignored.
 	PreviouslySelectedChannels *map[rids.DataSourceRid][]api.Channel `json:"previouslySelectedChannels,omitempty"`
 	NextPageToken              *api.Token                            `json:"nextPageToken,omitempty"`
 	// Defaults to 1000. Will throw if larger than 1000.
-	PageSize *int `conjure-docs:"Defaults to 1000. Will throw if larger than 1000." json:"pageSize,omitempty"`
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o SearchChannelsRequest) MarshalJSON() ([]byte, error) {
@@ -757,6 +761,9 @@ func (o SearchChannelsRequest) MarshalJSON() ([]byte, error) {
 	}
 	if o.DataSources == nil {
 		o.DataSources = make([]rids.DataSourceRid, 0)
+	}
+	if o.DataTypes == nil {
+		o.DataTypes = make([]api.SeriesDataType, 0)
 	}
 	type _tmpSearchChannelsRequest SearchChannelsRequest
 	return safejson.Marshal(_tmpSearchChannelsRequest(o))
@@ -773,6 +780,9 @@ func (o *SearchChannelsRequest) UnmarshalJSON(data []byte) error {
 	}
 	if rawSearchChannelsRequest.DataSources == nil {
 		rawSearchChannelsRequest.DataSources = make([]rids.DataSourceRid, 0)
+	}
+	if rawSearchChannelsRequest.DataTypes == nil {
+		rawSearchChannelsRequest.DataTypes = make([]api.SeriesDataType, 0)
 	}
 	*o = SearchChannelsRequest(rawSearchChannelsRequest)
 	return nil
@@ -838,25 +848,25 @@ func (o *SearchChannelsResponse) UnmarshalYAML(unmarshal func(interface{}) error
 
 type SearchFilteredChannelsRequest struct {
 	// All of the strings in the set must appear exactly as substrings within the channel name.
-	Substrings *[]string `conjure-docs:"All of the strings in the set must appear exactly as substrings within the channel name." json:"substrings,omitempty"`
+	Substrings *[]string `json:"substrings,omitempty"`
 	/*
 	   All of the characters in the string will appear in the same order (not necessarily adjacently)
 	   within the channel name. Only supports one subsequence to match at this time.
 	*/
-	Subsequences *[]string            `conjure-docs:"All of the characters in the string will appear in the same order (not necessarily adjacently)\nwithin the channel name. Only supports one subsequence to match at this time." json:"subsequences,omitempty"`
+	Subsequences *[]string            `json:"subsequences,omitempty"`
 	DataSources  []rids.DataSourceRid `json:"dataSources"`
 	// Defaults to 200. Will throw if larger than 200.
-	ResultSize *int `conjure-docs:"Defaults to 200. Will throw if larger than 200." json:"resultSize,omitempty"`
+	ResultSize *int `json:"resultSize,omitempty"`
 	/*
 	   For each data source specified as a key, search will only return channels containing a superset of the
 	   tags specified for that given datasource. If a data source is present in the dataSources field but not
 	   in this map, or if a data source points to an empty map of tags, it will be searched without tag filters.
 	*/
-	Tags map[rids.DataSourceRid]map[api.TagName]api.TagValue `conjure-docs:"For each data source specified as a key, search will only return channels containing a superset of the \ntags specified for that given datasource. If a data source is present in the dataSources field but not\nin this map, or if a data source points to an empty map of tags, it will be searched without tag filters." json:"tags"`
+	Tags map[rids.DataSourceRid]map[api.TagName]api.TagValue `json:"tags"`
 	// If specified, search will only return channels that have had new data after the specified time.
-	MinDataUpdatedTime *api1.UtcTimestamp `conjure-docs:"If specified, search will only return channels that have had new data after the specified time." json:"minDataUpdatedTime,omitempty"`
+	MinDataUpdatedTime *api1.UtcTimestamp `json:"minDataUpdatedTime,omitempty"`
 	// If specified, search will only return channels that have data before the specified time.
-	MaxDataStartTime *api1.UtcTimestamp `conjure-docs:"If specified, search will only return channels that have data before the specified time." json:"maxDataStartTime,omitempty"`
+	MaxDataStartTime *api1.UtcTimestamp `json:"maxDataStartTime,omitempty"`
 	// Deprecated: Will be ignored.
 	PreviouslySelectedChannels *map[rids.DataSourceRid][]api.Channel `json:"previouslySelectedChannels,omitempty"`
 	// Deprecated: Try subsequence search instead.
@@ -866,7 +876,7 @@ type SearchFilteredChannelsRequest struct {
 
 	   Deprecated: Try substring search instead.
 	*/
-	ExactMatch *[]string `conjure-docs:"Will return only channels that contain all strings specified as exact matches (case insensitive)." json:"exactMatch,omitempty"`
+	ExactMatch *[]string `json:"exactMatch,omitempty"`
 }
 
 func (o SearchFilteredChannelsRequest) MarshalJSON() ([]byte, error) {
@@ -874,7 +884,7 @@ func (o SearchFilteredChannelsRequest) MarshalJSON() ([]byte, error) {
 		o.DataSources = make([]rids.DataSourceRid, 0)
 	}
 	if o.Tags == nil {
-		o.Tags = make(map[rids.DataSourceRid]map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[rids.DataSourceRid]map[api.TagName]api.TagValue)
 	}
 	type _tmpSearchFilteredChannelsRequest SearchFilteredChannelsRequest
 	return safejson.Marshal(_tmpSearchFilteredChannelsRequest(o))
@@ -890,7 +900,7 @@ func (o *SearchFilteredChannelsRequest) UnmarshalJSON(data []byte) error {
 		rawSearchFilteredChannelsRequest.DataSources = make([]rids.DataSourceRid, 0)
 	}
 	if rawSearchFilteredChannelsRequest.Tags == nil {
-		rawSearchFilteredChannelsRequest.Tags = make(map[rids.DataSourceRid]map[api.TagName]api.TagValue, 0)
+		rawSearchFilteredChannelsRequest.Tags = make(map[rids.DataSourceRid]map[api.TagName]api.TagValue)
 	}
 	*o = SearchFilteredChannelsRequest(rawSearchFilteredChannelsRequest)
 	return nil
@@ -955,13 +965,13 @@ func (o *SearchFilteredChannelsResponse) UnmarshalYAML(unmarshal func(interface{
 
 type SearchHierarchicalChannelsRequest struct {
 	// The parent (represented as a list of parts) to search under. If empty, will return all top-level channels.
-	Parent      []string             `conjure-docs:"The parent (represented as a list of parts) to search under. If empty, will return all top-level channels." json:"parent"`
+	Parent      []string             `json:"parent"`
 	DataSources []rids.DataSourceRid `json:"dataSources"`
 	/*
 	   When dataScopeFilters are specified, the set of data sources must match the set of data sources in
 	   DataScopeFilters#tags
 	*/
-	DataScopeFilters *DataScopeFilters `conjure-docs:"When dataScopeFilters are specified, the set of data sources must match the set of data sources in\nDataScopeFilters#tags" json:"dataScopeFilters,omitempty"`
+	DataScopeFilters *DataScopeFilters `json:"dataScopeFilters,omitempty"`
 }
 
 func (o SearchHierarchicalChannelsRequest) MarshalJSON() ([]byte, error) {
@@ -1054,16 +1064,16 @@ All filters are optional.
 */
 type TagSearchFilters struct {
 	// Optional, defaults to all channels in datasource.
-	Channel *api.Channel `conjure-docs:"Optional, defaults to all channels in datasource." json:"channel,omitempty"`
+	Channel *api.Channel `json:"channel,omitempty"`
 	// Optional, defaults to no tag filter.
-	TagFilters map[api.TagName]api.TagValue `conjure-docs:"Optional, defaults to no tag filter." json:"tagFilters"`
+	TagFilters map[api.TagName]api.TagValue `json:"tagFilters"`
 	// Optional, defaults to no range filter.
-	Range *api.Range `conjure-docs:"Optional, defaults to no range filter." json:"range,omitempty"`
+	Range *api.Range `json:"range,omitempty"`
 }
 
 func (o TagSearchFilters) MarshalJSON() ([]byte, error) {
 	if o.TagFilters == nil {
-		o.TagFilters = make(map[api.TagName]api.TagValue, 0)
+		o.TagFilters = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpTagSearchFilters TagSearchFilters
 	return safejson.Marshal(_tmpTagSearchFilters(o))
@@ -1076,7 +1086,7 @@ func (o *TagSearchFilters) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawTagSearchFilters.TagFilters == nil {
-		rawTagSearchFilters.TagFilters = make(map[api.TagName]api.TagValue, 0)
+		rawTagSearchFilters.TagFilters = make(map[api.TagName]api.TagValue)
 	}
 	*o = TagSearchFilters(rawTagSearchFilters)
 	return nil

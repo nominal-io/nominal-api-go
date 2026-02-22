@@ -100,7 +100,7 @@ func (u *NotebookDataScope) AcceptFuncs(runRidsFunc func([]api.RunRid) error, as
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NotebookDataScope type")
 		}
 		return unknownFunc(u.typ)
 	case "runRids":
@@ -116,11 +116,11 @@ func (u *NotebookDataScope) AcceptFuncs(runRidsFunc func([]api.RunRid) error, as
 	}
 }
 
-func (u *NotebookDataScope) RunRidsNoopSuccess([]api.RunRid) error {
+func (u *NotebookDataScope) RunRidsNoopSuccess(_ []api.RunRid) error {
 	return nil
 }
 
-func (u *NotebookDataScope) AssetRidsNoopSuccess([]api1.AssetRid) error {
+func (u *NotebookDataScope) AssetRidsNoopSuccess(_ []api1.AssetRid) error {
 	return nil
 }
 
@@ -554,7 +554,7 @@ func (u *SearchNotebooksQuery) AcceptFuncs(andFunc func([]SearchNotebooksQuery) 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchNotebooksQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "and":
@@ -670,91 +670,91 @@ func (u *SearchNotebooksQuery) AcceptFuncs(andFunc func([]SearchNotebooksQuery) 
 	}
 }
 
-func (u *SearchNotebooksQuery) AndNoopSuccess([]SearchNotebooksQuery) error {
+func (u *SearchNotebooksQuery) AndNoopSuccess(_ []SearchNotebooksQuery) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) OrNoopSuccess([]SearchNotebooksQuery) error {
+func (u *SearchNotebooksQuery) OrNoopSuccess(_ []SearchNotebooksQuery) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) NotNoopSuccess(SearchNotebooksQuery) error {
+func (u *SearchNotebooksQuery) NotNoopSuccess(_ SearchNotebooksQuery) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) ExactMatchNoopSuccess(string) error {
+func (u *SearchNotebooksQuery) ExactMatchNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchNotebooksQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) LabelNoopSuccess(api2.Label) error {
+func (u *SearchNotebooksQuery) LabelNoopSuccess(_ api2.Label) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) LabelsNoopSuccess(api1.LabelsFilter) error {
+func (u *SearchNotebooksQuery) LabelsNoopSuccess(_ api1.LabelsFilter) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) PropertyNoopSuccess(api2.Property) error {
+func (u *SearchNotebooksQuery) PropertyNoopSuccess(_ api2.Property) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) PropertiesNoopSuccess(api1.PropertiesFilter) error {
+func (u *SearchNotebooksQuery) PropertiesNoopSuccess(_ api1.PropertiesFilter) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) AssetRidNoopSuccess(api1.AssetRid) error {
+func (u *SearchNotebooksQuery) AssetRidNoopSuccess(_ api1.AssetRid) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) AssetRidsNoopSuccess(AssetsFilter) error {
+func (u *SearchNotebooksQuery) AssetRidsNoopSuccess(_ AssetsFilter) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) ExactAssetRidsNoopSuccess([]api1.AssetRid) error {
+func (u *SearchNotebooksQuery) ExactAssetRidsNoopSuccess(_ []api1.AssetRid) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) AuthorRidNoopSuccess(api1.UserRid) error {
+func (u *SearchNotebooksQuery) AuthorRidNoopSuccess(_ api1.UserRid) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) RunRidNoopSuccess(api.RunRid) error {
+func (u *SearchNotebooksQuery) RunRidNoopSuccess(_ api.RunRid) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) RunRidsNoopSuccess(RunsFilter) error {
+func (u *SearchNotebooksQuery) RunRidsNoopSuccess(_ RunsFilter) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) NotebookTypeNoopSuccess(NotebookType) error {
+func (u *SearchNotebooksQuery) NotebookTypeNoopSuccess(_ NotebookType) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) NotebookTypesNoopSuccess(NotebookTypesFilter) error {
+func (u *SearchNotebooksQuery) NotebookTypesNoopSuccess(_ NotebookTypesFilter) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) DraftStateNoopSuccess(bool) error {
+func (u *SearchNotebooksQuery) DraftStateNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) ArchivedNoopSuccess(bool) error {
+func (u *SearchNotebooksQuery) ArchivedNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchNotebooksQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) AuthorIsCurrentUserNoopSuccess(bool) error {
+func (u *SearchNotebooksQuery) AuthorIsCurrentUserNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) AuthorRidsNoopSuccess([]api1.UserRid) error {
+func (u *SearchNotebooksQuery) AuthorRidsNoopSuccess(_ []api1.UserRid) error {
 	return nil
 }
 

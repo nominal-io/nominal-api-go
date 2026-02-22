@@ -19,13 +19,13 @@ import (
 type AddFileToDataset struct {
 	Handle Handle `json:"handle"`
 	// The size of the file in bytes.
-	FileSize          safelong.SafeLong  `conjure-docs:"The size of the file in bytes." json:"fileSize"`
+	FileSize          safelong.SafeLong  `json:"fileSize"`
 	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
 	IngestTagMetadata *IngestTagMetadata `json:"ingestTagMetadata,omitempty"`
 	OriginFileHandles *[]S3Handle        `json:"originFileHandles,omitempty"`
 	IngestJobRid      *api.IngestJobRid  `json:"ingestJobRid,omitempty"`
 	// File-type-specific metadata. For video files, contains timestamp manifest.
-	Metadata *DatasetFileMetadata `conjure-docs:"File-type-specific metadata. For video files, contains timestamp manifest." json:"metadata,omitempty"`
+	Metadata *DatasetFileMetadata `json:"metadata,omitempty"`
 }
 
 func (o AddFileToDataset) MarshalYAML() (interface{}, error) {
@@ -51,7 +51,7 @@ type AllPropertiesAndLabelsResponse struct {
 
 func (o AllPropertiesAndLabelsResponse) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName][]api1.PropertyValue, 0)
+		o.Properties = make(map[api1.PropertyName][]api1.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api1.Label, 0)
@@ -67,7 +67,7 @@ func (o *AllPropertiesAndLabelsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawAllPropertiesAndLabelsResponse.Properties == nil {
-		rawAllPropertiesAndLabelsResponse.Properties = make(map[api1.PropertyName][]api1.PropertyValue, 0)
+		rawAllPropertiesAndLabelsResponse.Properties = make(map[api1.PropertyName][]api1.PropertyValue)
 	}
 	if rawAllPropertiesAndLabelsResponse.Labels == nil {
 		rawAllPropertiesAndLabelsResponse.Labels = make([]api1.Label, 0)
@@ -138,7 +138,7 @@ func (o *Channel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type ChannelConfig struct {
 	// If set, will construct a prefix tree for channels of the dataset using the given delimiter.
-	PrefixTreeDelimiter *string `conjure-docs:"If set, will construct a prefix tree for channels of the dataset using the given delimiter." json:"prefixTreeDelimiter,omitempty"`
+	PrefixTreeDelimiter *string `json:"prefixTreeDelimiter,omitempty"`
 }
 
 func (o ChannelConfig) MarshalYAML() (interface{}, error) {
@@ -168,7 +168,7 @@ type ChannelDetails struct {
 
 func (o ChannelDetails) MarshalJSON() ([]byte, error) {
 	if o.OriginMetadata == nil {
-		o.OriginMetadata = make(map[string]string, 0)
+		o.OriginMetadata = make(map[string]string)
 	}
 	type _tmpChannelDetails ChannelDetails
 	return safejson.Marshal(_tmpChannelDetails(o))
@@ -181,7 +181,7 @@ func (o *ChannelDetails) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawChannelDetails.OriginMetadata == nil {
-		rawChannelDetails.OriginMetadata = make(map[string]string, 0)
+		rawChannelDetails.OriginMetadata = make(map[string]string)
 	}
 	*o = ChannelDetails(rawChannelDetails)
 	return nil
@@ -214,34 +214,36 @@ type CreateDataset struct {
 	Properties     map[api1.PropertyName]api1.PropertyValue `json:"properties"`
 	Description    *string                                  `json:"description,omitempty"`
 	// Granularity of dataset timestamps. Defaults to nanoseconds.
-	Granularity *api1.Granularity `conjure-docs:"Granularity of dataset timestamps. Defaults to nanoseconds." json:"granularity,omitempty"`
+	Granularity *api1.Granularity `json:"granularity,omitempty"`
 	/*
 	   If true, the dataset should be ingested to the v2 tables and is compatible with streaming.
 
 	   Deprecated: Regardless of what value is specified, this flag is treated as true by the service.
 	*/
-	IsV2Dataset *bool `conjure-docs:"If true, the dataset should be ingested to the v2 tables and is compatible with streaming." json:"isV2Dataset,omitempty"`
+	IsV2Dataset *bool `json:"isV2Dataset,omitempty"`
 	/*
 	   The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 	/*
 	   The markings to apply to the created dataset.
 	   If not provided, the dataset will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api2.MarkingRid `conjure-docs:"The markings to apply to the created dataset.\nIf not provided, the dataset will be visible to all users in the same workspace." json:"markingRids"`
+	MarkingRids []api2.MarkingRid `json:"markingRids"`
+	// The backing dataset type. Defaults to LEGACY type.
+	DatasetType *DatasetBackingType `json:"datasetType,omitempty"`
 }
 
 func (o CreateDataset) MarshalJSON() ([]byte, error) {
 	if o.Metadata == nil {
-		o.Metadata = make(map[string]string, 0)
+		o.Metadata = make(map[string]string)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api1.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		o.Properties = make(map[api1.PropertyName]api1.PropertyValue)
 	}
 	if o.MarkingRids == nil {
 		o.MarkingRids = make([]api2.MarkingRid, 0)
@@ -257,13 +259,13 @@ func (o *CreateDataset) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateDataset.Metadata == nil {
-		rawCreateDataset.Metadata = make(map[string]string, 0)
+		rawCreateDataset.Metadata = make(map[string]string)
 	}
 	if rawCreateDataset.Labels == nil {
 		rawCreateDataset.Labels = make([]api1.Label, 0)
 	}
 	if rawCreateDataset.Properties == nil {
-		rawCreateDataset.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		rawCreateDataset.Properties = make(map[api1.PropertyName]api1.PropertyValue)
 	}
 	if rawCreateDataset.MarkingRids == nil {
 		rawCreateDataset.MarkingRids = make([]api2.MarkingRid, 0)
@@ -294,7 +296,7 @@ where the UUID must be controlled by the caller.
 */
 type CreateDatasetWithUuidRequest struct {
 	// The UUID to assign to the new dataset.
-	Uuid          uuid.UUID     `conjure-docs:"The UUID to assign to the new dataset." json:"uuid"`
+	Uuid          uuid.UUID     `json:"uuid"`
 	CreateDataset CreateDataset `json:"createDataset"`
 }
 
@@ -316,11 +318,11 @@ func (o *CreateDatasetWithUuidRequest) UnmarshalYAML(unmarshal func(interface{})
 
 type CustomTimestamp struct {
 	// The format string should be in the format of the `DateTimeFormatter` class in Java.
-	Format string `conjure-docs:"The format string should be in the format of the \"DateTimeFormatter\" class in Java." json:"format"`
+	Format string `json:"format"`
 	// Year is accepted as an optional field for cases like IRIG time format, and will be assumed as current year if not provided.
-	DefaultYear *int `conjure-docs:"Year is accepted as an optional field for cases like IRIG time format, and will be assumed as current year if not provided." json:"defaultYear,omitempty"`
+	DefaultYear *int `json:"defaultYear,omitempty"`
 	// Default day of year is accepted as an optional field for cases like IRIG time format and will be overridden by day of year in time format.
-	DefaultDayOfYear *int `conjure-docs:"Default day of year is accepted as an optional field for cases like IRIG time format and will be overridden by day of year in time format." json:"defaultDayOfYear,omitempty"`
+	DefaultDayOfYear *int `json:"defaultDayOfYear,omitempty"`
 }
 
 func (o CustomTimestamp) MarshalYAML() (interface{}, error) {
@@ -353,11 +355,12 @@ type Dataset struct {
 	AllowStreaming bool                                     `json:"allowStreaming"`
 	Granularity    api1.Granularity                         `json:"granularity"`
 	IsArchived     bool                                     `json:"isArchived"`
+	DatasetType    *DatasetBackingType                      `json:"datasetType,omitempty"`
 }
 
 func (o Dataset) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		o.Properties = make(map[api1.PropertyName]api1.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api1.Label, 0)
@@ -373,7 +376,7 @@ func (o *Dataset) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawDataset.Properties == nil {
-		rawDataset.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		rawDataset.Properties = make(map[api1.PropertyName]api1.PropertyValue)
 	}
 	if rawDataset.Labels == nil {
 		rawDataset.Labels = make([]api1.Label, 0)
@@ -405,21 +408,21 @@ type DatasetFile struct {
 	Handle     Handle                   `json:"handle"`
 	Bounds     *Bounds                  `json:"bounds,omitempty"`
 	// Timestamp that the file was received and stored, but not processed or made available to consumers.
-	UploadedAt datetime.DateTime `conjure-docs:"Timestamp that the file was received and stored, but not processed or made available to consumers." json:"uploadedAt"`
+	UploadedAt datetime.DateTime `json:"uploadedAt"`
 	/*
 	   Timestamp that the file is ingested at and made available for processing. If the file has failed to be
 	   ingested for any reason or is still being processed, then this value will be empty.
 	*/
-	IngestedAt        *datetime.DateTime  `conjure-docs:"Timestamp that the file is ingested at and made available for processing. If the file has failed to be\ningested for any reason or is still being processed, then this value will be empty." json:"ingestedAt,omitempty"`
+	IngestedAt        *datetime.DateTime  `json:"ingestedAt,omitempty"`
 	IngestStatus      api1.IngestStatusV2 `json:"ingestStatus"`
 	TimestampMetadata *TimestampMetadata  `json:"timestampMetadata,omitempty"`
 	IngestTagMetadata *IngestTagMetadata  `json:"ingestTagMetadata,omitempty"`
 	OriginFilePaths   *[]string           `json:"originFilePaths,omitempty"`
 	IngestJobRid      *api.IngestJobRid   `json:"ingestJobRid,omitempty"`
 	// Timestamp that the file is deleted at, only present if the file has been deleted.
-	DeletedAt *datetime.DateTime `conjure-docs:"Timestamp that the file is deleted at, only present if the file has been deleted." json:"deletedAt,omitempty"`
+	DeletedAt *datetime.DateTime `json:"deletedAt,omitempty"`
 	// File-type-specific metadata. For video files, contains timestamp manifest and segment metadata.
-	Metadata *DatasetFileMetadata `conjure-docs:"File-type-specific metadata. For video files, contains timestamp manifest and segment metadata." json:"metadata,omitempty"`
+	Metadata *DatasetFileMetadata `json:"metadata,omitempty"`
 }
 
 func (o DatasetFile) MarshalYAML() (interface{}, error) {
@@ -527,17 +530,17 @@ func (o *DatasetFilesPage) UnmarshalYAML(unmarshal func(interface{}) error) erro
 
 type DatasetOriginMetadata struct {
 	// Deprecated in favor of FileOriginMetadata
-	Path *string `conjure-docs:"Deprecated in favor of FileOriginMetadata" json:"path,omitempty"`
+	Path *string `json:"path,omitempty"`
 	// Deprecated in favor of FileOriginMetadata
-	XSeriesIsAbsolute *bool `conjure-docs:"Deprecated in favor of FileOriginMetadata" json:"xSeriesIsAbsolute,omitempty"`
+	XSeriesIsAbsolute *bool `json:"xSeriesIsAbsolute,omitempty"`
 	// Deprecated in favor of FileOriginMetadata
-	SchemaDirectivePath *string `conjure-docs:"Deprecated in favor of FileOriginMetadata" json:"schemaDirectivePath,omitempty"`
+	SchemaDirectivePath *string `json:"schemaDirectivePath,omitempty"`
 	// Deprecated in favor of FileOriginMetadata
-	XSeriesColumnName *string `conjure-docs:"Deprecated in favor of FileOriginMetadata" json:"xSeriesColumnName,omitempty"`
+	XSeriesColumnName *string `json:"xSeriesColumnName,omitempty"`
 	// Deprecated in favor of FileOriginMetadata
-	XSeriesTimeUnit *api1.TimeUnit `conjure-docs:"Deprecated in favor of FileOriginMetadata" json:"xSeriesTimeUnit,omitempty"`
+	XSeriesTimeUnit *api1.TimeUnit `json:"xSeriesTimeUnit,omitempty"`
 	// Deprecated in favor of FileOriginMetadata
-	TimestampMetadata *TimestampMetadata `conjure-docs:"Deprecated in favor of FileOriginMetadata" json:"timestampMetadata,omitempty"`
+	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
 	ChannelConfig     *ChannelConfig     `json:"channelConfig,omitempty"`
 }
 
@@ -581,6 +584,7 @@ type EnrichedDataset struct {
 	Granularity      api1.Granularity                         `json:"granularity"`
 	AllowStreaming   bool                                     `json:"allowStreaming"`
 	IsArchived       bool                                     `json:"isArchived"`
+	DatasetType      *DatasetBackingType                      `json:"datasetType,omitempty"`
 }
 
 func (o EnrichedDataset) MarshalJSON() ([]byte, error) {
@@ -588,7 +592,7 @@ func (o EnrichedDataset) MarshalJSON() ([]byte, error) {
 		o.Labels = make([]api1.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		o.Properties = make(map[api1.PropertyName]api1.PropertyValue)
 	}
 	type _tmpEnrichedDataset EnrichedDataset
 	return safejson.Marshal(_tmpEnrichedDataset(o))
@@ -604,7 +608,7 @@ func (o *EnrichedDataset) UnmarshalJSON(data []byte) error {
 		rawEnrichedDataset.Labels = make([]api1.Label, 0)
 	}
 	if rawEnrichedDataset.Properties == nil {
-		rawEnrichedDataset.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		rawEnrichedDataset.Properties = make(map[api1.PropertyName]api1.PropertyValue)
 	}
 	*o = EnrichedDataset(rawEnrichedDataset)
 	return nil
@@ -812,13 +816,13 @@ func (o *GetHandlesForDatasetsRequest) UnmarshalYAML(unmarshal func(interface{})
 
 type IngestProgressV2 struct {
 	// Timestamp at start of ingest
-	StartTime datetime.DateTime `conjure-docs:"Timestamp at start of ingest" json:"startTime"`
+	StartTime datetime.DateTime `json:"startTime"`
 	// Timestamp at end of ingest, empty if still in progress
-	EndTime *datetime.DateTime `conjure-docs:"Timestamp at end of ingest, empty if still in progress" json:"endTime,omitempty"`
+	EndTime *datetime.DateTime `json:"endTime,omitempty"`
 	// Status of ingest, contains error if failed
-	IngestStatus api1.IngestStatusV2 `conjure-docs:"Status of ingest, contains error if failed" json:"ingestStatus"`
+	IngestStatus api1.IngestStatusV2 `json:"ingestStatus"`
 	// Whether ingest duration can be reliably calculated
-	Incalculable *bool `conjure-docs:"Whether ingest duration can be reliably calculated" json:"incalculable,omitempty"`
+	Incalculable *bool `json:"incalculable,omitempty"`
 }
 
 func (o IngestProgressV2) MarshalYAML() (interface{}, error) {
@@ -840,16 +844,16 @@ func (o *IngestProgressV2) UnmarshalYAML(unmarshal func(interface{}) error) erro
 // The tags used when ingesting the dataset file.
 type IngestTagMetadata struct {
 	// A map of tag names to column names to derive the tag values from.
-	TagColumns         map[api1.TagName]api1.ColumnName `conjure-docs:"A map of tag names to column names to derive the tag values from." json:"tagColumns"`
+	TagColumns         map[api1.TagName]api1.ColumnName `json:"tagColumns"`
 	AdditionalFileTags map[api1.TagName]api1.TagValue   `json:"additionalFileTags"`
 }
 
 func (o IngestTagMetadata) MarshalJSON() ([]byte, error) {
 	if o.TagColumns == nil {
-		o.TagColumns = make(map[api1.TagName]api1.ColumnName, 0)
+		o.TagColumns = make(map[api1.TagName]api1.ColumnName)
 	}
 	if o.AdditionalFileTags == nil {
-		o.AdditionalFileTags = make(map[api1.TagName]api1.TagValue, 0)
+		o.AdditionalFileTags = make(map[api1.TagName]api1.TagValue)
 	}
 	type _tmpIngestTagMetadata IngestTagMetadata
 	return safejson.Marshal(_tmpIngestTagMetadata(o))
@@ -862,10 +866,10 @@ func (o *IngestTagMetadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawIngestTagMetadata.TagColumns == nil {
-		rawIngestTagMetadata.TagColumns = make(map[api1.TagName]api1.ColumnName, 0)
+		rawIngestTagMetadata.TagColumns = make(map[api1.TagName]api1.ColumnName)
 	}
 	if rawIngestTagMetadata.AdditionalFileTags == nil {
-		rawIngestTagMetadata.AdditionalFileTags = make(map[api1.TagName]api1.TagValue, 0)
+		rawIngestTagMetadata.AdditionalFileTags = make(map[api1.TagName]api1.TagValue)
 	}
 	*o = IngestTagMetadata(rawIngestTagMetadata)
 	return nil
@@ -932,7 +936,7 @@ type MarkFileIngestSuccessful struct {
 	   It's produced externally and passed here to handle retries and failures, and must be nanosecond precision.
 	   Two files cannot have the same ingested at timestamp.
 	*/
-	IngestedAt api1.Timestamp `conjure-docs:"The ingestion timestamp is produced by CSV splitter and stored directly in the clickhouse table.\nIt's produced externally and passed here to handle retries and failures, and must be nanosecond precision.\nTwo files cannot have the same ingested at timestamp." json:"ingestedAt"`
+	IngestedAt api1.Timestamp `json:"ingestedAt"`
 }
 
 func (o MarkFileIngestSuccessful) MarshalYAML() (interface{}, error) {
@@ -1043,7 +1047,7 @@ type SearchDatasetFilesRequest struct {
 	DatasetRid rids.DatasetRid         `json:"datasetRid"`
 	Query      SearchDatasetFilesQuery `json:"query"`
 	// Defaults to 100. Will throw if larger than 1000.
-	PageSize    *int                   `conjure-docs:"Defaults to 100. Will throw if larger than 1000." json:"pageSize,omitempty"`
+	PageSize    *int                   `json:"pageSize,omitempty"`
 	Token       *api1.Token            `json:"token,omitempty"`
 	SortOptions DatasetFileSortOptions `json:"sortOptions"`
 }
@@ -1109,7 +1113,7 @@ func (o *SearchDatasetFilesResponse) UnmarshalYAML(unmarshal func(interface{}) e
 type SearchDatasetsRequest struct {
 	Query SearchDatasetsQuery `json:"query"`
 	// Defaults to 100. Will throw if larger than 1000.
-	PageSize    *int        `conjure-docs:"Defaults to 100. Will throw if larger than 1000." json:"pageSize,omitempty"`
+	PageSize    *int        `json:"pageSize,omitempty"`
 	Token       *api1.Token `json:"token,omitempty"`
 	SortOptions SortOptions `json:"sortOptions"`
 }
@@ -1259,7 +1263,7 @@ func (o *TimestampMetadata) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 type UnitConfig struct {
 	// If set, will extract the series unit from the column metadata of the ingested file.
-	UnitMetadataKey string `conjure-docs:"If set, will extract the series unit from the column metadata of the ingested file." json:"unitMetadataKey"`
+	UnitMetadataKey string `json:"unitMetadataKey"`
 }
 
 func (o UnitConfig) MarshalYAML() (interface{}, error) {

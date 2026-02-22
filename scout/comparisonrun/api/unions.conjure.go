@@ -96,7 +96,7 @@ func (u *OffsetAnchor) AcceptFuncs(runFunc func(OffsetRunAnchor) error, seriesFu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in OffsetAnchor type")
 		}
 		return unknownFunc(u.typ)
 	case "run":
@@ -112,11 +112,11 @@ func (u *OffsetAnchor) AcceptFuncs(runFunc func(OffsetRunAnchor) error, seriesFu
 	}
 }
 
-func (u *OffsetAnchor) RunNoopSuccess(OffsetRunAnchor) error {
+func (u *OffsetAnchor) RunNoopSuccess(_ OffsetRunAnchor) error {
 	return nil
 }
 
-func (u *OffsetAnchor) SeriesNoopSuccess(OffsetSeriesAnchor) error {
+func (u *OffsetAnchor) SeriesNoopSuccess(_ OffsetSeriesAnchor) error {
 	return nil
 }
 

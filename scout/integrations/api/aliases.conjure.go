@@ -27,6 +27,19 @@ func (a *IntegrationRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a IntegrationRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *IntegrationRid) UnmarshalJSON(data []byte) error {
+	var rawIntegrationRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawIntegrationRid); err != nil {
+		return err
+	}
+	*a = IntegrationRid(rawIntegrationRid)
+	return nil
+}
+
 func (a IntegrationRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	"github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
+	"github.com/palantir/pkg/safelong"
 	"github.com/palantir/pkg/safeyaml"
 )
 
@@ -143,7 +144,8 @@ func (o *ExportTimeDomainChannels) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 type GeneratePresignedLinkResponse struct {
-	PresignedUrl PresignedUrl `json:"presignedUrl"`
+	PresignedUrl  PresignedUrl      `json:"presignedUrl"`
+	FileSizeBytes safelong.SafeLong `json:"fileSizeBytes"`
 }
 
 func (o GeneratePresignedLinkResponse) MarshalYAML() (interface{}, error) {

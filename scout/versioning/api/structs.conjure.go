@@ -68,7 +68,7 @@ type Commit struct {
 	   A working state commit is created via the `saveWorkingState` endpoint
 	   and is non-permanent. In the future, it may be compacted and not exist.
 	*/
-	IsWorkingState bool              `conjure-docs:"A working state commit is created via the \"saveWorkingState\" endpoint\nand is non-permanent. In the future, it may be compacted and not exist." json:"isWorkingState"`
+	IsWorkingState bool              `json:"isWorkingState"`
 	CommittedBy    api.UserRid       `json:"committedBy"`
 	CommittedAt    datetime.DateTime `json:"committedAt"`
 }
@@ -138,7 +138,7 @@ type CommitRequest struct {
 	   of the new commit. It will be made permanent if not already,
 	   to prevent the merge parent from being compacted.
 	*/
-	MergeParentCommit *CommitId `conjure-docs:"If present, this existing commit will be the merge parent\nof the new commit. It will be made permanent if not already,\nto prevent the merge parent from being compacted." json:"mergeParentCommit,omitempty"`
+	MergeParentCommit *CommitId `json:"mergeParentCommit,omitempty"`
 	Message           string    `json:"message"`
 	LatestCommit      *CommitId `json:"latestCommit,omitempty"`
 }

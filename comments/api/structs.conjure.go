@@ -12,27 +12,27 @@ import (
 
 type Comment struct {
 	// Unique resource identifier for the comment
-	Rid CommentRid `conjure-docs:"Unique resource identifier for the comment" json:"rid"`
+	Rid CommentRid `json:"rid"`
 	// The parent of the comment. It can be a resource or another comment.
-	Parent CommentParent `conjure-docs:"The parent of the comment. It can be a resource or another comment." json:"parent"`
+	Parent CommentParent `json:"parent"`
 	// The user who authored the comment
-	AuthorRid rid.ResourceIdentifier `conjure-docs:"The user who authored the comment" json:"authorRid"`
+	AuthorRid rid.ResourceIdentifier `json:"authorRid"`
 	// The time the comment was created
-	CreatedAt datetime.DateTime `conjure-docs:"The time the comment was created" json:"createdAt"`
+	CreatedAt datetime.DateTime `json:"createdAt"`
 	// The time the comment was edited. Empty if the comment has not been edited.
-	EditedAt *datetime.DateTime `conjure-docs:"The time the comment was edited. Empty if the comment has not been edited." json:"editedAt,omitempty"`
+	EditedAt *datetime.DateTime `json:"editedAt,omitempty"`
 	// The time the comment was deleted. Empty if the comment has not been deleted.
-	DeletedAt *datetime.DateTime `conjure-docs:"The time the comment was deleted. Empty if the comment has not been deleted." json:"deletedAt,omitempty"`
+	DeletedAt *datetime.DateTime `json:"deletedAt,omitempty"`
 	// The markdown content of the comment.
-	Content string `conjure-docs:"The markdown content of the comment." json:"content"`
+	Content string `json:"content"`
 	// The user who pinned the comment. Empty if the comment is not pinned.
-	PinnedBy *rid.ResourceIdentifier `conjure-docs:"The user who pinned the comment. Empty if the comment is not pinned." json:"pinnedBy,omitempty"`
+	PinnedBy *rid.ResourceIdentifier `json:"pinnedBy,omitempty"`
 	// The time the comment was pinned. Empty if the comment is not pinned.
-	PinnedAt *datetime.DateTime `conjure-docs:"The time the comment was pinned. Empty if the comment is not pinned." json:"pinnedAt,omitempty"`
+	PinnedAt *datetime.DateTime `json:"pinnedAt,omitempty"`
 	// The reactions on the comment
-	Reactions []Reaction `conjure-docs:"The reactions on the comment" json:"reactions"`
+	Reactions []Reaction `json:"reactions"`
 	// The comment's attachments
-	Attachments []rids.AttachmentRid `conjure-docs:"The comment's attachments" json:"attachments"`
+	Attachments []rids.AttachmentRid `json:"attachments"`
 }
 
 func (o Comment) MarshalJSON() ([]byte, error) {
@@ -80,7 +80,7 @@ func (o *Comment) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type CommentParentComment struct {
 	// The resource identifier for the comment that the comment is replying to
-	CommentRid CommentRid `conjure-docs:"The resource identifier for the comment that the comment is replying to" json:"commentRid"`
+	CommentRid CommentRid `json:"commentRid"`
 }
 
 func (o CommentParentComment) MarshalYAML() (interface{}, error) {
@@ -101,9 +101,9 @@ func (o *CommentParentComment) UnmarshalYAML(unmarshal func(interface{}) error) 
 
 type CommentParentResource struct {
 	// The type of resource that the comment is associated with
-	ResourceType ResourceType `conjure-docs:"The type of resource that the comment is associated with" json:"resourceType"`
+	ResourceType ResourceType `json:"resourceType"`
 	// The resource identifier for the resource that the comment is associated with. For example, a run or a workbook.
-	ResourceRid rid.ResourceIdentifier `conjure-docs:"The resource identifier for the resource that the comment is associated with. For example, a run or a workbook." json:"resourceRid"`
+	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
 }
 
 func (o CommentParentResource) MarshalYAML() (interface{}, error) {
@@ -124,14 +124,14 @@ func (o *CommentParentResource) UnmarshalYAML(unmarshal func(interface{}) error)
 
 type Conversation struct {
 	// RID for the resource that the conversation is associated with.
-	ResourceRid rid.ResourceIdentifier `conjure-docs:"RID for the resource that the conversation is associated with." json:"resourceRid"`
+	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
 	// The type of the resource that the conversation is associated with.
-	ResourceType ResourceType `conjure-docs:"The type of the resource that the conversation is associated with." json:"resourceType"`
+	ResourceType ResourceType `json:"resourceType"`
 	/*
 	   The comments on the conversation ordered by creation time.
 	   Empty if the comment has no replies.
 	*/
-	Comments []ConversationNode `conjure-docs:"The comments on the conversation ordered by creation time.\nEmpty if the comment has no replies." json:"comments"`
+	Comments []ConversationNode `json:"comments"`
 }
 
 func (o Conversation) MarshalJSON() ([]byte, error) {
@@ -173,9 +173,9 @@ func (o *Conversation) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type ConversationNode struct {
 	// The comment
-	Comment Comment `conjure-docs:"The comment" json:"comment"`
+	Comment Comment `json:"comment"`
 	// The comments on (aka replies to) the comment ordered by creation time. Empty if the comment has no replies.
-	Replies []ConversationNode `conjure-docs:"The comments on (aka replies to) the comment ordered by creation time. Empty if the comment has no replies." json:"replies"`
+	Replies []ConversationNode `json:"replies"`
 }
 
 func (o ConversationNode) MarshalJSON() ([]byte, error) {
@@ -218,9 +218,9 @@ func (o *ConversationNode) UnmarshalYAML(unmarshal func(interface{}) error) erro
 type CreateCommentRequest struct {
 	Parent CommentParent `json:"parent"`
 	// The content of the comment. Markdown supported.
-	Content string `conjure-docs:"The content of the comment. Markdown supported." json:"content"`
+	Content string `json:"content"`
 	// Attachments to the comment.
-	Attachments []rids.AttachmentRid `conjure-docs:"Attachments to the comment." json:"attachments"`
+	Attachments []rids.AttachmentRid `json:"attachments"`
 }
 
 func (o CreateCommentRequest) MarshalJSON() ([]byte, error) {
@@ -262,9 +262,9 @@ func (o *CreateCommentRequest) UnmarshalYAML(unmarshal func(interface{}) error) 
 
 type EditCommentRequest struct {
 	// The content of the comment. Markdown supported.
-	Content string `conjure-docs:"The content of the comment. Markdown supported." json:"content"`
+	Content string `json:"content"`
 	// Attachments to the comment.
-	Attachments []rids.AttachmentRid `conjure-docs:"Attachments to the comment." json:"attachments"`
+	Attachments []rids.AttachmentRid `json:"attachments"`
 }
 
 func (o EditCommentRequest) MarshalJSON() ([]byte, error) {
@@ -306,13 +306,13 @@ func (o *EditCommentRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 
 type Reaction struct {
 	// Unique resource identifier for the reaction
-	Rid ReactionRid `conjure-docs:"Unique resource identifier for the reaction" json:"rid"`
+	Rid ReactionRid `json:"rid"`
 	// The user who authored the reaction
-	UserRid rid.ResourceIdentifier `conjure-docs:"The user who authored the reaction" json:"userRid"`
+	UserRid rid.ResourceIdentifier `json:"userRid"`
 	// The time the reaction was created
-	CreatedAt datetime.DateTime `conjure-docs:"The time the reaction was created" json:"createdAt"`
+	CreatedAt datetime.DateTime `json:"createdAt"`
 	// The type of reaction
-	Type ReactionType `conjure-docs:"The type of reaction" json:"type"`
+	Type ReactionType `json:"type"`
 }
 
 func (o Reaction) MarshalYAML() (interface{}, error) {

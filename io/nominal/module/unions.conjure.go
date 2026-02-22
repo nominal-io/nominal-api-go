@@ -113,7 +113,7 @@ func (u *FunctionNode) AcceptFuncs(enumFunc func(api1.EnumSeries) error, numeric
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FunctionNode type")
 		}
 		return unknownFunc(u.typ)
 	case "enum":
@@ -134,15 +134,15 @@ func (u *FunctionNode) AcceptFuncs(enumFunc func(api1.EnumSeries) error, numeric
 	}
 }
 
-func (u *FunctionNode) EnumNoopSuccess(api1.EnumSeries) error {
+func (u *FunctionNode) EnumNoopSuccess(_ api1.EnumSeries) error {
 	return nil
 }
 
-func (u *FunctionNode) NumericNoopSuccess(api1.NumericSeries) error {
+func (u *FunctionNode) NumericNoopSuccess(_ api1.NumericSeries) error {
 	return nil
 }
 
-func (u *FunctionNode) RangesNoopSuccess(api1.RangeSeries) error {
+func (u *FunctionNode) RangesNoopSuccess(_ api1.RangeSeries) error {
 	return nil
 }
 
@@ -313,7 +313,7 @@ func (u *RequestModuleRef) AcceptFuncs(nameFunc func(RequestModuleNameRef) error
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in RequestModuleRef type")
 		}
 		return unknownFunc(u.typ)
 	case "name":
@@ -329,11 +329,11 @@ func (u *RequestModuleRef) AcceptFuncs(nameFunc func(RequestModuleNameRef) error
 	}
 }
 
-func (u *RequestModuleRef) NameNoopSuccess(RequestModuleNameRef) error {
+func (u *RequestModuleRef) NameNoopSuccess(_ RequestModuleNameRef) error {
 	return nil
 }
 
-func (u *RequestModuleRef) RidNoopSuccess(RequestModuleRidRef) error {
+func (u *RequestModuleRef) RidNoopSuccess(_ RequestModuleRidRef) error {
 	return nil
 }
 
@@ -557,7 +557,7 @@ func (u *SearchModulesQuery) AcceptFuncs(searchTextFunc func(string) error, crea
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchModulesQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "searchText":
@@ -598,31 +598,31 @@ func (u *SearchModulesQuery) AcceptFuncs(searchTextFunc func(string) error, crea
 	}
 }
 
-func (u *SearchModulesQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchModulesQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchModulesQuery) CreatedByNoopSuccess(api.UserRid) error {
+func (u *SearchModulesQuery) CreatedByNoopSuccess(_ api.UserRid) error {
 	return nil
 }
 
-func (u *SearchModulesQuery) LastUpdatedByNoopSuccess(api.UserRid) error {
+func (u *SearchModulesQuery) LastUpdatedByNoopSuccess(_ api.UserRid) error {
 	return nil
 }
 
-func (u *SearchModulesQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchModulesQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
-func (u *SearchModulesQuery) AndNoopSuccess([]SearchModulesQuery) error {
+func (u *SearchModulesQuery) AndNoopSuccess(_ []SearchModulesQuery) error {
 	return nil
 }
 
-func (u *SearchModulesQuery) OrNoopSuccess([]SearchModulesQuery) error {
+func (u *SearchModulesQuery) OrNoopSuccess(_ []SearchModulesQuery) error {
 	return nil
 }
 
-func (u *SearchModulesQuery) NotNoopSuccess(SearchModulesQuery) error {
+func (u *SearchModulesQuery) NotNoopSuccess(_ SearchModulesQuery) error {
 	return nil
 }
 
@@ -856,7 +856,7 @@ func (u *VersionStrategy) AcceptFuncs(pinnedFunc func(PinnedVersionStrategy) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VersionStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "pinned":
@@ -872,11 +872,11 @@ func (u *VersionStrategy) AcceptFuncs(pinnedFunc func(PinnedVersionStrategy) err
 	}
 }
 
-func (u *VersionStrategy) PinnedNoopSuccess(PinnedVersionStrategy) error {
+func (u *VersionStrategy) PinnedNoopSuccess(_ PinnedVersionStrategy) error {
 	return nil
 }
 
-func (u *VersionStrategy) LatestNoopSuccess(LatestVersionStrategy) error {
+func (u *VersionStrategy) LatestNoopSuccess(_ LatestVersionStrategy) error {
 	return nil
 }
 

@@ -82,7 +82,7 @@ func (u *Handle) AcceptFuncs(s3Func func(S3Handle) error, unknownFunc func(strin
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Handle type")
 		}
 		return unknownFunc(u.typ)
 	case "s3":
@@ -93,7 +93,7 @@ func (u *Handle) AcceptFuncs(s3Func func(S3Handle) error, unknownFunc func(strin
 	}
 }
 
-func (u *Handle) S3NoopSuccess(S3Handle) error {
+func (u *Handle) S3NoopSuccess(_ S3Handle) error {
 	return nil
 }
 

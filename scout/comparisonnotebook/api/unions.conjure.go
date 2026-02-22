@@ -156,7 +156,7 @@ func (u *AggregationType) AcceptFuncs(maxFunc func(Max) error, minFunc func(Min)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in AggregationType type")
 		}
 		return unknownFunc(u.typ)
 	case "max":
@@ -192,27 +192,27 @@ func (u *AggregationType) AcceptFuncs(maxFunc func(Max) error, minFunc func(Min)
 	}
 }
 
-func (u *AggregationType) MaxNoopSuccess(Max) error {
+func (u *AggregationType) MaxNoopSuccess(_ Max) error {
 	return nil
 }
 
-func (u *AggregationType) MinNoopSuccess(Min) error {
+func (u *AggregationType) MinNoopSuccess(_ Min) error {
 	return nil
 }
 
-func (u *AggregationType) MeanNoopSuccess(Mean) error {
+func (u *AggregationType) MeanNoopSuccess(_ Mean) error {
 	return nil
 }
 
-func (u *AggregationType) StandardDeviationNoopSuccess(StandardDeviation) error {
+func (u *AggregationType) StandardDeviationNoopSuccess(_ StandardDeviation) error {
 	return nil
 }
 
-func (u *AggregationType) CountNoopSuccess(Count) error {
+func (u *AggregationType) CountNoopSuccess(_ Count) error {
 	return nil
 }
 
-func (u *AggregationType) RootMeanSquareNoopSuccess(RootMeanSquare) error {
+func (u *AggregationType) RootMeanSquareNoopSuccess(_ RootMeanSquare) error {
 	return nil
 }
 
@@ -416,7 +416,7 @@ func (u *ComparisonScatterPlotColoringOption) AcceptFuncs(byVariableFunc func(Co
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComparisonScatterPlotColoringOption type")
 		}
 		return unknownFunc(u.typ)
 	case "byVariable":
@@ -427,7 +427,7 @@ func (u *ComparisonScatterPlotColoringOption) AcceptFuncs(byVariableFunc func(Co
 	}
 }
 
-func (u *ComparisonScatterPlotColoringOption) ByVariableNoopSuccess(ColorByVariableConfiguration) error {
+func (u *ComparisonScatterPlotColoringOption) ByVariableNoopSuccess(_ ColorByVariableConfiguration) error {
 	return nil
 }
 
@@ -551,7 +551,7 @@ func (u *ComparisonScatterPlotDefinition) AcceptFuncs(v1Func func(ComparisonScat
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComparisonScatterPlotDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -562,7 +562,7 @@ func (u *ComparisonScatterPlotDefinition) AcceptFuncs(v1Func func(ComparisonScat
 	}
 }
 
-func (u *ComparisonScatterPlotDefinition) V1NoopSuccess(ComparisonScatterPlotDefinitionV1) error {
+func (u *ComparisonScatterPlotDefinition) V1NoopSuccess(_ ComparisonScatterPlotDefinitionV1) error {
 	return nil
 }
 
@@ -700,7 +700,7 @@ func (u *ComparisonTableDefinition) AcceptFuncs(v1Func func(ComparisonTableDefin
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComparisonTableDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -716,11 +716,11 @@ func (u *ComparisonTableDefinition) AcceptFuncs(v1Func func(ComparisonTableDefin
 	}
 }
 
-func (u *ComparisonTableDefinition) V1NoopSuccess(ComparisonTableDefinitionV1) error {
+func (u *ComparisonTableDefinition) V1NoopSuccess(_ ComparisonTableDefinitionV1) error {
 	return nil
 }
 
-func (u *ComparisonTableDefinition) V2NoopSuccess(ComparisonTableDefinitionV2) error {
+func (u *ComparisonTableDefinition) V2NoopSuccess(_ ComparisonTableDefinitionV2) error {
 	return nil
 }
 
@@ -860,7 +860,7 @@ func (u *ComparisonTimeSeriesPlotDefinition) AcceptFuncs(v1Func func(ComparisonT
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComparisonTimeSeriesPlotDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -871,7 +871,7 @@ func (u *ComparisonTimeSeriesPlotDefinition) AcceptFuncs(v1Func func(ComparisonT
 	}
 }
 
-func (u *ComparisonTimeSeriesPlotDefinition) V1NoopSuccess(ComparisonTimeSeriesPlotDefinitionV1) error {
+func (u *ComparisonTimeSeriesPlotDefinition) V1NoopSuccess(_ ComparisonTimeSeriesPlotDefinitionV1) error {
 	return nil
 }
 
@@ -1009,7 +1009,7 @@ func (u *ComparisonWorkbookDataScope) AcceptFuncs(runsFunc func([]api.RunRid) er
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComparisonWorkbookDataScope type")
 		}
 		return unknownFunc(u.typ)
 	case "runs":
@@ -1025,11 +1025,11 @@ func (u *ComparisonWorkbookDataScope) AcceptFuncs(runsFunc func([]api.RunRid) er
 	}
 }
 
-func (u *ComparisonWorkbookDataScope) RunsNoopSuccess([]api.RunRid) error {
+func (u *ComparisonWorkbookDataScope) RunsNoopSuccess(_ []api.RunRid) error {
 	return nil
 }
 
-func (u *ComparisonWorkbookDataScope) AssetsNoopSuccess([]api1.AssetRid) error {
+func (u *ComparisonWorkbookDataScope) AssetsNoopSuccess(_ []api1.AssetRid) error {
 	return nil
 }
 
@@ -1188,7 +1188,7 @@ func (u *SupplementalComparisonWorkbookContext) AcceptFuncs(noneFunc func(api2.E
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SupplementalComparisonWorkbookContext type")
 		}
 		return unknownFunc(u.typ)
 	case "none":
@@ -1204,11 +1204,11 @@ func (u *SupplementalComparisonWorkbookContext) AcceptFuncs(noneFunc func(api2.E
 	}
 }
 
-func (u *SupplementalComparisonWorkbookContext) NoneNoopSuccess(api2.Empty) error {
+func (u *SupplementalComparisonWorkbookContext) NoneNoopSuccess(_ api2.Empty) error {
 	return nil
 }
 
-func (u *SupplementalComparisonWorkbookContext) RangeAggregationNoopSuccess(RangeAggregationContext) error {
+func (u *SupplementalComparisonWorkbookContext) RangeAggregationNoopSuccess(_ RangeAggregationContext) error {
 	return nil
 }
 
@@ -1362,7 +1362,7 @@ func (u *TimeWindow) AcceptFuncs(relativeFunc func(api.Duration) error, fixedFun
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimeWindow type")
 		}
 		return unknownFunc(u.typ)
 	case "relative":
@@ -1378,11 +1378,11 @@ func (u *TimeWindow) AcceptFuncs(relativeFunc func(api.Duration) error, fixedFun
 	}
 }
 
-func (u *TimeWindow) RelativeNoopSuccess(api.Duration) error {
+func (u *TimeWindow) RelativeNoopSuccess(_ api.Duration) error {
 	return nil
 }
 
-func (u *TimeWindow) FixedNoopSuccess(TimestampedRange) error {
+func (u *TimeWindow) FixedNoopSuccess(_ TimestampedRange) error {
 	return nil
 }
 
@@ -1536,7 +1536,7 @@ func (u *VariableLocator) AcceptFuncs(comparisonWorkbookVariableFunc func(Variab
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VariableLocator type")
 		}
 		return unknownFunc(u.typ)
 	case "comparisonWorkbookVariable":
@@ -1552,11 +1552,11 @@ func (u *VariableLocator) AcceptFuncs(comparisonWorkbookVariableFunc func(Variab
 	}
 }
 
-func (u *VariableLocator) ComparisonWorkbookVariableNoopSuccess(VariableName) error {
+func (u *VariableLocator) ComparisonWorkbookVariableNoopSuccess(_ VariableName) error {
 	return nil
 }
 
-func (u *VariableLocator) SeriesNoopSuccess(api3.ChannelLocator) error {
+func (u *VariableLocator) SeriesNoopSuccess(_ api3.ChannelLocator) error {
 	return nil
 }
 
@@ -1724,7 +1724,7 @@ func (u *VizDefinition) AcceptFuncs(tableFunc func(ComparisonTableDefinition) er
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VizDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "table":
@@ -1745,15 +1745,15 @@ func (u *VizDefinition) AcceptFuncs(tableFunc func(ComparisonTableDefinition) er
 	}
 }
 
-func (u *VizDefinition) TableNoopSuccess(ComparisonTableDefinition) error {
+func (u *VizDefinition) TableNoopSuccess(_ ComparisonTableDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) ScatterNoopSuccess(ComparisonScatterPlotDefinition) error {
+func (u *VizDefinition) ScatterNoopSuccess(_ ComparisonScatterPlotDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) TimeSeriesNoopSuccess(ComparisonTimeSeriesPlotDefinition) error {
+func (u *VizDefinition) TimeSeriesNoopSuccess(_ ComparisonTimeSeriesPlotDefinition) error {
 	return nil
 }
 

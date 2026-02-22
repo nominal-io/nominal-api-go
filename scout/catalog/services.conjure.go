@@ -88,20 +88,18 @@ func NewCatalogServiceClient(client httpclient.Client) CatalogServiceClient {
 }
 
 func (c *catalogServiceClient) GetEnrichedDataset(ctx context.Context, authHeader bearertoken.Token, datasetUuidArg uuid.UUID) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	var returnVal *EnrichedDataset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetEnrichedDataset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s", url.PathEscape(fmt.Sprint(datasetUuidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getEnrichedDataset failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(EnrichedDataset), werror.WrapWithContextParams(ctx, err, "getEnrichedDataset failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getEnrichedDataset response cannot be nil")
+		return *new(EnrichedDataset), werror.ErrorWithContextParams(ctx, "getEnrichedDataset response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -110,13 +108,12 @@ func (c *catalogServiceClient) GetEnrichedDatasets(ctx context.Context, authHead
 	var returnVal []EnrichedDataset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetEnrichedDatasets"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/multiple"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(getDatasetsRequestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getEnrichedDatasets failed")
 	}
 	if returnVal == nil {
@@ -126,20 +123,18 @@ func (c *catalogServiceClient) GetEnrichedDatasets(ctx context.Context, authHead
 }
 
 func (c *catalogServiceClient) GetDataset(ctx context.Context, authHeader bearertoken.Token, datasetUuidArg uuid.UUID) (Dataset, error) {
-	var defaultReturnVal Dataset
 	var returnVal *Dataset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDataset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets-simple/%s", url.PathEscape(fmt.Sprint(datasetUuidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getDataset failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(Dataset), werror.WrapWithContextParams(ctx, err, "getDataset failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getDataset response cannot be nil")
+		return *new(Dataset), werror.ErrorWithContextParams(ctx, "getDataset response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -148,13 +143,12 @@ func (c *catalogServiceClient) GetDatasets(ctx context.Context, authHeader beare
 	var returnVal []Dataset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDatasets"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets-simple/multiple"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(getDatasetsRequestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getDatasets failed")
 	}
 	if returnVal == nil {
@@ -164,30 +158,26 @@ func (c *catalogServiceClient) GetDatasets(ctx context.Context, authHeader beare
 }
 
 func (c *catalogServiceClient) GetDatasetFile(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId) (DatasetFile, error) {
-	var defaultReturnVal DatasetFile
 	var returnVal *DatasetFile
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDatasetFile"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/dataset/%s/file/%s", url.PathEscape(fmt.Sprint(datasetRidArg)), url.PathEscape(fmt.Sprint(fileIdArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getDatasetFile failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(DatasetFile), werror.WrapWithContextParams(ctx, err, "getDatasetFile failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getDatasetFile response cannot be nil")
+		return *new(DatasetFile), werror.ErrorWithContextParams(ctx, "getDatasetFile response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) GetDatasetFilesForJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error) {
-	var defaultReturnVal DatasetFilesPage
 	var returnVal *DatasetFilesPage
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDatasetFilesForJob"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/ingest-job/%s/files", url.PathEscape(fmt.Sprint(ingestJobRidArg))))
 	queryParams := make(url.Values)
@@ -197,70 +187,64 @@ func (c *catalogServiceClient) GetDatasetFilesForJob(ctx context.Context, authHe
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getDatasetFilesForJob failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(DatasetFilesPage), werror.WrapWithContextParams(ctx, err, "getDatasetFilesForJob failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getDatasetFilesForJob response cannot be nil")
+		return *new(DatasetFilesPage), werror.ErrorWithContextParams(ctx, "getDatasetFilesForJob response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) SearchDatasets(ctx context.Context, authHeader bearertoken.Token, requestArg SearchDatasetsRequest) (SearchDatasetsResponse, error) {
-	var defaultReturnVal SearchDatasetsResponse
 	var returnVal *SearchDatasetsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchDatasets"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/search-datasets-v2"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchDatasets failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchDatasetsResponse), werror.WrapWithContextParams(ctx, err, "searchDatasets failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchDatasets response cannot be nil")
+		return *new(SearchDatasetsResponse), werror.ErrorWithContextParams(ctx, "searchDatasets response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) UpdateDatasetIngestStatusV2(ctx context.Context, authHeader bearertoken.Token, detailsArg UpdateIngestStatusV2) (api.IngestStatusV2, error) {
-	var defaultReturnVal api.IngestStatusV2
 	var returnVal *api.IngestStatusV2
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateDatasetIngestStatusV2"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/ingest-status-v2"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(detailsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateDatasetIngestStatusV2 failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api.IngestStatusV2), werror.WrapWithContextParams(ctx, err, "updateDatasetIngestStatusV2 failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateDatasetIngestStatusV2 response cannot be nil")
+		return *new(api.IngestStatusV2), werror.ErrorWithContextParams(ctx, "updateDatasetIngestStatusV2 response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) GetIngestProgressV2(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier) (IngestProgressV2, error) {
-	var defaultReturnVal IngestProgressV2
 	var returnVal *IngestProgressV2
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIngestProgressV2"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/ingest-progress-v2", url.PathEscape(fmt.Sprint(datasetRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getIngestProgressV2 failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(IngestProgressV2), werror.WrapWithContextParams(ctx, err, "getIngestProgressV2 failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getIngestProgressV2 response cannot be nil")
+		return *new(IngestProgressV2), werror.ErrorWithContextParams(ctx, "getIngestProgressV2 response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -269,103 +253,92 @@ func (c *catalogServiceClient) GetHandleForDataset(ctx context.Context, authHead
 	var returnVal *Handle
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetHandleForDataset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/handle", url.PathEscape(fmt.Sprint(datasetArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getHandleForDataset failed")
 	}
 	return returnVal, nil
 }
 
 func (c *catalogServiceClient) CreateDataset(ctx context.Context, authHeader bearertoken.Token, detailsArg CreateDataset) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	var returnVal *EnrichedDataset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateDataset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(detailsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createDataset failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(EnrichedDataset), werror.WrapWithContextParams(ctx, err, "createDataset failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createDataset response cannot be nil")
+		return *new(EnrichedDataset), werror.ErrorWithContextParams(ctx, "createDataset response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) CreateOrUpdateDataset(ctx context.Context, authHeader bearertoken.Token, detailsArg CreateDataset) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	var returnVal *EnrichedDataset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateOrUpdateDataset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/create-or-update"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(detailsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createOrUpdateDataset failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(EnrichedDataset), werror.WrapWithContextParams(ctx, err, "createOrUpdateDataset failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createOrUpdateDataset response cannot be nil")
+		return *new(EnrichedDataset), werror.ErrorWithContextParams(ctx, "createOrUpdateDataset response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) CreateDatasetWithUuid(ctx context.Context, authHeader bearertoken.Token, requestArg CreateDatasetWithUuidRequest) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	var returnVal *EnrichedDataset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateDatasetWithUuid"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/with-uuid"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createDatasetWithUuid failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(EnrichedDataset), werror.WrapWithContextParams(ctx, err, "createDatasetWithUuid failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createDatasetWithUuid response cannot be nil")
+		return *new(EnrichedDataset), werror.ErrorWithContextParams(ctx, "createDatasetWithUuid response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) AddFileToDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg AddFileToDataset) (DatasetFile, error) {
-	var defaultReturnVal DatasetFile
 	var returnVal *DatasetFile
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("AddFileToDataset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/add-file", url.PathEscape(fmt.Sprint(datasetRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "addFileToDataset failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(DatasetFile), werror.WrapWithContextParams(ctx, err, "addFileToDataset failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "addFileToDataset response cannot be nil")
+		return *new(DatasetFile), werror.ErrorWithContextParams(ctx, "addFileToDataset response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) ListDatasetFiles(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error) {
-	var defaultReturnVal DatasetFilesPage
 	var returnVal *DatasetFilesPage
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListDatasetFiles"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/files", url.PathEscape(fmt.Sprint(datasetRidArg))))
 	queryParams := make(url.Values)
@@ -375,69 +348,63 @@ func (c *catalogServiceClient) ListDatasetFiles(ctx context.Context, authHeader 
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "listDatasetFiles failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(DatasetFilesPage), werror.WrapWithContextParams(ctx, err, "listDatasetFiles failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "listDatasetFiles response cannot be nil")
+		return *new(DatasetFilesPage), werror.ErrorWithContextParams(ctx, "listDatasetFiles response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) SearchDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg SearchDatasetFilesRequest) (SearchDatasetFilesResponse, error) {
-	var defaultReturnVal SearchDatasetFilesResponse
 	var returnVal *SearchDatasetFilesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchDatasetFiles"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/search-dataset-files"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchDatasetFiles failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchDatasetFilesResponse), werror.WrapWithContextParams(ctx, err, "searchDatasetFiles failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchDatasetFiles response cannot be nil")
+		return *new(SearchDatasetFilesResponse), werror.ErrorWithContextParams(ctx, "searchDatasetFiles response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) GetDatasetFileUri(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) (DatasetFileUri, error) {
-	var defaultReturnVal DatasetFileUri
 	var returnVal *DatasetFileUri
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDatasetFileUri"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/%s/uri", url.PathEscape(fmt.Sprint(datasetRidArg)), url.PathEscape(fmt.Sprint(fileIdArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getDatasetFileUri failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(DatasetFileUri), werror.WrapWithContextParams(ctx, err, "getDatasetFileUri failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getDatasetFileUri response cannot be nil")
+		return *new(DatasetFileUri), werror.ErrorWithContextParams(ctx, "getDatasetFileUri response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) GetVideoFileUri(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (VideoFileUri, error) {
-	var defaultReturnVal VideoFileUri
 	var returnVal *VideoFileUri
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetVideoFileUri"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/videos/%s/uri", url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getVideoFileUri failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(VideoFileUri), werror.WrapWithContextParams(ctx, err, "getVideoFileUri failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getVideoFileUri response cannot be nil")
+		return *new(VideoFileUri), werror.ErrorWithContextParams(ctx, "getVideoFileUri response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -446,12 +413,11 @@ func (c *catalogServiceClient) GetOriginFileUris(ctx context.Context, authHeader
 	var returnVal []OriginFileUri
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetOriginFileUris"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/%s/origin-uris", url.PathEscape(fmt.Sprint(datasetRidArg)), url.PathEscape(fmt.Sprint(fileIdArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getOriginFileUris failed")
 	}
 	if returnVal == nil {
@@ -461,121 +427,109 @@ func (c *catalogServiceClient) GetOriginFileUris(ctx context.Context, authHeader
 }
 
 func (c *catalogServiceClient) MarkFileIngestSuccessful(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestSuccessful) (DatasetFile, error) {
-	var defaultReturnVal DatasetFile
 	var returnVal *DatasetFile
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("MarkFileIngestSuccessful"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/file/%s/success", url.PathEscape(fmt.Sprint(datasetRidArg)), url.PathEscape(fmt.Sprint(fileIdArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "markFileIngestSuccessful failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(DatasetFile), werror.WrapWithContextParams(ctx, err, "markFileIngestSuccessful failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "markFileIngestSuccessful response cannot be nil")
+		return *new(DatasetFile), werror.ErrorWithContextParams(ctx, "markFileIngestSuccessful response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) MarkFileIngestError(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestError) (DatasetFile, error) {
-	var defaultReturnVal DatasetFile
 	var returnVal *DatasetFile
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("MarkFileIngestError"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/file/%s/error", url.PathEscape(fmt.Sprint(datasetRidArg)), url.PathEscape(fmt.Sprint(fileIdArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "markFileIngestError failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(DatasetFile), werror.WrapWithContextParams(ctx, err, "markFileIngestError failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "markFileIngestError response cannot be nil")
+		return *new(DatasetFile), werror.ErrorWithContextParams(ctx, "markFileIngestError response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) UpdateDatasetFileMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg DatasetFileMetadata) (DatasetFile, error) {
-	var defaultReturnVal DatasetFile
 	var returnVal *DatasetFile
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateDatasetFileMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/file/%s/metadata", url.PathEscape(fmt.Sprint(datasetRidArg)), url.PathEscape(fmt.Sprint(fileIdArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(metadataArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateDatasetFileMetadata failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(DatasetFile), werror.WrapWithContextParams(ctx, err, "updateDatasetFileMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateDatasetFileMetadata response cannot be nil")
+		return *new(DatasetFile), werror.ErrorWithContextParams(ctx, "updateDatasetFileMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) UpdateDatasetMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg UpdateDatasetMetadata) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	var returnVal *EnrichedDataset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateDatasetMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s", url.PathEscape(fmt.Sprint(datasetRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateDatasetMetadata failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(EnrichedDataset), werror.WrapWithContextParams(ctx, err, "updateDatasetMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateDatasetMetadata response cannot be nil")
+		return *new(EnrichedDataset), werror.ErrorWithContextParams(ctx, "updateDatasetMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) UpdateBounds(ctx context.Context, authHeader bearertoken.Token, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	var returnVal *EnrichedDataset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateBounds"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/bounds", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateBounds failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(EnrichedDataset), werror.WrapWithContextParams(ctx, err, "updateBounds failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateBounds response cannot be nil")
+		return *new(EnrichedDataset), werror.ErrorWithContextParams(ctx, "updateBounds response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) UpdateGlobalDatasetBounds(ctx context.Context, authHeader bearertoken.Token, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (Dataset, error) {
-	var defaultReturnVal Dataset
 	var returnVal *Dataset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateGlobalDatasetBounds"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/bounds-from-streaming", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateGlobalDatasetBounds failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(Dataset), werror.WrapWithContextParams(ctx, err, "updateGlobalDatasetBounds failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateGlobalDatasetBounds response cannot be nil")
+		return *new(Dataset), werror.ErrorWithContextParams(ctx, "updateGlobalDatasetBounds response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -583,11 +537,10 @@ func (c *catalogServiceClient) UpdateGlobalDatasetBounds(ctx context.Context, au
 func (c *catalogServiceClient) ArchiveDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveDataset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/archive", url.PathEscape(fmt.Sprint(datasetRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archiveDataset failed")
 	}
 	return nil
@@ -596,22 +549,19 @@ func (c *catalogServiceClient) ArchiveDataset(ctx context.Context, authHeader be
 func (c *catalogServiceClient) UnarchiveDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveDataset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/unarchive", url.PathEscape(fmt.Sprint(datasetRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchiveDataset failed")
 	}
 	return nil
 }
 
 func (c *catalogServiceClient) GetAllPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (AllPropertiesAndLabelsResponse, error) {
-	var defaultReturnVal AllPropertiesAndLabelsResponse
 	var returnVal *AllPropertiesAndLabelsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAllPropertiesAndLabels"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/all-properties-labels"))
 	queryParams := make(url.Values)
@@ -621,11 +571,11 @@ func (c *catalogServiceClient) GetAllPropertiesAndLabels(ctx context.Context, au
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAllPropertiesAndLabels failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(AllPropertiesAndLabelsResponse), werror.WrapWithContextParams(ctx, err, "getAllPropertiesAndLabels failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAllPropertiesAndLabels response cannot be nil")
+		return *new(AllPropertiesAndLabelsResponse), werror.ErrorWithContextParams(ctx, "getAllPropertiesAndLabels response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -634,12 +584,11 @@ func (c *catalogServiceClient) GetLogDatasetForWorkspace(ctx context.Context, au
 	var returnVal *rids.DatasetRid
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetLogDatasetForWorkspace"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/workspaces/%s/log-dataset", url.PathEscape(fmt.Sprint(workspaceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getLogDatasetForWorkspace failed")
 	}
 	return returnVal, nil
@@ -841,226 +790,201 @@ type catalogServiceClientWithTokenProvider struct {
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetEnrichedDataset(ctx context.Context, datasetUuidArg uuid.UUID) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(EnrichedDataset), err
 	}
 	return c.client.GetEnrichedDataset(ctx, bearertoken.Token(token), datasetUuidArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetEnrichedDatasets(ctx context.Context, getDatasetsRequestArg GetDatasetsRequest) ([]EnrichedDataset, error) {
-	var defaultReturnVal []EnrichedDataset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetEnrichedDatasets(ctx, bearertoken.Token(token), getDatasetsRequestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetDataset(ctx context.Context, datasetUuidArg uuid.UUID) (Dataset, error) {
-	var defaultReturnVal Dataset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Dataset), err
 	}
 	return c.client.GetDataset(ctx, bearertoken.Token(token), datasetUuidArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetDatasets(ctx context.Context, getDatasetsRequestArg GetDatasetsRequest) ([]Dataset, error) {
-	var defaultReturnVal []Dataset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetDatasets(ctx, bearertoken.Token(token), getDatasetsRequestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetDatasetFile(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId) (DatasetFile, error) {
-	var defaultReturnVal DatasetFile
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DatasetFile), err
 	}
 	return c.client.GetDatasetFile(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetDatasetFilesForJob(ctx context.Context, ingestJobRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error) {
-	var defaultReturnVal DatasetFilesPage
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DatasetFilesPage), err
 	}
 	return c.client.GetDatasetFilesForJob(ctx, bearertoken.Token(token), ingestJobRidArg, nextPageTokenArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) SearchDatasets(ctx context.Context, requestArg SearchDatasetsRequest) (SearchDatasetsResponse, error) {
-	var defaultReturnVal SearchDatasetsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(SearchDatasetsResponse), err
 	}
 	return c.client.SearchDatasets(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) UpdateDatasetIngestStatusV2(ctx context.Context, detailsArg UpdateIngestStatusV2) (api.IngestStatusV2, error) {
-	var defaultReturnVal api.IngestStatusV2
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.IngestStatusV2), err
 	}
 	return c.client.UpdateDatasetIngestStatusV2(ctx, bearertoken.Token(token), detailsArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetIngestProgressV2(ctx context.Context, datasetRidArg rid.ResourceIdentifier) (IngestProgressV2, error) {
-	var defaultReturnVal IngestProgressV2
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(IngestProgressV2), err
 	}
 	return c.client.GetIngestProgressV2(ctx, bearertoken.Token(token), datasetRidArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetHandleForDataset(ctx context.Context, datasetArg uuid.UUID) (*Handle, error) {
-	var defaultReturnVal *Handle
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetHandleForDataset(ctx, bearertoken.Token(token), datasetArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) CreateDataset(ctx context.Context, detailsArg CreateDataset) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(EnrichedDataset), err
 	}
 	return c.client.CreateDataset(ctx, bearertoken.Token(token), detailsArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) CreateOrUpdateDataset(ctx context.Context, detailsArg CreateDataset) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(EnrichedDataset), err
 	}
 	return c.client.CreateOrUpdateDataset(ctx, bearertoken.Token(token), detailsArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) CreateDatasetWithUuid(ctx context.Context, requestArg CreateDatasetWithUuidRequest) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(EnrichedDataset), err
 	}
 	return c.client.CreateDatasetWithUuid(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) AddFileToDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg AddFileToDataset) (DatasetFile, error) {
-	var defaultReturnVal DatasetFile
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DatasetFile), err
 	}
 	return c.client.AddFileToDataset(ctx, bearertoken.Token(token), datasetRidArg, requestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) ListDatasetFiles(ctx context.Context, datasetRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error) {
-	var defaultReturnVal DatasetFilesPage
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DatasetFilesPage), err
 	}
 	return c.client.ListDatasetFiles(ctx, bearertoken.Token(token), datasetRidArg, nextPageTokenArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) SearchDatasetFiles(ctx context.Context, requestArg SearchDatasetFilesRequest) (SearchDatasetFilesResponse, error) {
-	var defaultReturnVal SearchDatasetFilesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(SearchDatasetFilesResponse), err
 	}
 	return c.client.SearchDatasetFiles(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetDatasetFileUri(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) (DatasetFileUri, error) {
-	var defaultReturnVal DatasetFileUri
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DatasetFileUri), err
 	}
 	return c.client.GetDatasetFileUri(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetVideoFileUri(ctx context.Context, videoFileRidArg rids.VideoFileRid) (VideoFileUri, error) {
-	var defaultReturnVal VideoFileUri
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(VideoFileUri), err
 	}
 	return c.client.GetVideoFileUri(ctx, bearertoken.Token(token), videoFileRidArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetOriginFileUris(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) ([]OriginFileUri, error) {
-	var defaultReturnVal []OriginFileUri
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetOriginFileUris(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) MarkFileIngestSuccessful(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestSuccessful) (DatasetFile, error) {
-	var defaultReturnVal DatasetFile
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DatasetFile), err
 	}
 	return c.client.MarkFileIngestSuccessful(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg, requestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) MarkFileIngestError(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg MarkFileIngestError) (DatasetFile, error) {
-	var defaultReturnVal DatasetFile
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DatasetFile), err
 	}
 	return c.client.MarkFileIngestError(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg, requestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) UpdateDatasetFileMetadata(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg DatasetFileMetadata) (DatasetFile, error) {
-	var defaultReturnVal DatasetFile
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DatasetFile), err
 	}
 	return c.client.UpdateDatasetFileMetadata(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg, metadataArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) UpdateDatasetMetadata(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg UpdateDatasetMetadata) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(EnrichedDataset), err
 	}
 	return c.client.UpdateDatasetMetadata(ctx, bearertoken.Token(token), datasetRidArg, requestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) UpdateBounds(ctx context.Context, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (EnrichedDataset, error) {
-	var defaultReturnVal EnrichedDataset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(EnrichedDataset), err
 	}
 	return c.client.UpdateBounds(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) UpdateGlobalDatasetBounds(ctx context.Context, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (Dataset, error) {
-	var defaultReturnVal Dataset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Dataset), err
 	}
 	return c.client.UpdateGlobalDatasetBounds(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
@@ -1082,19 +1006,17 @@ func (c *catalogServiceClientWithTokenProvider) UnarchiveDataset(ctx context.Con
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetAllPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (AllPropertiesAndLabelsResponse, error) {
-	var defaultReturnVal AllPropertiesAndLabelsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(AllPropertiesAndLabelsResponse), err
 	}
 	return c.client.GetAllPropertiesAndLabels(ctx, bearertoken.Token(token), workspacesArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetLogDatasetForWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (*rids.DatasetRid, error) {
-	var defaultReturnVal *rids.DatasetRid
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetLogDatasetForWorkspace(ctx, bearertoken.Token(token), workspaceRidArg)
 }

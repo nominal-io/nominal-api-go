@@ -28,6 +28,14 @@ type SeriesMetadataServiceClient interface {
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSeriesMetadataRequest) error
 	// Idempotently creates series metadata.
 	BatchCreate(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchCreateSeriesMetadataRequest) error
+	/*
+	   Upserts series metadata. Creates new series metadata if it does not exist for the given channel and data
+	   source. If it already exists, updates the locator and any provided unit and description fields while
+	   preserving existing values for fields not supplied.
+	*/
+	CreateOrUpdate(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSeriesMetadataRequest) error
+	// Batch version of createOrUpdate.
+	BatchCreateOrUpdate(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchCreateSeriesMetadataRequest) error
 	// Get series metadata from its series metadata rid.
 	Get(ctx context.Context, authHeader bearertoken.Token, ridArg api1.SeriesMetadataRid) (api.SeriesMetadata, error)
 	/*
@@ -51,21 +59,19 @@ func NewSeriesMetadataServiceClient(client httpclient.Client) SeriesMetadataServ
 }
 
 func (c *seriesMetadataServiceClient) BatchGet(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetSeriesMetadataRequest) (api.BatchGetSeriesMetadataResponse, error) {
-	var defaultReturnVal api.BatchGetSeriesMetadataResponse
 	var returnVal *api.BatchGetSeriesMetadataResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGet"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/archetype/v1/series-archetype/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGet failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchGetSeriesMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchGet failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGet response cannot be nil")
+		return *new(api.BatchGetSeriesMetadataResponse), werror.ErrorWithContextParams(ctx, "batchGet response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -73,12 +79,11 @@ func (c *seriesMetadataServiceClient) BatchGet(ctx context.Context, authHeader b
 func (c *seriesMetadataServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSeriesMetadataRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/archetype/v1/series-archetype"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	return nil
@@ -87,72 +92,91 @@ func (c *seriesMetadataServiceClient) Create(ctx context.Context, authHeader bea
 func (c *seriesMetadataServiceClient) BatchCreate(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchCreateSeriesMetadataRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchCreate"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/archetype/v1/series-archetype/batch-create"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "batchCreate failed")
 	}
 	return nil
 }
 
+func (c *seriesMetadataServiceClient) CreateOrUpdate(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSeriesMetadataRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateOrUpdate"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/archetype/v1/series-archetype/create-or-update"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "createOrUpdate failed")
+	}
+	return nil
+}
+
+func (c *seriesMetadataServiceClient) BatchCreateOrUpdate(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchCreateSeriesMetadataRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchCreateOrUpdate"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/archetype/v1/series-archetype/batch-create-or-update"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "batchCreateOrUpdate failed")
+	}
+	return nil
+}
+
 func (c *seriesMetadataServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, ridArg api1.SeriesMetadataRid) (api.SeriesMetadata, error) {
-	var defaultReturnVal api.SeriesMetadata
 	var returnVal *api.SeriesMetadata
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/archetype/v1/series-archetype/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "get failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.SeriesMetadata), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(api.SeriesMetadata), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *seriesMetadataServiceClient) UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api1.SeriesMetadataRid, requestArg api.UpdateSeriesMetadataRequest) (api.SeriesMetadata, error) {
-	var defaultReturnVal api.SeriesMetadata
 	var returnVal *api.SeriesMetadata
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/archetype/v1/series-archetype/%s/metadata", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SeriesMetadata), werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
+		return *new(api.SeriesMetadata), werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *seriesMetadataServiceClient) BatchCreateVideoSeries(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchCreateVideoSeriesRequest) (api.BatchCreateVideoSeriesResponse, error) {
-	var defaultReturnVal api.BatchCreateVideoSeriesResponse
 	var returnVal *api.BatchCreateVideoSeriesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchCreateVideoSeries"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/archetype/v1/series-archetype/video-channel"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchCreateVideoSeries failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchCreateVideoSeriesResponse), werror.WrapWithContextParams(ctx, err, "batchCreateVideoSeries failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchCreateVideoSeries response cannot be nil")
+		return *new(api.BatchCreateVideoSeriesResponse), werror.ErrorWithContextParams(ctx, "batchCreateVideoSeries response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -170,6 +194,14 @@ type SeriesMetadataServiceClientWithAuth interface {
 	Create(ctx context.Context, requestArg api.CreateSeriesMetadataRequest) error
 	// Idempotently creates series metadata.
 	BatchCreate(ctx context.Context, requestArg api.BatchCreateSeriesMetadataRequest) error
+	/*
+	   Upserts series metadata. Creates new series metadata if it does not exist for the given channel and data
+	   source. If it already exists, updates the locator and any provided unit and description fields while
+	   preserving existing values for fields not supplied.
+	*/
+	CreateOrUpdate(ctx context.Context, requestArg api.CreateSeriesMetadataRequest) error
+	// Batch version of createOrUpdate.
+	BatchCreateOrUpdate(ctx context.Context, requestArg api.BatchCreateSeriesMetadataRequest) error
 	// Get series metadata from its series metadata rid.
 	Get(ctx context.Context, ridArg api1.SeriesMetadataRid) (api.SeriesMetadata, error)
 	/*
@@ -205,6 +237,14 @@ func (c *seriesMetadataServiceClientWithAuth) BatchCreate(ctx context.Context, r
 	return c.client.BatchCreate(ctx, c.authHeader, requestArg)
 }
 
+func (c *seriesMetadataServiceClientWithAuth) CreateOrUpdate(ctx context.Context, requestArg api.CreateSeriesMetadataRequest) error {
+	return c.client.CreateOrUpdate(ctx, c.authHeader, requestArg)
+}
+
+func (c *seriesMetadataServiceClientWithAuth) BatchCreateOrUpdate(ctx context.Context, requestArg api.BatchCreateSeriesMetadataRequest) error {
+	return c.client.BatchCreateOrUpdate(ctx, c.authHeader, requestArg)
+}
+
 func (c *seriesMetadataServiceClientWithAuth) Get(ctx context.Context, ridArg api1.SeriesMetadataRid) (api.SeriesMetadata, error) {
 	return c.client.Get(ctx, c.authHeader, ridArg)
 }
@@ -227,10 +267,9 @@ type seriesMetadataServiceClientWithTokenProvider struct {
 }
 
 func (c *seriesMetadataServiceClientWithTokenProvider) BatchGet(ctx context.Context, requestArg api.BatchGetSeriesMetadataRequest) (api.BatchGetSeriesMetadataResponse, error) {
-	var defaultReturnVal api.BatchGetSeriesMetadataResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BatchGetSeriesMetadataResponse), err
 	}
 	return c.client.BatchGet(ctx, bearertoken.Token(token), requestArg)
 }
@@ -251,29 +290,42 @@ func (c *seriesMetadataServiceClientWithTokenProvider) BatchCreate(ctx context.C
 	return c.client.BatchCreate(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *seriesMetadataServiceClientWithTokenProvider) Get(ctx context.Context, ridArg api1.SeriesMetadataRid) (api.SeriesMetadata, error) {
-	var defaultReturnVal api.SeriesMetadata
+func (c *seriesMetadataServiceClientWithTokenProvider) CreateOrUpdate(ctx context.Context, requestArg api.CreateSeriesMetadataRequest) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return err
+	}
+	return c.client.CreateOrUpdate(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *seriesMetadataServiceClientWithTokenProvider) BatchCreateOrUpdate(ctx context.Context, requestArg api.BatchCreateSeriesMetadataRequest) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.BatchCreateOrUpdate(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *seriesMetadataServiceClientWithTokenProvider) Get(ctx context.Context, ridArg api1.SeriesMetadataRid) (api.SeriesMetadata, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.SeriesMetadata), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *seriesMetadataServiceClientWithTokenProvider) UpdateMetadata(ctx context.Context, ridArg api1.SeriesMetadataRid, requestArg api.UpdateSeriesMetadataRequest) (api.SeriesMetadata, error) {
-	var defaultReturnVal api.SeriesMetadata
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.SeriesMetadata), err
 	}
 	return c.client.UpdateMetadata(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
 func (c *seriesMetadataServiceClientWithTokenProvider) BatchCreateVideoSeries(ctx context.Context, requestArg api.BatchCreateVideoSeriesRequest) (api.BatchCreateVideoSeriesResponse, error) {
-	var defaultReturnVal api.BatchCreateVideoSeriesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BatchCreateVideoSeriesResponse), err
 	}
 	return c.client.BatchCreateVideoSeries(ctx, bearertoken.Token(token), requestArg)
 }

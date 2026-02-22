@@ -50,30 +50,26 @@ func NewCommentsServiceClient(client httpclient.Client) CommentsServiceClient {
 }
 
 func (c *commentsServiceClient) GetConversation(ctx context.Context, authHeader bearertoken.Token, resourceTypeArg ResourceType, resourceRidArg rid.ResourceIdentifier) (Conversation, error) {
-	var defaultReturnVal Conversation
 	var returnVal *Conversation
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetConversation"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/comments/v1/conversations/%s/%s", url.PathEscape(fmt.Sprint(resourceTypeArg)), url.PathEscape(fmt.Sprint(resourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getConversation failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(Conversation), werror.WrapWithContextParams(ctx, err, "getConversation failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getConversation response cannot be nil")
+		return *new(Conversation), werror.ErrorWithContextParams(ctx, "getConversation response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *commentsServiceClient) GetConversationCount(ctx context.Context, authHeader bearertoken.Token, resourceTypeArg ResourceType, resourceRidArg rid.ResourceIdentifier, includeDeletedArg *bool) (int, error) {
-	var defaultReturnVal int
 	var returnVal *int
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetConversationCount"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/comments/v1/conversations/%s/%s/count", url.PathEscape(fmt.Sprint(resourceTypeArg)), url.PathEscape(fmt.Sprint(resourceRidArg))))
 	queryParams := make(url.Values)
@@ -83,165 +79,149 @@ func (c *commentsServiceClient) GetConversationCount(ctx context.Context, authHe
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getConversationCount failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(int), werror.WrapWithContextParams(ctx, err, "getConversationCount failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getConversationCount response cannot be nil")
+		return *new(int), werror.ErrorWithContextParams(ctx, "getConversationCount response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *commentsServiceClient) GetComment(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid) (Comment, error) {
-	var defaultReturnVal Comment
 	var returnVal *Comment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetComment"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/comments/v1/comments/%s", url.PathEscape(fmt.Sprint(commentRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getComment failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(Comment), werror.WrapWithContextParams(ctx, err, "getComment failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getComment response cannot be nil")
+		return *new(Comment), werror.ErrorWithContextParams(ctx, "getComment response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *commentsServiceClient) CreateComment(ctx context.Context, authHeader bearertoken.Token, requestArg CreateCommentRequest) (Comment, error) {
-	var defaultReturnVal Comment
 	var returnVal *Comment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateComment"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/comments/v1/comments"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createComment failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(Comment), werror.WrapWithContextParams(ctx, err, "createComment failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createComment response cannot be nil")
+		return *new(Comment), werror.ErrorWithContextParams(ctx, "createComment response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *commentsServiceClient) EditComment(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid, requestArg EditCommentRequest) (Comment, error) {
-	var defaultReturnVal Comment
 	var returnVal *Comment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("EditComment"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/comments/v1/comments/%s", url.PathEscape(fmt.Sprint(commentRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "editComment failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(Comment), werror.WrapWithContextParams(ctx, err, "editComment failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "editComment response cannot be nil")
+		return *new(Comment), werror.ErrorWithContextParams(ctx, "editComment response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *commentsServiceClient) DeleteComment(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid) (Comment, error) {
-	var defaultReturnVal Comment
 	var returnVal *Comment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteComment"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/comments/v1/comments/%s", url.PathEscape(fmt.Sprint(commentRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "deleteComment failed")
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
+		return *new(Comment), werror.WrapWithContextParams(ctx, err, "deleteComment failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "deleteComment response cannot be nil")
+		return *new(Comment), werror.ErrorWithContextParams(ctx, "deleteComment response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *commentsServiceClient) PinComment(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid) (Comment, error) {
-	var defaultReturnVal Comment
 	var returnVal *Comment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("PinComment"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/comments/v1/comments/%s/pin", url.PathEscape(fmt.Sprint(commentRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "pinComment failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(Comment), werror.WrapWithContextParams(ctx, err, "pinComment failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "pinComment response cannot be nil")
+		return *new(Comment), werror.ErrorWithContextParams(ctx, "pinComment response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *commentsServiceClient) UnpinComment(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid) (Comment, error) {
-	var defaultReturnVal Comment
 	var returnVal *Comment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnpinComment"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/comments/v1/comments/%s/pin", url.PathEscape(fmt.Sprint(commentRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "unpinComment failed")
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
+		return *new(Comment), werror.WrapWithContextParams(ctx, err, "unpinComment failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "unpinComment response cannot be nil")
+		return *new(Comment), werror.ErrorWithContextParams(ctx, "unpinComment response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *commentsServiceClient) AddReaction(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid, typeArg ReactionType) (Comment, error) {
-	var defaultReturnVal Comment
 	var returnVal *Comment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("AddReaction"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/comments/v1/comments/%s/reactions/%s", url.PathEscape(fmt.Sprint(commentRidArg)), url.PathEscape(fmt.Sprint(typeArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "addReaction failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(Comment), werror.WrapWithContextParams(ctx, err, "addReaction failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "addReaction response cannot be nil")
+		return *new(Comment), werror.ErrorWithContextParams(ctx, "addReaction response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *commentsServiceClient) RemoveReaction(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid, typeArg ReactionType) (Comment, error) {
-	var defaultReturnVal Comment
 	var returnVal *Comment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("RemoveReaction"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/comments/v1/comments/%s/reactions/%s", url.PathEscape(fmt.Sprint(commentRidArg)), url.PathEscape(fmt.Sprint(typeArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "removeReaction failed")
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
+		return *new(Comment), werror.WrapWithContextParams(ctx, err, "removeReaction failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "removeReaction response cannot be nil")
+		return *new(Comment), werror.ErrorWithContextParams(ctx, "removeReaction response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -332,91 +312,81 @@ type commentsServiceClientWithTokenProvider struct {
 }
 
 func (c *commentsServiceClientWithTokenProvider) GetConversation(ctx context.Context, resourceTypeArg ResourceType, resourceRidArg rid.ResourceIdentifier) (Conversation, error) {
-	var defaultReturnVal Conversation
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Conversation), err
 	}
 	return c.client.GetConversation(ctx, bearertoken.Token(token), resourceTypeArg, resourceRidArg)
 }
 
 func (c *commentsServiceClientWithTokenProvider) GetConversationCount(ctx context.Context, resourceTypeArg ResourceType, resourceRidArg rid.ResourceIdentifier, includeDeletedArg *bool) (int, error) {
-	var defaultReturnVal int
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(int), err
 	}
 	return c.client.GetConversationCount(ctx, bearertoken.Token(token), resourceTypeArg, resourceRidArg, includeDeletedArg)
 }
 
 func (c *commentsServiceClientWithTokenProvider) GetComment(ctx context.Context, commentRidArg CommentRid) (Comment, error) {
-	var defaultReturnVal Comment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Comment), err
 	}
 	return c.client.GetComment(ctx, bearertoken.Token(token), commentRidArg)
 }
 
 func (c *commentsServiceClientWithTokenProvider) CreateComment(ctx context.Context, requestArg CreateCommentRequest) (Comment, error) {
-	var defaultReturnVal Comment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Comment), err
 	}
 	return c.client.CreateComment(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *commentsServiceClientWithTokenProvider) EditComment(ctx context.Context, commentRidArg CommentRid, requestArg EditCommentRequest) (Comment, error) {
-	var defaultReturnVal Comment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Comment), err
 	}
 	return c.client.EditComment(ctx, bearertoken.Token(token), commentRidArg, requestArg)
 }
 
 func (c *commentsServiceClientWithTokenProvider) DeleteComment(ctx context.Context, commentRidArg CommentRid) (Comment, error) {
-	var defaultReturnVal Comment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Comment), err
 	}
 	return c.client.DeleteComment(ctx, bearertoken.Token(token), commentRidArg)
 }
 
 func (c *commentsServiceClientWithTokenProvider) PinComment(ctx context.Context, commentRidArg CommentRid) (Comment, error) {
-	var defaultReturnVal Comment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Comment), err
 	}
 	return c.client.PinComment(ctx, bearertoken.Token(token), commentRidArg)
 }
 
 func (c *commentsServiceClientWithTokenProvider) UnpinComment(ctx context.Context, commentRidArg CommentRid) (Comment, error) {
-	var defaultReturnVal Comment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Comment), err
 	}
 	return c.client.UnpinComment(ctx, bearertoken.Token(token), commentRidArg)
 }
 
 func (c *commentsServiceClientWithTokenProvider) AddReaction(ctx context.Context, commentRidArg CommentRid, typeArg ReactionType) (Comment, error) {
-	var defaultReturnVal Comment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Comment), err
 	}
 	return c.client.AddReaction(ctx, bearertoken.Token(token), commentRidArg, typeArg)
 }
 
 func (c *commentsServiceClientWithTokenProvider) RemoveReaction(ctx context.Context, commentRidArg CommentRid, typeArg ReactionType) (Comment, error) {
-	var defaultReturnVal Comment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Comment), err
 	}
 	return c.client.RemoveReaction(ctx, bearertoken.Token(token), commentRidArg, typeArg)
 }

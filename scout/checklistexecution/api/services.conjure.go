@@ -56,21 +56,19 @@ func NewChecklistExecutionServiceClient(client httpclient.Client) ChecklistExecu
 }
 
 func (c *checklistExecutionServiceClient) ChecklistLiveStatus(ctx context.Context, authHeader bearertoken.Token, requestArg BatchChecklistLiveStatusRequest) (BatchChecklistLiveStatusResponse, error) {
-	var defaultReturnVal BatchChecklistLiveStatusResponse
 	var returnVal *BatchChecklistLiveStatusResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ChecklistLiveStatus"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/checklist-execution/checklist-live-status"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "checklistLiveStatus failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchChecklistLiveStatusResponse), werror.WrapWithContextParams(ctx, err, "checklistLiveStatus failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "checklistLiveStatus response cannot be nil")
+		return *new(BatchChecklistLiveStatusResponse), werror.ErrorWithContextParams(ctx, "checklistLiveStatus response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -78,92 +76,83 @@ func (c *checklistExecutionServiceClient) ChecklistLiveStatus(ctx context.Contex
 func (c *checklistExecutionServiceClient) ExecuteStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, requestArg ExecuteChecklistForAssetsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ExecuteStreamingChecklist"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/checklist-execution/execute-streaming-checklist"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "executeStreamingChecklist failed")
 	}
 	return nil
 }
 
 func (c *checklistExecutionServiceClient) ListStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, requestArg ListStreamingChecklistRequest) (ListStreamingChecklistResponse, error) {
-	var defaultReturnVal ListStreamingChecklistResponse
 	var returnVal *ListStreamingChecklistResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListStreamingChecklist"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/checklist-execution/list-streaming-checklists"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "listStreamingChecklist failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(ListStreamingChecklistResponse), werror.WrapWithContextParams(ctx, err, "listStreamingChecklist failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "listStreamingChecklist response cannot be nil")
+		return *new(ListStreamingChecklistResponse), werror.ErrorWithContextParams(ctx, "listStreamingChecklist response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *checklistExecutionServiceClient) ListStreamingChecklistForAsset(ctx context.Context, authHeader bearertoken.Token, requestArg ListStreamingChecklistForAssetRequest) (ListStreamingChecklistForAssetResponse, error) {
-	var defaultReturnVal ListStreamingChecklistForAssetResponse
 	var returnVal *ListStreamingChecklistForAssetResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListStreamingChecklistForAsset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/checklist-execution/list-streaming-checklists-for-asset"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "listStreamingChecklistForAsset failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(ListStreamingChecklistForAssetResponse), werror.WrapWithContextParams(ctx, err, "listStreamingChecklistForAsset failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "listStreamingChecklistForAsset response cannot be nil")
+		return *new(ListStreamingChecklistForAssetResponse), werror.ErrorWithContextParams(ctx, "listStreamingChecklistForAsset response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *checklistExecutionServiceClient) GetStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid) (StreamingChecklistInfo, error) {
-	var defaultReturnVal StreamingChecklistInfo
 	var returnVal *StreamingChecklistInfo
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetStreamingChecklist"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/checklist-execution/get-streaming-checklist/%s", url.PathEscape(fmt.Sprint(checklistRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getStreamingChecklist failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(StreamingChecklistInfo), werror.WrapWithContextParams(ctx, err, "getStreamingChecklist failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getStreamingChecklist response cannot be nil")
+		return *new(StreamingChecklistInfo), werror.ErrorWithContextParams(ctx, "getStreamingChecklist response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *checklistExecutionServiceClient) BatchGetStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetStreamingChecklistRequest) (BatchGetStreamingChecklistResponse, error) {
-	var defaultReturnVal BatchGetStreamingChecklistResponse
 	var returnVal *BatchGetStreamingChecklistResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetStreamingChecklist"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/checklist-execution/get-streaming-checklists"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGetStreamingChecklist failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchGetStreamingChecklistResponse), werror.WrapWithContextParams(ctx, err, "batchGetStreamingChecklist failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGetStreamingChecklist response cannot be nil")
+		return *new(BatchGetStreamingChecklistResponse), werror.ErrorWithContextParams(ctx, "batchGetStreamingChecklist response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -171,11 +160,10 @@ func (c *checklistExecutionServiceClient) BatchGetStreamingChecklist(ctx context
 func (c *checklistExecutionServiceClient) StopStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("StopStreamingChecklist"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/checklist-execution/stop-streaming-checklist/%s", url.PathEscape(fmt.Sprint(checklistRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "stopStreamingChecklist failed")
 	}
 	return nil
@@ -184,12 +172,11 @@ func (c *checklistExecutionServiceClient) StopStreamingChecklist(ctx context.Con
 func (c *checklistExecutionServiceClient) StopStreamingChecklistForAssets(ctx context.Context, authHeader bearertoken.Token, requestArg StopStreamingChecklistForAssetsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("StopStreamingChecklistForAssets"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/checklist-execution/stop-streaming-checklist-for-assets"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "stopStreamingChecklistForAssets failed")
 	}
 	return nil
@@ -198,32 +185,29 @@ func (c *checklistExecutionServiceClient) StopStreamingChecklistForAssets(ctx co
 func (c *checklistExecutionServiceClient) ReloadStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ReloadStreamingChecklist"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/checklist-execution/reload-streaming-checklist/%s", url.PathEscape(fmt.Sprint(checklistRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "reloadStreamingChecklist failed")
 	}
 	return nil
 }
 
 func (c *checklistExecutionServiceClient) ValidateChecklistResolution(ctx context.Context, authHeader bearertoken.Token, requestArg BatchValidateChecklistResolutionRequest) (BatchValidateChecklistResolutionResponse, error) {
-	var defaultReturnVal BatchValidateChecklistResolutionResponse
 	var returnVal *BatchValidateChecklistResolutionResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ValidateChecklistResolution"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/checklist-execution/validate-checklist-resolution"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "validateChecklistResolution failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchValidateChecklistResolutionResponse), werror.WrapWithContextParams(ctx, err, "validateChecklistResolution failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "validateChecklistResolution response cannot be nil")
+		return *new(BatchValidateChecklistResolutionResponse), werror.ErrorWithContextParams(ctx, "validateChecklistResolution response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -320,10 +304,9 @@ type checklistExecutionServiceClientWithTokenProvider struct {
 }
 
 func (c *checklistExecutionServiceClientWithTokenProvider) ChecklistLiveStatus(ctx context.Context, requestArg BatchChecklistLiveStatusRequest) (BatchChecklistLiveStatusResponse, error) {
-	var defaultReturnVal BatchChecklistLiveStatusResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchChecklistLiveStatusResponse), err
 	}
 	return c.client.ChecklistLiveStatus(ctx, bearertoken.Token(token), requestArg)
 }
@@ -337,37 +320,33 @@ func (c *checklistExecutionServiceClientWithTokenProvider) ExecuteStreamingCheck
 }
 
 func (c *checklistExecutionServiceClientWithTokenProvider) ListStreamingChecklist(ctx context.Context, requestArg ListStreamingChecklistRequest) (ListStreamingChecklistResponse, error) {
-	var defaultReturnVal ListStreamingChecklistResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ListStreamingChecklistResponse), err
 	}
 	return c.client.ListStreamingChecklist(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *checklistExecutionServiceClientWithTokenProvider) ListStreamingChecklistForAsset(ctx context.Context, requestArg ListStreamingChecklistForAssetRequest) (ListStreamingChecklistForAssetResponse, error) {
-	var defaultReturnVal ListStreamingChecklistForAssetResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ListStreamingChecklistForAssetResponse), err
 	}
 	return c.client.ListStreamingChecklistForAsset(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *checklistExecutionServiceClientWithTokenProvider) GetStreamingChecklist(ctx context.Context, checklistRidArg api.ChecklistRid) (StreamingChecklistInfo, error) {
-	var defaultReturnVal StreamingChecklistInfo
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(StreamingChecklistInfo), err
 	}
 	return c.client.GetStreamingChecklist(ctx, bearertoken.Token(token), checklistRidArg)
 }
 
 func (c *checklistExecutionServiceClientWithTokenProvider) BatchGetStreamingChecklist(ctx context.Context, requestArg BatchGetStreamingChecklistRequest) (BatchGetStreamingChecklistResponse, error) {
-	var defaultReturnVal BatchGetStreamingChecklistResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchGetStreamingChecklistResponse), err
 	}
 	return c.client.BatchGetStreamingChecklist(ctx, bearertoken.Token(token), requestArg)
 }
@@ -397,10 +376,9 @@ func (c *checklistExecutionServiceClientWithTokenProvider) ReloadStreamingCheckl
 }
 
 func (c *checklistExecutionServiceClientWithTokenProvider) ValidateChecklistResolution(ctx context.Context, requestArg BatchValidateChecklistResolutionRequest) (BatchValidateChecklistResolutionResponse, error) {
-	var defaultReturnVal BatchValidateChecklistResolutionResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchValidateChecklistResolutionResponse), err
 	}
 	return c.client.ValidateChecklistResolution(ctx, bearertoken.Token(token), requestArg)
 }

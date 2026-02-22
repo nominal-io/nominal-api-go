@@ -82,7 +82,7 @@ func (u *ChartThemeContent) AcceptFuncs(v1Func func(ChartThemeContentV1) error, 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ChartThemeContent type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -93,7 +93,7 @@ func (u *ChartThemeContent) AcceptFuncs(v1Func func(ChartThemeContentV1) error, 
 	}
 }
 
-func (u *ChartThemeContent) V1NoopSuccess(ChartThemeContentV1) error {
+func (u *ChartThemeContent) V1NoopSuccess(_ ChartThemeContentV1) error {
 	return nil
 }
 
@@ -217,7 +217,7 @@ func (u *TimeSeriesChartTheme) AcceptFuncs(v1Func func(TimeSeriesChartThemeV1) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimeSeriesChartTheme type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -228,7 +228,7 @@ func (u *TimeSeriesChartTheme) AcceptFuncs(v1Func func(TimeSeriesChartThemeV1) e
 	}
 }
 
-func (u *TimeSeriesChartTheme) V1NoopSuccess(TimeSeriesChartThemeV1) error {
+func (u *TimeSeriesChartTheme) V1NoopSuccess(_ TimeSeriesChartThemeV1) error {
 	return nil
 }
 

@@ -97,7 +97,7 @@ func (u *ArraySeriesNode) AcceptFuncs(numeric1dFunc func(NumericArraySeriesNode)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ArraySeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "numeric1d":
@@ -113,11 +113,11 @@ func (u *ArraySeriesNode) AcceptFuncs(numeric1dFunc func(NumericArraySeriesNode)
 	}
 }
 
-func (u *ArraySeriesNode) Numeric1dNoopSuccess(NumericArraySeriesNode) error {
+func (u *ArraySeriesNode) Numeric1dNoopSuccess(_ NumericArraySeriesNode) error {
 	return nil
 }
 
-func (u *ArraySeriesNode) Enum1dNoopSuccess(EnumArraySeriesNode) error {
+func (u *ArraySeriesNode) Enum1dNoopSuccess(_ EnumArraySeriesNode) error {
 	return nil
 }
 
@@ -183,6 +183,336 @@ func NewArraySeriesNodeFromNumeric1d(v NumericArraySeriesNode) ArraySeriesNode {
 
 func NewArraySeriesNodeFromEnum1d(v EnumArraySeriesNode) ArraySeriesNode {
 	return ArraySeriesNode{typ: "enum1d", enum1d: &v}
+}
+
+type BooleanSeriesNode struct {
+	typ                  string
+	greaterThan          *GreaterThanSeriesNode
+	lessThan             *LessThanSeriesNode
+	equalTo              *EqualToSeriesNode
+	notEqualTo           *NotEqualToSeriesNode
+	greaterThanOrEqualTo *GreaterThanOrEqualToSeriesNode
+	lessThanOrEqualTo    *LessThanOrEqualToSeriesNode
+}
+
+type booleanSeriesNodeDeserializer struct {
+	Type                 string                          `json:"type"`
+	GreaterThan          *GreaterThanSeriesNode          `json:"greaterThan"`
+	LessThan             *LessThanSeriesNode             `json:"lessThan"`
+	EqualTo              *EqualToSeriesNode              `json:"equalTo"`
+	NotEqualTo           *NotEqualToSeriesNode           `json:"notEqualTo"`
+	GreaterThanOrEqualTo *GreaterThanOrEqualToSeriesNode `json:"greaterThanOrEqualTo"`
+	LessThanOrEqualTo    *LessThanOrEqualToSeriesNode    `json:"lessThanOrEqualTo"`
+}
+
+func (u *booleanSeriesNodeDeserializer) toStruct() BooleanSeriesNode {
+	return BooleanSeriesNode{typ: u.Type, greaterThan: u.GreaterThan, lessThan: u.LessThan, equalTo: u.EqualTo, notEqualTo: u.NotEqualTo, greaterThanOrEqualTo: u.GreaterThanOrEqualTo, lessThanOrEqualTo: u.LessThanOrEqualTo}
+}
+
+func (u *BooleanSeriesNode) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "greaterThan":
+		if u.greaterThan == nil {
+			return nil, fmt.Errorf("field \"greaterThan\" is required")
+		}
+		return struct {
+			Type        string                `json:"type"`
+			GreaterThan GreaterThanSeriesNode `json:"greaterThan"`
+		}{Type: "greaterThan", GreaterThan: *u.greaterThan}, nil
+	case "lessThan":
+		if u.lessThan == nil {
+			return nil, fmt.Errorf("field \"lessThan\" is required")
+		}
+		return struct {
+			Type     string             `json:"type"`
+			LessThan LessThanSeriesNode `json:"lessThan"`
+		}{Type: "lessThan", LessThan: *u.lessThan}, nil
+	case "equalTo":
+		if u.equalTo == nil {
+			return nil, fmt.Errorf("field \"equalTo\" is required")
+		}
+		return struct {
+			Type    string            `json:"type"`
+			EqualTo EqualToSeriesNode `json:"equalTo"`
+		}{Type: "equalTo", EqualTo: *u.equalTo}, nil
+	case "notEqualTo":
+		if u.notEqualTo == nil {
+			return nil, fmt.Errorf("field \"notEqualTo\" is required")
+		}
+		return struct {
+			Type       string               `json:"type"`
+			NotEqualTo NotEqualToSeriesNode `json:"notEqualTo"`
+		}{Type: "notEqualTo", NotEqualTo: *u.notEqualTo}, nil
+	case "greaterThanOrEqualTo":
+		if u.greaterThanOrEqualTo == nil {
+			return nil, fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
+		}
+		return struct {
+			Type                 string                         `json:"type"`
+			GreaterThanOrEqualTo GreaterThanOrEqualToSeriesNode `json:"greaterThanOrEqualTo"`
+		}{Type: "greaterThanOrEqualTo", GreaterThanOrEqualTo: *u.greaterThanOrEqualTo}, nil
+	case "lessThanOrEqualTo":
+		if u.lessThanOrEqualTo == nil {
+			return nil, fmt.Errorf("field \"lessThanOrEqualTo\" is required")
+		}
+		return struct {
+			Type              string                      `json:"type"`
+			LessThanOrEqualTo LessThanOrEqualToSeriesNode `json:"lessThanOrEqualTo"`
+		}{Type: "lessThanOrEqualTo", LessThanOrEqualTo: *u.lessThanOrEqualTo}, nil
+	}
+}
+
+func (u BooleanSeriesNode) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *BooleanSeriesNode) UnmarshalJSON(data []byte) error {
+	var deser booleanSeriesNodeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "greaterThan":
+		if u.greaterThan == nil {
+			return fmt.Errorf("field \"greaterThan\" is required")
+		}
+	case "lessThan":
+		if u.lessThan == nil {
+			return fmt.Errorf("field \"lessThan\" is required")
+		}
+	case "equalTo":
+		if u.equalTo == nil {
+			return fmt.Errorf("field \"equalTo\" is required")
+		}
+	case "notEqualTo":
+		if u.notEqualTo == nil {
+			return fmt.Errorf("field \"notEqualTo\" is required")
+		}
+	case "greaterThanOrEqualTo":
+		if u.greaterThanOrEqualTo == nil {
+			return fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
+		}
+	case "lessThanOrEqualTo":
+		if u.lessThanOrEqualTo == nil {
+			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
+		}
+	}
+	return nil
+}
+
+func (u BooleanSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *BooleanSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *BooleanSeriesNode) AcceptFuncs(greaterThanFunc func(GreaterThanSeriesNode) error, lessThanFunc func(LessThanSeriesNode) error, equalToFunc func(EqualToSeriesNode) error, notEqualToFunc func(NotEqualToSeriesNode) error, greaterThanOrEqualToFunc func(GreaterThanOrEqualToSeriesNode) error, lessThanOrEqualToFunc func(LessThanOrEqualToSeriesNode) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in BooleanSeriesNode type")
+		}
+		return unknownFunc(u.typ)
+	case "greaterThan":
+		if u.greaterThan == nil {
+			return fmt.Errorf("field \"greaterThan\" is required")
+		}
+		return greaterThanFunc(*u.greaterThan)
+	case "lessThan":
+		if u.lessThan == nil {
+			return fmt.Errorf("field \"lessThan\" is required")
+		}
+		return lessThanFunc(*u.lessThan)
+	case "equalTo":
+		if u.equalTo == nil {
+			return fmt.Errorf("field \"equalTo\" is required")
+		}
+		return equalToFunc(*u.equalTo)
+	case "notEqualTo":
+		if u.notEqualTo == nil {
+			return fmt.Errorf("field \"notEqualTo\" is required")
+		}
+		return notEqualToFunc(*u.notEqualTo)
+	case "greaterThanOrEqualTo":
+		if u.greaterThanOrEqualTo == nil {
+			return fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
+		}
+		return greaterThanOrEqualToFunc(*u.greaterThanOrEqualTo)
+	case "lessThanOrEqualTo":
+		if u.lessThanOrEqualTo == nil {
+			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
+		}
+		return lessThanOrEqualToFunc(*u.lessThanOrEqualTo)
+	}
+}
+
+func (u *BooleanSeriesNode) GreaterThanNoopSuccess(_ GreaterThanSeriesNode) error {
+	return nil
+}
+
+func (u *BooleanSeriesNode) LessThanNoopSuccess(_ LessThanSeriesNode) error {
+	return nil
+}
+
+func (u *BooleanSeriesNode) EqualToNoopSuccess(_ EqualToSeriesNode) error {
+	return nil
+}
+
+func (u *BooleanSeriesNode) NotEqualToNoopSuccess(_ NotEqualToSeriesNode) error {
+	return nil
+}
+
+func (u *BooleanSeriesNode) GreaterThanOrEqualToNoopSuccess(_ GreaterThanOrEqualToSeriesNode) error {
+	return nil
+}
+
+func (u *BooleanSeriesNode) LessThanOrEqualToNoopSuccess(_ LessThanOrEqualToSeriesNode) error {
+	return nil
+}
+
+func (u *BooleanSeriesNode) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *BooleanSeriesNode) Accept(v BooleanSeriesNodeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "greaterThan":
+		if u.greaterThan == nil {
+			return fmt.Errorf("field \"greaterThan\" is required")
+		}
+		return v.VisitGreaterThan(*u.greaterThan)
+	case "lessThan":
+		if u.lessThan == nil {
+			return fmt.Errorf("field \"lessThan\" is required")
+		}
+		return v.VisitLessThan(*u.lessThan)
+	case "equalTo":
+		if u.equalTo == nil {
+			return fmt.Errorf("field \"equalTo\" is required")
+		}
+		return v.VisitEqualTo(*u.equalTo)
+	case "notEqualTo":
+		if u.notEqualTo == nil {
+			return fmt.Errorf("field \"notEqualTo\" is required")
+		}
+		return v.VisitNotEqualTo(*u.notEqualTo)
+	case "greaterThanOrEqualTo":
+		if u.greaterThanOrEqualTo == nil {
+			return fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
+		}
+		return v.VisitGreaterThanOrEqualTo(*u.greaterThanOrEqualTo)
+	case "lessThanOrEqualTo":
+		if u.lessThanOrEqualTo == nil {
+			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
+		}
+		return v.VisitLessThanOrEqualTo(*u.lessThanOrEqualTo)
+	}
+}
+
+type BooleanSeriesNodeVisitor interface {
+	VisitGreaterThan(v GreaterThanSeriesNode) error
+	VisitLessThan(v LessThanSeriesNode) error
+	VisitEqualTo(v EqualToSeriesNode) error
+	VisitNotEqualTo(v NotEqualToSeriesNode) error
+	VisitGreaterThanOrEqualTo(v GreaterThanOrEqualToSeriesNode) error
+	VisitLessThanOrEqualTo(v LessThanOrEqualToSeriesNode) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *BooleanSeriesNode) AcceptWithContext(ctx context.Context, v BooleanSeriesNodeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "greaterThan":
+		if u.greaterThan == nil {
+			return fmt.Errorf("field \"greaterThan\" is required")
+		}
+		return v.VisitGreaterThanWithContext(ctx, *u.greaterThan)
+	case "lessThan":
+		if u.lessThan == nil {
+			return fmt.Errorf("field \"lessThan\" is required")
+		}
+		return v.VisitLessThanWithContext(ctx, *u.lessThan)
+	case "equalTo":
+		if u.equalTo == nil {
+			return fmt.Errorf("field \"equalTo\" is required")
+		}
+		return v.VisitEqualToWithContext(ctx, *u.equalTo)
+	case "notEqualTo":
+		if u.notEqualTo == nil {
+			return fmt.Errorf("field \"notEqualTo\" is required")
+		}
+		return v.VisitNotEqualToWithContext(ctx, *u.notEqualTo)
+	case "greaterThanOrEqualTo":
+		if u.greaterThanOrEqualTo == nil {
+			return fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
+		}
+		return v.VisitGreaterThanOrEqualToWithContext(ctx, *u.greaterThanOrEqualTo)
+	case "lessThanOrEqualTo":
+		if u.lessThanOrEqualTo == nil {
+			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
+		}
+		return v.VisitLessThanOrEqualToWithContext(ctx, *u.lessThanOrEqualTo)
+	}
+}
+
+type BooleanSeriesNodeVisitorWithContext interface {
+	VisitGreaterThanWithContext(ctx context.Context, v GreaterThanSeriesNode) error
+	VisitLessThanWithContext(ctx context.Context, v LessThanSeriesNode) error
+	VisitEqualToWithContext(ctx context.Context, v EqualToSeriesNode) error
+	VisitNotEqualToWithContext(ctx context.Context, v NotEqualToSeriesNode) error
+	VisitGreaterThanOrEqualToWithContext(ctx context.Context, v GreaterThanOrEqualToSeriesNode) error
+	VisitLessThanOrEqualToWithContext(ctx context.Context, v LessThanOrEqualToSeriesNode) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewBooleanSeriesNodeFromGreaterThan(v GreaterThanSeriesNode) BooleanSeriesNode {
+	return BooleanSeriesNode{typ: "greaterThan", greaterThan: &v}
+}
+
+func NewBooleanSeriesNodeFromLessThan(v LessThanSeriesNode) BooleanSeriesNode {
+	return BooleanSeriesNode{typ: "lessThan", lessThan: &v}
+}
+
+func NewBooleanSeriesNodeFromEqualTo(v EqualToSeriesNode) BooleanSeriesNode {
+	return BooleanSeriesNode{typ: "equalTo", equalTo: &v}
+}
+
+func NewBooleanSeriesNodeFromNotEqualTo(v NotEqualToSeriesNode) BooleanSeriesNode {
+	return BooleanSeriesNode{typ: "notEqualTo", notEqualTo: &v}
+}
+
+func NewBooleanSeriesNodeFromGreaterThanOrEqualTo(v GreaterThanOrEqualToSeriesNode) BooleanSeriesNode {
+	return BooleanSeriesNode{typ: "greaterThanOrEqualTo", greaterThanOrEqualTo: &v}
+}
+
+func NewBooleanSeriesNodeFromLessThanOrEqualTo(v LessThanOrEqualToSeriesNode) BooleanSeriesNode {
+	return BooleanSeriesNode{typ: "lessThanOrEqualTo", lessThanOrEqualTo: &v}
 }
 
 type Cartesian3dNode struct {
@@ -257,7 +587,7 @@ func (u *Cartesian3dNode) AcceptFuncs(scatter3dFunc func(Scatter3dNode) error, u
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Cartesian3dNode type")
 		}
 		return unknownFunc(u.typ)
 	case "scatter3d":
@@ -268,7 +598,7 @@ func (u *Cartesian3dNode) AcceptFuncs(scatter3dFunc func(Scatter3dNode) error, u
 	}
 }
 
-func (u *Cartesian3dNode) Scatter3dNoopSuccess(Scatter3dNode) error {
+func (u *Cartesian3dNode) Scatter3dNoopSuccess(_ Scatter3dNode) error {
 	return nil
 }
 
@@ -392,7 +722,7 @@ func (u *CartesianNode) AcceptFuncs(scatterFunc func(ScatterNode) error, unknown
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CartesianNode type")
 		}
 		return unknownFunc(u.typ)
 	case "scatter":
@@ -403,7 +733,7 @@ func (u *CartesianNode) AcceptFuncs(scatterFunc func(ScatterNode) error, unknown
 	}
 }
 
-func (u *CartesianNode) ScatterNoopSuccess(ScatterNode) error {
+func (u *CartesianNode) ScatterNoopSuccess(_ ScatterNode) error {
 	return nil
 }
 
@@ -569,7 +899,7 @@ func (u *CurveFitDetails) AcceptFuncs(exponentialFunc func(ExponentialCurve) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CurveFitDetails type")
 		}
 		return unknownFunc(u.typ)
 	case "exponential":
@@ -595,19 +925,19 @@ func (u *CurveFitDetails) AcceptFuncs(exponentialFunc func(ExponentialCurve) err
 	}
 }
 
-func (u *CurveFitDetails) ExponentialNoopSuccess(ExponentialCurve) error {
+func (u *CurveFitDetails) ExponentialNoopSuccess(_ ExponentialCurve) error {
 	return nil
 }
 
-func (u *CurveFitDetails) LogarithmicNoopSuccess(LogarithmicCurve) error {
+func (u *CurveFitDetails) LogarithmicNoopSuccess(_ LogarithmicCurve) error {
 	return nil
 }
 
-func (u *CurveFitDetails) PolynomialNoopSuccess(PolynomialCurve) error {
+func (u *CurveFitDetails) PolynomialNoopSuccess(_ PolynomialCurve) error {
 	return nil
 }
 
-func (u *CurveFitDetails) PowerNoopSuccess(PowerCurve) error {
+func (u *CurveFitDetails) PowerNoopSuccess(_ PowerCurve) error {
 	return nil
 }
 
@@ -793,7 +1123,7 @@ func (u *CurveFitPlotTypeNode) AcceptFuncs(timeSeriesFunc func(TimeSeriesCurveFi
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CurveFitPlotTypeNode type")
 		}
 		return unknownFunc(u.typ)
 	case "timeSeries":
@@ -809,11 +1139,11 @@ func (u *CurveFitPlotTypeNode) AcceptFuncs(timeSeriesFunc func(TimeSeriesCurveFi
 	}
 }
 
-func (u *CurveFitPlotTypeNode) TimeSeriesNoopSuccess(TimeSeriesCurveFitNode) error {
+func (u *CurveFitPlotTypeNode) TimeSeriesNoopSuccess(_ TimeSeriesCurveFitNode) error {
 	return nil
 }
 
-func (u *CurveFitPlotTypeNode) ScatterNoopSuccess(ScatterCurveFitNode) error {
+func (u *CurveFitPlotTypeNode) ScatterNoopSuccess(_ ScatterCurveFitNode) error {
 	return nil
 }
 
@@ -953,7 +1283,7 @@ func (u *EnumArraySeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, un
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EnumArraySeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -964,7 +1294,7 @@ func (u *EnumArraySeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, un
 	}
 }
 
-func (u *EnumArraySeriesNode) RawNoopSuccess(ResolvedSeries) error {
+func (u *EnumArraySeriesNode) RawNoopSuccess(_ ResolvedSeries) error {
 	return nil
 }
 
@@ -1228,7 +1558,7 @@ func (u *EnumSeriesNode) AcceptFuncs(literalFunc func(LiteralEnumSeriesNode) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EnumSeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "literal":
@@ -1289,47 +1619,47 @@ func (u *EnumSeriesNode) AcceptFuncs(literalFunc func(LiteralEnumSeriesNode) err
 	}
 }
 
-func (u *EnumSeriesNode) LiteralNoopSuccess(LiteralEnumSeriesNode) error {
+func (u *EnumSeriesNode) LiteralNoopSuccess(_ LiteralEnumSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) RawNoopSuccess(RawEnumSeriesNode) error {
+func (u *EnumSeriesNode) RawNoopSuccess(_ RawEnumSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) ResampleNoopSuccess(EnumResampleSeriesNode) error {
+func (u *EnumSeriesNode) ResampleNoopSuccess(_ EnumResampleSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) TimeRangeFilterNoopSuccess(EnumTimeRangeFilterSeriesNode) error {
+func (u *EnumSeriesNode) TimeRangeFilterNoopSuccess(_ EnumTimeRangeFilterSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) TimeShiftNoopSuccess(EnumTimeShiftSeriesNode) error {
+func (u *EnumSeriesNode) TimeShiftNoopSuccess(_ EnumTimeShiftSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) UnionNoopSuccess(EnumUnionSeriesNode) error {
+func (u *EnumSeriesNode) UnionNoopSuccess(_ EnumUnionSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) AggregateNoopSuccess(AggregateEnumSeriesNode) error {
+func (u *EnumSeriesNode) AggregateNoopSuccess(_ AggregateEnumSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) FilterTransformationNoopSuccess(EnumFilterTransformationSeriesNode) error {
+func (u *EnumSeriesNode) FilterTransformationNoopSuccess(_ EnumFilterTransformationSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) ValueMapNoopSuccess(ValueMapSeriesNode) error {
+func (u *EnumSeriesNode) ValueMapNoopSuccess(_ ValueMapSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) ArraySelectNoopSuccess(SelectIndexFromEnumArraySeriesNode) error {
+func (u *EnumSeriesNode) ArraySelectNoopSuccess(_ SelectIndexFromEnumArraySeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) ExtractFromStructNoopSuccess(ExtractEnumFromStructSeriesNode) error {
+func (u *EnumSeriesNode) ExtractFromStructNoopSuccess(_ ExtractEnumFromStructSeriesNode) error {
 	return nil
 }
 
@@ -1627,7 +1957,7 @@ func (u *FrequencyDomainNode) AcceptFuncs(fftFunc func(FftNode) error, psdFunc f
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FrequencyDomainNode type")
 		}
 		return unknownFunc(u.typ)
 	case "fft":
@@ -1643,11 +1973,11 @@ func (u *FrequencyDomainNode) AcceptFuncs(fftFunc func(FftNode) error, psdFunc f
 	}
 }
 
-func (u *FrequencyDomainNode) FftNoopSuccess(FftNode) error {
+func (u *FrequencyDomainNode) FftNoopSuccess(_ FftNode) error {
 	return nil
 }
 
-func (u *FrequencyDomainNode) PsdNoopSuccess(PsdNode) error {
+func (u *FrequencyDomainNode) PsdNoopSuccess(_ PsdNode) error {
 	return nil
 }
 
@@ -1843,7 +2173,7 @@ func (u *FrequencyDomainNodeV2) AcceptFuncs(fftFunc func(FftNode) error, psdFunc
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FrequencyDomainNodeV2 type")
 		}
 		return unknownFunc(u.typ)
 	case "fft":
@@ -1874,23 +2204,23 @@ func (u *FrequencyDomainNodeV2) AcceptFuncs(fftFunc func(FftNode) error, psdFunc
 	}
 }
 
-func (u *FrequencyDomainNodeV2) FftNoopSuccess(FftNode) error {
+func (u *FrequencyDomainNodeV2) FftNoopSuccess(_ FftNode) error {
 	return nil
 }
 
-func (u *FrequencyDomainNodeV2) PsdNoopSuccess(PsdNode) error {
+func (u *FrequencyDomainNodeV2) PsdNoopSuccess(_ PsdNode) error {
 	return nil
 }
 
-func (u *FrequencyDomainNodeV2) CpsdNoopSuccess(CpsdNode) error {
+func (u *FrequencyDomainNodeV2) CpsdNoopSuccess(_ CpsdNode) error {
 	return nil
 }
 
-func (u *FrequencyDomainNodeV2) NyquistNoopSuccess(NyquistNode) error {
+func (u *FrequencyDomainNodeV2) NyquistNoopSuccess(_ NyquistNode) error {
 	return nil
 }
 
-func (u *FrequencyDomainNodeV2) BodeNoopSuccess(BodeNode) error {
+func (u *FrequencyDomainNodeV2) BodeNoopSuccess(_ BodeNode) error {
 	return nil
 }
 
@@ -2092,7 +2422,7 @@ func (u *HistogramNode) AcceptFuncs(numericHistogramFunc func(NumericHistogramNo
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in HistogramNode type")
 		}
 		return unknownFunc(u.typ)
 	case "numericHistogram":
@@ -2108,11 +2438,11 @@ func (u *HistogramNode) AcceptFuncs(numericHistogramFunc func(NumericHistogramNo
 	}
 }
 
-func (u *HistogramNode) NumericHistogramNoopSuccess(NumericHistogramNode) error {
+func (u *HistogramNode) NumericHistogramNoopSuccess(_ NumericHistogramNode) error {
 	return nil
 }
 
-func (u *HistogramNode) EnumHistogramNoopSuccess(EnumHistogramNode) error {
+func (u *HistogramNode) EnumHistogramNoopSuccess(_ EnumHistogramNode) error {
 	return nil
 }
 
@@ -2252,7 +2582,7 @@ func (u *InterpolationConfiguration) AcceptFuncs(forwardFillInterpolationFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in InterpolationConfiguration type")
 		}
 		return unknownFunc(u.typ)
 	case "forwardFillInterpolation":
@@ -2263,7 +2593,7 @@ func (u *InterpolationConfiguration) AcceptFuncs(forwardFillInterpolationFunc fu
 	}
 }
 
-func (u *InterpolationConfiguration) ForwardFillInterpolationNoopSuccess(ForwardFillInterpolation) error {
+func (u *InterpolationConfiguration) ForwardFillInterpolationNoopSuccess(_ ForwardFillInterpolation) error {
 	return nil
 }
 
@@ -2429,7 +2759,7 @@ func (u *LogSeriesNode) AcceptFuncs(rawFunc func(RawLogSeriesNode) error, unionF
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in LogSeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -2455,19 +2785,19 @@ func (u *LogSeriesNode) AcceptFuncs(rawFunc func(RawLogSeriesNode) error, unionF
 	}
 }
 
-func (u *LogSeriesNode) RawNoopSuccess(RawLogSeriesNode) error {
+func (u *LogSeriesNode) RawNoopSuccess(_ RawLogSeriesNode) error {
 	return nil
 }
 
-func (u *LogSeriesNode) UnionNoopSuccess(LogUnionSeriesNode) error {
+func (u *LogSeriesNode) UnionNoopSuccess(_ LogUnionSeriesNode) error {
 	return nil
 }
 
-func (u *LogSeriesNode) FilterNoopSuccess(LogFilterSeriesNode) error {
+func (u *LogSeriesNode) FilterNoopSuccess(_ LogFilterSeriesNode) error {
 	return nil
 }
 
-func (u *LogSeriesNode) TimeShiftNoopSuccess(LogTimeShiftSeriesNode) error {
+func (u *LogSeriesNode) TimeShiftNoopSuccess(_ LogTimeShiftSeriesNode) error {
 	return nil
 }
 
@@ -2639,7 +2969,7 @@ func (u *NumericArraySeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error,
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NumericArraySeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -2650,7 +2980,7 @@ func (u *NumericArraySeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error,
 	}
 }
 
-func (u *NumericArraySeriesNode) RawNoopSuccess(ResolvedSeries) error {
+func (u *NumericArraySeriesNode) RawNoopSuccess(_ ResolvedSeries) error {
 	return nil
 }
 
@@ -2788,7 +3118,7 @@ func (u *NumericHistogramBucketStrategy) AcceptFuncs(bucketCountFunc func(int) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NumericHistogramBucketStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "bucketCount":
@@ -2804,11 +3134,11 @@ func (u *NumericHistogramBucketStrategy) AcceptFuncs(bucketCountFunc func(int) e
 	}
 }
 
-func (u *NumericHistogramBucketStrategy) BucketCountNoopSuccess(int) error {
+func (u *NumericHistogramBucketStrategy) BucketCountNoopSuccess(_ int) error {
 	return nil
 }
 
-func (u *NumericHistogramBucketStrategy) BucketWidthAndOffsetNoopSuccess(NumericHistogramBucketWidthAndOffset) error {
+func (u *NumericHistogramBucketStrategy) BucketWidthAndOffsetNoopSuccess(_ NumericHistogramBucketWidthAndOffset) error {
 	return nil
 }
 
@@ -2914,6 +3244,7 @@ type NumericSeriesNode struct {
 	enumToNumeric                     *EnumToNumericSeriesNode
 	refprop                           *RefpropSeriesNode
 	extractFromStruct                 *ExtractNumericFromStructSeriesNode
+	zScore                            *ZscoreSeriesNode
 }
 
 type numericSeriesNodeDeserializer struct {
@@ -2954,10 +3285,11 @@ type numericSeriesNodeDeserializer struct {
 	EnumToNumeric                     *EnumToNumericSeriesNode                     `json:"enumToNumeric"`
 	Refprop                           *RefpropSeriesNode                           `json:"refprop"`
 	ExtractFromStruct                 *ExtractNumericFromStructSeriesNode          `json:"extractFromStruct"`
+	ZScore                            *ZscoreSeriesNode                            `json:"zScore"`
 }
 
 func (u *numericSeriesNodeDeserializer) toStruct() NumericSeriesNode {
-	return NumericSeriesNode{typ: u.Type, arithmetic: u.Arithmetic, bitOperation: u.BitOperation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, max: u.Max, mean: u.Mean, min: u.Min, offset: u.Offset, product: u.Product, raw: u.Raw, resample: u.Resample, rollingOperation: u.RollingOperation, aggregate: u.Aggregate, signalFilter: u.SignalFilter, sum: u.Sum, scale: u.Scale, timeDifference: u.TimeDifference, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic, union: u.Union, unitConversion: u.UnitConversion, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, thresholdFilter: u.ThresholdFilter, arraySelect: u.ArraySelect, absoluteTimestamp: u.AbsoluteTimestamp, newestPoints: u.NewestPoints, rangesNumericAggregationToNumeric: u.RangesNumericAggregationToNumeric, filterByExpression: u.FilterByExpression, enumToNumeric: u.EnumToNumeric, refprop: u.Refprop, extractFromStruct: u.ExtractFromStruct}
+	return NumericSeriesNode{typ: u.Type, arithmetic: u.Arithmetic, bitOperation: u.BitOperation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, max: u.Max, mean: u.Mean, min: u.Min, offset: u.Offset, product: u.Product, raw: u.Raw, resample: u.Resample, rollingOperation: u.RollingOperation, aggregate: u.Aggregate, signalFilter: u.SignalFilter, sum: u.Sum, scale: u.Scale, timeDifference: u.TimeDifference, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic, union: u.Union, unitConversion: u.UnitConversion, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, thresholdFilter: u.ThresholdFilter, arraySelect: u.ArraySelect, absoluteTimestamp: u.AbsoluteTimestamp, newestPoints: u.NewestPoints, rangesNumericAggregationToNumeric: u.RangesNumericAggregationToNumeric, filterByExpression: u.FilterByExpression, enumToNumeric: u.EnumToNumeric, refprop: u.Refprop, extractFromStruct: u.ExtractFromStruct, zScore: u.ZScore}
 }
 
 func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
@@ -3252,6 +3584,14 @@ func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 			Type              string                             `json:"type"`
 			ExtractFromStruct ExtractNumericFromStructSeriesNode `json:"extractFromStruct"`
 		}{Type: "extractFromStruct", ExtractFromStruct: *u.extractFromStruct}, nil
+	case "zScore":
+		if u.zScore == nil {
+			return nil, fmt.Errorf("field \"zScore\" is required")
+		}
+		return struct {
+			Type   string           `json:"type"`
+			ZScore ZscoreSeriesNode `json:"zScore"`
+		}{Type: "zScore", ZScore: *u.zScore}, nil
 	}
 }
 
@@ -3414,6 +3754,10 @@ func (u *NumericSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
+	case "zScore":
+		if u.zScore == nil {
+			return fmt.Errorf("field \"zScore\" is required")
+		}
 	}
 	return nil
 }
@@ -3434,11 +3778,11 @@ func (u *NumericSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *NumericSeriesNode) AcceptFuncs(arithmeticFunc func(ArithmeticSeriesNode) error, bitOperationFunc func(BitOperationSeriesNode) error, countDuplicateFunc func(EnumCountDuplicateSeriesNode) error, cumulativeSumFunc func(CumulativeSumSeriesNode) error, derivativeFunc func(DerivativeSeriesNode) error, integralFunc func(IntegralSeriesNode) error, maxFunc func(MaxSeriesNode) error, meanFunc func(MeanSeriesNode) error, minFunc func(MinSeriesNode) error, offsetFunc func(OffsetSeriesNode) error, productFunc func(ProductSeriesNode) error, rawFunc func(RawNumericSeriesNode) error, resampleFunc func(NumericResampleSeriesNode) error, rollingOperationFunc func(RollingOperationSeriesNode) error, aggregateFunc func(AggregateNumericSeriesNode) error, signalFilterFunc func(SignalFilterSeriesNode) error, sumFunc func(SumSeriesNode) error, scaleFunc func(ScaleSeriesNode) error, timeDifferenceFunc func(TimeDifferenceSeriesNode) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeriesNode) error, timeShiftFunc func(NumericTimeShiftSeriesNode) error, unaryArithmeticFunc func(UnaryArithmeticSeriesNode) error, binaryArithmeticFunc func(BinaryArithmeticSeriesNode) error, unionFunc func(NumericUnionSeriesNode) error, unitConversionFunc func(UnitConversionSeriesNode) error, valueDifferenceFunc func(ValueDifferenceSeriesNode) error, filterTransformationFunc func(NumericFilterTransformationSeriesNode) error, thresholdFilterFunc func(NumericThresholdFilterSeriesNode) error, arraySelectFunc func(SelectIndexFromNumericArraySeriesNode) error, absoluteTimestampFunc func(AbsoluteTimestampSeriesNode) error, newestPointsFunc func(SelectNewestPointsSeriesNode) error, rangesNumericAggregationToNumericFunc func(RangesNumericAggregationToNumericSeriesNode) error, filterByExpressionFunc func(FilterByExpressionSeriesNode) error, enumToNumericFunc func(EnumToNumericSeriesNode) error, refpropFunc func(RefpropSeriesNode) error, extractFromStructFunc func(ExtractNumericFromStructSeriesNode) error, unknownFunc func(string) error) error {
+func (u *NumericSeriesNode) AcceptFuncs(arithmeticFunc func(ArithmeticSeriesNode) error, bitOperationFunc func(BitOperationSeriesNode) error, countDuplicateFunc func(EnumCountDuplicateSeriesNode) error, cumulativeSumFunc func(CumulativeSumSeriesNode) error, derivativeFunc func(DerivativeSeriesNode) error, integralFunc func(IntegralSeriesNode) error, maxFunc func(MaxSeriesNode) error, meanFunc func(MeanSeriesNode) error, minFunc func(MinSeriesNode) error, offsetFunc func(OffsetSeriesNode) error, productFunc func(ProductSeriesNode) error, rawFunc func(RawNumericSeriesNode) error, resampleFunc func(NumericResampleSeriesNode) error, rollingOperationFunc func(RollingOperationSeriesNode) error, aggregateFunc func(AggregateNumericSeriesNode) error, signalFilterFunc func(SignalFilterSeriesNode) error, sumFunc func(SumSeriesNode) error, scaleFunc func(ScaleSeriesNode) error, timeDifferenceFunc func(TimeDifferenceSeriesNode) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeriesNode) error, timeShiftFunc func(NumericTimeShiftSeriesNode) error, unaryArithmeticFunc func(UnaryArithmeticSeriesNode) error, binaryArithmeticFunc func(BinaryArithmeticSeriesNode) error, unionFunc func(NumericUnionSeriesNode) error, unitConversionFunc func(UnitConversionSeriesNode) error, valueDifferenceFunc func(ValueDifferenceSeriesNode) error, filterTransformationFunc func(NumericFilterTransformationSeriesNode) error, thresholdFilterFunc func(NumericThresholdFilterSeriesNode) error, arraySelectFunc func(SelectIndexFromNumericArraySeriesNode) error, absoluteTimestampFunc func(AbsoluteTimestampSeriesNode) error, newestPointsFunc func(SelectNewestPointsSeriesNode) error, rangesNumericAggregationToNumericFunc func(RangesNumericAggregationToNumericSeriesNode) error, filterByExpressionFunc func(FilterByExpressionSeriesNode) error, enumToNumericFunc func(EnumToNumericSeriesNode) error, refpropFunc func(RefpropSeriesNode) error, extractFromStructFunc func(ExtractNumericFromStructSeriesNode) error, zScoreFunc func(ZscoreSeriesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NumericSeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "arithmetic":
@@ -3621,150 +3965,159 @@ func (u *NumericSeriesNode) AcceptFuncs(arithmeticFunc func(ArithmeticSeriesNode
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return extractFromStructFunc(*u.extractFromStruct)
+	case "zScore":
+		if u.zScore == nil {
+			return fmt.Errorf("field \"zScore\" is required")
+		}
+		return zScoreFunc(*u.zScore)
 	}
 }
 
-func (u *NumericSeriesNode) ArithmeticNoopSuccess(ArithmeticSeriesNode) error {
+func (u *NumericSeriesNode) ArithmeticNoopSuccess(_ ArithmeticSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) BitOperationNoopSuccess(BitOperationSeriesNode) error {
+func (u *NumericSeriesNode) BitOperationNoopSuccess(_ BitOperationSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) CountDuplicateNoopSuccess(EnumCountDuplicateSeriesNode) error {
+func (u *NumericSeriesNode) CountDuplicateNoopSuccess(_ EnumCountDuplicateSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) CumulativeSumNoopSuccess(CumulativeSumSeriesNode) error {
+func (u *NumericSeriesNode) CumulativeSumNoopSuccess(_ CumulativeSumSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) DerivativeNoopSuccess(DerivativeSeriesNode) error {
+func (u *NumericSeriesNode) DerivativeNoopSuccess(_ DerivativeSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) IntegralNoopSuccess(IntegralSeriesNode) error {
+func (u *NumericSeriesNode) IntegralNoopSuccess(_ IntegralSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) MaxNoopSuccess(MaxSeriesNode) error {
+func (u *NumericSeriesNode) MaxNoopSuccess(_ MaxSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) MeanNoopSuccess(MeanSeriesNode) error {
+func (u *NumericSeriesNode) MeanNoopSuccess(_ MeanSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) MinNoopSuccess(MinSeriesNode) error {
+func (u *NumericSeriesNode) MinNoopSuccess(_ MinSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) OffsetNoopSuccess(OffsetSeriesNode) error {
+func (u *NumericSeriesNode) OffsetNoopSuccess(_ OffsetSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) ProductNoopSuccess(ProductSeriesNode) error {
+func (u *NumericSeriesNode) ProductNoopSuccess(_ ProductSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) RawNoopSuccess(RawNumericSeriesNode) error {
+func (u *NumericSeriesNode) RawNoopSuccess(_ RawNumericSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) ResampleNoopSuccess(NumericResampleSeriesNode) error {
+func (u *NumericSeriesNode) ResampleNoopSuccess(_ NumericResampleSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) RollingOperationNoopSuccess(RollingOperationSeriesNode) error {
+func (u *NumericSeriesNode) RollingOperationNoopSuccess(_ RollingOperationSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) AggregateNoopSuccess(AggregateNumericSeriesNode) error {
+func (u *NumericSeriesNode) AggregateNoopSuccess(_ AggregateNumericSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) SignalFilterNoopSuccess(SignalFilterSeriesNode) error {
+func (u *NumericSeriesNode) SignalFilterNoopSuccess(_ SignalFilterSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) SumNoopSuccess(SumSeriesNode) error {
+func (u *NumericSeriesNode) SumNoopSuccess(_ SumSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) ScaleNoopSuccess(ScaleSeriesNode) error {
+func (u *NumericSeriesNode) ScaleNoopSuccess(_ ScaleSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) TimeDifferenceNoopSuccess(TimeDifferenceSeriesNode) error {
+func (u *NumericSeriesNode) TimeDifferenceNoopSuccess(_ TimeDifferenceSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) TimeRangeFilterNoopSuccess(NumericTimeRangeFilterSeriesNode) error {
+func (u *NumericSeriesNode) TimeRangeFilterNoopSuccess(_ NumericTimeRangeFilterSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) TimeShiftNoopSuccess(NumericTimeShiftSeriesNode) error {
+func (u *NumericSeriesNode) TimeShiftNoopSuccess(_ NumericTimeShiftSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) UnaryArithmeticNoopSuccess(UnaryArithmeticSeriesNode) error {
+func (u *NumericSeriesNode) UnaryArithmeticNoopSuccess(_ UnaryArithmeticSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) BinaryArithmeticNoopSuccess(BinaryArithmeticSeriesNode) error {
+func (u *NumericSeriesNode) BinaryArithmeticNoopSuccess(_ BinaryArithmeticSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) UnionNoopSuccess(NumericUnionSeriesNode) error {
+func (u *NumericSeriesNode) UnionNoopSuccess(_ NumericUnionSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) UnitConversionNoopSuccess(UnitConversionSeriesNode) error {
+func (u *NumericSeriesNode) UnitConversionNoopSuccess(_ UnitConversionSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) ValueDifferenceNoopSuccess(ValueDifferenceSeriesNode) error {
+func (u *NumericSeriesNode) ValueDifferenceNoopSuccess(_ ValueDifferenceSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) FilterTransformationNoopSuccess(NumericFilterTransformationSeriesNode) error {
+func (u *NumericSeriesNode) FilterTransformationNoopSuccess(_ NumericFilterTransformationSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) ThresholdFilterNoopSuccess(NumericThresholdFilterSeriesNode) error {
+func (u *NumericSeriesNode) ThresholdFilterNoopSuccess(_ NumericThresholdFilterSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) ArraySelectNoopSuccess(SelectIndexFromNumericArraySeriesNode) error {
+func (u *NumericSeriesNode) ArraySelectNoopSuccess(_ SelectIndexFromNumericArraySeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) AbsoluteTimestampNoopSuccess(AbsoluteTimestampSeriesNode) error {
+func (u *NumericSeriesNode) AbsoluteTimestampNoopSuccess(_ AbsoluteTimestampSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) NewestPointsNoopSuccess(SelectNewestPointsSeriesNode) error {
+func (u *NumericSeriesNode) NewestPointsNoopSuccess(_ SelectNewestPointsSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) RangesNumericAggregationToNumericNoopSuccess(RangesNumericAggregationToNumericSeriesNode) error {
+func (u *NumericSeriesNode) RangesNumericAggregationToNumericNoopSuccess(_ RangesNumericAggregationToNumericSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) FilterByExpressionNoopSuccess(FilterByExpressionSeriesNode) error {
+func (u *NumericSeriesNode) FilterByExpressionNoopSuccess(_ FilterByExpressionSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) EnumToNumericNoopSuccess(EnumToNumericSeriesNode) error {
+func (u *NumericSeriesNode) EnumToNumericNoopSuccess(_ EnumToNumericSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) RefpropNoopSuccess(RefpropSeriesNode) error {
+func (u *NumericSeriesNode) RefpropNoopSuccess(_ RefpropSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) ExtractFromStructNoopSuccess(ExtractNumericFromStructSeriesNode) error {
+func (u *NumericSeriesNode) ExtractFromStructNoopSuccess(_ ExtractNumericFromStructSeriesNode) error {
+	return nil
+}
+
+func (u *NumericSeriesNode) ZScoreNoopSuccess(_ ZscoreSeriesNode) error {
 	return nil
 }
 
@@ -3959,6 +4312,11 @@ func (u *NumericSeriesNode) Accept(v NumericSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStruct(*u.extractFromStruct)
+	case "zScore":
+		if u.zScore == nil {
+			return fmt.Errorf("field \"zScore\" is required")
+		}
+		return v.VisitZScore(*u.zScore)
 	}
 }
 
@@ -3999,6 +4357,7 @@ type NumericSeriesNodeVisitor interface {
 	VisitEnumToNumeric(v EnumToNumericSeriesNode) error
 	VisitRefprop(v RefpropSeriesNode) error
 	VisitExtractFromStruct(v ExtractNumericFromStructSeriesNode) error
+	VisitZScore(v ZscoreSeriesNode) error
 	VisitUnknown(typeName string) error
 }
 
@@ -4189,6 +4548,11 @@ func (u *NumericSeriesNode) AcceptWithContext(ctx context.Context, v NumericSeri
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStructWithContext(ctx, *u.extractFromStruct)
+	case "zScore":
+		if u.zScore == nil {
+			return fmt.Errorf("field \"zScore\" is required")
+		}
+		return v.VisitZScoreWithContext(ctx, *u.zScore)
 	}
 }
 
@@ -4229,6 +4593,7 @@ type NumericSeriesNodeVisitorWithContext interface {
 	VisitEnumToNumericWithContext(ctx context.Context, v EnumToNumericSeriesNode) error
 	VisitRefpropWithContext(ctx context.Context, v RefpropSeriesNode) error
 	VisitExtractFromStructWithContext(ctx context.Context, v ExtractNumericFromStructSeriesNode) error
+	VisitZScoreWithContext(ctx context.Context, v ZscoreSeriesNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -4374,6 +4739,10 @@ func NewNumericSeriesNodeFromRefprop(v RefpropSeriesNode) NumericSeriesNode {
 
 func NewNumericSeriesNodeFromExtractFromStruct(v ExtractNumericFromStructSeriesNode) NumericSeriesNode {
 	return NumericSeriesNode{typ: "extractFromStruct", extractFromStruct: &v}
+}
+
+func NewNumericSeriesNodeFromZScore(v ZscoreSeriesNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "zScore", zScore: &v}
 }
 
 type RangesNode struct {
@@ -4658,7 +5027,7 @@ func (u *RangesNode) AcceptFuncs(durationFilterFunc func(DurationFilterRangesNod
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in RangesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "durationFilter":
@@ -4744,67 +5113,67 @@ func (u *RangesNode) AcceptFuncs(durationFilterFunc func(DurationFilterRangesNod
 	}
 }
 
-func (u *RangesNode) DurationFilterNoopSuccess(DurationFilterRangesNode) error {
+func (u *RangesNode) DurationFilterNoopSuccess(_ DurationFilterRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) EnumEqualityNoopSuccess(EnumEqualityRangesNode) error {
+func (u *RangesNode) EnumEqualityNoopSuccess(_ EnumEqualityRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) EnumFilterNoopSuccess(EnumFilterRangesNode) error {
+func (u *RangesNode) EnumFilterNoopSuccess(_ EnumFilterRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) ExtremaNoopSuccess(ExtremaRangesNode) error {
+func (u *RangesNode) ExtremaNoopSuccess(_ ExtremaRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) IntersectRangeNoopSuccess(IntersectRangesNode) error {
+func (u *RangesNode) IntersectRangeNoopSuccess(_ IntersectRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) LiteralRangesNoopSuccess(LiteralRangesNode) error {
+func (u *RangesNode) LiteralRangesNoopSuccess(_ LiteralRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) MinMaxThresholdNoopSuccess(MinMaxThresholdRangesNode) error {
+func (u *RangesNode) MinMaxThresholdNoopSuccess(_ MinMaxThresholdRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) NotNoopSuccess(NotRangesNode) error {
+func (u *RangesNode) NotNoopSuccess(_ NotRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) OnChangeNoopSuccess(OnChangeRangesNode) error {
+func (u *RangesNode) OnChangeNoopSuccess(_ OnChangeRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) RangeNumericAggregationNoopSuccess(RangesNumericAggregationNode) error {
+func (u *RangesNode) RangeNumericAggregationNoopSuccess(_ RangesNumericAggregationNode) error {
 	return nil
 }
 
-func (u *RangesNode) SeriesCrossoverRangesNodeNoopSuccess(SeriesCrossoverRangesNode) error {
+func (u *RangesNode) SeriesCrossoverRangesNodeNoopSuccess(_ SeriesCrossoverRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) StaleRangeNoopSuccess(StaleRangesNode) error {
+func (u *RangesNode) StaleRangeNoopSuccess(_ StaleRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) StabilityDetectionNoopSuccess(StabilityDetectionRangesNode) error {
+func (u *RangesNode) StabilityDetectionNoopSuccess(_ StabilityDetectionRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) ThresholdNoopSuccess(ThresholdingRangesNode) error {
+func (u *RangesNode) ThresholdNoopSuccess(_ ThresholdingRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) UnionRangeNoopSuccess(UnionRangesNode) error {
+func (u *RangesNode) UnionRangeNoopSuccess(_ UnionRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) PaddedRangesNoopSuccess(PaddedRangesNode) error {
+func (u *RangesNode) PaddedRangesNoopSuccess(_ PaddedRangesNode) error {
 	return nil
 }
 
@@ -5182,7 +5551,7 @@ func (u *ResampleInterpolationConfiguration) AcceptFuncs(forwardFillResampleInte
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ResampleInterpolationConfiguration type")
 		}
 		return unknownFunc(u.typ)
 	case "forwardFillResampleInterpolationConfiguration":
@@ -5198,11 +5567,11 @@ func (u *ResampleInterpolationConfiguration) AcceptFuncs(forwardFillResampleInte
 	}
 }
 
-func (u *ResampleInterpolationConfiguration) ForwardFillResampleInterpolationConfigurationNoopSuccess(ForwardFillResampleInterpolationConfiguration) error {
+func (u *ResampleInterpolationConfiguration) ForwardFillResampleInterpolationConfigurationNoopSuccess(_ ForwardFillResampleInterpolationConfiguration) error {
 	return nil
 }
 
-func (u *ResampleInterpolationConfiguration) ConstantDefaultValueResampleInterpolationConfigurationNoopSuccess(ConstantDefaultValueResampleInterpolationConfiguration) error {
+func (u *ResampleInterpolationConfiguration) ConstantDefaultValueResampleInterpolationConfigurationNoopSuccess(_ ConstantDefaultValueResampleInterpolationConfiguration) error {
 	return nil
 }
 
@@ -5356,7 +5725,7 @@ func (u *ResampleInterpolationConstantDefaultValue) AcceptFuncs(numericFunc func
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ResampleInterpolationConstantDefaultValue type")
 		}
 		return unknownFunc(u.typ)
 	case "numeric":
@@ -5372,11 +5741,11 @@ func (u *ResampleInterpolationConstantDefaultValue) AcceptFuncs(numericFunc func
 	}
 }
 
-func (u *ResampleInterpolationConstantDefaultValue) NumericNoopSuccess(float64) error {
+func (u *ResampleInterpolationConstantDefaultValue) NumericNoopSuccess(_ float64) error {
 	return nil
 }
 
-func (u *ResampleInterpolationConstantDefaultValue) EnumNoopSuccess(string) error {
+func (u *ResampleInterpolationConstantDefaultValue) EnumNoopSuccess(_ string) error {
 	return nil
 }
 
@@ -5628,7 +5997,7 @@ func (u *ResolvedNode) AcceptFuncs(rangesFunc func(SummarizeRangesNode) error, s
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ResolvedNode type")
 		}
 		return unknownFunc(u.typ)
 	case "ranges":
@@ -5679,39 +6048,39 @@ func (u *ResolvedNode) AcceptFuncs(rangesFunc func(SummarizeRangesNode) error, s
 	}
 }
 
-func (u *ResolvedNode) RangesNoopSuccess(SummarizeRangesNode) error {
+func (u *ResolvedNode) RangesNoopSuccess(_ SummarizeRangesNode) error {
 	return nil
 }
 
-func (u *ResolvedNode) SeriesNoopSuccess(SummarizeSeriesNode) error {
+func (u *ResolvedNode) SeriesNoopSuccess(_ SummarizeSeriesNode) error {
 	return nil
 }
 
-func (u *ResolvedNode) ValueNoopSuccess(SelectValueNode) error {
+func (u *ResolvedNode) ValueNoopSuccess(_ SelectValueNode) error {
 	return nil
 }
 
-func (u *ResolvedNode) CartesianNoopSuccess(SummarizeCartesianNode) error {
+func (u *ResolvedNode) CartesianNoopSuccess(_ SummarizeCartesianNode) error {
 	return nil
 }
 
-func (u *ResolvedNode) Cartesian3dNoopSuccess(SummarizeCartesian3dNode) error {
+func (u *ResolvedNode) Cartesian3dNoopSuccess(_ SummarizeCartesian3dNode) error {
 	return nil
 }
 
-func (u *ResolvedNode) FrequencyNoopSuccess(FrequencyDomainNode) error {
+func (u *ResolvedNode) FrequencyNoopSuccess(_ FrequencyDomainNode) error {
 	return nil
 }
 
-func (u *ResolvedNode) FrequencyV2NoopSuccess(FrequencyDomainNodeV2) error {
+func (u *ResolvedNode) FrequencyV2NoopSuccess(_ FrequencyDomainNodeV2) error {
 	return nil
 }
 
-func (u *ResolvedNode) HistogramNoopSuccess(HistogramNode) error {
+func (u *ResolvedNode) HistogramNoopSuccess(_ HistogramNode) error {
 	return nil
 }
 
-func (u *ResolvedNode) CurveNoopSuccess(CurveFitNode) error {
+func (u *ResolvedNode) CurveNoopSuccess(_ CurveFitNode) error {
 	return nil
 }
 
@@ -6033,7 +6402,7 @@ func (u *SelectValueNode) AcceptFuncs(firstPointFunc func(SeriesNode) error, fir
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SelectValueNode type")
 		}
 		return unknownFunc(u.typ)
 	case "firstPoint":
@@ -6069,27 +6438,27 @@ func (u *SelectValueNode) AcceptFuncs(firstPointFunc func(SeriesNode) error, fir
 	}
 }
 
-func (u *SelectValueNode) FirstPointNoopSuccess(SeriesNode) error {
+func (u *SelectValueNode) FirstPointNoopSuccess(_ SeriesNode) error {
 	return nil
 }
 
-func (u *SelectValueNode) FirstValuePointNoopSuccess(SeriesNode) error {
+func (u *SelectValueNode) FirstValuePointNoopSuccess(_ SeriesNode) error {
 	return nil
 }
 
-func (u *SelectValueNode) FirstRangeNoopSuccess(RangesNode) error {
+func (u *SelectValueNode) FirstRangeNoopSuccess(_ RangesNode) error {
 	return nil
 }
 
-func (u *SelectValueNode) LastPointNoopSuccess(SeriesNode) error {
+func (u *SelectValueNode) LastPointNoopSuccess(_ SeriesNode) error {
 	return nil
 }
 
-func (u *SelectValueNode) LastValuePointNoopSuccess(SeriesNode) error {
+func (u *SelectValueNode) LastValuePointNoopSuccess(_ SeriesNode) error {
 	return nil
 }
 
-func (u *SelectValueNode) LastRangeNoopSuccess(RangesNode) error {
+func (u *SelectValueNode) LastRangeNoopSuccess(_ RangesNode) error {
 	return nil
 }
 
@@ -6224,6 +6593,7 @@ func NewSelectValueNodeFromLastRange(v RangesNode) SelectValueNode {
 type SeriesNode struct {
 	typ     string
 	raw     *RawUntypedSeriesNode
+	boolean *BooleanSeriesNode
 	enum    *EnumSeriesNode
 	numeric *NumericSeriesNode
 	log     *LogSeriesNode
@@ -6234,6 +6604,7 @@ type SeriesNode struct {
 type seriesNodeDeserializer struct {
 	Type    string                `json:"type"`
 	Raw     *RawUntypedSeriesNode `json:"raw"`
+	Boolean *BooleanSeriesNode    `json:"boolean"`
 	Enum    *EnumSeriesNode       `json:"enum"`
 	Numeric *NumericSeriesNode    `json:"numeric"`
 	Log     *LogSeriesNode        `json:"log"`
@@ -6242,7 +6613,7 @@ type seriesNodeDeserializer struct {
 }
 
 func (u *seriesNodeDeserializer) toStruct() SeriesNode {
-	return SeriesNode{typ: u.Type, raw: u.Raw, enum: u.Enum, numeric: u.Numeric, log: u.Log, array: u.Array, struct_: u.Struct}
+	return SeriesNode{typ: u.Type, raw: u.Raw, boolean: u.Boolean, enum: u.Enum, numeric: u.Numeric, log: u.Log, array: u.Array, struct_: u.Struct}
 }
 
 func (u *SeriesNode) toSerializer() (interface{}, error) {
@@ -6257,6 +6628,14 @@ func (u *SeriesNode) toSerializer() (interface{}, error) {
 			Type string               `json:"type"`
 			Raw  RawUntypedSeriesNode `json:"raw"`
 		}{Type: "raw", Raw: *u.raw}, nil
+	case "boolean":
+		if u.boolean == nil {
+			return nil, fmt.Errorf("field \"boolean\" is required")
+		}
+		return struct {
+			Type    string            `json:"type"`
+			Boolean BooleanSeriesNode `json:"boolean"`
+		}{Type: "boolean", Boolean: *u.boolean}, nil
 	case "enum":
 		if u.enum == nil {
 			return nil, fmt.Errorf("field \"enum\" is required")
@@ -6319,6 +6698,10 @@ func (u *SeriesNode) UnmarshalJSON(data []byte) error {
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
 		}
+	case "boolean":
+		if u.boolean == nil {
+			return fmt.Errorf("field \"boolean\" is required")
+		}
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -6359,11 +6742,11 @@ func (u *SeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SeriesNode) AcceptFuncs(rawFunc func(RawUntypedSeriesNode) error, enumFunc func(EnumSeriesNode) error, numericFunc func(NumericSeriesNode) error, logFunc func(LogSeriesNode) error, arrayFunc func(ArraySeriesNode) error, struct_Func func(StructSeriesNode) error, unknownFunc func(string) error) error {
+func (u *SeriesNode) AcceptFuncs(rawFunc func(RawUntypedSeriesNode) error, booleanFunc func(BooleanSeriesNode) error, enumFunc func(EnumSeriesNode) error, numericFunc func(NumericSeriesNode) error, logFunc func(LogSeriesNode) error, arrayFunc func(ArraySeriesNode) error, struct_Func func(StructSeriesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -6371,6 +6754,11 @@ func (u *SeriesNode) AcceptFuncs(rawFunc func(RawUntypedSeriesNode) error, enumF
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return rawFunc(*u.raw)
+	case "boolean":
+		if u.boolean == nil {
+			return fmt.Errorf("field \"boolean\" is required")
+		}
+		return booleanFunc(*u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -6399,27 +6787,31 @@ func (u *SeriesNode) AcceptFuncs(rawFunc func(RawUntypedSeriesNode) error, enumF
 	}
 }
 
-func (u *SeriesNode) RawNoopSuccess(RawUntypedSeriesNode) error {
+func (u *SeriesNode) RawNoopSuccess(_ RawUntypedSeriesNode) error {
 	return nil
 }
 
-func (u *SeriesNode) EnumNoopSuccess(EnumSeriesNode) error {
+func (u *SeriesNode) BooleanNoopSuccess(_ BooleanSeriesNode) error {
 	return nil
 }
 
-func (u *SeriesNode) NumericNoopSuccess(NumericSeriesNode) error {
+func (u *SeriesNode) EnumNoopSuccess(_ EnumSeriesNode) error {
 	return nil
 }
 
-func (u *SeriesNode) LogNoopSuccess(LogSeriesNode) error {
+func (u *SeriesNode) NumericNoopSuccess(_ NumericSeriesNode) error {
 	return nil
 }
 
-func (u *SeriesNode) ArrayNoopSuccess(ArraySeriesNode) error {
+func (u *SeriesNode) LogNoopSuccess(_ LogSeriesNode) error {
 	return nil
 }
 
-func (u *SeriesNode) StructNoopSuccess(StructSeriesNode) error {
+func (u *SeriesNode) ArrayNoopSuccess(_ ArraySeriesNode) error {
+	return nil
+}
+
+func (u *SeriesNode) StructNoopSuccess(_ StructSeriesNode) error {
 	return nil
 }
 
@@ -6439,6 +6831,11 @@ func (u *SeriesNode) Accept(v SeriesNodeVisitor) error {
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRaw(*u.raw)
+	case "boolean":
+		if u.boolean == nil {
+			return fmt.Errorf("field \"boolean\" is required")
+		}
+		return v.VisitBoolean(*u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -6469,6 +6866,7 @@ func (u *SeriesNode) Accept(v SeriesNodeVisitor) error {
 
 type SeriesNodeVisitor interface {
 	VisitRaw(v RawUntypedSeriesNode) error
+	VisitBoolean(v BooleanSeriesNode) error
 	VisitEnum(v EnumSeriesNode) error
 	VisitNumeric(v NumericSeriesNode) error
 	VisitLog(v LogSeriesNode) error
@@ -6489,6 +6887,11 @@ func (u *SeriesNode) AcceptWithContext(ctx context.Context, v SeriesNodeVisitorW
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRawWithContext(ctx, *u.raw)
+	case "boolean":
+		if u.boolean == nil {
+			return fmt.Errorf("field \"boolean\" is required")
+		}
+		return v.VisitBooleanWithContext(ctx, *u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -6519,6 +6922,7 @@ func (u *SeriesNode) AcceptWithContext(ctx context.Context, v SeriesNodeVisitorW
 
 type SeriesNodeVisitorWithContext interface {
 	VisitRawWithContext(ctx context.Context, v RawUntypedSeriesNode) error
+	VisitBooleanWithContext(ctx context.Context, v BooleanSeriesNode) error
 	VisitEnumWithContext(ctx context.Context, v EnumSeriesNode) error
 	VisitNumericWithContext(ctx context.Context, v NumericSeriesNode) error
 	VisitLogWithContext(ctx context.Context, v LogSeriesNode) error
@@ -6529,6 +6933,10 @@ type SeriesNodeVisitorWithContext interface {
 
 func NewSeriesNodeFromRaw(v RawUntypedSeriesNode) SeriesNode {
 	return SeriesNode{typ: "raw", raw: &v}
+}
+
+func NewSeriesNodeFromBoolean(v BooleanSeriesNode) SeriesNode {
+	return SeriesNode{typ: "boolean", boolean: &v}
 }
 
 func NewSeriesNodeFromEnum(v EnumSeriesNode) SeriesNode {
@@ -6665,7 +7073,7 @@ func (u *SignalFilterConfiguration) AcceptFuncs(lowPassFunc func(LowPassConfigur
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SignalFilterConfiguration type")
 		}
 		return unknownFunc(u.typ)
 	case "lowPass":
@@ -6691,19 +7099,19 @@ func (u *SignalFilterConfiguration) AcceptFuncs(lowPassFunc func(LowPassConfigur
 	}
 }
 
-func (u *SignalFilterConfiguration) LowPassNoopSuccess(LowPassConfiguration) error {
+func (u *SignalFilterConfiguration) LowPassNoopSuccess(_ LowPassConfiguration) error {
 	return nil
 }
 
-func (u *SignalFilterConfiguration) HighPassNoopSuccess(HighPassConfiguration) error {
+func (u *SignalFilterConfiguration) HighPassNoopSuccess(_ HighPassConfiguration) error {
 	return nil
 }
 
-func (u *SignalFilterConfiguration) BandPassNoopSuccess(BandPassConfiguration) error {
+func (u *SignalFilterConfiguration) BandPassNoopSuccess(_ BandPassConfiguration) error {
 	return nil
 }
 
-func (u *SignalFilterConfiguration) BandStopNoopSuccess(BandStopConfiguration) error {
+func (u *SignalFilterConfiguration) BandStopNoopSuccess(_ BandStopConfiguration) error {
 	return nil
 }
 
@@ -6806,13 +7214,13 @@ func NewSignalFilterConfigurationFromBandStop(v BandStopConfiguration) SignalFil
 type StorageLocator struct {
 	typ      string
 	nominal  *NominalStorageLocator
-	external *api.LogicalSeries
+	external *api.ExternalStorageLocator
 }
 
 type storageLocatorDeserializer struct {
-	Type     string                 `json:"type"`
-	Nominal  *NominalStorageLocator `json:"nominal"`
-	External *api.LogicalSeries     `json:"external"`
+	Type     string                      `json:"type"`
+	Nominal  *NominalStorageLocator      `json:"nominal"`
+	External *api.ExternalStorageLocator `json:"external"`
 }
 
 func (u *storageLocatorDeserializer) toStruct() StorageLocator {
@@ -6836,8 +7244,8 @@ func (u *StorageLocator) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"external\" is required")
 		}
 		return struct {
-			Type     string            `json:"type"`
-			External api.LogicalSeries `json:"external"`
+			Type     string                     `json:"type"`
+			External api.ExternalStorageLocator `json:"external"`
 		}{Type: "external", External: *u.external}, nil
 	}
 }
@@ -6885,11 +7293,11 @@ func (u *StorageLocator) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *StorageLocator) AcceptFuncs(nominalFunc func(NominalStorageLocator) error, externalFunc func(api.LogicalSeries) error, unknownFunc func(string) error) error {
+func (u *StorageLocator) AcceptFuncs(nominalFunc func(NominalStorageLocator) error, externalFunc func(api.ExternalStorageLocator) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in StorageLocator type")
 		}
 		return unknownFunc(u.typ)
 	case "nominal":
@@ -6905,11 +7313,11 @@ func (u *StorageLocator) AcceptFuncs(nominalFunc func(NominalStorageLocator) err
 	}
 }
 
-func (u *StorageLocator) NominalNoopSuccess(NominalStorageLocator) error {
+func (u *StorageLocator) NominalNoopSuccess(_ NominalStorageLocator) error {
 	return nil
 }
 
-func (u *StorageLocator) ExternalNoopSuccess(api.LogicalSeries) error {
+func (u *StorageLocator) ExternalNoopSuccess(_ api.ExternalStorageLocator) error {
 	return nil
 }
 
@@ -6939,7 +7347,7 @@ func (u *StorageLocator) Accept(v StorageLocatorVisitor) error {
 
 type StorageLocatorVisitor interface {
 	VisitNominal(v NominalStorageLocator) error
-	VisitExternal(v api.LogicalSeries) error
+	VisitExternal(v api.ExternalStorageLocator) error
 	VisitUnknown(typeName string) error
 }
 
@@ -6965,7 +7373,7 @@ func (u *StorageLocator) AcceptWithContext(ctx context.Context, v StorageLocator
 
 type StorageLocatorVisitorWithContext interface {
 	VisitNominalWithContext(ctx context.Context, v NominalStorageLocator) error
-	VisitExternalWithContext(ctx context.Context, v api.LogicalSeries) error
+	VisitExternalWithContext(ctx context.Context, v api.ExternalStorageLocator) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -6973,7 +7381,7 @@ func NewStorageLocatorFromNominal(v NominalStorageLocator) StorageLocator {
 	return StorageLocator{typ: "nominal", nominal: &v}
 }
 
-func NewStorageLocatorFromExternal(v api.LogicalSeries) StorageLocator {
+func NewStorageLocatorFromExternal(v api.ExternalStorageLocator) StorageLocator {
 	return StorageLocator{typ: "external", external: &v}
 }
 
@@ -7063,7 +7471,7 @@ func (u *StructSeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, extra
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in StructSeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -7079,11 +7487,11 @@ func (u *StructSeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, extra
 	}
 }
 
-func (u *StructSeriesNode) RawNoopSuccess(ResolvedSeries) error {
+func (u *StructSeriesNode) RawNoopSuccess(_ ResolvedSeries) error {
 	return nil
 }
 
-func (u *StructSeriesNode) ExtractFromStructNoopSuccess(ExtractStructFromStructSeriesNode) error {
+func (u *StructSeriesNode) ExtractFromStructNoopSuccess(_ ExtractStructFromStructSeriesNode) error {
 	return nil
 }
 
@@ -7237,7 +7645,7 @@ func (u *TagFilters) AcceptFuncs(singleFunc func(TagFilter) error, andFunc func(
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TagFilters type")
 		}
 		return unknownFunc(u.typ)
 	case "single":
@@ -7253,11 +7661,11 @@ func (u *TagFilters) AcceptFuncs(singleFunc func(TagFilter) error, andFunc func(
 	}
 }
 
-func (u *TagFilters) SingleNoopSuccess(TagFilter) error {
+func (u *TagFilters) SingleNoopSuccess(_ TagFilter) error {
 	return nil
 }
 
-func (u *TagFilters) AndNoopSuccess([]TagFilters) error {
+func (u *TagFilters) AndNoopSuccess(_ []TagFilters) error {
 	return nil
 }
 
@@ -7411,7 +7819,7 @@ func (u *Threshold) AcceptFuncs(absoluteFunc func(AbsoluteThreshold) error, perc
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Threshold type")
 		}
 		return unknownFunc(u.typ)
 	case "absolute":
@@ -7427,11 +7835,11 @@ func (u *Threshold) AcceptFuncs(absoluteFunc func(AbsoluteThreshold) error, perc
 	}
 }
 
-func (u *Threshold) AbsoluteNoopSuccess(AbsoluteThreshold) error {
+func (u *Threshold) AbsoluteNoopSuccess(_ AbsoluteThreshold) error {
 	return nil
 }
 
-func (u *Threshold) PercentageNoopSuccess(PercentageThreshold) error {
+func (u *Threshold) PercentageNoopSuccess(_ PercentageThreshold) error {
 	return nil
 }
 

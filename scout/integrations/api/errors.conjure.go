@@ -483,6 +483,624 @@ func (e *IntegrationsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type invalidDeliveryConfig struct {
+	FieldName     string `json:"fieldName"`
+	ProvidedValue *int   `json:"providedValue,omitempty"`
+	Constraint    string `json:"constraint"`
+}
+
+func (o invalidDeliveryConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidDeliveryConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidDeliveryConfig returns new instance of InvalidDeliveryConfig error.
+func NewInvalidDeliveryConfig(fieldNameArg string, providedValueArg *int, constraintArg string) *InvalidDeliveryConfig {
+	return &InvalidDeliveryConfig{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidDeliveryConfig: invalidDeliveryConfig{FieldName: fieldNameArg, ProvidedValue: providedValueArg, Constraint: constraintArg}}
+}
+
+// WrapWithInvalidDeliveryConfig returns new instance of InvalidDeliveryConfig error wrapping an existing error.
+func WrapWithInvalidDeliveryConfig(err error, fieldNameArg string, providedValueArg *int, constraintArg string) *InvalidDeliveryConfig {
+	return &InvalidDeliveryConfig{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidDeliveryConfig: invalidDeliveryConfig{FieldName: fieldNameArg, ProvidedValue: providedValueArg, Constraint: constraintArg}}
+}
+
+// InvalidDeliveryConfig is an error type.
+type InvalidDeliveryConfig struct {
+	errorInstanceID uuid.UUID
+	invalidDeliveryConfig
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidDeliveryConfig returns true if err is an instance of InvalidDeliveryConfig.
+func IsInvalidDeliveryConfig(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidDeliveryConfig)
+	return ok
+}
+
+func (e *InvalidDeliveryConfig) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidDeliveryConfig (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidDeliveryConfig) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidDeliveryConfig) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidDeliveryConfig) Message() string {
+	return "INVALID_ARGUMENT Scout:InvalidDeliveryConfig"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidDeliveryConfig) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidDeliveryConfig) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidDeliveryConfig) Name() string {
+	return "Scout:InvalidDeliveryConfig"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidDeliveryConfig) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidDeliveryConfig) Parameters() map[string]interface{} {
+	return map[string]interface{}{"fieldName": e.FieldName, "providedValue": e.ProvidedValue, "constraint": e.Constraint}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidDeliveryConfig) safeParams() map[string]interface{} {
+	return map[string]interface{}{"fieldName": e.FieldName, "providedValue": e.ProvidedValue, "constraint": e.Constraint, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidDeliveryConfig) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidDeliveryConfig) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidDeliveryConfig) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidDeliveryConfig) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidDeliveryConfig)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidDeliveryConfig", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidDeliveryConfig) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidDeliveryConfig
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidDeliveryConfig = parameters
+	return nil
+}
+
+type invalidWebhookHeaders struct {
+	BlockedHeaders []string `json:"blockedHeaders"`
+}
+
+func (o invalidWebhookHeaders) MarshalJSON() ([]byte, error) {
+	if o.BlockedHeaders == nil {
+		o.BlockedHeaders = make([]string, 0)
+	}
+	type _tmpinvalidWebhookHeaders invalidWebhookHeaders
+	return safejson.Marshal(_tmpinvalidWebhookHeaders(o))
+}
+
+func (o *invalidWebhookHeaders) UnmarshalJSON(data []byte) error {
+	type _tmpinvalidWebhookHeaders invalidWebhookHeaders
+	var rawinvalidWebhookHeaders _tmpinvalidWebhookHeaders
+	if err := safejson.Unmarshal(data, &rawinvalidWebhookHeaders); err != nil {
+		return err
+	}
+	if rawinvalidWebhookHeaders.BlockedHeaders == nil {
+		rawinvalidWebhookHeaders.BlockedHeaders = make([]string, 0)
+	}
+	*o = invalidWebhookHeaders(rawinvalidWebhookHeaders)
+	return nil
+}
+
+func (o invalidWebhookHeaders) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidWebhookHeaders) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidWebhookHeaders returns new instance of InvalidWebhookHeaders error.
+func NewInvalidWebhookHeaders(blockedHeadersArg []string) *InvalidWebhookHeaders {
+	return &InvalidWebhookHeaders{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidWebhookHeaders: invalidWebhookHeaders{BlockedHeaders: blockedHeadersArg}}
+}
+
+// WrapWithInvalidWebhookHeaders returns new instance of InvalidWebhookHeaders error wrapping an existing error.
+func WrapWithInvalidWebhookHeaders(err error, blockedHeadersArg []string) *InvalidWebhookHeaders {
+	return &InvalidWebhookHeaders{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidWebhookHeaders: invalidWebhookHeaders{BlockedHeaders: blockedHeadersArg}}
+}
+
+// InvalidWebhookHeaders is an error type.
+type InvalidWebhookHeaders struct {
+	errorInstanceID uuid.UUID
+	invalidWebhookHeaders
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidWebhookHeaders returns true if err is an instance of InvalidWebhookHeaders.
+func IsInvalidWebhookHeaders(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidWebhookHeaders)
+	return ok
+}
+
+func (e *InvalidWebhookHeaders) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidWebhookHeaders (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidWebhookHeaders) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidWebhookHeaders) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidWebhookHeaders) Message() string {
+	return "INVALID_ARGUMENT Scout:InvalidWebhookHeaders"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidWebhookHeaders) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidWebhookHeaders) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidWebhookHeaders) Name() string {
+	return "Scout:InvalidWebhookHeaders"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidWebhookHeaders) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidWebhookHeaders) Parameters() map[string]interface{} {
+	return map[string]interface{}{"blockedHeaders": e.BlockedHeaders}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidWebhookHeaders) safeParams() map[string]interface{} {
+	return map[string]interface{}{"blockedHeaders": e.BlockedHeaders, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidWebhookHeaders) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidWebhookHeaders) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidWebhookHeaders) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidWebhookHeaders) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidWebhookHeaders)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidWebhookHeaders", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidWebhookHeaders) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidWebhookHeaders
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidWebhookHeaders = parameters
+	return nil
+}
+
+type invalidWebhookUrl struct {
+	Url    string `json:"url"`
+	Reason string `json:"reason"`
+}
+
+func (o invalidWebhookUrl) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidWebhookUrl) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidWebhookUrl returns new instance of InvalidWebhookUrl error.
+func NewInvalidWebhookUrl(urlArg string, reasonArg string) *InvalidWebhookUrl {
+	return &InvalidWebhookUrl{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidWebhookUrl: invalidWebhookUrl{Url: urlArg, Reason: reasonArg}}
+}
+
+// WrapWithInvalidWebhookUrl returns new instance of InvalidWebhookUrl error wrapping an existing error.
+func WrapWithInvalidWebhookUrl(err error, urlArg string, reasonArg string) *InvalidWebhookUrl {
+	return &InvalidWebhookUrl{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidWebhookUrl: invalidWebhookUrl{Url: urlArg, Reason: reasonArg}}
+}
+
+// InvalidWebhookUrl is an error type.
+type InvalidWebhookUrl struct {
+	errorInstanceID uuid.UUID
+	invalidWebhookUrl
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidWebhookUrl returns true if err is an instance of InvalidWebhookUrl.
+func IsInvalidWebhookUrl(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidWebhookUrl)
+	return ok
+}
+
+func (e *InvalidWebhookUrl) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidWebhookUrl (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidWebhookUrl) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidWebhookUrl) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidWebhookUrl) Message() string {
+	return "INVALID_ARGUMENT Scout:InvalidWebhookUrl"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidWebhookUrl) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidWebhookUrl) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidWebhookUrl) Name() string {
+	return "Scout:InvalidWebhookUrl"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidWebhookUrl) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidWebhookUrl) Parameters() map[string]interface{} {
+	return map[string]interface{}{"url": e.Url, "reason": e.Reason}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidWebhookUrl) safeParams() map[string]interface{} {
+	return map[string]interface{}{"url": e.Url, "reason": e.Reason, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidWebhookUrl) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidWebhookUrl) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidWebhookUrl) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidWebhookUrl) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidWebhookUrl)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidWebhookUrl", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidWebhookUrl) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidWebhookUrl
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidWebhookUrl = parameters
+	return nil
+}
+
+type notImplemented struct{}
+
+func (o notImplemented) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *notImplemented) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewNotImplemented returns new instance of NotImplemented error.
+func NewNotImplemented() *NotImplemented {
+	return &NotImplemented{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), notImplemented: notImplemented{}}
+}
+
+// WrapWithNotImplemented returns new instance of NotImplemented error wrapping an existing error.
+func WrapWithNotImplemented(err error) *NotImplemented {
+	return &NotImplemented{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, notImplemented: notImplemented{}}
+}
+
+// NotImplemented is an error type.
+type NotImplemented struct {
+	errorInstanceID uuid.UUID
+	notImplemented
+	cause error
+	stack werror.StackTrace
+}
+
+// IsNotImplemented returns true if err is an instance of NotImplemented.
+func IsNotImplemented(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*NotImplemented)
+	return ok
+}
+
+func (e *NotImplemented) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:NotImplemented (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *NotImplemented) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *NotImplemented) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *NotImplemented) Message() string {
+	return "INVALID_ARGUMENT Scout:NotImplemented"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *NotImplemented) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *NotImplemented) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *NotImplemented) Name() string {
+	return "Scout:NotImplemented"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *NotImplemented) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *NotImplemented) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *NotImplemented) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *NotImplemented) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *NotImplemented) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *NotImplemented) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e NotImplemented) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.notImplemented)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:NotImplemented", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *NotImplemented) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters notImplemented
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.notImplemented = parameters
+	return nil
+}
+
 type slackIntegrationNotAvailable struct{}
 
 func (o slackIntegrationNotAvailable) MarshalYAML() (interface{}, error) {
@@ -781,6 +1399,10 @@ func init() {
 	conjureerrors.RegisterErrorType("Scout:IntegrationNotFound", reflect.TypeOf(IntegrationNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:IntegrationTokenNotFound", reflect.TypeOf(IntegrationTokenNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:IntegrationsNotFound", reflect.TypeOf(IntegrationsNotFound{}))
+	conjureerrors.RegisterErrorType("Scout:InvalidDeliveryConfig", reflect.TypeOf(InvalidDeliveryConfig{}))
+	conjureerrors.RegisterErrorType("Scout:InvalidWebhookHeaders", reflect.TypeOf(InvalidWebhookHeaders{}))
+	conjureerrors.RegisterErrorType("Scout:InvalidWebhookUrl", reflect.TypeOf(InvalidWebhookUrl{}))
+	conjureerrors.RegisterErrorType("Scout:NotImplemented", reflect.TypeOf(NotImplemented{}))
 	conjureerrors.RegisterErrorType("Scout:SlackIntegrationNotAvailable", reflect.TypeOf(SlackIntegrationNotAvailable{}))
 	conjureerrors.RegisterErrorType("Scout:UnsupportedOperationForIntegration", reflect.TypeOf(UnsupportedOperationForIntegration{}))
 }

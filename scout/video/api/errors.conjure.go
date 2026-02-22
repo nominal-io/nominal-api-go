@@ -2195,7 +2195,7 @@ func IsVideoIngestNotComplete(err error) bool {
 }
 
 func (e *VideoIngestNotComplete) Error() string {
-	return fmt.Sprintf("FAILED_PRECONDITION Video:VideoIngestNotComplete (%s)", e.errorInstanceID)
+	return fmt.Sprintf("CONFLICT Video:VideoIngestNotComplete (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
@@ -2212,7 +2212,7 @@ func (e *VideoIngestNotComplete) StackTrace() werror.StackTrace {
 
 // Message returns the message body for the error.
 func (e *VideoIngestNotComplete) Message() string {
-	return "FAILED_PRECONDITION Video:VideoIngestNotComplete"
+	return "CONFLICT Video:VideoIngestNotComplete"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
@@ -2222,7 +2222,7 @@ func (e *VideoIngestNotComplete) Format(state fmt.State, verb rune) {
 
 // Code returns an enum describing error category.
 func (e *VideoIngestNotComplete) Code() errors.ErrorCode {
-	return errors.FailedPrecondition
+	return errors.Conflict
 }
 
 // Name returns an error name identifying error type.
@@ -2279,7 +2279,7 @@ func (e VideoIngestNotComplete) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.FailedPrecondition, ErrorName: "Video:VideoIngestNotComplete", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Video:VideoIngestNotComplete", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
 func (e *VideoIngestNotComplete) UnmarshalJSON(data []byte) error {

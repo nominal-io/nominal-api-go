@@ -101,7 +101,7 @@ func (u *AggregateValue) AcceptFuncs(durationFunc func(api.Duration) error, coun
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in AggregateValue type")
 		}
 		return unknownFunc(u.typ)
 	case "duration":
@@ -117,11 +117,11 @@ func (u *AggregateValue) AcceptFuncs(durationFunc func(api.Duration) error, coun
 	}
 }
 
-func (u *AggregateValue) DurationNoopSuccess(api.Duration) error {
+func (u *AggregateValue) DurationNoopSuccess(_ api.Duration) error {
 	return nil
 }
 
-func (u *AggregateValue) CountNoopSuccess(int) error {
+func (u *AggregateValue) CountNoopSuccess(_ int) error {
 	return nil
 }
 
@@ -332,7 +332,7 @@ func (u *EventOrigin) AcceptFuncs(workbookFunc func(WorkbookEventOrigin) error, 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EventOrigin type")
 		}
 		return unknownFunc(u.typ)
 	case "workbook":
@@ -368,27 +368,27 @@ func (u *EventOrigin) AcceptFuncs(workbookFunc func(WorkbookEventOrigin) error, 
 	}
 }
 
-func (u *EventOrigin) WorkbookNoopSuccess(WorkbookEventOrigin) error {
+func (u *EventOrigin) WorkbookNoopSuccess(_ WorkbookEventOrigin) error {
 	return nil
 }
 
-func (u *EventOrigin) TemplateNoopSuccess(TemplateEventOrigin) error {
+func (u *EventOrigin) TemplateNoopSuccess(_ TemplateEventOrigin) error {
 	return nil
 }
 
-func (u *EventOrigin) ApiNoopSuccess(ApiEventOrigin) error {
+func (u *EventOrigin) ApiNoopSuccess(_ ApiEventOrigin) error {
 	return nil
 }
 
-func (u *EventOrigin) DataReviewNoopSuccess(DataReviewEventOrigin) error {
+func (u *EventOrigin) DataReviewNoopSuccess(_ DataReviewEventOrigin) error {
 	return nil
 }
 
-func (u *EventOrigin) ProcedureNoopSuccess(ProcedureEventOrigin) error {
+func (u *EventOrigin) ProcedureNoopSuccess(_ ProcedureEventOrigin) error {
 	return nil
 }
 
-func (u *EventOrigin) StreamingChecklistNoopSuccess(StreamingChecklistEventOrigin) error {
+func (u *EventOrigin) StreamingChecklistNoopSuccess(_ StreamingChecklistEventOrigin) error {
 	return nil
 }
 
@@ -872,7 +872,7 @@ func (u *HistogramFilterQuery) AcceptFuncs(searchTextFunc func(string) error, as
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in HistogramFilterQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "searchText":
@@ -983,87 +983,87 @@ func (u *HistogramFilterQuery) AcceptFuncs(searchTextFunc func(string) error, as
 	}
 }
 
-func (u *HistogramFilterQuery) SearchTextNoopSuccess(string) error {
+func (u *HistogramFilterQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) AssetNoopSuccess(api1.AssetRid) error {
+func (u *HistogramFilterQuery) AssetNoopSuccess(_ api1.AssetRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) TemplateNoopSuccess(api1.TemplateRid) error {
+func (u *HistogramFilterQuery) TemplateNoopSuccess(_ api1.TemplateRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) WorkbookNoopSuccess(api1.NotebookRid) error {
+func (u *HistogramFilterQuery) WorkbookNoopSuccess(_ api1.NotebookRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) DataReviewNoopSuccess(api1.DataReviewRid) error {
+func (u *HistogramFilterQuery) DataReviewNoopSuccess(_ api1.DataReviewRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) OriginTypeNoopSuccess(SearchEventOriginType) error {
+func (u *HistogramFilterQuery) OriginTypeNoopSuccess(_ SearchEventOriginType) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) DataReviewCheckNoopSuccess(api1.CheckRid) error {
+func (u *HistogramFilterQuery) DataReviewCheckNoopSuccess(_ api1.CheckRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) DispositionStatusNoopSuccess(EventDispositionStatus) error {
+func (u *HistogramFilterQuery) DispositionStatusNoopSuccess(_ EventDispositionStatus) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) PriorityNoopSuccess(api2.Priority) error {
+func (u *HistogramFilterQuery) PriorityNoopSuccess(_ api2.Priority) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) AssigneeNoopSuccess(api1.UserRid) error {
+func (u *HistogramFilterQuery) AssigneeNoopSuccess(_ api1.UserRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) EventTypeNoopSuccess(EventType) error {
+func (u *HistogramFilterQuery) EventTypeNoopSuccess(_ EventType) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) CreatedByNoopSuccess(api1.UserRid) error {
+func (u *HistogramFilterQuery) CreatedByNoopSuccess(_ api1.UserRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) LabelNoopSuccess(api3.Label) error {
+func (u *HistogramFilterQuery) LabelNoopSuccess(_ api3.Label) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) PropertyNoopSuccess(api3.Property) error {
+func (u *HistogramFilterQuery) PropertyNoopSuccess(_ api3.Property) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) AndNoopSuccess([]HistogramFilterQuery) error {
+func (u *HistogramFilterQuery) AndNoopSuccess(_ []HistogramFilterQuery) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) OrNoopSuccess([]HistogramFilterQuery) error {
+func (u *HistogramFilterQuery) OrNoopSuccess(_ []HistogramFilterQuery) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) NotNoopSuccess(HistogramFilterQuery) error {
+func (u *HistogramFilterQuery) NotNoopSuccess(_ HistogramFilterQuery) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *HistogramFilterQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) ProcedureNoopSuccess(rids.ProcedureRid) error {
+func (u *HistogramFilterQuery) ProcedureNoopSuccess(_ rids.ProcedureRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) ProcedureExecutionNoopSuccess(rids.ProcedureExecutionRid) error {
+func (u *HistogramFilterQuery) ProcedureExecutionNoopSuccess(_ rids.ProcedureExecutionRid) error {
 	return nil
 }
 
-func (u *HistogramFilterQuery) StepIdNoopSuccess(string) error {
+func (u *HistogramFilterQuery) StepIdNoopSuccess(_ string) error {
 	return nil
 }
 
@@ -2025,7 +2025,7 @@ func (u *SearchQuery) AcceptFuncs(archivedFunc func(bool) error, searchTextFunc 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "archived":
@@ -2221,155 +2221,155 @@ func (u *SearchQuery) AcceptFuncs(archivedFunc func(bool) error, searchTextFunc 
 	}
 }
 
-func (u *SearchQuery) ArchivedNoopSuccess(bool) error {
+func (u *SearchQuery) ArchivedNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchQuery) AfterNoopSuccess(api3.Timestamp) error {
+func (u *SearchQuery) AfterNoopSuccess(_ api3.Timestamp) error {
 	return nil
 }
 
-func (u *SearchQuery) BeforeNoopSuccess(api3.Timestamp) error {
+func (u *SearchQuery) BeforeNoopSuccess(_ api3.Timestamp) error {
 	return nil
 }
 
-func (u *SearchQuery) AdvancedTimeFilterNoopSuccess(EventTimeFilter) error {
+func (u *SearchQuery) AdvancedTimeFilterNoopSuccess(_ EventTimeFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) AssetNoopSuccess(api1.AssetRid) error {
+func (u *SearchQuery) AssetNoopSuccess(_ api1.AssetRid) error {
 	return nil
 }
 
-func (u *SearchQuery) AssetsNoopSuccess(AssetsFilter) error {
+func (u *SearchQuery) AssetsNoopSuccess(_ AssetsFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) TemplateNoopSuccess(api1.TemplateRid) error {
+func (u *SearchQuery) TemplateNoopSuccess(_ api1.TemplateRid) error {
 	return nil
 }
 
-func (u *SearchQuery) WorkbookNoopSuccess(api1.NotebookRid) error {
+func (u *SearchQuery) WorkbookNoopSuccess(_ api1.NotebookRid) error {
 	return nil
 }
 
-func (u *SearchQuery) DataReviewNoopSuccess(api1.DataReviewRid) error {
+func (u *SearchQuery) DataReviewNoopSuccess(_ api1.DataReviewRid) error {
 	return nil
 }
 
-func (u *SearchQuery) DataReviewsNoopSuccess(DataReviewsFilter) error {
+func (u *SearchQuery) DataReviewsNoopSuccess(_ DataReviewsFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) OriginTypeNoopSuccess(SearchEventOriginType) error {
+func (u *SearchQuery) OriginTypeNoopSuccess(_ SearchEventOriginType) error {
 	return nil
 }
 
-func (u *SearchQuery) OriginTypesNoopSuccess(OriginTypesFilter) error {
+func (u *SearchQuery) OriginTypesNoopSuccess(_ OriginTypesFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) DataReviewCheckNoopSuccess(api1.CheckRid) error {
+func (u *SearchQuery) DataReviewCheckNoopSuccess(_ api1.CheckRid) error {
 	return nil
 }
 
-func (u *SearchQuery) DataReviewChecksNoopSuccess(DataReviewChecksFilter) error {
+func (u *SearchQuery) DataReviewChecksNoopSuccess(_ DataReviewChecksFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) DispositionStatusNoopSuccess(EventDispositionStatus) error {
+func (u *SearchQuery) DispositionStatusNoopSuccess(_ EventDispositionStatus) error {
 	return nil
 }
 
-func (u *SearchQuery) DispositionStatusesNoopSuccess([]EventDispositionStatus) error {
+func (u *SearchQuery) DispositionStatusesNoopSuccess(_ []EventDispositionStatus) error {
 	return nil
 }
 
-func (u *SearchQuery) PriorityNoopSuccess(api2.Priority) error {
+func (u *SearchQuery) PriorityNoopSuccess(_ api2.Priority) error {
 	return nil
 }
 
-func (u *SearchQuery) PrioritiesNoopSuccess([]api2.Priority) error {
+func (u *SearchQuery) PrioritiesNoopSuccess(_ []api2.Priority) error {
 	return nil
 }
 
-func (u *SearchQuery) AssigneeNoopSuccess(api1.UserRid) error {
+func (u *SearchQuery) AssigneeNoopSuccess(_ api1.UserRid) error {
 	return nil
 }
 
-func (u *SearchQuery) AssigneesNoopSuccess(AssigneesFilter) error {
+func (u *SearchQuery) AssigneesNoopSuccess(_ AssigneesFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) EventTypeNoopSuccess(EventType) error {
+func (u *SearchQuery) EventTypeNoopSuccess(_ EventType) error {
 	return nil
 }
 
-func (u *SearchQuery) EventTypesNoopSuccess([]EventType) error {
+func (u *SearchQuery) EventTypesNoopSuccess(_ []EventType) error {
 	return nil
 }
 
-func (u *SearchQuery) CreatedByNoopSuccess(api1.UserRid) error {
+func (u *SearchQuery) CreatedByNoopSuccess(_ api1.UserRid) error {
 	return nil
 }
 
-func (u *SearchQuery) CreatedByAnyOfNoopSuccess([]api1.UserRid) error {
+func (u *SearchQuery) CreatedByAnyOfNoopSuccess(_ []api1.UserRid) error {
 	return nil
 }
 
-func (u *SearchQuery) LabelNoopSuccess(api3.Label) error {
+func (u *SearchQuery) LabelNoopSuccess(_ api3.Label) error {
 	return nil
 }
 
-func (u *SearchQuery) LabelsNoopSuccess(api1.LabelsFilter) error {
+func (u *SearchQuery) LabelsNoopSuccess(_ api1.LabelsFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) PropertyNoopSuccess(api3.Property) error {
+func (u *SearchQuery) PropertyNoopSuccess(_ api3.Property) error {
 	return nil
 }
 
-func (u *SearchQuery) PropertiesNoopSuccess(api1.PropertiesFilter) error {
+func (u *SearchQuery) PropertiesNoopSuccess(_ api1.PropertiesFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) AndNoopSuccess([]SearchQuery) error {
+func (u *SearchQuery) AndNoopSuccess(_ []SearchQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) OrNoopSuccess([]SearchQuery) error {
+func (u *SearchQuery) OrNoopSuccess(_ []SearchQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) NotNoopSuccess(SearchQuery) error {
+func (u *SearchQuery) NotNoopSuccess(_ SearchQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
-func (u *SearchQuery) ProcedureNoopSuccess(rids.ProcedureRid) error {
+func (u *SearchQuery) ProcedureNoopSuccess(_ rids.ProcedureRid) error {
 	return nil
 }
 
-func (u *SearchQuery) ProcedureExecutionNoopSuccess(rids.ProcedureExecutionRid) error {
+func (u *SearchQuery) ProcedureExecutionNoopSuccess(_ rids.ProcedureExecutionRid) error {
 	return nil
 }
 
-func (u *SearchQuery) StepIdNoopSuccess(string) error {
+func (u *SearchQuery) StepIdNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchQuery) StreamingChecklistNoopSuccess(api1.ChecklistRid) error {
+func (u *SearchQuery) StreamingChecklistNoopSuccess(_ api1.ChecklistRid) error {
 	return nil
 }
 
-func (u *SearchQuery) StreamingCheckNoopSuccess(api1.CheckRid) error {
+func (u *SearchQuery) StreamingCheckNoopSuccess(_ api1.CheckRid) error {
 	return nil
 }
 
@@ -3085,7 +3085,7 @@ func (u *WorkbookDataAssociation) AcceptFuncs(timeSeriesChannelFunc func(TimeSer
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in WorkbookDataAssociation type")
 		}
 		return unknownFunc(u.typ)
 	case "timeSeriesChannel":
@@ -3096,7 +3096,7 @@ func (u *WorkbookDataAssociation) AcceptFuncs(timeSeriesChannelFunc func(TimeSer
 	}
 }
 
-func (u *WorkbookDataAssociation) TimeSeriesChannelNoopSuccess(TimeSeriesChannelAssociation) error {
+func (u *WorkbookDataAssociation) TimeSeriesChannelNoopSuccess(_ TimeSeriesChannelAssociation) error {
 	return nil
 }
 

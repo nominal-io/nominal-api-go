@@ -24,7 +24,7 @@ type batchGranularityMismatch struct {
 
 func (o batchGranularityMismatch) MarshalJSON() ([]byte, error) {
 	if o.DatasetRids == nil {
-		o.DatasetRids = make(map[api.Granularity][]rid.ResourceIdentifier, 0)
+		o.DatasetRids = make(map[api.Granularity][]rid.ResourceIdentifier)
 	}
 	type _tmpbatchGranularityMismatch batchGranularityMismatch
 	return safejson.Marshal(_tmpbatchGranularityMismatch(o))
@@ -37,7 +37,7 @@ func (o *batchGranularityMismatch) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawbatchGranularityMismatch.DatasetRids == nil {
-		rawbatchGranularityMismatch.DatasetRids = make(map[api.Granularity][]rid.ResourceIdentifier, 0)
+		rawbatchGranularityMismatch.DatasetRids = make(map[api.Granularity][]rid.ResourceIdentifier)
 	}
 	*o = batchGranularityMismatch(rawbatchGranularityMismatch)
 	return nil

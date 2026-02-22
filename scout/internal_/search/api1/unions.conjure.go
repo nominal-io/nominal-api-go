@@ -324,7 +324,7 @@ func (u *SearchQuery) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) erro
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "dateTimeField":
@@ -420,75 +420,75 @@ func (u *SearchQuery) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) erro
 	}
 }
 
-func (u *SearchQuery) DateTimeFieldNoopSuccess(api.DateTimeField) error {
+func (u *SearchQuery) DateTimeFieldNoopSuccess(_ api.DateTimeField) error {
 	return nil
 }
 
-func (u *SearchQuery) StringFieldNoopSuccess(api.StringField) error {
+func (u *SearchQuery) StringFieldNoopSuccess(_ api.StringField) error {
 	return nil
 }
 
-func (u *SearchQuery) TimestampFieldNoopSuccess(api.TimestampField) error {
+func (u *SearchQuery) TimestampFieldNoopSuccess(_ api.TimestampField) error {
 	return nil
 }
 
-func (u *SearchQuery) LongFieldNoopSuccess(api.LongField) error {
+func (u *SearchQuery) LongFieldNoopSuccess(_ api.LongField) error {
 	return nil
 }
 
-func (u *SearchQuery) BooleanFieldNoopSuccess(api.BooleanField) error {
+func (u *SearchQuery) BooleanFieldNoopSuccess(_ api.BooleanField) error {
 	return nil
 }
 
-func (u *SearchQuery) ExactMatchNoopSuccess(string) error {
+func (u *SearchQuery) ExactMatchNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchQuery) StringArrayExactMatchNoopSuccess(api.StringArrayField) error {
+func (u *SearchQuery) StringArrayExactMatchNoopSuccess(_ api.StringArrayField) error {
 	return nil
 }
 
-func (u *SearchQuery) StringArrayLengthNoopSuccess(metadata.StringArrayLengthQuery) error {
+func (u *SearchQuery) StringArrayLengthNoopSuccess(_ metadata.StringArrayLengthQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchQuery) LabelNoopSuccess(api1.Label) error {
+func (u *SearchQuery) LabelNoopSuccess(_ api1.Label) error {
 	return nil
 }
 
-func (u *SearchQuery) PropertyNoopSuccess(api1.Property) error {
+func (u *SearchQuery) PropertyNoopSuccess(_ api1.Property) error {
 	return nil
 }
 
-func (u *SearchQuery) AndNoopSuccess([]SearchQuery) error {
+func (u *SearchQuery) AndNoopSuccess(_ []SearchQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) OrNoopSuccess([]SearchQuery) error {
+func (u *SearchQuery) OrNoopSuccess(_ []SearchQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) NotNoopSuccess(SearchQuery) error {
+func (u *SearchQuery) NotNoopSuccess(_ SearchQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
-func (u *SearchQuery) CreatedAtNoopSuccess(metadata.CreatedAtQuery) error {
+func (u *SearchQuery) CreatedAtNoopSuccess(_ metadata.CreatedAtQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) ArchivedStatusNoopSuccess(api1.ArchivedStatus) error {
+func (u *SearchQuery) ArchivedStatusNoopSuccess(_ api1.ArchivedStatus) error {
 	return nil
 }
 
-func (u *SearchQuery) IsPublishedNoopSuccess(bool) error {
+func (u *SearchQuery) IsPublishedNoopSuccess(_ bool) error {
 	return nil
 }
 

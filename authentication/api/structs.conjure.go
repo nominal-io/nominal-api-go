@@ -16,16 +16,16 @@ and on which app version.
 */
 type CoachmarkDismissal struct {
 	// The coachmark identifier (typically the feature flag name)
-	CoachmarkId string `conjure-docs:"The coachmark identifier (typically the feature flag name)" json:"coachmarkId"`
+	CoachmarkId string `json:"coachmarkId"`
 	// ISO 8601 timestamp of when the coachmark was dismissed
-	DismissedAt datetime.DateTime `conjure-docs:"ISO 8601 timestamp of when the coachmark was dismissed" json:"dismissedAt"`
+	DismissedAt datetime.DateTime `json:"dismissedAt"`
 	// The apps-scout version (semver) when the coachmark was dismissed
-	AppVersion string `conjure-docs:"The apps-scout version (semver) when the coachmark was dismissed" json:"appVersion"`
+	AppVersion string `json:"appVersion"`
 	/*
 	   The step index when dismissed (for multi-step coachmarks).
 	   If not present, the coachmark was dismissed via the X button.
 	*/
-	StepIndex *int `conjure-docs:"The step index when dismissed (for multi-step coachmarks).\nIf not present, the coachmark was dismissed via the X button." json:"stepIndex,omitempty"`
+	StepIndex *int `json:"stepIndex,omitempty"`
 }
 
 func (o CoachmarkDismissal) MarshalYAML() (interface{}, error) {
@@ -46,7 +46,7 @@ func (o *CoachmarkDismissal) UnmarshalYAML(unmarshal func(interface{}) error) er
 
 type DefaultNumberFormatConfigurations struct {
 	// Default number format for data values, e.g. chart tooltip and value table cell values.
-	Data *api.NumberFormat `conjure-docs:"Default number format for data values, e.g. chart tooltip and value table cell values." json:"data,omitempty"`
+	Data *api.NumberFormat `json:"data,omitempty"`
 }
 
 func (o DefaultNumberFormatConfigurations) MarshalYAML() (interface{}, error) {
@@ -68,11 +68,11 @@ func (o *DefaultNumberFormatConfigurations) UnmarshalYAML(unmarshal func(interfa
 // Request to dismiss a coachmark
 type DismissCoachmarkRequest struct {
 	// The coachmark identifier to dismiss
-	CoachmarkId string `conjure-docs:"The coachmark identifier to dismiss" json:"coachmarkId"`
+	CoachmarkId string `json:"coachmarkId"`
 	// The apps-scout version (semver) when dismissing
-	AppVersion string `conjure-docs:"The apps-scout version (semver) when dismissing" json:"appVersion"`
+	AppVersion string `json:"appVersion"`
 	// The step index when dismissed (for multi-step coachmarks)
-	StepIndex *int `conjure-docs:"The step index when dismissed (for multi-step coachmarks)" json:"stepIndex,omitempty"`
+	StepIndex *int `json:"stepIndex,omitempty"`
 }
 
 func (o DismissCoachmarkRequest) MarshalYAML() (interface{}, error) {
@@ -94,7 +94,7 @@ func (o *DismissCoachmarkRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 // Request to generate a MediaMTX authentication token
 type GenerateMediaMtxTokenRequest struct {
 	// List of permissions to include in the token
-	Permissions []MediaMtxPermission `conjure-docs:"List of permissions to include in the token" json:"permissions"`
+	Permissions []MediaMtxPermission `json:"permissions"`
 }
 
 func (o GenerateMediaMtxTokenRequest) MarshalJSON() ([]byte, error) {
@@ -137,7 +137,7 @@ func (o *GenerateMediaMtxTokenRequest) UnmarshalYAML(unmarshal func(interface{})
 // Response containing the generated MediaMTX token
 type GenerateMediaMtxTokenResponse struct {
 	// The signed JWT token for MediaMTX authentication
-	Token string `conjure-docs:"The signed JWT token for MediaMTX authentication" json:"token"`
+	Token string `json:"token"`
 }
 
 func (o GenerateMediaMtxTokenResponse) MarshalYAML() (interface{}, error) {
@@ -162,7 +162,7 @@ type GetCoachmarkDismissalsRequest struct {
 	   Optional list of coachmark IDs to filter by.
 	   If empty, returns all dismissals for the user.
 	*/
-	CoachmarkIds *[]string `conjure-docs:"Optional list of coachmark IDs to filter by.\nIf empty, returns all dismissals for the user." json:"coachmarkIds,omitempty"`
+	CoachmarkIds *[]string `json:"coachmarkIds,omitempty"`
 }
 
 func (o GetCoachmarkDismissalsRequest) MarshalYAML() (interface{}, error) {
@@ -184,12 +184,12 @@ func (o *GetCoachmarkDismissalsRequest) UnmarshalYAML(unmarshal func(interface{}
 // Response containing coachmark dismissals
 type GetCoachmarkDismissalsResponse struct {
 	// Map of coachmark ID to dismissal record
-	Dismissals map[string]CoachmarkDismissal `conjure-docs:"Map of coachmark ID to dismissal record" json:"dismissals"`
+	Dismissals map[string]CoachmarkDismissal `json:"dismissals"`
 }
 
 func (o GetCoachmarkDismissalsResponse) MarshalJSON() ([]byte, error) {
 	if o.Dismissals == nil {
-		o.Dismissals = make(map[string]CoachmarkDismissal, 0)
+		o.Dismissals = make(map[string]CoachmarkDismissal)
 	}
 	type _tmpGetCoachmarkDismissalsResponse GetCoachmarkDismissalsResponse
 	return safejson.Marshal(_tmpGetCoachmarkDismissalsResponse(o))
@@ -202,7 +202,7 @@ func (o *GetCoachmarkDismissalsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawGetCoachmarkDismissalsResponse.Dismissals == nil {
-		rawGetCoachmarkDismissalsResponse.Dismissals = make(map[string]CoachmarkDismissal, 0)
+		rawGetCoachmarkDismissalsResponse.Dismissals = make(map[string]CoachmarkDismissal)
 	}
 	*o = GetCoachmarkDismissalsResponse(rawGetCoachmarkDismissalsResponse)
 	return nil
@@ -295,9 +295,9 @@ func (o *Jwks) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // A permission definition for MediaMTX authentication
 type MediaMtxPermission struct {
 	// The action permitted. Allowed values are publish, read, playback, api, metrics, pprof.
-	Action string `conjure-docs:"The action permitted. Allowed values are publish, read, playback, api, metrics, pprof." json:"action"`
+	Action string `json:"action"`
 	// The stream path this permission applies to (e.g., "stream/test")
-	Path string `conjure-docs:"The stream path this permission applies to (e.g., \"stream/test\")" json:"path"`
+	Path string `json:"path"`
 }
 
 func (o MediaMtxPermission) MarshalYAML() (interface{}, error) {
@@ -339,10 +339,10 @@ func (o *OrgSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type SearchUsersRequest struct {
 	Query SearchUsersQuery `json:"query"`
 	// UPDATED_AT descending by default
-	SortBy        *SortBy     `conjure-docs:"UPDATED_AT descending by default" json:"sortBy,omitempty"`
+	SortBy        *SortBy     `json:"sortBy,omitempty"`
 	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
 	// Defaults to 100. Will throw if larger than 1_000.
-	PageSize *int `conjure-docs:"Defaults to 100. Will throw if larger than 1_000." json:"pageSize,omitempty"`
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o SearchUsersRequest) MarshalYAML() (interface{}, error) {
@@ -479,7 +479,7 @@ type UserV2 struct {
 	Email       string  `json:"email"`
 	DisplayName string  `json:"displayName"`
 	// Avatar URL or a default avatar if the user does not have one.
-	AvatarUrl string `conjure-docs:"Avatar URL or a default avatar if the user does not have one." json:"avatarUrl"`
+	AvatarUrl string `json:"avatarUrl"`
 }
 
 func (o UserV2) MarshalYAML() (interface{}, error) {

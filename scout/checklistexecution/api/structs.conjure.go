@@ -188,7 +188,7 @@ type BatchGetStreamingChecklistResponse struct {
 
 func (o BatchGetStreamingChecklistResponse) MarshalJSON() ([]byte, error) {
 	if o.StreamingChecklistInfos == nil {
-		o.StreamingChecklistInfos = make(map[api2.ChecklistRid]StreamingChecklistInfo, 0)
+		o.StreamingChecklistInfos = make(map[api2.ChecklistRid]StreamingChecklistInfo)
 	}
 	type _tmpBatchGetStreamingChecklistResponse BatchGetStreamingChecklistResponse
 	return safejson.Marshal(_tmpBatchGetStreamingChecklistResponse(o))
@@ -201,7 +201,7 @@ func (o *BatchGetStreamingChecklistResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawBatchGetStreamingChecklistResponse.StreamingChecklistInfos == nil {
-		rawBatchGetStreamingChecklistResponse.StreamingChecklistInfos = make(map[api2.ChecklistRid]StreamingChecklistInfo, 0)
+		rawBatchGetStreamingChecklistResponse.StreamingChecklistInfos = make(map[api2.ChecklistRid]StreamingChecklistInfo)
 	}
 	*o = BatchGetStreamingChecklistResponse(rawBatchGetStreamingChecklistResponse)
 	return nil
@@ -333,7 +333,7 @@ type CheckLiveStatusResponse struct {
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
 	   The check implementation index will correspond to the implementation index of the check condition.
 	*/
-	CheckParameterIndex *int `conjure-docs:"Checks can define a single range computation which can evaluate over multiple implementations of a context.\nThe check implementation index will correspond to the implementation index of the check condition." json:"checkParameterIndex,omitempty"`
+	CheckParameterIndex *int `json:"checkParameterIndex,omitempty"`
 }
 
 func (o CheckLiveStatusResponse) MarshalYAML() (interface{}, error) {
@@ -418,20 +418,20 @@ type ExecuteChecklistForAssetsRequest struct {
 	Checklist api2.ChecklistRid `json:"checklist"`
 	Assets    []api2.AssetRid   `json:"assets"`
 	// Checklist violations will be sent to the specified integrations. At least one integration must be specified.
-	NotificationConfigurations []api.NotificationConfiguration `conjure-docs:"Checklist violations will be sent to the specified integrations. At least one integration must be specified." json:"notificationConfigurations"`
+	NotificationConfigurations []api.NotificationConfiguration `json:"notificationConfigurations"`
 	// Delays the evaluation of the streaming checklist. This is useful for when data is delayed.
-	EvaluationDelay api1.Duration `conjure-docs:"Delays the evaluation of the streaming checklist. This is useful for when data is delayed." json:"evaluationDelay"`
+	EvaluationDelay api1.Duration `json:"evaluationDelay"`
 	/*
 	   Specifies the minimum amount of time that must pass before a check can recover from a failure.
 	   Minimum value is 15 seconds.
 	*/
-	RecoveryDelay api1.Duration `conjure-docs:"Specifies the minimum amount of time that must pass before a check can recover from a failure.\nMinimum value is 15 seconds." json:"recoveryDelay"`
+	RecoveryDelay api1.Duration `json:"recoveryDelay"`
 	/*
 	   The option to automatically create events for check status changes.
 	   If true, events will be created when checks fail and recover.
 	   Defaults to false if not specified.
 	*/
-	AutoCreateEvents *bool `conjure-docs:"The option to automatically create events for check status changes.\nIf true, events will be created when checks fail and recover.\nDefaults to false if not specified." json:"autoCreateEvents,omitempty"`
+	AutoCreateEvents *bool `json:"autoCreateEvents,omitempty"`
 }
 
 func (o ExecuteChecklistForAssetsRequest) MarshalJSON() ([]byte, error) {
@@ -538,7 +538,7 @@ func (o *Invalid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type ListStreamingChecklistForAssetRequest struct {
 	AssetRid api2.AssetRid `json:"assetRid"`
 	// Page sizes greater than 10_000 will be rejected. Default pageSize is 100.
-	PageSize  *int       `conjure-docs:"Page sizes greater than 10_000 will be rejected. Default pageSize is 100." json:"pageSize,omitempty"`
+	PageSize  *int       `json:"pageSize,omitempty"`
 	PageToken *uuid.UUID `json:"pageToken,omitempty"`
 }
 
@@ -602,7 +602,7 @@ func (o *ListStreamingChecklistForAssetResponse) UnmarshalYAML(unmarshal func(in
 
 type ListStreamingChecklistRequest struct {
 	// Page sizes greater than 10_000 will be rejected. Default pageSize is 100.
-	PageSize   *int                `conjure-docs:"Page sizes greater than 10_000 will be rejected. Default pageSize is 100." json:"pageSize,omitempty"`
+	PageSize   *int                `json:"pageSize,omitempty"`
 	Workspaces []rids.WorkspaceRid `json:"workspaces"`
 	PageToken  *uuid.UUID          `json:"pageToken,omitempty"`
 }
@@ -752,7 +752,7 @@ type ResolvedCheckStatus struct {
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
 	   The check implementation index will correspond to the implementation index of the check condition.
 	*/
-	CheckParameterIndex          *int                          `conjure-docs:"Checks can define a single range computation which can evaluate over multiple implementations of a context.\nThe check implementation index will correspond to the implementation index of the check condition." json:"checkParameterIndex,omitempty"`
+	CheckParameterIndex          *int                          `json:"checkParameterIndex,omitempty"`
 	InvalidStreamingComputeNodes []InvalidStreamingComputeNode `json:"invalidStreamingComputeNodes"`
 	Channels                     []ChannelLocatorWithStatus    `json:"channels"`
 }
@@ -885,7 +885,7 @@ type StreamingChecklistInfo struct {
 
 func (o StreamingChecklistInfo) MarshalJSON() ([]byte, error) {
 	if o.AssetConfigurations == nil {
-		o.AssetConfigurations = make(map[api2.AssetRid]AssetStreamConfiguration, 0)
+		o.AssetConfigurations = make(map[api2.AssetRid]AssetStreamConfiguration)
 	}
 	type _tmpStreamingChecklistInfo StreamingChecklistInfo
 	return safejson.Marshal(_tmpStreamingChecklistInfo(o))
@@ -898,7 +898,7 @@ func (o *StreamingChecklistInfo) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawStreamingChecklistInfo.AssetConfigurations == nil {
-		rawStreamingChecklistInfo.AssetConfigurations = make(map[api2.AssetRid]AssetStreamConfiguration, 0)
+		rawStreamingChecklistInfo.AssetConfigurations = make(map[api2.AssetRid]AssetStreamConfiguration)
 	}
 	*o = StreamingChecklistInfo(rawStreamingChecklistInfo)
 	return nil
@@ -940,7 +940,7 @@ func (o *StreamingChecklistInitializing) UnmarshalYAML(unmarshal func(interface{
 
 type StreamingChecklistRunning struct {
 	// The commitId of the checklist that is currently executing.
-	CommitId     api5.CommitId             `conjure-docs:"The commitId of the checklist that is currently executing." json:"commitId"`
+	CommitId     api5.CommitId             `json:"commitId"`
 	CheckResults []CheckLiveStatusResponse `json:"checkResults"`
 }
 

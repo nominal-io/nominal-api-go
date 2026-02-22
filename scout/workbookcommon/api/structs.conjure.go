@@ -4,20 +4,42 @@ package api
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	"github.com/nominal-io/nominal-api-go/scout/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/event"
+	api1 "github.com/nominal-io/nominal-api-go/scout/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
 	api4 "github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
-	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 	"github.com/palantir/pkg/uuid"
 )
 
+// An asset data scope input value.
+type AssetDataScopeInputValue struct {
+	AssetRid api.AssetRid `json:"assetRid"`
+}
+
+func (o AssetDataScopeInputValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AssetDataScopeInputValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // An offset that can be applied to an asset.
 type AssetOffset struct {
-	Offset      *Offset                           `json:"offset,omitempty"`
-	DataSources *map[api.DataSourceRefName]Offset `json:"dataSources,omitempty"`
+	Offset      *Offset                            `json:"offset,omitempty"`
+	DataSources *map[api1.DataSourceRefName]Offset `json:"dataSources,omitempty"`
 }
 
 func (o AssetOffset) MarshalYAML() (interface{}, error) {
@@ -37,8 +59,8 @@ func (o *AssetOffset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type AssetSettings struct {
-	Offset           *api1.UserDuration                           `json:"offset,omitempty"`
-	DataScopeOffsets *map[api.DataSourceRefName]api1.UserDuration `json:"dataScopeOffsets,omitempty"`
+	Offset           *api.UserDuration                            `json:"offset,omitempty"`
+	DataScopeOffsets *map[api1.DataSourceRefName]api.UserDuration `json:"dataScopeOffsets,omitempty"`
 }
 
 func (o AssetSettings) MarshalYAML() (interface{}, error) {
@@ -58,7 +80,7 @@ func (o *AssetSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type CheckAlertReference struct {
-	CheckAlertRid api1.CheckAlertRid `json:"checkAlertRid"`
+	CheckAlertRid api.CheckAlertRid `json:"checkAlertRid"`
 }
 
 func (o CheckAlertReference) MarshalYAML() (interface{}, error) {
@@ -77,11 +99,34 @@ func (o *CheckAlertReference) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// An offset that is defined relative to the first target event found by query.
+type EventAlignment struct {
+	TargetRunRid api2.RunRid       `json:"targetRunRid"`
+	AlignTo      EventAlignTo      `json:"alignTo"`
+	EventQuery   event.SearchQuery `json:"eventQuery"`
+}
+
+func (o EventAlignment) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EventAlignment) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type EventReference struct {
 	// Deprecated: Please use the rid field instead.
 	EventUuid *uuid.UUID `json:"eventUuid,omitempty"`
 	// The event's unique identifier.
-	Rid rids.EventRid `conjure-docs:"The event's unique identifier." json:"rid"`
+	Rid rids.EventRid `json:"rid"`
 }
 
 func (o EventReference) MarshalYAML() (interface{}, error) {
@@ -122,10 +167,31 @@ func (o *RunAlignment) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A run data scope input value.
+type RunDataScopeInputValue struct {
+	RunRid api2.RunRid `json:"runRid"`
+}
+
+func (o RunDataScopeInputValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RunDataScopeInputValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // An offset that can be applied to a run.
 type RunOffset struct {
-	Offset *Offset                        `json:"offset,omitempty"`
-	Assets *map[api1.AssetRid]AssetOffset `json:"assets,omitempty"`
+	Offset *Offset                       `json:"offset,omitempty"`
+	Assets *map[api.AssetRid]AssetOffset `json:"assets,omitempty"`
 }
 
 func (o RunOffset) MarshalYAML() (interface{}, error) {
@@ -145,8 +211,8 @@ func (o *RunOffset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type RunSettings struct {
-	Offset        *api1.UserDuration               `json:"offset,omitempty"`
-	AssetSettings *map[api1.AssetRid]AssetSettings `json:"assetSettings,omitempty"`
+	Offset        *api.UserDuration               `json:"offset,omitempty"`
+	AssetSettings *map[api.AssetRid]AssetSettings `json:"assetSettings,omitempty"`
 }
 
 func (o RunSettings) MarshalYAML() (interface{}, error) {
@@ -172,12 +238,12 @@ and tag group by fields of the series node in the compute tree.
 */
 type Tag struct {
 	// The key of the tag for the filter and group by compute arguments.
-	Key TagString `conjure-docs:"The key of the tag for the filter and group by compute arguments." json:"key"`
+	Key TagString `json:"key"`
 	/*
 	   The values of the tag to filter against.
 	   An empty list will treat the tag as a wildcard, including all values in the compute
 	*/
-	Values []TagString `conjure-docs:"The values of the tag to filter against. \nAn empty list will treat the tag as a wildcard, including all values in the compute" json:"values"`
+	Values []TagString `json:"values"`
 }
 
 func (o Tag) MarshalJSON() ([]byte, error) {
@@ -224,9 +290,9 @@ type TagStringLiteral struct {
 	   Used as the variable id for the StringConstant applied to the tag fields
 	   of the channel compute node.
 	*/
-	Id uuid.UUID `conjure-docs:"A unique identifier for this string. Cannot be shared across different Tag inputs.\nUsed as the variable id for the StringConstant applied to the tag fields \nof the channel compute node." json:"id"`
+	Id uuid.UUID `json:"id"`
 	// The string value.
-	Value string `conjure-docs:"The string value." json:"value"`
+	Value string `json:"value"`
 }
 
 func (o TagStringLiteral) MarshalYAML() (interface{}, error) {
@@ -249,16 +315,17 @@ type WorkbookContent struct {
 	ChannelVariables api3.WorkbookChannelVariableMap `json:"channelVariables"`
 	Inputs           *WorkbookInputs                 `json:"inputs,omitempty"`
 	// map of visualizations. Previously termed "charts"
-	Charts   api4.WorkbookVizDefinitionMap `conjure-docs:"map of visualizations. Previously termed \"charts\"" json:"charts"`
-	Settings *WorkbookSettings             `json:"settings,omitempty"`
+	Charts          api4.WorkbookVizDefinitionMap `json:"charts"`
+	Settings        *WorkbookSettings             `json:"settings,omitempty"`
+	DataScopeInputs *WorkbookDataScopeInputs      `json:"dataScopeInputs,omitempty"`
 }
 
 func (o WorkbookContent) MarshalJSON() ([]byte, error) {
 	if o.ChannelVariables == nil {
-		o.ChannelVariables = make(map[api3.ChannelVariableName]api3.ChannelVariable, 0)
+		o.ChannelVariables = make(map[api3.ChannelVariableName]api3.ChannelVariable)
 	}
 	if o.Charts == nil {
-		o.Charts = make(map[api1.VizId]api4.VizDefinition, 0)
+		o.Charts = make(map[api.VizId]api4.VizDefinition)
 	}
 	type _tmpWorkbookContent WorkbookContent
 	return safejson.Marshal(_tmpWorkbookContent(o))
@@ -271,10 +338,10 @@ func (o *WorkbookContent) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawWorkbookContent.ChannelVariables == nil {
-		rawWorkbookContent.ChannelVariables = make(map[api3.ChannelVariableName]api3.ChannelVariable, 0)
+		rawWorkbookContent.ChannelVariables = make(map[api3.ChannelVariableName]api3.ChannelVariable)
 	}
 	if rawWorkbookContent.Charts == nil {
-		rawWorkbookContent.Charts = make(map[api1.VizId]api4.VizDefinition, 0)
+		rawWorkbookContent.Charts = make(map[api.VizId]api4.VizDefinition)
 	}
 	*o = WorkbookContent(rawWorkbookContent)
 	return nil
@@ -297,14 +364,80 @@ func (o *WorkbookContent) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 /*
+A data scope input that binds a variable name to an asset or run RID.
+The variable name is the map key.
+*/
+type WorkbookDataScopeInput struct {
+	Value DataScopeInputValue `json:"value"`
+}
+
+func (o WorkbookDataScopeInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *WorkbookDataScopeInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A map of data scope input variable name to its definition.
+type WorkbookDataScopeInputsV1 struct {
+	Inputs map[WorkbookDataScopeInputName]WorkbookDataScopeInput `json:"inputs"`
+}
+
+func (o WorkbookDataScopeInputsV1) MarshalJSON() ([]byte, error) {
+	if o.Inputs == nil {
+		o.Inputs = make(map[WorkbookDataScopeInputName]WorkbookDataScopeInput)
+	}
+	type _tmpWorkbookDataScopeInputsV1 WorkbookDataScopeInputsV1
+	return safejson.Marshal(_tmpWorkbookDataScopeInputsV1(o))
+}
+
+func (o *WorkbookDataScopeInputsV1) UnmarshalJSON(data []byte) error {
+	type _tmpWorkbookDataScopeInputsV1 WorkbookDataScopeInputsV1
+	var rawWorkbookDataScopeInputsV1 _tmpWorkbookDataScopeInputsV1
+	if err := safejson.Unmarshal(data, &rawWorkbookDataScopeInputsV1); err != nil {
+		return err
+	}
+	if rawWorkbookDataScopeInputsV1.Inputs == nil {
+		rawWorkbookDataScopeInputsV1.Inputs = make(map[WorkbookDataScopeInputName]WorkbookDataScopeInput)
+	}
+	*o = WorkbookDataScopeInputsV1(rawWorkbookDataScopeInputsV1)
+	return nil
+}
+
+func (o WorkbookDataScopeInputsV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *WorkbookDataScopeInputsV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
 A workbook input is a value managed at the workbook level
 that can be applied to multiple elements.
 */
 type WorkbookInput struct {
 	// The unique identifier of the input.
-	Id uuid.UUID `conjure-docs:"The unique identifier of the input." json:"id"`
+	Id uuid.UUID `json:"id"`
 	// The label of the input for display purposes.
-	Label *string   `conjure-docs:"The label of the input for display purposes." json:"label,omitempty"`
+	Label *string   `json:"label,omitempty"`
 	Value InputType `json:"value"`
 }
 
@@ -367,16 +500,16 @@ func (o *WorkbookInputsV1) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type WorkbookOffsetsV1 struct {
-	Runs   map[api2.RunRid]RunOffset     `json:"runs"`
-	Assets map[api1.AssetRid]AssetOffset `json:"assets"`
+	Runs   map[api2.RunRid]RunOffset    `json:"runs"`
+	Assets map[api.AssetRid]AssetOffset `json:"assets"`
 }
 
 func (o WorkbookOffsetsV1) MarshalJSON() ([]byte, error) {
 	if o.Runs == nil {
-		o.Runs = make(map[api2.RunRid]RunOffset, 0)
+		o.Runs = make(map[api2.RunRid]RunOffset)
 	}
 	if o.Assets == nil {
-		o.Assets = make(map[api1.AssetRid]AssetOffset, 0)
+		o.Assets = make(map[api.AssetRid]AssetOffset)
 	}
 	type _tmpWorkbookOffsetsV1 WorkbookOffsetsV1
 	return safejson.Marshal(_tmpWorkbookOffsetsV1(o))
@@ -389,10 +522,10 @@ func (o *WorkbookOffsetsV1) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawWorkbookOffsetsV1.Runs == nil {
-		rawWorkbookOffsetsV1.Runs = make(map[api2.RunRid]RunOffset, 0)
+		rawWorkbookOffsetsV1.Runs = make(map[api2.RunRid]RunOffset)
 	}
 	if rawWorkbookOffsetsV1.Assets == nil {
-		rawWorkbookOffsetsV1.Assets = make(map[api1.AssetRid]AssetOffset, 0)
+		rawWorkbookOffsetsV1.Assets = make(map[api.AssetRid]AssetOffset)
 	}
 	*o = WorkbookOffsetsV1(rawWorkbookOffsetsV1)
 	return nil
@@ -416,16 +549,16 @@ func (o *WorkbookOffsetsV1) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 type WorkbookSettings struct {
 	// Settings for assets to be used in the workbook. This should be present for asset workbooks.
-	AssetSettings *map[api1.AssetRid]AssetSettings `conjure-docs:"Settings for assets to be used in the workbook. This should be present for asset workbooks." json:"assetSettings,omitempty"`
+	AssetSettings *map[api.AssetRid]AssetSettings `json:"assetSettings,omitempty"`
 	// Settings for runs to be used in the workbook. This should be present for run workbooks.
-	RunSettings *map[api2.RunRid]RunSettings `conjure-docs:"Settings for runs to be used in the workbook. This should be present for run workbooks." json:"runSettings,omitempty"`
+	RunSettings *map[api2.RunRid]RunSettings `json:"runSettings,omitempty"`
 	/*
 	   Time range settings when users access a workbook. Time range URL query params will take precedence
 	   over persisted the global time range.
 	*/
-	TimeSettings *WorkbookTimeSettings `conjure-docs:"Time range settings when users access a workbook. Time range URL query params will take precedence\nover persisted the global time range." json:"timeSettings,omitempty"`
+	TimeSettings *WorkbookTimeSettings `json:"timeSettings,omitempty"`
 	// Time offsets that can be applied to the workbook.
-	Offsets *WorkbookOffsets `conjure-docs:"Time offsets that can be applied to the workbook." json:"offsets,omitempty"`
+	Offsets *WorkbookOffsets `json:"offsets,omitempty"`
 }
 
 func (o WorkbookSettings) MarshalYAML() (interface{}, error) {
@@ -447,20 +580,20 @@ func (o *WorkbookSettings) UnmarshalYAML(unmarshal func(interface{}) error) erro
 // Time range configuration for workbooks
 type WorkbookTimeSettingsV1 struct {
 	// The time range type of the workbook
-	TimeRangeType WorkbookTimeRangeType `conjure-docs:"The time range type of the workbook" json:"timeRangeType"`
+	TimeRangeType WorkbookTimeRangeType `json:"timeRangeType"`
 	// The global time range a workbook falls back to.
-	GlobalTimeRange *TimeRange `conjure-docs:"The global time range a workbook falls back to." json:"globalTimeRange,omitempty"`
+	GlobalTimeRange *TimeRange `json:"globalTimeRange,omitempty"`
 	/*
 	   If true, workbook will default to globalTimeRange for all tabs.
 	   If false, will attempt to use tabTime to populate the workbook time range.
 	*/
-	IsGlobalTime  bool                 `conjure-docs:"If true, workbook will default to globalTimeRange for all tabs.\nIf false, will attempt to use tabTime to populate the workbook time range." json:"isGlobalTime"`
+	IsGlobalTime  bool                 `json:"isGlobalTime"`
 	TabTimeRanges map[string]TimeRange `json:"tabTimeRanges"`
 }
 
 func (o WorkbookTimeSettingsV1) MarshalJSON() ([]byte, error) {
 	if o.TabTimeRanges == nil {
-		o.TabTimeRanges = make(map[string]TimeRange, 0)
+		o.TabTimeRanges = make(map[string]TimeRange)
 	}
 	type _tmpWorkbookTimeSettingsV1 WorkbookTimeSettingsV1
 	return safejson.Marshal(_tmpWorkbookTimeSettingsV1(o))
@@ -473,7 +606,7 @@ func (o *WorkbookTimeSettingsV1) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawWorkbookTimeSettingsV1.TabTimeRanges == nil {
-		rawWorkbookTimeSettingsV1.TabTimeRanges = make(map[string]TimeRange, 0)
+		rawWorkbookTimeSettingsV1.TabTimeRanges = make(map[string]TimeRange)
 	}
 	*o = WorkbookTimeSettingsV1(rawWorkbookTimeSettingsV1)
 	return nil

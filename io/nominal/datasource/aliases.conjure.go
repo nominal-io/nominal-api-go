@@ -27,6 +27,19 @@ func (a *DatasetFileId) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a DatasetFileId) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(uuid.UUID(a))
+}
+
+func (a *DatasetFileId) UnmarshalJSON(data []byte) error {
+	var rawDatasetFileId uuid.UUID
+	if err := safejson.Unmarshal(data, &rawDatasetFileId); err != nil {
+		return err
+	}
+	*a = DatasetFileId(rawDatasetFileId)
+	return nil
+}
+
 func (a DatasetFileId) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -56,6 +69,19 @@ func (a VideoFileId) MarshalText() ([]byte, error) {
 func (a *VideoFileId) UnmarshalText(data []byte) error {
 	var rawVideoFileId uuid.UUID
 	if err := rawVideoFileId.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = VideoFileId(rawVideoFileId)
+	return nil
+}
+
+func (a VideoFileId) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(uuid.UUID(a))
+}
+
+func (a *VideoFileId) UnmarshalJSON(data []byte) error {
+	var rawVideoFileId uuid.UUID
+	if err := safejson.Unmarshal(data, &rawVideoFileId); err != nil {
 		return err
 	}
 	*a = VideoFileId(rawVideoFileId)

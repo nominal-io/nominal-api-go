@@ -13,11 +13,24 @@ type ChannelPrefix struct {
 	Value *string
 }
 
+func (a ChannelPrefix) String() string {
+	if a.Value == nil {
+		return ""
+	}
+	return string(*a.Value)
+}
+
 func (a ChannelPrefix) MarshalText() ([]byte, error) {
 	if a.Value == nil {
 		return nil, nil
 	}
 	return []byte(*a.Value), nil
+}
+
+func (a *ChannelPrefix) UnmarshalText(data []byte) error {
+	rawChannelPrefix := string(data)
+	a.Value = &rawChannelPrefix
+	return nil
 }
 
 func (a ChannelPrefix) MarshalJSON() ([]byte, error) {
@@ -27,10 +40,11 @@ func (a ChannelPrefix) MarshalJSON() ([]byte, error) {
 	return safejson.Marshal(a.Value)
 }
 
-func (a *ChannelPrefix) UnmarshalText(data []byte) error {
-	rawChannelPrefix := string(data)
-	a.Value = &rawChannelPrefix
-	return nil
+func (a *ChannelPrefix) UnmarshalJSON(data []byte) error {
+	if a.Value == nil {
+		a.Value = new(string)
+	}
+	return safejson.Unmarshal(data, a.Value)
 }
 
 func (a ChannelPrefix) MarshalYAML() (interface{}, error) {
@@ -62,6 +76,19 @@ func (a ContainerizedExtractorRid) MarshalText() ([]byte, error) {
 func (a *ContainerizedExtractorRid) UnmarshalText(data []byte) error {
 	var rawContainerizedExtractorRid rid.ResourceIdentifier
 	if err := rawContainerizedExtractorRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = ContainerizedExtractorRid(rawContainerizedExtractorRid)
+	return nil
+}
+
+func (a ContainerizedExtractorRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ContainerizedExtractorRid) UnmarshalJSON(data []byte) error {
+	var rawContainerizedExtractorRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawContainerizedExtractorRid); err != nil {
 		return err
 	}
 	*a = ContainerizedExtractorRid(rawContainerizedExtractorRid)
@@ -106,6 +133,19 @@ func (a IngestJobRid) MarshalText() ([]byte, error) {
 func (a *IngestJobRid) UnmarshalText(data []byte) error {
 	var rawIngestJobRid rid.ResourceIdentifier
 	if err := rawIngestJobRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = IngestJobRid(rawIngestJobRid)
+	return nil
+}
+
+func (a IngestJobRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *IngestJobRid) UnmarshalJSON(data []byte) error {
+	var rawIngestJobRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawIngestJobRid); err != nil {
 		return err
 	}
 	*a = IngestJobRid(rawIngestJobRid)

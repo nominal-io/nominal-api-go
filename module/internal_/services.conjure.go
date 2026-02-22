@@ -27,21 +27,19 @@ func NewInternalModuleServiceClient(client httpclient.Client) InternalModuleServ
 }
 
 func (c *internalModuleServiceClient) BatchGetUnresolvedModuleDefinition(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetUnresolvedModuleDefinitionsRequest) (BatchGetUnresolvedModuleDefinitionsResponse, error) {
-	var defaultReturnVal BatchGetUnresolvedModuleDefinitionsResponse
 	var returnVal *BatchGetUnresolvedModuleDefinitionsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetUnresolvedModuleDefinition"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/internal/scout/v2/module/unresolved-module/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGetUnresolvedModuleDefinition failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchGetUnresolvedModuleDefinitionsResponse), werror.WrapWithContextParams(ctx, err, "batchGetUnresolvedModuleDefinition failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGetUnresolvedModuleDefinition response cannot be nil")
+		return *new(BatchGetUnresolvedModuleDefinitionsResponse), werror.ErrorWithContextParams(ctx, "batchGetUnresolvedModuleDefinition response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -75,10 +73,9 @@ type internalModuleServiceClientWithTokenProvider struct {
 }
 
 func (c *internalModuleServiceClientWithTokenProvider) BatchGetUnresolvedModuleDefinition(ctx context.Context, requestArg BatchGetUnresolvedModuleDefinitionsRequest) (BatchGetUnresolvedModuleDefinitionsResponse, error) {
-	var defaultReturnVal BatchGetUnresolvedModuleDefinitionsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchGetUnresolvedModuleDefinitionsResponse), err
 	}
 	return c.client.BatchGetUnresolvedModuleDefinition(ctx, bearertoken.Token(token), requestArg)
 }

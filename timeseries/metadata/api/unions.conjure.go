@@ -194,7 +194,7 @@ func (u *LocatorTemplate) AcceptFuncs(timescaleDbFunc func(TimescaleDbLocatorTem
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in LocatorTemplate type")
 		}
 		return unknownFunc(u.typ)
 	case "timescaleDb":
@@ -245,39 +245,39 @@ func (u *LocatorTemplate) AcceptFuncs(timescaleDbFunc func(TimescaleDbLocatorTem
 	}
 }
 
-func (u *LocatorTemplate) TimescaleDbNoopSuccess(TimescaleDbLocatorTemplate) error {
+func (u *LocatorTemplate) TimescaleDbNoopSuccess(_ TimescaleDbLocatorTemplate) error {
 	return nil
 }
 
-func (u *LocatorTemplate) InfluxNoopSuccess(Influx2LocatorTemplate) error {
+func (u *LocatorTemplate) InfluxNoopSuccess(_ Influx2LocatorTemplate) error {
 	return nil
 }
 
-func (u *LocatorTemplate) Influx1NoopSuccess(Influx1LocatorTemplate) error {
+func (u *LocatorTemplate) Influx1NoopSuccess(_ Influx1LocatorTemplate) error {
 	return nil
 }
 
-func (u *LocatorTemplate) NominalNoopSuccess(NominalLocatorTemplate) error {
+func (u *LocatorTemplate) NominalNoopSuccess(_ NominalLocatorTemplate) error {
 	return nil
 }
 
-func (u *LocatorTemplate) TimestreamNoopSuccess(TimestreamLocatorTemplate) error {
+func (u *LocatorTemplate) TimestreamNoopSuccess(_ TimestreamLocatorTemplate) error {
 	return nil
 }
 
-func (u *LocatorTemplate) VisualCrossingNoopSuccess(VisualCrossingLocatorTemplate) error {
+func (u *LocatorTemplate) VisualCrossingNoopSuccess(_ VisualCrossingLocatorTemplate) error {
 	return nil
 }
 
-func (u *LocatorTemplate) BigQueryNoopSuccess(BigQueryLocatorTemplate) error {
+func (u *LocatorTemplate) BigQueryNoopSuccess(_ BigQueryLocatorTemplate) error {
 	return nil
 }
 
-func (u *LocatorTemplate) ApiNoopSuccess(ApiLocatorTemplate) error {
+func (u *LocatorTemplate) ApiNoopSuccess(_ ApiLocatorTemplate) error {
 	return nil
 }
 
-func (u *LocatorTemplate) VideoNoopSuccess(VideoLocatorTemplate) error {
+func (u *LocatorTemplate) VideoNoopSuccess(_ VideoLocatorTemplate) error {
 	return nil
 }
 

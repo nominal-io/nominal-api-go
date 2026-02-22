@@ -27,6 +27,19 @@ func (a *ApiKeyRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a ApiKeyRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ApiKeyRid) UnmarshalJSON(data []byte) error {
+	var rawApiKeyRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawApiKeyRid); err != nil {
+		return err
+	}
+	*a = ApiKeyRid(rawApiKeyRid)
+	return nil
+}
+
 func (a ApiKeyRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {

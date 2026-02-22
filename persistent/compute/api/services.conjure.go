@@ -27,20 +27,18 @@ func NewPersistentComputeServiceClient(client httpclient.Client) PersistentCompu
 }
 
 func (c *persistentComputeServiceClient) IsEnabled(ctx context.Context, authHeader bearertoken.Token) (IsEnabledResponse, error) {
-	var defaultReturnVal IsEnabledResponse
 	var returnVal *IsEnabledResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("IsEnabled"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/persistent-compute/enabled"))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "isEnabled failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(IsEnabledResponse), werror.WrapWithContextParams(ctx, err, "isEnabled failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "isEnabled response cannot be nil")
+		return *new(IsEnabledResponse), werror.ErrorWithContextParams(ctx, "isEnabled response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -74,10 +72,9 @@ type persistentComputeServiceClientWithTokenProvider struct {
 }
 
 func (c *persistentComputeServiceClientWithTokenProvider) IsEnabled(ctx context.Context) (IsEnabledResponse, error) {
-	var defaultReturnVal IsEnabledResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(IsEnabledResponse), err
 	}
 	return c.client.IsEnabled(ctx, bearertoken.Token(token))
 }

@@ -97,7 +97,7 @@ func (u *ArrayPoints) AcceptFuncs(doubleFunc func([]DoubleArrayPoint) error, str
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ArrayPoints type")
 		}
 		return unknownFunc(u.typ)
 	case "double":
@@ -113,11 +113,11 @@ func (u *ArrayPoints) AcceptFuncs(doubleFunc func([]DoubleArrayPoint) error, str
 	}
 }
 
-func (u *ArrayPoints) DoubleNoopSuccess([]DoubleArrayPoint) error {
+func (u *ArrayPoints) DoubleNoopSuccess(_ []DoubleArrayPoint) error {
 	return nil
 }
 
-func (u *ArrayPoints) StringNoopSuccess([]StringArrayPoint) error {
+func (u *ArrayPoints) StringNoopSuccess(_ []StringArrayPoint) error {
 	return nil
 }
 
@@ -275,7 +275,7 @@ func (u *ArraysValues) AcceptFuncs(strings1dFunc func([][]string) error, doubles
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ArraysValues type")
 		}
 		return unknownFunc(u.typ)
 	case "strings1d":
@@ -291,11 +291,11 @@ func (u *ArraysValues) AcceptFuncs(strings1dFunc func([][]string) error, doubles
 	}
 }
 
-func (u *ArraysValues) Strings1dNoopSuccess([][]string) error {
+func (u *ArraysValues) Strings1dNoopSuccess(_ [][]string) error {
 	return nil
 }
 
-func (u *ArraysValues) Doubles1dNoopSuccess([][]float64) error {
+func (u *ArraysValues) Doubles1dNoopSuccess(_ [][]float64) error {
 	return nil
 }
 
@@ -492,7 +492,7 @@ func (u *ColumnValues) AcceptFuncs(stringsFunc func([]string) error, doublesFunc
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ColumnValues type")
 		}
 		return unknownFunc(u.typ)
 	case "strings":
@@ -523,23 +523,23 @@ func (u *ColumnValues) AcceptFuncs(stringsFunc func([]string) error, doublesFunc
 	}
 }
 
-func (u *ColumnValues) StringsNoopSuccess([]string) error {
+func (u *ColumnValues) StringsNoopSuccess(_ []string) error {
 	return nil
 }
 
-func (u *ColumnValues) DoublesNoopSuccess([]float64) error {
+func (u *ColumnValues) DoublesNoopSuccess(_ []float64) error {
 	return nil
 }
 
-func (u *ColumnValues) IntsNoopSuccess([]int) error {
+func (u *ColumnValues) IntsNoopSuccess(_ []int) error {
 	return nil
 }
 
-func (u *ColumnValues) ArraysNoopSuccess(ArraysValues) error {
+func (u *ColumnValues) ArraysNoopSuccess(_ ArraysValues) error {
 	return nil
 }
 
-func (u *ColumnValues) StructsNoopSuccess([]string) error {
+func (u *ColumnValues) StructsNoopSuccess(_ []string) error {
 	return nil
 }
 
@@ -815,7 +815,7 @@ func (u *Points) AcceptFuncs(stringFunc func([]StringPoint) error, doubleFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Points type")
 		}
 		return unknownFunc(u.typ)
 	case "string":
@@ -856,31 +856,31 @@ func (u *Points) AcceptFuncs(stringFunc func([]StringPoint) error, doubleFunc fu
 	}
 }
 
-func (u *Points) StringNoopSuccess([]StringPoint) error {
+func (u *Points) StringNoopSuccess(_ []StringPoint) error {
 	return nil
 }
 
-func (u *Points) DoubleNoopSuccess([]DoublePoint) error {
+func (u *Points) DoubleNoopSuccess(_ []DoublePoint) error {
 	return nil
 }
 
-func (u *Points) LogNoopSuccess([]LogPoint) error {
+func (u *Points) LogNoopSuccess(_ []LogPoint) error {
 	return nil
 }
 
-func (u *Points) IntNoopSuccess([]IntPoint) error {
+func (u *Points) IntNoopSuccess(_ []IntPoint) error {
 	return nil
 }
 
-func (u *Points) Uint64NoopSuccess([]Uint64Point) error {
+func (u *Points) Uint64NoopSuccess(_ []Uint64Point) error {
 	return nil
 }
 
-func (u *Points) ArrayNoopSuccess(ArrayPoints) error {
+func (u *Points) ArrayNoopSuccess(_ ArrayPoints) error {
 	return nil
 }
 
-func (u *Points) StructNoopSuccess([]StructPoint) error {
+func (u *Points) StructNoopSuccess(_ []StructPoint) error {
 	return nil
 }
 
@@ -1156,7 +1156,7 @@ func (u *PointsExternal) AcceptFuncs(stringFunc func([]StringPoint) error, doubl
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in PointsExternal type")
 		}
 		return unknownFunc(u.typ)
 	case "string":
@@ -1187,23 +1187,23 @@ func (u *PointsExternal) AcceptFuncs(stringFunc func([]StringPoint) error, doubl
 	}
 }
 
-func (u *PointsExternal) StringNoopSuccess([]StringPoint) error {
+func (u *PointsExternal) StringNoopSuccess(_ []StringPoint) error {
 	return nil
 }
 
-func (u *PointsExternal) DoubleNoopSuccess([]DoublePoint) error {
+func (u *PointsExternal) DoubleNoopSuccess(_ []DoublePoint) error {
 	return nil
 }
 
-func (u *PointsExternal) IntNoopSuccess([]IntPoint) error {
+func (u *PointsExternal) IntNoopSuccess(_ []IntPoint) error {
 	return nil
 }
 
-func (u *PointsExternal) ArrayNoopSuccess(ArrayPoints) error {
+func (u *PointsExternal) ArrayNoopSuccess(_ ArrayPoints) error {
 	return nil
 }
 
-func (u *PointsExternal) StructNoopSuccess([]StructPoint) error {
+func (u *PointsExternal) StructNoopSuccess(_ []StructPoint) error {
 	return nil
 }
 

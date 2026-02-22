@@ -14,7 +14,7 @@ type ChannelVariable struct {
 	VariableName ChannelVariableName `json:"variableName"`
 	ComputeSpec  ComputeSpec         `json:"computeSpec"`
 	// optional for backcompatibility. If empty, fall back to computeSpec.
-	ComputeSpecV2 *ComputeNodeWithContext `conjure-docs:"optional for backcompatibility. If empty, fall back to computeSpec." json:"computeSpecV2,omitempty"`
+	ComputeSpecV2 *ComputeNodeWithContext `json:"computeSpecV2,omitempty"`
 }
 
 func (o ChannelVariable) MarshalYAML() (interface{}, error) {
@@ -60,7 +60,7 @@ type WorkbookContext struct {
 
 func (o WorkbookContext) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api.VariableName]VariableLocator, 0)
+		o.Variables = make(map[api.VariableName]VariableLocator)
 	}
 	type _tmpWorkbookContext WorkbookContext
 	return safejson.Marshal(_tmpWorkbookContext(o))
@@ -73,7 +73,7 @@ func (o *WorkbookContext) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawWorkbookContext.Variables == nil {
-		rawWorkbookContext.Variables = make(map[api.VariableName]VariableLocator, 0)
+		rawWorkbookContext.Variables = make(map[api.VariableName]VariableLocator)
 	}
 	*o = WorkbookContext(rawWorkbookContext)
 	return nil

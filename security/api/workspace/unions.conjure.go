@@ -83,7 +83,7 @@ func (u *PreferredRefNameConfiguration) AcceptFuncs(v1Func func([]api.RefNameAnd
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in PreferredRefNameConfiguration type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -94,7 +94,7 @@ func (u *PreferredRefNameConfiguration) AcceptFuncs(v1Func func([]api.RefNameAnd
 	}
 }
 
-func (u *PreferredRefNameConfiguration) V1NoopSuccess([]api.RefNameAndType) error {
+func (u *PreferredRefNameConfiguration) V1NoopSuccess(_ []api.RefNameAndType) error {
 	return nil
 }
 
@@ -218,7 +218,7 @@ func (u *ProcedureSettings) AcceptFuncs(v1Func func(ProcedureSettingsV1) error, 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ProcedureSettings type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -229,7 +229,7 @@ func (u *ProcedureSettings) AcceptFuncs(v1Func func(ProcedureSettingsV1) error, 
 	}
 }
 
-func (u *ProcedureSettings) V1NoopSuccess(ProcedureSettingsV1) error {
+func (u *ProcedureSettings) V1NoopSuccess(_ ProcedureSettingsV1) error {
 	return nil
 }
 
@@ -372,7 +372,7 @@ func (u *UpdateOrRemoveWorkspaceDisplayName) AcceptFuncs(displayNameFunc func(st
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UpdateOrRemoveWorkspaceDisplayName type")
 		}
 		return unknownFunc(u.typ)
 	case "displayName":
@@ -388,11 +388,11 @@ func (u *UpdateOrRemoveWorkspaceDisplayName) AcceptFuncs(displayNameFunc func(st
 	}
 }
 
-func (u *UpdateOrRemoveWorkspaceDisplayName) DisplayNameNoopSuccess(string) error {
+func (u *UpdateOrRemoveWorkspaceDisplayName) DisplayNameNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *UpdateOrRemoveWorkspaceDisplayName) RemoveTypeNoopSuccess(RemoveType) error {
+func (u *UpdateOrRemoveWorkspaceDisplayName) RemoveTypeNoopSuccess(_ RemoveType) error {
 	return nil
 }
 
@@ -551,7 +551,7 @@ func (u *UpdateOrRemoveWorkspaceSymbol) AcceptFuncs(symbolFunc func(WorkspaceSym
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UpdateOrRemoveWorkspaceSymbol type")
 		}
 		return unknownFunc(u.typ)
 	case "symbol":
@@ -567,11 +567,11 @@ func (u *UpdateOrRemoveWorkspaceSymbol) AcceptFuncs(symbolFunc func(WorkspaceSym
 	}
 }
 
-func (u *UpdateOrRemoveWorkspaceSymbol) SymbolNoopSuccess(WorkspaceSymbol) error {
+func (u *UpdateOrRemoveWorkspaceSymbol) SymbolNoopSuccess(_ WorkspaceSymbol) error {
 	return nil
 }
 
-func (u *UpdateOrRemoveWorkspaceSymbol) RemoveTypeNoopSuccess(RemoveType) error {
+func (u *UpdateOrRemoveWorkspaceSymbol) RemoveTypeNoopSuccess(_ RemoveType) error {
 	return nil
 }
 
@@ -739,7 +739,7 @@ func (u *WorkspaceSymbol) AcceptFuncs(iconFunc func(string) error, emojiFunc fun
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in WorkspaceSymbol type")
 		}
 		return unknownFunc(u.typ)
 	case "icon":
@@ -760,15 +760,15 @@ func (u *WorkspaceSymbol) AcceptFuncs(iconFunc func(string) error, emojiFunc fun
 	}
 }
 
-func (u *WorkspaceSymbol) IconNoopSuccess(string) error {
+func (u *WorkspaceSymbol) IconNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *WorkspaceSymbol) EmojiNoopSuccess(string) error {
+func (u *WorkspaceSymbol) EmojiNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *WorkspaceSymbol) ImageNoopSuccess(string) error {
+func (u *WorkspaceSymbol) ImageNoopSuccess(_ string) error {
 	return nil
 }
 

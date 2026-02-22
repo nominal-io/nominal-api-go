@@ -323,7 +323,7 @@ func (e *CannotCompileRegexp) UnmarshalJSON(data []byte) error {
 type channelHasWrongType struct {
 	SeriesType api.NominalDataType `json:"seriesType"`
 	// The set of types that would have been compatible with the rest of the compute graph.
-	ValidTypes []api.NominalDataType `conjure-docs:"The set of types that would have been compatible with the rest of the compute graph." json:"validTypes"`
+	ValidTypes []api.NominalDataType `json:"validTypes"`
 	Channel    DataSourceAndChannel  `json:"channel"`
 }
 
@@ -2437,6 +2437,157 @@ func (e *ExternalDatabaseSocketTimeout) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.externalDatabaseSocketTimeout = parameters
+	return nil
+}
+
+type frequencyDomainNotEnoughData struct{}
+
+func (o frequencyDomainNotEnoughData) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *frequencyDomainNotEnoughData) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewFrequencyDomainNotEnoughData returns new instance of FrequencyDomainNotEnoughData error.
+func NewFrequencyDomainNotEnoughData() *FrequencyDomainNotEnoughData {
+	return &FrequencyDomainNotEnoughData{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), frequencyDomainNotEnoughData: frequencyDomainNotEnoughData{}}
+}
+
+// WrapWithFrequencyDomainNotEnoughData returns new instance of FrequencyDomainNotEnoughData error wrapping an existing error.
+func WrapWithFrequencyDomainNotEnoughData(err error) *FrequencyDomainNotEnoughData {
+	return &FrequencyDomainNotEnoughData{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, frequencyDomainNotEnoughData: frequencyDomainNotEnoughData{}}
+}
+
+// FrequencyDomainNotEnoughData is an error type.
+/*
+Not enough data points to estimate a sampling frequency for frequency-domain analysis.
+Try again with a larger time range.
+*/
+type FrequencyDomainNotEnoughData struct {
+	errorInstanceID uuid.UUID
+	frequencyDomainNotEnoughData
+	cause error
+	stack werror.StackTrace
+}
+
+// IsFrequencyDomainNotEnoughData returns true if err is an instance of FrequencyDomainNotEnoughData.
+func IsFrequencyDomainNotEnoughData(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*FrequencyDomainNotEnoughData)
+	return ok
+}
+
+func (e *FrequencyDomainNotEnoughData) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:FrequencyDomainNotEnoughData (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *FrequencyDomainNotEnoughData) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *FrequencyDomainNotEnoughData) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *FrequencyDomainNotEnoughData) Message() string {
+	return "INVALID_ARGUMENT Compute:FrequencyDomainNotEnoughData"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *FrequencyDomainNotEnoughData) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *FrequencyDomainNotEnoughData) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *FrequencyDomainNotEnoughData) Name() string {
+	return "Compute:FrequencyDomainNotEnoughData"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *FrequencyDomainNotEnoughData) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *FrequencyDomainNotEnoughData) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *FrequencyDomainNotEnoughData) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *FrequencyDomainNotEnoughData) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *FrequencyDomainNotEnoughData) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *FrequencyDomainNotEnoughData) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e FrequencyDomainNotEnoughData) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.frequencyDomainNotEnoughData)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:FrequencyDomainNotEnoughData", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *FrequencyDomainNotEnoughData) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters frequencyDomainNotEnoughData
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.frequencyDomainNotEnoughData = parameters
 	return nil
 }
 
@@ -10332,6 +10483,7 @@ func init() {
 	conjureerrors.RegisterErrorType("ExternalDatabase:ExternalDatabaseBadGateway", reflect.TypeOf(ExternalDatabaseBadGateway{}))
 	conjureerrors.RegisterErrorType("ExternalDatabase:ExternalDatabaseGatewayTimeout", reflect.TypeOf(ExternalDatabaseGatewayTimeout{}))
 	conjureerrors.RegisterErrorType("ExternalDatabase:ExternalDatabaseSocketTimeout", reflect.TypeOf(ExternalDatabaseSocketTimeout{}))
+	conjureerrors.RegisterErrorType("Compute:FrequencyDomainNotEnoughData", reflect.TypeOf(FrequencyDomainNotEnoughData{}))
 	conjureerrors.RegisterErrorType("Compute:FrequencyDomainWindowEmpty", reflect.TypeOf(FrequencyDomainWindowEmpty{}))
 	conjureerrors.RegisterErrorType("Compute:FrequencyDomainWindowTooLarge", reflect.TypeOf(FrequencyDomainWindowTooLarge{}))
 	conjureerrors.RegisterErrorType("Compute:GranularityMismatch", reflect.TypeOf(GranularityMismatch{}))

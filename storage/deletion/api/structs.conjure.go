@@ -15,23 +15,23 @@ type DeleteDataRequest struct {
 	   If specified, will only delete data within the given time range.
 	   If not specified, will delete data across all time.
 	*/
-	TimeRange *api.Range `conjure-docs:"If specified, will only delete data within the given time range.\nIf not specified, will delete data across all time." json:"timeRange,omitempty"`
+	TimeRange *api.Range `json:"timeRange,omitempty"`
 	/*
 	   If specified, will only delete data that fully matches the given tags.
 	   If not specified, will delete data across all tags.
 	*/
-	Tags *map[api.TagName]api.TagValue `conjure-docs:"If specified, will only delete data that fully matches the given tags.\nIf not specified, will delete data across all tags." json:"tags,omitempty"`
+	Tags *map[api.TagName]api.TagValue `json:"tags,omitempty"`
 	/*
 	   If specified, will only delete data that has an exact channel name match with the given names.
 	   If not specified, will delete data across all channels.
 	*/
-	ChannelNames *[]api.Channel `conjure-docs:"If specified, will only delete data that has an exact channel name match with the given names.\nIf not specified, will delete data across all channels." json:"channelNames,omitempty"`
+	ChannelNames *[]api.Channel `json:"channelNames,omitempty"`
 	/*
 	   If true and tags and channelNames are empty, will also delete associated channel metadata.
 	   Otherwise, will only delete raw data. This is to guarantee that you are not orphaning data unintentionally
 	   by deleting the metadata.
 	*/
-	DeleteMetadata *bool `conjure-docs:"If true and tags and channelNames are empty, will also delete associated channel metadata.\nOtherwise, will only delete raw data. This is to guarantee that you are not orphaning data unintentionally\nby deleting the metadata." json:"deleteMetadata,omitempty"`
+	DeleteMetadata *bool `json:"deleteMetadata,omitempty"`
 }
 
 func (o DeleteDataRequest) MarshalYAML() (interface{}, error) {

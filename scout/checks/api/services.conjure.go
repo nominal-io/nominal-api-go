@@ -84,31 +84,27 @@ func NewChecklistServiceClient(client httpclient.Client) ChecklistServiceClient 
 }
 
 func (c *checklistServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg CreateChecklistRequest) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	var returnVal *VersionedChecklist
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "create failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(VersionedChecklist), werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "create response cannot be nil")
+		return *new(VersionedChecklist), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *checklistServiceClient) Commit(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, requestArg CommitChecklistRequest) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	var returnVal *VersionedChecklist
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Commit"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/%s/commit", url.PathEscape(fmt.Sprint(checklistRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
@@ -119,21 +115,19 @@ func (c *checklistServiceClient) Commit(ctx context.Context, authHeader bearerto
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "commit failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(VersionedChecklist), werror.WrapWithContextParams(ctx, err, "commit failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "commit response cannot be nil")
+		return *new(VersionedChecklist), werror.ErrorWithContextParams(ctx, "commit response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *checklistServiceClient) SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, requestArg SaveChecklistRequest) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	var returnVal *VersionedChecklist
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SaveWorkingState"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/%s/save-working-state", url.PathEscape(fmt.Sprint(checklistRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
@@ -144,41 +138,37 @@ func (c *checklistServiceClient) SaveWorkingState(ctx context.Context, authHeade
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "saveWorkingState failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(VersionedChecklist), werror.WrapWithContextParams(ctx, err, "saveWorkingState failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "saveWorkingState response cannot be nil")
+		return *new(VersionedChecklist), werror.ErrorWithContextParams(ctx, "saveWorkingState response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *checklistServiceClient) MergeToMain(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid, requestArg MergeToMainRequest) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	var returnVal *VersionedChecklist
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("MergeToMain"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/%s/merge-to-main", url.PathEscape(fmt.Sprint(checklistRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "mergeToMain failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(VersionedChecklist), werror.WrapWithContextParams(ctx, err, "mergeToMain failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "mergeToMain response cannot be nil")
+		return *new(VersionedChecklist), werror.ErrorWithContextParams(ctx, "mergeToMain response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *checklistServiceClient) UpdateDataSourceRefNames(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, refNameUpdatesArg map[api2.DataSourceRefName]api2.DataSourceRefName) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	var returnVal *VersionedChecklist
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateDataSourceRefNames"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/%s/update-ref-names", url.PathEscape(fmt.Sprint(checklistRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(refNameUpdatesArg))
@@ -189,41 +179,37 @@ func (c *checklistServiceClient) UpdateDataSourceRefNames(ctx context.Context, a
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateDataSourceRefNames failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(VersionedChecklist), werror.WrapWithContextParams(ctx, err, "updateDataSourceRefNames failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateDataSourceRefNames response cannot be nil")
+		return *new(VersionedChecklist), werror.ErrorWithContextParams(ctx, "updateDataSourceRefNames response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *checklistServiceClient) UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api.ChecklistRid, requestArg UpdateChecklistMetadataRequest) (ChecklistMetadata, error) {
-	var defaultReturnVal ChecklistMetadata
 	var returnVal *ChecklistMetadata
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/%s/update-metadata", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(ChecklistMetadata), werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
+		return *new(ChecklistMetadata), werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *checklistServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, ridArg api.ChecklistRid, branchArg *api1.BranchName, commitArg *api1.CommitId) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	var returnVal *VersionedChecklist
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	queryParams := make(url.Values)
@@ -236,11 +222,11 @@ func (c *checklistServiceClient) Get(ctx context.Context, authHeader bearertoken
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "get failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(VersionedChecklist), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(VersionedChecklist), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -249,13 +235,12 @@ func (c *checklistServiceClient) BatchGet(ctx context.Context, authHeader bearer
 	var returnVal []VersionedChecklist
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGet"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(checklistRefsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGet failed")
 	}
 	if returnVal == nil {
@@ -265,41 +250,37 @@ func (c *checklistServiceClient) BatchGet(ctx context.Context, authHeader bearer
 }
 
 func (c *checklistServiceClient) BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetChecklistMetadataRequest) (BatchGetChecklistMetadataResponse, error) {
-	var defaultReturnVal BatchGetChecklistMetadataResponse
 	var returnVal *BatchGetChecklistMetadataResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/batch-get-metadata"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGetMetadata failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchGetChecklistMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchGetMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGetMetadata response cannot be nil")
+		return *new(BatchGetChecklistMetadataResponse), werror.ErrorWithContextParams(ctx, "batchGetMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *checklistServiceClient) Search(ctx context.Context, authHeader bearertoken.Token, requestArg SearchChecklistsRequest) (VersionedChecklistPage, error) {
-	var defaultReturnVal VersionedChecklistPage
 	var returnVal *VersionedChecklistPage
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Search"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/search"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "search failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(VersionedChecklistPage), werror.WrapWithContextParams(ctx, err, "search failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "search response cannot be nil")
+		return *new(VersionedChecklistPage), werror.ErrorWithContextParams(ctx, "search response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -307,12 +288,11 @@ func (c *checklistServiceClient) Search(ctx context.Context, authHeader bearerto
 func (c *checklistServiceClient) Archive(ctx context.Context, authHeader bearertoken.Token, requestArg ArchiveChecklistsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Archive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/archive"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archive failed")
 	}
 	return nil
@@ -321,32 +301,29 @@ func (c *checklistServiceClient) Archive(ctx context.Context, authHeader bearert
 func (c *checklistServiceClient) Unarchive(ctx context.Context, authHeader bearertoken.Token, requestArg UnarchiveChecklistsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Unarchive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/unarchive"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchive failed")
 	}
 	return nil
 }
 
 func (c *checklistServiceClient) GetCheck(ctx context.Context, authHeader bearertoken.Token, ridArg api.CheckRid) (Check, error) {
-	var defaultReturnVal Check
 	var returnVal *Check
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCheck"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/check/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getCheck failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(Check), werror.WrapWithContextParams(ctx, err, "getCheck failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getCheck response cannot be nil")
+		return *new(Check), werror.ErrorWithContextParams(ctx, "getCheck response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -355,13 +332,12 @@ func (c *checklistServiceClient) BatchGetChecks(ctx context.Context, authHeader 
 	var returnVal []Check
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetChecks"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/check/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetChecks failed")
 	}
 	if returnVal == nil {
@@ -371,11 +347,9 @@ func (c *checklistServiceClient) BatchGetChecks(ctx context.Context, authHeader 
 }
 
 func (c *checklistServiceClient) GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (GetAllLabelsAndPropertiesResponse, error) {
-	var defaultReturnVal GetAllLabelsAndPropertiesResponse
 	var returnVal *GetAllLabelsAndPropertiesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAllLabelsAndProperties"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/get-all-labels-properties"))
 	queryParams := make(url.Values)
@@ -385,11 +359,11 @@ func (c *checklistServiceClient) GetAllLabelsAndProperties(ctx context.Context, 
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAllLabelsAndProperties failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(GetAllLabelsAndPropertiesResponse), werror.WrapWithContextParams(ctx, err, "getAllLabelsAndProperties failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAllLabelsAndProperties response cannot be nil")
+		return *new(GetAllLabelsAndPropertiesResponse), werror.ErrorWithContextParams(ctx, "getAllLabelsAndProperties response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -531,91 +505,81 @@ type checklistServiceClientWithTokenProvider struct {
 }
 
 func (c *checklistServiceClientWithTokenProvider) Create(ctx context.Context, requestArg CreateChecklistRequest) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(VersionedChecklist), err
 	}
 	return c.client.Create(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) Commit(ctx context.Context, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, requestArg CommitChecklistRequest) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(VersionedChecklist), err
 	}
 	return c.client.Commit(ctx, bearertoken.Token(token), checklistRidArg, branchArg, requestArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) SaveWorkingState(ctx context.Context, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, requestArg SaveChecklistRequest) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(VersionedChecklist), err
 	}
 	return c.client.SaveWorkingState(ctx, bearertoken.Token(token), checklistRidArg, branchArg, requestArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) MergeToMain(ctx context.Context, checklistRidArg api.ChecklistRid, requestArg MergeToMainRequest) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(VersionedChecklist), err
 	}
 	return c.client.MergeToMain(ctx, bearertoken.Token(token), checklistRidArg, requestArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) UpdateDataSourceRefNames(ctx context.Context, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, refNameUpdatesArg map[api2.DataSourceRefName]api2.DataSourceRefName) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(VersionedChecklist), err
 	}
 	return c.client.UpdateDataSourceRefNames(ctx, bearertoken.Token(token), checklistRidArg, branchArg, refNameUpdatesArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) UpdateMetadata(ctx context.Context, ridArg api.ChecklistRid, requestArg UpdateChecklistMetadataRequest) (ChecklistMetadata, error) {
-	var defaultReturnVal ChecklistMetadata
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ChecklistMetadata), err
 	}
 	return c.client.UpdateMetadata(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) Get(ctx context.Context, ridArg api.ChecklistRid, branchArg *api1.BranchName, commitArg *api1.CommitId) (VersionedChecklist, error) {
-	var defaultReturnVal VersionedChecklist
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(VersionedChecklist), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), ridArg, branchArg, commitArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) BatchGet(ctx context.Context, checklistRefsArg []PinnedChecklistRef) ([]VersionedChecklist, error) {
-	var defaultReturnVal []VersionedChecklist
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGet(ctx, bearertoken.Token(token), checklistRefsArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) BatchGetMetadata(ctx context.Context, requestArg BatchGetChecklistMetadataRequest) (BatchGetChecklistMetadataResponse, error) {
-	var defaultReturnVal BatchGetChecklistMetadataResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchGetChecklistMetadataResponse), err
 	}
 	return c.client.BatchGetMetadata(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) Search(ctx context.Context, requestArg SearchChecklistsRequest) (VersionedChecklistPage, error) {
-	var defaultReturnVal VersionedChecklistPage
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(VersionedChecklistPage), err
 	}
 	return c.client.Search(ctx, bearertoken.Token(token), requestArg)
 }
@@ -637,28 +601,25 @@ func (c *checklistServiceClientWithTokenProvider) Unarchive(ctx context.Context,
 }
 
 func (c *checklistServiceClientWithTokenProvider) GetCheck(ctx context.Context, ridArg api.CheckRid) (Check, error) {
-	var defaultReturnVal Check
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Check), err
 	}
 	return c.client.GetCheck(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) BatchGetChecks(ctx context.Context, ridsArg []api.CheckRid) ([]Check, error) {
-	var defaultReturnVal []Check
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetChecks(ctx, bearertoken.Token(token), ridsArg)
 }
 
 func (c *checklistServiceClientWithTokenProvider) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (GetAllLabelsAndPropertiesResponse, error) {
-	var defaultReturnVal GetAllLabelsAndPropertiesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(GetAllLabelsAndPropertiesResponse), err
 	}
 	return c.client.GetAllLabelsAndProperties(ctx, bearertoken.Token(token), workspacesArg)
 }

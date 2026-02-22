@@ -59,6 +59,19 @@ func (a *SubscriptionId) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a SubscriptionId) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(uuid.UUID(a))
+}
+
+func (a *SubscriptionId) UnmarshalJSON(data []byte) error {
+	var rawSubscriptionId uuid.UUID
+	if err := safejson.Unmarshal(data, &rawSubscriptionId); err != nil {
+		return err
+	}
+	*a = SubscriptionId(rawSubscriptionId)
+	return nil
+}
+
 func (a SubscriptionId) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {

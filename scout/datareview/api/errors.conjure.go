@@ -1837,7 +1837,7 @@ type failedToResolveSeriesForCheck struct {
 
 func (o failedToResolveSeriesForCheck) MarshalJSON() ([]byte, error) {
 	if o.AdditionalArgs == nil {
-		o.AdditionalArgs = make(map[string]string, 0)
+		o.AdditionalArgs = make(map[string]string)
 	}
 	type _tmpfailedToResolveSeriesForCheck failedToResolveSeriesForCheck
 	return safejson.Marshal(_tmpfailedToResolveSeriesForCheck(o))
@@ -1850,7 +1850,7 @@ func (o *failedToResolveSeriesForCheck) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawfailedToResolveSeriesForCheck.AdditionalArgs == nil {
-		rawfailedToResolveSeriesForCheck.AdditionalArgs = make(map[string]string, 0)
+		rawfailedToResolveSeriesForCheck.AdditionalArgs = make(map[string]string)
 	}
 	*o = failedToResolveSeriesForCheck(rawfailedToResolveSeriesForCheck)
 	return nil

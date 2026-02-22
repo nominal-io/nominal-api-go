@@ -19,7 +19,7 @@ type ApiLocator struct {
 
 func (o ApiLocator) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpApiLocator ApiLocator
 	return safejson.Marshal(_tmpApiLocator(o))
@@ -32,7 +32,7 @@ func (o *ApiLocator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawApiLocator.Tags == nil {
-		rawApiLocator.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawApiLocator.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = ApiLocator(rawApiLocator)
 	return nil
@@ -54,32 +54,32 @@ func (o *ApiLocator) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type BatchCreateLogicalSeriesRequest struct {
-	Requests []CreateLogicalSeries `json:"requests"`
+type BatchCreateExternalStorageLocatorRequest struct {
+	Requests []CreateExternalStorageLocator `json:"requests"`
 }
 
-func (o BatchCreateLogicalSeriesRequest) MarshalJSON() ([]byte, error) {
+func (o BatchCreateExternalStorageLocatorRequest) MarshalJSON() ([]byte, error) {
 	if o.Requests == nil {
-		o.Requests = make([]CreateLogicalSeries, 0)
+		o.Requests = make([]CreateExternalStorageLocator, 0)
 	}
-	type _tmpBatchCreateLogicalSeriesRequest BatchCreateLogicalSeriesRequest
-	return safejson.Marshal(_tmpBatchCreateLogicalSeriesRequest(o))
+	type _tmpBatchCreateExternalStorageLocatorRequest BatchCreateExternalStorageLocatorRequest
+	return safejson.Marshal(_tmpBatchCreateExternalStorageLocatorRequest(o))
 }
 
-func (o *BatchCreateLogicalSeriesRequest) UnmarshalJSON(data []byte) error {
-	type _tmpBatchCreateLogicalSeriesRequest BatchCreateLogicalSeriesRequest
-	var rawBatchCreateLogicalSeriesRequest _tmpBatchCreateLogicalSeriesRequest
-	if err := safejson.Unmarshal(data, &rawBatchCreateLogicalSeriesRequest); err != nil {
+func (o *BatchCreateExternalStorageLocatorRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchCreateExternalStorageLocatorRequest BatchCreateExternalStorageLocatorRequest
+	var rawBatchCreateExternalStorageLocatorRequest _tmpBatchCreateExternalStorageLocatorRequest
+	if err := safejson.Unmarshal(data, &rawBatchCreateExternalStorageLocatorRequest); err != nil {
 		return err
 	}
-	if rawBatchCreateLogicalSeriesRequest.Requests == nil {
-		rawBatchCreateLogicalSeriesRequest.Requests = make([]CreateLogicalSeries, 0)
+	if rawBatchCreateExternalStorageLocatorRequest.Requests == nil {
+		rawBatchCreateExternalStorageLocatorRequest.Requests = make([]CreateExternalStorageLocator, 0)
 	}
-	*o = BatchCreateLogicalSeriesRequest(rawBatchCreateLogicalSeriesRequest)
+	*o = BatchCreateExternalStorageLocatorRequest(rawBatchCreateExternalStorageLocatorRequest)
 	return nil
 }
 
-func (o BatchCreateLogicalSeriesRequest) MarshalYAML() (interface{}, error) {
+func (o BatchCreateExternalStorageLocatorRequest) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (o BatchCreateLogicalSeriesRequest) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *BatchCreateLogicalSeriesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *BatchCreateExternalStorageLocatorRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -95,32 +95,32 @@ func (o *BatchCreateLogicalSeriesRequest) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type BatchCreateLogicalSeriesResponse struct {
-	Responses []LogicalSeries `json:"responses"`
+type BatchCreateExternalStorageLocatorResponse struct {
+	Responses []ExternalStorageLocator `json:"responses"`
 }
 
-func (o BatchCreateLogicalSeriesResponse) MarshalJSON() ([]byte, error) {
+func (o BatchCreateExternalStorageLocatorResponse) MarshalJSON() ([]byte, error) {
 	if o.Responses == nil {
-		o.Responses = make([]LogicalSeries, 0)
+		o.Responses = make([]ExternalStorageLocator, 0)
 	}
-	type _tmpBatchCreateLogicalSeriesResponse BatchCreateLogicalSeriesResponse
-	return safejson.Marshal(_tmpBatchCreateLogicalSeriesResponse(o))
+	type _tmpBatchCreateExternalStorageLocatorResponse BatchCreateExternalStorageLocatorResponse
+	return safejson.Marshal(_tmpBatchCreateExternalStorageLocatorResponse(o))
 }
 
-func (o *BatchCreateLogicalSeriesResponse) UnmarshalJSON(data []byte) error {
-	type _tmpBatchCreateLogicalSeriesResponse BatchCreateLogicalSeriesResponse
-	var rawBatchCreateLogicalSeriesResponse _tmpBatchCreateLogicalSeriesResponse
-	if err := safejson.Unmarshal(data, &rawBatchCreateLogicalSeriesResponse); err != nil {
+func (o *BatchCreateExternalStorageLocatorResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchCreateExternalStorageLocatorResponse BatchCreateExternalStorageLocatorResponse
+	var rawBatchCreateExternalStorageLocatorResponse _tmpBatchCreateExternalStorageLocatorResponse
+	if err := safejson.Unmarshal(data, &rawBatchCreateExternalStorageLocatorResponse); err != nil {
 		return err
 	}
-	if rawBatchCreateLogicalSeriesResponse.Responses == nil {
-		rawBatchCreateLogicalSeriesResponse.Responses = make([]LogicalSeries, 0)
+	if rawBatchCreateExternalStorageLocatorResponse.Responses == nil {
+		rawBatchCreateExternalStorageLocatorResponse.Responses = make([]ExternalStorageLocator, 0)
 	}
-	*o = BatchCreateLogicalSeriesResponse(rawBatchCreateLogicalSeriesResponse)
+	*o = BatchCreateExternalStorageLocatorResponse(rawBatchCreateExternalStorageLocatorResponse)
 	return nil
 }
 
-func (o BatchCreateLogicalSeriesResponse) MarshalYAML() (interface{}, error) {
+func (o BatchCreateExternalStorageLocatorResponse) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func (o BatchCreateLogicalSeriesResponse) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *BatchCreateLogicalSeriesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *BatchCreateExternalStorageLocatorResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -218,32 +218,32 @@ func (o *BatchResolveSeriesResponse) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type BatchUpdateLogicalSeriesRequest struct {
-	Requests []UpdateLogicalSeries `json:"requests"`
+type BatchUpdateExternalStorageLocatorRequest struct {
+	Requests []UpdateExternalStorageLocator `json:"requests"`
 }
 
-func (o BatchUpdateLogicalSeriesRequest) MarshalJSON() ([]byte, error) {
+func (o BatchUpdateExternalStorageLocatorRequest) MarshalJSON() ([]byte, error) {
 	if o.Requests == nil {
-		o.Requests = make([]UpdateLogicalSeries, 0)
+		o.Requests = make([]UpdateExternalStorageLocator, 0)
 	}
-	type _tmpBatchUpdateLogicalSeriesRequest BatchUpdateLogicalSeriesRequest
-	return safejson.Marshal(_tmpBatchUpdateLogicalSeriesRequest(o))
+	type _tmpBatchUpdateExternalStorageLocatorRequest BatchUpdateExternalStorageLocatorRequest
+	return safejson.Marshal(_tmpBatchUpdateExternalStorageLocatorRequest(o))
 }
 
-func (o *BatchUpdateLogicalSeriesRequest) UnmarshalJSON(data []byte) error {
-	type _tmpBatchUpdateLogicalSeriesRequest BatchUpdateLogicalSeriesRequest
-	var rawBatchUpdateLogicalSeriesRequest _tmpBatchUpdateLogicalSeriesRequest
-	if err := safejson.Unmarshal(data, &rawBatchUpdateLogicalSeriesRequest); err != nil {
+func (o *BatchUpdateExternalStorageLocatorRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchUpdateExternalStorageLocatorRequest BatchUpdateExternalStorageLocatorRequest
+	var rawBatchUpdateExternalStorageLocatorRequest _tmpBatchUpdateExternalStorageLocatorRequest
+	if err := safejson.Unmarshal(data, &rawBatchUpdateExternalStorageLocatorRequest); err != nil {
 		return err
 	}
-	if rawBatchUpdateLogicalSeriesRequest.Requests == nil {
-		rawBatchUpdateLogicalSeriesRequest.Requests = make([]UpdateLogicalSeries, 0)
+	if rawBatchUpdateExternalStorageLocatorRequest.Requests == nil {
+		rawBatchUpdateExternalStorageLocatorRequest.Requests = make([]UpdateExternalStorageLocator, 0)
 	}
-	*o = BatchUpdateLogicalSeriesRequest(rawBatchUpdateLogicalSeriesRequest)
+	*o = BatchUpdateExternalStorageLocatorRequest(rawBatchUpdateExternalStorageLocatorRequest)
 	return nil
 }
 
-func (o BatchUpdateLogicalSeriesRequest) MarshalYAML() (interface{}, error) {
+func (o BatchUpdateExternalStorageLocatorRequest) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -251,7 +251,7 @@ func (o BatchUpdateLogicalSeriesRequest) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *BatchUpdateLogicalSeriesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *BatchUpdateExternalStorageLocatorRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -259,32 +259,32 @@ func (o *BatchUpdateLogicalSeriesRequest) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type BatchUpdateLogicalSeriesResponse struct {
-	Responses []LogicalSeries `json:"responses"`
+type BatchUpdateExternalStorageLocatorResponse struct {
+	Responses []ExternalStorageLocator `json:"responses"`
 }
 
-func (o BatchUpdateLogicalSeriesResponse) MarshalJSON() ([]byte, error) {
+func (o BatchUpdateExternalStorageLocatorResponse) MarshalJSON() ([]byte, error) {
 	if o.Responses == nil {
-		o.Responses = make([]LogicalSeries, 0)
+		o.Responses = make([]ExternalStorageLocator, 0)
 	}
-	type _tmpBatchUpdateLogicalSeriesResponse BatchUpdateLogicalSeriesResponse
-	return safejson.Marshal(_tmpBatchUpdateLogicalSeriesResponse(o))
+	type _tmpBatchUpdateExternalStorageLocatorResponse BatchUpdateExternalStorageLocatorResponse
+	return safejson.Marshal(_tmpBatchUpdateExternalStorageLocatorResponse(o))
 }
 
-func (o *BatchUpdateLogicalSeriesResponse) UnmarshalJSON(data []byte) error {
-	type _tmpBatchUpdateLogicalSeriesResponse BatchUpdateLogicalSeriesResponse
-	var rawBatchUpdateLogicalSeriesResponse _tmpBatchUpdateLogicalSeriesResponse
-	if err := safejson.Unmarshal(data, &rawBatchUpdateLogicalSeriesResponse); err != nil {
+func (o *BatchUpdateExternalStorageLocatorResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchUpdateExternalStorageLocatorResponse BatchUpdateExternalStorageLocatorResponse
+	var rawBatchUpdateExternalStorageLocatorResponse _tmpBatchUpdateExternalStorageLocatorResponse
+	if err := safejson.Unmarshal(data, &rawBatchUpdateExternalStorageLocatorResponse); err != nil {
 		return err
 	}
-	if rawBatchUpdateLogicalSeriesResponse.Responses == nil {
-		rawBatchUpdateLogicalSeriesResponse.Responses = make([]LogicalSeries, 0)
+	if rawBatchUpdateExternalStorageLocatorResponse.Responses == nil {
+		rawBatchUpdateExternalStorageLocatorResponse.Responses = make([]ExternalStorageLocator, 0)
 	}
-	*o = BatchUpdateLogicalSeriesResponse(rawBatchUpdateLogicalSeriesResponse)
+	*o = BatchUpdateExternalStorageLocatorResponse(rawBatchUpdateExternalStorageLocatorResponse)
 	return nil
 }
 
-func (o BatchUpdateLogicalSeriesResponse) MarshalYAML() (interface{}, error) {
+func (o BatchUpdateExternalStorageLocatorResponse) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -292,7 +292,7 @@ func (o BatchUpdateLogicalSeriesResponse) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *BatchUpdateLogicalSeriesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *BatchUpdateExternalStorageLocatorResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -302,17 +302,17 @@ func (o *BatchUpdateLogicalSeriesResponse) UnmarshalYAML(unmarshal func(interfac
 
 type BigQueryLocator struct {
 	// The name of the column which has the values for this series
-	ValueColumn ColumnName `conjure-docs:"The name of the column which has the values for this series" json:"valueColumn"`
+	ValueColumn ColumnName `json:"valueColumn"`
 	// The name of the column which has the timestamps for this series
-	TimeColumn ColumnName `conjure-docs:"The name of the column which has the timestamps for this series" json:"timeColumn"`
+	TimeColumn ColumnName `json:"timeColumn"`
 	// The mapping of columns to column values to filter on
-	TagValues map[api.TagName]api.TagValue `conjure-docs:"The mapping of columns to column values to filter on" json:"tagValues"`
+	TagValues map[api.TagName]api.TagValue `json:"tagValues"`
 	Type      BigQueryType                 `json:"type"`
 }
 
 func (o BigQueryLocator) MarshalJSON() ([]byte, error) {
 	if o.TagValues == nil {
-		o.TagValues = make(map[api.TagName]api.TagValue, 0)
+		o.TagValues = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpBigQueryLocator BigQueryLocator
 	return safejson.Marshal(_tmpBigQueryLocator(o))
@@ -325,7 +325,7 @@ func (o *BigQueryLocator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawBigQueryLocator.TagValues == nil {
-		rawBigQueryLocator.TagValues = make(map[api.TagName]api.TagValue, 0)
+		rawBigQueryLocator.TagValues = make(map[api.TagName]api.TagValue)
 	}
 	*o = BigQueryLocator(rawBigQueryLocator)
 	return nil
@@ -353,7 +353,7 @@ type Context struct {
 
 func (o Context) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[string]ContextProperty, 0)
+		o.Properties = make(map[string]ContextProperty)
 	}
 	type _tmpContext Context
 	return safejson.Marshal(_tmpContext(o))
@@ -366,7 +366,7 @@ func (o *Context) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawContext.Properties == nil {
-		rawContext.Properties = make(map[string]ContextProperty, 0)
+		rawContext.Properties = make(map[string]ContextProperty)
 	}
 	*o = Context(rawContext)
 	return nil
@@ -388,24 +388,24 @@ func (o *Context) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type CreateLogicalSeries struct {
+type CreateExternalStorageLocator struct {
 	Channel api.Channel `json:"channel"`
 	Locator Locator     `json:"locator"`
 	/*
 	   If present, will be used as the locator of the LogicalSeriesRid. If a logical series already exists
 	   with this id, will throw a CONFLICT.
 	*/
-	IdLocator      *uuid.UUID          `conjure-docs:"If present, will be used as the locator of the LogicalSeriesRid. If a logical series already exists\nwith this id, will throw a CONFLICT." json:"idLocator,omitempty"`
+	IdLocator      *uuid.UUID          `json:"idLocator,omitempty"`
 	DataSourceRid  rids.DataSourceRid  `json:"dataSourceRid"`
 	Description    *string             `json:"description,omitempty"`
 	Unit           *api.Unit           `json:"unit,omitempty"`
 	SeriesDataType *api.SeriesDataType `json:"seriesDataType,omitempty"`
 	Granularity    *api.Granularity    `json:"granularity,omitempty"`
 	// Deprecated. Do not use.
-	SeriesArchetypeRid *api.SeriesArchetypeRid `conjure-docs:"Deprecated. Do not use." json:"seriesArchetypeRid,omitempty"`
+	SeriesArchetypeRid *api.SeriesArchetypeRid `json:"seriesArchetypeRid,omitempty"`
 }
 
-func (o CreateLogicalSeries) MarshalYAML() (interface{}, error) {
+func (o CreateExternalStorageLocator) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -413,7 +413,41 @@ func (o CreateLogicalSeries) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *CreateLogicalSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *CreateExternalStorageLocator) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ExternalStorageLocator struct {
+	Rid           api.LogicalSeriesRid `json:"rid"`
+	DataSourceRid rids.DataSourceRid   `json:"dataSourceRid"`
+	Locator       Locator              `json:"locator"`
+	// Only required to be present for legacy CSVs.
+	TimeLocator    *Locator            `json:"timeLocator,omitempty"`
+	Channel        api.Channel         `json:"channel"`
+	Description    *string             `json:"description,omitempty"`
+	Unit           *api.Unit           `json:"unit,omitempty"`
+	SeriesDataType *api.SeriesDataType `json:"seriesDataType,omitempty"`
+	/*
+	   Time granularity of the series. If omitted, defaults to nanoseconds.
+
+	   Deprecated: The source of truth for granularity comes from the data source of the logical series.
+	*/
+	Granularity *api.Granularity `json:"granularity,omitempty"`
+}
+
+func (o ExternalStorageLocator) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ExternalStorageLocator) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -431,7 +465,7 @@ type Influx1Locator struct {
 
 func (o Influx1Locator) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpInflux1Locator Influx1Locator
 	return safejson.Marshal(_tmpInflux1Locator(o))
@@ -444,7 +478,7 @@ func (o *Influx1Locator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawInflux1Locator.Tags == nil {
-		rawInflux1Locator.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawInflux1Locator.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = Influx1Locator(rawInflux1Locator)
 	return nil
@@ -471,14 +505,14 @@ type Influx2Locator struct {
 	Measurement MeasurementName `json:"measurement"`
 	Field       FieldName       `json:"field"`
 	// If omitted, defaults to `_value`. Can be used to extract tag values.
-	ValueColumn *string                      `conjure-docs:"If omitted, defaults to \"_value\". Can be used to extract tag values." json:"valueColumn,omitempty"`
+	ValueColumn *string                      `json:"valueColumn,omitempty"`
 	Tags        map[api.TagName]api.TagValue `json:"tags"`
 	Type        InfluxType                   `json:"type"`
 }
 
 func (o Influx2Locator) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpInflux2Locator Influx2Locator
 	return safejson.Marshal(_tmpInflux2Locator(o))
@@ -491,7 +525,7 @@ func (o *Influx2Locator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawInflux2Locator.Tags == nil {
-		rawInflux2Locator.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawInflux2Locator.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = Influx2Locator(rawInflux2Locator)
 	return nil
@@ -513,40 +547,6 @@ func (o *Influx2Locator) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type LogicalSeries struct {
-	Rid           api.LogicalSeriesRid `json:"rid"`
-	DataSourceRid rids.DataSourceRid   `json:"dataSourceRid"`
-	Locator       Locator              `json:"locator"`
-	// Only required to be present for legacy CSVs.
-	TimeLocator    *Locator            `conjure-docs:"Only required to be present for legacy CSVs." json:"timeLocator,omitempty"`
-	Channel        api.Channel         `json:"channel"`
-	Description    *string             `json:"description,omitempty"`
-	Unit           *api.Unit           `json:"unit,omitempty"`
-	SeriesDataType *api.SeriesDataType `json:"seriesDataType,omitempty"`
-	/*
-	   Time granularity of the series. If omitted, defaults to nanoseconds.
-
-	   Deprecated: The source of truth for granularity comes from the data source of the logical series.
-	*/
-	Granularity *api.Granularity `conjure-docs:"Time granularity of the series. If omitted, defaults to nanoseconds." json:"granularity,omitempty"`
-}
-
-func (o LogicalSeries) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *LogicalSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type NominalLocator struct {
 	Channel api.Channel                  `json:"channel"`
 	Tags    map[api.TagName]api.TagValue `json:"tags"`
@@ -555,7 +555,7 @@ type NominalLocator struct {
 
 func (o NominalLocator) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpNominalLocator NominalLocator
 	return safejson.Marshal(_tmpNominalLocator(o))
@@ -568,7 +568,7 @@ func (o *NominalLocator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNominalLocator.Tags == nil {
-		rawNominalLocator.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawNominalLocator.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = NominalLocator(rawNominalLocator)
 	return nil
@@ -597,7 +597,7 @@ type ResolveSeriesError struct {
 
 func (o ResolveSeriesError) MarshalJSON() ([]byte, error) {
 	if o.Args == nil {
-		o.Args = make(map[string]string, 0)
+		o.Args = make(map[string]string)
 	}
 	type _tmpResolveSeriesError ResolveSeriesError
 	return safejson.Marshal(_tmpResolveSeriesError(o))
@@ -610,7 +610,7 @@ func (o *ResolveSeriesError) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawResolveSeriesError.Args == nil {
-		rawResolveSeriesError.Args = make(map[string]string, 0)
+		rawResolveSeriesError.Args = make(map[string]string)
 	}
 	*o = ResolveSeriesError(rawResolveSeriesError)
 	return nil
@@ -640,7 +640,7 @@ type ResolveSeriesRequest struct {
 
 func (o ResolveSeriesRequest) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpResolveSeriesRequest ResolveSeriesRequest
 	return safejson.Marshal(_tmpResolveSeriesRequest(o))
@@ -653,7 +653,7 @@ func (o *ResolveSeriesRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawResolveSeriesRequest.Tags == nil {
-		rawResolveSeriesRequest.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawResolveSeriesRequest.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = ResolveSeriesRequest(rawResolveSeriesRequest)
 	return nil
@@ -686,7 +686,7 @@ type TimescaleDbLocator struct {
 
 func (o TimescaleDbLocator) MarshalJSON() ([]byte, error) {
 	if o.Dimensions == nil {
-		o.Dimensions = make(map[api.TagName]api.TagValue, 0)
+		o.Dimensions = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpTimescaleDbLocator TimescaleDbLocator
 	return safejson.Marshal(_tmpTimescaleDbLocator(o))
@@ -699,7 +699,7 @@ func (o *TimescaleDbLocator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawTimescaleDbLocator.Dimensions == nil {
-		rawTimescaleDbLocator.Dimensions = make(map[api.TagName]api.TagValue, 0)
+		rawTimescaleDbLocator.Dimensions = make(map[api.TagName]api.TagValue)
 	}
 	*o = TimescaleDbLocator(rawTimescaleDbLocator)
 	return nil
@@ -726,13 +726,13 @@ type TimestreamLocator struct {
 	Dimensions map[api.TagName]api.TagValue `json:"dimensions"`
 	Measure    MeasureName                  `json:"measure"`
 	// If present, will be the attribute within the measurement for multi-measures.
-	Attribute *AttributeName `conjure-docs:"If present, will be the attribute within the measurement for multi-measures." json:"attribute,omitempty"`
+	Attribute *AttributeName `json:"attribute,omitempty"`
 	Type      TimestreamType `json:"type"`
 }
 
 func (o TimestreamLocator) MarshalJSON() ([]byte, error) {
 	if o.Dimensions == nil {
-		o.Dimensions = make(map[api.TagName]api.TagValue, 0)
+		o.Dimensions = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpTimestreamLocator TimestreamLocator
 	return safejson.Marshal(_tmpTimestreamLocator(o))
@@ -745,7 +745,7 @@ func (o *TimestreamLocator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawTimestreamLocator.Dimensions == nil {
-		rawTimestreamLocator.Dimensions = make(map[api.TagName]api.TagValue, 0)
+		rawTimestreamLocator.Dimensions = make(map[api.TagName]api.TagValue)
 	}
 	*o = TimestreamLocator(rawTimestreamLocator)
 	return nil
@@ -767,7 +767,7 @@ func (o *TimestreamLocator) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type UpdateLogicalSeries struct {
+type UpdateExternalStorageLocator struct {
 	LogicalSeriesRid api.LogicalSeriesRid `json:"logicalSeriesRid"`
 	Description      *string              `json:"description,omitempty"`
 	// Deprecated: Deprecated. Use unitUpdate instead.
@@ -775,7 +775,7 @@ type UpdateLogicalSeries struct {
 	UnitUpdate *UnitUpdate `json:"unitUpdate,omitempty"`
 }
 
-func (o UpdateLogicalSeries) MarshalYAML() (interface{}, error) {
+func (o UpdateExternalStorageLocator) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -783,7 +783,7 @@ func (o UpdateLogicalSeries) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *UpdateLogicalSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *UpdateExternalStorageLocator) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -796,9 +796,9 @@ type VisualCrossingLocator struct {
 	   Location to fetch data from.  Can be any arbitrary string (i.e. name, abbreviation,
 	   zip code, lat/long, etc.) as remote endpoint performs location resolution.
 	*/
-	Location LocationName `conjure-docs:"Location to fetch data from.  Can be any arbitrary string (i.e. name, abbreviation,\nzip code, lat/long, etc.) as remote endpoint performs location resolution." json:"location"`
+	Location LocationName `json:"location"`
 	// Defaults to HISTORY.  Endpoint to fetch data from for this series.
-	Endpoint *VisualCrossingEndpointUri `conjure-docs:"Defaults to HISTORY.  Endpoint to fetch data from for this series." json:"endpoint,omitempty"`
+	Endpoint *VisualCrossingEndpointUri `json:"endpoint,omitempty"`
 	Field    FieldName                  `json:"field"`
 	Type     VisualCrossingType         `json:"type"`
 }

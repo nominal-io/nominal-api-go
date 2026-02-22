@@ -45,41 +45,37 @@ func NewNominalDataSourceServiceClient(client httpclient.Client) NominalDataSour
 }
 
 func (c *nominalDataSourceServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg CreateNominalDataSourceRequest) (NominalDataSource, error) {
-	var defaultReturnVal NominalDataSource
 	var returnVal *NominalDataSource
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/data-source/v1"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "create failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(NominalDataSource), werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "create response cannot be nil")
+		return *new(NominalDataSource), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *nominalDataSourceServiceClient) Update(ctx context.Context, authHeader bearertoken.Token, ridArg rids.NominalDataSourceRid, requestArg UpdateNominalDataSourceRequest) (NominalDataSource, error) {
-	var defaultReturnVal NominalDataSource
 	var returnVal *NominalDataSource
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Update"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/data-source/v1/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "update failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(NominalDataSource), werror.WrapWithContextParams(ctx, err, "update failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "update response cannot be nil")
+		return *new(NominalDataSource), werror.ErrorWithContextParams(ctx, "update response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -88,13 +84,12 @@ func (c *nominalDataSourceServiceClient) BatchGet(ctx context.Context, authHeade
 	var returnVal []NominalDataSource
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGet"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/data-source/v1/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGet failed")
 	}
 	if returnVal == nil {
@@ -106,32 +101,29 @@ func (c *nominalDataSourceServiceClient) BatchGet(ctx context.Context, authHeade
 func (c *nominalDataSourceServiceClient) UpdateLastWrittenTimestamp(ctx context.Context, authHeader bearertoken.Token, ridArg rids.NominalDataSourceRid, timestampArg datetime.DateTime) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateLastWrittenTimestamp"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/data-source/v1/%s/last-written", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(timestampArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "updateLastWrittenTimestamp failed")
 	}
 	return nil
 }
 
 func (c *nominalDataSourceServiceClient) EnsureDatasetForDataSource(ctx context.Context, authHeader bearertoken.Token, ridArg rids.NominalDataSourceRid) (rids.DatasetRid, error) {
-	var defaultReturnVal rids.DatasetRid
 	var returnVal *rids.DatasetRid
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("EnsureDatasetForDataSource"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/data-source/v1/%s/ensure-dataset", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "ensureDatasetForDataSource failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(rids.DatasetRid), werror.WrapWithContextParams(ctx, err, "ensureDatasetForDataSource failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "ensureDatasetForDataSource response cannot be nil")
+		return *new(rids.DatasetRid), werror.ErrorWithContextParams(ctx, "ensureDatasetForDataSource response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -196,28 +188,25 @@ type nominalDataSourceServiceClientWithTokenProvider struct {
 }
 
 func (c *nominalDataSourceServiceClientWithTokenProvider) Create(ctx context.Context, requestArg CreateNominalDataSourceRequest) (NominalDataSource, error) {
-	var defaultReturnVal NominalDataSource
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(NominalDataSource), err
 	}
 	return c.client.Create(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *nominalDataSourceServiceClientWithTokenProvider) Update(ctx context.Context, ridArg rids.NominalDataSourceRid, requestArg UpdateNominalDataSourceRequest) (NominalDataSource, error) {
-	var defaultReturnVal NominalDataSource
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(NominalDataSource), err
 	}
 	return c.client.Update(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
 func (c *nominalDataSourceServiceClientWithTokenProvider) BatchGet(ctx context.Context, ridsArg []rids.NominalDataSourceRid) ([]NominalDataSource, error) {
-	var defaultReturnVal []NominalDataSource
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGet(ctx, bearertoken.Token(token), ridsArg)
 }
@@ -231,10 +220,9 @@ func (c *nominalDataSourceServiceClientWithTokenProvider) UpdateLastWrittenTimes
 }
 
 func (c *nominalDataSourceServiceClientWithTokenProvider) EnsureDatasetForDataSource(ctx context.Context, ridArg rids.NominalDataSourceRid) (rids.DatasetRid, error) {
-	var defaultReturnVal rids.DatasetRid
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(rids.DatasetRid), err
 	}
 	return c.client.EnsureDatasetForDataSource(ctx, bearertoken.Token(token), ridArg)
 }

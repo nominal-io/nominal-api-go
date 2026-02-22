@@ -41,12 +41,11 @@ func NewConnectionBootstrapperServiceClient(client httpclient.Client) Connection
 func (c *connectionBootstrapperServiceClient) PopulateSeries(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid, requestArg api.PopulateSeriesRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("PopulateSeries"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v1/%s/populateSeries", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "populateSeries failed")
 	}
 	return nil
@@ -126,6 +125,11 @@ type ConnectionServiceClient interface {
 	ListConnections(ctx context.Context, authHeader bearertoken.Token, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid) ([]api.Connection, error)
 	// Lists connections with pagination. Returns connections ordered by creation time descending.
 	ListConnectionsV2(ctx context.Context, authHeader bearertoken.Token, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error)
+	/*
+	   Lists connections that reference the specified Nominal data sources, with pagination.
+	   Only returns connections within the caller's organization.
+	*/
+	ListConnectionsByNominalDataSource(ctx context.Context, authHeader bearertoken.Token, nominalDataSourceRidsArg []rids.NominalDataSourceRid, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error)
 	// Archives a connection, which simply tags the connection for a client to filter.
 	ArchiveConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid) error
 	// Undoes the archiving of a connection.
@@ -141,41 +145,37 @@ func NewConnectionServiceClient(client httpclient.Client) ConnectionServiceClien
 }
 
 func (c *connectionServiceClient) CreateConnection(ctx context.Context, authHeader bearertoken.Token, createConnectionArg api.CreateConnection) (api.Connection, error) {
-	var defaultReturnVal api.Connection
 	var returnVal *api.Connection
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateConnection"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v1/connections"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(createConnectionArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createConnection failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.Connection), werror.WrapWithContextParams(ctx, err, "createConnection failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createConnection response cannot be nil")
+		return *new(api.Connection), werror.ErrorWithContextParams(ctx, "createConnection response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *connectionServiceClient) UpdateConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid, requestArg api.UpdateConnectionRequest) (api.Connection, error) {
-	var defaultReturnVal api.Connection
 	var returnVal *api.Connection
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateConnection"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v1/connection/%s/details", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateConnection failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api.Connection), werror.WrapWithContextParams(ctx, err, "updateConnection failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateConnection response cannot be nil")
+		return *new(api.Connection), werror.ErrorWithContextParams(ctx, "updateConnection response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -183,52 +183,47 @@ func (c *connectionServiceClient) UpdateConnection(ctx context.Context, authHead
 func (c *connectionServiceClient) UpdateConnectionStatus(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid, requestArg api.ConnectionStatus) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateConnectionStatus"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v1/connection/%s/status", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "updateConnectionStatus failed")
 	}
 	return nil
 }
 
 func (c *connectionServiceClient) AddAvailableTags(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid, tagsArg map[api1.TagName][]api1.TagValue) (api.Connection, error) {
-	var defaultReturnVal api.Connection
 	var returnVal *api.Connection
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("AddAvailableTags"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v1/connection/%s/available-tags", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(tagsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "addAvailableTags failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.Connection), werror.WrapWithContextParams(ctx, err, "addAvailableTags failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "addAvailableTags response cannot be nil")
+		return *new(api.Connection), werror.ErrorWithContextParams(ctx, "addAvailableTags response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *connectionServiceClient) GetConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid) (api.Connection, error) {
-	var defaultReturnVal api.Connection
 	var returnVal *api.Connection
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetConnection"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v1/connection/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getConnection failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.Connection), werror.WrapWithContextParams(ctx, err, "getConnection failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getConnection response cannot be nil")
+		return *new(api.Connection), werror.ErrorWithContextParams(ctx, "getConnection response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -237,13 +232,12 @@ func (c *connectionServiceClient) GetConnections(ctx context.Context, authHeader
 	var returnVal []api.Connection
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetConnections"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v1/connection/multiple"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getConnections failed")
 	}
 	if returnVal == nil {
@@ -256,7 +250,6 @@ func (c *connectionServiceClient) ListConnections(ctx context.Context, authHeade
 	var returnVal []api.Connection
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListConnections"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v1/connections"))
 	queryParams := make(url.Values)
@@ -269,7 +262,7 @@ func (c *connectionServiceClient) ListConnections(ctx context.Context, authHeade
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "listConnections failed")
 	}
 	if returnVal == nil {
@@ -279,11 +272,9 @@ func (c *connectionServiceClient) ListConnections(ctx context.Context, authHeade
 }
 
 func (c *connectionServiceClient) ListConnectionsV2(ctx context.Context, authHeader bearertoken.Token, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error) {
-	var defaultReturnVal api.ListConnectionsResponse
 	var returnVal *api.ListConnectionsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListConnectionsV2"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v2/connections"))
 	queryParams := make(url.Values)
@@ -302,11 +293,42 @@ func (c *connectionServiceClient) ListConnectionsV2(ctx context.Context, authHea
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "listConnectionsV2 failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.ListConnectionsResponse), werror.WrapWithContextParams(ctx, err, "listConnectionsV2 failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "listConnectionsV2 response cannot be nil")
+		return *new(api.ListConnectionsResponse), werror.ErrorWithContextParams(ctx, "listConnectionsV2 response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *connectionServiceClient) ListConnectionsByNominalDataSource(ctx context.Context, authHeader bearertoken.Token, nominalDataSourceRidsArg []rids.NominalDataSourceRid, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error) {
+	var returnVal *api.ListConnectionsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListConnectionsByNominalDataSource"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v2/connections/by-datasource"))
+	queryParams := make(url.Values)
+	for _, v := range nominalDataSourceRidsArg {
+		queryParams.Add("nominalDataSourceRids", fmt.Sprint(v))
+	}
+	for _, v := range workspacesArg {
+		queryParams.Add("workspaces", fmt.Sprint(v))
+	}
+	if pageSizeArg != nil {
+		queryParams.Set("pageSize", fmt.Sprint(*pageSizeArg))
+	}
+	if nextPageTokenArg != nil {
+		queryParams.Set("nextPageToken", fmt.Sprint(*nextPageTokenArg))
+	}
+	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.ListConnectionsResponse), werror.WrapWithContextParams(ctx, err, "listConnectionsByNominalDataSource failed")
+	}
+	if returnVal == nil {
+		return *new(api.ListConnectionsResponse), werror.ErrorWithContextParams(ctx, "listConnectionsByNominalDataSource response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -314,11 +336,10 @@ func (c *connectionServiceClient) ListConnectionsV2(ctx context.Context, authHea
 func (c *connectionServiceClient) ArchiveConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveConnection"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v1/connections/%s/archive", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archiveConnection failed")
 	}
 	return nil
@@ -327,11 +348,10 @@ func (c *connectionServiceClient) ArchiveConnection(ctx context.Context, authHea
 func (c *connectionServiceClient) UnarchiveConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveConnection"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/connection/v1/connections/%s/unarchive", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchiveConnection failed")
 	}
 	return nil
@@ -367,6 +387,11 @@ type ConnectionServiceClientWithAuth interface {
 	ListConnections(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid) ([]api.Connection, error)
 	// Lists connections with pagination. Returns connections ordered by creation time descending.
 	ListConnectionsV2(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error)
+	/*
+	   Lists connections that reference the specified Nominal data sources, with pagination.
+	   Only returns connections within the caller's organization.
+	*/
+	ListConnectionsByNominalDataSource(ctx context.Context, nominalDataSourceRidsArg []rids.NominalDataSourceRid, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error)
 	// Archives a connection, which simply tags the connection for a client to filter.
 	ArchiveConnection(ctx context.Context, ridArg api.ConnectionRid) error
 	// Undoes the archiving of a connection.
@@ -414,6 +439,10 @@ func (c *connectionServiceClientWithAuth) ListConnectionsV2(ctx context.Context,
 	return c.client.ListConnectionsV2(ctx, c.authHeader, includeArchivedArg, workspacesArg, pageSizeArg, nextPageTokenArg)
 }
 
+func (c *connectionServiceClientWithAuth) ListConnectionsByNominalDataSource(ctx context.Context, nominalDataSourceRidsArg []rids.NominalDataSourceRid, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error) {
+	return c.client.ListConnectionsByNominalDataSource(ctx, c.authHeader, nominalDataSourceRidsArg, workspacesArg, pageSizeArg, nextPageTokenArg)
+}
+
 func (c *connectionServiceClientWithAuth) ArchiveConnection(ctx context.Context, ridArg api.ConnectionRid) error {
 	return c.client.ArchiveConnection(ctx, c.authHeader, ridArg)
 }
@@ -432,19 +461,17 @@ type connectionServiceClientWithTokenProvider struct {
 }
 
 func (c *connectionServiceClientWithTokenProvider) CreateConnection(ctx context.Context, createConnectionArg api.CreateConnection) (api.Connection, error) {
-	var defaultReturnVal api.Connection
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Connection), err
 	}
 	return c.client.CreateConnection(ctx, bearertoken.Token(token), createConnectionArg)
 }
 
 func (c *connectionServiceClientWithTokenProvider) UpdateConnection(ctx context.Context, ridArg api.ConnectionRid, requestArg api.UpdateConnectionRequest) (api.Connection, error) {
-	var defaultReturnVal api.Connection
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Connection), err
 	}
 	return c.client.UpdateConnection(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
@@ -458,48 +485,51 @@ func (c *connectionServiceClientWithTokenProvider) UpdateConnectionStatus(ctx co
 }
 
 func (c *connectionServiceClientWithTokenProvider) AddAvailableTags(ctx context.Context, ridArg api.ConnectionRid, tagsArg map[api1.TagName][]api1.TagValue) (api.Connection, error) {
-	var defaultReturnVal api.Connection
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Connection), err
 	}
 	return c.client.AddAvailableTags(ctx, bearertoken.Token(token), ridArg, tagsArg)
 }
 
 func (c *connectionServiceClientWithTokenProvider) GetConnection(ctx context.Context, ridArg api.ConnectionRid) (api.Connection, error) {
-	var defaultReturnVal api.Connection
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Connection), err
 	}
 	return c.client.GetConnection(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *connectionServiceClientWithTokenProvider) GetConnections(ctx context.Context, ridsArg []api.ConnectionRid) ([]api.Connection, error) {
-	var defaultReturnVal []api.Connection
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetConnections(ctx, bearertoken.Token(token), ridsArg)
 }
 
 func (c *connectionServiceClientWithTokenProvider) ListConnections(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid) ([]api.Connection, error) {
-	var defaultReturnVal []api.Connection
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.ListConnections(ctx, bearertoken.Token(token), includeArchivedArg, workspacesArg)
 }
 
 func (c *connectionServiceClientWithTokenProvider) ListConnectionsV2(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error) {
-	var defaultReturnVal api.ListConnectionsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.ListConnectionsResponse), err
 	}
 	return c.client.ListConnectionsV2(ctx, bearertoken.Token(token), includeArchivedArg, workspacesArg, pageSizeArg, nextPageTokenArg)
+}
+
+func (c *connectionServiceClientWithTokenProvider) ListConnectionsByNominalDataSource(ctx context.Context, nominalDataSourceRidsArg []rids.NominalDataSourceRid, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.ListConnectionsResponse), err
+	}
+	return c.client.ListConnectionsByNominalDataSource(ctx, bearertoken.Token(token), nominalDataSourceRidsArg, workspacesArg, pageSizeArg, nextPageTokenArg)
 }
 
 func (c *connectionServiceClientWithTokenProvider) ArchiveConnection(ctx context.Context, ridArg api.ConnectionRid) error {

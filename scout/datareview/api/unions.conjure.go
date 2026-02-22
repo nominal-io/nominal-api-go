@@ -126,7 +126,7 @@ func (u *AutomaticCheckEvaluationAction) AcceptFuncs(executionFinishedFunc func(
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in AutomaticCheckEvaluationAction type")
 		}
 		return unknownFunc(u.typ)
 	case "executionFinished":
@@ -152,19 +152,19 @@ func (u *AutomaticCheckEvaluationAction) AcceptFuncs(executionFinishedFunc func(
 	}
 }
 
-func (u *AutomaticCheckEvaluationAction) ExecutionFinishedNoopSuccess(AutomaticCheckExecutionFinished) error {
+func (u *AutomaticCheckEvaluationAction) ExecutionFinishedNoopSuccess(_ AutomaticCheckExecutionFinished) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationAction) ExecutionFailedToRunNoopSuccess(AutomaticCheckExecutionFailedToRun) error {
+func (u *AutomaticCheckEvaluationAction) ExecutionFailedToRunNoopSuccess(_ AutomaticCheckExecutionFailedToRun) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationAction) ExecutionRetriggeredNoopSuccess(ExecutionRetriggered) error {
+func (u *AutomaticCheckEvaluationAction) ExecutionRetriggeredNoopSuccess(_ ExecutionRetriggered) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationAction) ExecutionStartedNoopSuccess(AutomaticCheckExecutionStarted) error {
+func (u *AutomaticCheckEvaluationAction) ExecutionStartedNoopSuccess(_ AutomaticCheckExecutionStarted) error {
 	return nil
 }
 
@@ -392,7 +392,7 @@ func (u *AutomaticCheckEvaluationReviewAction) AcceptFuncs(closeWithIgnoreFunc f
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in AutomaticCheckEvaluationReviewAction type")
 		}
 		return unknownFunc(u.typ)
 	case "closeWithIgnore":
@@ -423,23 +423,23 @@ func (u *AutomaticCheckEvaluationReviewAction) AcceptFuncs(closeWithIgnoreFunc f
 	}
 }
 
-func (u *AutomaticCheckEvaluationReviewAction) CloseWithIgnoreNoopSuccess(CloseWithIgnoreAlert) error {
+func (u *AutomaticCheckEvaluationReviewAction) CloseWithIgnoreNoopSuccess(_ CloseWithIgnoreAlert) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationReviewAction) CloseWithFurtherActionNoopSuccess(CloseWithFurtherAction) error {
+func (u *AutomaticCheckEvaluationReviewAction) CloseWithFurtherActionNoopSuccess(_ CloseWithFurtherAction) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationReviewAction) ReopenNoopSuccess(Reopen) error {
+func (u *AutomaticCheckEvaluationReviewAction) ReopenNoopSuccess(_ Reopen) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationReviewAction) ReassignNoopSuccess(Reassign) error {
+func (u *AutomaticCheckEvaluationReviewAction) ReassignNoopSuccess(_ Reassign) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationReviewAction) UpdateNotesNoopSuccess(UpdateNotes) error {
+func (u *AutomaticCheckEvaluationReviewAction) UpdateNotesNoopSuccess(_ UpdateNotes) error {
 	return nil
 }
 
@@ -697,7 +697,7 @@ func (u *AutomaticCheckEvaluationState) AcceptFuncs(pendingExecutionFunc func(Pe
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in AutomaticCheckEvaluationState type")
 		}
 		return unknownFunc(u.typ)
 	case "pendingExecution":
@@ -733,27 +733,27 @@ func (u *AutomaticCheckEvaluationState) AcceptFuncs(pendingExecutionFunc func(Pe
 	}
 }
 
-func (u *AutomaticCheckEvaluationState) PendingExecutionNoopSuccess(PendingExecutionState) error {
+func (u *AutomaticCheckEvaluationState) PendingExecutionNoopSuccess(_ PendingExecutionState) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationState) FailedToExecuteNoopSuccess(FailedToExecuteState) error {
+func (u *AutomaticCheckEvaluationState) FailedToExecuteNoopSuccess(_ FailedToExecuteState) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationState) PassingNoopSuccess(PassingExecutionState) error {
+func (u *AutomaticCheckEvaluationState) PassingNoopSuccess(_ PassingExecutionState) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationState) GeneratedAlertsNoopSuccess(GeneratedAlertsState) error {
+func (u *AutomaticCheckEvaluationState) GeneratedAlertsNoopSuccess(_ GeneratedAlertsState) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationState) TooManyAlertsNoopSuccess(TooManyAlertsState) error {
+func (u *AutomaticCheckEvaluationState) TooManyAlertsNoopSuccess(_ TooManyAlertsState) error {
 	return nil
 }
 
-func (u *AutomaticCheckEvaluationState) ExecutingNoopSuccess(ExecutingState) error {
+func (u *AutomaticCheckEvaluationState) ExecutingNoopSuccess(_ ExecutingState) error {
 	return nil
 }
 
@@ -1069,7 +1069,7 @@ func (u *CheckAlertAction) AcceptFuncs(closeWithIgnoreFunc func(CloseWithIgnoreA
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CheckAlertAction type")
 		}
 		return unknownFunc(u.typ)
 	case "closeWithIgnore":
@@ -1120,39 +1120,39 @@ func (u *CheckAlertAction) AcceptFuncs(closeWithIgnoreFunc func(CloseWithIgnoreA
 	}
 }
 
-func (u *CheckAlertAction) CloseWithIgnoreNoopSuccess(CloseWithIgnoreAlert) error {
+func (u *CheckAlertAction) CloseWithIgnoreNoopSuccess(_ CloseWithIgnoreAlert) error {
 	return nil
 }
 
-func (u *CheckAlertAction) CloseWithFurtherActionNoopSuccess(CloseWithFurtherAction) error {
+func (u *CheckAlertAction) CloseWithFurtherActionNoopSuccess(_ CloseWithFurtherAction) error {
 	return nil
 }
 
-func (u *CheckAlertAction) ReopenNoopSuccess(Reopen) error {
+func (u *CheckAlertAction) ReopenNoopSuccess(_ Reopen) error {
 	return nil
 }
 
-func (u *CheckAlertAction) ReassignNoopSuccess(Reassign) error {
+func (u *CheckAlertAction) ReassignNoopSuccess(_ Reassign) error {
 	return nil
 }
 
-func (u *CheckAlertAction) UpdateNotesNoopSuccess(UpdateNotes) error {
+func (u *CheckAlertAction) UpdateNotesNoopSuccess(_ UpdateNotes) error {
 	return nil
 }
 
-func (u *CheckAlertAction) LinkNotebookNoopSuccess(LinkNotebook) error {
+func (u *CheckAlertAction) LinkNotebookNoopSuccess(_ LinkNotebook) error {
 	return nil
 }
 
-func (u *CheckAlertAction) UnlinkNotebookNoopSuccess(UnlinkNotebook) error {
+func (u *CheckAlertAction) UnlinkNotebookNoopSuccess(_ UnlinkNotebook) error {
 	return nil
 }
 
-func (u *CheckAlertAction) ArchiveDataReviewNoopSuccess(ArchiveDataReview) error {
+func (u *CheckAlertAction) ArchiveDataReviewNoopSuccess(_ ArchiveDataReview) error {
 	return nil
 }
 
-func (u *CheckAlertAction) UnarchiveDataReviewNoopSuccess(UnarchiveDataReview) error {
+func (u *CheckAlertAction) UnarchiveDataReviewNoopSuccess(_ UnarchiveDataReview) error {
 	return nil
 }
 
@@ -1432,7 +1432,7 @@ func (u *CheckAlertsHistogramBuckets) AcceptFuncs(unstackedFunc func(CheckAlerts
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CheckAlertsHistogramBuckets type")
 		}
 		return unknownFunc(u.typ)
 	case "unstacked":
@@ -1453,15 +1453,15 @@ func (u *CheckAlertsHistogramBuckets) AcceptFuncs(unstackedFunc func(CheckAlerts
 	}
 }
 
-func (u *CheckAlertsHistogramBuckets) UnstackedNoopSuccess(CheckAlertsUnstackedHistogram) error {
+func (u *CheckAlertsHistogramBuckets) UnstackedNoopSuccess(_ CheckAlertsUnstackedHistogram) error {
 	return nil
 }
 
-func (u *CheckAlertsHistogramBuckets) PriorityNoopSuccess(CheckAlertsPriorityHistogram) error {
+func (u *CheckAlertsHistogramBuckets) PriorityNoopSuccess(_ CheckAlertsPriorityHistogram) error {
 	return nil
 }
 
-func (u *CheckAlertsHistogramBuckets) StatusNoopSuccess(CheckAlertsStatusHistogram) error {
+func (u *CheckAlertsHistogramBuckets) StatusNoopSuccess(_ CheckAlertsStatusHistogram) error {
 	return nil
 }
 
@@ -1631,7 +1631,7 @@ func (u *CheckEvaluation) AcceptFuncs(automaticCheckFunc func(AutomaticCheckEval
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CheckEvaluation type")
 		}
 		return unknownFunc(u.typ)
 	case "automaticCheck":
@@ -1647,11 +1647,11 @@ func (u *CheckEvaluation) AcceptFuncs(automaticCheckFunc func(AutomaticCheckEval
 	}
 }
 
-func (u *CheckEvaluation) AutomaticCheckNoopSuccess(AutomaticCheckEvaluation) error {
+func (u *CheckEvaluation) AutomaticCheckNoopSuccess(_ AutomaticCheckEvaluation) error {
 	return nil
 }
 
-func (u *CheckEvaluation) ManualCheckNoopSuccess(ManualCheckEvaluation) error {
+func (u *CheckEvaluation) ManualCheckNoopSuccess(_ ManualCheckEvaluation) error {
 	return nil
 }
 
@@ -1805,7 +1805,7 @@ func (u *CloseAction) AcceptFuncs(closeWithIgnoreFunc func(CloseWithIgnoreAlert)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CloseAction type")
 		}
 		return unknownFunc(u.typ)
 	case "closeWithIgnore":
@@ -1821,11 +1821,11 @@ func (u *CloseAction) AcceptFuncs(closeWithIgnoreFunc func(CloseWithIgnoreAlert)
 	}
 }
 
-func (u *CloseAction) CloseWithIgnoreNoopSuccess(CloseWithIgnoreAlert) error {
+func (u *CloseAction) CloseWithIgnoreNoopSuccess(_ CloseWithIgnoreAlert) error {
 	return nil
 }
 
-func (u *CloseAction) CloseWithFurtherActionNoopSuccess(CloseWithFurtherAction) error {
+func (u *CloseAction) CloseWithFurtherActionNoopSuccess(_ CloseWithFurtherAction) error {
 	return nil
 }
 
@@ -1993,7 +1993,7 @@ func (u *CloseStrategy) AcceptFuncs(closeAllLinkedAlertsFunc func(CloseAllLinked
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CloseStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "closeAllLinkedAlerts":
@@ -2014,15 +2014,15 @@ func (u *CloseStrategy) AcceptFuncs(closeAllLinkedAlertsFunc func(CloseAllLinked
 	}
 }
 
-func (u *CloseStrategy) CloseAllLinkedAlertsNoopSuccess(CloseAllLinkedAlerts) error {
+func (u *CloseStrategy) CloseAllLinkedAlertsNoopSuccess(_ CloseAllLinkedAlerts) error {
 	return nil
 }
 
-func (u *CloseStrategy) CloseAndDetachFromNotebookNoopSuccess(CloseAndDetachFromNotebook) error {
+func (u *CloseStrategy) CloseAndDetachFromNotebookNoopSuccess(_ CloseAndDetachFromNotebook) error {
 	return nil
 }
 
-func (u *CloseStrategy) CloseAndDuplicatePreviouslyLinkedNotebookNoopSuccess(CloseAndDuplicatePreviouslyLinkedNotebook) error {
+func (u *CloseStrategy) CloseAndDuplicatePreviouslyLinkedNotebookNoopSuccess(_ CloseAndDuplicatePreviouslyLinkedNotebook) error {
 	return nil
 }
 
@@ -2206,7 +2206,7 @@ func (u *DataReviewCheckMetricsScope) AcceptFuncs(runRidFunc func(api.RunRid) er
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DataReviewCheckMetricsScope type")
 		}
 		return unknownFunc(u.typ)
 	case "runRid":
@@ -2227,15 +2227,15 @@ func (u *DataReviewCheckMetricsScope) AcceptFuncs(runRidFunc func(api.RunRid) er
 	}
 }
 
-func (u *DataReviewCheckMetricsScope) RunRidNoopSuccess(api.RunRid) error {
+func (u *DataReviewCheckMetricsScope) RunRidNoopSuccess(_ api.RunRid) error {
 	return nil
 }
 
-func (u *DataReviewCheckMetricsScope) AssetRidNoopSuccess(api1.AssetRid) error {
+func (u *DataReviewCheckMetricsScope) AssetRidNoopSuccess(_ api1.AssetRid) error {
 	return nil
 }
 
-func (u *DataReviewCheckMetricsScope) DataReviewRidNoopSuccess(api1.DataReviewRid) error {
+func (u *DataReviewCheckMetricsScope) DataReviewRidNoopSuccess(_ api1.DataReviewRid) error {
 	return nil
 }
 
@@ -2391,7 +2391,7 @@ func (u *HistogramDistributionVariable) AcceptFuncs(startTimeFunc func(Histogram
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in HistogramDistributionVariable type")
 		}
 		return unknownFunc(u.typ)
 	case "startTime":
@@ -2402,7 +2402,7 @@ func (u *HistogramDistributionVariable) AcceptFuncs(startTimeFunc func(Histogram
 	}
 }
 
-func (u *HistogramDistributionVariable) StartTimeNoopSuccess(HistogramStartTimeVariable) error {
+func (u *HistogramDistributionVariable) StartTimeNoopSuccess(_ HistogramStartTimeVariable) error {
 	return nil
 }
 
@@ -2540,7 +2540,7 @@ func (u *HistogramSubGroupVariable) AcceptFuncs(priorityFunc func(HistogramPrior
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in HistogramSubGroupVariable type")
 		}
 		return unknownFunc(u.typ)
 	case "priority":
@@ -2556,11 +2556,11 @@ func (u *HistogramSubGroupVariable) AcceptFuncs(priorityFunc func(HistogramPrior
 	}
 }
 
-func (u *HistogramSubGroupVariable) PriorityNoopSuccess(HistogramPriorityVariable) error {
+func (u *HistogramSubGroupVariable) PriorityNoopSuccess(_ HistogramPriorityVariable) error {
 	return nil
 }
 
-func (u *HistogramSubGroupVariable) StatusNoopSuccess(HistogramStatusVariable) error {
+func (u *HistogramSubGroupVariable) StatusNoopSuccess(_ HistogramStatusVariable) error {
 	return nil
 }
 
@@ -2728,7 +2728,7 @@ func (u *LinkNotebookStrategy) AcceptFuncs(duplicateAndLinkToNewNotebookFunc fun
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in LinkNotebookStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "duplicateAndLinkToNewNotebook":
@@ -2749,15 +2749,15 @@ func (u *LinkNotebookStrategy) AcceptFuncs(duplicateAndLinkToNewNotebookFunc fun
 	}
 }
 
-func (u *LinkNotebookStrategy) DuplicateAndLinkToNewNotebookNoopSuccess(DuplicateAndLinkNotebook) error {
+func (u *LinkNotebookStrategy) DuplicateAndLinkToNewNotebookNoopSuccess(_ DuplicateAndLinkNotebook) error {
 	return nil
 }
 
-func (u *LinkNotebookStrategy) CloseAndLinkNoopSuccess(CloseAndLinkToNotebook) error {
+func (u *LinkNotebookStrategy) CloseAndLinkNoopSuccess(_ CloseAndLinkToNotebook) error {
 	return nil
 }
 
-func (u *LinkNotebookStrategy) ReopenAndLinkNoopSuccess(ReopenAndLinkToNotebook) error {
+func (u *LinkNotebookStrategy) ReopenAndLinkNoopSuccess(_ ReopenAndLinkToNotebook) error {
 	return nil
 }
 
@@ -2983,7 +2983,7 @@ func (u *ManualCheckAlertAction) AcceptFuncs(passFunc func(Pass) error, closeWit
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ManualCheckAlertAction type")
 		}
 		return unknownFunc(u.typ)
 	case "pass":
@@ -3019,27 +3019,27 @@ func (u *ManualCheckAlertAction) AcceptFuncs(passFunc func(Pass) error, closeWit
 	}
 }
 
-func (u *ManualCheckAlertAction) PassNoopSuccess(Pass) error {
+func (u *ManualCheckAlertAction) PassNoopSuccess(_ Pass) error {
 	return nil
 }
 
-func (u *ManualCheckAlertAction) CloseWithFurtherActionNoopSuccess(CloseWithFurtherAction) error {
+func (u *ManualCheckAlertAction) CloseWithFurtherActionNoopSuccess(_ CloseWithFurtherAction) error {
 	return nil
 }
 
-func (u *ManualCheckAlertAction) ReopenNoopSuccess(Reopen) error {
+func (u *ManualCheckAlertAction) ReopenNoopSuccess(_ Reopen) error {
 	return nil
 }
 
-func (u *ManualCheckAlertAction) ReassignNoopSuccess(Reassign) error {
+func (u *ManualCheckAlertAction) ReassignNoopSuccess(_ Reassign) error {
 	return nil
 }
 
-func (u *ManualCheckAlertAction) UpdateNotesNoopSuccess(UpdateNotes) error {
+func (u *ManualCheckAlertAction) UpdateNotesNoopSuccess(_ UpdateNotes) error {
 	return nil
 }
 
-func (u *ManualCheckAlertAction) LinkNotebookNoopSuccess(LinkNotebook) error {
+func (u *ManualCheckAlertAction) LinkNotebookNoopSuccess(_ LinkNotebook) error {
 	return nil
 }
 
@@ -3271,7 +3271,7 @@ func (u *ManualCheckEvaluationState) AcceptFuncs(pendingReviewFunc func(PendingR
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ManualCheckEvaluationState type")
 		}
 		return unknownFunc(u.typ)
 	case "pendingReview":
@@ -3292,15 +3292,15 @@ func (u *ManualCheckEvaluationState) AcceptFuncs(pendingReviewFunc func(PendingR
 	}
 }
 
-func (u *ManualCheckEvaluationState) PendingReviewNoopSuccess(PendingReviewState) error {
+func (u *ManualCheckEvaluationState) PendingReviewNoopSuccess(_ PendingReviewState) error {
 	return nil
 }
 
-func (u *ManualCheckEvaluationState) ClosedWithFurtherActionNoopSuccess(ClosedWithFurtherActionState) error {
+func (u *ManualCheckEvaluationState) ClosedWithFurtherActionNoopSuccess(_ ClosedWithFurtherActionState) error {
 	return nil
 }
 
-func (u *ManualCheckEvaluationState) PassingNoopSuccess(PassState) error {
+func (u *ManualCheckEvaluationState) PassingNoopSuccess(_ PassState) error {
 	return nil
 }
 
@@ -3484,7 +3484,7 @@ func (u *ReopenStrategy) AcceptFuncs(reopenAllLinkedAlertsFunc func(ReopenAllLin
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ReopenStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "reopenAllLinkedAlerts":
@@ -3505,15 +3505,15 @@ func (u *ReopenStrategy) AcceptFuncs(reopenAllLinkedAlertsFunc func(ReopenAllLin
 	}
 }
 
-func (u *ReopenStrategy) ReopenAllLinkedAlertsNoopSuccess(ReopenAllLinkedAlerts) error {
+func (u *ReopenStrategy) ReopenAllLinkedAlertsNoopSuccess(_ ReopenAllLinkedAlerts) error {
 	return nil
 }
 
-func (u *ReopenStrategy) ReopenAndDetachFromNotebookNoopSuccess(ReopenAndDetachFromNotebook) error {
+func (u *ReopenStrategy) ReopenAndDetachFromNotebookNoopSuccess(_ ReopenAndDetachFromNotebook) error {
 	return nil
 }
 
-func (u *ReopenStrategy) ReopenAndDuplicatePreviouslyLinkedNotebookNoopSuccess(ReopenAndDuplicatePreviouslyLinkedNotebook) error {
+func (u *ReopenStrategy) ReopenAndDuplicatePreviouslyLinkedNotebookNoopSuccess(_ ReopenAndDuplicatePreviouslyLinkedNotebook) error {
 	return nil
 }
 

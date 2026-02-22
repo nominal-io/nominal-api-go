@@ -115,7 +115,7 @@ func (u *AssetMetricColumnTimeRange) AcceptFuncs(mostRecentRunFunc func(MostRece
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in AssetMetricColumnTimeRange type")
 		}
 		return unknownFunc(u.typ)
 	case "mostRecentRun":
@@ -136,15 +136,15 @@ func (u *AssetMetricColumnTimeRange) AcceptFuncs(mostRecentRunFunc func(MostRece
 	}
 }
 
-func (u *AssetMetricColumnTimeRange) MostRecentRunNoopSuccess(MostRecentRun) error {
+func (u *AssetMetricColumnTimeRange) MostRecentRunNoopSuccess(_ MostRecentRun) error {
 	return nil
 }
 
-func (u *AssetMetricColumnTimeRange) CustomNoopSuccess(api.CustomTimeframeFilter) error {
+func (u *AssetMetricColumnTimeRange) CustomNoopSuccess(_ api.CustomTimeframeFilter) error {
 	return nil
 }
 
-func (u *AssetMetricColumnTimeRange) PresetNoopSuccess(api.PresetTimeframeFilter) error {
+func (u *AssetMetricColumnTimeRange) PresetNoopSuccess(_ api.PresetTimeframeFilter) error {
 	return nil
 }
 
@@ -300,7 +300,7 @@ func (u *DisplayState) AcceptFuncs(displayStateV1Func func(TableState) error, un
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DisplayState type")
 		}
 		return unknownFunc(u.typ)
 	case "displayStateV1":
@@ -311,7 +311,7 @@ func (u *DisplayState) AcceptFuncs(displayStateV1Func func(TableState) error, un
 	}
 }
 
-func (u *DisplayState) DisplayStateV1NoopSuccess(TableState) error {
+func (u *DisplayState) DisplayStateV1NoopSuccess(_ TableState) error {
 	return nil
 }
 
@@ -435,7 +435,7 @@ func (u *MetricColumnData) AcceptFuncs(eventFunc func(event.SearchQuery) error, 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in MetricColumnData type")
 		}
 		return unknownFunc(u.typ)
 	case "event":
@@ -446,7 +446,7 @@ func (u *MetricColumnData) AcceptFuncs(eventFunc func(event.SearchQuery) error, 
 	}
 }
 
-func (u *MetricColumnData) EventNoopSuccess(event.SearchQuery) error {
+func (u *MetricColumnData) EventNoopSuccess(_ event.SearchQuery) error {
 	return nil
 }
 
@@ -570,7 +570,7 @@ func (u *MetricColumns) AcceptFuncs(assetFunc func(AssetMetricColumns) error, un
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in MetricColumns type")
 		}
 		return unknownFunc(u.typ)
 	case "asset":
@@ -581,7 +581,7 @@ func (u *MetricColumns) AcceptFuncs(assetFunc func(AssetMetricColumns) error, un
 	}
 }
 
-func (u *MetricColumns) AssetNoopSuccess(AssetMetricColumns) error {
+func (u *MetricColumns) AssetNoopSuccess(_ AssetMetricColumns) error {
 	return nil
 }
 
@@ -775,7 +775,7 @@ func (u *SearchSavedViewsQuery) AcceptFuncs(andFunc func(SearchSavedViewsQueryLi
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchSavedViewsQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "and":
@@ -811,27 +811,27 @@ func (u *SearchSavedViewsQuery) AcceptFuncs(andFunc func(SearchSavedViewsQueryLi
 	}
 }
 
-func (u *SearchSavedViewsQuery) AndNoopSuccess(SearchSavedViewsQueryList) error {
+func (u *SearchSavedViewsQuery) AndNoopSuccess(_ SearchSavedViewsQueryList) error {
 	return nil
 }
 
-func (u *SearchSavedViewsQuery) OrNoopSuccess(SearchSavedViewsQueryList) error {
+func (u *SearchSavedViewsQuery) OrNoopSuccess(_ SearchSavedViewsQueryList) error {
 	return nil
 }
 
-func (u *SearchSavedViewsQuery) NotNoopSuccess(SearchSavedViewsQuery) error {
+func (u *SearchSavedViewsQuery) NotNoopSuccess(_ SearchSavedViewsQuery) error {
 	return nil
 }
 
-func (u *SearchSavedViewsQuery) TitleExactSubstringSearchNoopSuccess(string) error {
+func (u *SearchSavedViewsQuery) TitleExactSubstringSearchNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchSavedViewsQuery) ResourceTypeNoopSuccess(ResourceType) error {
+func (u *SearchSavedViewsQuery) ResourceTypeNoopSuccess(_ ResourceType) error {
 	return nil
 }
 
-func (u *SearchSavedViewsQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchSavedViewsQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
@@ -1091,7 +1091,7 @@ func (u *SearchState) AcceptFuncs(assetFunc func(AssetSearchState) error, runFun
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchState type")
 		}
 		return unknownFunc(u.typ)
 	case "asset":
@@ -1122,23 +1122,23 @@ func (u *SearchState) AcceptFuncs(assetFunc func(AssetSearchState) error, runFun
 	}
 }
 
-func (u *SearchState) AssetNoopSuccess(AssetSearchState) error {
+func (u *SearchState) AssetNoopSuccess(_ AssetSearchState) error {
 	return nil
 }
 
-func (u *SearchState) RunNoopSuccess(RunSearchState) error {
+func (u *SearchState) RunNoopSuccess(_ RunSearchState) error {
 	return nil
 }
 
-func (u *SearchState) ChecklistNoopSuccess(ChecklistSearchState) error {
+func (u *SearchState) ChecklistNoopSuccess(_ ChecklistSearchState) error {
 	return nil
 }
 
-func (u *SearchState) WorkbookNoopSuccess(WorkbookSearchState) error {
+func (u *SearchState) WorkbookNoopSuccess(_ WorkbookSearchState) error {
 	return nil
 }
 
-func (u *SearchState) TemplateNoopSuccess(TemplateSearchState) error {
+func (u *SearchState) TemplateNoopSuccess(_ TemplateSearchState) error {
 	return nil
 }
 
@@ -1326,7 +1326,7 @@ func (u *SortKey) AcceptFuncs(fieldFunc func(SortField) error, unknownFunc func(
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SortKey type")
 		}
 		return unknownFunc(u.typ)
 	case "field":
@@ -1337,7 +1337,7 @@ func (u *SortKey) AcceptFuncs(fieldFunc func(SortField) error, unknownFunc func(
 	}
 }
 
-func (u *SortKey) FieldNoopSuccess(SortField) error {
+func (u *SortKey) FieldNoopSuccess(_ SortField) error {
 	return nil
 }
 
@@ -1475,7 +1475,7 @@ func (u *UpdateColor) AcceptFuncs(colorFunc func(api1.Color) error, clearColorFu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UpdateColor type")
 		}
 		return unknownFunc(u.typ)
 	case "color":
@@ -1491,11 +1491,11 @@ func (u *UpdateColor) AcceptFuncs(colorFunc func(api1.Color) error, clearColorFu
 	}
 }
 
-func (u *UpdateColor) ColorNoopSuccess(api1.Color) error {
+func (u *UpdateColor) ColorNoopSuccess(_ api1.Color) error {
 	return nil
 }
 
-func (u *UpdateColor) ClearColorNoopSuccess(api2.Empty) error {
+func (u *UpdateColor) ClearColorNoopSuccess(_ api2.Empty) error {
 	return nil
 }
 
@@ -1649,7 +1649,7 @@ func (u *UpdateSymbol) AcceptFuncs(symbolFunc func(api1.Symbol) error, clearSymb
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UpdateSymbol type")
 		}
 		return unknownFunc(u.typ)
 	case "symbol":
@@ -1665,11 +1665,11 @@ func (u *UpdateSymbol) AcceptFuncs(symbolFunc func(api1.Symbol) error, clearSymb
 	}
 }
 
-func (u *UpdateSymbol) SymbolNoopSuccess(api1.Symbol) error {
+func (u *UpdateSymbol) SymbolNoopSuccess(_ api1.Symbol) error {
 	return nil
 }
 
-func (u *UpdateSymbol) ClearSymbolNoopSuccess(api2.Empty) error {
+func (u *UpdateSymbol) ClearSymbolNoopSuccess(_ api2.Empty) error {
 	return nil
 }
 

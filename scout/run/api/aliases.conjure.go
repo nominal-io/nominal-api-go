@@ -27,6 +27,19 @@ func (a *ConnectionRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a ConnectionRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ConnectionRid) UnmarshalJSON(data []byte) error {
+	var rawConnectionRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawConnectionRid); err != nil {
+		return err
+	}
+	*a = ConnectionRid(rawConnectionRid)
+	return nil
+}
+
 func (a ConnectionRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -62,6 +75,19 @@ func (a *LogSetRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a LogSetRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *LogSetRid) UnmarshalJSON(data []byte) error {
+	var rawLogSetRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawLogSetRid); err != nil {
+		return err
+	}
+	*a = LogSetRid(rawLogSetRid)
+	return nil
+}
+
 func (a LogSetRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -91,6 +117,19 @@ func (a RunRid) MarshalText() ([]byte, error) {
 func (a *RunRid) UnmarshalText(data []byte) error {
 	var rawRunRid rid.ResourceIdentifier
 	if err := rawRunRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = RunRid(rawRunRid)
+	return nil
+}
+
+func (a RunRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *RunRid) UnmarshalJSON(data []byte) error {
+	var rawRunRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawRunRid); err != nil {
 		return err
 	}
 	*a = RunRid(rawRunRid)

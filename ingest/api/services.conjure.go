@@ -41,40 +41,36 @@ func NewContainerizedExtractorServiceClient(client httpclient.Client) Containeri
 }
 
 func (c *containerizedExtractorServiceClient) RegisterContainerizedExtractor(ctx context.Context, authHeader bearertoken.Token, requestArg RegisterContainerizedExtractorRequest) (RegisterContainerizedExtractorResponse, error) {
-	var defaultReturnVal RegisterContainerizedExtractorResponse
 	var returnVal *RegisterContainerizedExtractorResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("RegisterContainerizedExtractor"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/extractors/v1/container"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "registerContainerizedExtractor failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(RegisterContainerizedExtractorResponse), werror.WrapWithContextParams(ctx, err, "registerContainerizedExtractor failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "registerContainerizedExtractor response cannot be nil")
+		return *new(RegisterContainerizedExtractorResponse), werror.ErrorWithContextParams(ctx, "registerContainerizedExtractor response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *containerizedExtractorServiceClient) GetContainerizedExtractor(ctx context.Context, authHeader bearertoken.Token, extractorRidArg rid.ResourceIdentifier) (ContainerizedExtractor, error) {
-	var defaultReturnVal ContainerizedExtractor
 	var returnVal *ContainerizedExtractor
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetContainerizedExtractor"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/extractors/v1/container/%s", url.PathEscape(fmt.Sprint(extractorRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getContainerizedExtractor failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(ContainerizedExtractor), werror.WrapWithContextParams(ctx, err, "getContainerizedExtractor failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getContainerizedExtractor response cannot be nil")
+		return *new(ContainerizedExtractor), werror.ErrorWithContextParams(ctx, "getContainerizedExtractor response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -83,13 +79,12 @@ func (c *containerizedExtractorServiceClient) SearchContainerizedExtractors(ctx 
 	var returnVal []ContainerizedExtractor
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchContainerizedExtractors"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/extractors/v1/container/search"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "searchContainerizedExtractors failed")
 	}
 	if returnVal == nil {
@@ -99,21 +94,19 @@ func (c *containerizedExtractorServiceClient) SearchContainerizedExtractors(ctx 
 }
 
 func (c *containerizedExtractorServiceClient) UpdateContainerizedExtractor(ctx context.Context, authHeader bearertoken.Token, extractorRidArg rid.ResourceIdentifier, requestArg UpdateContainerizedExtractorRequest) (ContainerizedExtractor, error) {
-	var defaultReturnVal ContainerizedExtractor
 	var returnVal *ContainerizedExtractor
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateContainerizedExtractor"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/extractors/v1/container/%s", url.PathEscape(fmt.Sprint(extractorRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateContainerizedExtractor failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(ContainerizedExtractor), werror.WrapWithContextParams(ctx, err, "updateContainerizedExtractor failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateContainerizedExtractor response cannot be nil")
+		return *new(ContainerizedExtractor), werror.ErrorWithContextParams(ctx, "updateContainerizedExtractor response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -121,11 +114,10 @@ func (c *containerizedExtractorServiceClient) UpdateContainerizedExtractor(ctx c
 func (c *containerizedExtractorServiceClient) ArchiveContainerizedExtractor(ctx context.Context, authHeader bearertoken.Token, extractorRidArg rid.ResourceIdentifier) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveContainerizedExtractor"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/extractors/v1/container/%s/archive", url.PathEscape(fmt.Sprint(extractorRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archiveContainerizedExtractor failed")
 	}
 	return nil
@@ -134,11 +126,10 @@ func (c *containerizedExtractorServiceClient) ArchiveContainerizedExtractor(ctx 
 func (c *containerizedExtractorServiceClient) UnarchiveContainerizedExtractor(ctx context.Context, authHeader bearertoken.Token, extractorRidArg rid.ResourceIdentifier) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveContainerizedExtractor"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/extractors/v1/container/%s/unarchive", url.PathEscape(fmt.Sprint(extractorRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchiveContainerizedExtractor failed")
 	}
 	return nil
@@ -203,37 +194,33 @@ type containerizedExtractorServiceClientWithTokenProvider struct {
 }
 
 func (c *containerizedExtractorServiceClientWithTokenProvider) RegisterContainerizedExtractor(ctx context.Context, requestArg RegisterContainerizedExtractorRequest) (RegisterContainerizedExtractorResponse, error) {
-	var defaultReturnVal RegisterContainerizedExtractorResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(RegisterContainerizedExtractorResponse), err
 	}
 	return c.client.RegisterContainerizedExtractor(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *containerizedExtractorServiceClientWithTokenProvider) GetContainerizedExtractor(ctx context.Context, extractorRidArg rid.ResourceIdentifier) (ContainerizedExtractor, error) {
-	var defaultReturnVal ContainerizedExtractor
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ContainerizedExtractor), err
 	}
 	return c.client.GetContainerizedExtractor(ctx, bearertoken.Token(token), extractorRidArg)
 }
 
 func (c *containerizedExtractorServiceClientWithTokenProvider) SearchContainerizedExtractors(ctx context.Context, requestArg SearchContainerizedExtractorsRequest) ([]ContainerizedExtractor, error) {
-	var defaultReturnVal []ContainerizedExtractor
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.SearchContainerizedExtractors(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *containerizedExtractorServiceClientWithTokenProvider) UpdateContainerizedExtractor(ctx context.Context, extractorRidArg rid.ResourceIdentifier, requestArg UpdateContainerizedExtractorRequest) (ContainerizedExtractor, error) {
-	var defaultReturnVal ContainerizedExtractor
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ContainerizedExtractor), err
 	}
 	return c.client.UpdateContainerizedExtractor(ctx, bearertoken.Token(token), extractorRidArg, requestArg)
 }
@@ -269,20 +256,18 @@ func NewIngestJobServiceClient(client httpclient.Client) IngestJobServiceClient 
 }
 
 func (c *ingestJobServiceClient) GetIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (IngestJob, error) {
-	var defaultReturnVal IngestJob
 	var returnVal *IngestJob
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIngestJob"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-job/%s", url.PathEscape(fmt.Sprint(ingestJobRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getIngestJob failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(IngestJob), werror.WrapWithContextParams(ctx, err, "getIngestJob failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getIngestJob response cannot be nil")
+		return *new(IngestJob), werror.ErrorWithContextParams(ctx, "getIngestJob response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -316,10 +301,9 @@ type ingestJobServiceClientWithTokenProvider struct {
 }
 
 func (c *ingestJobServiceClientWithTokenProvider) GetIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error) {
-	var defaultReturnVal IngestJob
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(IngestJob), err
 	}
 	return c.client.GetIngestJob(ctx, bearertoken.Token(token), ingestJobRidArg)
 }
@@ -371,101 +355,91 @@ func NewIngestServiceClient(client httpclient.Client) IngestServiceClient {
 }
 
 func (c *ingestServiceClient) Ingest(ctx context.Context, authHeader bearertoken.Token, triggerIngestArg IngestRequest) (IngestResponse, error) {
-	var defaultReturnVal IngestResponse
 	var returnVal *IngestResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Ingest"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(triggerIngestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "ingest failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(IngestResponse), werror.WrapWithContextParams(ctx, err, "ingest failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "ingest response cannot be nil")
+		return *new(IngestResponse), werror.ErrorWithContextParams(ctx, "ingest response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *ingestServiceClient) RerunIngest(ctx context.Context, authHeader bearertoken.Token, requestArg RerunIngestRequest) (IngestResponse, error) {
-	var defaultReturnVal IngestResponse
 	var returnVal *IngestResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("RerunIngest"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/re-ingest"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "rerunIngest failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(IngestResponse), werror.WrapWithContextParams(ctx, err, "rerunIngest failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "rerunIngest response cannot be nil")
+		return *new(IngestResponse), werror.ErrorWithContextParams(ctx, "rerunIngest response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *ingestServiceClient) IngestRun(ctx context.Context, authHeader bearertoken.Token, requestArg IngestRunRequest) (IngestRunResponse, error) {
-	var defaultReturnVal IngestRunResponse
 	var returnVal *IngestRunResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("IngestRun"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-run"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "ingestRun failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(IngestRunResponse), werror.WrapWithContextParams(ctx, err, "ingestRun failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "ingestRun response cannot be nil")
+		return *new(IngestRunResponse), werror.ErrorWithContextParams(ctx, "ingestRun response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *ingestServiceClient) IngestVideo(ctx context.Context, authHeader bearertoken.Token, ingestVideoArg IngestVideoRequest) (IngestVideoResponse, error) {
-	var defaultReturnVal IngestVideoResponse
 	var returnVal *IngestVideoResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("IngestVideo"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-video"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ingestVideoArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "ingestVideo failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(IngestVideoResponse), werror.WrapWithContextParams(ctx, err, "ingestVideo failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "ingestVideo response cannot be nil")
+		return *new(IngestVideoResponse), werror.ErrorWithContextParams(ctx, "ingestVideo response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *ingestServiceClient) ReingestFromDatasets(ctx context.Context, authHeader bearertoken.Token, requestArg ReingestDatasetsRequest) (ReingestDatasetsResponse, error) {
-	var defaultReturnVal ReingestDatasetsResponse
 	var returnVal *ReingestDatasetsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ReingestFromDatasets"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/reingest-dataset-files"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "reingestFromDatasets failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(ReingestDatasetsResponse), werror.WrapWithContextParams(ctx, err, "reingestFromDatasets failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "reingestFromDatasets response cannot be nil")
+		return *new(ReingestDatasetsResponse), werror.ErrorWithContextParams(ctx, "reingestFromDatasets response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -473,11 +447,10 @@ func (c *ingestServiceClient) ReingestFromDatasets(ctx context.Context, authHead
 func (c *ingestServiceClient) DeleteFile(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg uuid.UUID) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteFile"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/delete-file/%s/file/%s", url.PathEscape(fmt.Sprint(datasetRidArg)), url.PathEscape(fmt.Sprint(fileIdArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "deleteFile failed")
 	}
 	return nil
@@ -564,46 +537,41 @@ type ingestServiceClientWithTokenProvider struct {
 }
 
 func (c *ingestServiceClientWithTokenProvider) Ingest(ctx context.Context, triggerIngestArg IngestRequest) (IngestResponse, error) {
-	var defaultReturnVal IngestResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(IngestResponse), err
 	}
 	return c.client.Ingest(ctx, bearertoken.Token(token), triggerIngestArg)
 }
 
 func (c *ingestServiceClientWithTokenProvider) RerunIngest(ctx context.Context, requestArg RerunIngestRequest) (IngestResponse, error) {
-	var defaultReturnVal IngestResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(IngestResponse), err
 	}
 	return c.client.RerunIngest(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *ingestServiceClientWithTokenProvider) IngestRun(ctx context.Context, requestArg IngestRunRequest) (IngestRunResponse, error) {
-	var defaultReturnVal IngestRunResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(IngestRunResponse), err
 	}
 	return c.client.IngestRun(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *ingestServiceClientWithTokenProvider) IngestVideo(ctx context.Context, ingestVideoArg IngestVideoRequest) (IngestVideoResponse, error) {
-	var defaultReturnVal IngestVideoResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(IngestVideoResponse), err
 	}
 	return c.client.IngestVideo(ctx, bearertoken.Token(token), ingestVideoArg)
 }
 
 func (c *ingestServiceClientWithTokenProvider) ReingestFromDatasets(ctx context.Context, requestArg ReingestDatasetsRequest) (ReingestDatasetsResponse, error) {
-	var defaultReturnVal ReingestDatasetsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ReingestDatasetsResponse), err
 	}
 	return c.client.ReingestFromDatasets(ctx, bearertoken.Token(token), requestArg)
 }
@@ -635,60 +603,54 @@ func NewInternalIngestJobServiceClient(client httpclient.Client) InternalIngestJ
 }
 
 func (c *internalIngestJobServiceClient) CreateIngestJob(ctx context.Context, authHeader bearertoken.Token, createIngestJobRequestArg CreateIngestJobRequest) (IngestJobRid, error) {
-	var defaultReturnVal IngestJobRid
 	var returnVal *IngestJobRid
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateIngestJob"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/internal/ingest/v1/ingest-job"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(createIngestJobRequestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createIngestJob failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(IngestJobRid), werror.WrapWithContextParams(ctx, err, "createIngestJob failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createIngestJob response cannot be nil")
+		return *new(IngestJobRid), werror.ErrorWithContextParams(ctx, "createIngestJob response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *internalIngestJobServiceClient) GetIngestJobInternal(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (InternalIngestJob, error) {
-	var defaultReturnVal InternalIngestJob
 	var returnVal *InternalIngestJob
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIngestJobInternal"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/internal/ingest/v1/ingest-job/%s", url.PathEscape(fmt.Sprint(ingestJobRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getIngestJobInternal failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(InternalIngestJob), werror.WrapWithContextParams(ctx, err, "getIngestJobInternal failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getIngestJobInternal response cannot be nil")
+		return *new(InternalIngestJob), werror.ErrorWithContextParams(ctx, "getIngestJobInternal response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *internalIngestJobServiceClient) UpdateIngestJobStatus(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid, statusArg IngestJobStatus) (IngestJobStatus, error) {
-	var defaultReturnVal IngestJobStatus
 	var returnVal *IngestJobStatus
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateIngestJobStatus"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/internal/ingest/v1/ingest-job/%s/status", url.PathEscape(fmt.Sprint(ingestJobRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(statusArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateIngestJobStatus failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(IngestJobStatus), werror.WrapWithContextParams(ctx, err, "updateIngestJobStatus failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateIngestJobStatus response cannot be nil")
+		return *new(IngestJobStatus), werror.ErrorWithContextParams(ctx, "updateIngestJobStatus response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -734,28 +696,25 @@ type internalIngestJobServiceClientWithTokenProvider struct {
 }
 
 func (c *internalIngestJobServiceClientWithTokenProvider) CreateIngestJob(ctx context.Context, createIngestJobRequestArg CreateIngestJobRequest) (IngestJobRid, error) {
-	var defaultReturnVal IngestJobRid
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(IngestJobRid), err
 	}
 	return c.client.CreateIngestJob(ctx, bearertoken.Token(token), createIngestJobRequestArg)
 }
 
 func (c *internalIngestJobServiceClientWithTokenProvider) GetIngestJobInternal(ctx context.Context, ingestJobRidArg IngestJobRid) (InternalIngestJob, error) {
-	var defaultReturnVal InternalIngestJob
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(InternalIngestJob), err
 	}
 	return c.client.GetIngestJobInternal(ctx, bearertoken.Token(token), ingestJobRidArg)
 }
 
 func (c *internalIngestJobServiceClientWithTokenProvider) UpdateIngestJobStatus(ctx context.Context, ingestJobRidArg IngestJobRid, statusArg IngestJobStatus) (IngestJobStatus, error) {
-	var defaultReturnVal IngestJobStatus
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(IngestJobStatus), err
 	}
 	return c.client.UpdateIngestJobStatus(ctx, bearertoken.Token(token), ingestJobRidArg, statusArg)
 }

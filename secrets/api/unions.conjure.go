@@ -154,7 +154,7 @@ func (u *SearchSecretsQuery) AcceptFuncs(searchTextFunc func(string) error, labe
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchSecretsQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "searchText":
@@ -190,27 +190,27 @@ func (u *SearchSecretsQuery) AcceptFuncs(searchTextFunc func(string) error, labe
 	}
 }
 
-func (u *SearchSecretsQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchSecretsQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchSecretsQuery) LabelNoopSuccess(api.Label) error {
+func (u *SearchSecretsQuery) LabelNoopSuccess(_ api.Label) error {
 	return nil
 }
 
-func (u *SearchSecretsQuery) PropertyNoopSuccess(api.Property) error {
+func (u *SearchSecretsQuery) PropertyNoopSuccess(_ api.Property) error {
 	return nil
 }
 
-func (u *SearchSecretsQuery) AndNoopSuccess([]SearchSecretsQuery) error {
+func (u *SearchSecretsQuery) AndNoopSuccess(_ []SearchSecretsQuery) error {
 	return nil
 }
 
-func (u *SearchSecretsQuery) OrNoopSuccess([]SearchSecretsQuery) error {
+func (u *SearchSecretsQuery) OrNoopSuccess(_ []SearchSecretsQuery) error {
 	return nil
 }
 
-func (u *SearchSecretsQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchSecretsQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 

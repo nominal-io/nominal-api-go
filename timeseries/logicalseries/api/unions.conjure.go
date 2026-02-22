@@ -83,7 +83,7 @@ func (u *ContextProperty) AcceptFuncs(valueFunc func(string) error, unknownFunc 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ContextProperty type")
 		}
 		return unknownFunc(u.typ)
 	case "value":
@@ -94,7 +94,7 @@ func (u *ContextProperty) AcceptFuncs(valueFunc func(string) error, unknownFunc 
 	}
 }
 
-func (u *ContextProperty) ValueNoopSuccess(string) error {
+func (u *ContextProperty) ValueNoopSuccess(_ string) error {
 	return nil
 }
 
@@ -316,7 +316,7 @@ func (u *Locator) AcceptFuncs(timescaleDbLocatorFunc func(TimescaleDbLocator) er
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Locator type")
 		}
 		return unknownFunc(u.typ)
 	case "timescaleDbLocator":
@@ -362,35 +362,35 @@ func (u *Locator) AcceptFuncs(timescaleDbLocatorFunc func(TimescaleDbLocator) er
 	}
 }
 
-func (u *Locator) TimescaleDbLocatorNoopSuccess(TimescaleDbLocator) error {
+func (u *Locator) TimescaleDbLocatorNoopSuccess(_ TimescaleDbLocator) error {
 	return nil
 }
 
-func (u *Locator) InfluxLocatorNoopSuccess(Influx2Locator) error {
+func (u *Locator) InfluxLocatorNoopSuccess(_ Influx2Locator) error {
 	return nil
 }
 
-func (u *Locator) Influx1LocatorNoopSuccess(Influx1Locator) error {
+func (u *Locator) Influx1LocatorNoopSuccess(_ Influx1Locator) error {
 	return nil
 }
 
-func (u *Locator) NominalLocatorNoopSuccess(NominalLocator) error {
+func (u *Locator) NominalLocatorNoopSuccess(_ NominalLocator) error {
 	return nil
 }
 
-func (u *Locator) TimestreamLocatorNoopSuccess(TimestreamLocator) error {
+func (u *Locator) TimestreamLocatorNoopSuccess(_ TimestreamLocator) error {
 	return nil
 }
 
-func (u *Locator) VisualCrossingLocatorNoopSuccess(VisualCrossingLocator) error {
+func (u *Locator) VisualCrossingLocatorNoopSuccess(_ VisualCrossingLocator) error {
 	return nil
 }
 
-func (u *Locator) BigQueryLocatorNoopSuccess(BigQueryLocator) error {
+func (u *Locator) BigQueryLocatorNoopSuccess(_ BigQueryLocator) error {
 	return nil
 }
 
-func (u *Locator) ApiLocatorNoopSuccess(ApiLocator) error {
+func (u *Locator) ApiLocatorNoopSuccess(_ ApiLocator) error {
 	return nil
 }
 
@@ -640,7 +640,7 @@ func (u *ResolveSeriesResponse) AcceptFuncs(ridFunc func(api.LogicalSeriesRid) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ResolveSeriesResponse type")
 		}
 		return unknownFunc(u.typ)
 	case "rid":
@@ -656,11 +656,11 @@ func (u *ResolveSeriesResponse) AcceptFuncs(ridFunc func(api.LogicalSeriesRid) e
 	}
 }
 
-func (u *ResolveSeriesResponse) RidNoopSuccess(api.LogicalSeriesRid) error {
+func (u *ResolveSeriesResponse) RidNoopSuccess(_ api.LogicalSeriesRid) error {
 	return nil
 }
 
-func (u *ResolveSeriesResponse) ErrorNoopSuccess(ResolveSeriesError) error {
+func (u *ResolveSeriesResponse) ErrorNoopSuccess(_ ResolveSeriesError) error {
 	return nil
 }
 
@@ -815,7 +815,7 @@ func (u *UnitUpdate) AcceptFuncs(unitFunc func(api.Unit) error, clearUnitFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UnitUpdate type")
 		}
 		return unknownFunc(u.typ)
 	case "unit":
@@ -831,11 +831,11 @@ func (u *UnitUpdate) AcceptFuncs(unitFunc func(api.Unit) error, clearUnitFunc fu
 	}
 }
 
-func (u *UnitUpdate) UnitNoopSuccess(api.Unit) error {
+func (u *UnitUpdate) UnitNoopSuccess(_ api.Unit) error {
 	return nil
 }
 
-func (u *UnitUpdate) ClearUnitNoopSuccess(api.Empty) error {
+func (u *UnitUpdate) ClearUnitNoopSuccess(_ api.Empty) error {
 	return nil
 }
 

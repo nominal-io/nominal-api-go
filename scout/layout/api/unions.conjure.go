@@ -82,7 +82,7 @@ func (u *ChartPanel) AcceptFuncs(v1Func func(ChartPanelV1) error, unknownFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ChartPanel type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -93,7 +93,7 @@ func (u *ChartPanel) AcceptFuncs(v1Func func(ChartPanelV1) error, unknownFunc fu
 	}
 }
 
-func (u *ChartPanel) V1NoopSuccess(ChartPanelV1) error {
+func (u *ChartPanel) V1NoopSuccess(_ ChartPanelV1) error {
 	return nil
 }
 
@@ -217,7 +217,7 @@ func (u *EmptyPanel) AcceptFuncs(v1Func func(EmptyPanelV1) error, unknownFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EmptyPanel type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -228,7 +228,7 @@ func (u *EmptyPanel) AcceptFuncs(v1Func func(EmptyPanelV1) error, unknownFunc fu
 	}
 }
 
-func (u *EmptyPanel) V1NoopSuccess(EmptyPanelV1) error {
+func (u *EmptyPanel) V1NoopSuccess(_ EmptyPanelV1) error {
 	return nil
 }
 
@@ -408,7 +408,7 @@ func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPa
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Panel type")
 		}
 		return unknownFunc(u.typ)
 	case "viz":
@@ -439,23 +439,23 @@ func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPa
 	}
 }
 
-func (u *Panel) VizNoopSuccess(VizPanel) error {
+func (u *Panel) VizNoopSuccess(_ VizPanel) error {
 	return nil
 }
 
-func (u *Panel) ChartNoopSuccess(ChartPanel) error {
+func (u *Panel) ChartNoopSuccess(_ ChartPanel) error {
 	return nil
 }
 
-func (u *Panel) EmptyNoopSuccess(EmptyPanel) error {
+func (u *Panel) EmptyNoopSuccess(_ EmptyPanel) error {
 	return nil
 }
 
-func (u *Panel) SplitNoopSuccess(SplitPanel) error {
+func (u *Panel) SplitNoopSuccess(_ SplitPanel) error {
 	return nil
 }
 
-func (u *Panel) TabbedNoopSuccess(TabbedPanel) error {
+func (u *Panel) TabbedNoopSuccess(_ TabbedPanel) error {
 	return nil
 }
 
@@ -643,7 +643,7 @@ func (u *SingleTab) AcceptFuncs(v1Func func(SingleTabV1) error, unknownFunc func
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SingleTab type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -654,7 +654,7 @@ func (u *SingleTab) AcceptFuncs(v1Func func(SingleTabV1) error, unknownFunc func
 	}
 }
 
-func (u *SingleTab) V1NoopSuccess(SingleTabV1) error {
+func (u *SingleTab) V1NoopSuccess(_ SingleTabV1) error {
 	return nil
 }
 
@@ -778,7 +778,7 @@ func (u *SplitPanel) AcceptFuncs(v1Func func(SplitPanelV1) error, unknownFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SplitPanel type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -789,7 +789,7 @@ func (u *SplitPanel) AcceptFuncs(v1Func func(SplitPanelV1) error, unknownFunc fu
 	}
 }
 
-func (u *SplitPanel) V1NoopSuccess(SplitPanelV1) error {
+func (u *SplitPanel) V1NoopSuccess(_ SplitPanelV1) error {
 	return nil
 }
 
@@ -913,7 +913,7 @@ func (u *TabbedPanel) AcceptFuncs(v1Func func(TabbedPanelV1) error, unknownFunc 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TabbedPanel type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -924,7 +924,7 @@ func (u *TabbedPanel) AcceptFuncs(v1Func func(TabbedPanelV1) error, unknownFunc 
 	}
 }
 
-func (u *TabbedPanel) V1NoopSuccess(TabbedPanelV1) error {
+func (u *TabbedPanel) V1NoopSuccess(_ TabbedPanelV1) error {
 	return nil
 }
 
@@ -1048,7 +1048,7 @@ func (u *VizPanel) AcceptFuncs(v1Func func(VizPanelV1) error, unknownFunc func(s
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VizPanel type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -1059,7 +1059,7 @@ func (u *VizPanel) AcceptFuncs(v1Func func(VizPanelV1) error, unknownFunc func(s
 	}
 }
 
-func (u *VizPanel) V1NoopSuccess(VizPanelV1) error {
+func (u *VizPanel) V1NoopSuccess(_ VizPanelV1) error {
 	return nil
 }
 
@@ -1183,7 +1183,7 @@ func (u *WorkbookLayout) AcceptFuncs(v1Func func(WorkbookLayoutV1) error, unknow
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in WorkbookLayout type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -1194,7 +1194,7 @@ func (u *WorkbookLayout) AcceptFuncs(v1Func func(WorkbookLayoutV1) error, unknow
 	}
 }
 
-func (u *WorkbookLayout) V1NoopSuccess(WorkbookLayoutV1) error {
+func (u *WorkbookLayout) V1NoopSuccess(_ WorkbookLayoutV1) error {
 	return nil
 }
 

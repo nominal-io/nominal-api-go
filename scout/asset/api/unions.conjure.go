@@ -253,7 +253,7 @@ func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exact
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchAssetsQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "searchText":
@@ -324,55 +324,55 @@ func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exact
 	}
 }
 
-func (u *SearchAssetsQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchAssetsQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) ExactSubstringNoopSuccess(string) error {
+func (u *SearchAssetsQuery) ExactSubstringNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) LabelNoopSuccess(api.Label) error {
+func (u *SearchAssetsQuery) LabelNoopSuccess(_ api.Label) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) LabelsNoopSuccess(api1.LabelsFilter) error {
+func (u *SearchAssetsQuery) LabelsNoopSuccess(_ api1.LabelsFilter) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) PropertyNoopSuccess(api.Property) error {
+func (u *SearchAssetsQuery) PropertyNoopSuccess(_ api.Property) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) PropertiesNoopSuccess(api1.PropertiesFilter) error {
+func (u *SearchAssetsQuery) PropertiesNoopSuccess(_ api1.PropertiesFilter) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) TypeRidNoopSuccess(api1.TypeRid) error {
+func (u *SearchAssetsQuery) TypeRidNoopSuccess(_ api1.TypeRid) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) AssetTypesNoopSuccess(AssetTypesFilter) error {
+func (u *SearchAssetsQuery) AssetTypesNoopSuccess(_ AssetTypesFilter) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) IsStagedNoopSuccess(bool) error {
+func (u *SearchAssetsQuery) IsStagedNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) ArchivedNoopSuccess(bool) error {
+func (u *SearchAssetsQuery) ArchivedNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) AndNoopSuccess([]SearchAssetsQuery) error {
+func (u *SearchAssetsQuery) AndNoopSuccess(_ []SearchAssetsQuery) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) OrNoopSuccess([]SearchAssetsQuery) error {
+func (u *SearchAssetsQuery) OrNoopSuccess(_ []SearchAssetsQuery) error {
 	return nil
 }
 
-func (u *SearchAssetsQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchAssetsQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
@@ -758,7 +758,7 @@ func (u *SearchTypesQuery) AcceptFuncs(searchTextFunc func(string) error, proper
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchTypesQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "searchText":
@@ -794,27 +794,27 @@ func (u *SearchTypesQuery) AcceptFuncs(searchTextFunc func(string) error, proper
 	}
 }
 
-func (u *SearchTypesQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchTypesQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchTypesQuery) PropertyNoopSuccess(api.PropertyName) error {
+func (u *SearchTypesQuery) PropertyNoopSuccess(_ api.PropertyName) error {
 	return nil
 }
 
-func (u *SearchTypesQuery) AndNoopSuccess([]SearchTypesQuery) error {
+func (u *SearchTypesQuery) AndNoopSuccess(_ []SearchTypesQuery) error {
 	return nil
 }
 
-func (u *SearchTypesQuery) OrNoopSuccess([]SearchTypesQuery) error {
+func (u *SearchTypesQuery) OrNoopSuccess(_ []SearchTypesQuery) error {
 	return nil
 }
 
-func (u *SearchTypesQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchTypesQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
-func (u *SearchTypesQuery) ConfiguredDatasourceNoopSuccess(rids.DataSourceRid) error {
+func (u *SearchTypesQuery) ConfiguredDatasourceNoopSuccess(_ rids.DataSourceRid) error {
 	return nil
 }
 
@@ -1032,7 +1032,7 @@ func (u *SortKey) AcceptFuncs(fieldFunc func(AssetSortField) error, propertyFunc
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SortKey type")
 		}
 		return unknownFunc(u.typ)
 	case "field":
@@ -1048,11 +1048,11 @@ func (u *SortKey) AcceptFuncs(fieldFunc func(AssetSortField) error, propertyFunc
 	}
 }
 
-func (u *SortKey) FieldNoopSuccess(AssetSortField) error {
+func (u *SortKey) FieldNoopSuccess(_ AssetSortField) error {
 	return nil
 }
 
-func (u *SortKey) PropertyNoopSuccess(SortProperty) error {
+func (u *SortKey) PropertyNoopSuccess(_ SortProperty) error {
 	return nil
 }
 
@@ -1192,7 +1192,7 @@ func (u *TagConfig) AcceptFuncs(v1Func func([]api.TagName) error, unknownFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TagConfig type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -1203,7 +1203,7 @@ func (u *TagConfig) AcceptFuncs(v1Func func([]api.TagName) error, unknownFunc fu
 	}
 }
 
-func (u *TagConfig) V1NoopSuccess([]api.TagName) error {
+func (u *TagConfig) V1NoopSuccess(_ []api.TagName) error {
 	return nil
 }
 
@@ -1345,7 +1345,7 @@ func (u *UpdateOrRemoveAssetType) AcceptFuncs(typeRidFunc func(api1.TypeRid) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UpdateOrRemoveAssetType type")
 		}
 		return unknownFunc(u.typ)
 	case "typeRid":
@@ -1361,11 +1361,11 @@ func (u *UpdateOrRemoveAssetType) AcceptFuncs(typeRidFunc func(api1.TypeRid) err
 	}
 }
 
-func (u *UpdateOrRemoveAssetType) TypeRidNoopSuccess(api1.TypeRid) error {
+func (u *UpdateOrRemoveAssetType) TypeRidNoopSuccess(_ api1.TypeRid) error {
 	return nil
 }
 
-func (u *UpdateOrRemoveAssetType) RemoveTypeNoopSuccess(RemoveType) error {
+func (u *UpdateOrRemoveAssetType) RemoveTypeNoopSuccess(_ RemoveType) error {
 	return nil
 }
 

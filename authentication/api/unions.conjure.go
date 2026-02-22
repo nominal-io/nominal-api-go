@@ -124,7 +124,7 @@ func (u *SearchUsersQuery) AcceptFuncs(andFunc func([]SearchUsersQuery) error, o
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchUsersQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "and":
@@ -150,19 +150,19 @@ func (u *SearchUsersQuery) AcceptFuncs(andFunc func([]SearchUsersQuery) error, o
 	}
 }
 
-func (u *SearchUsersQuery) AndNoopSuccess([]SearchUsersQuery) error {
+func (u *SearchUsersQuery) AndNoopSuccess(_ []SearchUsersQuery) error {
 	return nil
 }
 
-func (u *SearchUsersQuery) OrNoopSuccess([]SearchUsersQuery) error {
+func (u *SearchUsersQuery) OrNoopSuccess(_ []SearchUsersQuery) error {
 	return nil
 }
 
-func (u *SearchUsersQuery) ExactMatchNoopSuccess(string) error {
+func (u *SearchUsersQuery) ExactMatchNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchUsersQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchUsersQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 

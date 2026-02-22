@@ -13,7 +13,7 @@ type GetUnitsResponse struct {
 
 func (o GetUnitsResponse) MarshalJSON() ([]byte, error) {
 	if o.UnitsByProperty == nil {
-		o.UnitsByProperty = make(map[UnitProperty][]Unit, 0)
+		o.UnitsByProperty = make(map[UnitProperty][]Unit)
 	}
 	type _tmpGetUnitsResponse GetUnitsResponse
 	return safejson.Marshal(_tmpGetUnitsResponse(o))
@@ -26,7 +26,7 @@ func (o *GetUnitsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawGetUnitsResponse.UnitsByProperty == nil {
-		rawGetUnitsResponse.UnitsByProperty = make(map[UnitProperty][]Unit, 0)
+		rawGetUnitsResponse.UnitsByProperty = make(map[UnitProperty][]Unit)
 	}
 	*o = GetUnitsResponse(rawGetUnitsResponse)
 	return nil
@@ -55,12 +55,12 @@ type Unit struct {
 	   Empty if no property is available. If two units measure different properties, it is not possible to
 	   convert between them.
 	*/
-	Property *UnitProperty `conjure-docs:"Empty if no property is available. If two units measure different properties, it is not possible to \nconvert between them." json:"property,omitempty"`
+	Property *UnitProperty `json:"property,omitempty"`
 	/*
 	   The physical dimensions in terms of the base units of the system. It is only possible to convert units if
 	   they have the same dimension. Empty if the unit is a base unit.
 	*/
-	Dimension *UnitDimension `conjure-docs:"The physical dimensions in terms of the base units of the system. It is only possible to convert units if \nthey have the same dimension. Empty if the unit is a base unit." json:"dimension,omitempty"`
+	Dimension *UnitDimension `json:"dimension,omitempty"`
 	System    UnitSystem     `json:"system"`
 }
 
@@ -87,7 +87,7 @@ type UnitDimension struct {
 
 func (o UnitDimension) MarshalJSON() ([]byte, error) {
 	if o.BaseDimensions == nil {
-		o.BaseDimensions = make(map[string]int, 0)
+		o.BaseDimensions = make(map[string]int)
 	}
 	type _tmpUnitDimension UnitDimension
 	return safejson.Marshal(_tmpUnitDimension(o))
@@ -100,7 +100,7 @@ func (o *UnitDimension) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawUnitDimension.BaseDimensions == nil {
-		rawUnitDimension.BaseDimensions = make(map[string]int, 0)
+		rawUnitDimension.BaseDimensions = make(map[string]int)
 	}
 	*o = UnitDimension(rawUnitDimension)
 	return nil

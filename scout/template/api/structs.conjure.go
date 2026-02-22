@@ -25,7 +25,7 @@ type CommitTemplateRequest struct {
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommit *api3.CommitId `conjure-docs:"If present, will validate that the latest commit matches this id,\nand otherwise throw CommitConflict." json:"latestCommit,omitempty"`
+	LatestCommit *api3.CommitId `json:"latestCommit,omitempty"`
 }
 
 func (o CommitTemplateRequest) MarshalYAML() (interface{}, error) {
@@ -50,7 +50,7 @@ type CreateTemplateRequest struct {
 	Labels      []api4.Label                             `json:"labels"`
 	Properties  map[api4.PropertyName]api4.PropertyValue `json:"properties"`
 	// Default is true
-	IsPublished *bool `conjure-docs:"Default is true" json:"isPublished,omitempty"`
+	IsPublished *bool `json:"isPublished,omitempty"`
 	// Deprecated: charts are no longer versioned resources. They are stored in workbook content.
 	Charts  *[]api.VersionedVizId `json:"charts,omitempty"`
 	Layout  api1.WorkbookLayout   `json:"layout"`
@@ -60,7 +60,7 @@ type CreateTemplateRequest struct {
 	   The workspace in which to create the template. If not provided, the template will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the template. If not provided, the template will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o CreateTemplateRequest) MarshalJSON() ([]byte, error) {
@@ -68,7 +68,7 @@ func (o CreateTemplateRequest) MarshalJSON() ([]byte, error) {
 		o.Labels = make([]api4.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api4.PropertyName]api4.PropertyValue, 0)
+		o.Properties = make(map[api4.PropertyName]api4.PropertyValue)
 	}
 	type _tmpCreateTemplateRequest CreateTemplateRequest
 	return safejson.Marshal(_tmpCreateTemplateRequest(o))
@@ -84,7 +84,7 @@ func (o *CreateTemplateRequest) UnmarshalJSON(data []byte) error {
 		rawCreateTemplateRequest.Labels = make([]api4.Label, 0)
 	}
 	if rawCreateTemplateRequest.Properties == nil {
-		rawCreateTemplateRequest.Properties = make(map[api4.PropertyName]api4.PropertyValue, 0)
+		rawCreateTemplateRequest.Properties = make(map[api4.PropertyName]api4.PropertyValue)
 	}
 	*o = CreateTemplateRequest(rawCreateTemplateRequest)
 	return nil
@@ -113,7 +113,7 @@ type GetAllLabelsAndPropertiesResponse struct {
 
 func (o GetAllLabelsAndPropertiesResponse) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api4.PropertyName][]api4.PropertyValue, 0)
+		o.Properties = make(map[api4.PropertyName][]api4.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api4.Label, 0)
@@ -129,7 +129,7 @@ func (o *GetAllLabelsAndPropertiesResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawGetAllLabelsAndPropertiesResponse.Properties == nil {
-		rawGetAllLabelsAndPropertiesResponse.Properties = make(map[api4.PropertyName][]api4.PropertyValue, 0)
+		rawGetAllLabelsAndPropertiesResponse.Properties = make(map[api4.PropertyName][]api4.PropertyValue)
 	}
 	if rawGetAllLabelsAndPropertiesResponse.Labels == nil {
 		rawGetAllLabelsAndPropertiesResponse.Labels = make([]api4.Label, 0)
@@ -156,13 +156,13 @@ func (o *GetAllLabelsAndPropertiesResponse) UnmarshalYAML(unmarshal func(interfa
 
 type MergeToMainRequest struct {
 	// If "main", the request will throw.
-	BranchName api3.BranchName `conjure-docs:"If \"main\", the request will throw." json:"branchName"`
+	BranchName api3.BranchName `json:"branchName"`
 	Message    string          `json:"message"`
 	/*
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommitOnMain *api3.CommitId `conjure-docs:"If present, will validate that the latest commit matches this id,\nand otherwise throw CommitConflict." json:"latestCommitOnMain,omitempty"`
+	LatestCommitOnMain *api3.CommitId `json:"latestCommitOnMain,omitempty"`
 }
 
 func (o MergeToMainRequest) MarshalYAML() (interface{}, error) {
@@ -190,7 +190,7 @@ type SaveTemplateRequest struct {
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommit *api3.CommitId `conjure-docs:"If present, will validate that the latest commit matches this id,\nand otherwise throw CommitConflict." json:"latestCommit,omitempty"`
+	LatestCommit *api3.CommitId `json:"latestCommit,omitempty"`
 }
 
 func (o SaveTemplateRequest) MarshalYAML() (interface{}, error) {
@@ -212,10 +212,10 @@ func (o *SaveTemplateRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 type SearchTemplatesRequest struct {
 	Query SearchTemplatesQuery `json:"query"`
 	// EDITED_AT descending by default
-	SortBy        *SortBy     `conjure-docs:"EDITED_AT descending by default" json:"sortBy,omitempty"`
+	SortBy        *SortBy     `json:"sortBy,omitempty"`
 	NextPageToken *api4.Token `json:"nextPageToken,omitempty"`
 	// Defaults to 100. Will throw if larger than 1_000.
-	PageSize *int `conjure-docs:"Defaults to 100. Will throw if larger than 1_000." json:"pageSize,omitempty"`
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o SearchTemplatesRequest) MarshalYAML() (interface{}, error) {
@@ -355,7 +355,7 @@ type TemplateMetadata struct {
 	CreatedAt   datetime.DateTime                        `json:"createdAt"`
 	UpdatedAt   datetime.DateTime                        `json:"updatedAt"`
 	// The time of the last permanent commit to the main branch.
-	EditedAt datetime.DateTime `conjure-docs:"The time of the last permanent commit to the main branch." json:"editedAt"`
+	EditedAt datetime.DateTime `json:"editedAt"`
 }
 
 func (o TemplateMetadata) MarshalJSON() ([]byte, error) {
@@ -363,7 +363,7 @@ func (o TemplateMetadata) MarshalJSON() ([]byte, error) {
 		o.Labels = make([]api4.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api4.PropertyName]api4.PropertyValue, 0)
+		o.Properties = make(map[api4.PropertyName]api4.PropertyValue)
 	}
 	type _tmpTemplateMetadata TemplateMetadata
 	return safejson.Marshal(_tmpTemplateMetadata(o))
@@ -379,7 +379,7 @@ func (o *TemplateMetadata) UnmarshalJSON(data []byte) error {
 		rawTemplateMetadata.Labels = make([]api4.Label, 0)
 	}
 	if rawTemplateMetadata.Properties == nil {
-		rawTemplateMetadata.Properties = make(map[api4.PropertyName]api4.PropertyValue, 0)
+		rawTemplateMetadata.Properties = make(map[api4.PropertyName]api4.PropertyValue)
 	}
 	*o = TemplateMetadata(rawTemplateMetadata)
 	return nil
@@ -453,12 +453,12 @@ type UpdateRefNameRequest struct {
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommit *api3.CommitId `conjure-docs:"If present, will validate that the latest commit matches this id,\nand otherwise throw CommitConflict." json:"latestCommit,omitempty"`
+	LatestCommit *api3.CommitId `json:"latestCommit,omitempty"`
 }
 
 func (o UpdateRefNameRequest) MarshalJSON() ([]byte, error) {
 	if o.RefNameUpdates == nil {
-		o.RefNameUpdates = make(map[api5.DataSourceRefName]api5.DataSourceRefName, 0)
+		o.RefNameUpdates = make(map[api5.DataSourceRefName]api5.DataSourceRefName)
 	}
 	type _tmpUpdateRefNameRequest UpdateRefNameRequest
 	return safejson.Marshal(_tmpUpdateRefNameRequest(o))
@@ -471,7 +471,7 @@ func (o *UpdateRefNameRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawUpdateRefNameRequest.RefNameUpdates == nil {
-		rawUpdateRefNameRequest.RefNameUpdates = make(map[api5.DataSourceRefName]api5.DataSourceRefName, 0)
+		rawUpdateRefNameRequest.RefNameUpdates = make(map[api5.DataSourceRefName]api5.DataSourceRefName)
 	}
 	*o = UpdateRefNameRequest(rawUpdateRefNameRequest)
 	return nil

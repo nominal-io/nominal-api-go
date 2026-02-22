@@ -27,6 +27,19 @@ func (a *SecretRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a SecretRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *SecretRid) UnmarshalJSON(data []byte) error {
+	var rawSecretRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawSecretRid); err != nil {
+		return err
+	}
+	*a = SecretRid(rawSecretRid)
+	return nil
+}
+
 func (a SecretRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {

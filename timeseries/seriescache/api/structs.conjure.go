@@ -17,7 +17,7 @@ type Chunk struct {
 	StartTimestamp   api.Timestamp        `json:"startTimestamp"`
 	EndTimestamp     api.Timestamp        `json:"endTimestamp"`
 	// The number of distinct timestamps contained within the chunk.
-	Count       safelong.SafeLong `conjure-docs:"The number of distinct timestamps contained within the chunk." json:"count"`
+	Count       safelong.SafeLong `json:"count"`
 	SizeInBytes safelong.SafeLong `json:"sizeInBytes"`
 	Resolution  Resolution        `json:"resolution"`
 	Handle      Handle            `json:"handle"`

@@ -407,6 +407,11 @@ func (u *ComputeNodeResponseWithT[T]) Accept(ctx context.Context, v ComputeNodeR
 			return result, fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
 		return v.VisitFrequencyDomainV2(ctx, *u.frequencyDomainV2)
+	case "bucketedFrequencyDomain":
+		if u.bucketedFrequencyDomain == nil {
+			return result, fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
+		}
+		return v.VisitBucketedFrequencyDomain(ctx, *u.bucketedFrequencyDomain)
 	case "numericHistogram":
 		if u.numericHistogram == nil {
 			return result, fmt.Errorf("field \"numericHistogram\" is required")
@@ -445,7 +450,7 @@ func (u *ComputeNodeResponseWithT[T]) Accept(ctx context.Context, v ComputeNodeR
 	}
 }
 
-func (u *ComputeNodeResponseWithT[T]) AcceptFuncs(range_Func func([]Range) (T, error), rangesSummaryFunc func(RangesSummary) (T, error), rangeValueFunc func(*Range) (T, error), numericFunc func(NumericPlot) (T, error), bucketedNumericFunc func(BucketedNumericPlot) (T, error), numericPointFunc func(*NumericPoint) (T, error), singlePointFunc func(*SinglePoint) (T, error), arrowNumericFunc func(ArrowNumericPlot) (T, error), arrowBucketedNumericFunc func(ArrowBucketedNumericPlot) (T, error), enumFunc func(EnumPlot) (T, error), enumPointFunc func(*EnumPoint) (T, error), bucketedEnumFunc func(BucketedEnumPlot) (T, error), arrowEnumFunc func(ArrowEnumPlot) (T, error), arrowBucketedEnumFunc func(ArrowBucketedEnumPlot) (T, error), pagedLogFunc func(PagedLogPlot) (T, error), logPointFunc func(*LogPoint) (T, error), cartesianFunc func(CartesianPlot) (T, error), bucketedCartesianFunc func(BucketedCartesianPlot) (T, error), bucketedCartesian3dFunc func(BucketedCartesian3dPlot) (T, error), frequencyDomainFunc func(FrequencyDomainPlot) (T, error), frequencyDomainV2Func func(FrequencyDomainPlotV2) (T, error), numericHistogramFunc func(NumericHistogramPlot) (T, error), enumHistogramFunc func(EnumHistogramPlot) (T, error), curveFitFunc func(CurveFitResult) (T, error), groupedFunc func(GroupedComputeNodeResponses) (T, error), arrayFunc func(ArrowArrayPlot) (T, error), bucketedStructFunc func(ArrowBucketedStructPlot) (T, error), fullResolutionFunc func(ArrowFullResolutionPlot) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ComputeNodeResponseWithT[T]) AcceptFuncs(range_Func func([]Range) (T, error), rangesSummaryFunc func(RangesSummary) (T, error), rangeValueFunc func(*Range) (T, error), numericFunc func(NumericPlot) (T, error), bucketedNumericFunc func(BucketedNumericPlot) (T, error), numericPointFunc func(*NumericPoint) (T, error), singlePointFunc func(*SinglePoint) (T, error), arrowNumericFunc func(ArrowNumericPlot) (T, error), arrowBucketedNumericFunc func(ArrowBucketedNumericPlot) (T, error), enumFunc func(EnumPlot) (T, error), enumPointFunc func(*EnumPoint) (T, error), bucketedEnumFunc func(BucketedEnumPlot) (T, error), arrowEnumFunc func(ArrowEnumPlot) (T, error), arrowBucketedEnumFunc func(ArrowBucketedEnumPlot) (T, error), pagedLogFunc func(PagedLogPlot) (T, error), logPointFunc func(*LogPoint) (T, error), cartesianFunc func(CartesianPlot) (T, error), bucketedCartesianFunc func(BucketedCartesianPlot) (T, error), bucketedCartesian3dFunc func(BucketedCartesian3dPlot) (T, error), frequencyDomainFunc func(FrequencyDomainPlot) (T, error), frequencyDomainV2Func func(FrequencyDomainPlotV2) (T, error), bucketedFrequencyDomainFunc func(BucketedFrequencyDomainPlot) (T, error), numericHistogramFunc func(NumericHistogramPlot) (T, error), enumHistogramFunc func(EnumHistogramPlot) (T, error), curveFitFunc func(CurveFitResult) (T, error), groupedFunc func(GroupedComputeNodeResponses) (T, error), arrayFunc func(ArrowArrayPlot) (T, error), bucketedStructFunc func(ArrowBucketedStructPlot) (T, error), fullResolutionFunc func(ArrowFullResolutionPlot) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -563,6 +568,11 @@ func (u *ComputeNodeResponseWithT[T]) AcceptFuncs(range_Func func([]Range) (T, e
 			return result, fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
 		return frequencyDomainV2Func(*u.frequencyDomainV2)
+	case "bucketedFrequencyDomain":
+		if u.bucketedFrequencyDomain == nil {
+			return result, fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
+		}
+		return bucketedFrequencyDomainFunc(*u.bucketedFrequencyDomain)
 	case "numericHistogram":
 		if u.numericHistogram == nil {
 			return result, fmt.Errorf("field \"numericHistogram\" is required")
@@ -706,6 +716,11 @@ func (u *ComputeNodeResponseWithT[T]) FrequencyDomainV2NoopSuccess(FrequencyDoma
 	return result, nil
 }
 
+func (u *ComputeNodeResponseWithT[T]) BucketedFrequencyDomainNoopSuccess(BucketedFrequencyDomainPlot) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ComputeNodeResponseWithT[T]) NumericHistogramNoopSuccess(NumericHistogramPlot) (T, error) {
 	var result T
 	return result, nil
@@ -768,6 +783,7 @@ type ComputeNodeResponseVisitorWithT[T any] interface {
 	VisitBucketedCartesian3d(ctx context.Context, v BucketedCartesian3dPlot) (T, error)
 	VisitFrequencyDomain(ctx context.Context, v FrequencyDomainPlot) (T, error)
 	VisitFrequencyDomainV2(ctx context.Context, v FrequencyDomainPlotV2) (T, error)
+	VisitBucketedFrequencyDomain(ctx context.Context, v BucketedFrequencyDomainPlot) (T, error)
 	VisitNumericHistogram(ctx context.Context, v NumericHistogramPlot) (T, error)
 	VisitEnumHistogram(ctx context.Context, v EnumHistogramPlot) (T, error)
 	VisitCurveFit(ctx context.Context, v CurveFitResult) (T, error)
@@ -1456,6 +1472,55 @@ type FrequencyDomainPlotV2VisitorWithT[T any] interface {
 	VisitReal(ctx context.Context, v FrequencyDomainPlot) (T, error)
 	VisitComplex(ctx context.Context, v FrequencyDomainPlotComplex) (T, error)
 	VisitMagnitudeAndPhase(ctx context.Context, v FrequencyDomainPlotMagnitudeAndPhase) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type FrequencySummarizationStrategyWithT[T any] FrequencySummarizationStrategy
+
+func (u *FrequencySummarizationStrategyWithT[T]) Accept(ctx context.Context, v FrequencySummarizationStrategyVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "buckets":
+		if u.buckets == nil {
+			return result, fmt.Errorf("field \"buckets\" is required")
+		}
+		return v.VisitBuckets(ctx, *u.buckets)
+	}
+}
+
+func (u *FrequencySummarizationStrategyWithT[T]) AcceptFuncs(bucketsFunc func(FrequencyDecimateWithBuckets) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "buckets":
+		if u.buckets == nil {
+			return result, fmt.Errorf("field \"buckets\" is required")
+		}
+		return bucketsFunc(*u.buckets)
+	}
+}
+
+func (u *FrequencySummarizationStrategyWithT[T]) BucketsNoopSuccess(FrequencyDecimateWithBuckets) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FrequencySummarizationStrategyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type FrequencySummarizationStrategyVisitorWithT[T any] interface {
+	VisitBuckets(ctx context.Context, v FrequencyDecimateWithBuckets) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

@@ -82,7 +82,7 @@ func (u *Handle) AcceptFuncs(s3Func func(S3Path) error, unknownFunc func(string)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Handle type")
 		}
 		return unknownFunc(u.typ)
 	case "s3":
@@ -93,7 +93,7 @@ func (u *Handle) AcceptFuncs(s3Func func(S3Path) error, unknownFunc func(string)
 	}
 }
 
-func (u *Handle) S3NoopSuccess(S3Path) error {
+func (u *Handle) S3NoopSuccess(_ S3Path) error {
 	return nil
 }
 
@@ -273,7 +273,7 @@ func (u *IngestStatusV2) AcceptFuncs(successFunc func(SuccessResult) error, erro
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in IngestStatusV2 type")
 		}
 		return unknownFunc(u.typ)
 	case "success":
@@ -304,23 +304,23 @@ func (u *IngestStatusV2) AcceptFuncs(successFunc func(SuccessResult) error, erro
 	}
 }
 
-func (u *IngestStatusV2) SuccessNoopSuccess(SuccessResult) error {
+func (u *IngestStatusV2) SuccessNoopSuccess(_ SuccessResult) error {
 	return nil
 }
 
-func (u *IngestStatusV2) ErrorNoopSuccess(ErrorResult) error {
+func (u *IngestStatusV2) ErrorNoopSuccess(_ ErrorResult) error {
 	return nil
 }
 
-func (u *IngestStatusV2) InProgressNoopSuccess(InProgressResult) error {
+func (u *IngestStatusV2) InProgressNoopSuccess(_ InProgressResult) error {
 	return nil
 }
 
-func (u *IngestStatusV2) DeletionInProgressNoopSuccess(DeletionInProgress) error {
+func (u *IngestStatusV2) DeletionInProgressNoopSuccess(_ DeletionInProgress) error {
 	return nil
 }
 
-func (u *IngestStatusV2) DeletedNoopSuccess(Deleted) error {
+func (u *IngestStatusV2) DeletedNoopSuccess(_ Deleted) error {
 	return nil
 }
 
@@ -526,7 +526,7 @@ func (u *McapChannelLocator) AcceptFuncs(topicFunc func(McapChannelTopic) error,
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in McapChannelLocator type")
 		}
 		return unknownFunc(u.typ)
 	case "topic":
@@ -542,11 +542,11 @@ func (u *McapChannelLocator) AcceptFuncs(topicFunc func(McapChannelTopic) error,
 	}
 }
 
-func (u *McapChannelLocator) TopicNoopSuccess(McapChannelTopic) error {
+func (u *McapChannelLocator) TopicNoopSuccess(_ McapChannelTopic) error {
 	return nil
 }
 
-func (u *McapChannelLocator) IdNoopSuccess(McapChannelId) error {
+func (u *McapChannelLocator) IdNoopSuccess(_ McapChannelId) error {
 	return nil
 }
 

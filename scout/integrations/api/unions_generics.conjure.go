@@ -131,6 +131,11 @@ func (u *IntegrationDetailsWithT[T]) Accept(ctx context.Context, v IntegrationDe
 			return result, fmt.Errorf("field \"simpleWebhookIntegration\" is required")
 		}
 		return v.VisitSimpleWebhookIntegration(ctx, *u.simpleWebhookIntegration)
+	case "secureWebhookIntegration":
+		if u.secureWebhookIntegration == nil {
+			return result, fmt.Errorf("field \"secureWebhookIntegration\" is required")
+		}
+		return v.VisitSecureWebhookIntegration(ctx, *u.secureWebhookIntegration)
 	case "teamsWebhookIntegration":
 		if u.teamsWebhookIntegration == nil {
 			return result, fmt.Errorf("field \"teamsWebhookIntegration\" is required")
@@ -144,7 +149,7 @@ func (u *IntegrationDetailsWithT[T]) Accept(ctx context.Context, v IntegrationDe
 	}
 }
 
-func (u *IntegrationDetailsWithT[T]) AcceptFuncs(slackWebhookIntegrationFunc func(SlackWebhookIntegration) (T, error), opsgenieIntegrationFunc func(OpsgenieIntegration) (T, error), simpleWebhookIntegrationFunc func(SimpleWebhookIntegration) (T, error), teamsWebhookIntegrationFunc func(TeamsWebhookIntegration) (T, error), pagerDutyIntegrationFunc func(PagerDutyIntegration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IntegrationDetailsWithT[T]) AcceptFuncs(slackWebhookIntegrationFunc func(SlackWebhookIntegration) (T, error), opsgenieIntegrationFunc func(OpsgenieIntegration) (T, error), simpleWebhookIntegrationFunc func(SimpleWebhookIntegration) (T, error), secureWebhookIntegrationFunc func(SecureWebhookIntegration) (T, error), teamsWebhookIntegrationFunc func(TeamsWebhookIntegration) (T, error), pagerDutyIntegrationFunc func(PagerDutyIntegration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -167,6 +172,11 @@ func (u *IntegrationDetailsWithT[T]) AcceptFuncs(slackWebhookIntegrationFunc fun
 			return result, fmt.Errorf("field \"simpleWebhookIntegration\" is required")
 		}
 		return simpleWebhookIntegrationFunc(*u.simpleWebhookIntegration)
+	case "secureWebhookIntegration":
+		if u.secureWebhookIntegration == nil {
+			return result, fmt.Errorf("field \"secureWebhookIntegration\" is required")
+		}
+		return secureWebhookIntegrationFunc(*u.secureWebhookIntegration)
 	case "teamsWebhookIntegration":
 		if u.teamsWebhookIntegration == nil {
 			return result, fmt.Errorf("field \"teamsWebhookIntegration\" is required")
@@ -195,6 +205,11 @@ func (u *IntegrationDetailsWithT[T]) SimpleWebhookIntegrationNoopSuccess(SimpleW
 	return result, nil
 }
 
+func (u *IntegrationDetailsWithT[T]) SecureWebhookIntegrationNoopSuccess(SecureWebhookIntegration) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *IntegrationDetailsWithT[T]) TeamsWebhookIntegrationNoopSuccess(TeamsWebhookIntegration) (T, error) {
 	var result T
 	return result, nil
@@ -214,6 +229,7 @@ type IntegrationDetailsVisitorWithT[T any] interface {
 	VisitSlackWebhookIntegration(ctx context.Context, v SlackWebhookIntegration) (T, error)
 	VisitOpsgenieIntegration(ctx context.Context, v OpsgenieIntegration) (T, error)
 	VisitSimpleWebhookIntegration(ctx context.Context, v SimpleWebhookIntegration) (T, error)
+	VisitSecureWebhookIntegration(ctx context.Context, v SecureWebhookIntegration) (T, error)
 	VisitTeamsWebhookIntegration(ctx context.Context, v TeamsWebhookIntegration) (T, error)
 	VisitPagerDutyIntegration(ctx context.Context, v PagerDutyIntegration) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
@@ -299,6 +315,11 @@ func (u *UpdateIntegrationDetailsWithT[T]) Accept(ctx context.Context, v UpdateI
 			return result, fmt.Errorf("field \"simpleWebhook\" is required")
 		}
 		return v.VisitSimpleWebhook(ctx, *u.simpleWebhook)
+	case "secureWebhookIntegration":
+		if u.secureWebhookIntegration == nil {
+			return result, fmt.Errorf("field \"secureWebhookIntegration\" is required")
+		}
+		return v.VisitSecureWebhookIntegration(ctx, *u.secureWebhookIntegration)
 	case "opsgenieIntegration":
 		if u.opsgenieIntegration == nil {
 			return result, fmt.Errorf("field \"opsgenieIntegration\" is required")
@@ -317,7 +338,7 @@ func (u *UpdateIntegrationDetailsWithT[T]) Accept(ctx context.Context, v UpdateI
 	}
 }
 
-func (u *UpdateIntegrationDetailsWithT[T]) AcceptFuncs(simpleWebhookFunc func(UpdateSimpleWebhookDetails) (T, error), opsgenieIntegrationFunc func(UpdateOpsgenieIntegrationDetails) (T, error), teamsWebhookFunc func(UpdateTeamsWebhookIntegrationDetails) (T, error), pagerDutyFunc func(UpdatePagerDutyIntegrationDetails) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UpdateIntegrationDetailsWithT[T]) AcceptFuncs(simpleWebhookFunc func(UpdateSimpleWebhookDetails) (T, error), secureWebhookIntegrationFunc func(UpdateSecureWebhookIntegrationDetails) (T, error), opsgenieIntegrationFunc func(UpdateOpsgenieIntegrationDetails) (T, error), teamsWebhookFunc func(UpdateTeamsWebhookIntegrationDetails) (T, error), pagerDutyFunc func(UpdatePagerDutyIntegrationDetails) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -330,6 +351,11 @@ func (u *UpdateIntegrationDetailsWithT[T]) AcceptFuncs(simpleWebhookFunc func(Up
 			return result, fmt.Errorf("field \"simpleWebhook\" is required")
 		}
 		return simpleWebhookFunc(*u.simpleWebhook)
+	case "secureWebhookIntegration":
+		if u.secureWebhookIntegration == nil {
+			return result, fmt.Errorf("field \"secureWebhookIntegration\" is required")
+		}
+		return secureWebhookIntegrationFunc(*u.secureWebhookIntegration)
 	case "opsgenieIntegration":
 		if u.opsgenieIntegration == nil {
 			return result, fmt.Errorf("field \"opsgenieIntegration\" is required")
@@ -349,6 +375,11 @@ func (u *UpdateIntegrationDetailsWithT[T]) AcceptFuncs(simpleWebhookFunc func(Up
 }
 
 func (u *UpdateIntegrationDetailsWithT[T]) SimpleWebhookNoopSuccess(UpdateSimpleWebhookDetails) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *UpdateIntegrationDetailsWithT[T]) SecureWebhookIntegrationNoopSuccess(UpdateSecureWebhookIntegrationDetails) (T, error) {
 	var result T
 	return result, nil
 }
@@ -375,6 +406,7 @@ func (u *UpdateIntegrationDetailsWithT[T]) ErrorOnUnknown(typeName string) (T, e
 
 type UpdateIntegrationDetailsVisitorWithT[T any] interface {
 	VisitSimpleWebhook(ctx context.Context, v UpdateSimpleWebhookDetails) (T, error)
+	VisitSecureWebhookIntegration(ctx context.Context, v UpdateSecureWebhookIntegrationDetails) (T, error)
 	VisitOpsgenieIntegration(ctx context.Context, v UpdateOpsgenieIntegrationDetails) (T, error)
 	VisitTeamsWebhook(ctx context.Context, v UpdateTeamsWebhookIntegrationDetails) (T, error)
 	VisitPagerDuty(ctx context.Context, v UpdatePagerDutyIntegrationDetails) (T, error)

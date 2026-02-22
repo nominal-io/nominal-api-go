@@ -30,21 +30,19 @@ func NewInternalJobServiceClient(client httpclient.Client) InternalJobServiceCli
 }
 
 func (c *internalJobServiceClient) SubmitJobs(ctx context.Context, authHeader bearertoken.Token, requestArg api.SubmitJobsRequest) (api.SubmitJobsResponse, error) {
-	var defaultReturnVal api.SubmitJobsResponse
 	var returnVal *api.SubmitJobsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SubmitJobs"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/internal/jobs/v1/submitJobs"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "submitJobs failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SubmitJobsResponse), werror.WrapWithContextParams(ctx, err, "submitJobs failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "submitJobs response cannot be nil")
+		return *new(api.SubmitJobsResponse), werror.ErrorWithContextParams(ctx, "submitJobs response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -78,10 +76,9 @@ type internalJobServiceClientWithTokenProvider struct {
 }
 
 func (c *internalJobServiceClientWithTokenProvider) SubmitJobs(ctx context.Context, requestArg api.SubmitJobsRequest) (api.SubmitJobsResponse, error) {
-	var defaultReturnVal api.SubmitJobsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.SubmitJobsResponse), err
 	}
 	return c.client.SubmitJobs(ctx, bearertoken.Token(token), requestArg)
 }
@@ -106,40 +103,36 @@ func NewJobServiceClient(client httpclient.Client) JobServiceClient {
 }
 
 func (c *jobServiceClient) GetJobReport(ctx context.Context, authHeader bearertoken.Token, jobRidArg api.JobRid) (api1.JobReport, error) {
-	var defaultReturnVal api1.JobReport
 	var returnVal *api1.JobReport
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetJobReport"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/jobs/v1/%s/job-report", url.PathEscape(fmt.Sprint(jobRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getJobReport failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api1.JobReport), werror.WrapWithContextParams(ctx, err, "getJobReport failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getJobReport response cannot be nil")
+		return *new(api1.JobReport), werror.ErrorWithContextParams(ctx, "getJobReport response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *jobServiceClient) BatchGetJobReports(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetJobReportsRequest) (api1.BatchGetJobReportsResponse, error) {
-	var defaultReturnVal api1.BatchGetJobReportsResponse
 	var returnVal *api1.BatchGetJobReportsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetJobReports"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/jobs/v1/batch-get-job-reports"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGetJobReports failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.BatchGetJobReportsResponse), werror.WrapWithContextParams(ctx, err, "batchGetJobReports failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGetJobReports response cannot be nil")
+		return *new(api1.BatchGetJobReportsResponse), werror.ErrorWithContextParams(ctx, "batchGetJobReports response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -182,19 +175,17 @@ type jobServiceClientWithTokenProvider struct {
 }
 
 func (c *jobServiceClientWithTokenProvider) GetJobReport(ctx context.Context, jobRidArg api.JobRid) (api1.JobReport, error) {
-	var defaultReturnVal api1.JobReport
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.JobReport), err
 	}
 	return c.client.GetJobReport(ctx, bearertoken.Token(token), jobRidArg)
 }
 
 func (c *jobServiceClientWithTokenProvider) BatchGetJobReports(ctx context.Context, requestArg api.BatchGetJobReportsRequest) (api1.BatchGetJobReportsResponse, error) {
-	var defaultReturnVal api1.BatchGetJobReportsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.BatchGetJobReportsResponse), err
 	}
 	return c.client.BatchGetJobReports(ctx, bearertoken.Token(token), requestArg)
 }

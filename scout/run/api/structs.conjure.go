@@ -21,7 +21,7 @@ type AllRunsPropertiesAndLabelsResponse struct {
 
 func (o AllRunsPropertiesAndLabelsResponse) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName][]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName][]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -37,7 +37,7 @@ func (o *AllRunsPropertiesAndLabelsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawAllRunsPropertiesAndLabelsResponse.Properties == nil {
-		rawAllRunsPropertiesAndLabelsResponse.Properties = make(map[api.PropertyName][]api.PropertyValue, 0)
+		rawAllRunsPropertiesAndLabelsResponse.Properties = make(map[api.PropertyName][]api.PropertyValue)
 	}
 	if rawAllRunsPropertiesAndLabelsResponse.Labels == nil {
 		rawAllRunsPropertiesAndLabelsResponse.Labels = make([]api.Label, 0)
@@ -68,7 +68,7 @@ type ArchiveRunsRequest struct {
 	   If true, all auto-archived workbooks that are linked to run will be unarchived as well.
 	   Defaults to false.
 	*/
-	IncludeLinkedWorkbooks *bool `conjure-docs:"If true, all auto-archived workbooks that are linked to run will be unarchived as well.\nDefaults to false." json:"includeLinkedWorkbooks,omitempty"`
+	IncludeLinkedWorkbooks *bool `json:"includeLinkedWorkbooks,omitempty"`
 }
 
 func (o ArchiveRunsRequest) MarshalJSON() ([]byte, error) {
@@ -201,7 +201,7 @@ type CreateOrUpdateRunRequest struct {
 	   If a run with the same rid already exists, it will be updated.
 	   Otherwise, a new run will be created.
 	*/
-	RunRid           *RunRid          `conjure-docs:"If a run with the same rid already exists, it will be updated.\nOtherwise, a new run will be created." json:"runRid,omitempty"`
+	RunRid           *RunRid          `json:"runRid,omitempty"`
 	CreateRunRequest CreateRunRequest `json:"createRunRequest"`
 }
 
@@ -229,20 +229,20 @@ type CreateRunDataSource struct {
 
 	   Deprecated: Use dataSourceRid instead.
 	*/
-	DataSource *DataSource `conjure-docs:"One of dataSource and dataSourceRid must be present.\ndataSourceRid takes precedence." json:"dataSource,omitempty"`
+	DataSource *DataSource `json:"dataSource,omitempty"`
 	/*
 	   One of dataSource and dataSourceRid must be present.
 	   dataSourceRid takes precedence.
 	*/
-	DataSourceRid *rids.DataSourceRid `conjure-docs:"One of dataSource and dataSourceRid must be present.\ndataSourceRid takes precedence." json:"dataSourceRid,omitempty"`
+	DataSourceRid *rids.DataSourceRid `json:"dataSourceRid,omitempty"`
 	Offset        *Duration           `json:"offset,omitempty"`
 	// Used to resolve logical series for this data source.
-	SeriesTags map[api.TagName]api.TagValue `conjure-docs:"Used to resolve logical series for this data source." json:"seriesTags"`
+	SeriesTags map[api.TagName]api.TagValue `json:"seriesTags"`
 }
 
 func (o CreateRunDataSource) MarshalJSON() ([]byte, error) {
 	if o.SeriesTags == nil {
-		o.SeriesTags = make(map[api.TagName]api.TagValue, 0)
+		o.SeriesTags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpCreateRunDataSource CreateRunDataSource
 	return safejson.Marshal(_tmpCreateRunDataSource(o))
@@ -255,7 +255,7 @@ func (o *CreateRunDataSource) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateRunDataSource.SeriesTags == nil {
-		rawCreateRunDataSource.SeriesTags = make(map[api.TagName]api.TagValue, 0)
+		rawCreateRunDataSource.SeriesTags = make(map[api.TagName]api.TagValue)
 	}
 	*o = CreateRunDataSource(rawCreateRunDataSource)
 	return nil
@@ -297,12 +297,12 @@ type CreateRunRequest struct {
 	   organization is configured.
 	   All data sources, attachments, and assets must be in the same workspace.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the run. If not provided, the run will be created in\nthe default workspace for the user's organization, if the default workspace for the\norganization is configured.\nAll data sources, attachments, and assets must be in the same workspace." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o CreateRunRequest) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -311,7 +311,7 @@ func (o CreateRunRequest) MarshalJSON() ([]byte, error) {
 		o.Links = make([]Link, 0)
 	}
 	if o.DataSources == nil {
-		o.DataSources = make(map[api3.DataSourceRefName]CreateRunDataSource, 0)
+		o.DataSources = make(map[api3.DataSourceRefName]CreateRunDataSource)
 	}
 	if o.Attachments == nil {
 		o.Attachments = make([]rids.AttachmentRid, 0)
@@ -330,7 +330,7 @@ func (o *CreateRunRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateRunRequest.Properties == nil {
-		rawCreateRunRequest.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawCreateRunRequest.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawCreateRunRequest.Labels == nil {
 		rawCreateRunRequest.Labels = make([]api.Label, 0)
@@ -339,7 +339,7 @@ func (o *CreateRunRequest) UnmarshalJSON(data []byte) error {
 		rawCreateRunRequest.Links = make([]Link, 0)
 	}
 	if rawCreateRunRequest.DataSources == nil {
-		rawCreateRunRequest.DataSources = make(map[api3.DataSourceRefName]CreateRunDataSource, 0)
+		rawCreateRunRequest.DataSources = make(map[api3.DataSourceRefName]CreateRunDataSource)
 	}
 	if rawCreateRunRequest.Attachments == nil {
 		rawCreateRunRequest.Attachments = make([]rids.AttachmentRid, 0)
@@ -511,7 +511,7 @@ type GetRunByIdRequest struct {
 	   if the default workspace for the organization is configured and the user
 	   has access to it.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to query for the run. If not provided, the run\nwill be queried in the default workspace for the user's organization,\nif the default workspace for the organization is configured and the user\nhas access to it." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o GetRunByIdRequest) MarshalYAML() (interface{}, error) {
@@ -649,17 +649,17 @@ type RunDataSource struct {
 	   This offset is used for small time-sync corrections. Notably, it is
 	   not the offset to move a relative data source to the start of the run.
 	*/
-	Offset Duration `conjure-docs:"This offset is used for small time-sync corrections. Notably, it is\nnot the offset to move a relative data source to the start of the run." json:"offset"`
+	Offset Duration `json:"offset"`
 	// Included for convenience, duplicated from the key of the map
-	RefName       api3.DataSourceRefName `conjure-docs:"Included for convenience, duplicated from the key of the map" json:"refName"`
+	RefName       api3.DataSourceRefName `json:"refName"`
 	TimestampType WeakTimestampType      `json:"timestampType"`
 	// Used to resolve logical series for this data source.
-	SeriesTags map[api.TagName]api.TagValue `conjure-docs:"Used to resolve logical series for this data source." json:"seriesTags"`
+	SeriesTags map[api.TagName]api.TagValue `json:"seriesTags"`
 }
 
 func (o RunDataSource) MarshalJSON() ([]byte, error) {
 	if o.SeriesTags == nil {
-		o.SeriesTags = make(map[api.TagName]api.TagValue, 0)
+		o.SeriesTags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpRunDataSource RunDataSource
 	return safejson.Marshal(_tmpRunDataSource(o))
@@ -672,7 +672,7 @@ func (o *RunDataSource) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawRunDataSource.SeriesTags == nil {
-		rawRunDataSource.SeriesTags = make(map[api.TagName]api.TagValue, 0)
+		rawRunDataSource.SeriesTags = make(map[api.TagName]api.TagValue)
 	}
 	*o = RunDataSource(rawRunDataSource)
 	return nil
@@ -697,16 +697,16 @@ func (o *RunDataSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type SearchRunChannelsRequest struct {
 	SearchText string `json:"searchText"`
 	// If not empty, will filter to channels from the selected DataSourceRefNames.
-	RefNameFilter              *[]api3.DataSourceRefName                `conjure-docs:"If not empty, will filter to channels from the selected DataSourceRefNames." json:"refNameFilter,omitempty"`
+	RefNameFilter              *[]api3.DataSourceRefName                `json:"refNameFilter,omitempty"`
 	PreviouslySelectedChannels map[api3.DataSourceRefName][]api.Channel `json:"previouslySelectedChannels"`
 	NextPageToken              *api.Token                               `json:"nextPageToken,omitempty"`
 	// Defaults to 1000. Will throw if larger than 1000.
-	PageSize *int `conjure-docs:"Defaults to 1000. Will throw if larger than 1000." json:"pageSize,omitempty"`
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o SearchRunChannelsRequest) MarshalJSON() ([]byte, error) {
 	if o.PreviouslySelectedChannels == nil {
-		o.PreviouslySelectedChannels = make(map[api3.DataSourceRefName][]api.Channel, 0)
+		o.PreviouslySelectedChannels = make(map[api3.DataSourceRefName][]api.Channel)
 	}
 	type _tmpSearchRunChannelsRequest SearchRunChannelsRequest
 	return safejson.Marshal(_tmpSearchRunChannelsRequest(o))
@@ -719,7 +719,7 @@ func (o *SearchRunChannelsRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawSearchRunChannelsRequest.PreviouslySelectedChannels == nil {
-		rawSearchRunChannelsRequest.PreviouslySelectedChannels = make(map[api3.DataSourceRefName][]api.Channel, 0)
+		rawSearchRunChannelsRequest.PreviouslySelectedChannels = make(map[api3.DataSourceRefName][]api.Channel)
 	}
 	*o = SearchRunChannelsRequest(rawSearchRunChannelsRequest)
 	return nil
@@ -786,7 +786,7 @@ func (o *SearchRunChannelsResponse) UnmarshalYAML(unmarshal func(interface{}) er
 type SearchRunsRequest struct {
 	Sort SortOptions `json:"sort"`
 	// Will reject page sizes greater than 1000.
-	PageSize      int         `conjure-docs:"Will reject page sizes greater than 1000." json:"pageSize"`
+	PageSize      int         `json:"pageSize"`
 	NextPageToken *api.Token  `json:"nextPageToken,omitempty"`
 	Query         SearchQuery `json:"query"`
 	/*
@@ -794,7 +794,7 @@ type SearchRunsRequest struct {
 
 	   Deprecated: use archived filter in search query instead.
 	*/
-	ArchivedStatuses *[]api.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived runs in search." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchRunsRequest) MarshalYAML() (interface{}, error) {
@@ -818,7 +818,7 @@ type SortOptions struct {
 	// Deprecated: use SortKey with SortField union type instead
 	Field *SortField `json:"field,omitempty"`
 	// Field to sort by. Includes both field and property-based sorting.
-	SortKey *SortKey `conjure-docs:"Field to sort by. Includes both field and property-based sorting." json:"sortKey,omitempty"`
+	SortKey *SortKey `json:"sortKey,omitempty"`
 }
 
 func (o SortOptions) MarshalYAML() (interface{}, error) {
@@ -885,7 +885,7 @@ type UnarchiveRunsRequest struct {
 	   If true, all auto-archived workbooks that are linked to run will be unarchived as well.
 	   Defaults to false.
 	*/
-	IncludeLinkedWorkbooks *bool `conjure-docs:"If true, all auto-archived workbooks that are linked to run will be unarchived as well.\nDefaults to false." json:"includeLinkedWorkbooks,omitempty"`
+	IncludeLinkedWorkbooks *bool `json:"includeLinkedWorkbooks,omitempty"`
 }
 
 func (o UnarchiveRunsRequest) MarshalJSON() ([]byte, error) {
@@ -999,14 +999,14 @@ type UpdateRunRequest struct {
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
 	// If strictOverwrite is false, will only update the startTime if it is before the existing startTime.
-	StartTime *UtcTimestamp `conjure-docs:"If strictOverwrite is false, will only update the startTime if it is before the existing startTime." json:"startTime,omitempty"`
+	StartTime *UtcTimestamp `json:"startTime,omitempty"`
 	// If strictOverwrite is false, will only update the endTime if it is after the existing endTime.
-	EndTime    *UtcTimestamp                           `conjure-docs:"If strictOverwrite is false, will only update the endTime if it is after the existing endTime." json:"endTime,omitempty"`
+	EndTime    *UtcTimestamp                           `json:"endTime,omitempty"`
 	Properties *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
 	Labels     *[]api.Label                            `json:"labels,omitempty"`
 	Links      *[]Link                                 `json:"links,omitempty"`
 	// Pass in an empty string to remove the run prefix.
-	RunPrefix   *string                                         `conjure-docs:"Pass in an empty string to remove the run prefix." json:"runPrefix,omitempty"`
+	RunPrefix   *string                                         `json:"runPrefix,omitempty"`
 	DataSources *map[api3.DataSourceRefName]CreateRunDataSource `json:"dataSources,omitempty"`
 	Attachments *[]rids.AttachmentRid                           `json:"attachments,omitempty"`
 	// Deprecated: Use assets
@@ -1018,7 +1018,7 @@ type UpdateRunRequest struct {
 	   See individual field docs for more details.
 	   Defaults to true for backwards compatibility.
 	*/
-	StrictOverwrite *bool `conjure-docs:"If true, will blindly overwrite the existing fields with the new values in the request.\nIf false, will only update the fields if application constraints are maintained.\nSee individual field docs for more details.\nDefaults to true for backwards compatibility." json:"strictOverwrite,omitempty"`
+	StrictOverwrite *bool `json:"strictOverwrite,omitempty"`
 }
 
 func (o UpdateRunRequest) MarshalJSON() ([]byte, error) {

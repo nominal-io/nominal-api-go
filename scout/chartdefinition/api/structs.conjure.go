@@ -38,7 +38,7 @@ type AxisDisplayOptions struct {
 	ShowTitle bool     `json:"showTitle"`
 	AxisWidth *float64 `json:"axisWidth,omitempty"`
 	// The scale type of the axis. If not specified, the default is LINEAR.
-	ScaleType *AxisScaleType `conjure-docs:"The scale type of the axis. If not specified, the default is LINEAR." json:"scaleType,omitempty"`
+	ScaleType *AxisScaleType `json:"scaleType,omitempty"`
 }
 
 func (o AxisDisplayOptions) MarshalYAML() (interface{}, error) {
@@ -81,7 +81,7 @@ func (o *AxisRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type AxisThresholdVisualization struct {
 	AxisId AxisId `json:"axisId"`
 	// Determines it's current visibility in the time series chart.
-	Visibility bool               `conjure-docs:"Determines it's current visibility in the time series chart." json:"visibility"`
+	Visibility bool               `json:"visibility"`
 	Thresholds AxisThresholdGroup `json:"thresholds"`
 }
 
@@ -149,9 +149,9 @@ func (o *BitFlagMapCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) 
 // The settings for a raw bit flag map visualisation.
 type BitFlagMapRawVisualisation struct {
 	// The color when any bit is high
-	HighColor *api.HexColor `conjure-docs:"The color when any bit is high" json:"highColor,omitempty"`
+	HighColor *api.HexColor `json:"highColor,omitempty"`
 	// The color when all bits are low
-	LowColor *api.HexColor `conjure-docs:"The color when all bits are low" json:"lowColor,omitempty"`
+	LowColor *api.HexColor `json:"lowColor,omitempty"`
 	BitFlags []BitFlag     `json:"bitFlags"`
 }
 
@@ -199,8 +199,12 @@ type CartesianChartDefinitionV1 struct {
 	ComparisonRunGroups []api1.ComparisonRunGroup `json:"comparisonRunGroups"`
 	Title               *string                   `json:"title,omitempty"`
 	ValueAxes           []ValueAxis               `json:"valueAxes"`
+	// The strategy for bucketing points together.
+	Decimation *ScatterDecimation `json:"decimation,omitempty"`
 	// If toggled true, will visually connect the points of the series
-	ConnectPoints *bool `conjure-docs:"If toggled true, will visually connect the points of the series" json:"connectPoints,omitempty"`
+	ConnectPoints *bool `json:"connectPoints,omitempty"`
+	// Config for showing a floating legend in the chart. If undefined, defaults to hiding.
+	FloatingLegendsConfig *FloatingLegendConfig `json:"floatingLegendsConfig,omitempty"`
 }
 
 func (o CartesianChartDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -253,12 +257,16 @@ func (o *CartesianChartDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) e
 }
 
 type CartesianPlot struct {
-	XVariableName api2.ChannelVariableName `json:"xVariableName"`
-	YVariableName api2.ChannelVariableName `json:"yVariableName"`
-	Enabled       *bool                    `json:"enabled,omitempty"`
-	XAxisId       AxisId                   `json:"xAxisId"`
-	YAxisId       AxisId                   `json:"yAxisId"`
-	Color         api.HexColor             `json:"color"`
+	XVariableName      api2.ChannelVariableName `json:"xVariableName"`
+	YVariableName      api2.ChannelVariableName `json:"yVariableName"`
+	SecondaryVariables *[]SecondaryVariable     `json:"secondaryVariables,omitempty"`
+	Enabled            *bool                    `json:"enabled,omitempty"`
+	XAxisId            AxisId                   `json:"xAxisId"`
+	YAxisId            AxisId                   `json:"yAxisId"`
+	// Default color for points
+	Color api.HexColor `json:"color"`
+	// Configuration for dynamic coloring. Overrides color if specified.
+	ColorBy *ColorBy `json:"colorBy,omitempty"`
 }
 
 func (o CartesianPlot) MarshalYAML() (interface{}, error) {
@@ -384,7 +392,7 @@ type EnumCellConfig struct {
 	   Sorting configuration for grouped data rendering in a cell.
 	   If undefined, will sort alphabetically by grouping.
 	*/
-	GroupBySort *EnumGroupBySort `conjure-docs:"Sorting configuration for grouped data rendering in a cell.\nIf undefined, will sort alphabetically by grouping." json:"groupBySort,omitempty"`
+	GroupBySort *EnumGroupBySort `json:"groupBySort,omitempty"`
 }
 
 func (o EnumCellConfig) MarshalYAML() (interface{}, error) {
@@ -480,7 +488,7 @@ type EnumGroupBySortCustom struct {
 	   Specify the values in the order they should appear.
 	   Unspecified values will be sorted to the bottom.
 	*/
-	Order []string `conjure-docs:"Specify the values in the order they should appear.\nUnspecified values will be sorted to the bottom." json:"order"`
+	Order []string `json:"order"`
 }
 
 func (o EnumGroupBySortCustom) MarshalJSON() ([]byte, error) {
@@ -592,7 +600,7 @@ type Figure struct {
 	   The json config definition according to plotly's schema
 	   https://plotly.com/python/figure-structure/#the-toplevel-config-attribute
 	*/
-	PlotlyConfig string `conjure-docs:"The json config definition according to plotly's schema\nhttps://plotly.com/python/figure-structure/#the-toplevel-config-attribute" json:"plotlyConfig"`
+	PlotlyConfig string `json:"plotlyConfig"`
 }
 
 func (o Figure) MarshalJSON() ([]byte, error) {
@@ -655,7 +663,7 @@ func (o *FixedDecimalPlaces) UnmarshalYAML(unmarshal func(interface{}) error) er
 
 type FloatingLegendConfig struct {
 	// Whether to hide the floating legend. Defaults to false.
-	Hidden *bool          `conjure-docs:"Whether to hide the floating legend. Defaults to false." json:"hidden,omitempty"`
+	Hidden *bool          `json:"hidden,omitempty"`
 	Legend FloatingLegend `json:"legend"`
 }
 
@@ -683,7 +691,7 @@ type FrequencyChartDefinitionV1 struct {
 	Title               *string                   `json:"title,omitempty"`
 	ValueAxes           []ValueAxis               `json:"valueAxes"`
 	// The type of plot to display. If not specified, the default is FFT.
-	PlotType *FrequencyPlotType `conjure-docs:"The type of plot to display. If not specified, the default is FFT." json:"plotType,omitempty"`
+	PlotType *FrequencyPlotType `json:"plotType,omitempty"`
 }
 
 func (o FrequencyChartDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -743,7 +751,7 @@ type FrequencyChartDefinitionV2 struct {
 	Title               *string                   `json:"title,omitempty"`
 	ValueAxes           []ValueAxis               `json:"valueAxes"`
 	// The type of plot to display. If not specified, the default is FFT.
-	PlotType *FrequencyPlotType `conjure-docs:"The type of plot to display. If not specified, the default is FFT." json:"plotType,omitempty"`
+	PlotType *FrequencyPlotType `json:"plotType,omitempty"`
 }
 
 func (o FrequencyChartDefinitionV2) MarshalJSON() ([]byte, error) {
@@ -882,7 +890,7 @@ type FrequencyPlotTypeBode struct {
 	OutputFrequencyType *api3.OutputFrequencyType `json:"outputFrequencyType,omitempty"`
 	UnwrapPhase         *bool                     `json:"unwrapPhase,omitempty"`
 	// Whether to the magnitude or phase of the output. Defaults to MAGNITUDE if not specified.
-	DisplayMode *MagnitudeAndPhaseDisplayMode `conjure-docs:"Whether to the magnitude or phase of the output. Defaults to MAGNITUDE if not specified." json:"displayMode,omitempty"`
+	DisplayMode *MagnitudeAndPhaseDisplayMode `json:"displayMode,omitempty"`
 }
 
 func (o FrequencyPlotTypeBode) MarshalYAML() (interface{}, error) {
@@ -908,7 +916,7 @@ type FrequencyPlotTypeCpsd struct {
 	UnwrapPhase         *bool                     `json:"unwrapPhase,omitempty"`
 	OutputPhaseUnit     *api3.OutputPhaseUnit     `json:"outputPhaseUnit,omitempty"`
 	// Whether to the magnitude or phase of the output. Defaults to MAGNITUDE if not specified.
-	DisplayMode *MagnitudeAndPhaseDisplayMode `conjure-docs:"Whether to the magnitude or phase of the output. Defaults to MAGNITUDE if not specified." json:"displayMode,omitempty"`
+	DisplayMode *MagnitudeAndPhaseDisplayMode `json:"displayMode,omitempty"`
 }
 
 func (o FrequencyPlotTypeCpsd) MarshalYAML() (interface{}, error) {
@@ -1031,9 +1039,8 @@ func (o *Geo3dCustomModel) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type Geo3dDefinitionV1 struct {
-	Plots   []GeoPlot3d    `json:"plots"`
-	Sensors *[]Geo3dSensor `json:"sensors,omitempty"`
-	Title   *string        `json:"title,omitempty"`
+	Plots []GeoPlot3d `json:"plots"`
+	Title *string     `json:"title,omitempty"`
 }
 
 func (o Geo3dDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -1073,6 +1080,29 @@ func (o *Geo3dDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Orientation specified as Euler angles yaw/pitch/roll in degrees.
+type Geo3dOrientationEulerAngles struct {
+	Yaw   VariableStaticOrChannel `json:"yaw"`
+	Pitch VariableStaticOrChannel `json:"pitch"`
+	Roll  VariableStaticOrChannel `json:"roll"`
+}
+
+func (o Geo3dOrientationEulerAngles) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dOrientationEulerAngles) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Geo3dOrientationPrincipalAxes struct {
 	HeadingVariableName *api2.ChannelVariableName `json:"headingVariableName,omitempty"`
 	PitchVariableName   *api2.ChannelVariableName `json:"pitchVariableName,omitempty"`
@@ -1088,33 +1118,6 @@ func (o Geo3dOrientationPrincipalAxes) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Geo3dOrientationPrincipalAxes) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-/*
-Orientation specified as heading/pitch/roll in WGS84.
-Heading is clockwise with respect to north.
-*/
-type Geo3dOrientationStaticPrincipalAxes struct {
-	// Clockwise angle with respect to north (a.k.a. yaw).
-	Heading float64 `conjure-docs:"Clockwise angle with respect to north (a.k.a. yaw)." json:"heading"`
-	Pitch   float64 `json:"pitch"`
-	Roll    float64 `json:"roll"`
-}
-
-func (o Geo3dOrientationStaticPrincipalAxes) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *Geo3dOrientationStaticPrincipalAxes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1144,50 +1147,6 @@ func (o *Geo3dPositionEcef) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type Geo3dPositionStaticEcef struct {
-	EcefX float64 `json:"ecefX"`
-	EcefY float64 `json:"ecefY"`
-	EcefZ float64 `json:"ecefZ"`
-}
-
-func (o Geo3dPositionStaticEcef) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *Geo3dPositionStaticEcef) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type Geo3dPositionStaticWgs84 struct {
-	Latitude  float64  `json:"latitude"`
-	Longitude float64  `json:"longitude"`
-	Height    *float64 `json:"height,omitempty"`
-}
-
-func (o Geo3dPositionStaticWgs84) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *Geo3dPositionStaticWgs84) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type Geo3dPositionWgs84 struct {
 	LatitudeVariableName  api2.ChannelVariableName  `json:"latitudeVariableName"`
 	LongitudeVariableName api2.ChannelVariableName  `json:"longitudeVariableName"`
@@ -1210,18 +1169,18 @@ func (o *Geo3dPositionWgs84) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// A 3D sensor configuration for rendering/animating sensors in a 3D scene.
+// Sensor configuration for 3D scene.
 type Geo3dSensor struct {
 	SensorId string `json:"sensorId"`
 	Enabled  *bool  `json:"enabled,omitempty"`
 	// The name of the sensor.
-	Name *string `conjure-docs:"The name of the sensor." json:"name,omitempty"`
-	// The position of the sensor.
-	Position Geo3dSensorPositionConfig `conjure-docs:"The position of the sensor." json:"position"`
-	// The orientation used for the sensor, e.g. nadir.
-	Orientation *Geo3dSensorOrientationConfig `conjure-docs:"The orientation used for the sensor, e.g. nadir." json:"orientation,omitempty"`
+	Name *string `json:"name,omitempty"`
+	// The orientation of the sensor.
+	Orientation *Geo3dSensorOrientationConfig `json:"orientation,omitempty"`
 	// The color of the sensor.
-	Color *api.HexColor `conjure-docs:"The color of the sensor." json:"color,omitempty"`
+	Color *api.HexColor `json:"color,omitempty"`
+	// The shape of the sensor's view volume.
+	ViewShape *Geo3dSensorShape `json:"viewShape,omitempty"`
 }
 
 func (o Geo3dSensor) MarshalYAML() (interface{}, error) {
@@ -1276,13 +1235,15 @@ func (o *Geo3dSensorOrientationZenith) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type GeoAdditionalVariable struct {
-	VariableName        api2.ChannelVariableName             `json:"variableName"`
-	Label               *string                              `json:"label,omitempty"`
-	VisualizationOption *GeoSecondaryPlotVisualizationOption `json:"visualizationOption,omitempty"`
+// A conic frustum shaped sensor volume.
+type Geo3dSensorShapeConic struct {
+	// Full field-of-view (FOV) angle, in degrees.
+	Fov VariableStaticOrChannel `json:"fov"`
+	// Length for the projection, in meters.
+	Length VariableStaticOrChannel `json:"length"`
 }
 
-func (o GeoAdditionalVariable) MarshalYAML() (interface{}, error) {
+func (o Geo3dSensorShapeConic) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -1290,7 +1251,55 @@ func (o GeoAdditionalVariable) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *GeoAdditionalVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *Geo3dSensorShapeConic) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A rectangular frustum shaped sensor volume, defined by included angles.
+type Geo3dSensorShapeRectangularIncludedFov struct {
+	// Full field-of-view (FOV) angle in the sensor's horizontal direction, in degrees.
+	XFov VariableStaticOrChannel `json:"xFov"`
+	// Full field-of-view (FOV) angle in the sensor's vertical direction, in degrees.
+	YFov VariableStaticOrChannel `json:"yFov"`
+	// Length for the projection, in meters.
+	Length VariableStaticOrChannel `json:"length"`
+}
+
+func (o Geo3dSensorShapeRectangularIncludedFov) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dSensorShapeRectangularIncludedFov) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A spherical sensor volume.
+type Geo3dSensorShapeSpherical struct {
+	// Radius of the sphere, in meters.
+	Radius VariableStaticOrChannel `json:"radius"`
+}
+
+func (o Geo3dSensorShapeSpherical) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dSensorShapeSpherical) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1305,6 +1314,7 @@ type GeoPlot3d struct {
 	VisualizationOptions GeoPlot3dVisualizationOptions `json:"visualizationOptions"`
 	Position             Geo3dPosition                 `json:"position"`
 	Orientation          Geo3dOrientation              `json:"orientation"`
+	PlotSensors          *[]Geo3dSensor                `json:"plotSensors,omitempty"`
 }
 
 func (o GeoPlot3d) MarshalYAML() (interface{}, error) {
@@ -1346,13 +1356,12 @@ func (o *GeoPlot3dVisualizationOptions) UnmarshalYAML(unmarshal func(interface{}
 }
 
 type GeoPlotFromLatLong struct {
-	LatitudeVariableName  api2.ChannelVariableName `json:"latitudeVariableName"`
-	LongitudeVariableName api2.ChannelVariableName `json:"longitudeVariableName"`
-	// optional for backcompatibility
-	SecondaryVariables   *[]GeoAdditionalVariable    `conjure-docs:"optional for backcompatibility" json:"secondaryVariables,omitempty"`
-	Enabled              *bool                       `json:"enabled,omitempty"`
-	Label                *string                     `json:"label,omitempty"`
-	VisualizationOptions GeoPlotVisualizationOptions `json:"visualizationOptions"`
+	LatitudeVariableName  api2.ChannelVariableName    `json:"latitudeVariableName"`
+	LongitudeVariableName api2.ChannelVariableName    `json:"longitudeVariableName"`
+	SecondaryVariables    *[]SecondaryVariable        `json:"secondaryVariables,omitempty"`
+	Enabled               *bool                       `json:"enabled,omitempty"`
+	Label                 *string                     `json:"label,omitempty"`
+	VisualizationOptions  GeoPlotVisualizationOptions `json:"visualizationOptions"`
 }
 
 func (o GeoPlotFromLatLong) MarshalYAML() (interface{}, error) {
@@ -1396,7 +1405,7 @@ type GeoPlotVisualizationOptions struct {
 	Color     api.HexColor `json:"color"`
 	LineStyle GeoLineStyle `json:"lineStyle"`
 	// If visible, overwrites any existing visualization options on the geo plot.
-	SecondaryColorVisualization *GeoPlotSecondaryVisibilityConfig `conjure-docs:"If visible, overwrites any existing visualization options on the geo plot." json:"secondaryColorVisualization,omitempty"`
+	SecondaryColorVisualization *GeoPlotSecondaryVisibilityConfig `json:"secondaryColorVisualization,omitempty"`
 }
 
 func (o GeoPlotVisualizationOptions) MarshalYAML() (interface{}, error) {
@@ -1417,16 +1426,16 @@ func (o *GeoPlotVisualizationOptions) UnmarshalYAML(unmarshal func(interface{}) 
 
 // A static coordinate on the map
 type GeoPoint struct {
-	Label     *string                 `json:"label,omitempty"`
-	Icon      string                  `json:"icon"`
-	Latitude  float64                 `json:"latitude"`
-	Longitude float64                 `json:"longitude"`
-	Variables []GeoAdditionalVariable `json:"variables"`
+	Label     *string             `json:"label,omitempty"`
+	Icon      string              `json:"icon"`
+	Latitude  float64             `json:"latitude"`
+	Longitude float64             `json:"longitude"`
+	Variables []SecondaryVariable `json:"variables"`
 }
 
 func (o GeoPoint) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make([]GeoAdditionalVariable, 0)
+		o.Variables = make([]SecondaryVariable, 0)
 	}
 	type _tmpGeoPoint GeoPoint
 	return safejson.Marshal(_tmpGeoPoint(o))
@@ -1439,7 +1448,7 @@ func (o *GeoPoint) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawGeoPoint.Variables == nil {
-		rawGeoPoint.Variables = make([]GeoAdditionalVariable, 0)
+		rawGeoPoint.Variables = make([]SecondaryVariable, 0)
 	}
 	*o = GeoPoint(rawGeoPoint)
 	return nil
@@ -1605,7 +1614,7 @@ type Layout struct {
 	   The json layout definition according to plotly's schema
 	   https://plotly.com/python/figure-structure/#the-toplevel-layout-attribute
 	*/
-	PlotlyLayout string `conjure-docs:"The json layout definition according to plotly's schema\nhttps://plotly.com/python/figure-structure/#the-toplevel-layout-attribute" json:"plotlyLayout"`
+	PlotlyLayout string `json:"plotlyLayout"`
 }
 
 func (o Layout) MarshalYAML() (interface{}, error) {
@@ -1655,7 +1664,7 @@ type LineThresholdGroup struct {
 	   To supplement a set of line thresholds, the default fill configures how the remaining space (either
 	   above or below) should be colored. Transparent if empty.
 	*/
-	DefaultFill *DefaultFill `conjure-docs:"To supplement a set of line thresholds, the default fill configures how the remaining space (either\nabove or below) should be colored. Transparent if empty." json:"defaultFill,omitempty"`
+	DefaultFill *DefaultFill `json:"defaultFill,omitempty"`
 }
 
 func (o LineThresholdGroup) MarshalJSON() ([]byte, error) {
@@ -1707,7 +1716,7 @@ func (o LogChannel) MarshalJSON() ([]byte, error) {
 		o.VisibleLogColumnNames = make([]LogColumnName, 0)
 	}
 	if o.TagFilters == nil {
-		o.TagFilters = make(map[string][]string, 0)
+		o.TagFilters = make(map[string][]string)
 	}
 	type _tmpLogChannel LogChannel
 	return safejson.Marshal(_tmpLogChannel(o))
@@ -1723,7 +1732,7 @@ func (o *LogChannel) UnmarshalJSON(data []byte) error {
 		rawLogChannel.VisibleLogColumnNames = make([]LogColumnName, 0)
 	}
 	if rawLogChannel.TagFilters == nil {
-		rawLogChannel.TagFilters = make(map[string][]string, 0)
+		rawLogChannel.TagFilters = make(map[string][]string)
 	}
 	*o = LogChannel(rawLogChannel)
 	return nil
@@ -1831,13 +1840,13 @@ func (o *NeverConnectDisconnectedValues) UnmarshalYAML(unmarshal func(interface{
 // Number format for numeric cells, eg 1e4 | 10000 | 10,000.
 type NumberFormat struct {
 	// Include the specified number of significant figures, rounding if needed.
-	SigFigs *int `conjure-docs:"Include the specified number of significant figures, rounding if needed." json:"sigFigs,omitempty"`
+	SigFigs *int `json:"sigFigs,omitempty"`
 	// The base display format for the number.
-	DisplayOption *NumberFormatDisplayOption `conjure-docs:"The base display format for the number." json:"displayOption,omitempty"`
+	DisplayOption *NumberFormatDisplayOption `json:"displayOption,omitempty"`
 	// Deprecated: use decimalPlaces instead
 	FixedDecimalPlaces *int `json:"fixedDecimalPlaces,omitempty"`
 	// Options for formatting the decimal part of number.
-	DecimalPlaces *DecimalPlaces `conjure-docs:"Options for formatting the decimal part of number." json:"decimalPlaces,omitempty"`
+	DecimalPlaces *DecimalPlaces `json:"decimalPlaces,omitempty"`
 }
 
 func (o NumberFormat) MarshalYAML() (interface{}, error) {
@@ -1930,7 +1939,7 @@ type NumericBarVisualisationV2 struct {
 	   the computed value equals or surpasses. The lowest and highest value will determine
 	   the 0% and 100% values of the bar.
 	*/
-	Thresholds *[]Threshold `conjure-docs:"Modifies the visualisation based on the highest threshold value that\nthe computed value equals or surpasses. The lowest and highest value will determine\nthe 0% and 100% values of the bar." json:"thresholds,omitempty"`
+	Thresholds *[]Threshold `json:"thresholds,omitempty"`
 }
 
 func (o NumericBarVisualisationV2) MarshalYAML() (interface{}, error) {
@@ -1956,7 +1965,7 @@ type NumericCellConfig struct {
 	   Sorting configuration for grouped data rendering in a cell.
 	   If undefined, will sort alphabetically by grouping.
 	*/
-	GroupBySort *NumericGroupBySort `conjure-docs:"Sorting configuration for grouped data rendering in a cell.\nIf undefined, will sort alphabetically by grouping." json:"groupBySort,omitempty"`
+	GroupBySort *NumericGroupBySort `json:"groupBySort,omitempty"`
 }
 
 func (o NumericCellConfig) MarshalYAML() (interface{}, error) {
@@ -1968,6 +1977,29 @@ func (o NumericCellConfig) MarshalYAML() (interface{}, error) {
 }
 
 func (o *NumericCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Color interpolation for numeric values using a preset color scheme.
+type NumericPresetColorRange struct {
+	Low    float64     `json:"low"`
+	High   float64     `json:"high"`
+	Preset ColorScheme `json:"preset"`
+}
+
+func (o NumericPresetColorRange) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericPresetColorRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1999,7 +2031,7 @@ type NumericRawVisualisationV2 struct {
 	   Modifies the visualisation based on the highest threshold value that
 	   the computed value surpasses.
 	*/
-	Thresholds *[]Threshold `conjure-docs:"Modifies the visualisation based on the highest threshold value that\nthe computed value surpasses." json:"thresholds,omitempty"`
+	Thresholds *[]Threshold `json:"thresholds,omitempty"`
 }
 
 func (o NumericRawVisualisationV2) MarshalYAML() (interface{}, error) {
@@ -2098,7 +2130,10 @@ func (o *PanelBucketStrategyFixed) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 // Show a separate floating legend for the series in each row of the chart.
-type PerRowFloatingLegends struct{}
+type PerRowFloatingLegends struct {
+	// Position of the floating legend in the chart. If undefined, defaults to preset BOTTOM_LEFT.
+	Position *FloatingLegendPosition `json:"position,omitempty"`
+}
 
 func (o PerRowFloatingLegends) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
@@ -2178,9 +2213,9 @@ func (o *PersistByValue) UnmarshalYAML(unmarshal func(interface{}) error) error 
 type PlotlyPanelDefinitionV1 struct {
 	Title *string `json:"title,omitempty"`
 	// A preset that will render a nominal-defined plotly figure with minimum necessary inputs
-	Preset *PlotlyPreset `conjure-docs:"A preset that will render a nominal-defined plotly figure with minimum necessary inputs" json:"preset,omitempty"`
+	Preset *PlotlyPreset `json:"preset,omitempty"`
 	// The plotly instance definition, with extra fields for nominal-specific inputs
-	Figure Figure `conjure-docs:"The plotly instance definition, with extra fields for nominal-specific inputs" json:"figure"`
+	Figure Figure `json:"figure"`
 }
 
 func (o PlotlyPanelDefinitionV1) MarshalYAML() (interface{}, error) {
@@ -2223,7 +2258,7 @@ func (o *ProcedureVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) err
 type ProcedureVizDefinitionV2 struct {
 	Title *string `json:"title,omitempty"`
 	// A workbook can save either an execution or a template. Workbook templates should only use the latter.
-	Procedure *ProcedureVizId `conjure-docs:"A workbook can save either an execution or a template. Workbook templates should only use the latter." json:"procedure,omitempty"`
+	Procedure *ProcedureVizId `json:"procedure,omitempty"`
 }
 
 func (o ProcedureVizDefinitionV2) MarshalYAML() (interface{}, error) {
@@ -2248,7 +2283,7 @@ type RangeCellConfig struct {
 	   Sorting configuration for grouped data rendering in a cell.
 	   If undefined, will sort alphabetically by grouping.
 	*/
-	GroupBySort *RangeGroupBySort `conjure-docs:"Sorting configuration for grouped data rendering in a cell.\nIf undefined, will sort alphabetically by grouping." json:"groupBySort,omitempty"`
+	GroupBySort *RangeGroupBySort `json:"groupBySort,omitempty"`
 }
 
 func (o RangeCellConfig) MarshalYAML() (interface{}, error) {
@@ -2271,10 +2306,10 @@ func (o *RangeCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) error
 type RangeRawVisualisation struct {
 	RangeColor *api.HexColor `json:"rangeColor,omitempty"`
 	// The string to display when the condition defined by the variable's function spec is met.
-	RangeLabel   *string       `conjure-docs:"The string to display when the condition defined by the variable's function spec is met." json:"rangeLabel,omitempty"`
+	RangeLabel   *string       `json:"rangeLabel,omitempty"`
 	NoRangeColor *api.HexColor `json:"noRangeColor,omitempty"`
 	// The string to display when the condition defined by the variable's function spec is not met.
-	NoRangeLabel *string `conjure-docs:"The string to display when the condition defined by the variable's function spec is not met." json:"noRangeLabel,omitempty"`
+	NoRangeLabel *string `json:"noRangeLabel,omitempty"`
 }
 
 func (o RangeRawVisualisation) MarshalYAML() (interface{}, error) {
@@ -2352,7 +2387,7 @@ func (o *RowSharedPlotColoringConfiguration) UnmarshalYAML(unmarshal func(interf
 
 type Scatter3dTraceComputeConfig struct {
 	// Bucket computed data points by their proximity in space or in time
-	DecimationStrategy *Scatter3dDecimationStrategy `conjure-docs:"Bucket computed data points by their proximity in space or in time" json:"decimationStrategy,omitempty"`
+	DecimationStrategy *Scatter3dDecimationStrategy `json:"decimationStrategy,omitempty"`
 }
 
 func (o Scatter3dTraceComputeConfig) MarshalYAML() (interface{}, error) {
@@ -2371,13 +2406,57 @@ func (o *Scatter3dTraceComputeConfig) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A secondary variable to associate with a trace
+type SecondaryVariable struct {
+	VariableName api2.ChannelVariableName `json:"variableName"`
+	Label        *string                  `json:"label,omitempty"`
+	// Default true
+	Enabled             *bool                     `json:"enabled,omitempty"`
+	VisualizationOption *SecondaryVariableOptions `json:"visualizationOption,omitempty"`
+}
+
+func (o SecondaryVariable) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SecondaryVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Bucket points together by proximity in value.
+type SpatialDecimation struct{}
+
+func (o SpatialDecimation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialDecimation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type StalenessCellConfig struct {
 	Visualisation *StalenessVisualisation `json:"visualisation,omitempty"`
 	/*
 	   Sorting configuration for grouped data rendering in a cell.
 	   If undefined, will sort alphabetically by grouping.
 	*/
-	GroupBySort *NumericGroupBySort `conjure-docs:"Sorting configuration for grouped data rendering in a cell.\nIf undefined, will sort alphabetically by grouping." json:"groupBySort,omitempty"`
+	GroupBySort *NumericGroupBySort `json:"groupBySort,omitempty"`
 }
 
 func (o StalenessCellConfig) MarshalYAML() (interface{}, error) {
@@ -2398,9 +2477,9 @@ func (o *StalenessCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 type StalenessConfiguration struct {
 	// The duration above which points are considered stale. By default this is 1 second.
-	Threshold api5.Duration `conjure-docs:"The duration above which points are considered stale. By default this is 1 second." json:"threshold"`
+	Threshold api5.Duration `json:"threshold"`
 	// Whether or not to visually connect stale points, i.e. points whose distance exceeds that of the configured threshold. By default this is true.
-	ConnectStalePoints bool `conjure-docs:"Whether or not to visually connect stale points, i.e. points whose distance exceeds that of the configured threshold. By default this is true." json:"connectStalePoints"`
+	ConnectStalePoints bool `json:"connectStalePoints"`
 }
 
 func (o StalenessConfiguration) MarshalYAML() (interface{}, error) {
@@ -2458,18 +2537,37 @@ func (o *StructRawVisualisation) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Bucket points together by proximity in time.
+type TemporalDecimation struct{}
+
+func (o TemporalDecimation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TemporalDecimation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Threshold struct {
 	// The minimum value a number must be to trigger the threshold color. If used in a staleness cell, this value is in milliseconds.
-	Value float64 `conjure-docs:"The minimum value a number must be to trigger the threshold color. If used in a staleness cell, this value is in milliseconds." json:"value"`
+	Value float64 `json:"value"`
 	// The color to apply to the cell when the threshold is active.
-	Color api.HexColor `conjure-docs:"The color to apply to the cell when the threshold is active." json:"color"`
+	Color api.HexColor `json:"color"`
 	// A name for this threshold to display while editing.
-	Label *string `conjure-docs:"A name for this threshold to display while editing." json:"label,omitempty"`
+	Label *string `json:"label,omitempty"`
 	/*
 	   Options for pinning an indicator that data was within the threshold range
 	   while streaming.
 	*/
-	Latch *ThresholdLatch `conjure-docs:"Options for pinning an indicator that data was within the threshold range\nwhile streaming." json:"latch,omitempty"`
+	Latch *ThresholdLatch `json:"latch,omitempty"`
 }
 
 func (o Threshold) MarshalYAML() (interface{}, error) {
@@ -2545,18 +2643,18 @@ type TimeSeriesChartDefinitionV1 struct {
 
 	   Deprecated: Use stalenessConfiguration instead
 	*/
-	DisconnectedValues *DisconnectedValueVisualization `conjure-docs:"Determines when disconnected values should be connected. By default, they are always connected." json:"disconnectedValues,omitempty"`
+	DisconnectedValues *DisconnectedValueVisualization `json:"disconnectedValues,omitempty"`
 	// Determines when to draw lines between points. By default, the staleness threshold is 1s and stale points are connected.
-	StalenessConfiguration *StalenessConfiguration `conjure-docs:"Determines when to draw lines between points. By default, the staleness threshold is 1s and stale points are connected." json:"stalenessConfiguration,omitempty"`
+	StalenessConfiguration *StalenessConfiguration `json:"stalenessConfiguration,omitempty"`
 	/*
 	   Configuration for coloring time series plots in this chart. By default, plots are colored
 	   independently between rows with a unique color if possible when created.
 	*/
-	PlotColoringConfiguration *PlotColoringConfiguration `conjure-docs:"Configuration for coloring time series plots in this chart. By default, plots are colored\nindependently between rows with a unique color if possible when created." json:"plotColoringConfiguration,omitempty"`
+	PlotColoringConfiguration *PlotColoringConfiguration `json:"plotColoringConfiguration,omitempty"`
 	// Custom bucket size to use when loading data.
-	BucketStrategy *PanelBucketStrategy `conjure-docs:"Custom bucket size to use when loading data." json:"bucketStrategy,omitempty"`
+	BucketStrategy *PanelBucketStrategy `json:"bucketStrategy,omitempty"`
 	// Config for showing floating legends in the chart. If undefined, defaults to hiding.
-	FloatingLegendsConfig *FloatingLegendConfig `conjure-docs:"Config for showing floating legends in the chart. If undefined, defaults to hiding." json:"floatingLegendsConfig,omitempty"`
+	FloatingLegendsConfig *FloatingLegendConfig `json:"floatingLegendsConfig,omitempty"`
 }
 
 func (o TimeSeriesChartDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -2610,20 +2708,20 @@ func (o *TimeSeriesChartDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) 
 
 type TimeSeriesEnumPlot struct {
 	// How to color the value ranges
-	Color ColorStyle `conjure-docs:"How to color the value ranges" json:"color"`
+	Color ColorStyle `json:"color"`
 	// Where to place the plot within the row
-	Position Position `conjure-docs:"Where to place the plot within the row" json:"position"`
+	Position Position `json:"position"`
 	/*
 	   Render certain values' full-row/full-panel color overlays
 	   even when not interacting with the plot
 	*/
-	PersistValueOverlays PersistValueOverlay `conjure-docs:"Render certain values' full-row/full-panel color overlays\neven when not interacting with the plot" json:"persistValueOverlays"`
+	PersistValueOverlays PersistValueOverlay `json:"persistValueOverlays"`
 	// How far to extend the overlay
-	OverlayScope OverlayScope `conjure-docs:"How far to extend the overlay" json:"overlayScope"`
+	OverlayScope OverlayScope `json:"overlayScope"`
 	// Deprecated: Use displayStyle instead
 	DisplayInline *bool `json:"displayInline,omitempty"`
 	// How to display the enum values on the chart
-	DisplayStyle *EnumDisplayStyle `conjure-docs:"How to display the enum values on the chart" json:"displayStyle,omitempty"`
+	DisplayStyle *EnumDisplayStyle `json:"displayStyle,omitempty"`
 }
 
 func (o TimeSeriesEnumPlot) MarshalYAML() (interface{}, error) {
@@ -2780,9 +2878,9 @@ type Trace struct {
 	   The json trace definition according to plotly's schema
 	   https://plotly.com/python/figure-structure/#the-toplevel-data-attribute
 	*/
-	PlotlyTrace string `conjure-docs:"The json trace definition according to plotly's schema\nhttps://plotly.com/python/figure-structure/#the-toplevel-data-attribute" json:"plotlyTrace"`
+	PlotlyTrace string `json:"plotlyTrace"`
 	// Information needed to substitute computed data arrays into the trace
-	Compute *TraceCompute `conjure-docs:"Information needed to substitute computed data arrays into the trace" json:"compute,omitempty"`
+	Compute *TraceCompute `json:"compute,omitempty"`
 }
 
 func (o Trace) MarshalYAML() (interface{}, error) {
@@ -2803,13 +2901,13 @@ func (o *Trace) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type TraceCompute struct {
 	// A map of plotly trace variables to the channel variables that should load into them
-	TraceChannelVariables map[string]api2.ChannelVariableName `conjure-docs:"A map of plotly trace variables to the channel variables that should load into them" json:"traceChannelVariables"`
+	TraceChannelVariables map[string]api2.ChannelVariableName `json:"traceChannelVariables"`
 	Config                *TraceComputeConfig                 `json:"config,omitempty"`
 }
 
 func (o TraceCompute) MarshalJSON() ([]byte, error) {
 	if o.TraceChannelVariables == nil {
-		o.TraceChannelVariables = make(map[string]api2.ChannelVariableName, 0)
+		o.TraceChannelVariables = make(map[string]api2.ChannelVariableName)
 	}
 	type _tmpTraceCompute TraceCompute
 	return safejson.Marshal(_tmpTraceCompute(o))
@@ -2822,7 +2920,7 @@ func (o *TraceCompute) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawTraceCompute.TraceChannelVariables == nil {
-		rawTraceCompute.TraceChannelVariables = make(map[string]api2.ChannelVariableName, 0)
+		rawTraceCompute.TraceChannelVariables = make(map[string]api2.ChannelVariableName)
 	}
 	*o = TraceCompute(rawTraceCompute)
 	return nil
@@ -2854,6 +2952,11 @@ type ValueAxis struct {
 	DomainType          AxisDomainType     `json:"domainType"`
 	TickNumberFormat    *NumberFormat      `json:"tickNumberFormat,omitempty"`
 	TooltipNumberFormat *NumberFormat      `json:"tooltipNumberFormat,omitempty"`
+	/*
+	   Whether the axis direction is reversed. When true, larger values appear on the
+	   opposite side (left for X axis, bottom for Y axis). Defaults to false.
+	*/
+	Reversed *bool `json:"reversed,omitempty"`
 }
 
 func (o ValueAxis) MarshalYAML() (interface{}, error) {
@@ -2877,7 +2980,7 @@ type ValueSort struct {
 	   If true, numerics sort high to low, enums sort alphabetically descending, and ranges sort inRange groupings first.
 	   If false, the opposite is true for each.
 	*/
-	IsDescending bool `conjure-docs:"If true, numerics sort high to low, enums sort alphabetically descending, and ranges sort inRange groupings first.\nIf false, the opposite is true for each." json:"isDescending"`
+	IsDescending bool `json:"isDescending"`
 }
 
 func (o ValueSort) MarshalYAML() (interface{}, error) {
@@ -2924,7 +3027,7 @@ type ValueTableDefinitionV1 struct {
 	   Each channel to be displayed. Based on the data type, the visualisation
 	   options and settings will be different.
 	*/
-	Channels []ValueTableChannel `conjure-docs:"Each channel to be displayed. Based on the data type, the visualisation\noptions and settings will be different." json:"channels"`
+	Channels []ValueTableChannel `json:"channels"`
 }
 
 func (o ValueTableDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -2966,14 +3069,14 @@ func (o *ValueTableDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error
 
 type ValueTableDefinitionV2 struct {
 	// The display title of the panel.
-	Title *string `conjure-docs:"The display title of the panel." json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 	// If true, display units in the cells when available.
-	ShowUnits *bool `conjure-docs:"If true, display units in the cells when available." json:"showUnits,omitempty"`
+	ShowUnits *bool `json:"showUnits,omitempty"`
 	// If true, display staleness indicator in the cells when available.
-	ShowStalenessIndicator *bool            `conjure-docs:"If true, display staleness indicator in the cells when available." json:"showStalenessIndicator,omitempty"`
+	ShowStalenessIndicator *bool            `json:"showStalenessIndicator,omitempty"`
 	Layout                 ValueTableLayout `json:"layout"`
 	// Configuration for showing staleness of values in the value table while streaming.
-	StalenessIndicator *ValueTableStalenessConfig `conjure-docs:"Configuration for showing staleness of values in the value table while streaming." json:"stalenessIndicator,omitempty"`
+	StalenessIndicator *ValueTableStalenessConfig `json:"stalenessIndicator,omitempty"`
 }
 
 func (o ValueTableDefinitionV2) MarshalYAML() (interface{}, error) {
@@ -2994,7 +3097,7 @@ func (o *ValueTableDefinitionV2) UnmarshalYAML(unmarshal func(interface{}) error
 
 type ValueTableGridRowColumnConfig struct {
 	// The index of the row or column to apply this configuration to.
-	Position   int                        `conjure-docs:"The index of the row or column to apply this configuration to." json:"position"`
+	Position   int                        `json:"position"`
 	Header     *string                    `json:"header,omitempty"`
 	CellConfig *ValueTableMultiCellConfig `json:"cellConfig,omitempty"`
 }
@@ -3044,21 +3147,21 @@ the cell's own definition, then the column's, then the row's, then the panel's.
 */
 type ValueTableLayoutGrid struct {
 	// If true, display row headers.
-	ShowRowHeaders *bool `conjure-docs:"If true, display row headers." json:"showRowHeaders,omitempty"`
+	ShowRowHeaders *bool `json:"showRowHeaders,omitempty"`
 	// If true, display column headers.
-	ShowColumnHeaders *bool `conjure-docs:"If true, display column headers." json:"showColumnHeaders,omitempty"`
+	ShowColumnHeaders *bool `json:"showColumnHeaders,omitempty"`
 	// If true, display channel names in the cells.
-	ShowCellLabels *bool `conjure-docs:"If true, display channel names in the cells." json:"showCellLabels,omitempty"`
+	ShowCellLabels *bool `json:"showCellLabels,omitempty"`
 	// Panel-level defaults for cell visualisations
-	GridDefaultCellConfigs ValueTableMultiCellConfig `conjure-docs:"Panel-level defaults for cell visualisations" json:"gridDefaultCellConfigs"`
+	GridDefaultCellConfigs ValueTableMultiCellConfig `json:"gridDefaultCellConfigs"`
 	// Column-level configurations.
-	ColumnConfigs []ValueTableGridRowColumnConfig `conjure-docs:"Column-level configurations." json:"columnConfigs"`
+	ColumnConfigs []ValueTableGridRowColumnConfig `json:"columnConfigs"`
 	// Row-level configurations.
-	RowConfigs  []ValueTableGridRowColumnConfig `conjure-docs:"Row-level configurations." json:"rowConfigs"`
+	RowConfigs  []ValueTableGridRowColumnConfig `json:"rowConfigs"`
 	RowCount    int                             `json:"rowCount"`
 	ColumnCount int                             `json:"columnCount"`
 	// An array of cells to display in the table.
-	Cells []ValueTableGridValueTableCell `conjure-docs:"An array of cells to display in the table." json:"cells"`
+	Cells []ValueTableGridValueTableCell `json:"cells"`
 }
 
 func (o ValueTableLayoutGrid) MarshalJSON() ([]byte, error) {
@@ -3143,7 +3246,7 @@ func (o *ValueTableMultiCellConfig) UnmarshalYAML(unmarshal func(interface{}) er
 // Configuration for showing staleness of values while streaming
 type ValueTableStalenessConfig struct {
 	// If true, will not show any indication of staleness. Defaults to false
-	HideStaleness *bool `conjure-docs:"If true, will not show any indication of staleness. Defaults to false" json:"hideStaleness,omitempty"`
+	HideStaleness *bool `json:"hideStaleness,omitempty"`
 }
 
 func (o ValueTableStalenessConfig) MarshalYAML() (interface{}, error) {

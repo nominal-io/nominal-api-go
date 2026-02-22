@@ -22,12 +22,12 @@ type CreateSecretRequest struct {
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the secret. If not provided, the secret will be created in\nthe default workspace for the user's organization, if the default workspace for the\norganization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o CreateSecretRequest) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -43,7 +43,7 @@ func (o *CreateSecretRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateSecretRequest.Properties == nil {
-		rawCreateSecretRequest.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawCreateSecretRequest.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawCreateSecretRequest.Labels == nil {
 		rawCreateSecretRequest.Labels = make([]api.Label, 0)
@@ -82,7 +82,7 @@ type DecryptedSecret struct {
 
 func (o DecryptedSecret) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -98,7 +98,7 @@ func (o *DecryptedSecret) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawDecryptedSecret.Properties == nil {
-		rawDecryptedSecret.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawDecryptedSecret.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawDecryptedSecret.Labels == nil {
 		rawDecryptedSecret.Labels = make([]api.Label, 0)
@@ -208,11 +208,11 @@ func (o *GetSecretsResponse) UnmarshalYAML(unmarshal func(interface{}) error) er
 type SearchSecretsRequest struct {
 	Query SearchSecretsQuery `json:"query"`
 	// Defaults to 100. Will throw if larger than 1000.
-	PageSize *int        `conjure-docs:"Defaults to 100. Will throw if larger than 1000." json:"pageSize,omitempty"`
+	PageSize *int        `json:"pageSize,omitempty"`
 	Sort     SortOptions `json:"sort"`
 	Token    *api.Token  `json:"token,omitempty"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived secrets in search.
-	ArchivedStatuses *[]api.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived secrets in search." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchSecretsRequest) MarshalYAML() (interface{}, error) {
@@ -286,7 +286,7 @@ type Secret struct {
 
 func (o Secret) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -302,7 +302,7 @@ func (o *Secret) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawSecret.Properties == nil {
-		rawSecret.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawSecret.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawSecret.Labels == nil {
 		rawSecret.Labels = make([]api.Label, 0)

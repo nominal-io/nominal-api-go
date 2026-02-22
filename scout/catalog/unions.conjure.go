@@ -114,7 +114,7 @@ func (u *AbsoluteTimestamp) AcceptFuncs(iso8601Func func(Iso8601Timestamp) error
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in AbsoluteTimestamp type")
 		}
 		return unknownFunc(u.typ)
 	case "iso8601":
@@ -135,15 +135,15 @@ func (u *AbsoluteTimestamp) AcceptFuncs(iso8601Func func(Iso8601Timestamp) error
 	}
 }
 
-func (u *AbsoluteTimestamp) Iso8601NoopSuccess(Iso8601Timestamp) error {
+func (u *AbsoluteTimestamp) Iso8601NoopSuccess(_ Iso8601Timestamp) error {
 	return nil
 }
 
-func (u *AbsoluteTimestamp) EpochOfTimeUnitNoopSuccess(EpochTimestamp) error {
+func (u *AbsoluteTimestamp) EpochOfTimeUnitNoopSuccess(_ EpochTimestamp) error {
 	return nil
 }
 
-func (u *AbsoluteTimestamp) CustomFormatNoopSuccess(CustomTimestamp) error {
+func (u *AbsoluteTimestamp) CustomFormatNoopSuccess(_ CustomTimestamp) error {
 	return nil
 }
 
@@ -300,7 +300,7 @@ func (u *DatasetFileMetadata) AcceptFuncs(videoFunc func(datasource.VideoFileMet
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DatasetFileMetadata type")
 		}
 		return unknownFunc(u.typ)
 	case "video":
@@ -311,7 +311,7 @@ func (u *DatasetFileMetadata) AcceptFuncs(videoFunc func(datasource.VideoFileMet
 	}
 }
 
-func (u *DatasetFileMetadata) VideoNoopSuccess(datasource.VideoFileMetadata) error {
+func (u *DatasetFileMetadata) VideoNoopSuccess(_ datasource.VideoFileMetadata) error {
 	return nil
 }
 
@@ -435,7 +435,7 @@ func (u *Handle) AcceptFuncs(s3Func func(S3Handle) error, unknownFunc func(strin
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Handle type")
 		}
 		return unknownFunc(u.typ)
 	case "s3":
@@ -446,7 +446,7 @@ func (u *Handle) AcceptFuncs(s3Func func(S3Handle) error, unknownFunc func(strin
 	}
 }
 
-func (u *Handle) S3NoopSuccess(S3Handle) error {
+func (u *Handle) S3NoopSuccess(_ S3Handle) error {
 	return nil
 }
 
@@ -612,7 +612,7 @@ func (u *SearchDatasetFilesQuery) AcceptFuncs(timeRangeFunc func(TimeRangeFilter
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchDatasetFilesQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "timeRange":
@@ -638,19 +638,19 @@ func (u *SearchDatasetFilesQuery) AcceptFuncs(timeRangeFunc func(TimeRangeFilter
 	}
 }
 
-func (u *SearchDatasetFilesQuery) TimeRangeNoopSuccess(TimeRangeFilter) error {
+func (u *SearchDatasetFilesQuery) TimeRangeNoopSuccess(_ TimeRangeFilter) error {
 	return nil
 }
 
-func (u *SearchDatasetFilesQuery) FileTagsNoopSuccess(map[api.TagName]api.TagValue) error {
+func (u *SearchDatasetFilesQuery) FileTagsNoopSuccess(_ map[api.TagName]api.TagValue) error {
 	return nil
 }
 
-func (u *SearchDatasetFilesQuery) AndNoopSuccess([]SearchDatasetFilesQuery) error {
+func (u *SearchDatasetFilesQuery) AndNoopSuccess(_ []SearchDatasetFilesQuery) error {
 	return nil
 }
 
-func (u *SearchDatasetFilesQuery) OrNoopSuccess([]SearchDatasetFilesQuery) error {
+func (u *SearchDatasetFilesQuery) OrNoopSuccess(_ []SearchDatasetFilesQuery) error {
 	return nil
 }
 
@@ -962,7 +962,7 @@ func (u *SearchDatasetsQuery) AcceptFuncs(searchTextFunc func(string) error, exa
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchDatasetsQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "searchText":
@@ -1023,47 +1023,47 @@ func (u *SearchDatasetsQuery) AcceptFuncs(searchTextFunc func(string) error, exa
 	}
 }
 
-func (u *SearchDatasetsQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchDatasetsQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchDatasetsQuery) ExactMatchNoopSuccess(string) error {
+func (u *SearchDatasetsQuery) ExactMatchNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchDatasetsQuery) LabelNoopSuccess(api.Label) error {
+func (u *SearchDatasetsQuery) LabelNoopSuccess(_ api.Label) error {
 	return nil
 }
 
-func (u *SearchDatasetsQuery) PropertiesNoopSuccess(api.Property) error {
+func (u *SearchDatasetsQuery) PropertiesNoopSuccess(_ api.Property) error {
 	return nil
 }
 
-func (u *SearchDatasetsQuery) IngestStatusNoopSuccess(IngestStatus) error {
+func (u *SearchDatasetsQuery) IngestStatusNoopSuccess(_ IngestStatus) error {
 	return nil
 }
 
-func (u *SearchDatasetsQuery) IngestedBeforeInclusiveNoopSuccess(datetime.DateTime) error {
+func (u *SearchDatasetsQuery) IngestedBeforeInclusiveNoopSuccess(_ datetime.DateTime) error {
 	return nil
 }
 
-func (u *SearchDatasetsQuery) IngestedAfterInclusiveNoopSuccess(datetime.DateTime) error {
+func (u *SearchDatasetsQuery) IngestedAfterInclusiveNoopSuccess(_ datetime.DateTime) error {
 	return nil
 }
 
-func (u *SearchDatasetsQuery) ArchiveStatusNoopSuccess(bool) error {
+func (u *SearchDatasetsQuery) ArchiveStatusNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchDatasetsQuery) AndNoopSuccess([]SearchDatasetsQuery) error {
+func (u *SearchDatasetsQuery) AndNoopSuccess(_ []SearchDatasetsQuery) error {
 	return nil
 }
 
-func (u *SearchDatasetsQuery) OrNoopSuccess([]SearchDatasetsQuery) error {
+func (u *SearchDatasetsQuery) OrNoopSuccess(_ []SearchDatasetsQuery) error {
 	return nil
 }
 
-func (u *SearchDatasetsQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchDatasetsQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
@@ -1361,7 +1361,7 @@ func (u *TimestampType) AcceptFuncs(relativeFunc func(RelativeTimestamp) error, 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimestampType type")
 		}
 		return unknownFunc(u.typ)
 	case "relative":
@@ -1377,11 +1377,11 @@ func (u *TimestampType) AcceptFuncs(relativeFunc func(RelativeTimestamp) error, 
 	}
 }
 
-func (u *TimestampType) RelativeNoopSuccess(RelativeTimestamp) error {
+func (u *TimestampType) RelativeNoopSuccess(_ RelativeTimestamp) error {
 	return nil
 }
 
-func (u *TimestampType) AbsoluteNoopSuccess(AbsoluteTimestamp) error {
+func (u *TimestampType) AbsoluteNoopSuccess(_ AbsoluteTimestamp) error {
 	return nil
 }
 

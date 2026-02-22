@@ -130,7 +130,7 @@ func (u *CheckCondition) AcceptFuncs(numRangesFunc func(NumRangesConditionV1) er
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CheckCondition type")
 		}
 		return unknownFunc(u.typ)
 	case "numRanges":
@@ -156,19 +156,19 @@ func (u *CheckCondition) AcceptFuncs(numRangesFunc func(NumRangesConditionV1) er
 	}
 }
 
-func (u *CheckCondition) NumRangesNoopSuccess(NumRangesConditionV1) error {
+func (u *CheckCondition) NumRangesNoopSuccess(_ NumRangesConditionV1) error {
 	return nil
 }
 
-func (u *CheckCondition) NumRangesV2NoopSuccess(NumRangesConditionV2) error {
+func (u *CheckCondition) NumRangesV2NoopSuccess(_ NumRangesConditionV2) error {
 	return nil
 }
 
-func (u *CheckCondition) NumRangesV3NoopSuccess(NumRangesConditionV3) error {
+func (u *CheckCondition) NumRangesV3NoopSuccess(_ NumRangesConditionV3) error {
 	return nil
 }
 
-func (u *CheckCondition) ParameterizedNumRangesV1NoopSuccess(ParameterizedNumRangesConditionV1) error {
+func (u *CheckCondition) ParameterizedNumRangesV1NoopSuccess(_ ParameterizedNumRangesConditionV1) error {
 	return nil
 }
 
@@ -340,7 +340,7 @@ func (u *ChecklistEntry) AcceptFuncs(checkFunc func(Check) error, unknownFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ChecklistEntry type")
 		}
 		return unknownFunc(u.typ)
 	case "check":
@@ -351,7 +351,7 @@ func (u *ChecklistEntry) AcceptFuncs(checkFunc func(Check) error, unknownFunc fu
 	}
 }
 
-func (u *ChecklistEntry) CheckNoopSuccess(Check) error {
+func (u *ChecklistEntry) CheckNoopSuccess(_ Check) error {
 	return nil
 }
 
@@ -671,7 +671,7 @@ func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ChecklistSearchQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "and":
@@ -752,63 +752,63 @@ func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) 
 	}
 }
 
-func (u *ChecklistSearchQuery) AndNoopSuccess([]ChecklistSearchQuery) error {
+func (u *ChecklistSearchQuery) AndNoopSuccess(_ []ChecklistSearchQuery) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) OrNoopSuccess([]ChecklistSearchQuery) error {
+func (u *ChecklistSearchQuery) OrNoopSuccess(_ []ChecklistSearchQuery) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) SearchTextNoopSuccess(string) error {
+func (u *ChecklistSearchQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) LabelNoopSuccess(api.Label) error {
+func (u *ChecklistSearchQuery) LabelNoopSuccess(_ api.Label) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) LabelsNoopSuccess(api1.LabelsFilter) error {
+func (u *ChecklistSearchQuery) LabelsNoopSuccess(_ api1.LabelsFilter) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) PropertyNoopSuccess(api.Property) error {
+func (u *ChecklistSearchQuery) PropertyNoopSuccess(_ api.Property) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) PropertiesNoopSuccess(api1.PropertiesFilter) error {
+func (u *ChecklistSearchQuery) PropertiesNoopSuccess(_ api1.PropertiesFilter) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) AuthorRidNoopSuccess(api1.UserRid) error {
+func (u *ChecklistSearchQuery) AuthorRidNoopSuccess(_ api1.UserRid) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) AssigneeRidNoopSuccess(api1.UserRid) error {
+func (u *ChecklistSearchQuery) AssigneeRidNoopSuccess(_ api1.UserRid) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) IsPublishedNoopSuccess(bool) error {
+func (u *ChecklistSearchQuery) IsPublishedNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) NotNoopSuccess(ChecklistSearchQuery) error {
+func (u *ChecklistSearchQuery) NotNoopSuccess(_ ChecklistSearchQuery) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *ChecklistSearchQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) AuthorIsCurrentUserNoopSuccess(bool) error {
+func (u *ChecklistSearchQuery) AuthorIsCurrentUserNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) AuthorRidsNoopSuccess([]api1.UserRid) error {
+func (u *ChecklistSearchQuery) AuthorRidsNoopSuccess(_ []api1.UserRid) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) IsArchivedNoopSuccess(bool) error {
+func (u *ChecklistSearchQuery) IsArchivedNoopSuccess(_ bool) error {
 	return nil
 }
 
@@ -1156,7 +1156,7 @@ func (u *CreateChecklistEntryRequest) AcceptFuncs(createCheckFunc func(CreateChe
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CreateChecklistEntryRequest type")
 		}
 		return unknownFunc(u.typ)
 	case "createCheck":
@@ -1167,7 +1167,7 @@ func (u *CreateChecklistEntryRequest) AcceptFuncs(createCheckFunc func(CreateChe
 	}
 }
 
-func (u *CreateChecklistEntryRequest) CreateCheckNoopSuccess(CreateCheckRequest) error {
+func (u *CreateChecklistEntryRequest) CreateCheckNoopSuccess(_ CreateCheckRequest) error {
 	return nil
 }
 
@@ -1319,7 +1319,7 @@ func (u *FunctionNode) AcceptFuncs(enumFunc func(api11.EnumSeries) error, numeri
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FunctionNode type")
 		}
 		return unknownFunc(u.typ)
 	case "enum":
@@ -1340,15 +1340,15 @@ func (u *FunctionNode) AcceptFuncs(enumFunc func(api11.EnumSeries) error, numeri
 	}
 }
 
-func (u *FunctionNode) EnumNoopSuccess(api11.EnumSeries) error {
+func (u *FunctionNode) EnumNoopSuccess(_ api11.EnumSeries) error {
 	return nil
 }
 
-func (u *FunctionNode) NumericNoopSuccess(api11.NumericSeries) error {
+func (u *FunctionNode) NumericNoopSuccess(_ api11.NumericSeries) error {
 	return nil
 }
 
-func (u *FunctionNode) RangesNoopSuccess(api11.RangeSeries) error {
+func (u *FunctionNode) RangesNoopSuccess(_ api11.RangeSeries) error {
 	return nil
 }
 
@@ -1504,7 +1504,7 @@ func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, unknownFunc 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in JobSpec type")
 		}
 		return unknownFunc(u.typ)
 	case "checkV2":
@@ -1515,7 +1515,7 @@ func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, unknownFunc 
 	}
 }
 
-func (u *JobSpec) CheckV2NoopSuccess(CheckJobSpec) error {
+func (u *JobSpec) CheckV2NoopSuccess(_ CheckJobSpec) error {
 	return nil
 }
 
@@ -1667,7 +1667,7 @@ func (u *UnresolvedCheckCondition) AcceptFuncs(numRangesV2Func func(UnresolvedNu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UnresolvedCheckCondition type")
 		}
 		return unknownFunc(u.typ)
 	case "numRangesV2":
@@ -1688,15 +1688,15 @@ func (u *UnresolvedCheckCondition) AcceptFuncs(numRangesV2Func func(UnresolvedNu
 	}
 }
 
-func (u *UnresolvedCheckCondition) NumRangesV2NoopSuccess(UnresolvedNumRangesConditionV2) error {
+func (u *UnresolvedCheckCondition) NumRangesV2NoopSuccess(_ UnresolvedNumRangesConditionV2) error {
 	return nil
 }
 
-func (u *UnresolvedCheckCondition) NumRangesV3NoopSuccess(UnresolvedNumRangesConditionV3) error {
+func (u *UnresolvedCheckCondition) NumRangesV3NoopSuccess(_ UnresolvedNumRangesConditionV3) error {
 	return nil
 }
 
-func (u *UnresolvedCheckCondition) ParameterizedNumRangesV1NoopSuccess(UnresolvedParameterizedNumRangesConditionV1) error {
+func (u *UnresolvedCheckCondition) ParameterizedNumRangesV1NoopSuccess(_ UnresolvedParameterizedNumRangesConditionV1) error {
 	return nil
 }
 
@@ -1894,7 +1894,7 @@ func (u *UnresolvedVariableLocator) AcceptFuncs(checklistVariableFunc func(api2.
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UnresolvedVariableLocator type")
 		}
 		return unknownFunc(u.typ)
 	case "checklistVariable":
@@ -1920,19 +1920,19 @@ func (u *UnresolvedVariableLocator) AcceptFuncs(checklistVariableFunc func(api2.
 	}
 }
 
-func (u *UnresolvedVariableLocator) ChecklistVariableNoopSuccess(api2.VariableName) error {
+func (u *UnresolvedVariableLocator) ChecklistVariableNoopSuccess(_ api2.VariableName) error {
 	return nil
 }
 
-func (u *UnresolvedVariableLocator) ComputeNodeNoopSuccess(UnresolvedComputeNodeWithContext) error {
+func (u *UnresolvedVariableLocator) ComputeNodeNoopSuccess(_ UnresolvedComputeNodeWithContext) error {
 	return nil
 }
 
-func (u *UnresolvedVariableLocator) SeriesNoopSuccess(api3.ChannelLocator) error {
+func (u *UnresolvedVariableLocator) SeriesNoopSuccess(_ api3.ChannelLocator) error {
 	return nil
 }
 
-func (u *UnresolvedVariableLocator) TimestampNoopSuccess(TimestampLocator) error {
+func (u *UnresolvedVariableLocator) TimestampNoopSuccess(_ TimestampLocator) error {
 	return nil
 }
 
@@ -2118,7 +2118,7 @@ func (u *UpdateChecklistEntryRequest) AcceptFuncs(createCheckFunc func(CreateChe
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UpdateChecklistEntryRequest type")
 		}
 		return unknownFunc(u.typ)
 	case "createCheck":
@@ -2134,11 +2134,11 @@ func (u *UpdateChecklistEntryRequest) AcceptFuncs(createCheckFunc func(CreateChe
 	}
 }
 
-func (u *UpdateChecklistEntryRequest) CreateCheckNoopSuccess(CreateCheckRequest) error {
+func (u *UpdateChecklistEntryRequest) CreateCheckNoopSuccess(_ CreateCheckRequest) error {
 	return nil
 }
 
-func (u *UpdateChecklistEntryRequest) CheckNoopSuccess(api1.CheckRid) error {
+func (u *UpdateChecklistEntryRequest) CheckNoopSuccess(_ api1.CheckRid) error {
 	return nil
 }
 
@@ -2320,7 +2320,7 @@ func (u *VariableLocator) AcceptFuncs(checklistVariableFunc func(api2.VariableNa
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VariableLocator type")
 		}
 		return unknownFunc(u.typ)
 	case "checklistVariable":
@@ -2346,19 +2346,19 @@ func (u *VariableLocator) AcceptFuncs(checklistVariableFunc func(api2.VariableNa
 	}
 }
 
-func (u *VariableLocator) ChecklistVariableNoopSuccess(api2.VariableName) error {
+func (u *VariableLocator) ChecklistVariableNoopSuccess(_ api2.VariableName) error {
 	return nil
 }
 
-func (u *VariableLocator) ComputeNodeNoopSuccess(ComputeNodeWithContext) error {
+func (u *VariableLocator) ComputeNodeNoopSuccess(_ ComputeNodeWithContext) error {
 	return nil
 }
 
-func (u *VariableLocator) SeriesNoopSuccess(api3.ChannelLocator) error {
+func (u *VariableLocator) SeriesNoopSuccess(_ api3.ChannelLocator) error {
 	return nil
 }
 
-func (u *VariableLocator) TimestampNoopSuccess(TimestampLocator) error {
+func (u *VariableLocator) TimestampNoopSuccess(_ TimestampLocator) error {
 	return nil
 }
 

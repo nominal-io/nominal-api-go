@@ -38,7 +38,7 @@ func (o *Bounds) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type CreateSegment struct {
 	DataHandle api.Handle `json:"dataHandle"`
 	// The average frame rate (FPS) of the segment calculated as total frames / duration in seconds.
-	FrameRate           float64           `conjure-docs:"The average frame rate (FPS) of the segment calculated as total frames / duration in seconds." json:"frameRate"`
+	FrameRate           float64           `json:"frameRate"`
 	DurationSeconds     float64           `json:"durationSeconds"`
 	Timestamps          SegmentTimestamps `json:"timestamps"`
 	SegmentEndTimestamp api.Timestamp     `json:"segmentEndTimestamp"`
@@ -67,7 +67,7 @@ type CreateSegmentsRequest struct {
 	   If true, overlapping segments from other video files within the same video will be deleted
 	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
 	*/
-	OverWriteSegments *bool `conjure-docs:"If true, overlapping segments from other video files within the same video will be deleted\nbefore inserting new segments. The cached segment metadata for affected files will be recomputed." json:"overWriteSegments,omitempty"`
+	OverWriteSegments *bool `json:"overWriteSegments,omitempty"`
 }
 
 func (o CreateSegmentsRequest) MarshalJSON() ([]byte, error) {
@@ -158,7 +158,7 @@ type CreateSegmentsV2Request struct {
 	   If true, overlapping segments from other dataset files within the same series will be deleted
 	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
 	*/
-	OverWriteSegments *bool `conjure-docs:"If true, overlapping segments from other dataset files within the same series will be deleted\nbefore inserting new segments. The cached segment metadata for affected files will be recomputed." json:"overWriteSegments,omitempty"`
+	OverWriteSegments *bool `json:"overWriteSegments,omitempty"`
 }
 
 func (o CreateSegmentsV2Request) MarshalJSON() ([]byte, error) {
@@ -247,7 +247,7 @@ type CreateVideoFileRequest struct {
 	OriginMetadata VideoFileOriginMetadata `json:"originMetadata"`
 	VideoRid       rids.VideoRid           `json:"videoRid"`
 	// The size of the pre-processed raw video file in bytes.
-	RawFileSize safelong.SafeLong `conjure-docs:"The size of the pre-processed raw video file in bytes." json:"rawFileSize"`
+	RawFileSize safelong.SafeLong `json:"rawFileSize"`
 }
 
 func (o CreateVideoFileRequest) MarshalYAML() (interface{}, error) {
@@ -278,12 +278,12 @@ type CreateVideoRequest struct {
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the video. If not provided, the video will be created in\nthe default workspace for the user's organization, if the default workspace for the\norganization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 	/*
 	   The markings to apply to the created video.
 	   If not provided, the video will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api1.MarkingRid `conjure-docs:"The markings to apply to the created video.\nIf not provided, the video will be visible to all users in the same workspace." json:"markingRids"`
+	MarkingRids []api1.MarkingRid `json:"markingRids"`
 }
 
 func (o CreateVideoRequest) MarshalJSON() ([]byte, error) {
@@ -291,7 +291,7 @@ func (o CreateVideoRequest) MarshalJSON() ([]byte, error) {
 		o.Labels = make([]api.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.MarkingRids == nil {
 		o.MarkingRids = make([]api1.MarkingRid, 0)
@@ -310,7 +310,7 @@ func (o *CreateVideoRequest) UnmarshalJSON(data []byte) error {
 		rawCreateVideoRequest.Labels = make([]api.Label, 0)
 	}
 	if rawCreateVideoRequest.Properties == nil {
-		rawCreateVideoRequest.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawCreateVideoRequest.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawCreateVideoRequest.MarkingRids == nil {
 		rawCreateVideoRequest.MarkingRids = make([]api1.MarkingRid, 0)
@@ -343,7 +343,7 @@ type EnrichedVideoIngestStatus struct {
 
 func (o EnrichedVideoIngestStatus) MarshalJSON() ([]byte, error) {
 	if o.FileIngestStatus == nil {
-		o.FileIngestStatus = make(map[rids.VideoFileRid]VideoFileIngestStatus, 0)
+		o.FileIngestStatus = make(map[rids.VideoFileRid]VideoFileIngestStatus)
 	}
 	type _tmpEnrichedVideoIngestStatus EnrichedVideoIngestStatus
 	return safejson.Marshal(_tmpEnrichedVideoIngestStatus(o))
@@ -356,7 +356,7 @@ func (o *EnrichedVideoIngestStatus) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawEnrichedVideoIngestStatus.FileIngestStatus == nil {
-		rawEnrichedVideoIngestStatus.FileIngestStatus = make(map[rids.VideoFileRid]VideoFileIngestStatus, 0)
+		rawEnrichedVideoIngestStatus.FileIngestStatus = make(map[rids.VideoFileRid]VideoFileIngestStatus)
 	}
 	*o = EnrichedVideoIngestStatus(rawEnrichedVideoIngestStatus)
 	return nil
@@ -684,7 +684,7 @@ type GetSegmentByTimestampRequest struct {
 	   timestamp of the returned segment. The view range should be the same as the one requested to get the
 	   playlist and segment summaries.
 	*/
-	ViewRangeStart *api.Timestamp `conjure-docs:"The start of the view range used to dynamically calculate media timestamps. The first segment with an \noverlap with the time bounds will have its minimum media timestamp set to 0, with every subsequent\nsegment building media time cumulatively from that offset. This will determine the starting media\ntimestamp of the returned segment. The view range should be the same as the one requested to get the\nplaylist and segment summaries." json:"viewRangeStart,omitempty"`
+	ViewRangeStart *api.Timestamp `json:"viewRangeStart,omitempty"`
 }
 
 func (o GetSegmentByTimestampRequest) MarshalYAML() (interface{}, error) {
@@ -712,7 +712,7 @@ type GetSegmentByTimestampV2Request struct {
 	   overlap with the time bounds will have its minimum media timestamp set to 0, with every subsequent
 	   segment building media time cumulatively from that offset.
 	*/
-	ViewRangeStart *api.Timestamp `conjure-docs:"The start of the view range used to dynamically calculate media timestamps. The first segment with an \noverlap with the time bounds will have its minimum media timestamp set to 0, with every subsequent\nsegment building media time cumulatively from that offset." json:"viewRangeStart,omitempty"`
+	ViewRangeStart *api.Timestamp `json:"viewRangeStart,omitempty"`
 }
 
 func (o GetSegmentByTimestampV2Request) MarshalYAML() (interface{}, error) {
@@ -1039,9 +1039,9 @@ implicitly through the segment timestamps.
 */
 type NoTimestampManifest struct {
 	// Specifies the original starting timestamp of the video.
-	StartingTimestamp api.Timestamp `conjure-docs:"Specifies the original starting timestamp of the video." json:"startingTimestamp"`
+	StartingTimestamp api.Timestamp `json:"startingTimestamp"`
 	// A field that specifies that the frame rate of the video does not match the frame rate of the camera | i.e. a slowed down or sped up video. Can specify either the camera frame rate or the absolute end time.
-	ScaleParameter *ScaleParameter `conjure-docs:"A field that specifies that the frame rate of the video does not match the frame rate of the camera | i.e. a slowed down or sped up video. Can specify either the camera frame rate or the absolute end time." json:"scaleParameter,omitempty"`
+	ScaleParameter *ScaleParameter `json:"scaleParameter,omitempty"`
 }
 
 func (o NoTimestampManifest) MarshalYAML() (interface{}, error) {
@@ -1063,11 +1063,11 @@ func (o *NoTimestampManifest) UnmarshalYAML(unmarshal func(interface{}) error) e
 type SearchVideosRequest struct {
 	Query SearchVideosQuery `json:"query"`
 	// Defaults to 100. Will throw if larger than 1_000.
-	PageSize    *int        `conjure-docs:"Defaults to 100. Will throw if larger than 1_000." json:"pageSize,omitempty"`
+	PageSize    *int        `json:"pageSize,omitempty"`
 	Token       *api.Token  `json:"token,omitempty"`
 	SortOptions SortOptions `json:"sortOptions"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived videos in search.
-	ArchivedStatuses *[]api.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived videos in search." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchVideosRequest) MarshalYAML() (interface{}, error) {
@@ -1133,14 +1133,14 @@ type Segment struct {
 	VideoRid   rids.VideoRid   `json:"videoRid"`
 	DataHandle api.Handle      `json:"dataHandle"`
 	// The average frame rate (FPS) of the segment calculated as total frames / duration in seconds.
-	FrameRate float64 `conjure-docs:"The average frame rate (FPS) of the segment calculated as total frames / duration in seconds." json:"frameRate"`
+	FrameRate float64 `json:"frameRate"`
 	// The duration of a segment in media time.
-	DurationSeconds float64 `conjure-docs:"The duration of a segment in media time." json:"durationSeconds"`
+	DurationSeconds float64 `json:"durationSeconds"`
 	/*
 	   for videos with frame-level timestamps, we provide mappings, otherwise we just include a single list
 	   of timestamps.
 	*/
-	Timestamps SegmentTimestamps `conjure-docs:"for videos with frame-level timestamps, we provide mappings, otherwise we just include a single list\nof timestamps." json:"timestamps"`
+	Timestamps SegmentTimestamps `json:"timestamps"`
 }
 
 func (o Segment) MarshalYAML() (interface{}, error) {
@@ -1189,7 +1189,7 @@ func (o *SegmentSummary) UnmarshalYAML(unmarshal func(interface{}) error) error 
 // Bounding timestamps for the frames within a segment. Includes datasetFileId for V2 channel-based API.
 type SegmentSummaryV2 struct {
 	// The dataset file ID that this segment belongs to.
-	DatasetFileId        *uuid.UUID    `conjure-docs:"The dataset file ID that this segment belongs to." json:"datasetFileId,omitempty"`
+	DatasetFileId        *uuid.UUID    `json:"datasetFileId,omitempty"`
 	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp"`
 	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp"`
 	MinMediaTimestamp    float64       `json:"minMediaTimestamp"`
@@ -1216,17 +1216,17 @@ func (o *SegmentSummaryV2) UnmarshalYAML(unmarshal func(interface{}) error) erro
 type SegmentV2 struct {
 	Rid rids.SegmentRid `json:"rid"`
 	// The dataset file ID that this segment belongs to.
-	DatasetFileId *uuid.UUID `conjure-docs:"The dataset file ID that this segment belongs to." json:"datasetFileId,omitempty"`
+	DatasetFileId *uuid.UUID `json:"datasetFileId,omitempty"`
 	DataHandle    api.Handle `json:"dataHandle"`
 	// The average frame rate (FPS) of the segment calculated as total frames / duration in seconds.
-	FrameRate float64 `conjure-docs:"The average frame rate (FPS) of the segment calculated as total frames / duration in seconds." json:"frameRate"`
+	FrameRate float64 `json:"frameRate"`
 	// The duration of a segment in media time.
-	DurationSeconds float64 `conjure-docs:"The duration of a segment in media time." json:"durationSeconds"`
+	DurationSeconds float64 `json:"durationSeconds"`
 	/*
 	   for videos with frame-level timestamps, we provide mappings, otherwise we just include a single list
 	   of timestamps.
 	*/
-	Timestamps SegmentTimestamps `conjure-docs:"for videos with frame-level timestamps, we provide mappings, otherwise we just include a single list\nof timestamps." json:"timestamps"`
+	Timestamps SegmentTimestamps `json:"timestamps"`
 }
 
 func (o SegmentV2) MarshalYAML() (interface{}, error) {
@@ -1364,7 +1364,7 @@ type UpdateVideoFileRequest struct {
 	StartingTimestamp *api.Timestamp  `json:"startingTimestamp,omitempty"`
 	ScaleParameter    *ScaleParameter `json:"scaleParameter,omitempty"`
 	// The total size of all the post-processed segments corresponding to this video file in bytes.
-	SegmentedFilesSize *safelong.SafeLong `conjure-docs:"The total size of all the post-processed segments corresponding to this video file in bytes." json:"segmentedFilesSize,omitempty"`
+	SegmentedFilesSize *safelong.SafeLong `json:"segmentedFilesSize,omitempty"`
 }
 
 func (o UpdateVideoFileRequest) MarshalYAML() (interface{}, error) {
@@ -1431,7 +1431,7 @@ func (o Video) MarshalJSON() ([]byte, error) {
 		o.Labels = make([]api.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	type _tmpVideo Video
 	return safejson.Marshal(_tmpVideo(o))
@@ -1447,7 +1447,7 @@ func (o *Video) UnmarshalJSON(data []byte) error {
 		rawVideo.Labels = make([]api.Label, 0)
 	}
 	if rawVideo.Properties == nil {
-		rawVideo.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawVideo.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	*o = Video(rawVideo)
 	return nil
@@ -1474,21 +1474,21 @@ type VideoAllSegmentsMetadata struct {
 	NumFrames   int           `json:"numFrames"`
 	NumSegments int           `json:"numSegments"`
 	// deprecated, in favor of per-file VideoFileSegmentsMetadata scaleFactor. Will be removed after April 15th.
-	ScaleFactor          *float64      `conjure-docs:"deprecated, in favor of per-file VideoFileSegmentsMetadata scaleFactor. Will be removed after April 15th." json:"scaleFactor,omitempty"`
+	ScaleFactor          *float64      `json:"scaleFactor,omitempty"`
 	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp"`
 	// the timestamp corresponding to absolute starting timestamp plus absolute duration of the video.
-	MaxAbsoluteTimestamp api.Timestamp `conjure-docs:"the timestamp corresponding to absolute starting timestamp plus absolute duration of the video." json:"maxAbsoluteTimestamp"`
+	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp"`
 	MediaDurationSeconds float64       `json:"mediaDurationSeconds"`
 	// The average media frame rate (FPS) of the video calculated as total frames / duration in seconds.
-	MediaFrameRate float64 `conjure-docs:"The average media frame rate (FPS) of the video calculated as total frames / duration in seconds." json:"mediaFrameRate"`
+	MediaFrameRate float64 `json:"mediaFrameRate"`
 	// deprecated. Will be removed after April 15th.
-	MinTimestamp *api.Timestamp `conjure-docs:"deprecated. Will be removed after April 15th." json:"minTimestamp,omitempty"`
+	MinTimestamp *api.Timestamp `json:"minTimestamp,omitempty"`
 	// deprecated. Will be removed after April 15th.
-	MaxTimestamp *api.Timestamp `conjure-docs:"deprecated. Will be removed after April 15th." json:"maxTimestamp,omitempty"`
+	MaxTimestamp *api.Timestamp `json:"maxTimestamp,omitempty"`
 	// deprecated. Will be removed after April 15th.
-	DurationSeconds *float64 `conjure-docs:"deprecated. Will be removed after April 15th." json:"durationSeconds,omitempty"`
+	DurationSeconds *float64 `json:"durationSeconds,omitempty"`
 	// deprecated. Will be removed after April 15th.
-	FrameRate *float64 `conjure-docs:"deprecated. Will be removed after April 15th." json:"frameRate,omitempty"`
+	FrameRate *float64 `json:"frameRate,omitempty"`
 }
 
 func (o VideoAllSegmentsMetadata) MarshalYAML() (interface{}, error) {
@@ -1517,7 +1517,7 @@ type VideoAssetChannel struct {
 
 func (o VideoAssetChannel) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpVideoAssetChannel VideoAssetChannel
 	return safejson.Marshal(_tmpVideoAssetChannel(o))
@@ -1530,7 +1530,7 @@ func (o *VideoAssetChannel) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawVideoAssetChannel.Tags == nil {
-		rawVideoAssetChannel.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawVideoAssetChannel.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = VideoAssetChannel(rawVideoAssetChannel)
 	return nil
@@ -1560,7 +1560,7 @@ type VideoChannelSegmentsMetadata struct {
 	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp"`
 	MediaDurationSeconds float64       `json:"mediaDurationSeconds"`
 	// The average media frame rate (FPS) calculated as total frames / duration in seconds.
-	MediaFrameRate float64 `conjure-docs:"The average media frame rate (FPS) calculated as total frames / duration in seconds." json:"mediaFrameRate"`
+	MediaFrameRate float64 `json:"mediaFrameRate"`
 }
 
 func (o VideoChannelSegmentsMetadata) MarshalYAML() (interface{}, error) {
@@ -1588,7 +1588,7 @@ type VideoDataSourceChannel struct {
 
 func (o VideoDataSourceChannel) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpVideoDataSourceChannel VideoDataSourceChannel
 	return safejson.Marshal(_tmpVideoDataSourceChannel(o))
@@ -1601,7 +1601,7 @@ func (o *VideoDataSourceChannel) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawVideoDataSourceChannel.Tags == nil {
-		rawVideoDataSourceChannel.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawVideoDataSourceChannel.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = VideoDataSourceChannel(rawVideoDataSourceChannel)
 	return nil

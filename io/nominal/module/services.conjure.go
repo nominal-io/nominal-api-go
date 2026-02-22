@@ -42,41 +42,37 @@ func NewModuleServiceClient(client httpclient.Client) ModuleServiceClient {
 }
 
 func (c *moduleServiceClient) CreateModule(ctx context.Context, authHeader bearertoken.Token, requestArg CreateModuleRequest) (Module, error) {
-	var defaultReturnVal Module
 	var returnVal *Module
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateModule"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createModule failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(Module), werror.WrapWithContextParams(ctx, err, "createModule failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createModule response cannot be nil")
+		return *new(Module), werror.ErrorWithContextParams(ctx, "createModule response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *moduleServiceClient) UpdateModule(ctx context.Context, authHeader bearertoken.Token, moduleRidArg api.ModuleRid, requestArg UpdateModuleRequest) (Module, error) {
-	var defaultReturnVal Module
 	var returnVal *Module
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateModule"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/%s", url.PathEscape(fmt.Sprint(moduleRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateModule failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(Module), werror.WrapWithContextParams(ctx, err, "updateModule failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateModule response cannot be nil")
+		return *new(Module), werror.ErrorWithContextParams(ctx, "updateModule response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -85,13 +81,12 @@ func (c *moduleServiceClient) BatchGetModules(ctx context.Context, authHeader be
 	var returnVal []Module
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetModules"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetModules failed")
 	}
 	if returnVal == nil {
@@ -101,61 +96,55 @@ func (c *moduleServiceClient) BatchGetModules(ctx context.Context, authHeader be
 }
 
 func (c *moduleServiceClient) SearchModules(ctx context.Context, authHeader bearertoken.Token, requestArg SearchModulesRequest) (SearchModulesResponse, error) {
-	var defaultReturnVal SearchModulesResponse
 	var returnVal *SearchModulesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchModules"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/search"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchModules failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchModulesResponse), werror.WrapWithContextParams(ctx, err, "searchModules failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchModules response cannot be nil")
+		return *new(SearchModulesResponse), werror.ErrorWithContextParams(ctx, "searchModules response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *moduleServiceClient) BatchArchiveModules(ctx context.Context, authHeader bearertoken.Token, requestArg BatchArchiveModulesRequest) (BatchArchiveModulesResponse, error) {
-	var defaultReturnVal BatchArchiveModulesResponse
 	var returnVal *BatchArchiveModulesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchArchiveModules"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/archive"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchArchiveModules failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchArchiveModulesResponse), werror.WrapWithContextParams(ctx, err, "batchArchiveModules failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchArchiveModules response cannot be nil")
+		return *new(BatchArchiveModulesResponse), werror.ErrorWithContextParams(ctx, "batchArchiveModules response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *moduleServiceClient) BatchUnarchiveModules(ctx context.Context, authHeader bearertoken.Token, requestArg BatchUnarchiveModulesRequest) (BatchUnarchiveModulesResponse, error) {
-	var defaultReturnVal BatchUnarchiveModulesResponse
 	var returnVal *BatchUnarchiveModulesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchUnarchiveModules"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/module/unarchive"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchUnarchiveModules failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchUnarchiveModulesResponse), werror.WrapWithContextParams(ctx, err, "batchUnarchiveModules failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchUnarchiveModules response cannot be nil")
+		return *new(BatchUnarchiveModulesResponse), werror.ErrorWithContextParams(ctx, "batchUnarchiveModules response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -222,55 +211,49 @@ type moduleServiceClientWithTokenProvider struct {
 }
 
 func (c *moduleServiceClientWithTokenProvider) CreateModule(ctx context.Context, requestArg CreateModuleRequest) (Module, error) {
-	var defaultReturnVal Module
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Module), err
 	}
 	return c.client.CreateModule(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *moduleServiceClientWithTokenProvider) UpdateModule(ctx context.Context, moduleRidArg api.ModuleRid, requestArg UpdateModuleRequest) (Module, error) {
-	var defaultReturnVal Module
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Module), err
 	}
 	return c.client.UpdateModule(ctx, bearertoken.Token(token), moduleRidArg, requestArg)
 }
 
 func (c *moduleServiceClientWithTokenProvider) BatchGetModules(ctx context.Context, requestArg BatchGetModulesRequest) ([]Module, error) {
-	var defaultReturnVal []Module
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetModules(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *moduleServiceClientWithTokenProvider) SearchModules(ctx context.Context, requestArg SearchModulesRequest) (SearchModulesResponse, error) {
-	var defaultReturnVal SearchModulesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(SearchModulesResponse), err
 	}
 	return c.client.SearchModules(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *moduleServiceClientWithTokenProvider) BatchArchiveModules(ctx context.Context, requestArg BatchArchiveModulesRequest) (BatchArchiveModulesResponse, error) {
-	var defaultReturnVal BatchArchiveModulesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchArchiveModulesResponse), err
 	}
 	return c.client.BatchArchiveModules(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *moduleServiceClientWithTokenProvider) BatchUnarchiveModules(ctx context.Context, requestArg BatchUnarchiveModulesRequest) (BatchUnarchiveModulesResponse, error) {
-	var defaultReturnVal BatchUnarchiveModulesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchUnarchiveModulesResponse), err
 	}
 	return c.client.BatchUnarchiveModules(ctx, bearertoken.Token(token), requestArg)
 }

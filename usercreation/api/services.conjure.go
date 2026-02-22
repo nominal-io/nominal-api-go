@@ -32,11 +32,10 @@ func NewInternalUserCreationServiceClient(client httpclient.Client) InternalUser
 func (c *internalUserCreationServiceClient) EnsureDatabaseUserExists(ctx context.Context, authHeader bearertoken.Token) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("EnsureDatabaseUserExists"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/user-creation/v1/database"))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "ensureDatabaseUserExists failed")
 	}
 	return nil

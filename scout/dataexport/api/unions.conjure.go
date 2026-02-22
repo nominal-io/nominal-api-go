@@ -83,7 +83,7 @@ func (u *ExportChannels) AcceptFuncs(timeDomainFunc func(ExportTimeDomainChannel
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ExportChannels type")
 		}
 		return unknownFunc(u.typ)
 	case "timeDomain":
@@ -94,7 +94,7 @@ func (u *ExportChannels) AcceptFuncs(timeDomainFunc func(ExportTimeDomainChannel
 	}
 }
 
-func (u *ExportChannels) TimeDomainNoopSuccess(ExportTimeDomainChannels) error {
+func (u *ExportChannels) TimeDomainNoopSuccess(_ ExportTimeDomainChannels) error {
 	return nil
 }
 
@@ -246,7 +246,7 @@ func (u *ExportFormat) AcceptFuncs(arrowFunc func(Arrow) error, csvFunc func(Csv
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ExportFormat type")
 		}
 		return unknownFunc(u.typ)
 	case "arrow":
@@ -267,15 +267,15 @@ func (u *ExportFormat) AcceptFuncs(arrowFunc func(Arrow) error, csvFunc func(Csv
 	}
 }
 
-func (u *ExportFormat) ArrowNoopSuccess(Arrow) error {
+func (u *ExportFormat) ArrowNoopSuccess(_ Arrow) error {
 	return nil
 }
 
-func (u *ExportFormat) CsvNoopSuccess(Csv) error {
+func (u *ExportFormat) CsvNoopSuccess(_ Csv) error {
 	return nil
 }
 
-func (u *ExportFormat) MatfileNoopSuccess(Matfile) error {
+func (u *ExportFormat) MatfileNoopSuccess(_ Matfile) error {
 	return nil
 }
 
@@ -446,7 +446,7 @@ func (u *MergeTimestampStrategy) AcceptFuncs(noneFunc func(NoneStrategy) error, 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in MergeTimestampStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "none":
@@ -462,11 +462,11 @@ func (u *MergeTimestampStrategy) AcceptFuncs(noneFunc func(NoneStrategy) error, 
 	}
 }
 
-func (u *MergeTimestampStrategy) NoneNoopSuccess(NoneStrategy) error {
+func (u *MergeTimestampStrategy) NoneNoopSuccess(_ NoneStrategy) error {
 	return nil
 }
 
-func (u *MergeTimestampStrategy) AllTimestampsForwardFillNoopSuccess(AllTimestampsForwardFillStrategy) error {
+func (u *MergeTimestampStrategy) AllTimestampsForwardFillNoopSuccess(_ AllTimestampsForwardFillStrategy) error {
 	return nil
 }
 
@@ -638,7 +638,7 @@ func (u *ResolutionOption) AcceptFuncs(nanosecondsFunc func(safelong.SafeLong) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ResolutionOption type")
 		}
 		return unknownFunc(u.typ)
 	case "nanoseconds":
@@ -659,15 +659,15 @@ func (u *ResolutionOption) AcceptFuncs(nanosecondsFunc func(safelong.SafeLong) e
 	}
 }
 
-func (u *ResolutionOption) NanosecondsNoopSuccess(safelong.SafeLong) error {
+func (u *ResolutionOption) NanosecondsNoopSuccess(_ safelong.SafeLong) error {
 	return nil
 }
 
-func (u *ResolutionOption) BucketsNoopSuccess(int) error {
+func (u *ResolutionOption) BucketsNoopSuccess(_ int) error {
 	return nil
 }
 
-func (u *ResolutionOption) UndecimatedNoopSuccess(UndecimatedResolution) error {
+func (u *ResolutionOption) UndecimatedNoopSuccess(_ UndecimatedResolution) error {
 	return nil
 }
 
@@ -837,7 +837,7 @@ func (u *TimestampFormat) AcceptFuncs(iso8601Func func(Iso8601TimestampFormat) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimestampFormat type")
 		}
 		return unknownFunc(u.typ)
 	case "iso8601":
@@ -853,11 +853,11 @@ func (u *TimestampFormat) AcceptFuncs(iso8601Func func(Iso8601TimestampFormat) e
 	}
 }
 
-func (u *TimestampFormat) Iso8601NoopSuccess(Iso8601TimestampFormat) error {
+func (u *TimestampFormat) Iso8601NoopSuccess(_ Iso8601TimestampFormat) error {
 	return nil
 }
 
-func (u *TimestampFormat) RelativeNoopSuccess(RelativeTimestampFormat) error {
+func (u *TimestampFormat) RelativeNoopSuccess(_ RelativeTimestampFormat) error {
 	return nil
 }
 

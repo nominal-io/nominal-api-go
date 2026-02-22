@@ -96,7 +96,7 @@ func (u *Claim) AcceptFuncs(stringFunc func(string) error, stringListFunc func([
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Claim type")
 		}
 		return unknownFunc(u.typ)
 	case "string":
@@ -112,11 +112,11 @@ func (u *Claim) AcceptFuncs(stringFunc func(string) error, stringListFunc func([
 	}
 }
 
-func (u *Claim) StringNoopSuccess(string) error {
+func (u *Claim) StringNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *Claim) StringListNoopSuccess([]string) error {
+func (u *Claim) StringListNoopSuccess(_ []string) error {
 	return nil
 }
 

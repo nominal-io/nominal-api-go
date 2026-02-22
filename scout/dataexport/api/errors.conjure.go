@@ -16,6 +16,154 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+type exportBucketNotConfigured struct{}
+
+func (o exportBucketNotConfigured) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *exportBucketNotConfigured) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewExportBucketNotConfigured returns new instance of ExportBucketNotConfigured error.
+func NewExportBucketNotConfigured() *ExportBucketNotConfigured {
+	return &ExportBucketNotConfigured{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), exportBucketNotConfigured: exportBucketNotConfigured{}}
+}
+
+// WrapWithExportBucketNotConfigured returns new instance of ExportBucketNotConfigured error wrapping an existing error.
+func WrapWithExportBucketNotConfigured(err error) *ExportBucketNotConfigured {
+	return &ExportBucketNotConfigured{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, exportBucketNotConfigured: exportBucketNotConfigured{}}
+}
+
+// ExportBucketNotConfigured is an error type.
+// The export bucket is not configured for this environment. Data export via presigned link is not available.
+type ExportBucketNotConfigured struct {
+	errorInstanceID uuid.UUID
+	exportBucketNotConfigured
+	cause error
+	stack werror.StackTrace
+}
+
+// IsExportBucketNotConfigured returns true if err is an instance of ExportBucketNotConfigured.
+func IsExportBucketNotConfigured(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ExportBucketNotConfigured)
+	return ok
+}
+
+func (e *ExportBucketNotConfigured) Error() string {
+	return fmt.Sprintf("NOT_FOUND Export:ExportBucketNotConfigured (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ExportBucketNotConfigured) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ExportBucketNotConfigured) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ExportBucketNotConfigured) Message() string {
+	return "NOT_FOUND Export:ExportBucketNotConfigured"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ExportBucketNotConfigured) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ExportBucketNotConfigured) Code() errors.ErrorCode {
+	return errors.NotFound
+}
+
+// Name returns an error name identifying error type.
+func (e *ExportBucketNotConfigured) Name() string {
+	return "Export:ExportBucketNotConfigured"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ExportBucketNotConfigured) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ExportBucketNotConfigured) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ExportBucketNotConfigured) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ExportBucketNotConfigured) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ExportBucketNotConfigured) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ExportBucketNotConfigured) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ExportBucketNotConfigured) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.exportBucketNotConfigured)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Export:ExportBucketNotConfigured", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ExportBucketNotConfigured) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters exportBucketNotConfigured
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.exportBucketNotConfigured = parameters
+	return nil
+}
+
 type exportDataTooBig struct {
 	EstimatedSize safelong.SafeLong `json:"estimatedSize"`
 }
@@ -166,5 +314,6 @@ func (e *ExportDataTooBig) UnmarshalJSON(data []byte) error {
 }
 
 func init() {
+	conjureerrors.RegisterErrorType("Export:ExportBucketNotConfigured", reflect.TypeOf(ExportBucketNotConfigured{}))
 	conjureerrors.RegisterErrorType("Export:ExportDataTooBig", reflect.TypeOf(ExportDataTooBig{}))
 }

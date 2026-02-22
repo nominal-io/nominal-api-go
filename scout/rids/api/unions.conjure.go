@@ -111,7 +111,7 @@ func (u *CheckAlertState) AcceptFuncs(pendingReviewFunc func(PendingReviewAlertS
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CheckAlertState type")
 		}
 		return unknownFunc(u.typ)
 	case "pendingReview":
@@ -132,15 +132,15 @@ func (u *CheckAlertState) AcceptFuncs(pendingReviewFunc func(PendingReviewAlertS
 	}
 }
 
-func (u *CheckAlertState) PendingReviewNoopSuccess(PendingReviewAlertState) error {
+func (u *CheckAlertState) PendingReviewNoopSuccess(_ PendingReviewAlertState) error {
 	return nil
 }
 
-func (u *CheckAlertState) ClosedWithFurtherActionNoopSuccess(ClosedWithFurtherActionAlertState) error {
+func (u *CheckAlertState) ClosedWithFurtherActionNoopSuccess(_ ClosedWithFurtherActionAlertState) error {
 	return nil
 }
 
-func (u *CheckAlertState) ClosedWithIgnoreNoopSuccess(ClosedWithIgnoreAlertState) error {
+func (u *CheckAlertState) ClosedWithIgnoreNoopSuccess(_ ClosedWithIgnoreAlertState) error {
 	return nil
 }
 
@@ -618,7 +618,7 @@ func (u *ComputeEventQuery) AcceptFuncs(searchTextFunc func(api.StringConstant) 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComputeEventQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "searchText":
@@ -744,99 +744,99 @@ func (u *ComputeEventQuery) AcceptFuncs(searchTextFunc func(api.StringConstant) 
 	}
 }
 
-func (u *ComputeEventQuery) SearchTextNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) SearchTextNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) AfterNoopSuccess(api.TimestampConstant) error {
+func (u *ComputeEventQuery) AfterNoopSuccess(_ api.TimestampConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) BeforeNoopSuccess(api.TimestampConstant) error {
+func (u *ComputeEventQuery) BeforeNoopSuccess(_ api.TimestampConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) AdvancedTimeFilterNoopSuccess(EventTimeFilter) error {
+func (u *ComputeEventQuery) AdvancedTimeFilterNoopSuccess(_ EventTimeFilter) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) AssetNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) AssetNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) TemplateNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) TemplateNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) WorkbookNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) WorkbookNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) DataReviewNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) DataReviewNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) OriginTypeNoopSuccess(SearchEventOriginType) error {
+func (u *ComputeEventQuery) OriginTypeNoopSuccess(_ SearchEventOriginType) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) DataReviewCheckNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) DataReviewCheckNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) DispositionStatusNoopSuccess(EventDispositionStatus) error {
+func (u *ComputeEventQuery) DispositionStatusNoopSuccess(_ EventDispositionStatus) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) PriorityNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) PriorityNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) AssigneeNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) AssigneeNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) EventTypeNoopSuccess(EventType) error {
+func (u *ComputeEventQuery) EventTypeNoopSuccess(_ EventType) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) CreatedByNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) CreatedByNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) LabelNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) LabelNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) PropertyNoopSuccess(Property) error {
+func (u *ComputeEventQuery) PropertyNoopSuccess(_ Property) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) AndNoopSuccess([]ComputeEventQuery) error {
+func (u *ComputeEventQuery) AndNoopSuccess(_ []ComputeEventQuery) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) OrNoopSuccess([]ComputeEventQuery) error {
+func (u *ComputeEventQuery) OrNoopSuccess(_ []ComputeEventQuery) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) NotNoopSuccess(ComputeEventQuery) error {
+func (u *ComputeEventQuery) NotNoopSuccess(_ ComputeEventQuery) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) WorkspaceNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) WorkspaceNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) ProcedureNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) ProcedureNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) ProcedureExecutionNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) ProcedureExecutionNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 
-func (u *ComputeEventQuery) StepIdNoopSuccess(api.StringConstant) error {
+func (u *ComputeEventQuery) StepIdNoopSuccess(_ api.StringConstant) error {
 	return nil
 }
 

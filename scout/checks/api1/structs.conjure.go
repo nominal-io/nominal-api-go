@@ -17,7 +17,7 @@ type BatchGetJobReportsResponse struct {
 
 func (o BatchGetJobReportsResponse) MarshalJSON() ([]byte, error) {
 	if o.JobRidsToJobReports == nil {
-		o.JobRidsToJobReports = make(map[api.JobRid]JobReport, 0)
+		o.JobRidsToJobReports = make(map[api.JobRid]JobReport)
 	}
 	type _tmpBatchGetJobReportsResponse BatchGetJobReportsResponse
 	return safejson.Marshal(_tmpBatchGetJobReportsResponse(o))
@@ -30,7 +30,7 @@ func (o *BatchGetJobReportsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawBatchGetJobReportsResponse.JobRidsToJobReports == nil {
-		rawBatchGetJobReportsResponse.JobRidsToJobReports = make(map[api.JobRid]JobReport, 0)
+		rawBatchGetJobReportsResponse.JobRidsToJobReports = make(map[api.JobRid]JobReport)
 	}
 	*o = BatchGetJobReportsResponse(rawBatchGetJobReportsResponse)
 	return nil

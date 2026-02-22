@@ -15,7 +15,7 @@ type VideoFileMetadata struct {
 	   Can be an embedded MCAP manifest, an external sidecar file, or calculated
 	   from a starting offset applied to presentation timestamps.
 	*/
-	TimestampManifest api.VideoFileTimestampManifest `conjure-docs:"Specifies how to determine absolute timestamps for each frame in the video.\nCan be an embedded MCAP manifest, an external sidecar file, or calculated\nfrom a starting offset applied to presentation timestamps." json:"timestampManifest"`
+	TimestampManifest api.VideoFileTimestampManifest `json:"timestampManifest"`
 	/*
 	   Cached aggregate metadata about the segments comprising this video file
 	   after segmentation has completed. Includes frame counts, duration, and
@@ -23,7 +23,7 @@ type VideoFileMetadata struct {
 	   Note: Min/max timestamps are stored in DatasetFile.bounds field.
 	   Raw file size is stored in DatasetFile.fileSizeBytes.
 	*/
-	SegmentMetadata *VideoSegmentsMetadata `conjure-docs:"Cached aggregate metadata about the segments comprising this video file\nafter segmentation has completed. Includes frame counts, duration, and\nframe rate. Empty until segmentation is complete.\nNote: Min/max timestamps are stored in DatasetFile.bounds field.\nRaw file size is stored in DatasetFile.fileSizeBytes." json:"segmentMetadata,omitempty"`
+	SegmentMetadata *VideoSegmentsMetadata `json:"segmentMetadata,omitempty"`
 }
 
 func (o VideoFileMetadata) MarshalYAML() (interface{}, error) {
@@ -48,15 +48,15 @@ Lightweight version that excludes bounds and RID since those are stored elsewher
 */
 type VideoSegmentsMetadata struct {
 	// Total number of frames across all segments.
-	NumFrames int `conjure-docs:"Total number of frames across all segments." json:"numFrames"`
+	NumFrames int `json:"numFrames"`
 	// Number of segments the video was split into.
-	NumSegments int `conjure-docs:"Number of segments the video was split into." json:"numSegments"`
+	NumSegments int `json:"numSegments"`
 	// Scale factor applied to timestamps during segmentation.
-	ScaleFactor float64 `conjure-docs:"Scale factor applied to timestamps during segmentation." json:"scaleFactor"`
+	ScaleFactor float64 `json:"scaleFactor"`
 	// Total duration of the video in seconds.
-	MediaDurationSeconds float64 `conjure-docs:"Total duration of the video in seconds." json:"mediaDurationSeconds"`
+	MediaDurationSeconds float64 `json:"mediaDurationSeconds"`
 	// Average frame rate (FPS) calculated as total frames / duration.
-	MediaFrameRate float64 `conjure-docs:"Average frame rate (FPS) calculated as total frames / duration." json:"mediaFrameRate"`
+	MediaFrameRate float64 `json:"mediaFrameRate"`
 }
 
 func (o VideoSegmentsMetadata) MarshalYAML() (interface{}, error) {
