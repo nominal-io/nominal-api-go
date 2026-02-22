@@ -28,6 +28,12 @@ type NominalDataSourceServiceClient interface {
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, ridsArg []rids.NominalDataSourceRid) ([]NominalDataSource, error)
 	// Sets the timestamp that the Nominal Data Source in question was last written to. Only needs to be called once per minute.
 	UpdateLastWrittenTimestamp(ctx context.Context, authHeader bearertoken.Token, ridArg rids.NominalDataSourceRid, timestampArg datetime.DateTime) error
+	/*
+	   Ensures a corresponding dataset exists for the given NominalDataSource.
+	   If the dataset already exists, this is a no-op. If it doesn't exist, creates one
+	   with the same UUID as the NominalDataSource. This is to facilitate the migration from NominalDataSource to Dataset.
+	*/
+	EnsureDatasetForDataSource(ctx context.Context, authHeader bearertoken.Token, ridArg rids.NominalDataSourceRid) (rids.DatasetRid, error)
 }
 
 type nominalDataSourceServiceClient struct {
@@ -111,6 +117,25 @@ func (c *nominalDataSourceServiceClient) UpdateLastWrittenTimestamp(ctx context.
 	return nil
 }
 
+func (c *nominalDataSourceServiceClient) EnsureDatasetForDataSource(ctx context.Context, authHeader bearertoken.Token, ridArg rids.NominalDataSourceRid) (rids.DatasetRid, error) {
+	var defaultReturnVal rids.DatasetRid
+	var returnVal *rids.DatasetRid
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("EnsureDatasetForDataSource"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/storage/data-source/v1/%s/ensure-dataset", url.PathEscape(fmt.Sprint(ridArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "ensureDatasetForDataSource failed")
+	}
+	if returnVal == nil {
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "ensureDatasetForDataSource response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 // Manages data sources (logical groupings of series) that are stored by Nominal.
 type NominalDataSourceServiceClientWithAuth interface {
 	// Creates a data source.
@@ -124,6 +149,12 @@ type NominalDataSourceServiceClientWithAuth interface {
 	BatchGet(ctx context.Context, ridsArg []rids.NominalDataSourceRid) ([]NominalDataSource, error)
 	// Sets the timestamp that the Nominal Data Source in question was last written to. Only needs to be called once per minute.
 	UpdateLastWrittenTimestamp(ctx context.Context, ridArg rids.NominalDataSourceRid, timestampArg datetime.DateTime) error
+	/*
+	   Ensures a corresponding dataset exists for the given NominalDataSource.
+	   If the dataset already exists, this is a no-op. If it doesn't exist, creates one
+	   with the same UUID as the NominalDataSource. This is to facilitate the migration from NominalDataSource to Dataset.
+	*/
+	EnsureDatasetForDataSource(ctx context.Context, ridArg rids.NominalDataSourceRid) (rids.DatasetRid, error)
 }
 
 func NewNominalDataSourceServiceClientWithAuth(client NominalDataSourceServiceClient, authHeader bearertoken.Token) NominalDataSourceServiceClientWithAuth {
@@ -149,6 +180,10 @@ func (c *nominalDataSourceServiceClientWithAuth) BatchGet(ctx context.Context, r
 
 func (c *nominalDataSourceServiceClientWithAuth) UpdateLastWrittenTimestamp(ctx context.Context, ridArg rids.NominalDataSourceRid, timestampArg datetime.DateTime) error {
 	return c.client.UpdateLastWrittenTimestamp(ctx, c.authHeader, ridArg, timestampArg)
+}
+
+func (c *nominalDataSourceServiceClientWithAuth) EnsureDatasetForDataSource(ctx context.Context, ridArg rids.NominalDataSourceRid) (rids.DatasetRid, error) {
+	return c.client.EnsureDatasetForDataSource(ctx, c.authHeader, ridArg)
 }
 
 func NewNominalDataSourceServiceClientWithTokenProvider(client NominalDataSourceServiceClient, tokenProvider httpclient.TokenProvider) NominalDataSourceServiceClientWithAuth {
@@ -193,4 +228,13 @@ func (c *nominalDataSourceServiceClientWithTokenProvider) UpdateLastWrittenTimes
 		return err
 	}
 	return c.client.UpdateLastWrittenTimestamp(ctx, bearertoken.Token(token), ridArg, timestampArg)
+}
+
+func (c *nominalDataSourceServiceClientWithTokenProvider) EnsureDatasetForDataSource(ctx context.Context, ridArg rids.NominalDataSourceRid) (rids.DatasetRid, error) {
+	var defaultReturnVal rids.DatasetRid
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.EnsureDatasetForDataSource(ctx, bearertoken.Token(token), ridArg)
 }

@@ -303,85 +303,6 @@ func (a *DatasetRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-/*
-Unique resource identifier for an Edge Sync.
-This is any resource type that's supported for edge syncs and represents the edge version of the resource.
-*/
-type EdgeSyncSourceRid rid.ResourceIdentifier
-
-func (a EdgeSyncSourceRid) String() string {
-	return rid.ResourceIdentifier(a).String()
-}
-
-func (a EdgeSyncSourceRid) MarshalText() ([]byte, error) {
-	return rid.ResourceIdentifier(a).MarshalText()
-}
-
-func (a *EdgeSyncSourceRid) UnmarshalText(data []byte) error {
-	var rawEdgeSyncSourceRid rid.ResourceIdentifier
-	if err := rawEdgeSyncSourceRid.UnmarshalText(data); err != nil {
-		return err
-	}
-	*a = EdgeSyncSourceRid(rawEdgeSyncSourceRid)
-	return nil
-}
-
-func (a EdgeSyncSourceRid) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(a)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (a *EdgeSyncSourceRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&a)
-}
-
-/*
-Unique resource identifier for an Edge Sync.
-This is any resource type that's supported for edge syncs and represents the data center version of the
-resource.
-*/
-type EdgeSyncTargetRid rid.ResourceIdentifier
-
-func (a EdgeSyncTargetRid) String() string {
-	return rid.ResourceIdentifier(a).String()
-}
-
-func (a EdgeSyncTargetRid) MarshalText() ([]byte, error) {
-	return rid.ResourceIdentifier(a).MarshalText()
-}
-
-func (a *EdgeSyncTargetRid) UnmarshalText(data []byte) error {
-	var rawEdgeSyncTargetRid rid.ResourceIdentifier
-	if err := rawEdgeSyncTargetRid.UnmarshalText(data); err != nil {
-		return err
-	}
-	*a = EdgeSyncTargetRid(rawEdgeSyncTargetRid)
-	return nil
-}
-
-func (a EdgeSyncTargetRid) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(a)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (a *EdgeSyncTargetRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&a)
-}
-
 // Unique resource identifier for an Event.
 type EventRid rid.ResourceIdentifier
 
@@ -411,6 +332,84 @@ func (a EventRid) MarshalYAML() (interface{}, error) {
 }
 
 func (a *EventRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+/*
+Unique resource identifier for a Mesh Link.
+A link connects a local resource to a remote resource for syncing between mesh environments.
+*/
+type LinkRid rid.ResourceIdentifier
+
+func (a LinkRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a LinkRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *LinkRid) UnmarshalText(data []byte) error {
+	var rawLinkRid rid.ResourceIdentifier
+	if err := rawLinkRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = LinkRid(rawLinkRid)
+	return nil
+}
+
+func (a LinkRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *LinkRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+/*
+Unique resource identifier for a local resource in a Mesh link.
+This is any resource type that's supported for mesh links and represents the local environment's resource.
+*/
+type LocalResourceRid rid.ResourceIdentifier
+
+func (a LocalResourceRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a LocalResourceRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *LocalResourceRid) UnmarshalText(data []byte) error {
+	var rawLocalResourceRid rid.ResourceIdentifier
+	if err := rawLocalResourceRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = LocalResourceRid(rawLocalResourceRid)
+	return nil
+}
+
+func (a LocalResourceRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *LocalResourceRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -563,6 +562,84 @@ func (a ProcedureRid) MarshalYAML() (interface{}, error) {
 }
 
 func (a *ProcedureRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+/*
+Unique resource identifier for a Remote Connection.
+This represents a remote Nominal environment for mesh links.
+*/
+type RemoteConnectionRid rid.ResourceIdentifier
+
+func (a RemoteConnectionRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a RemoteConnectionRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *RemoteConnectionRid) UnmarshalText(data []byte) error {
+	var rawRemoteConnectionRid rid.ResourceIdentifier
+	if err := rawRemoteConnectionRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = RemoteConnectionRid(rawRemoteConnectionRid)
+	return nil
+}
+
+func (a RemoteConnectionRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *RemoteConnectionRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+/*
+Unique resource identifier for a remote resource in a Mesh link.
+This is any resource type that's supported for mesh links and represents the remote environment's resource.
+*/
+type RemoteResourceRid rid.ResourceIdentifier
+
+func (a RemoteResourceRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a RemoteResourceRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *RemoteResourceRid) UnmarshalText(data []byte) error {
+	var rawRemoteResourceRid rid.ResourceIdentifier
+	if err := rawRemoteResourceRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = RemoteResourceRid(rawRemoteResourceRid)
+	return nil
+}
+
+func (a RemoteResourceRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *RemoteResourceRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

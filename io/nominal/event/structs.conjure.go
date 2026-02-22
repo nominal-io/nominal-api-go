@@ -300,6 +300,48 @@ func (o *BatchAggregateEventsResponse) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BatchFilterEventsRequest struct {
+	EventRids   []rids.EventRid `json:"eventRids"`
+	FilterQuery SearchQuery     `json:"filterQuery"`
+}
+
+func (o BatchFilterEventsRequest) MarshalJSON() ([]byte, error) {
+	if o.EventRids == nil {
+		o.EventRids = make([]rids.EventRid, 0)
+	}
+	type _tmpBatchFilterEventsRequest BatchFilterEventsRequest
+	return safejson.Marshal(_tmpBatchFilterEventsRequest(o))
+}
+
+func (o *BatchFilterEventsRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchFilterEventsRequest BatchFilterEventsRequest
+	var rawBatchFilterEventsRequest _tmpBatchFilterEventsRequest
+	if err := safejson.Unmarshal(data, &rawBatchFilterEventsRequest); err != nil {
+		return err
+	}
+	if rawBatchFilterEventsRequest.EventRids == nil {
+		rawBatchFilterEventsRequest.EventRids = make([]rids.EventRid, 0)
+	}
+	*o = BatchFilterEventsRequest(rawBatchFilterEventsRequest)
+	return nil
+}
+
+func (o BatchFilterEventsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchFilterEventsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type BatchUpdateDispositionRequest struct {
 	Requests []UpdateDispositionRequest `json:"requests"`
 }

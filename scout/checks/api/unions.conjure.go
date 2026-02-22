@@ -1434,32 +1434,22 @@ func NewFunctionNodeFromRanges(v api11.RangeSeries) FunctionNode {
 
 type JobSpec struct {
 	typ     string
-	check   *DeprecatedCheckJobSpec
 	checkV2 *CheckJobSpec
 }
 
 type jobSpecDeserializer struct {
-	Type    string                  `json:"type"`
-	Check   *DeprecatedCheckJobSpec `json:"check"`
-	CheckV2 *CheckJobSpec           `json:"checkV2"`
+	Type    string        `json:"type"`
+	CheckV2 *CheckJobSpec `json:"checkV2"`
 }
 
 func (u *jobSpecDeserializer) toStruct() JobSpec {
-	return JobSpec{typ: u.Type, check: u.Check, checkV2: u.CheckV2}
+	return JobSpec{typ: u.Type, checkV2: u.CheckV2}
 }
 
 func (u *JobSpec) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "check":
-		if u.check == nil {
-			return nil, fmt.Errorf("field \"check\" is required")
-		}
-		return struct {
-			Type  string                 `json:"type"`
-			Check DeprecatedCheckJobSpec `json:"check"`
-		}{Type: "check", Check: *u.check}, nil
 	case "checkV2":
 		if u.checkV2 == nil {
 			return nil, fmt.Errorf("field \"checkV2\" is required")
@@ -1486,10 +1476,6 @@ func (u *JobSpec) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "check":
-		if u.check == nil {
-			return fmt.Errorf("field \"check\" is required")
-		}
 	case "checkV2":
 		if u.checkV2 == nil {
 			return fmt.Errorf("field \"checkV2\" is required")
@@ -1514,28 +1500,19 @@ func (u *JobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *JobSpec) AcceptFuncs(checkFunc func(DeprecatedCheckJobSpec) error, checkV2Func func(CheckJobSpec) error, unknownFunc func(string) error) error {
+func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "check":
-		if u.check == nil {
-			return fmt.Errorf("field \"check\" is required")
-		}
-		return checkFunc(*u.check)
 	case "checkV2":
 		if u.checkV2 == nil {
 			return fmt.Errorf("field \"checkV2\" is required")
 		}
 		return checkV2Func(*u.checkV2)
 	}
-}
-
-func (u *JobSpec) CheckNoopSuccess(DeprecatedCheckJobSpec) error {
-	return nil
 }
 
 func (u *JobSpec) CheckV2NoopSuccess(CheckJobSpec) error {
@@ -1553,11 +1530,6 @@ func (u *JobSpec) Accept(v JobSpecVisitor) error {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "check":
-		if u.check == nil {
-			return fmt.Errorf("field \"check\" is required")
-		}
-		return v.VisitCheck(*u.check)
 	case "checkV2":
 		if u.checkV2 == nil {
 			return fmt.Errorf("field \"checkV2\" is required")
@@ -1567,7 +1539,6 @@ func (u *JobSpec) Accept(v JobSpecVisitor) error {
 }
 
 type JobSpecVisitor interface {
-	VisitCheck(v DeprecatedCheckJobSpec) error
 	VisitCheckV2(v CheckJobSpec) error
 	VisitUnknown(typeName string) error
 }
@@ -1579,11 +1550,6 @@ func (u *JobSpec) AcceptWithContext(ctx context.Context, v JobSpecVisitorWithCon
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "check":
-		if u.check == nil {
-			return fmt.Errorf("field \"check\" is required")
-		}
-		return v.VisitCheckWithContext(ctx, *u.check)
 	case "checkV2":
 		if u.checkV2 == nil {
 			return fmt.Errorf("field \"checkV2\" is required")
@@ -1593,13 +1559,8 @@ func (u *JobSpec) AcceptWithContext(ctx context.Context, v JobSpecVisitorWithCon
 }
 
 type JobSpecVisitorWithContext interface {
-	VisitCheckWithContext(ctx context.Context, v DeprecatedCheckJobSpec) error
 	VisitCheckV2WithContext(ctx context.Context, v CheckJobSpec) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewJobSpecFromCheck(v DeprecatedCheckJobSpec) JobSpec {
-	return JobSpec{typ: "check", check: &v}
 }
 
 func NewJobSpecFromCheckV2(v CheckJobSpec) JobSpec {

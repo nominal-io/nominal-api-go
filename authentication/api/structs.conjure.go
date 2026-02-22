@@ -3,7 +3,8 @@
 package api
 
 import (
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
@@ -36,6 +37,27 @@ func (o CoachmarkDismissal) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CoachmarkDismissal) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type DefaultNumberFormatConfigurations struct {
+	// Default number format for data values, e.g. chart tooltip and value table cell values.
+	Data *api.NumberFormat `conjure-docs:"Default number format for data values, e.g. chart tooltip and value table cell values." json:"data,omitempty"`
+}
+
+func (o DefaultNumberFormatConfigurations) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DefaultNumberFormatConfigurations) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -317,8 +339,8 @@ func (o *OrgSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type SearchUsersRequest struct {
 	Query SearchUsersQuery `json:"query"`
 	// UPDATED_AT descending by default
-	SortBy        *SortBy    `conjure-docs:"UPDATED_AT descending by default" json:"sortBy,omitempty"`
-	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
+	SortBy        *SortBy     `conjure-docs:"UPDATED_AT descending by default" json:"sortBy,omitempty"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
 	// Defaults to 100. Will throw if larger than 1_000.
 	PageSize *int `conjure-docs:"Defaults to 100. Will throw if larger than 1_000." json:"pageSize,omitempty"`
 }
@@ -340,8 +362,8 @@ func (o *SearchUsersRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 type SearchUsersResponseV2 struct {
-	Results       []UserV2   `json:"results"`
-	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
+	Results       []UserV2    `json:"results"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
 }
 
 func (o SearchUsersResponseV2) MarshalJSON() ([]byte, error) {
@@ -430,8 +452,9 @@ type UserSettings struct {
 	   Deprecated: Use `chartHoverTooltipMode` instead. If `chartHoverTooltipMode` is not set, this field will be
 	   used: `true` as `SINGLE` and `false` as `VERBOSE`.
 	*/
-	TimeSeriesHoverTooltipConcise *bool                    `json:"timeSeriesHoverTooltipConcise,omitempty"`
-	ChartHoverTooltipMode         *ChartTooltipModeSetting `json:"chartHoverTooltipMode,omitempty"`
+	TimeSeriesHoverTooltipConcise *bool                              `json:"timeSeriesHoverTooltipConcise,omitempty"`
+	ChartHoverTooltipMode         *ChartTooltipModeSetting           `json:"chartHoverTooltipMode,omitempty"`
+	DefaultNumberFormats          *DefaultNumberFormatConfigurations `json:"defaultNumberFormats,omitempty"`
 }
 
 func (o UserSettings) MarshalYAML() (interface{}, error) {

@@ -564,8 +564,11 @@ type VideoSegmentServiceClient interface {
 	CreateVideoFileSegments(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, videoFileRidArg rids.VideoFileRid, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
 	// Creates segments for a video stream. Similar to createVideoFileSegments but for streaming video.
 	CreateVideoStreamSegments(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, streamUuidArg uuid.UUID, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
-	// Creates segments for a dataset file video. Used for channel-based video ingestion.
-	CreateDatasetFileSegments(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateDatasetFileSegmentsRequest) (api.CreateSegmentsResponse, error)
+	/*
+	   Creates segments for a dataset file video. Used for channel-based video ingestion.
+	   Internal use only.
+	*/
+	CreateSegmentsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSegmentsV2Request) (api.CreateSegmentsV2Response, error)
 	// Returns metadata for the segment within a video containing the requested absolute timestamp.
 	GetSegmentByTimestamp(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error)
 }
@@ -632,22 +635,22 @@ func (c *videoSegmentServiceClient) CreateVideoStreamSegments(ctx context.Contex
 	return *returnVal, nil
 }
 
-func (c *videoSegmentServiceClient) CreateDatasetFileSegments(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateDatasetFileSegmentsRequest) (api.CreateSegmentsResponse, error) {
-	var defaultReturnVal api.CreateSegmentsResponse
-	var returnVal *api.CreateSegmentsResponse
+func (c *videoSegmentServiceClient) CreateSegmentsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSegmentsV2Request) (api.CreateSegmentsV2Response, error) {
+	var defaultReturnVal api.CreateSegmentsV2Response
+	var returnVal *api.CreateSegmentsV2Response
 	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateDatasetFileSegments"))
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateSegmentsV2"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/dataset-files/create-segments"))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/create-segments"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createDatasetFileSegments failed")
+		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createSegmentsV2 failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createDatasetFileSegments response cannot be nil")
+		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createSegmentsV2 response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -678,8 +681,11 @@ type VideoSegmentServiceClientWithAuth interface {
 	CreateVideoFileSegments(ctx context.Context, videoRidArg rids.VideoRid, videoFileRidArg rids.VideoFileRid, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
 	// Creates segments for a video stream. Similar to createVideoFileSegments but for streaming video.
 	CreateVideoStreamSegments(ctx context.Context, videoRidArg rids.VideoRid, streamUuidArg uuid.UUID, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
-	// Creates segments for a dataset file video. Used for channel-based video ingestion.
-	CreateDatasetFileSegments(ctx context.Context, requestArg api.CreateDatasetFileSegmentsRequest) (api.CreateSegmentsResponse, error)
+	/*
+	   Creates segments for a dataset file video. Used for channel-based video ingestion.
+	   Internal use only.
+	*/
+	CreateSegmentsV2(ctx context.Context, requestArg api.CreateSegmentsV2Request) (api.CreateSegmentsV2Response, error)
 	// Returns metadata for the segment within a video containing the requested absolute timestamp.
 	GetSegmentByTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error)
 }
@@ -705,8 +711,8 @@ func (c *videoSegmentServiceClientWithAuth) CreateVideoStreamSegments(ctx contex
 	return c.client.CreateVideoStreamSegments(ctx, c.authHeader, videoRidArg, streamUuidArg, requestArg)
 }
 
-func (c *videoSegmentServiceClientWithAuth) CreateDatasetFileSegments(ctx context.Context, requestArg api.CreateDatasetFileSegmentsRequest) (api.CreateSegmentsResponse, error) {
-	return c.client.CreateDatasetFileSegments(ctx, c.authHeader, requestArg)
+func (c *videoSegmentServiceClientWithAuth) CreateSegmentsV2(ctx context.Context, requestArg api.CreateSegmentsV2Request) (api.CreateSegmentsV2Response, error) {
+	return c.client.CreateSegmentsV2(ctx, c.authHeader, requestArg)
 }
 
 func (c *videoSegmentServiceClientWithAuth) GetSegmentByTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error) {
@@ -748,13 +754,13 @@ func (c *videoSegmentServiceClientWithTokenProvider) CreateVideoStreamSegments(c
 	return c.client.CreateVideoStreamSegments(ctx, bearertoken.Token(token), videoRidArg, streamUuidArg, requestArg)
 }
 
-func (c *videoSegmentServiceClientWithTokenProvider) CreateDatasetFileSegments(ctx context.Context, requestArg api.CreateDatasetFileSegmentsRequest) (api.CreateSegmentsResponse, error) {
-	var defaultReturnVal api.CreateSegmentsResponse
+func (c *videoSegmentServiceClientWithTokenProvider) CreateSegmentsV2(ctx context.Context, requestArg api.CreateSegmentsV2Request) (api.CreateSegmentsV2Response, error) {
+	var defaultReturnVal api.CreateSegmentsV2Response
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return defaultReturnVal, err
 	}
-	return c.client.CreateDatasetFileSegments(ctx, bearertoken.Token(token), requestArg)
+	return c.client.CreateSegmentsV2(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoSegmentServiceClientWithTokenProvider) GetSegmentByTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error) {
@@ -817,29 +823,35 @@ type VideoServiceClient interface {
 	*/
 	GetPlaylistInBounds(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetPlaylistInBoundsRequest) (io.ReadCloser, error)
 	/*
-	   Generates an HLS playlist for a video channel series (identified by channel + tags) within an optional set of
-	   bounds then generates a playlist for all matching video segments.
+	   Generates an HLS playlist for a video series (identified by channel + tags) within bounds.
 
-	   Deprecated: Use getPlaylistForChannel (GET) for HLS.js compatibility.
+	   Deprecated: Use getPlaylistV2 (GET) for HLS.js compatibility.
 	*/
-	GetPlaylistInBoundsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error)
+	GetPlaylistInBoundsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error)
 	/*
-	   Generates an HLS playlist for a video channel series within time bounds.
-	   Specify either dataSourceRid OR (assetRid + dataScopeName) to identify the channel source.
+	   Generates an HLS playlist for a video series within time bounds.
+	   Specify either dataSourceRid OR (assetRid + dataScopeName) to identify the series source.
 
 	   Note: Both start and end parameters are required and must be provided together.
 	*/
-	GetPlaylistForChannel(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error)
+	GetPlaylistV2(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error)
 	/*
 	   Returns the min and max absolute and media timestamps for each segment in a video that overlap with an
 	   optional set of bounds.
 	*/
 	GetSegmentSummariesInBounds(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentSummariesInBoundsRequest) ([]api.SegmentSummary, error)
 	/*
-	   Returns the min and max absolute and media timestamps for each segment matching a video channel series
+	   Returns the min and max absolute and media timestamps for each segment matching a video series
 	   (identified by channel + tags) within the specified bounds.
 	*/
-	GetSegmentSummariesInBoundsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummary, error)
+	GetSegmentSummariesInBoundsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummaryV2, error)
+	/*
+	   Returns aggregated segment metadata for a video channel series, including total frames,
+	   segment count, min/max timestamps, and average frame rate. Optionally filter by time bounds.
+	*/
+	GetSegmentMetadataV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentMetadataForChannelRequest) (*api.VideoChannelSegmentsMetadata, error)
+	// Returns metadata for the segment within a video series containing the requested absolute timestamp.
+	GetSegmentByTimestampV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error)
 	/*
 	   Returns the min and max absolute timestamps from non-archived video files associated with a given video that
 	   overlap with an optional set of bounds. The files on the edges of the bounds will be truncated to segments
@@ -1122,28 +1134,28 @@ func (c *videoServiceClient) GetPlaylistInBounds(ctx context.Context, authHeader
 	return resp.Body, nil
 }
 
-func (c *videoServiceClient) GetPlaylistInBoundsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error) {
+func (c *videoServiceClient) GetPlaylistInBoundsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error) {
 	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetPlaylistInBoundsForChannel"))
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetPlaylistInBoundsV2"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/channel/playlist-in-bounds"))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/playlist-in-bounds"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRawResponseBody())
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	resp, err := c.client.Do(ctx, requestParams...)
 	if err != nil {
-		return nil, werror.WrapWithContextParams(ctx, err, "getPlaylistInBoundsForChannel failed")
+		return nil, werror.WrapWithContextParams(ctx, err, "getPlaylistInBoundsV2 failed")
 	}
 	return resp.Body, nil
 }
 
-func (c *videoServiceClient) GetPlaylistForChannel(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error) {
+func (c *videoServiceClient) GetPlaylistV2(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error) {
 	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetPlaylistForChannel"))
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetPlaylistV2"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/channel/playlist"))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/playlist"))
 	queryParams := make(url.Values)
 	if dataSourceRidArg != nil {
 		queryParams.Set("dataSourceRid", fmt.Sprint(*dataSourceRidArg))
@@ -1165,7 +1177,7 @@ func (c *videoServiceClient) GetPlaylistForChannel(ctx context.Context, authHead
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	resp, err := c.client.Do(ctx, requestParams...)
 	if err != nil {
-		return nil, werror.WrapWithContextParams(ctx, err, "getPlaylistForChannel failed")
+		return nil, werror.WrapWithContextParams(ctx, err, "getPlaylistV2 failed")
 	}
 	return resp.Body, nil
 }
@@ -1189,21 +1201,53 @@ func (c *videoServiceClient) GetSegmentSummariesInBounds(ctx context.Context, au
 	return returnVal, nil
 }
 
-func (c *videoServiceClient) GetSegmentSummariesInBoundsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummary, error) {
-	var returnVal []api.SegmentSummary
+func (c *videoServiceClient) GetSegmentSummariesInBoundsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummaryV2, error) {
+	var returnVal []api.SegmentSummaryV2
 	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentSummariesInBoundsForChannel"))
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentSummariesInBoundsV2"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/channel/segment-summaries-in-bounds"))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/segment-summaries-in-bounds"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentSummariesInBoundsForChannel failed")
+		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentSummariesInBoundsV2 failed")
 	}
 	if returnVal == nil {
-		return nil, werror.ErrorWithContextParams(ctx, "getSegmentSummariesInBoundsForChannel response cannot be nil")
+		return nil, werror.ErrorWithContextParams(ctx, "getSegmentSummariesInBoundsV2 response cannot be nil")
+	}
+	return returnVal, nil
+}
+
+func (c *videoServiceClient) GetSegmentMetadataV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentMetadataForChannelRequest) (*api.VideoChannelSegmentsMetadata, error) {
+	var returnVal *api.VideoChannelSegmentsMetadata
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentMetadataV2"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/segment-metadata"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentMetadataV2 failed")
+	}
+	return returnVal, nil
+}
+
+func (c *videoServiceClient) GetSegmentByTimestampV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error) {
+	var returnVal *api.SegmentV2
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentByTimestampV2"))
+	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/get-segment-by-timestamp"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentByTimestampV2 failed")
 	}
 	return returnVal, nil
 }
@@ -1333,29 +1377,35 @@ type VideoServiceClientWithAuth interface {
 	*/
 	GetPlaylistInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetPlaylistInBoundsRequest) (io.ReadCloser, error)
 	/*
-	   Generates an HLS playlist for a video channel series (identified by channel + tags) within an optional set of
-	   bounds then generates a playlist for all matching video segments.
+	   Generates an HLS playlist for a video series (identified by channel + tags) within bounds.
 
-	   Deprecated: Use getPlaylistForChannel (GET) for HLS.js compatibility.
+	   Deprecated: Use getPlaylistV2 (GET) for HLS.js compatibility.
 	*/
-	GetPlaylistInBoundsForChannel(ctx context.Context, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error)
+	GetPlaylistInBoundsV2(ctx context.Context, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error)
 	/*
-	   Generates an HLS playlist for a video channel series within time bounds.
-	   Specify either dataSourceRid OR (assetRid + dataScopeName) to identify the channel source.
+	   Generates an HLS playlist for a video series within time bounds.
+	   Specify either dataSourceRid OR (assetRid + dataScopeName) to identify the series source.
 
 	   Note: Both start and end parameters are required and must be provided together.
 	*/
-	GetPlaylistForChannel(ctx context.Context, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error)
+	GetPlaylistV2(ctx context.Context, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error)
 	/*
 	   Returns the min and max absolute and media timestamps for each segment in a video that overlap with an
 	   optional set of bounds.
 	*/
 	GetSegmentSummariesInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentSummariesInBoundsRequest) ([]api.SegmentSummary, error)
 	/*
-	   Returns the min and max absolute and media timestamps for each segment matching a video channel series
+	   Returns the min and max absolute and media timestamps for each segment matching a video series
 	   (identified by channel + tags) within the specified bounds.
 	*/
-	GetSegmentSummariesInBoundsForChannel(ctx context.Context, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummary, error)
+	GetSegmentSummariesInBoundsV2(ctx context.Context, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummaryV2, error)
+	/*
+	   Returns aggregated segment metadata for a video channel series, including total frames,
+	   segment count, min/max timestamps, and average frame rate. Optionally filter by time bounds.
+	*/
+	GetSegmentMetadataV2(ctx context.Context, requestArg api.GetSegmentMetadataForChannelRequest) (*api.VideoChannelSegmentsMetadata, error)
+	// Returns metadata for the segment within a video series containing the requested absolute timestamp.
+	GetSegmentByTimestampV2(ctx context.Context, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error)
 	/*
 	   Returns the min and max absolute timestamps from non-archived video files associated with a given video that
 	   overlap with an optional set of bounds. The files on the edges of the bounds will be truncated to segments
@@ -1445,20 +1495,28 @@ func (c *videoServiceClientWithAuth) GetPlaylistInBounds(ctx context.Context, vi
 	return c.client.GetPlaylistInBounds(ctx, c.authHeader, videoRidArg, requestArg)
 }
 
-func (c *videoServiceClientWithAuth) GetPlaylistInBoundsForChannel(ctx context.Context, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error) {
-	return c.client.GetPlaylistInBoundsForChannel(ctx, c.authHeader, requestArg)
+func (c *videoServiceClientWithAuth) GetPlaylistInBoundsV2(ctx context.Context, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error) {
+	return c.client.GetPlaylistInBoundsV2(ctx, c.authHeader, requestArg)
 }
 
-func (c *videoServiceClientWithAuth) GetPlaylistForChannel(ctx context.Context, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error) {
-	return c.client.GetPlaylistForChannel(ctx, c.authHeader, dataSourceRidArg, assetRidArg, dataScopeNameArg, channelArg, tagsArg, startArg, endArg)
+func (c *videoServiceClientWithAuth) GetPlaylistV2(ctx context.Context, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error) {
+	return c.client.GetPlaylistV2(ctx, c.authHeader, dataSourceRidArg, assetRidArg, dataScopeNameArg, channelArg, tagsArg, startArg, endArg)
 }
 
 func (c *videoServiceClientWithAuth) GetSegmentSummariesInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentSummariesInBoundsRequest) ([]api.SegmentSummary, error) {
 	return c.client.GetSegmentSummariesInBounds(ctx, c.authHeader, videoRidArg, requestArg)
 }
 
-func (c *videoServiceClientWithAuth) GetSegmentSummariesInBoundsForChannel(ctx context.Context, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummary, error) {
-	return c.client.GetSegmentSummariesInBoundsForChannel(ctx, c.authHeader, requestArg)
+func (c *videoServiceClientWithAuth) GetSegmentSummariesInBoundsV2(ctx context.Context, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummaryV2, error) {
+	return c.client.GetSegmentSummariesInBoundsV2(ctx, c.authHeader, requestArg)
+}
+
+func (c *videoServiceClientWithAuth) GetSegmentMetadataV2(ctx context.Context, requestArg api.GetSegmentMetadataForChannelRequest) (*api.VideoChannelSegmentsMetadata, error) {
+	return c.client.GetSegmentMetadataV2(ctx, c.authHeader, requestArg)
+}
+
+func (c *videoServiceClientWithAuth) GetSegmentByTimestampV2(ctx context.Context, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error) {
+	return c.client.GetSegmentByTimestampV2(ctx, c.authHeader, requestArg)
 }
 
 func (c *videoServiceClientWithAuth) GetFileSummaries(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error) {
@@ -1609,22 +1667,22 @@ func (c *videoServiceClientWithTokenProvider) GetPlaylistInBounds(ctx context.Co
 	return c.client.GetPlaylistInBounds(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
 
-func (c *videoServiceClientWithTokenProvider) GetPlaylistInBoundsForChannel(ctx context.Context, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error) {
+func (c *videoServiceClientWithTokenProvider) GetPlaylistInBoundsV2(ctx context.Context, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error) {
 	var defaultReturnVal io.ReadCloser
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return defaultReturnVal, err
 	}
-	return c.client.GetPlaylistInBoundsForChannel(ctx, bearertoken.Token(token), requestArg)
+	return c.client.GetPlaylistInBoundsV2(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *videoServiceClientWithTokenProvider) GetPlaylistForChannel(ctx context.Context, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error) {
+func (c *videoServiceClientWithTokenProvider) GetPlaylistV2(ctx context.Context, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error) {
 	var defaultReturnVal io.ReadCloser
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return defaultReturnVal, err
 	}
-	return c.client.GetPlaylistForChannel(ctx, bearertoken.Token(token), dataSourceRidArg, assetRidArg, dataScopeNameArg, channelArg, tagsArg, startArg, endArg)
+	return c.client.GetPlaylistV2(ctx, bearertoken.Token(token), dataSourceRidArg, assetRidArg, dataScopeNameArg, channelArg, tagsArg, startArg, endArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetSegmentSummariesInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentSummariesInBoundsRequest) ([]api.SegmentSummary, error) {
@@ -1636,13 +1694,31 @@ func (c *videoServiceClientWithTokenProvider) GetSegmentSummariesInBounds(ctx co
 	return c.client.GetSegmentSummariesInBounds(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
 
-func (c *videoServiceClientWithTokenProvider) GetSegmentSummariesInBoundsForChannel(ctx context.Context, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummary, error) {
-	var defaultReturnVal []api.SegmentSummary
+func (c *videoServiceClientWithTokenProvider) GetSegmentSummariesInBoundsV2(ctx context.Context, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummaryV2, error) {
+	var defaultReturnVal []api.SegmentSummaryV2
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return defaultReturnVal, err
 	}
-	return c.client.GetSegmentSummariesInBoundsForChannel(ctx, bearertoken.Token(token), requestArg)
+	return c.client.GetSegmentSummariesInBoundsV2(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *videoServiceClientWithTokenProvider) GetSegmentMetadataV2(ctx context.Context, requestArg api.GetSegmentMetadataForChannelRequest) (*api.VideoChannelSegmentsMetadata, error) {
+	var defaultReturnVal *api.VideoChannelSegmentsMetadata
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetSegmentMetadataV2(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *videoServiceClientWithTokenProvider) GetSegmentByTimestampV2(ctx context.Context, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error) {
+	var defaultReturnVal *api.SegmentV2
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return defaultReturnVal, err
+	}
+	return c.client.GetSegmentByTimestampV2(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetFileSummaries(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error) {

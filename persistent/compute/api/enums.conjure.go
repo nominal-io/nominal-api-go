@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+/*
+Compute types that are completely incompatible with streaming.
+If any of these are present, the subscription cannot be created.
+*/
 type InvalidComputationType struct {
 	val InvalidComputationType_Value
 }
@@ -13,25 +17,18 @@ type InvalidComputationType struct {
 type InvalidComputationType_Value string
 
 const (
-	InvalidComputationType_POINT_PERSISTENCE               InvalidComputationType_Value = "POINT_PERSISTENCE"
-	InvalidComputationType_CUMULATIVE_SUM                  InvalidComputationType_Value = "CUMULATIVE_SUM"
-	InvalidComputationType_INTEGRAL                        InvalidComputationType_Value = "INTEGRAL"
-	InvalidComputationType_STALENESS_DETECTION             InvalidComputationType_Value = "STALENESS_DETECTION"
-	InvalidComputationType_TIME_RANGE_FILTER               InvalidComputationType_Value = "TIME_RANGE_FILTER"
-	InvalidComputationType_FREQUENCY_DOMAIN                InvalidComputationType_Value = "FREQUENCY_DOMAIN"
-	InvalidComputationType_CURVE_FITTING                   InvalidComputationType_Value = "CURVE_FITTING"
-	InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY     InvalidComputationType_Value = "PAGE_SUMMARIZATION_STRATEGY"
-	InvalidComputationType_TRUNCATE_SUMMARIZATION_STRATEGY InvalidComputationType_Value = "TRUNCATE_SUMMARIZATION_STRATEGY"
-	InvalidComputationType_LOG_SERIES                      InvalidComputationType_Value = "LOG_SERIES"
-	InvalidComputationType_LITERAL_RANGES                  InvalidComputationType_Value = "LITERAL_RANGES"
-	InvalidComputationType_ARRAY                           InvalidComputationType_Value = "ARRAY"
-	InvalidComputationType_STRUCT                          InvalidComputationType_Value = "STRUCT"
-	InvalidComputationType_UNKNOWN                         InvalidComputationType_Value = "UNKNOWN"
+	InvalidComputationType_POINT_PERSISTENCE   InvalidComputationType_Value = "POINT_PERSISTENCE"
+	InvalidComputationType_CUMULATIVE_SUM      InvalidComputationType_Value = "CUMULATIVE_SUM"
+	InvalidComputationType_INTEGRAL            InvalidComputationType_Value = "INTEGRAL"
+	InvalidComputationType_STALENESS_DETECTION InvalidComputationType_Value = "STALENESS_DETECTION"
+	InvalidComputationType_TIME_RANGE_FILTER   InvalidComputationType_Value = "TIME_RANGE_FILTER"
+	InvalidComputationType_LITERAL_RANGES      InvalidComputationType_Value = "LITERAL_RANGES"
+	InvalidComputationType_UNKNOWN             InvalidComputationType_Value = "UNKNOWN"
 )
 
 // InvalidComputationType_Values returns all known variants of InvalidComputationType.
 func InvalidComputationType_Values() []InvalidComputationType_Value {
-	return []InvalidComputationType_Value{InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_TIME_RANGE_FILTER, InvalidComputationType_FREQUENCY_DOMAIN, InvalidComputationType_CURVE_FITTING, InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY, InvalidComputationType_TRUNCATE_SUMMARIZATION_STRATEGY, InvalidComputationType_LOG_SERIES, InvalidComputationType_LITERAL_RANGES, InvalidComputationType_ARRAY, InvalidComputationType_STRUCT}
+	return []InvalidComputationType_Value{InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_TIME_RANGE_FILTER, InvalidComputationType_LITERAL_RANGES}
 }
 
 func New_InvalidComputationType(value InvalidComputationType_Value) InvalidComputationType {
@@ -41,7 +38,7 @@ func New_InvalidComputationType(value InvalidComputationType_Value) InvalidCompu
 // IsUnknown returns false for all known variants of InvalidComputationType and true otherwise.
 func (e InvalidComputationType) IsUnknown() bool {
 	switch e.val {
-	case InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_TIME_RANGE_FILTER, InvalidComputationType_FREQUENCY_DOMAIN, InvalidComputationType_CURVE_FITTING, InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY, InvalidComputationType_TRUNCATE_SUMMARIZATION_STRATEGY, InvalidComputationType_LOG_SERIES, InvalidComputationType_LITERAL_RANGES, InvalidComputationType_ARRAY, InvalidComputationType_STRUCT:
+	case InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_TIME_RANGE_FILTER, InvalidComputationType_LITERAL_RANGES:
 		return false
 	}
 	return true
@@ -76,22 +73,85 @@ func (e *InvalidComputationType) UnmarshalText(data []byte) error {
 		*e = New_InvalidComputationType(InvalidComputationType_STALENESS_DETECTION)
 	case "TIME_RANGE_FILTER":
 		*e = New_InvalidComputationType(InvalidComputationType_TIME_RANGE_FILTER)
-	case "FREQUENCY_DOMAIN":
-		*e = New_InvalidComputationType(InvalidComputationType_FREQUENCY_DOMAIN)
-	case "CURVE_FITTING":
-		*e = New_InvalidComputationType(InvalidComputationType_CURVE_FITTING)
-	case "PAGE_SUMMARIZATION_STRATEGY":
-		*e = New_InvalidComputationType(InvalidComputationType_PAGE_SUMMARIZATION_STRATEGY)
-	case "TRUNCATE_SUMMARIZATION_STRATEGY":
-		*e = New_InvalidComputationType(InvalidComputationType_TRUNCATE_SUMMARIZATION_STRATEGY)
-	case "LOG_SERIES":
-		*e = New_InvalidComputationType(InvalidComputationType_LOG_SERIES)
 	case "LITERAL_RANGES":
 		*e = New_InvalidComputationType(InvalidComputationType_LITERAL_RANGES)
+	}
+	return nil
+}
+
+/*
+Compute types that support streaming but only via polling (not real-time appends).
+Subscriptions with these types will be created successfully, but the frontend should
+use polling mode instead of expecting append updates.
+*/
+type PollingOnlyComputationType struct {
+	val PollingOnlyComputationType_Value
+}
+
+type PollingOnlyComputationType_Value string
+
+const (
+	PollingOnlyComputationType_FREQUENCY_DOMAIN                PollingOnlyComputationType_Value = "FREQUENCY_DOMAIN"
+	PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY     PollingOnlyComputationType_Value = "PAGE_SUMMARIZATION_STRATEGY"
+	PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY PollingOnlyComputationType_Value = "TRUNCATE_SUMMARIZATION_STRATEGY"
+	PollingOnlyComputationType_LOG_SERIES                      PollingOnlyComputationType_Value = "LOG_SERIES"
+	PollingOnlyComputationType_CURVE_FITTING                   PollingOnlyComputationType_Value = "CURVE_FITTING"
+	PollingOnlyComputationType_ARRAY                           PollingOnlyComputationType_Value = "ARRAY"
+	PollingOnlyComputationType_STRUCT                          PollingOnlyComputationType_Value = "STRUCT"
+	PollingOnlyComputationType_UNKNOWN                         PollingOnlyComputationType_Value = "UNKNOWN"
+)
+
+// PollingOnlyComputationType_Values returns all known variants of PollingOnlyComputationType.
+func PollingOnlyComputationType_Values() []PollingOnlyComputationType_Value {
+	return []PollingOnlyComputationType_Value{PollingOnlyComputationType_FREQUENCY_DOMAIN, PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_LOG_SERIES, PollingOnlyComputationType_CURVE_FITTING, PollingOnlyComputationType_ARRAY, PollingOnlyComputationType_STRUCT}
+}
+
+func New_PollingOnlyComputationType(value PollingOnlyComputationType_Value) PollingOnlyComputationType {
+	return PollingOnlyComputationType{val: value}
+}
+
+// IsUnknown returns false for all known variants of PollingOnlyComputationType and true otherwise.
+func (e PollingOnlyComputationType) IsUnknown() bool {
+	switch e.val {
+	case PollingOnlyComputationType_FREQUENCY_DOMAIN, PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_LOG_SERIES, PollingOnlyComputationType_CURVE_FITTING, PollingOnlyComputationType_ARRAY, PollingOnlyComputationType_STRUCT:
+		return false
+	}
+	return true
+}
+
+func (e PollingOnlyComputationType) Value() PollingOnlyComputationType_Value {
+	if e.IsUnknown() {
+		return PollingOnlyComputationType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e PollingOnlyComputationType) String() string {
+	return string(e.val)
+}
+
+func (e PollingOnlyComputationType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *PollingOnlyComputationType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_Value(v))
+	case "FREQUENCY_DOMAIN":
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_FREQUENCY_DOMAIN)
+	case "PAGE_SUMMARIZATION_STRATEGY":
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY)
+	case "TRUNCATE_SUMMARIZATION_STRATEGY":
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY)
+	case "LOG_SERIES":
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_LOG_SERIES)
+	case "CURVE_FITTING":
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_CURVE_FITTING)
 	case "ARRAY":
-		*e = New_InvalidComputationType(InvalidComputationType_ARRAY)
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_ARRAY)
 	case "STRUCT":
-		*e = New_InvalidComputationType(InvalidComputationType_STRUCT)
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_STRUCT)
 	}
 	return nil
 }

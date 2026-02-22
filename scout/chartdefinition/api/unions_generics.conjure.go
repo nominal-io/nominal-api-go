@@ -468,6 +468,103 @@ type EnumArrayVisualisationVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type EnumDisplayStyleWithT[T any] EnumDisplayStyle
+
+func (u *EnumDisplayStyleWithT[T]) Accept(ctx context.Context, v EnumDisplayStyleVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "stacked":
+		if u.stacked == nil {
+			return result, fmt.Errorf("field \"stacked\" is required")
+		}
+		return v.VisitStacked(ctx, *u.stacked)
+	case "inline":
+		if u.inline == nil {
+			return result, fmt.Errorf("field \"inline\" is required")
+		}
+		return v.VisitInline(ctx, *u.inline)
+	case "bar":
+		if u.bar == nil {
+			return result, fmt.Errorf("field \"bar\" is required")
+		}
+		return v.VisitBar(ctx, *u.bar)
+	case "line":
+		if u.line == nil {
+			return result, fmt.Errorf("field \"line\" is required")
+		}
+		return v.VisitLine(ctx, *u.line)
+	}
+}
+
+func (u *EnumDisplayStyleWithT[T]) AcceptFuncs(stackedFunc func(EnumDisplayStyleStacked) (T, error), inlineFunc func(EnumDisplayStyleInline) (T, error), barFunc func(EnumDisplayStyleBar) (T, error), lineFunc func(EnumDisplayStyleLine) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "stacked":
+		if u.stacked == nil {
+			return result, fmt.Errorf("field \"stacked\" is required")
+		}
+		return stackedFunc(*u.stacked)
+	case "inline":
+		if u.inline == nil {
+			return result, fmt.Errorf("field \"inline\" is required")
+		}
+		return inlineFunc(*u.inline)
+	case "bar":
+		if u.bar == nil {
+			return result, fmt.Errorf("field \"bar\" is required")
+		}
+		return barFunc(*u.bar)
+	case "line":
+		if u.line == nil {
+			return result, fmt.Errorf("field \"line\" is required")
+		}
+		return lineFunc(*u.line)
+	}
+}
+
+func (u *EnumDisplayStyleWithT[T]) StackedNoopSuccess(EnumDisplayStyleStacked) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *EnumDisplayStyleWithT[T]) InlineNoopSuccess(EnumDisplayStyleInline) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *EnumDisplayStyleWithT[T]) BarNoopSuccess(EnumDisplayStyleBar) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *EnumDisplayStyleWithT[T]) LineNoopSuccess(EnumDisplayStyleLine) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *EnumDisplayStyleWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type EnumDisplayStyleVisitorWithT[T any] interface {
+	VisitStacked(ctx context.Context, v EnumDisplayStyleStacked) (T, error)
+	VisitInline(ctx context.Context, v EnumDisplayStyleInline) (T, error)
+	VisitBar(ctx context.Context, v EnumDisplayStyleBar) (T, error)
+	VisitLine(ctx context.Context, v EnumDisplayStyleLine) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type EnumGroupBySortWithT[T any] EnumGroupBySort
 
 func (u *EnumGroupBySortWithT[T]) Accept(ctx context.Context, v EnumGroupBySortVisitorWithT[T]) (T, error) {
@@ -579,6 +676,55 @@ func (u *EnumValueVisualisationWithT[T]) ErrorOnUnknown(typeName string) (T, err
 
 type EnumValueVisualisationVisitorWithT[T any] interface {
 	VisitRaw(ctx context.Context, v EnumRawVisualisation) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type FloatingLegendWithT[T any] FloatingLegend
+
+func (u *FloatingLegendWithT[T]) Accept(ctx context.Context, v FloatingLegendVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "perRow":
+		if u.perRow == nil {
+			return result, fmt.Errorf("field \"perRow\" is required")
+		}
+		return v.VisitPerRow(ctx, *u.perRow)
+	}
+}
+
+func (u *FloatingLegendWithT[T]) AcceptFuncs(perRowFunc func(PerRowFloatingLegends) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "perRow":
+		if u.perRow == nil {
+			return result, fmt.Errorf("field \"perRow\" is required")
+		}
+		return perRowFunc(*u.perRow)
+	}
+}
+
+func (u *FloatingLegendWithT[T]) PerRowNoopSuccess(PerRowFloatingLegends) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FloatingLegendWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type FloatingLegendVisitorWithT[T any] interface {
+	VisitPerRow(ctx context.Context, v PerRowFloatingLegends) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1004,6 +1150,55 @@ type Geo3dOrientationVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type Geo3dOrientationStaticWithT[T any] Geo3dOrientationStatic
+
+func (u *Geo3dOrientationStaticWithT[T]) Accept(ctx context.Context, v Geo3dOrientationStaticVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "principalAxes":
+		if u.principalAxes == nil {
+			return result, fmt.Errorf("field \"principalAxes\" is required")
+		}
+		return v.VisitPrincipalAxes(ctx, *u.principalAxes)
+	}
+}
+
+func (u *Geo3dOrientationStaticWithT[T]) AcceptFuncs(principalAxesFunc func(Geo3dOrientationStaticPrincipalAxes) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "principalAxes":
+		if u.principalAxes == nil {
+			return result, fmt.Errorf("field \"principalAxes\" is required")
+		}
+		return principalAxesFunc(*u.principalAxes)
+	}
+}
+
+func (u *Geo3dOrientationStaticWithT[T]) PrincipalAxesNoopSuccess(Geo3dOrientationStaticPrincipalAxes) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dOrientationStaticWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type Geo3dOrientationStaticVisitorWithT[T any] interface {
+	VisitPrincipalAxes(ctx context.Context, v Geo3dOrientationStaticPrincipalAxes) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type Geo3dPositionWithT[T any] Geo3dPosition
 
 func (u *Geo3dPositionWithT[T]) Accept(ctx context.Context, v Geo3dPositionVisitorWithT[T]) (T, error) {
@@ -1066,6 +1261,265 @@ func (u *Geo3dPositionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type Geo3dPositionVisitorWithT[T any] interface {
 	VisitWgs84(ctx context.Context, v Geo3dPositionWgs84) (T, error)
 	VisitEcef(ctx context.Context, v Geo3dPositionEcef) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type Geo3dPositionStaticWithT[T any] Geo3dPositionStatic
+
+func (u *Geo3dPositionStaticWithT[T]) Accept(ctx context.Context, v Geo3dPositionStaticVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "wgs84":
+		if u.wgs84 == nil {
+			return result, fmt.Errorf("field \"wgs84\" is required")
+		}
+		return v.VisitWgs84(ctx, *u.wgs84)
+	case "ecef":
+		if u.ecef == nil {
+			return result, fmt.Errorf("field \"ecef\" is required")
+		}
+		return v.VisitEcef(ctx, *u.ecef)
+	}
+}
+
+func (u *Geo3dPositionStaticWithT[T]) AcceptFuncs(wgs84Func func(Geo3dPositionStaticWgs84) (T, error), ecefFunc func(Geo3dPositionStaticEcef) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "wgs84":
+		if u.wgs84 == nil {
+			return result, fmt.Errorf("field \"wgs84\" is required")
+		}
+		return wgs84Func(*u.wgs84)
+	case "ecef":
+		if u.ecef == nil {
+			return result, fmt.Errorf("field \"ecef\" is required")
+		}
+		return ecefFunc(*u.ecef)
+	}
+}
+
+func (u *Geo3dPositionStaticWithT[T]) Wgs84NoopSuccess(Geo3dPositionStaticWgs84) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dPositionStaticWithT[T]) EcefNoopSuccess(Geo3dPositionStaticEcef) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dPositionStaticWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type Geo3dPositionStaticVisitorWithT[T any] interface {
+	VisitWgs84(ctx context.Context, v Geo3dPositionStaticWgs84) (T, error)
+	VisitEcef(ctx context.Context, v Geo3dPositionStaticEcef) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type Geo3dSensorOrientationConfigWithT[T any] Geo3dSensorOrientationConfig
+
+func (u *Geo3dSensorOrientationConfigWithT[T]) Accept(ctx context.Context, v Geo3dSensorOrientationConfigVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "static":
+		if u.static == nil {
+			return result, fmt.Errorf("field \"static\" is required")
+		}
+		return v.VisitStatic(ctx, *u.static)
+	case "channel":
+		if u.channel == nil {
+			return result, fmt.Errorf("field \"channel\" is required")
+		}
+		return v.VisitChannel(ctx, *u.channel)
+	case "nadir":
+		if u.nadir == nil {
+			return result, fmt.Errorf("field \"nadir\" is required")
+		}
+		return v.VisitNadir(ctx, *u.nadir)
+	case "zenith":
+		if u.zenith == nil {
+			return result, fmt.Errorf("field \"zenith\" is required")
+		}
+		return v.VisitZenith(ctx, *u.zenith)
+	}
+}
+
+func (u *Geo3dSensorOrientationConfigWithT[T]) AcceptFuncs(staticFunc func(Geo3dOrientationStatic) (T, error), channelFunc func(Geo3dOrientation) (T, error), nadirFunc func(Geo3dSensorOrientationNadir) (T, error), zenithFunc func(Geo3dSensorOrientationZenith) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "static":
+		if u.static == nil {
+			return result, fmt.Errorf("field \"static\" is required")
+		}
+		return staticFunc(*u.static)
+	case "channel":
+		if u.channel == nil {
+			return result, fmt.Errorf("field \"channel\" is required")
+		}
+		return channelFunc(*u.channel)
+	case "nadir":
+		if u.nadir == nil {
+			return result, fmt.Errorf("field \"nadir\" is required")
+		}
+		return nadirFunc(*u.nadir)
+	case "zenith":
+		if u.zenith == nil {
+			return result, fmt.Errorf("field \"zenith\" is required")
+		}
+		return zenithFunc(*u.zenith)
+	}
+}
+
+func (u *Geo3dSensorOrientationConfigWithT[T]) StaticNoopSuccess(Geo3dOrientationStatic) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dSensorOrientationConfigWithT[T]) ChannelNoopSuccess(Geo3dOrientation) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dSensorOrientationConfigWithT[T]) NadirNoopSuccess(Geo3dSensorOrientationNadir) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dSensorOrientationConfigWithT[T]) ZenithNoopSuccess(Geo3dSensorOrientationZenith) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dSensorOrientationConfigWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type Geo3dSensorOrientationConfigVisitorWithT[T any] interface {
+	VisitStatic(ctx context.Context, v Geo3dOrientationStatic) (T, error)
+	VisitChannel(ctx context.Context, v Geo3dOrientation) (T, error)
+	VisitNadir(ctx context.Context, v Geo3dSensorOrientationNadir) (T, error)
+	VisitZenith(ctx context.Context, v Geo3dSensorOrientationZenith) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type Geo3dSensorPositionConfigWithT[T any] Geo3dSensorPositionConfig
+
+func (u *Geo3dSensorPositionConfigWithT[T]) Accept(ctx context.Context, v Geo3dSensorPositionConfigVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "static":
+		if u.static == nil {
+			return result, fmt.Errorf("field \"static\" is required")
+		}
+		return v.VisitStatic(ctx, *u.static)
+	case "channel":
+		if u.channel == nil {
+			return result, fmt.Errorf("field \"channel\" is required")
+		}
+		return v.VisitChannel(ctx, *u.channel)
+	case "model":
+		if u.model == nil {
+			return result, fmt.Errorf("field \"model\" is required")
+		}
+		return v.VisitModel(ctx, *u.model)
+	case "waypoint":
+		if u.waypoint == nil {
+			return result, fmt.Errorf("field \"waypoint\" is required")
+		}
+		return v.VisitWaypoint(ctx, *u.waypoint)
+	}
+}
+
+func (u *Geo3dSensorPositionConfigWithT[T]) AcceptFuncs(staticFunc func(Geo3dPositionStatic) (T, error), channelFunc func(Geo3dPosition) (T, error), modelFunc func(string) (T, error), waypointFunc func(string) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "static":
+		if u.static == nil {
+			return result, fmt.Errorf("field \"static\" is required")
+		}
+		return staticFunc(*u.static)
+	case "channel":
+		if u.channel == nil {
+			return result, fmt.Errorf("field \"channel\" is required")
+		}
+		return channelFunc(*u.channel)
+	case "model":
+		if u.model == nil {
+			return result, fmt.Errorf("field \"model\" is required")
+		}
+		return modelFunc(*u.model)
+	case "waypoint":
+		if u.waypoint == nil {
+			return result, fmt.Errorf("field \"waypoint\" is required")
+		}
+		return waypointFunc(*u.waypoint)
+	}
+}
+
+func (u *Geo3dSensorPositionConfigWithT[T]) StaticNoopSuccess(Geo3dPositionStatic) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dSensorPositionConfigWithT[T]) ChannelNoopSuccess(Geo3dPosition) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dSensorPositionConfigWithT[T]) ModelNoopSuccess(string) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dSensorPositionConfigWithT[T]) WaypointNoopSuccess(string) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dSensorPositionConfigWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type Geo3dSensorPositionConfigVisitorWithT[T any] interface {
+	VisitStatic(ctx context.Context, v Geo3dPositionStatic) (T, error)
+	VisitChannel(ctx context.Context, v Geo3dPosition) (T, error)
+	VisitModel(ctx context.Context, v string) (T, error)
+	VisitWaypoint(ctx context.Context, v string) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1591,6 +2045,87 @@ type NumericValueVisualisationV2VisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type PanelBucketStrategyWithT[T any] PanelBucketStrategy
+
+func (u *PanelBucketStrategyWithT[T]) Accept(ctx context.Context, v PanelBucketStrategyVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "auto":
+		if u.auto == nil {
+			return result, fmt.Errorf("field \"auto\" is required")
+		}
+		return v.VisitAuto(ctx, *u.auto)
+	case "fixed":
+		if u.fixed == nil {
+			return result, fmt.Errorf("field \"fixed\" is required")
+		}
+		return v.VisitFixed(ctx, *u.fixed)
+	case "duration":
+		if u.duration == nil {
+			return result, fmt.Errorf("field \"duration\" is required")
+		}
+		return v.VisitDuration(ctx, *u.duration)
+	}
+}
+
+func (u *PanelBucketStrategyWithT[T]) AcceptFuncs(autoFunc func(PanelBucketStrategyAuto) (T, error), fixedFunc func(PanelBucketStrategyFixed) (T, error), durationFunc func(PanelBucketStrategyDuration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "auto":
+		if u.auto == nil {
+			return result, fmt.Errorf("field \"auto\" is required")
+		}
+		return autoFunc(*u.auto)
+	case "fixed":
+		if u.fixed == nil {
+			return result, fmt.Errorf("field \"fixed\" is required")
+		}
+		return fixedFunc(*u.fixed)
+	case "duration":
+		if u.duration == nil {
+			return result, fmt.Errorf("field \"duration\" is required")
+		}
+		return durationFunc(*u.duration)
+	}
+}
+
+func (u *PanelBucketStrategyWithT[T]) AutoNoopSuccess(PanelBucketStrategyAuto) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PanelBucketStrategyWithT[T]) FixedNoopSuccess(PanelBucketStrategyFixed) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PanelBucketStrategyWithT[T]) DurationNoopSuccess(PanelBucketStrategyDuration) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PanelBucketStrategyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type PanelBucketStrategyVisitorWithT[T any] interface {
+	VisitAuto(ctx context.Context, v PanelBucketStrategyAuto) (T, error)
+	VisitFixed(ctx context.Context, v PanelBucketStrategyFixed) (T, error)
+	VisitDuration(ctx context.Context, v PanelBucketStrategyDuration) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type PersistValueOverlayWithT[T any] PersistValueOverlay
 
 func (u *PersistValueOverlayWithT[T]) Accept(ctx context.Context, v PersistValueOverlayVisitorWithT[T]) (T, error) {
@@ -1653,6 +2188,71 @@ func (u *PersistValueOverlayWithT[T]) ErrorOnUnknown(typeName string) (T, error)
 type PersistValueOverlayVisitorWithT[T any] interface {
 	VisitByValue(ctx context.Context, v PersistByValue) (T, error)
 	VisitAll(ctx context.Context, v PersistAll) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type PlotColoringConfigurationWithT[T any] PlotColoringConfiguration
+
+func (u *PlotColoringConfigurationWithT[T]) Accept(ctx context.Context, v PlotColoringConfigurationVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "rowIndependent":
+		if u.rowIndependent == nil {
+			return result, fmt.Errorf("field \"rowIndependent\" is required")
+		}
+		return v.VisitRowIndependent(ctx, *u.rowIndependent)
+	case "rowShared":
+		if u.rowShared == nil {
+			return result, fmt.Errorf("field \"rowShared\" is required")
+		}
+		return v.VisitRowShared(ctx, *u.rowShared)
+	}
+}
+
+func (u *PlotColoringConfigurationWithT[T]) AcceptFuncs(rowIndependentFunc func(RowIndependentPlotColoringConfiguration) (T, error), rowSharedFunc func(RowSharedPlotColoringConfiguration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "rowIndependent":
+		if u.rowIndependent == nil {
+			return result, fmt.Errorf("field \"rowIndependent\" is required")
+		}
+		return rowIndependentFunc(*u.rowIndependent)
+	case "rowShared":
+		if u.rowShared == nil {
+			return result, fmt.Errorf("field \"rowShared\" is required")
+		}
+		return rowSharedFunc(*u.rowShared)
+	}
+}
+
+func (u *PlotColoringConfigurationWithT[T]) RowIndependentNoopSuccess(RowIndependentPlotColoringConfiguration) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PlotColoringConfigurationWithT[T]) RowSharedNoopSuccess(RowSharedPlotColoringConfiguration) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PlotColoringConfigurationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type PlotColoringConfigurationVisitorWithT[T any] interface {
+	VisitRowIndependent(ctx context.Context, v RowIndependentPlotColoringConfiguration) (T, error)
+	VisitRowShared(ctx context.Context, v RowSharedPlotColoringConfiguration) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -2646,10 +3246,15 @@ func (u *VideoVizDefinitionWithT[T]) Accept(ctx context.Context, v VideoVizDefin
 			return result, fmt.Errorf("field \"v1\" is required")
 		}
 		return v.VisitV1(ctx, *u.v1)
+	case "v2":
+		if u.v2 == nil {
+			return result, fmt.Errorf("field \"v2\" is required")
+		}
+		return v.VisitV2(ctx, *u.v2)
 	}
 }
 
-func (u *VideoVizDefinitionWithT[T]) AcceptFuncs(v1Func func(VideoVizDefinitionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *VideoVizDefinitionWithT[T]) AcceptFuncs(v1Func func(VideoVizDefinitionV1) (T, error), v2Func func(VideoVizDefinitionV2) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2662,10 +3267,20 @@ func (u *VideoVizDefinitionWithT[T]) AcceptFuncs(v1Func func(VideoVizDefinitionV
 			return result, fmt.Errorf("field \"v1\" is required")
 		}
 		return v1Func(*u.v1)
+	case "v2":
+		if u.v2 == nil {
+			return result, fmt.Errorf("field \"v2\" is required")
+		}
+		return v2Func(*u.v2)
 	}
 }
 
 func (u *VideoVizDefinitionWithT[T]) V1NoopSuccess(VideoVizDefinitionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *VideoVizDefinitionWithT[T]) V2NoopSuccess(VideoVizDefinitionV2) (T, error) {
 	var result T
 	return result, nil
 }
@@ -2677,6 +3292,7 @@ func (u *VideoVizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) 
 
 type VideoVizDefinitionVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v VideoVizDefinitionV1) (T, error)
+	VisitV2(ctx context.Context, v VideoVizDefinitionV2) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

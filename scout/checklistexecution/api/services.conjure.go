@@ -16,7 +16,10 @@ import (
 
 // The Checklist Execution Service checks the status of checklist executions.
 type ChecklistExecutionServiceClient interface {
-	// For each request, get the latest status for each check in a streaming checklist against the given asset.
+	/*
+	   For each request, get the latest status for each check in a streaming checklist against the given asset.
+	   Requests with more than 10,000 checklists will be rejected.
+	*/
 	ChecklistLiveStatus(ctx context.Context, authHeader bearertoken.Token, requestArg BatchChecklistLiveStatusRequest) (BatchChecklistLiveStatusResponse, error)
 	/*
 	   Triggers a checklist to run continuously against assets.
@@ -227,7 +230,10 @@ func (c *checklistExecutionServiceClient) ValidateChecklistResolution(ctx contex
 
 // The Checklist Execution Service checks the status of checklist executions.
 type ChecklistExecutionServiceClientWithAuth interface {
-	// For each request, get the latest status for each check in a streaming checklist against the given asset.
+	/*
+	   For each request, get the latest status for each check in a streaming checklist against the given asset.
+	   Requests with more than 10,000 checklists will be rejected.
+	*/
 	ChecklistLiveStatus(ctx context.Context, requestArg BatchChecklistLiveStatusRequest) (BatchChecklistLiveStatusResponse, error)
 	/*
 	   Triggers a checklist to run continuously against assets.

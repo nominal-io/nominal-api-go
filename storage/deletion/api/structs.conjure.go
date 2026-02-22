@@ -15,7 +15,7 @@ type DeleteDataRequest struct {
 	   If specified, will only delete data within the given time range.
 	   If not specified, will delete data across all time.
 	*/
-	TimeRange *TimeRange `conjure-docs:"If specified, will only delete data within the given time range.\nIf not specified, will delete data across all time." json:"timeRange,omitempty"`
+	TimeRange *api.Range `conjure-docs:"If specified, will only delete data within the given time range.\nIf not specified, will delete data across all time." json:"timeRange,omitempty"`
 	/*
 	   If specified, will only delete data that fully matches the given tags.
 	   If not specified, will delete data across all tags.
@@ -25,7 +25,13 @@ type DeleteDataRequest struct {
 	   If specified, will only delete data that has an exact channel name match with the given names.
 	   If not specified, will delete data across all channels.
 	*/
-	ChannelNames *[]string `conjure-docs:"If specified, will only delete data that has an exact channel name match with the given names.\nIf not specified, will delete data across all channels." json:"channelNames,omitempty"`
+	ChannelNames *[]api.Channel `conjure-docs:"If specified, will only delete data that has an exact channel name match with the given names.\nIf not specified, will delete data across all channels." json:"channelNames,omitempty"`
+	/*
+	   If true and tags and channelNames are empty, will also delete associated channel metadata.
+	   Otherwise, will only delete raw data. This is to guarantee that you are not orphaning data unintentionally
+	   by deleting the metadata.
+	*/
+	DeleteMetadata *bool `conjure-docs:"If true and tags and channelNames are empty, will also delete associated channel metadata.\nOtherwise, will only delete raw data. This is to guarantee that you are not orphaning data unintentionally\nby deleting the metadata." json:"deleteMetadata,omitempty"`
 }
 
 func (o DeleteDataRequest) MarshalYAML() (interface{}, error) {
@@ -37,27 +43,6 @@ func (o DeleteDataRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *DeleteDataRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type TimeRange struct {
-	Start api.Timestamp `json:"start"`
-	End   api.Timestamp `json:"end"`
-}
-
-func (o TimeRange) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *TimeRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

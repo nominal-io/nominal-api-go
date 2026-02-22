@@ -588,32 +588,6 @@ func (o *CreateChecklistRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type DeprecatedCheckJobSpec struct {
-	DataReviewRid      api.DataReviewRid                `json:"dataReviewRid"`
-	CheckRid           api.CheckRid                     `json:"checkRid"`
-	CheckEvaluationRid rids.AutomaticCheckEvaluationRid `json:"checkEvaluationRid"`
-	CheckCondition     CheckCondition                   `json:"checkCondition"`
-	Start              api2.Timestamp                   `json:"start"`
-	End                api2.Timestamp                   `json:"end"`
-	Context            deprecated.Context               `json:"context"`
-}
-
-func (o DeprecatedCheckJobSpec) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *DeprecatedCheckJobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type Failed struct {
 	FailureMessage     *string            `json:"failureMessage,omitempty"`
 	ExecutionStartTime *datetime.DateTime `json:"executionStartTime,omitempty"`

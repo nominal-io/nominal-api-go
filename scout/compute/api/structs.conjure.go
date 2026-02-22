@@ -154,6 +154,11 @@ func (o *ArrowBucketedStructPlot) UnmarshalYAML(unmarshal func(interface{}) erro
 type ArrowEnumPlot struct {
 	// The raw binary containing Arrow IPC stream for EnumPlot
 	ArrowBinary []byte `conjure-docs:"The raw binary containing Arrow IPC stream for EnumPlot" json:"arrowBinary"`
+	/*
+	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
+	   this list represents the superset of all group by keys used across every individual channel.
+	*/
+	GroupByKeys *[]string `conjure-docs:"This field specifies the tags that the final output is grouped by. When you combine multiple channels, \nthis list represents the superset of all group by keys used across every individual channel." json:"groupByKeys,omitempty"`
 }
 
 func (o ArrowEnumPlot) MarshalYAML() (interface{}, error) {
@@ -201,6 +206,11 @@ func (o *ArrowFullResolutionPlot) UnmarshalYAML(unmarshal func(interface{}) erro
 type ArrowNumericPlot struct {
 	// The raw binary containing Arrow IPC stream for NumericPlot
 	ArrowBinary []byte `conjure-docs:"The raw binary containing Arrow IPC stream for NumericPlot" json:"arrowBinary"`
+	/*
+	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
+	   this list represents the superset of all group by keys used across every individual channel.
+	*/
+	GroupByKeys *[]string `conjure-docs:"This field specifies the tags that the final output is grouped by. When you combine multiple channels, \nthis list represents the superset of all group by keys used across every individual channel." json:"groupByKeys,omitempty"`
 }
 
 func (o ArrowNumericPlot) MarshalYAML() (interface{}, error) {

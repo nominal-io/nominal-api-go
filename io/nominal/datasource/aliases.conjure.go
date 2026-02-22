@@ -42,3 +42,38 @@ func (a *DatasetFileId) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
+
+type VideoFileId uuid.UUID
+
+func (a VideoFileId) String() string {
+	return uuid.UUID(a).String()
+}
+
+func (a VideoFileId) MarshalText() ([]byte, error) {
+	return uuid.UUID(a).MarshalText()
+}
+
+func (a *VideoFileId) UnmarshalText(data []byte) error {
+	var rawVideoFileId uuid.UUID
+	if err := rawVideoFileId.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = VideoFileId(rawVideoFileId)
+	return nil
+}
+
+func (a VideoFileId) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *VideoFileId) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}

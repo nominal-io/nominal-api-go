@@ -12,29 +12,28 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
-// For internal user only. Contact Nominal support if you need to delete data.
-type InternalNominalStorageDataDeletionServiceClient interface {
+type DataDeletionServiceClient interface {
 	/*
 	   Deletes stored data. This is an irreversible operation so be careful about specified
-	   time range, channel names, and tag scope.
+	   time range, channel names, and tag scope. requires the user to be an admin for the organization.
 	*/
 	Delete(ctx context.Context, authHeader bearertoken.Token, requestArg DeleteDataRequest) error
 }
 
-type internalNominalStorageDataDeletionServiceClient struct {
+type dataDeletionServiceClient struct {
 	client httpclient.Client
 }
 
-func NewInternalNominalStorageDataDeletionServiceClient(client httpclient.Client) InternalNominalStorageDataDeletionServiceClient {
-	return &internalNominalStorageDataDeletionServiceClient{client: client}
+func NewDataDeletionServiceClient(client httpclient.Client) DataDeletionServiceClient {
+	return &dataDeletionServiceClient{client: client}
 }
 
-func (c *internalNominalStorageDataDeletionServiceClient) Delete(ctx context.Context, authHeader bearertoken.Token, requestArg DeleteDataRequest) error {
+func (c *dataDeletionServiceClient) Delete(ctx context.Context, authHeader bearertoken.Token, requestArg DeleteDataRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Delete"))
 	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/internal/storage-data-deletion/v1/delete-data"))
+	requestParams = append(requestParams, httpclient.WithPathf("/storage/data-deletion/v1/delete-data"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Do(ctx, requestParams...); err != nil {
@@ -43,38 +42,37 @@ func (c *internalNominalStorageDataDeletionServiceClient) Delete(ctx context.Con
 	return nil
 }
 
-// For internal user only. Contact Nominal support if you need to delete data.
-type InternalNominalStorageDataDeletionServiceClientWithAuth interface {
+type DataDeletionServiceClientWithAuth interface {
 	/*
 	   Deletes stored data. This is an irreversible operation so be careful about specified
-	   time range, channel names, and tag scope.
+	   time range, channel names, and tag scope. requires the user to be an admin for the organization.
 	*/
 	Delete(ctx context.Context, requestArg DeleteDataRequest) error
 }
 
-func NewInternalNominalStorageDataDeletionServiceClientWithAuth(client InternalNominalStorageDataDeletionServiceClient, authHeader bearertoken.Token) InternalNominalStorageDataDeletionServiceClientWithAuth {
-	return &internalNominalStorageDataDeletionServiceClientWithAuth{client: client, authHeader: authHeader}
+func NewDataDeletionServiceClientWithAuth(client DataDeletionServiceClient, authHeader bearertoken.Token) DataDeletionServiceClientWithAuth {
+	return &dataDeletionServiceClientWithAuth{client: client, authHeader: authHeader}
 }
 
-type internalNominalStorageDataDeletionServiceClientWithAuth struct {
-	client     InternalNominalStorageDataDeletionServiceClient
+type dataDeletionServiceClientWithAuth struct {
+	client     DataDeletionServiceClient
 	authHeader bearertoken.Token
 }
 
-func (c *internalNominalStorageDataDeletionServiceClientWithAuth) Delete(ctx context.Context, requestArg DeleteDataRequest) error {
+func (c *dataDeletionServiceClientWithAuth) Delete(ctx context.Context, requestArg DeleteDataRequest) error {
 	return c.client.Delete(ctx, c.authHeader, requestArg)
 }
 
-func NewInternalNominalStorageDataDeletionServiceClientWithTokenProvider(client InternalNominalStorageDataDeletionServiceClient, tokenProvider httpclient.TokenProvider) InternalNominalStorageDataDeletionServiceClientWithAuth {
-	return &internalNominalStorageDataDeletionServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
+func NewDataDeletionServiceClientWithTokenProvider(client DataDeletionServiceClient, tokenProvider httpclient.TokenProvider) DataDeletionServiceClientWithAuth {
+	return &dataDeletionServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
 }
 
-type internalNominalStorageDataDeletionServiceClientWithTokenProvider struct {
-	client        InternalNominalStorageDataDeletionServiceClient
+type dataDeletionServiceClientWithTokenProvider struct {
+	client        DataDeletionServiceClient
 	tokenProvider httpclient.TokenProvider
 }
 
-func (c *internalNominalStorageDataDeletionServiceClientWithTokenProvider) Delete(ctx context.Context, requestArg DeleteDataRequest) error {
+func (c *dataDeletionServiceClientWithTokenProvider) Delete(ctx context.Context, requestArg DeleteDataRequest) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err

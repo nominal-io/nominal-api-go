@@ -7558,7 +7558,6 @@ type VariableValue struct {
 	integer     *int
 	channel     *api.ChannelSeries
 	derived     *DerivedSeries
-	series      *SeriesSpec
 	string      *string
 	stringSet   *[]string
 	timestamp   *api2.Timestamp
@@ -7572,14 +7571,13 @@ type variableValueDeserializer struct {
 	Integer     *int                    `json:"integer"`
 	Channel     *api.ChannelSeries      `json:"channel"`
 	Derived     *DerivedSeries          `json:"derived"`
-	Series      *SeriesSpec             `json:"series"`
 	String      *string                 `json:"string"`
 	StringSet   *[]string               `json:"stringSet"`
 	Timestamp   *api2.Timestamp         `json:"timestamp"`
 }
 
 func (u *variableValueDeserializer) toStruct() VariableValue {
-	return VariableValue{typ: u.Type, double: u.Double, computeNode: u.ComputeNode, duration: u.Duration, integer: u.Integer, channel: u.Channel, derived: u.Derived, series: u.Series, string: u.String, stringSet: u.StringSet, timestamp: u.Timestamp}
+	return VariableValue{typ: u.Type, double: u.Double, computeNode: u.ComputeNode, duration: u.Duration, integer: u.Integer, channel: u.Channel, derived: u.Derived, string: u.String, stringSet: u.StringSet, timestamp: u.Timestamp}
 }
 
 func (u *VariableValue) toSerializer() (interface{}, error) {
@@ -7634,14 +7632,6 @@ func (u *VariableValue) toSerializer() (interface{}, error) {
 			Type    string        `json:"type"`
 			Derived DerivedSeries `json:"derived"`
 		}{Type: "derived", Derived: *u.derived}, nil
-	case "series":
-		if u.series == nil {
-			return nil, fmt.Errorf("field \"series\" is required")
-		}
-		return struct {
-			Type   string     `json:"type"`
-			Series SeriesSpec `json:"series"`
-		}{Type: "series", Series: *u.series}, nil
 	case "string":
 		if u.string == nil {
 			return nil, fmt.Errorf("field \"string\" is required")
@@ -7708,10 +7698,6 @@ func (u *VariableValue) UnmarshalJSON(data []byte) error {
 		if u.derived == nil {
 			return fmt.Errorf("field \"derived\" is required")
 		}
-	case "series":
-		if u.series == nil {
-			return fmt.Errorf("field \"series\" is required")
-		}
 	case "string":
 		if u.string == nil {
 			return fmt.Errorf("field \"string\" is required")
@@ -7744,7 +7730,7 @@ func (u *VariableValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *VariableValue) AcceptFuncs(doubleFunc func(float64) error, computeNodeFunc func(ComputeNodeWithContext) error, durationFunc func(api1.Duration) error, integerFunc func(int) error, channelFunc func(api.ChannelSeries) error, derivedFunc func(DerivedSeries) error, seriesFunc func(SeriesSpec) error, stringFunc func(string) error, stringSetFunc func([]string) error, timestampFunc func(api2.Timestamp) error, unknownFunc func(string) error) error {
+func (u *VariableValue) AcceptFuncs(doubleFunc func(float64) error, computeNodeFunc func(ComputeNodeWithContext) error, durationFunc func(api1.Duration) error, integerFunc func(int) error, channelFunc func(api.ChannelSeries) error, derivedFunc func(DerivedSeries) error, stringFunc func(string) error, stringSetFunc func([]string) error, timestampFunc func(api2.Timestamp) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -7781,11 +7767,6 @@ func (u *VariableValue) AcceptFuncs(doubleFunc func(float64) error, computeNodeF
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return derivedFunc(*u.derived)
-	case "series":
-		if u.series == nil {
-			return fmt.Errorf("field \"series\" is required")
-		}
-		return seriesFunc(*u.series)
 	case "string":
 		if u.string == nil {
 			return fmt.Errorf("field \"string\" is required")
@@ -7825,10 +7806,6 @@ func (u *VariableValue) ChannelNoopSuccess(api.ChannelSeries) error {
 }
 
 func (u *VariableValue) DerivedNoopSuccess(DerivedSeries) error {
-	return nil
-}
-
-func (u *VariableValue) SeriesNoopSuccess(SeriesSpec) error {
 	return nil
 }
 
@@ -7885,11 +7862,6 @@ func (u *VariableValue) Accept(v VariableValueVisitor) error {
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerived(*u.derived)
-	case "series":
-		if u.series == nil {
-			return fmt.Errorf("field \"series\" is required")
-		}
-		return v.VisitSeries(*u.series)
 	case "string":
 		if u.string == nil {
 			return fmt.Errorf("field \"string\" is required")
@@ -7915,7 +7887,6 @@ type VariableValueVisitor interface {
 	VisitInteger(v int) error
 	VisitChannel(v api.ChannelSeries) error
 	VisitDerived(v DerivedSeries) error
-	VisitSeries(v SeriesSpec) error
 	VisitString(v string) error
 	VisitStringSet(v []string) error
 	VisitTimestamp(v api2.Timestamp) error
@@ -7959,11 +7930,6 @@ func (u *VariableValue) AcceptWithContext(ctx context.Context, v VariableValueVi
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerivedWithContext(ctx, *u.derived)
-	case "series":
-		if u.series == nil {
-			return fmt.Errorf("field \"series\" is required")
-		}
-		return v.VisitSeriesWithContext(ctx, *u.series)
 	case "string":
 		if u.string == nil {
 			return fmt.Errorf("field \"string\" is required")
@@ -7989,7 +7955,6 @@ type VariableValueVisitorWithContext interface {
 	VisitIntegerWithContext(ctx context.Context, v int) error
 	VisitChannelWithContext(ctx context.Context, v api.ChannelSeries) error
 	VisitDerivedWithContext(ctx context.Context, v DerivedSeries) error
-	VisitSeriesWithContext(ctx context.Context, v SeriesSpec) error
 	VisitStringWithContext(ctx context.Context, v string) error
 	VisitStringSetWithContext(ctx context.Context, v []string) error
 	VisitTimestampWithContext(ctx context.Context, v api2.Timestamp) error
@@ -8018,10 +7983,6 @@ func NewVariableValueFromChannel(v api.ChannelSeries) VariableValue {
 
 func NewVariableValueFromDerived(v DerivedSeries) VariableValue {
 	return VariableValue{typ: "derived", derived: &v}
-}
-
-func NewVariableValueFromSeries(v SeriesSpec) VariableValue {
-	return VariableValue{typ: "series", series: &v}
 }
 
 func NewVariableValueFromString(v string) VariableValue {

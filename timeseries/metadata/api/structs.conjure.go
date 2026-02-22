@@ -322,7 +322,6 @@ Returns the SeriesMetadataRid of the created or existing series metadata.
 type CreateVideoSeriesRequest struct {
 	DatasetRid rids.DatasetRid              `json:"datasetRid"`
 	Channel    api.Channel                  `json:"channel"`
-	VideoRid   rids.VideoRid                `json:"videoRid"`
 	Tags       map[api.TagName]api.TagValue `json:"tags"`
 	TimeBounds TimeBounds                   `json:"timeBounds"`
 }
@@ -601,8 +600,7 @@ func (o *UpdateSeriesMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) 
 }
 
 type VideoLocatorTemplate struct {
-	Channel  api.Channel   `json:"channel"`
-	VideoRid rids.VideoRid `json:"videoRid"`
+	Channel api.Channel `json:"channel"`
 }
 
 func (o VideoLocatorTemplate) MarshalYAML() (interface{}, error) {

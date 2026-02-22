@@ -35,52 +35,6 @@ func (o *Bounds) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Request to create segments for a dataset file video. Used for channel-based video ingestion.
-type CreateDatasetFileSegmentsRequest struct {
-	VideoRid      rids.VideoRid   `json:"videoRid"`
-	DatasetRid    rids.DatasetRid `json:"datasetRid"`
-	DatasetFileId uuid.UUID       `json:"datasetFileId"`
-	Requests      []CreateSegment `json:"requests"`
-	SeriesUuid    uuid.UUID       `json:"seriesUuid"`
-}
-
-func (o CreateDatasetFileSegmentsRequest) MarshalJSON() ([]byte, error) {
-	if o.Requests == nil {
-		o.Requests = make([]CreateSegment, 0)
-	}
-	type _tmpCreateDatasetFileSegmentsRequest CreateDatasetFileSegmentsRequest
-	return safejson.Marshal(_tmpCreateDatasetFileSegmentsRequest(o))
-}
-
-func (o *CreateDatasetFileSegmentsRequest) UnmarshalJSON(data []byte) error {
-	type _tmpCreateDatasetFileSegmentsRequest CreateDatasetFileSegmentsRequest
-	var rawCreateDatasetFileSegmentsRequest _tmpCreateDatasetFileSegmentsRequest
-	if err := safejson.Unmarshal(data, &rawCreateDatasetFileSegmentsRequest); err != nil {
-		return err
-	}
-	if rawCreateDatasetFileSegmentsRequest.Requests == nil {
-		rawCreateDatasetFileSegmentsRequest.Requests = make([]CreateSegment, 0)
-	}
-	*o = CreateDatasetFileSegmentsRequest(rawCreateDatasetFileSegmentsRequest)
-	return nil
-}
-
-func (o CreateDatasetFileSegmentsRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *CreateDatasetFileSegmentsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type CreateSegment struct {
 	DataHandle api.Handle `json:"dataHandle"`
 	// The average frame rate (FPS) of the segment calculated as total frames / duration in seconds.
@@ -109,6 +63,11 @@ func (o *CreateSegment) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type CreateSegmentsRequest struct {
 	Requests   []CreateSegment `json:"requests"`
 	SeriesUuid *uuid.UUID      `json:"seriesUuid,omitempty"`
+	/*
+	   If true, overlapping segments from other video files within the same video will be deleted
+	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
+	*/
+	OverWriteSegments *bool `conjure-docs:"If true, overlapping segments from other video files within the same video will be deleted\nbefore inserting new segments. The cached segment metadata for affected files will be recomputed." json:"overWriteSegments,omitempty"`
 }
 
 func (o CreateSegmentsRequest) MarshalJSON() ([]byte, error) {
@@ -182,6 +141,98 @@ func (o CreateSegmentsResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CreateSegmentsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Request to create video segments for channel-based ingestion. Internal use only.
+type CreateSegmentsV2Request struct {
+	DatasetRid    rids.DatasetRid `json:"datasetRid"`
+	DatasetFileId uuid.UUID       `json:"datasetFileId"`
+	Requests      []CreateSegment `json:"requests"`
+	SeriesUuid    uuid.UUID       `json:"seriesUuid"`
+	/*
+	   If true, overlapping segments from other dataset files within the same series will be deleted
+	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
+	*/
+	OverWriteSegments *bool `conjure-docs:"If true, overlapping segments from other dataset files within the same series will be deleted\nbefore inserting new segments. The cached segment metadata for affected files will be recomputed." json:"overWriteSegments,omitempty"`
+}
+
+func (o CreateSegmentsV2Request) MarshalJSON() ([]byte, error) {
+	if o.Requests == nil {
+		o.Requests = make([]CreateSegment, 0)
+	}
+	type _tmpCreateSegmentsV2Request CreateSegmentsV2Request
+	return safejson.Marshal(_tmpCreateSegmentsV2Request(o))
+}
+
+func (o *CreateSegmentsV2Request) UnmarshalJSON(data []byte) error {
+	type _tmpCreateSegmentsV2Request CreateSegmentsV2Request
+	var rawCreateSegmentsV2Request _tmpCreateSegmentsV2Request
+	if err := safejson.Unmarshal(data, &rawCreateSegmentsV2Request); err != nil {
+		return err
+	}
+	if rawCreateSegmentsV2Request.Requests == nil {
+		rawCreateSegmentsV2Request.Requests = make([]CreateSegment, 0)
+	}
+	*o = CreateSegmentsV2Request(rawCreateSegmentsV2Request)
+	return nil
+}
+
+func (o CreateSegmentsV2Request) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CreateSegmentsV2Request) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Response for creating V2 segments. Internal use only.
+type CreateSegmentsV2Response struct {
+	Segments []SegmentV2 `json:"segments"`
+}
+
+func (o CreateSegmentsV2Response) MarshalJSON() ([]byte, error) {
+	if o.Segments == nil {
+		o.Segments = make([]SegmentV2, 0)
+	}
+	type _tmpCreateSegmentsV2Response CreateSegmentsV2Response
+	return safejson.Marshal(_tmpCreateSegmentsV2Response(o))
+}
+
+func (o *CreateSegmentsV2Response) UnmarshalJSON(data []byte) error {
+	type _tmpCreateSegmentsV2Response CreateSegmentsV2Response
+	var rawCreateSegmentsV2Response _tmpCreateSegmentsV2Response
+	if err := safejson.Unmarshal(data, &rawCreateSegmentsV2Response); err != nil {
+		return err
+	}
+	if rawCreateSegmentsV2Response.Segments == nil {
+		rawCreateSegmentsV2Response.Segments = make([]SegmentV2, 0)
+	}
+	*o = CreateSegmentsV2Response(rawCreateSegmentsV2Response)
+	return nil
+}
+
+func (o CreateSegmentsV2Response) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CreateSegmentsV2Response) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -652,6 +703,60 @@ func (o *GetSegmentByTimestampRequest) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Request to get a segment by timestamp for a video series.
+type GetSegmentByTimestampV2Request struct {
+	ChannelSeries VideoChannelSeries `json:"channelSeries"`
+	Timestamp     api.Timestamp      `json:"timestamp"`
+	/*
+	   The start of the view range used to dynamically calculate media timestamps. The first segment with an
+	   overlap with the time bounds will have its minimum media timestamp set to 0, with every subsequent
+	   segment building media time cumulatively from that offset.
+	*/
+	ViewRangeStart *api.Timestamp `conjure-docs:"The start of the view range used to dynamically calculate media timestamps. The first segment with an \noverlap with the time bounds will have its minimum media timestamp set to 0, with every subsequent\nsegment building media time cumulatively from that offset." json:"viewRangeStart,omitempty"`
+}
+
+func (o GetSegmentByTimestampV2Request) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetSegmentByTimestampV2Request) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Request to get aggregated segment metadata for a video channel series.
+Uses channel + tags to resolve to video series metadata.
+Optionally filter by time bounds.
+*/
+type GetSegmentMetadataForChannelRequest struct {
+	ChannelSeries VideoChannelSeries `json:"channelSeries"`
+	Bounds        *Bounds            `json:"bounds,omitempty"`
+}
+
+func (o GetSegmentMetadataForChannelRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetSegmentMetadataForChannelRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 /*
 Request to get segment summaries for a video channel series.
 Uses channel + tags to resolve to video series metadata within the specified bounds.
@@ -1081,6 +1186,65 @@ func (o *SegmentSummary) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Bounding timestamps for the frames within a segment. Includes datasetFileId for V2 channel-based API.
+type SegmentSummaryV2 struct {
+	// The dataset file ID that this segment belongs to.
+	DatasetFileId        *uuid.UUID    `conjure-docs:"The dataset file ID that this segment belongs to." json:"datasetFileId,omitempty"`
+	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp"`
+	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp"`
+	MinMediaTimestamp    float64       `json:"minMediaTimestamp"`
+	MaxMediaTimestamp    float64       `json:"maxMediaTimestamp"`
+}
+
+func (o SegmentSummaryV2) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SegmentSummaryV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Segment for V2 channel-based video API (without videoRid).
+type SegmentV2 struct {
+	Rid rids.SegmentRid `json:"rid"`
+	// The dataset file ID that this segment belongs to.
+	DatasetFileId *uuid.UUID `conjure-docs:"The dataset file ID that this segment belongs to." json:"datasetFileId,omitempty"`
+	DataHandle    api.Handle `json:"dataHandle"`
+	// The average frame rate (FPS) of the segment calculated as total frames / duration in seconds.
+	FrameRate float64 `conjure-docs:"The average frame rate (FPS) of the segment calculated as total frames / duration in seconds." json:"frameRate"`
+	// The duration of a segment in media time.
+	DurationSeconds float64 `conjure-docs:"The duration of a segment in media time." json:"durationSeconds"`
+	/*
+	   for videos with frame-level timestamps, we provide mappings, otherwise we just include a single list
+	   of timestamps.
+	*/
+	Timestamps SegmentTimestamps `conjure-docs:"for videos with frame-level timestamps, we provide mappings, otherwise we just include a single list\nof timestamps." json:"timestamps"`
+}
+
+func (o SegmentV2) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SegmentV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type SortOptions struct {
 	IsDescending bool      `json:"isDescending"`
 	Field        SortField `json:"field"`
@@ -1256,6 +1420,7 @@ type Video struct {
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
 	CreatedBy   rid.ResourceIdentifier                 `json:"createdBy"`
 	CreatedAt   datetime.DateTime                      `json:"createdAt"`
+	IsArchived  bool                                   `json:"isArchived"`
 	// Deprecated: deprecated in favor of per-file VideoFileOriginMetadata. Will be removed after April 15th.
 	OriginMetadata      *VideoOriginMetadata      `json:"originMetadata,omitempty"`
 	AllSegmentsMetadata *VideoAllSegmentsMetadata `json:"allSegmentsMetadata,omitempty"`
@@ -1380,6 +1545,33 @@ func (o VideoAssetChannel) MarshalYAML() (interface{}, error) {
 }
 
 func (o *VideoAssetChannel) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Aggregated segment metadata for a video channel series
+type VideoChannelSegmentsMetadata struct {
+	NumFrames            int           `json:"numFrames"`
+	NumSegments          int           `json:"numSegments"`
+	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp"`
+	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp"`
+	MediaDurationSeconds float64       `json:"mediaDurationSeconds"`
+	// The average media frame rate (FPS) calculated as total frames / duration in seconds.
+	MediaFrameRate float64 `conjure-docs:"The average media frame rate (FPS) calculated as total frames / duration in seconds." json:"mediaFrameRate"`
+}
+
+func (o VideoChannelSegmentsMetadata) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoChannelSegmentsMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
