@@ -124,7 +124,7 @@ func (u *CheckStatus) AcceptFuncs(passFunc func(Pass) error, failFunc func(Fail)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CheckStatus type")
 		}
 		return unknownFunc(u.typ)
 	case "pass":
@@ -150,19 +150,19 @@ func (u *CheckStatus) AcceptFuncs(passFunc func(Pass) error, failFunc func(Fail)
 	}
 }
 
-func (u *CheckStatus) PassNoopSuccess(Pass) error {
+func (u *CheckStatus) PassNoopSuccess(_ Pass) error {
 	return nil
 }
 
-func (u *CheckStatus) FailNoopSuccess(Fail) error {
+func (u *CheckStatus) FailNoopSuccess(_ Fail) error {
 	return nil
 }
 
-func (u *CheckStatus) InvalidNoopSuccess(Invalid) error {
+func (u *CheckStatus) InvalidNoopSuccess(_ Invalid) error {
 	return nil
 }
 
-func (u *CheckStatus) SkippedNoopSuccess(Skipped) error {
+func (u *CheckStatus) SkippedNoopSuccess(_ Skipped) error {
 	return nil
 }
 
@@ -362,7 +362,7 @@ func (u *ChecklistLiveStatus) AcceptFuncs(runningFunc func(StreamingChecklistRun
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ChecklistLiveStatus type")
 		}
 		return unknownFunc(u.typ)
 	case "running":
@@ -383,15 +383,15 @@ func (u *ChecklistLiveStatus) AcceptFuncs(runningFunc func(StreamingChecklistRun
 	}
 }
 
-func (u *ChecklistLiveStatus) RunningNoopSuccess(StreamingChecklistRunning) error {
+func (u *ChecklistLiveStatus) RunningNoopSuccess(_ StreamingChecklistRunning) error {
 	return nil
 }
 
-func (u *ChecklistLiveStatus) InitializingNoopSuccess(StreamingChecklistInitializing) error {
+func (u *ChecklistLiveStatus) InitializingNoopSuccess(_ StreamingChecklistInitializing) error {
 	return nil
 }
 
-func (u *ChecklistLiveStatus) FailedNoopSuccess(StreamingChecklistFailed) error {
+func (u *ChecklistLiveStatus) FailedNoopSuccess(_ StreamingChecklistFailed) error {
 	return nil
 }
 
@@ -589,7 +589,7 @@ func (u *LastFailure) AcceptFuncs(notComputedFunc func(NotComputed) error, compu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in LastFailure type")
 		}
 		return unknownFunc(u.typ)
 	case "notComputed":
@@ -615,19 +615,19 @@ func (u *LastFailure) AcceptFuncs(notComputedFunc func(NotComputed) error, compu
 	}
 }
 
-func (u *LastFailure) NotComputedNoopSuccess(NotComputed) error {
+func (u *LastFailure) NotComputedNoopSuccess(_ NotComputed) error {
 	return nil
 }
 
-func (u *LastFailure) ComputingNoopSuccess(Computing) error {
+func (u *LastFailure) ComputingNoopSuccess(_ Computing) error {
 	return nil
 }
 
-func (u *LastFailure) NoPreviousFailureNoopSuccess(NoPreviousFailure) error {
+func (u *LastFailure) NoPreviousFailureNoopSuccess(_ NoPreviousFailure) error {
 	return nil
 }
 
-func (u *LastFailure) FailureNoopSuccess(Failure) error {
+func (u *LastFailure) FailureNoopSuccess(_ Failure) error {
 	return nil
 }
 

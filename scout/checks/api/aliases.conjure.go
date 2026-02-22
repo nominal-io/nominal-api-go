@@ -27,6 +27,19 @@ func (a *JobRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a JobRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *JobRid) UnmarshalJSON(data []byte) error {
+	var rawJobRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawJobRid); err != nil {
+		return err
+	}
+	*a = JobRid(rawJobRid)
+	return nil
+}
+
 func (a JobRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {

@@ -45,12 +45,11 @@ func (c *workspaceServiceClient) GetWorkspaces(ctx context.Context, authHeader b
 	var returnVal []Workspace
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetWorkspaces"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/workspaces/v1/workspaces"))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getWorkspaces failed")
 	}
 	if returnVal == nil {
@@ -60,40 +59,36 @@ func (c *workspaceServiceClient) GetWorkspaces(ctx context.Context, authHeader b
 }
 
 func (c *workspaceServiceClient) GetWorkspace(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid) (Workspace, error) {
-	var defaultReturnVal Workspace
 	var returnVal *Workspace
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetWorkspace"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/workspaces/v1/workspaces/%s", url.PathEscape(fmt.Sprint(workspaceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getWorkspace failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(Workspace), werror.WrapWithContextParams(ctx, err, "getWorkspace failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getWorkspace response cannot be nil")
+		return *new(Workspace), werror.ErrorWithContextParams(ctx, "getWorkspace response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *workspaceServiceClient) UpdateWorkspace(ctx context.Context, authHeader bearertoken.Token, ridArg rids.WorkspaceRid, requestArg UpdateWorkspaceRequest) (Workspace, error) {
-	var defaultReturnVal Workspace
 	var returnVal *Workspace
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateWorkspace"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/workspaces/v1/workspaces/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateWorkspace failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(Workspace), werror.WrapWithContextParams(ctx, err, "updateWorkspace failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateWorkspace response cannot be nil")
+		return *new(Workspace), werror.ErrorWithContextParams(ctx, "updateWorkspace response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -102,12 +97,11 @@ func (c *workspaceServiceClient) GetDefaultWorkspace(ctx context.Context, authHe
 	var returnVal *Workspace
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDefaultWorkspace"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/workspaces/v1/default-workspace"))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getDefaultWorkspace failed")
 	}
 	return returnVal, nil
@@ -167,37 +161,33 @@ type workspaceServiceClientWithTokenProvider struct {
 }
 
 func (c *workspaceServiceClientWithTokenProvider) GetWorkspaces(ctx context.Context) ([]Workspace, error) {
-	var defaultReturnVal []Workspace
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetWorkspaces(ctx, bearertoken.Token(token))
 }
 
 func (c *workspaceServiceClientWithTokenProvider) GetWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (Workspace, error) {
-	var defaultReturnVal Workspace
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Workspace), err
 	}
 	return c.client.GetWorkspace(ctx, bearertoken.Token(token), workspaceRidArg)
 }
 
 func (c *workspaceServiceClientWithTokenProvider) UpdateWorkspace(ctx context.Context, ridArg rids.WorkspaceRid, requestArg UpdateWorkspaceRequest) (Workspace, error) {
-	var defaultReturnVal Workspace
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Workspace), err
 	}
 	return c.client.UpdateWorkspace(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
 func (c *workspaceServiceClientWithTokenProvider) GetDefaultWorkspace(ctx context.Context) (*Workspace, error) {
-	var defaultReturnVal *Workspace
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetDefaultWorkspace(ctx, bearertoken.Token(token))
 }

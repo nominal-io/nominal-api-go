@@ -47,7 +47,7 @@ type AssetMetricColumns struct {
 
 func (o AssetMetricColumns) MarshalJSON() ([]byte, error) {
 	if o.MetricColumns == nil {
-		o.MetricColumns = make(map[ColumnId]AssetMetricColumn, 0)
+		o.MetricColumns = make(map[ColumnId]AssetMetricColumn)
 	}
 	type _tmpAssetMetricColumns AssetMetricColumns
 	return safejson.Marshal(_tmpAssetMetricColumns(o))
@@ -60,7 +60,7 @@ func (o *AssetMetricColumns) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawAssetMetricColumns.MetricColumns == nil {
-		rawAssetMetricColumns.MetricColumns = make(map[ColumnId]AssetMetricColumn, 0)
+		rawAssetMetricColumns.MetricColumns = make(map[ColumnId]AssetMetricColumn)
 	}
 	*o = AssetMetricColumns(rawAssetMetricColumns)
 	return nil
@@ -437,7 +437,7 @@ func (o *SavedViewMetadata) UnmarshalYAML(unmarshal func(interface{}) error) err
 type SavedViewSortOptions struct {
 	IsDescending bool `json:"isDescending"`
 	// Field to sort by.
-	SortKey SortKey `conjure-docs:"Field to sort by." json:"sortKey"`
+	SortKey SortKey `json:"sortKey"`
 }
 
 func (o SavedViewSortOptions) MarshalYAML() (interface{}, error) {
@@ -500,11 +500,11 @@ func (o *SearchSavedViewsQueryList) UnmarshalYAML(unmarshal func(interface{}) er
 type SearchSavedViewsRequest struct {
 	Sort SavedViewSortOptions `json:"sort"`
 	// Defaults to 100. Will throw if larger than 1_000.
-	PageSize      *int                  `conjure-docs:"Defaults to 100. Will throw if larger than 1_000." json:"pageSize,omitempty"`
+	PageSize      *int                  `json:"pageSize,omitempty"`
 	NextPageToken *api5.Token           `json:"nextPageToken,omitempty"`
 	Query         SearchSavedViewsQuery `json:"query"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search.
-	ArchivedStatuses *[]api5.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api5.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchSavedViewsRequest) MarshalYAML() (interface{}, error) {
@@ -591,7 +591,7 @@ func (o *TableState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type TemplateSearchState struct {
 	// Sort for templates view. Uses BE-supplied default if empty.
-	Sort  *api6.SortBy              `conjure-docs:"Sort for templates view. Uses BE-supplied default if empty." json:"sort,omitempty"`
+	Sort  *api6.SortBy              `json:"sort,omitempty"`
 	Query api6.SearchTemplatesQuery `json:"query"`
 }
 

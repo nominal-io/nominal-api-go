@@ -7,6 +7,7 @@ import (
 	api1 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/units/api"
+	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safelong"
 	"github.com/palantir/pkg/safeyaml"
@@ -16,7 +17,7 @@ import (
 type AbsoluteTimestampSeries struct {
 	Input Series `json:"input"`
 	// The time unit used to define the output values. Throws an error if nanosecond or finer.
-	TimeUnit api.TimeUnit `conjure-docs:"The time unit used to define the output values. Throws an error if nanosecond or finer." json:"timeUnit"`
+	TimeUnit api.TimeUnit `json:"timeUnit"`
 }
 
 func (o AbsoluteTimestampSeries) MarshalYAML() (interface{}, error) {
@@ -67,14 +68,19 @@ type AggregateNumericSeries struct {
 	   If specified, the result will be grouped ONLY by the specified tags.
 	   The tags specified here MUST be a (non-strict) subset of the input series's group by tags.
 	*/
-	GroupByTags []api1.StringConstant `conjure-docs:"Tags to group by for the aggregation.\nIf left empty, the tags to group by will be equivalent to those in the input series.\nIf specified, the result will be grouped ONLY by the specified tags.\nThe tags specified here MUST be a (non-strict) subset of the input series's group by tags." json:"groupByTags"`
+	GroupByTags []api1.StringConstant `json:"groupByTags"`
 	/*
 	   This field's purpose is to distinguish between the two flavors of groupByTags being empty. It has no
 	   effect when groupByTags is non-empty.
 	   When true and groupByTags is empty, aggregate across all series in the input.
 	   When false and groupByTags is empty, the result will be grouped by the same tags as the input series.
 	*/
-	AggregateByAllGroupings *bool `conjure-docs:"This field's purpose is to distinguish between the two flavors of groupByTags being empty. It has no\neffect when groupByTags is non-empty.\nWhen true and groupByTags is empty, aggregate across all series in the input.\nWhen false and groupByTags is empty, the result will be grouped by the same tags as the input series." json:"aggregateByAllGroupings,omitempty"`
+	AggregateByAllGroupings *bool `json:"aggregateByAllGroupings,omitempty"`
+	/*
+	   If provided, interpolates values at timestamps where the input series has values before aggregating.
+	   If not provided, only aggregates when timestamps match exactly (existing behavior).
+	*/
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o AggregateNumericSeries) MarshalJSON() ([]byte, error) {
@@ -171,12 +177,12 @@ type ArithmeticSeries struct {
 	Inputs     map[api1.LocalVariableName]NumericSeries `json:"inputs"`
 	Expression string                                   `json:"expression"`
 	// Defaults to forward fill interpolation with a 1s interpolation radius
-	InterpolationConfiguration *InterpolationConfiguration `conjure-docs:"Defaults to forward fill interpolation with a 1s interpolation radius" json:"interpolationConfiguration,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o ArithmeticSeries) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[api1.LocalVariableName]NumericSeries, 0)
+		o.Inputs = make(map[api1.LocalVariableName]NumericSeries)
 	}
 	type _tmpArithmeticSeries ArithmeticSeries
 	return safejson.Marshal(_tmpArithmeticSeries(o))
@@ -189,7 +195,7 @@ func (o *ArithmeticSeries) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawArithmeticSeries.Inputs == nil {
-		rawArithmeticSeries.Inputs = make(map[api1.LocalVariableName]NumericSeries, 0)
+		rawArithmeticSeries.Inputs = make(map[api1.LocalVariableName]NumericSeries)
 	}
 	*o = ArithmeticSeries(rawArithmeticSeries)
 	return nil
@@ -299,7 +305,7 @@ type BinaryArithmeticSeries struct {
 	Input2    NumericSeries                  `json:"input2"`
 	Operation api1.BinaryArithmeticOperation `json:"operation"`
 	// Defaults to forward fill interpolation with a 1s interpolation radius
-	InterpolationConfiguration *InterpolationConfiguration `conjure-docs:"Defaults to forward fill interpolation with a 1s interpolation radius" json:"interpolationConfiguration,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o BinaryArithmeticSeries) MarshalYAML() (interface{}, error) {
@@ -346,11 +352,11 @@ type Bode struct {
 	Output      NumericSeries     `json:"output"`
 	StftOptions *api1.StftOptions `json:"stftOptions,omitempty"`
 	// The scaling to apply to the output magnitude. Defaults to MAGNITUDE_DB_20 if not specified.
-	MagnitudeScaling *api1.MagnitudeScaling `conjure-docs:"The scaling to apply to the output magnitude. Defaults to MAGNITUDE_DB_20 if not specified." json:"magnitudeScaling,omitempty"`
+	MagnitudeScaling *api1.MagnitudeScaling `json:"magnitudeScaling,omitempty"`
 	// The type of the output frequency. Defaults to LINEAR if not specified.
-	OutputFrequencyType *api1.OutputFrequencyType `conjure-docs:"The type of the output frequency. Defaults to LINEAR if not specified." json:"outputFrequencyType,omitempty"`
+	OutputFrequencyType *api1.OutputFrequencyType `json:"outputFrequencyType,omitempty"`
 	// Unwrap the phase of the output. Defaults to true if not specified.
-	UnwrapPhase *bool `conjure-docs:"Unwrap the phase of the output. Defaults to true if not specified." json:"unwrapPhase,omitempty"`
+	UnwrapPhase *bool `json:"unwrapPhase,omitempty"`
 }
 
 func (o Bode) MarshalYAML() (interface{}, error) {
@@ -397,6 +403,11 @@ type ComputeNodeRequest struct {
 	Start   api.Timestamp  `json:"start"`
 	End     api.Timestamp  `json:"end"`
 	Context Context        `json:"context"`
+	/*
+	   Optional RID identifying the resource that initiated this query (e.g. workbook/notebook RID, checklist RID).
+	   Used for observability only — trusted as-is, no permission checks are performed on this value.
+	*/
+	SourceRid *rid.ResourceIdentifier `json:"sourceRid,omitempty"`
 }
 
 func (o ComputeNodeRequest) MarshalYAML() (interface{}, error) {
@@ -465,7 +476,7 @@ type Context struct {
 
 func (o Context) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api1.VariableName]VariableValue, 0)
+		o.Variables = make(map[api1.VariableName]VariableValue)
 	}
 	type _tmpContext Context
 	return safejson.Marshal(_tmpContext(o))
@@ -478,7 +489,7 @@ func (o *Context) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawContext.Variables == nil {
-		rawContext.Variables = make(map[api1.VariableName]VariableValue, 0)
+		rawContext.Variables = make(map[api1.VariableName]VariableValue)
 	}
 	*o = Context(rawContext)
 	return nil
@@ -506,16 +517,16 @@ type Cpsd struct {
 	Y           NumericSeries     `json:"y"`
 	StftOptions *api1.StftOptions `json:"stftOptions,omitempty"`
 	// The scaling to apply to the output magnitude. Defaults to MAGNITUDE_DB_10 if not specified.
-	MagnitudeScaling *api1.MagnitudeScaling `conjure-docs:"The scaling to apply to the output magnitude. Defaults to MAGNITUDE_DB_10 if not specified." json:"magnitudeScaling,omitempty"`
+	MagnitudeScaling *api1.MagnitudeScaling `json:"magnitudeScaling,omitempty"`
 	/*
 	   The type of the output frequency. Defaults to LINEAR if not specified. Changing the output frequency type
 	   may also rescale the magnitude of the output in order to ensure the density of the output is consistent.
 	*/
-	OutputFrequencyType *api1.OutputFrequencyType `conjure-docs:"The type of the output frequency. Defaults to LINEAR if not specified. Changing the output frequency type\nmay also rescale the magnitude of the output in order to ensure the density of the output is consistent." json:"outputFrequencyType,omitempty"`
+	OutputFrequencyType *api1.OutputFrequencyType `json:"outputFrequencyType,omitempty"`
 	// Unwrap the phase of the output. Defaults to true if not specified.
-	UnwrapPhase *bool `conjure-docs:"Unwrap the phase of the output. Defaults to true if not specified." json:"unwrapPhase,omitempty"`
+	UnwrapPhase *bool `json:"unwrapPhase,omitempty"`
 	// The unit of the output phase. Defaults to RADIANS if not specified.
-	OutputPhaseUnit *api1.OutputPhaseUnit `conjure-docs:"The unit of the output phase. Defaults to RADIANS if not specified." json:"outputPhaseUnit,omitempty"`
+	OutputPhaseUnit *api1.OutputPhaseUnit `json:"outputPhaseUnit,omitempty"`
 }
 
 func (o Cpsd) MarshalYAML() (interface{}, error) {
@@ -582,9 +593,9 @@ func (o *CurveFit) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type DerivativeSeries struct {
 	Input NumericSeries `json:"input"`
 	// Time unit used to calculate the derivative. Defaults to seconds if not specified.
-	TimeUnit *api.TimeUnit `conjure-docs:"Time unit used to calculate the derivative. Defaults to seconds if not specified." json:"timeUnit,omitempty"`
+	TimeUnit *api.TimeUnit `json:"timeUnit,omitempty"`
 	// Defines the strategy for handling negative output values. Defaults to allowNegativeValues if not specified.
-	NegativeValuesConfiguration *api1.NegativeValueConfiguration `conjure-docs:"Defines the strategy for handling negative output values. Defaults to allowNegativeValues if not specified." json:"negativeValuesConfiguration,omitempty"`
+	NegativeValuesConfiguration *api1.NegativeValueConfiguration `json:"negativeValuesConfiguration,omitempty"`
 }
 
 func (o DerivativeSeries) MarshalYAML() (interface{}, error) {
@@ -721,7 +732,7 @@ type EnumHistogramNode struct {
 
 func (o EnumHistogramNode) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[api1.VariableName]EnumSeries, 0)
+		o.Inputs = make(map[api1.VariableName]EnumSeries)
 	}
 	type _tmpEnumHistogramNode EnumHistogramNode
 	return safejson.Marshal(_tmpEnumHistogramNode(o))
@@ -734,7 +745,7 @@ func (o *EnumHistogramNode) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawEnumHistogramNode.Inputs == nil {
-		rawEnumHistogramNode.Inputs = make(map[api1.VariableName]EnumSeries, 0)
+		rawEnumHistogramNode.Inputs = make(map[api1.VariableName]EnumSeries)
 	}
 	*o = EnumHistogramNode(rawEnumHistogramNode)
 	return nil
@@ -758,9 +769,9 @@ func (o *EnumHistogramNode) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 type EnumResampleConfiguration struct {
 	// Interval between resampled points
-	Interval DurationConstant `conjure-docs:"Interval between resampled points" json:"interval"`
+	Interval DurationConstant `json:"interval"`
 	// Interpolation strategy to use (defaults to forward fill).
-	Interpolation *api1.EnumResampleInterpolationConfiguration `conjure-docs:"Interpolation strategy to use (defaults to forward fill)." json:"interpolation,omitempty"`
+	Interpolation *api1.EnumResampleInterpolationConfiguration `json:"interpolation,omitempty"`
 }
 
 func (o EnumResampleConfiguration) MarshalYAML() (interface{}, error) {
@@ -787,7 +798,7 @@ determines range of timestamps to output data for and interpolates values where 
 type EnumResampleSeries struct {
 	Input EnumSeries `json:"input"`
 	// The interval at which to resample the series and interpolation strategy
-	ResampleConfiguration EnumResampleConfiguration `conjure-docs:"The interval at which to resample the series and interpolation strategy" json:"resampleConfiguration"`
+	ResampleConfiguration EnumResampleConfiguration `json:"resampleConfiguration"`
 }
 
 func (o EnumResampleSeries) MarshalYAML() (interface{}, error) {
@@ -812,7 +823,7 @@ type EnumSeriesEqualityRanges struct {
 	EqualityOperator               api1.EqualityOperator           `json:"equalityOperator"`
 	PersistenceWindowConfiguration *PersistenceWindowConfiguration `json:"persistenceWindowConfiguration,omitempty"`
 	// Defaults to forward fill interpolation with a 1s interpolation radius
-	InterpolationConfiguration *InterpolationConfiguration `conjure-docs:"Defaults to forward fill interpolation with a 1s interpolation radius" json:"interpolationConfiguration,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o EnumSeriesEqualityRanges) MarshalJSON() ([]byte, error) {
@@ -856,9 +867,9 @@ func (o *EnumSeriesEqualityRanges) UnmarshalYAML(unmarshal func(interface{}) err
 type EnumTimeRangeFilterSeries struct {
 	Input EnumSeries `json:"input"`
 	// Represents the start time (inclusive) of the time range.
-	StartTime *api1.TimestampConstant `conjure-docs:"Represents the start time (inclusive) of the time range." json:"startTime,omitempty"`
+	StartTime *api1.TimestampConstant `json:"startTime,omitempty"`
 	// Represents the end time (inclusive) of the time range.
-	EndTime *api1.TimestampConstant `conjure-docs:"Represents the end time (inclusive) of the time range." json:"endTime,omitempty"`
+	EndTime *api1.TimestampConstant `json:"endTime,omitempty"`
 }
 
 func (o EnumTimeRangeFilterSeries) MarshalYAML() (interface{}, error) {
@@ -902,17 +913,17 @@ func (o *EnumTimeShiftSeries) UnmarshalYAML(unmarshal func(interface{}) error) e
 type EnumToNumericSeries struct {
 	Input EnumSeries `json:"input"`
 	// The mapping from enum values to doubles.
-	Mapping map[string]api1.DoubleConstant `conjure-docs:"The mapping from enum values to doubles." json:"mapping"`
+	Mapping map[string]api1.DoubleConstant `json:"mapping"`
 	/*
 	   The value to use for enum values not present in the mapping. If not specified, points with unmapped
 	   enum values will be dropped.
 	*/
-	DefaultValue *api1.DoubleConstant `conjure-docs:"The value to use for enum values not present in the mapping. If not specified, points with unmapped\nenum values will be dropped." json:"defaultValue,omitempty"`
+	DefaultValue *api1.DoubleConstant `json:"defaultValue,omitempty"`
 }
 
 func (o EnumToNumericSeries) MarshalJSON() ([]byte, error) {
 	if o.Mapping == nil {
-		o.Mapping = make(map[string]api1.DoubleConstant, 0)
+		o.Mapping = make(map[string]api1.DoubleConstant)
 	}
 	type _tmpEnumToNumericSeries EnumToNumericSeries
 	return safejson.Marshal(_tmpEnumToNumericSeries(o))
@@ -925,7 +936,7 @@ func (o *EnumToNumericSeries) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawEnumToNumericSeries.Mapping == nil {
-		rawEnumToNumericSeries.Mapping = make(map[string]api1.DoubleConstant, 0)
+		rawEnumToNumericSeries.Mapping = make(map[string]api1.DoubleConstant)
 	}
 	*o = EnumToNumericSeries(rawEnumToNumericSeries)
 	return nil
@@ -954,7 +965,7 @@ with the same timestamp together is specified in the operation field.
 type EnumUnionSeries struct {
 	Input []EnumSeries `json:"input"`
 	// The strategy to merge points with duplicate timestamps.
-	Operation api1.EnumUnionOperation `conjure-docs:"The strategy to merge points with duplicate timestamps." json:"operation"`
+	Operation api1.EnumUnionOperation `json:"operation"`
 }
 
 func (o EnumUnionSeries) MarshalJSON() ([]byte, error) {
@@ -987,6 +998,30 @@ func (o EnumUnionSeries) MarshalYAML() (interface{}, error) {
 }
 
 func (o *EnumUnionSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Compares two numeric series point-wise, producing 1 where left == right and 0 otherwise.
+type EqualToSeries struct {
+	Left  NumericSeries `json:"left"`
+	Right NumericSeries `json:"right"`
+	// Defaults to forward fill interpolation with a 1s interpolation radius
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
+}
+
+func (o EqualToSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EqualToSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1049,7 +1084,7 @@ type ExtractEnumFromStructSeries struct {
 	   Path to the field to extract as an enum series. Nested fields are separated by periods and field names cannot contain periods.
 	   Will filter out invalid paths and paths to sub structures.
 	*/
-	FieldPath []api1.StringConstant `conjure-docs:"Path to the field to extract as an enum series. Nested fields are separated by periods and field names cannot contain periods.\nWill filter out invalid paths and paths to sub structures." json:"fieldPath"`
+	FieldPath []api1.StringConstant `json:"fieldPath"`
 }
 
 func (o ExtractEnumFromStructSeries) MarshalJSON() ([]byte, error) {
@@ -1095,9 +1130,9 @@ type ExtractNumericFromStructSeries struct {
 	   Path to the field to extract as a numeric series. Nested fields are separated by periods and field names cannot contain periods.
 	   Will filter out invalid paths and values that cannot be converted to the specified type.
 	*/
-	FieldPath []api1.StringConstant `conjure-docs:"Path to the field to extract as a numeric series. Nested fields are separated by periods and field names cannot contain periods.\nWill filter out invalid paths and values that cannot be converted to the specified type." json:"fieldPath"`
+	FieldPath []api1.StringConstant `json:"fieldPath"`
 	// The type the numeric data will be cast to, defaults to FLOAT64
-	DataType *api1.NumericDataType `conjure-docs:"The type the numeric data will be cast to, defaults to FLOAT64" json:"dataType,omitempty"`
+	DataType *api1.NumericDataType `json:"dataType,omitempty"`
 }
 
 func (o ExtractNumericFromStructSeries) MarshalJSON() ([]byte, error) {
@@ -1143,7 +1178,7 @@ type ExtractStructFromStructSeries struct {
 	   Path to the field to extract as a struct. Nested fields are separated by periods and field names cannot contain periods.
 	   Returns an empty struct if the path is invalid or does not resolve to a valid JSON struct.
 	*/
-	FieldPath []api1.StringConstant `conjure-docs:"Path to the field to extract as a struct. Nested fields are separated by periods and field names cannot contain periods.\nReturns an empty struct if the path is invalid or does not resolve to a valid JSON struct." json:"fieldPath"`
+	FieldPath []api1.StringConstant `json:"fieldPath"`
 }
 
 func (o ExtractStructFromStructSeries) MarshalJSON() ([]byte, error) {
@@ -1187,7 +1222,9 @@ func (o *ExtractStructFromStructSeries) UnmarshalYAML(unmarshal func(interface{}
 type Fft struct {
 	Input NumericSeries `json:"input"`
 	// Window function applied to the input series. Defaults to RECT is not specified.
-	Window *api1.FftWindow `conjure-docs:"Window function applied to the input series. Defaults to RECT is not specified." json:"window,omitempty"`
+	Window *api1.FftWindow `json:"window,omitempty"`
+	// Strategy to downsample the output frequency spectrum.
+	SummarizationStrategy *api1.FrequencySummarizationStrategy `json:"summarizationStrategy,omitempty"`
 }
 
 func (o Fft) MarshalYAML() (interface{}, error) {
@@ -1216,18 +1253,18 @@ type FilterByExpressionSeries struct {
 	   The variable name for the series that will be returned by this filter. The expression can filter points
 	   conditional on multiple series. The base defines which series' points will be returned after applying all the filters.
 	*/
-	Base api1.LocalVariableName `conjure-docs:"The variable name for the series that will be returned by this filter. The expression can filter points \nconditional on multiple series. The base defines which series' points will be returned after applying all the filters." json:"base"`
+	Base api1.LocalVariableName `json:"base"`
 	// A map containing all the numeric series present in the expression.
-	Inputs map[api1.LocalVariableName]NumericSeries `conjure-docs:"A map containing all the numeric series present in the expression." json:"inputs"`
+	Inputs map[api1.LocalVariableName]NumericSeries `json:"inputs"`
 	// An expression that evaluates to a boolean. For example - a > 5.
-	Expression string `conjure-docs:"An expression that evaluates to a boolean. For example - a > 5." json:"expression"`
+	Expression string `json:"expression"`
 	// Defaults to forward fill interpolation with a 1s interpolation radius
-	InterpolationConfiguration *InterpolationConfiguration `conjure-docs:"Defaults to forward fill interpolation with a 1s interpolation radius" json:"interpolationConfiguration,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o FilterByExpressionSeries) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[api1.LocalVariableName]NumericSeries, 0)
+		o.Inputs = make(map[api1.LocalVariableName]NumericSeries)
 	}
 	type _tmpFilterByExpressionSeries FilterByExpressionSeries
 	return safejson.Marshal(_tmpFilterByExpressionSeries(o))
@@ -1240,7 +1277,7 @@ func (o *FilterByExpressionSeries) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawFilterByExpressionSeries.Inputs == nil {
-		rawFilterByExpressionSeries.Inputs = make(map[api1.LocalVariableName]NumericSeries, 0)
+		rawFilterByExpressionSeries.Inputs = make(map[api1.LocalVariableName]NumericSeries)
 	}
 	*o = FilterByExpressionSeries(rawFilterByExpressionSeries)
 	return nil
@@ -1291,12 +1328,12 @@ type FunctionDerivedSeries struct {
 	   Map of function input names to their values. The function inputs must match the function's parameter
 	   names and types. An input must be specified for each of the referenced function's parameters.
 	*/
-	FunctionArgs map[api1.FunctionParameterName]FunctionParameterValue `conjure-docs:"Map of function input names to their values. The function inputs must match the function's parameter\nnames and types. An input must be specified for each of the referenced function's parameters." json:"functionArgs"`
+	FunctionArgs map[api1.FunctionParameterName]FunctionParameterValue `json:"functionArgs"`
 }
 
 func (o FunctionDerivedSeries) MarshalJSON() ([]byte, error) {
 	if o.FunctionArgs == nil {
-		o.FunctionArgs = make(map[api1.FunctionParameterName]FunctionParameterValue, 0)
+		o.FunctionArgs = make(map[api1.FunctionParameterName]FunctionParameterValue)
 	}
 	type _tmpFunctionDerivedSeries FunctionDerivedSeries
 	return safejson.Marshal(_tmpFunctionDerivedSeries(o))
@@ -1309,7 +1346,7 @@ func (o *FunctionDerivedSeries) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawFunctionDerivedSeries.FunctionArgs == nil {
-		rawFunctionDerivedSeries.FunctionArgs = make(map[api1.FunctionParameterName]FunctionParameterValue, 0)
+		rawFunctionDerivedSeries.FunctionArgs = make(map[api1.FunctionParameterName]FunctionParameterValue)
 	}
 	*o = FunctionDerivedSeries(rawFunctionDerivedSeries)
 	return nil
@@ -1338,10 +1375,10 @@ type FunctionVariables struct {
 
 func (o FunctionVariables) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api1.VariableName]VariableValue, 0)
+		o.Variables = make(map[api1.VariableName]VariableValue)
 	}
 	if o.SubFunctionVariables == nil {
-		o.SubFunctionVariables = make(map[api1.FunctionReference]FunctionVariables, 0)
+		o.SubFunctionVariables = make(map[api1.FunctionReference]FunctionVariables)
 	}
 	type _tmpFunctionVariables FunctionVariables
 	return safejson.Marshal(_tmpFunctionVariables(o))
@@ -1354,10 +1391,10 @@ func (o *FunctionVariables) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawFunctionVariables.Variables == nil {
-		rawFunctionVariables.Variables = make(map[api1.VariableName]VariableValue, 0)
+		rawFunctionVariables.Variables = make(map[api1.VariableName]VariableValue)
 	}
 	if rawFunctionVariables.SubFunctionVariables == nil {
-		rawFunctionVariables.SubFunctionVariables = make(map[api1.FunctionReference]FunctionVariables, 0)
+		rawFunctionVariables.SubFunctionVariables = make(map[api1.FunctionReference]FunctionVariables)
 	}
 	*o = FunctionVariables(rawFunctionVariables)
 	return nil
@@ -1379,12 +1416,60 @@ func (o *FunctionVariables) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Compares two numeric series point-wise, producing 1 where left >= right and 0 otherwise.
+type GreaterThanOrEqualToSeries struct {
+	Left  NumericSeries `json:"left"`
+	Right NumericSeries `json:"right"`
+	// Defaults to forward fill interpolation with a 1s interpolation radius
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
+}
+
+func (o GreaterThanOrEqualToSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GreaterThanOrEqualToSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Compares two numeric series point-wise, producing 1 where left > right and 0 otherwise.
+type GreaterThanSeries struct {
+	Left  NumericSeries `json:"left"`
+	Right NumericSeries `json:"right"`
+	// Defaults to forward fill interpolation with a 1s interpolation radius
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
+}
+
+func (o GreaterThanSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GreaterThanSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Calculates the running sum of the area underneath a series using the trapezoidal rule.
 type IntegralSeries struct {
 	Input          NumericSeries          `json:"input"`
 	StartTimestamp api1.TimestampConstant `json:"startTimestamp"`
 	// Time unit used to calculate the integral. Defaults to seconds if not specified.
-	TimeUnit *api.TimeUnit `conjure-docs:"Time unit used to calculate the integral. Defaults to seconds if not specified." json:"timeUnit,omitempty"`
+	TimeUnit *api.TimeUnit `json:"timeUnit,omitempty"`
 }
 
 func (o IntegralSeries) MarshalYAML() (interface{}, error) {
@@ -1450,6 +1535,54 @@ func (o *IntersectRanges) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Compares two numeric series point-wise, producing 1 where left <= right and 0 otherwise.
+type LessThanOrEqualToSeries struct {
+	Left  NumericSeries `json:"left"`
+	Right NumericSeries `json:"right"`
+	// Defaults to forward fill interpolation with a 1s interpolation radius
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
+}
+
+func (o LessThanOrEqualToSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LessThanOrEqualToSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Compares two numeric series point-wise, producing 1 where left < right and 0 otherwise.
+type LessThanSeries struct {
+	Left  NumericSeries `json:"left"`
+	Right NumericSeries `json:"right"`
+	// Defaults to forward fill interpolation with a 1s interpolation radius
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
+}
+
+func (o LessThanSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LessThanSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Outputs only values of the log plot that satisfy the filter.
 type LogFilterSeries struct {
 	Input    LogSeries              `json:"input"`
@@ -1500,7 +1633,7 @@ same timestamp together is specified in the operation field.
 type LogUnionSeries struct {
 	Input []LogSeries `json:"input"`
 	// The strategy to merge points with duplicate timestamps.
-	Operation api1.LogUnionOperation `conjure-docs:"The strategy to merge points with duplicate timestamps." json:"operation"`
+	Operation api1.LogUnionOperation `json:"operation"`
 }
 
 func (o LogUnionSeries) MarshalJSON() ([]byte, error) {
@@ -1549,7 +1682,7 @@ using the interpolation configuration.
 type MaxSeries struct {
 	Inputs []NumericSeries `json:"inputs"`
 	// Defaults to forward fill interpolation with a 1s interpolation radius
-	InterpolationConfiguration *InterpolationConfiguration `conjure-docs:"Defaults to forward fill interpolation with a 1s interpolation radius" json:"interpolationConfiguration,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o MaxSeries) MarshalJSON() ([]byte, error) {
@@ -1598,7 +1731,7 @@ using the interpolation configuration.
 type MeanSeries struct {
 	Inputs []NumericSeries `json:"inputs"`
 	// Defaults to forward fill interpolation with a 1s interpolation radius
-	InterpolationConfiguration *InterpolationConfiguration `conjure-docs:"Defaults to forward fill interpolation with a 1s interpolation radius" json:"interpolationConfiguration,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o MeanSeries) MarshalJSON() ([]byte, error) {
@@ -1672,7 +1805,7 @@ using the interpolation configuration.
 type MinSeries struct {
 	Inputs []NumericSeries `json:"inputs"`
 	// Defaults to forward fill interpolation with a 1s interpolation radius
-	InterpolationConfiguration *InterpolationConfiguration `conjure-docs:"Defaults to forward fill interpolation with a 1s interpolation radius" json:"interpolationConfiguration,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o MinSeries) MarshalJSON() ([]byte, error) {
@@ -1705,6 +1838,30 @@ func (o MinSeries) MarshalYAML() (interface{}, error) {
 }
 
 func (o *MinSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Compares two numeric series point-wise, producing 1 where left != right and 0 otherwise.
+type NotEqualToSeries struct {
+	Left  NumericSeries `json:"left"`
+	Right NumericSeries `json:"right"`
+	// Defaults to forward fill interpolation with a 1s interpolation radius
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
+}
+
+func (o NotEqualToSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NotEqualToSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1786,7 +1943,7 @@ type NumericHistogramNode struct {
 
 func (o NumericHistogramNode) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[api1.VariableName]NumericSeries, 0)
+		o.Inputs = make(map[api1.VariableName]NumericSeries)
 	}
 	type _tmpNumericHistogramNode NumericHistogramNode
 	return safejson.Marshal(_tmpNumericHistogramNode(o))
@@ -1799,7 +1956,7 @@ func (o *NumericHistogramNode) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNumericHistogramNode.Inputs == nil {
-		rawNumericHistogramNode.Inputs = make(map[api1.VariableName]NumericSeries, 0)
+		rawNumericHistogramNode.Inputs = make(map[api1.VariableName]NumericSeries)
 	}
 	*o = NumericHistogramNode(rawNumericHistogramNode)
 	return nil
@@ -1823,9 +1980,9 @@ func (o *NumericHistogramNode) UnmarshalYAML(unmarshal func(interface{}) error) 
 
 type NumericResampleConfiguration struct {
 	// Interval between resampled points
-	Interval DurationConstant `conjure-docs:"Interval between resampled points" json:"interval"`
+	Interval DurationConstant `json:"interval"`
 	// Interpolation strategy to use (defaults to forward fill).
-	Interpolation *api1.NumericResampleInterpolationConfiguration `conjure-docs:"Interpolation strategy to use (defaults to forward fill)." json:"interpolation,omitempty"`
+	Interpolation *api1.NumericResampleInterpolationConfiguration `json:"interpolation,omitempty"`
 }
 
 func (o NumericResampleConfiguration) MarshalYAML() (interface{}, error) {
@@ -1852,7 +2009,7 @@ determines range of timestamps to output data for and interpolates values where 
 type NumericResampleSeries struct {
 	Input NumericSeries `json:"input"`
 	// The interpolation strategy and interval at which to resample the series
-	ResampleConfiguration NumericResampleConfiguration `conjure-docs:"The interpolation strategy and interval at which to resample the series" json:"resampleConfiguration"`
+	ResampleConfiguration NumericResampleConfiguration `json:"resampleConfiguration"`
 }
 
 func (o NumericResampleSeries) MarshalYAML() (interface{}, error) {
@@ -1898,9 +2055,9 @@ func (o *NumericThresholdFilterSeries) UnmarshalYAML(unmarshal func(interface{})
 type NumericTimeRangeFilterSeries struct {
 	Input NumericSeries `json:"input"`
 	// Represents the start time (inclusive) of the time range.
-	StartTime *api1.TimestampConstant `conjure-docs:"Represents the start time (inclusive) of the time range." json:"startTime,omitempty"`
+	StartTime *api1.TimestampConstant `json:"startTime,omitempty"`
 	// Represents the end time (inclusive) of the time range.
-	EndTime *api1.TimestampConstant `conjure-docs:"Represents the end time (inclusive) of the time range." json:"endTime,omitempty"`
+	EndTime *api1.TimestampConstant `json:"endTime,omitempty"`
 }
 
 func (o NumericTimeRangeFilterSeries) MarshalYAML() (interface{}, error) {
@@ -1948,7 +2105,7 @@ merge input values with the same timestamp together is specified in the operatio
 type NumericUnionSeries struct {
 	Input []NumericSeries `json:"input"`
 	// The strategy to merge points with duplicate timestamps.
-	Operation api1.NumericUnionOperation `conjure-docs:"The strategy to merge points with duplicate timestamps." json:"operation"`
+	Operation api1.NumericUnionOperation `json:"operation"`
 }
 
 func (o NumericUnionSeries) MarshalJSON() ([]byte, error) {
@@ -2015,7 +2172,7 @@ func (o *Nyquist) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type OffsetSeries struct {
 	Input NumericSeries `json:"input"`
 	// The constant to add to each point
-	Scalar api1.DoubleConstant `conjure-docs:"The constant to add to each point" json:"scalar"`
+	Scalar api1.DoubleConstant `json:"scalar"`
 }
 
 func (o OffsetSeries) MarshalYAML() (interface{}, error) {
@@ -2066,7 +2223,7 @@ type PaddedRanges struct {
 	Input   RangeSeries      `json:"input"`
 	Padding DurationConstant `json:"padding"`
 	// Configuration for how to apply padding to the ranges. Defaults to PAD_START_AND_END if not specified.
-	PaddingConfiguration *api1.RangePaddingConfiguration `conjure-docs:"Configuration for how to apply padding to the ranges. Defaults to PAD_START_AND_END if not specified." json:"paddingConfiguration,omitempty"`
+	PaddingConfiguration *api1.RangePaddingConfiguration `json:"paddingConfiguration,omitempty"`
 }
 
 func (o PaddedRanges) MarshalYAML() (interface{}, error) {
@@ -2091,12 +2248,12 @@ type ParameterInput struct {
 	   Overrides the start and end time of the compute request. If either the start or end are not present, we
 	   default back to the start/end specified in the request.
 	*/
-	TimeRange *api1.Range `conjure-docs:"Overrides the start and end time of the compute request. If either the start or end are not present, we\ndefault back to the start/end specified in the request." json:"timeRange,omitempty"`
+	TimeRange *api1.Range `json:"timeRange,omitempty"`
 }
 
 func (o ParameterInput) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api1.VariableName]VariableValue, 0)
+		o.Variables = make(map[api1.VariableName]VariableValue)
 	}
 	type _tmpParameterInput ParameterInput
 	return safejson.Marshal(_tmpParameterInput(o))
@@ -2109,7 +2266,7 @@ func (o *ParameterInput) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawParameterInput.Variables == nil {
-		rawParameterInput.Variables = make(map[api1.VariableName]VariableValue, 0)
+		rawParameterInput.Variables = make(map[api1.VariableName]VariableValue)
 	}
 	*o = ParameterInput(rawParameterInput)
 	return nil
@@ -2137,10 +2294,15 @@ type ParameterizedComputeNodeRequest struct {
 	End     api.Timestamp  `json:"end"`
 	Context Context        `json:"context"`
 	/*
+	   Optional RID identifying the resource that initiated this query (e.g. workbook/notebook RID, checklist RID).
+	   Used for observability only — trusted as-is, no permission checks are performed on this value.
+	*/
+	SourceRid *rid.ResourceIdentifier `json:"sourceRid,omitempty"`
+	/*
 	   Specifies how certain variables should be parameterized. If a variable name appears in both the context
 	   and the parameterized context, it will be treated as parameterized.
 	*/
-	ParameterizedContext ParameterizedContext `conjure-docs:"Specifies how certain variables should be parameterized. If a variable name appears in both the context\nand the parameterized context, it will be treated as parameterized." json:"parameterizedContext"`
+	ParameterizedContext ParameterizedContext `json:"parameterizedContext"`
 }
 
 func (o ParameterizedComputeNodeRequest) MarshalYAML() (interface{}, error) {
@@ -2161,7 +2323,7 @@ func (o *ParameterizedComputeNodeRequest) UnmarshalYAML(unmarshal func(interface
 
 type ParameterizedContext struct {
 	// Each parameter input provides a satisfying set of values for the parameterized compute node.
-	ParameterInputs []ParameterInput `conjure-docs:"Each parameter input provides a satisfying set of values for the parameterized compute node." json:"parameterInputs"`
+	ParameterInputs []ParameterInput `json:"parameterInputs"`
 }
 
 func (o ParameterizedContext) MarshalJSON() ([]byte, error) {
@@ -2212,14 +2374,14 @@ type PeakRanges struct {
 
 	   Deprecated: No longer used, use returnType instead
 	*/
-	ReturnsPeaks *bool `conjure-docs:"True if returning peaks, else troughs." json:"returnsPeaks,omitempty"`
+	ReturnsPeaks *bool `json:"returnsPeaks,omitempty"`
 	// Optional for backcompatibility.
-	ReturnType *api1.PeakType `conjure-docs:"Optional for backcompatibility." json:"returnType,omitempty"`
+	ReturnType *api1.PeakType `json:"returnType,omitempty"`
 	/*
 	   The minimum topographic prominence for an extrema to be returned.
 	   Prominence is the minimum vertical distance needed to travel from an extrema to one of greater magnitude.
 	*/
-	MinimumProminence *api1.DoubleConstant `conjure-docs:"The minimum topographic prominence for an extrema to be returned.\nProminence is the minimum vertical distance needed to travel from an extrema to one of greater magnitude." json:"minimumProminence,omitempty"`
+	MinimumProminence *api1.DoubleConstant `json:"minimumProminence,omitempty"`
 }
 
 func (o PeakRanges) MarshalYAML() (interface{}, error) {
@@ -2270,14 +2432,14 @@ type PersistenceWindowConfiguration struct {
 	   The minimum number of points for which this condition be must satisfied to include the time range in the
 	   output. Must be non-negative. If not present, will default to 1.
 	*/
-	MinPoints *api1.IntegerConstant `conjure-docs:"The minimum number of points for which this condition be must satisfied to include the time range in the\noutput. Must be non-negative. If not present, will default to 1." json:"minPoints,omitempty"`
+	MinPoints *api1.IntegerConstant `json:"minPoints,omitempty"`
 	/*
 	   The minimum number of points for which this condition must be satisfied to include the time range in the
 	   output. Must be non-negative. If not present, will default to 1 nanosecond.
 	*/
-	MinDuration *DurationConstant `conjure-docs:"The minimum number of points for which this condition must be satisfied to include the time range in the\noutput. Must be non-negative. If not present, will default to 1 nanosecond." json:"minDuration,omitempty"`
+	MinDuration *DurationConstant `json:"minDuration,omitempty"`
 	// Which point to use as the start of the output range. Defaults to firstPointMatchingCondition if not specified.
-	OutputRangeStart api1.OutputRangeStart `conjure-docs:"Which point to use as the start of the output range. Defaults to firstPointMatchingCondition if not specified." json:"outputRangeStart"`
+	OutputRangeStart api1.OutputRangeStart `json:"outputRangeStart"`
 }
 
 func (o PersistenceWindowConfiguration) MarshalYAML() (interface{}, error) {
@@ -2305,7 +2467,7 @@ using the interpolation configuration.
 type ProductSeries struct {
 	Inputs []NumericSeries `json:"inputs"`
 	// Defaults to forward fill interpolation with a 1s interpolation radius
-	InterpolationConfiguration *InterpolationConfiguration `conjure-docs:"Defaults to forward fill interpolation with a 1s interpolation radius" json:"interpolationConfiguration,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o ProductSeries) MarshalJSON() ([]byte, error) {
@@ -2349,12 +2511,12 @@ type Psd struct {
 	Input       NumericSeries     `json:"input"`
 	StftOptions *api1.StftOptions `json:"stftOptions,omitempty"`
 	// The scaling to apply to the output magnitude. Defaults to MAGNITUDE_DB_10 if not specified.
-	MagnitudeScaling *api1.MagnitudeScaling `conjure-docs:"The scaling to apply to the output magnitude. Defaults to MAGNITUDE_DB_10 if not specified." json:"magnitudeScaling,omitempty"`
+	MagnitudeScaling *api1.MagnitudeScaling `json:"magnitudeScaling,omitempty"`
 	/*
 	   The type of the output frequency. Defaults to LINEAR if not specified. Changing the output frequency unit
 	   may also rescale the magnitude of the output in order to ensure the density of the output is consistent.
 	*/
-	OutputFrequencyType *api1.OutputFrequencyType `conjure-docs:"The type of the output frequency. Defaults to LINEAR if not specified. Changing the output frequency unit\nmay also rescale the magnitude of the output in order to ensure the density of the output is consistent." json:"outputFrequencyType,omitempty"`
+	OutputFrequencyType *api1.OutputFrequencyType `json:"outputFrequencyType,omitempty"`
 }
 
 func (o Psd) MarshalYAML() (interface{}, error) {
@@ -2402,17 +2564,17 @@ only expects two input properties.
 */
 type RefpropSeries struct {
 	// A map that maps a REFPROP property to its numeric series.
-	Inputs map[api1.RefpropProperty]NumericSeries `conjure-docs:"A map that maps a REFPROP property to its numeric series." json:"inputs"`
+	Inputs map[api1.RefpropProperty]NumericSeries `json:"inputs"`
 	// The desired output property. This should not be one of the input properties.
-	OutputProperty api1.RefpropProperty `conjure-docs:"The desired output property. This should not be one of the input properties." json:"outputProperty"`
+	OutputProperty api1.RefpropProperty `json:"outputProperty"`
 	// The substance for REFPROP calculations.
-	Substance                  api1.RefpropSubstance       `conjure-docs:"The substance for REFPROP calculations." json:"substance"`
+	Substance                  api1.RefpropSubstance       `json:"substance"`
 	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o RefpropSeries) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[api1.RefpropProperty]NumericSeries, 0)
+		o.Inputs = make(map[api1.RefpropProperty]NumericSeries)
 	}
 	type _tmpRefpropSeries RefpropSeries
 	return safejson.Marshal(_tmpRefpropSeries(o))
@@ -2425,7 +2587,7 @@ func (o *RefpropSeries) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawRefpropSeries.Inputs == nil {
-		rawRefpropSeries.Inputs = make(map[api1.RefpropProperty]NumericSeries, 0)
+		rawRefpropSeries.Inputs = make(map[api1.RefpropProperty]NumericSeries)
 	}
 	*o = RefpropSeries(rawRefpropSeries)
 	return nil
@@ -2473,9 +2635,9 @@ func (o *RollingOperationSeries) UnmarshalYAML(unmarshal func(interface{}) error
 type ScaleSeries struct {
 	Input NumericSeries `json:"input"`
 	// The constant to multiply each point by
-	Scalar api1.DoubleConstant `conjure-docs:"The constant to multiply each point by" json:"scalar"`
+	Scalar api1.DoubleConstant `json:"scalar"`
 	// The units of the scalar to multiply by. If empty, the scalar is considered unit-less.
-	ScalarUnit *api3.UnitSymbol `conjure-docs:"The units of the scalar to multiply by. If empty, the scalar is considered unit-less." json:"scalarUnit,omitempty"`
+	ScalarUnit *api3.UnitSymbol `json:"scalarUnit,omitempty"`
 }
 
 func (o ScaleSeries) MarshalYAML() (interface{}, error) {
@@ -2545,7 +2707,7 @@ func (o *Scatter3d) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // Fits a curve to the scatter between two series.
 type ScatterCurveFit struct {
 	// The x and y series to fit to.
-	Scatter Scatter                `conjure-docs:"The x and y series to fit to." json:"scatter"`
+	Scatter Scatter                `json:"scatter"`
 	Options api1.ScatterFitOptions `json:"options"`
 }
 
@@ -2666,7 +2828,7 @@ type SeriesEqualityRanges struct {
 	Tolerance                      *api1.DoubleConstant            `json:"tolerance,omitempty"`
 	PersistenceWindowConfiguration *PersistenceWindowConfiguration `json:"persistenceWindowConfiguration,omitempty"`
 	// Defaults to forward fill interpolation with a 1s interpolation radius
-	InterpolationConfiguration *InterpolationConfiguration `conjure-docs:"Defaults to forward fill interpolation with a 1s interpolation radius" json:"interpolationConfiguration,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o SeriesEqualityRanges) MarshalJSON() ([]byte, error) {
@@ -2714,11 +2876,11 @@ on SciPy output.
 type SignalFilterSeries struct {
 	Input NumericSeries `json:"input"`
 	// Filter type and cutoff frequencies.
-	SignalFilterConfiguration api1.SignalFilterConfiguration `conjure-docs:"Filter type and cutoff frequencies." json:"signalFilterConfiguration"`
+	SignalFilterConfiguration api1.SignalFilterConfiguration `json:"signalFilterConfiguration"`
 	// Order of filter. Must be a positive integer, and is effectively doubled for bidirectional filters.
-	Order api1.IntegerConstant `conjure-docs:"Order of filter. Must be a positive integer, and is effectively doubled for bidirectional filters." json:"order"`
+	Order api1.IntegerConstant `json:"order"`
 	// The sampling frequency of the input series. Used to calculate normalized frequency for cutoff frequencies.
-	SamplingFrequency *api1.DoubleConstant `conjure-docs:"The sampling frequency of the input series. Used to calculate normalized frequency for cutoff frequencies." json:"samplingFrequency,omitempty"`
+	SamplingFrequency *api1.DoubleConstant `json:"samplingFrequency,omitempty"`
 }
 
 func (o SignalFilterSeries) MarshalYAML() (interface{}, error) {
@@ -2771,7 +2933,7 @@ type StabilityWindowConfiguration struct {
 	   The minimum number of points within the window to create a stable range. Must be non-negative. If not
 	   present, will default to 2.
 	*/
-	MinPoints *api1.IntegerConstant `conjure-docs:"The minimum number of points within the window to create a stable range. Must be non-negative. If not \npresent, will default to 2." json:"minPoints,omitempty"`
+	MinPoints *api1.IntegerConstant `json:"minPoints,omitempty"`
 	Duration  DurationConstant      `json:"duration"`
 }
 
@@ -2800,7 +2962,7 @@ type StaleRanges struct {
 	Input     Series           `json:"input"`
 	Threshold DurationConstant `json:"threshold"`
 	// The start timestamp of the range. If not specified, staleness will automatically use view range start.
-	StartTimestamp *api1.TimestampConstant `conjure-docs:"The start timestamp of the range. If not specified, staleness will automatically use view range start." json:"startTimestamp,omitempty"`
+	StartTimestamp *api1.TimestampConstant `json:"startTimestamp,omitempty"`
 	// Deprecated: No longer used and will be removed
 	EndTimestamp *api1.TimestampConstant `json:"endTimestamp,omitempty"`
 }
@@ -2830,7 +2992,7 @@ using the interpolation configuration.
 type SumSeries struct {
 	Inputs []NumericSeries `json:"inputs"`
 	// Defaults to forward fill interpolation with a 1s interpolation radius
-	InterpolationConfiguration *InterpolationConfiguration `conjure-docs:"Defaults to forward fill interpolation with a 1s interpolation radius" json:"interpolationConfiguration,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o SumSeries) MarshalJSON() ([]byte, error) {
@@ -2874,12 +3036,12 @@ type SummarizeCartesian struct {
 	Input  Cartesian             `json:"input"`
 	Bounds *api1.CartesianBounds `json:"bounds,omitempty"`
 	// The summarization strategy to use when there are more than `maxPoints`. Defaults to spatial.
-	SummarizationStrategy *api1.ScatterSummarizationStrategy `conjure-docs:"The summarization strategy to use when there are more than \"maxPoints\". Defaults to spatial." json:"summarizationStrategy,omitempty"`
+	SummarizationStrategy *api1.ScatterSummarizationStrategy `json:"summarizationStrategy,omitempty"`
 	/*
 	   The maximum number of points to return in the response. If more points are found, a BucketedCartesianPlot
 	   will be returned. Maximum is 10,000. Defaults to 2,000 if not specified.
 	*/
-	MaxPoints *int `conjure-docs:"The maximum number of points to return in the response. If more points are found, a BucketedCartesianPlot\nwill be returned. Maximum is 10,000. Defaults to 2,000 if not specified." json:"maxPoints,omitempty"`
+	MaxPoints *int `json:"maxPoints,omitempty"`
 }
 
 func (o SummarizeCartesian) MarshalYAML() (interface{}, error) {
@@ -2906,9 +3068,9 @@ type SummarizeCartesian3d struct {
 	   If more points are found, a BucketedCartesian3dPlot will be returned.
 	   Maximum is 10,000. Defaults to 2,000 if not specified.
 	*/
-	MaxPoints *int `conjure-docs:"The maximum number of points to return in the response.\nIf more points are found, a BucketedCartesian3dPlot will be returned.\nMaximum is 10,000. Defaults to 2,000 if not specified." json:"maxPoints,omitempty"`
+	MaxPoints *int `json:"maxPoints,omitempty"`
 	// The strategy to use when summarizing the series. Only spatial decimation is supported.
-	SummarizationStrategy *api1.ScatterSummarizationStrategy `conjure-docs:"The strategy to use when summarizing the series. Only spatial decimation is supported." json:"summarizationStrategy,omitempty"`
+	SummarizationStrategy *api1.ScatterSummarizationStrategy `json:"summarizationStrategy,omitempty"`
 }
 
 func (o SummarizeCartesian3d) MarshalYAML() (interface{}, error) {
@@ -2933,7 +3095,7 @@ type SummarizeRanges struct {
 	   The maximum number of ranges to return in the response. If more ranges are found, a RangesSummary
 	   will be returned. Defaults to 2000 if not specified.
 	*/
-	MaxRanges *int `conjure-docs:"The maximum number of ranges to return in the response. If more ranges are found, a RangesSummary\nwill be returned. Defaults to 2000 if not specified." json:"maxRanges,omitempty"`
+	MaxRanges *int `json:"maxRanges,omitempty"`
 }
 
 func (o SummarizeRanges) MarshalYAML() (interface{}, error) {
@@ -2959,24 +3121,24 @@ Summarization strategy should be specified.
 type SummarizeSeries struct {
 	Input Series `json:"input"`
 	// The output format of the response. Defaults to LEGACY.
-	OutputFormat *api1.OutputFormat `conjure-docs:"The output format of the response. Defaults to LEGACY." json:"outputFormat,omitempty"`
+	OutputFormat *api1.OutputFormat `json:"outputFormat,omitempty"`
 	// The fields to output from the summarization. Applies only to Arrow format numeric series.
-	NumericOutputFields *[]api1.NumericOutputField `conjure-docs:"The fields to output from the summarization. Applies only to Arrow format numeric series." json:"numericOutputFields,omitempty"`
+	NumericOutputFields *[]api1.NumericOutputField `json:"numericOutputFields,omitempty"`
 	/*
 	   Resolution of the output series specifying time interval between decimated points.
 	   Picoseconds for picosecond-granularity dataset, nanoseconds otherwise.
 
 	   Deprecated: Use summarizationStrategy instead.
 	*/
-	Resolution *safelong.SafeLong `conjure-docs:"Resolution of the output series specifying time interval between decimated points.\nPicoseconds for picosecond-granularity dataset, nanoseconds otherwise." json:"resolution,omitempty"`
+	Resolution *safelong.SafeLong `json:"resolution,omitempty"`
 	/*
 	   Number of points to generate in the output series.
 
 	   Deprecated: Use summarizationStrategy instead.
 	*/
-	Buckets *int `conjure-docs:"Number of points to generate in the output series." json:"buckets,omitempty"`
+	Buckets *int `json:"buckets,omitempty"`
 	// The strategy to use when summarizing the series.
-	SummarizationStrategy *api1.SummarizationStrategy `conjure-docs:"The strategy to use when summarizing the series." json:"summarizationStrategy,omitempty"`
+	SummarizationStrategy *api1.SummarizationStrategy `json:"summarizationStrategy,omitempty"`
 }
 
 func (o SummarizeSeries) MarshalYAML() (interface{}, error) {
@@ -3023,7 +3185,7 @@ func (o *ThresholdingRanges) UnmarshalYAML(unmarshal func(interface{}) error) er
 type TimeDifferenceSeries struct {
 	Input Series `json:"input"`
 	// The time unit used to define the output values. Defaults to seconds if not specified.
-	TimeUnit *api.TimeUnit `conjure-docs:"The time unit used to define the output values. Defaults to seconds if not specified." json:"timeUnit,omitempty"`
+	TimeUnit *api.TimeUnit `json:"timeUnit,omitempty"`
 }
 
 func (o TimeDifferenceSeries) MarshalYAML() (interface{}, error) {
@@ -3048,7 +3210,7 @@ type TimeSeriesCurveFit struct {
 	   The series to fit. Timestamps will be used as x values and data as y values. The leftmost (earliest)
 	   timestamp will be used as the value of 0, and all other timestamps will be relative to that.
 	*/
-	Series  NumericSeries             `conjure-docs:"The series to fit. Timestamps will be used as x values and data as y values. The leftmost (earliest)\ntimestamp will be used as the value of 0, and all other timestamps will be relative to that." json:"series"`
+	Series  NumericSeries             `json:"series"`
 	Options api1.TimeSeriesFitOptions `json:"options"`
 }
 
@@ -3160,7 +3322,7 @@ func (o *UnitConversionSeries) UnmarshalYAML(unmarshal func(interface{}) error) 
 type ValueDifferenceSeries struct {
 	Input NumericSeries `json:"input"`
 	// Defines the strategy for handling negative output values. Defaults to allowNegativeValues if not specified.
-	NegativeValuesConfiguration *api1.NegativeValueConfiguration `conjure-docs:"Defines the strategy for handling negative output values. Defaults to allowNegativeValues if not specified." json:"negativeValuesConfiguration,omitempty"`
+	NegativeValuesConfiguration *api1.NegativeValueConfiguration `json:"negativeValuesConfiguration,omitempty"`
 }
 
 func (o ValueDifferenceSeries) MarshalYAML() (interface{}, error) {
@@ -3182,15 +3344,15 @@ func (o *ValueDifferenceSeries) UnmarshalYAML(unmarshal func(interface{}) error)
 // Maps a continuous numeric series to a discrete enum series using the specified value ranges.
 type ValueMapSeries struct {
 	// The input series to map to an enumerated series
-	Input NumericSeries `conjure-docs:"The input series to map to an enumerated series" json:"input"`
+	Input NumericSeries `json:"input"`
 	/*
 	   The output of the first capturing range will be used. Ranges are start inclusive, end exclusive, must not overlap,
 	   and increasing from lowest to highest. Ranges can be open ended to the edge of the next or prior range.
 	   The first range can be open ended to negative infinity, and the last range can be open ended to positive infinity.
 	*/
-	Mapping []api1.RangeMap `conjure-docs:"The output of the first capturing range will be used. Ranges are start inclusive, end exclusive, must not overlap,\nand increasing from lowest to highest. Ranges can be open ended to the edge of the next or prior range.\nThe first range can be open ended to negative infinity, and the last range can be open ended to positive infinity." json:"mapping"`
+	Mapping []api1.RangeMap `json:"mapping"`
 	// The default value if not captured by any range. If not specified, points will be filtered.
-	Default *api1.StringConstant `conjure-docs:"The default value if not captured by any range. If not specified, points will be filtered." json:"default,omitempty"`
+	Default *api1.StringConstant `json:"default,omitempty"`
 }
 
 func (o ValueMapSeries) MarshalJSON() ([]byte, error) {
@@ -3223,6 +3385,64 @@ func (o ValueMapSeries) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ValueMapSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Computes the z-score for each series within a group-by family. For each group at each timestamp, the output is
+(value - mean) / stddev, where mean and stddev are computed across all groups in the family at that timestamp,
+using the interpolation configuration to align values across groups. When stddev is zero at a timestamp (e.g., all groups have the same value), that data point is excluded from the output.
+If groupByTags is empty, all groups in the input series will be considered as a single family. This node only
+produces meaningful results when the input has a group by.
+*/
+type ZscoreSeries struct {
+	Input NumericSeries `json:"input"`
+	/*
+	   Tags to group by for the normalization. If left empty, all groups in the input will be considered as a
+	   single family. Otherwise, inputs will be normalized separately across the groups specified by the tags.
+	*/
+	GroupByTags []api1.StringConstant `json:"groupByTags"`
+	/*
+	   Configuration for aligning values across groups at each timestamp. Defaults to forward fill interpolation
+	   with a 1s interpolation radius.
+	*/
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
+}
+
+func (o ZscoreSeries) MarshalJSON() ([]byte, error) {
+	if o.GroupByTags == nil {
+		o.GroupByTags = make([]api1.StringConstant, 0)
+	}
+	type _tmpZscoreSeries ZscoreSeries
+	return safejson.Marshal(_tmpZscoreSeries(o))
+}
+
+func (o *ZscoreSeries) UnmarshalJSON(data []byte) error {
+	type _tmpZscoreSeries ZscoreSeries
+	var rawZscoreSeries _tmpZscoreSeries
+	if err := safejson.Unmarshal(data, &rawZscoreSeries); err != nil {
+		return err
+	}
+	if rawZscoreSeries.GroupByTags == nil {
+		rawZscoreSeries.GroupByTags = make([]api1.StringConstant, 0)
+	}
+	*o = ZscoreSeries(rawZscoreSeries)
+	return nil
+}
+
+func (o ZscoreSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ZscoreSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

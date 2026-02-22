@@ -219,7 +219,7 @@ func (o *BatchUnarchiveModulesResponse) UnmarshalYAML(unmarshal func(interface{}
 
 type CreateModuleRequest struct {
 	// The API name for the module. This string will uniquely identify the module within the organization.
-	ApiName     string                  `conjure-docs:"The API name for the module. This string will uniquely identify the module within the organization." json:"apiName"`
+	ApiName     string                  `json:"apiName"`
 	Title       string                  `json:"title"`
 	Description string                  `json:"description"`
 	Definition  ModuleVersionDefinition `json:"definition"`
@@ -244,7 +244,7 @@ func (o *CreateModuleRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 type Function struct {
 	// The name of the function. This should be unique to the function in the current module.
-	Name         string              `conjure-docs:"The name of the function. This should be unique to the function in the current module." json:"name"`
+	Name         string              `json:"name"`
 	Description  string              `json:"description"`
 	Parameters   []FunctionParameter `json:"parameters"`
 	FunctionNode FunctionNode        `json:"functionNode"`
@@ -356,13 +356,13 @@ type ModuleMetadata struct {
 	   This uniquely identifies the module within the org.
 	   Note that this cannot be changed after creation.
 	*/
-	ApiName     string            `conjure-docs:"This uniquely identifies the module within the org.\nNote that this cannot be changed after creation." json:"apiName"`
+	ApiName     string            `json:"apiName"`
 	Title       string            `json:"title"`
 	Description string            `json:"description"`
 	CreatedBy   api1.UserRid      `json:"createdBy"`
 	CreatedAt   datetime.DateTime `json:"createdAt"`
 	// The time at which the module was archived. Unset if the module is not archived.
-	ArchivedAt *datetime.DateTime `conjure-docs:"The time at which the module was archived. Unset if the module is not archived." json:"archivedAt,omitempty"`
+	ArchivedAt *datetime.DateTime `json:"archivedAt,omitempty"`
 }
 
 func (o ModuleMetadata) MarshalYAML() (interface{}, error) {
@@ -429,7 +429,7 @@ type ModuleVersionDefinition struct {
 	   The list of functions that resolve to derived series that appear in channel search after applying to an
 	   asset. Limited to 100.
 	*/
-	Functions []Function `conjure-docs:"The list of functions that resolve to derived series that appear in channel search after applying to an\nasset. Limited to 100." json:"functions"`
+	Functions []Function `json:"functions"`
 }
 
 func (o ModuleVersionDefinition) MarshalJSON() ([]byte, error) {
@@ -562,7 +562,7 @@ type SearchModulesRequest struct {
 	PageSize      int                       `json:"pageSize"`
 	NextPageToken *api2.Token               `json:"nextPageToken,omitempty"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived modules in search.
-	ArchivedStatuses *[]api2.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived modules in search." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api2.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchModulesRequest) MarshalYAML() (interface{}, error) {

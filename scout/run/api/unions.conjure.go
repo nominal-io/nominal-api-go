@@ -129,7 +129,7 @@ func (u *DataSource) AcceptFuncs(datasetFunc func(rids.DatasetRid) error, connec
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DataSource type")
 		}
 		return unknownFunc(u.typ)
 	case "dataset":
@@ -155,19 +155,19 @@ func (u *DataSource) AcceptFuncs(datasetFunc func(rids.DatasetRid) error, connec
 	}
 }
 
-func (u *DataSource) DatasetNoopSuccess(rids.DatasetRid) error {
+func (u *DataSource) DatasetNoopSuccess(_ rids.DatasetRid) error {
 	return nil
 }
 
-func (u *DataSource) ConnectionNoopSuccess(ConnectionRid) error {
+func (u *DataSource) ConnectionNoopSuccess(_ ConnectionRid) error {
 	return nil
 }
 
-func (u *DataSource) LogSetNoopSuccess(LogSetRid) error {
+func (u *DataSource) LogSetNoopSuccess(_ LogSetRid) error {
 	return nil
 }
 
-func (u *DataSource) VideoNoopSuccess(rids.VideoRid) error {
+func (u *DataSource) VideoNoopSuccess(_ rids.VideoRid) error {
 	return nil
 }
 
@@ -689,7 +689,7 @@ func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) erro
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "startTimeInclusive":
@@ -825,107 +825,107 @@ func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) erro
 	}
 }
 
-func (u *SearchQuery) StartTimeInclusiveNoopSuccess(UtcTimestamp) error {
+func (u *SearchQuery) StartTimeInclusiveNoopSuccess(_ UtcTimestamp) error {
 	return nil
 }
 
-func (u *SearchQuery) StartTimeNoopSuccess(TimeframeFilter) error {
+func (u *SearchQuery) StartTimeNoopSuccess(_ TimeframeFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) EndTimeInclusiveNoopSuccess(UtcTimestamp) error {
+func (u *SearchQuery) EndTimeInclusiveNoopSuccess(_ UtcTimestamp) error {
 	return nil
 }
 
-func (u *SearchQuery) EndTimeNoopSuccess(TimeframeFilter) error {
+func (u *SearchQuery) EndTimeNoopSuccess(_ TimeframeFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) TimeRangeNoopSuccess(TimeRangeFilter) error {
+func (u *SearchQuery) TimeRangeNoopSuccess(_ TimeRangeFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) CreatedAtNoopSuccess(TimeframeFilter) error {
+func (u *SearchQuery) CreatedAtNoopSuccess(_ TimeframeFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) ExactMatchNoopSuccess(string) error {
+func (u *SearchQuery) ExactMatchNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchQuery) AssetNoopSuccess(api.AssetRid) error {
+func (u *SearchQuery) AssetNoopSuccess(_ api.AssetRid) error {
 	return nil
 }
 
-func (u *SearchQuery) AssetsNoopSuccess(AssetsFilter) error {
+func (u *SearchQuery) AssetsNoopSuccess(_ AssetsFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) IsSingleAssetNoopSuccess(bool) error {
+func (u *SearchQuery) IsSingleAssetNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchQuery) LabelNoopSuccess(api1.Label) error {
+func (u *SearchQuery) LabelNoopSuccess(_ api1.Label) error {
 	return nil
 }
 
-func (u *SearchQuery) LabelsNoopSuccess(api.LabelsFilter) error {
+func (u *SearchQuery) LabelsNoopSuccess(_ api.LabelsFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) PropertyNoopSuccess(api1.Property) error {
+func (u *SearchQuery) PropertyNoopSuccess(_ api1.Property) error {
 	return nil
 }
 
-func (u *SearchQuery) PropertiesNoopSuccess(api.PropertiesFilter) error {
+func (u *SearchQuery) PropertiesNoopSuccess(_ api.PropertiesFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) DataSourceSeriesTagNoopSuccess(DataSourceSeriesTag) error {
+func (u *SearchQuery) DataSourceSeriesTagNoopSuccess(_ DataSourceSeriesTag) error {
 	return nil
 }
 
-func (u *SearchQuery) DataSourceRefNameNoopSuccess(api2.DataSourceRefName) error {
+func (u *SearchQuery) DataSourceRefNameNoopSuccess(_ api2.DataSourceRefName) error {
 	return nil
 }
 
-func (u *SearchQuery) DataSourceNoopSuccess(DataSource) error {
+func (u *SearchQuery) DataSourceNoopSuccess(_ DataSource) error {
 	return nil
 }
 
-func (u *SearchQuery) RunNumberNoopSuccess(safelong.SafeLong) error {
+func (u *SearchQuery) RunNumberNoopSuccess(_ safelong.SafeLong) error {
 	return nil
 }
 
-func (u *SearchQuery) RunPrefixNoopSuccess(string) error {
+func (u *SearchQuery) RunPrefixNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchQuery) CheckAlertStatesFilterNoopSuccess(CheckAlertStatesFilter) error {
+func (u *SearchQuery) CheckAlertStatesFilterNoopSuccess(_ CheckAlertStatesFilter) error {
 	return nil
 }
 
-func (u *SearchQuery) ArchivedNoopSuccess(bool) error {
+func (u *SearchQuery) ArchivedNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchQuery) AndNoopSuccess([]SearchQuery) error {
+func (u *SearchQuery) AndNoopSuccess(_ []SearchQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) OrNoopSuccess([]SearchQuery) error {
+func (u *SearchQuery) OrNoopSuccess(_ []SearchQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) NotNoopSuccess(SearchQuery) error {
+func (u *SearchQuery) NotNoopSuccess(_ SearchQuery) error {
 	return nil
 }
 
-func (u *SearchQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
@@ -1463,7 +1463,7 @@ func (u *SortKey) AcceptFuncs(fieldFunc func(SortField) error, propertyFunc func
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SortKey type")
 		}
 		return unknownFunc(u.typ)
 	case "field":
@@ -1479,11 +1479,11 @@ func (u *SortKey) AcceptFuncs(fieldFunc func(SortField) error, propertyFunc func
 	}
 }
 
-func (u *SortKey) FieldNoopSuccess(SortField) error {
+func (u *SortKey) FieldNoopSuccess(_ SortField) error {
 	return nil
 }
 
-func (u *SortKey) PropertyNoopSuccess(SortProperty) error {
+func (u *SortKey) PropertyNoopSuccess(_ SortProperty) error {
 	return nil
 }
 
@@ -1637,7 +1637,7 @@ func (u *TimeframeFilter) AcceptFuncs(customFunc func(CustomTimeframeFilter) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimeframeFilter type")
 		}
 		return unknownFunc(u.typ)
 	case "custom":
@@ -1653,11 +1653,11 @@ func (u *TimeframeFilter) AcceptFuncs(customFunc func(CustomTimeframeFilter) err
 	}
 }
 
-func (u *TimeframeFilter) CustomNoopSuccess(CustomTimeframeFilter) error {
+func (u *TimeframeFilter) CustomNoopSuccess(_ CustomTimeframeFilter) error {
 	return nil
 }
 
-func (u *TimeframeFilter) PresetNoopSuccess(PresetTimeframeFilter) error {
+func (u *TimeframeFilter) PresetNoopSuccess(_ PresetTimeframeFilter) error {
 	return nil
 }
 

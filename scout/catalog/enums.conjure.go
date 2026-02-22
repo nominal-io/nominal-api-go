@@ -6,6 +6,63 @@ import (
 	"strings"
 )
 
+type DatasetBackingType struct {
+	val DatasetBackingType_Value
+}
+
+type DatasetBackingType_Value string
+
+const (
+	DatasetBackingType_ICEBERG DatasetBackingType_Value = "ICEBERG"
+	DatasetBackingType_LEGACY  DatasetBackingType_Value = "LEGACY"
+	DatasetBackingType_UNKNOWN DatasetBackingType_Value = "UNKNOWN"
+)
+
+// DatasetBackingType_Values returns all known variants of DatasetBackingType.
+func DatasetBackingType_Values() []DatasetBackingType_Value {
+	return []DatasetBackingType_Value{DatasetBackingType_ICEBERG, DatasetBackingType_LEGACY}
+}
+
+func New_DatasetBackingType(value DatasetBackingType_Value) DatasetBackingType {
+	return DatasetBackingType{val: value}
+}
+
+// IsUnknown returns false for all known variants of DatasetBackingType and true otherwise.
+func (e DatasetBackingType) IsUnknown() bool {
+	switch e.val {
+	case DatasetBackingType_ICEBERG, DatasetBackingType_LEGACY:
+		return false
+	}
+	return true
+}
+
+func (e DatasetBackingType) Value() DatasetBackingType_Value {
+	if e.IsUnknown() {
+		return DatasetBackingType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e DatasetBackingType) String() string {
+	return string(e.val)
+}
+
+func (e DatasetBackingType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *DatasetBackingType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_DatasetBackingType(DatasetBackingType_Value(v))
+	case "ICEBERG":
+		*e = New_DatasetBackingType(DatasetBackingType_ICEBERG)
+	case "LEGACY":
+		*e = New_DatasetBackingType(DatasetBackingType_LEGACY)
+	}
+	return nil
+}
+
 type DatasetFileSortField struct {
 	val DatasetFileSortField_Value
 }

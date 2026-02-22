@@ -19,7 +19,7 @@ type ChannelLocator struct {
 
 func (o ChannelLocator) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpChannelLocator ChannelLocator
 	return safejson.Marshal(_tmpChannelLocator(o))
@@ -32,7 +32,7 @@ func (o *ChannelLocator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawChannelLocator.Tags == nil {
-		rawChannelLocator.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawChannelLocator.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = ChannelLocator(rawChannelLocator)
 	return nil

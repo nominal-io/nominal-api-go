@@ -177,6 +177,135 @@ func (e *AxisScaleType) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type ColorScheme struct {
+	val ColorScheme_Value
+}
+
+type ColorScheme_Value string
+
+const (
+	ColorScheme_TURBO   ColorScheme_Value = "TURBO"
+	ColorScheme_MAGMA   ColorScheme_Value = "MAGMA"
+	ColorScheme_VIRIDIS ColorScheme_Value = "VIRIDIS"
+	ColorScheme_PLASMA  ColorScheme_Value = "PLASMA"
+	ColorScheme_INFERNO ColorScheme_Value = "INFERNO"
+	ColorScheme_UNKNOWN ColorScheme_Value = "UNKNOWN"
+)
+
+// ColorScheme_Values returns all known variants of ColorScheme.
+func ColorScheme_Values() []ColorScheme_Value {
+	return []ColorScheme_Value{ColorScheme_TURBO, ColorScheme_MAGMA, ColorScheme_VIRIDIS, ColorScheme_PLASMA, ColorScheme_INFERNO}
+}
+
+func New_ColorScheme(value ColorScheme_Value) ColorScheme {
+	return ColorScheme{val: value}
+}
+
+// IsUnknown returns false for all known variants of ColorScheme and true otherwise.
+func (e ColorScheme) IsUnknown() bool {
+	switch e.val {
+	case ColorScheme_TURBO, ColorScheme_MAGMA, ColorScheme_VIRIDIS, ColorScheme_PLASMA, ColorScheme_INFERNO:
+		return false
+	}
+	return true
+}
+
+func (e ColorScheme) Value() ColorScheme_Value {
+	if e.IsUnknown() {
+		return ColorScheme_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ColorScheme) String() string {
+	return string(e.val)
+}
+
+func (e ColorScheme) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ColorScheme) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ColorScheme(ColorScheme_Value(v))
+	case "TURBO":
+		*e = New_ColorScheme(ColorScheme_TURBO)
+	case "MAGMA":
+		*e = New_ColorScheme(ColorScheme_MAGMA)
+	case "VIRIDIS":
+		*e = New_ColorScheme(ColorScheme_VIRIDIS)
+	case "PLASMA":
+		*e = New_ColorScheme(ColorScheme_PLASMA)
+	case "INFERNO":
+		*e = New_ColorScheme(ColorScheme_INFERNO)
+	}
+	return nil
+}
+
+type FloatingLegendPresetPosition struct {
+	val FloatingLegendPresetPosition_Value
+}
+
+type FloatingLegendPresetPosition_Value string
+
+const (
+	FloatingLegendPresetPosition_TOP_LEFT     FloatingLegendPresetPosition_Value = "TOP_LEFT"
+	FloatingLegendPresetPosition_TOP_RIGHT    FloatingLegendPresetPosition_Value = "TOP_RIGHT"
+	FloatingLegendPresetPosition_BOTTOM_LEFT  FloatingLegendPresetPosition_Value = "BOTTOM_LEFT"
+	FloatingLegendPresetPosition_BOTTOM_RIGHT FloatingLegendPresetPosition_Value = "BOTTOM_RIGHT"
+	FloatingLegendPresetPosition_UNKNOWN      FloatingLegendPresetPosition_Value = "UNKNOWN"
+)
+
+// FloatingLegendPresetPosition_Values returns all known variants of FloatingLegendPresetPosition.
+func FloatingLegendPresetPosition_Values() []FloatingLegendPresetPosition_Value {
+	return []FloatingLegendPresetPosition_Value{FloatingLegendPresetPosition_TOP_LEFT, FloatingLegendPresetPosition_TOP_RIGHT, FloatingLegendPresetPosition_BOTTOM_LEFT, FloatingLegendPresetPosition_BOTTOM_RIGHT}
+}
+
+func New_FloatingLegendPresetPosition(value FloatingLegendPresetPosition_Value) FloatingLegendPresetPosition {
+	return FloatingLegendPresetPosition{val: value}
+}
+
+// IsUnknown returns false for all known variants of FloatingLegendPresetPosition and true otherwise.
+func (e FloatingLegendPresetPosition) IsUnknown() bool {
+	switch e.val {
+	case FloatingLegendPresetPosition_TOP_LEFT, FloatingLegendPresetPosition_TOP_RIGHT, FloatingLegendPresetPosition_BOTTOM_LEFT, FloatingLegendPresetPosition_BOTTOM_RIGHT:
+		return false
+	}
+	return true
+}
+
+func (e FloatingLegendPresetPosition) Value() FloatingLegendPresetPosition_Value {
+	if e.IsUnknown() {
+		return FloatingLegendPresetPosition_UNKNOWN
+	}
+	return e.val
+}
+
+func (e FloatingLegendPresetPosition) String() string {
+	return string(e.val)
+}
+
+func (e FloatingLegendPresetPosition) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *FloatingLegendPresetPosition) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_FloatingLegendPresetPosition(FloatingLegendPresetPosition_Value(v))
+	case "TOP_LEFT":
+		*e = New_FloatingLegendPresetPosition(FloatingLegendPresetPosition_TOP_LEFT)
+	case "TOP_RIGHT":
+		*e = New_FloatingLegendPresetPosition(FloatingLegendPresetPosition_TOP_RIGHT)
+	case "BOTTOM_LEFT":
+		*e = New_FloatingLegendPresetPosition(FloatingLegendPresetPosition_BOTTOM_LEFT)
+	case "BOTTOM_RIGHT":
+		*e = New_FloatingLegendPresetPosition(FloatingLegendPresetPosition_BOTTOM_RIGHT)
+	}
+	return nil
+}
+
 type Geo3dDefaultModel struct {
 	val Geo3dDefaultModel_Value
 }
@@ -184,14 +313,16 @@ type Geo3dDefaultModel struct {
 type Geo3dDefaultModel_Value string
 
 const (
-	Geo3dDefaultModel_QUADCOPTER Geo3dDefaultModel_Value = "QUADCOPTER"
-	Geo3dDefaultModel_FIXEDWING  Geo3dDefaultModel_Value = "FIXEDWING"
-	Geo3dDefaultModel_UNKNOWN    Geo3dDefaultModel_Value = "UNKNOWN"
+	Geo3dDefaultModel_FICTIONAL_FIGHTER Geo3dDefaultModel_Value = "FICTIONAL_FIGHTER"
+	Geo3dDefaultModel_SATELLITE         Geo3dDefaultModel_Value = "SATELLITE"
+	Geo3dDefaultModel_QUADCOPTER        Geo3dDefaultModel_Value = "QUADCOPTER"
+	Geo3dDefaultModel_FIXEDWING         Geo3dDefaultModel_Value = "FIXEDWING"
+	Geo3dDefaultModel_UNKNOWN           Geo3dDefaultModel_Value = "UNKNOWN"
 )
 
 // Geo3dDefaultModel_Values returns all known variants of Geo3dDefaultModel.
 func Geo3dDefaultModel_Values() []Geo3dDefaultModel_Value {
-	return []Geo3dDefaultModel_Value{Geo3dDefaultModel_QUADCOPTER, Geo3dDefaultModel_FIXEDWING}
+	return []Geo3dDefaultModel_Value{Geo3dDefaultModel_FICTIONAL_FIGHTER, Geo3dDefaultModel_SATELLITE, Geo3dDefaultModel_QUADCOPTER, Geo3dDefaultModel_FIXEDWING}
 }
 
 func New_Geo3dDefaultModel(value Geo3dDefaultModel_Value) Geo3dDefaultModel {
@@ -201,7 +332,7 @@ func New_Geo3dDefaultModel(value Geo3dDefaultModel_Value) Geo3dDefaultModel {
 // IsUnknown returns false for all known variants of Geo3dDefaultModel and true otherwise.
 func (e Geo3dDefaultModel) IsUnknown() bool {
 	switch e.val {
-	case Geo3dDefaultModel_QUADCOPTER, Geo3dDefaultModel_FIXEDWING:
+	case Geo3dDefaultModel_FICTIONAL_FIGHTER, Geo3dDefaultModel_SATELLITE, Geo3dDefaultModel_QUADCOPTER, Geo3dDefaultModel_FIXEDWING:
 		return false
 	}
 	return true
@@ -226,6 +357,10 @@ func (e *Geo3dDefaultModel) UnmarshalText(data []byte) error {
 	switch v := strings.ToUpper(string(data)); v {
 	default:
 		*e = New_Geo3dDefaultModel(Geo3dDefaultModel_Value(v))
+	case "FICTIONAL_FIGHTER":
+		*e = New_Geo3dDefaultModel(Geo3dDefaultModel_FICTIONAL_FIGHTER)
+	case "SATELLITE":
+		*e = New_Geo3dDefaultModel(Geo3dDefaultModel_SATELLITE)
 	case "QUADCOPTER":
 		*e = New_Geo3dDefaultModel(Geo3dDefaultModel_QUADCOPTER)
 	case "FIXEDWING":

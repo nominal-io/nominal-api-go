@@ -83,7 +83,8 @@ type AggregateNumericSeriesNode struct {
 	   Present optional containing empty set means explicitly group by NO tags.
 	   Empty optional means inherit tag groupings from input.
 	*/
-	GroupByTags *[]api.TagName `conjure-docs:"Present optional containing empty set means explicitly group by NO tags.\nEmpty optional means inherit tag groupings from input." json:"groupByTags,omitempty"`
+	GroupByTags                *[]api.TagName              `json:"groupByTags,omitempty"`
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
 func (o AggregateNumericSeriesNode) MarshalYAML() (interface{}, error) {
@@ -110,7 +111,7 @@ type ArithmeticSeriesNode struct {
 
 func (o ArithmeticSeriesNode) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[api1.LocalVariableName]NumericSeriesNode, 0)
+		o.Inputs = make(map[api1.LocalVariableName]NumericSeriesNode)
 	}
 	type _tmpArithmeticSeriesNode ArithmeticSeriesNode
 	return safejson.Marshal(_tmpArithmeticSeriesNode(o))
@@ -123,7 +124,7 @@ func (o *ArithmeticSeriesNode) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawArithmeticSeriesNode.Inputs == nil {
-		rawArithmeticSeriesNode.Inputs = make(map[api1.LocalVariableName]NumericSeriesNode, 0)
+		rawArithmeticSeriesNode.Inputs = make(map[api1.LocalVariableName]NumericSeriesNode)
 	}
 	*o = ArithmeticSeriesNode(rawArithmeticSeriesNode)
 	return nil
@@ -661,7 +662,7 @@ type EnumHistogramNode struct {
 
 func (o EnumHistogramNode) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[api1.VariableName]EnumSeriesNode, 0)
+		o.Inputs = make(map[api1.VariableName]EnumSeriesNode)
 	}
 	type _tmpEnumHistogramNode EnumHistogramNode
 	return safejson.Marshal(_tmpEnumHistogramNode(o))
@@ -674,7 +675,7 @@ func (o *EnumHistogramNode) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawEnumHistogramNode.Inputs == nil {
-		rawEnumHistogramNode.Inputs = make(map[api1.VariableName]EnumSeriesNode, 0)
+		rawEnumHistogramNode.Inputs = make(map[api1.VariableName]EnumSeriesNode)
 	}
 	*o = EnumHistogramNode(rawEnumHistogramNode)
 	return nil
@@ -768,7 +769,7 @@ type EnumToNumericSeriesNode struct {
 
 func (o EnumToNumericSeriesNode) MarshalJSON() ([]byte, error) {
 	if o.Mapping == nil {
-		o.Mapping = make(map[string]float64, 0)
+		o.Mapping = make(map[string]float64)
 	}
 	type _tmpEnumToNumericSeriesNode EnumToNumericSeriesNode
 	return safejson.Marshal(_tmpEnumToNumericSeriesNode(o))
@@ -781,7 +782,7 @@ func (o *EnumToNumericSeriesNode) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawEnumToNumericSeriesNode.Mapping == nil {
-		rawEnumToNumericSeriesNode.Mapping = make(map[string]float64, 0)
+		rawEnumToNumericSeriesNode.Mapping = make(map[string]float64)
 	}
 	*o = EnumToNumericSeriesNode(rawEnumToNumericSeriesNode)
 	return nil
@@ -838,6 +839,28 @@ func (o EnumUnionSeriesNode) MarshalYAML() (interface{}, error) {
 }
 
 func (o *EnumUnionSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type EqualToSeriesNode struct {
+	Left                       NumericSeriesNode          `json:"left"`
+	Right                      NumericSeriesNode          `json:"right"`
+	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
+}
+
+func (o EqualToSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EqualToSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -950,8 +973,9 @@ func (o *ExtremaRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 type FftNode struct {
-	Input  NumericSeriesNode `json:"input"`
-	Window *api1.FftWindow   `json:"window,omitempty"`
+	Input                 NumericSeriesNode                    `json:"input"`
+	Window                *api1.FftWindow                      `json:"window,omitempty"`
+	SummarizationStrategy *api1.FrequencySummarizationStrategy `json:"summarizationStrategy,omitempty"`
 }
 
 func (o FftNode) MarshalYAML() (interface{}, error) {
@@ -979,7 +1003,7 @@ type FilterByExpressionSeriesNode struct {
 
 func (o FilterByExpressionSeriesNode) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[api1.LocalVariableName]NumericSeriesNode, 0)
+		o.Inputs = make(map[api1.LocalVariableName]NumericSeriesNode)
 	}
 	type _tmpFilterByExpressionSeriesNode FilterByExpressionSeriesNode
 	return safejson.Marshal(_tmpFilterByExpressionSeriesNode(o))
@@ -992,7 +1016,7 @@ func (o *FilterByExpressionSeriesNode) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawFilterByExpressionSeriesNode.Inputs == nil {
-		rawFilterByExpressionSeriesNode.Inputs = make(map[api1.LocalVariableName]NumericSeriesNode, 0)
+		rawFilterByExpressionSeriesNode.Inputs = make(map[api1.LocalVariableName]NumericSeriesNode)
 	}
 	*o = FilterByExpressionSeriesNode(rawFilterByExpressionSeriesNode)
 	return nil
@@ -1045,6 +1069,50 @@ func (o ForwardFillResampleInterpolationConfiguration) MarshalYAML() (interface{
 }
 
 func (o *ForwardFillResampleInterpolationConfiguration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GreaterThanOrEqualToSeriesNode struct {
+	Left                       NumericSeriesNode          `json:"left"`
+	Right                      NumericSeriesNode          `json:"right"`
+	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
+}
+
+func (o GreaterThanOrEqualToSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GreaterThanOrEqualToSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GreaterThanSeriesNode struct {
+	Left                       NumericSeriesNode          `json:"left"`
+	Right                      NumericSeriesNode          `json:"right"`
+	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
+}
+
+func (o GreaterThanSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GreaterThanSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1128,6 +1196,50 @@ func (o IntersectRangesNode) MarshalYAML() (interface{}, error) {
 }
 
 func (o *IntersectRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type LessThanOrEqualToSeriesNode struct {
+	Left                       NumericSeriesNode          `json:"left"`
+	Right                      NumericSeriesNode          `json:"right"`
+	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
+}
+
+func (o LessThanOrEqualToSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LessThanOrEqualToSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type LessThanSeriesNode struct {
+	Left                       NumericSeriesNode          `json:"left"`
+	Right                      NumericSeriesNode          `json:"right"`
+	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
+}
+
+func (o LessThanSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LessThanSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1534,6 +1646,28 @@ func (o *NominalStorageLocator) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type NotEqualToSeriesNode struct {
+	Left                       NumericSeriesNode          `json:"left"`
+	Right                      NumericSeriesNode          `json:"right"`
+	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
+}
+
+func (o NotEqualToSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NotEqualToSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type NotRangesNode struct {
 	Input RangesNode `json:"input"`
 }
@@ -1604,7 +1738,7 @@ type NumericHistogramNode struct {
 
 func (o NumericHistogramNode) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[api1.VariableName]NumericSeriesNode, 0)
+		o.Inputs = make(map[api1.VariableName]NumericSeriesNode)
 	}
 	type _tmpNumericHistogramNode NumericHistogramNode
 	return safejson.Marshal(_tmpNumericHistogramNode(o))
@@ -1617,7 +1751,7 @@ func (o *NumericHistogramNode) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNumericHistogramNode.Inputs == nil {
-		rawNumericHistogramNode.Inputs = make(map[api1.VariableName]NumericSeriesNode, 0)
+		rawNumericHistogramNode.Inputs = make(map[api1.VariableName]NumericSeriesNode)
 	}
 	*o = NumericHistogramNode(rawNumericHistogramNode)
 	return nil
@@ -2442,14 +2576,14 @@ on SciPy output.
 type SignalFilterSeriesNode struct {
 	Input NumericSeriesNode `json:"input"`
 	// Configuration for the signal filter, including filter type, cutoff frequency, and order.
-	SignalFilterConfiguration SignalFilterConfiguration `conjure-docs:"Configuration for the signal filter, including filter type, cutoff frequency, and order." json:"signalFilterConfiguration"`
+	SignalFilterConfiguration SignalFilterConfiguration `json:"signalFilterConfiguration"`
 	// Order of filter. Must be a positive integer, and is effectively doubled for bidirectional filters.
-	Order int `conjure-docs:"Order of filter. Must be a positive integer, and is effectively doubled for bidirectional filters." json:"order"`
+	Order int `json:"order"`
 	/*
 	   The sampling frequency of the input series. Used to calculate normalized frequency for cutoff frequencies.
 	   Defaults to number of points divided by timespan of series.
 	*/
-	SamplingFrequency *float64 `conjure-docs:"The sampling frequency of the input series. Used to calculate normalized frequency for cutoff frequencies.\nDefaults to number of points divided by timespan of series." json:"samplingFrequency,omitempty"`
+	SamplingFrequency *float64 `json:"samplingFrequency,omitempty"`
 }
 
 func (o SignalFilterSeriesNode) MarshalYAML() (interface{}, error) {
@@ -2628,7 +2762,7 @@ Summarization strategy should be specified.
 type SummarizeSeriesNode struct {
 	Input SeriesNode `json:"input"`
 	// The strategy to use when summarizing the series.
-	SummarizationStrategy api1.SummarizationStrategy `conjure-docs:"The strategy to use when summarizing the series." json:"summarizationStrategy"`
+	SummarizationStrategy api1.SummarizationStrategy `json:"summarizationStrategy"`
 	OutputFormat          api1.OutputFormat          `json:"outputFormat"`
 	NumericOutputFields   *[]api1.NumericOutputField `json:"numericOutputFields,omitempty"`
 }
@@ -2938,6 +3072,28 @@ func (o Window) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Window) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ZscoreSeriesNode struct {
+	Input                      NumericSeriesNode          `json:"input"`
+	GroupByTags                *[]api.TagName             `json:"groupByTags,omitempty"`
+	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
+}
+
+func (o ZscoreSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ZscoreSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

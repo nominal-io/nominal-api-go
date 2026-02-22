@@ -19,7 +19,7 @@ type AppendOnlyConfig struct {
 	   If this is false, the client may receive a `SubscriptionCreationError` if the data rate is too high
 	   and responses must be decimated.
 	*/
-	DecimateResults bool `conjure-docs:"Specifies whether the returned results should be decimated.\nIf this is false, the client may receive a \"SubscriptionCreationError\" if the data rate is too high\nand responses must be decimated." json:"decimateResults"`
+	DecimateResults bool `json:"decimateResults"`
 }
 
 func (o AppendOnlyConfig) MarshalYAML() (interface{}, error) {
@@ -49,9 +49,9 @@ append result for [117s, 122s].
 */
 type AppendResult struct {
 	// The start of the time range that the append result covers
-	Start api.Timestamp `conjure-docs:"The start of the time range that the append result covers" json:"start"`
+	Start api.Timestamp `json:"start"`
 	// The end of the time range that the append result covers
-	End    api.Timestamp             `conjure-docs:"The end of the time range that the append result covers" json:"end"`
+	End    api.Timestamp             `json:"end"`
 	Result ComputeNodeAppendResponse `json:"result"`
 }
 
@@ -328,7 +328,7 @@ means that the subscription encountered an unrecoverable error at runtime and wi
 */
 type SubscriptionCreationError struct {
 	// A serialized version of the error. Should match the errors defined below.
-	SerializableError api.SerializableError `conjure-docs:"A serialized version of the error. Should match the errors defined below." json:"serializableError"`
+	SerializableError api.SerializableError `json:"serializableError"`
 }
 
 func (o SubscriptionCreationError) MarshalYAML() (interface{}, error) {
@@ -391,7 +391,7 @@ func (o *SubscriptionCreationSuccess) UnmarshalYAML(unmarshal func(interface{}) 
 
 type SubscriptionOptions struct {
 	// The minimum delay between `SubscriptionUpdate`s sent for this subscription.
-	MinDelay Milliseconds `conjure-docs:"The minimum delay between \"SubscriptionUpdate\"s sent for this subscription." json:"minDelay"`
+	MinDelay Milliseconds `json:"minDelay"`
 	/*
 	   Can be set to `false` by the client to indicate that it doesn't support appends for this subscription
 	   and always wants to receive full results. Defaults to `false` if not set.
@@ -403,12 +403,17 @@ type SubscriptionOptions struct {
 
 	   Deprecated: Use `resultConfiguration` instead.
 	*/
-	AllowAppends *bool `conjure-docs:"Can be set to \"false\" by the client to indicate that it doesn't support appends for this subscription\nand always wants to receive full results. Defaults to \"false\" if not set.\nThe expectation is that clients should implement support for appends for any of the results covered in\n\"ComputeNodeAppendResponse\" and set this to \"true\" as quickly as possible. However, in order to support \nadding new sub-types to \"ComputeNodeAppendResponse\" without breaking clients that haven't upgraded yet \nand haven't yet added support for them, we default this to \"false\" and make clients opt-in as soon as they\nimplement support." json:"allowAppends,omitempty"`
+	AllowAppends *bool `json:"allowAppends,omitempty"`
 	/*
 	   Defines the results that are sent for this subscription. If not set, falls back to the behavior
 	   defined by `allowAppends`.
 	*/
-	ResultConfiguration *ResultConfiguration `conjure-docs:"Defines the results that are sent for this subscription. If not set, falls back to the behavior \ndefined by \"allowAppends\"." json:"resultConfiguration,omitempty"`
+	ResultConfiguration *ResultConfiguration `json:"resultConfiguration,omitempty"`
+	/*
+	   If true and server has Flink enabled, use Flink-based streaming computation.
+	   Defaults to false if not specified.
+	*/
+	UseFlink *bool `json:"useFlink,omitempty"`
 }
 
 func (o SubscriptionOptions) MarshalYAML() (interface{}, error) {
@@ -433,7 +438,7 @@ the subscription. The client will have to call `ClientMessage::unsubscribe` to d
 */
 type SubscriptionUpdateError struct {
 	// A serialized version of the error. Should match the errors defined below.
-	SerializableError api.SerializableError `conjure-docs:"A serialized version of the error. Should match the errors defined below." json:"serializableError"`
+	SerializableError api.SerializableError `json:"serializableError"`
 }
 
 func (o SubscriptionUpdateError) MarshalYAML() (interface{}, error) {

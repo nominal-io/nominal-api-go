@@ -66,61 +66,55 @@ func NewInternalVersioningServiceClient(client httpclient.Client) InternalVersio
 }
 
 func (c *internalVersioningServiceClient) InitResourceVersioning(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.InitResourceVersioningRequest) (api.BranchAndCommit, error) {
-	var defaultReturnVal api.BranchAndCommit
 	var returnVal *api.BranchAndCommit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("InitResourceVersioning"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/internal/scout/v1/versioning/%s", url.PathEscape(fmt.Sprint(resourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "initResourceVersioning failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BranchAndCommit), werror.WrapWithContextParams(ctx, err, "initResourceVersioning failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "initResourceVersioning response cannot be nil")
+		return *new(api.BranchAndCommit), werror.ErrorWithContextParams(ctx, "initResourceVersioning response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *internalVersioningServiceClient) SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.SaveWorkingStateRequest) (api.BranchAndCommit, error) {
-	var defaultReturnVal api.BranchAndCommit
 	var returnVal *api.BranchAndCommit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SaveWorkingState"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/internal/scout/v1/versioning/%s/branch/%s/working-state", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(branchNameArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "saveWorkingState failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BranchAndCommit), werror.WrapWithContextParams(ctx, err, "saveWorkingState failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "saveWorkingState response cannot be nil")
+		return *new(api.BranchAndCommit), werror.ErrorWithContextParams(ctx, "saveWorkingState response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *internalVersioningServiceClient) Commit(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.CommitRequest) (api.BranchAndCommit, error) {
-	var defaultReturnVal api.BranchAndCommit
 	var returnVal *api.BranchAndCommit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Commit"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/internal/scout/v1/versioning/%s/branch/%s/commit", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(branchNameArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "commit failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BranchAndCommit), werror.WrapWithContextParams(ctx, err, "commit failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "commit response cannot be nil")
+		return *new(api.BranchAndCommit), werror.ErrorWithContextParams(ctx, "commit response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -129,13 +123,12 @@ func (c *internalVersioningServiceClient) CompactCommits(ctx context.Context, au
 	var returnVal []api.CommitId
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CompactCommits"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/internal/scout/v1/versioning/%s/compact-commits", url.PathEscape(fmt.Sprint(resourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "compactCommits failed")
 	}
 	if returnVal == nil {
@@ -212,37 +205,33 @@ type internalVersioningServiceClientWithTokenProvider struct {
 }
 
 func (c *internalVersioningServiceClientWithTokenProvider) InitResourceVersioning(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.InitResourceVersioningRequest) (api.BranchAndCommit, error) {
-	var defaultReturnVal api.BranchAndCommit
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BranchAndCommit), err
 	}
 	return c.client.InitResourceVersioning(ctx, bearertoken.Token(token), resourceRidArg, requestArg)
 }
 
 func (c *internalVersioningServiceClientWithTokenProvider) SaveWorkingState(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.SaveWorkingStateRequest) (api.BranchAndCommit, error) {
-	var defaultReturnVal api.BranchAndCommit
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BranchAndCommit), err
 	}
 	return c.client.SaveWorkingState(ctx, bearertoken.Token(token), resourceRidArg, branchNameArg, requestArg)
 }
 
 func (c *internalVersioningServiceClientWithTokenProvider) Commit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.CommitRequest) (api.BranchAndCommit, error) {
-	var defaultReturnVal api.BranchAndCommit
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BranchAndCommit), err
 	}
 	return c.client.Commit(ctx, bearertoken.Token(token), resourceRidArg, branchNameArg, requestArg)
 }
 
 func (c *internalVersioningServiceClientWithTokenProvider) CompactCommits(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CompactCommitsRequest) ([]api.CommitId, error) {
-	var defaultReturnVal []api.CommitId
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.CompactCommits(ctx, bearertoken.Token(token), resourceRidArg, requestArg)
 }
@@ -300,51 +289,45 @@ func NewNotebookServiceClient(client httpclient.Client) NotebookServiceClient {
 }
 
 func (c *notebookServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg api1.CreateNotebookRequest) (api1.Notebook, error) {
-	var defaultReturnVal api1.Notebook
 	var returnVal *api1.Notebook
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "create failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.Notebook), werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "create response cannot be nil")
+		return *new(api1.Notebook), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *notebookServiceClient) Update(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookRequest) (api1.Notebook, error) {
-	var defaultReturnVal api1.Notebook
 	var returnVal *api1.Notebook
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Update"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "update failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api1.Notebook), werror.WrapWithContextParams(ctx, err, "update failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "update response cannot be nil")
+		return *new(api1.Notebook), werror.ErrorWithContextParams(ctx, "update response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *notebookServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error) {
-	var defaultReturnVal api1.Notebook
 	var returnVal *api1.Notebook
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	queryParams := make(url.Values)
@@ -354,11 +337,11 @@ func (c *notebookServiceClient) Get(ctx context.Context, authHeader bearertoken.
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "get failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api1.Notebook), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(api1.Notebook), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -367,13 +350,12 @@ func (c *notebookServiceClient) BatchGet(ctx context.Context, authHeader bearert
 	var returnVal []api1.Notebook
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGet"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGet failed")
 	}
 	if returnVal == nil {
@@ -386,13 +368,12 @@ func (c *notebookServiceClient) BatchGetMetadata(ctx context.Context, authHeader
 	var returnVal []api1.NotebookMetadataWithRid
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/batch-get-metadata"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetMetadata failed")
 	}
 	if returnVal == nil {
@@ -402,21 +383,19 @@ func (c *notebookServiceClient) BatchGetMetadata(ctx context.Context, authHeader
 }
 
 func (c *notebookServiceClient) UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookMetadataRequest) (api1.NotebookMetadata, error) {
-	var defaultReturnVal api1.NotebookMetadata
 	var returnVal *api1.NotebookMetadata
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s/update-metadata", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api1.NotebookMetadata), werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
+		return *new(api1.NotebookMetadata), werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -425,12 +404,11 @@ func (c *notebookServiceClient) GetUsedRefNames(ctx context.Context, authHeader 
 	var returnVal []api3.DataSourceRefName
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetUsedRefNames"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s/ref-names", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getUsedRefNames failed")
 	}
 	if returnVal == nil {
@@ -440,31 +418,27 @@ func (c *notebookServiceClient) GetUsedRefNames(ctx context.Context, authHeader 
 }
 
 func (c *notebookServiceClient) UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, requestArg api1.UpdateRefNameRequest) (api1.Notebook, error) {
-	var defaultReturnVal api1.Notebook
 	var returnVal *api1.Notebook
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateRefNames"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s/update-ref-names", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateRefNames failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.Notebook), werror.WrapWithContextParams(ctx, err, "updateRefNames failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateRefNames response cannot be nil")
+		return *new(api1.Notebook), werror.ErrorWithContextParams(ctx, "updateRefNames response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *notebookServiceClient) GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api1.GetAllLabelsAndPropertiesResponse, error) {
-	var defaultReturnVal api1.GetAllLabelsAndPropertiesResponse
 	var returnVal *api1.GetAllLabelsAndPropertiesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAllLabelsAndProperties"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/get-all-labels-properties"))
 	queryParams := make(url.Values)
@@ -474,31 +448,29 @@ func (c *notebookServiceClient) GetAllLabelsAndProperties(ctx context.Context, a
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAllLabelsAndProperties failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api1.GetAllLabelsAndPropertiesResponse), werror.WrapWithContextParams(ctx, err, "getAllLabelsAndProperties failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAllLabelsAndProperties response cannot be nil")
+		return *new(api1.GetAllLabelsAndPropertiesResponse), werror.ErrorWithContextParams(ctx, "getAllLabelsAndProperties response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *notebookServiceClient) Search(ctx context.Context, authHeader bearertoken.Token, requestArg api1.SearchNotebooksRequest) (api1.SearchNotebooksResponse, error) {
-	var defaultReturnVal api1.SearchNotebooksResponse
 	var returnVal *api1.SearchNotebooksResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Search"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/search"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "search failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.SearchNotebooksResponse), werror.WrapWithContextParams(ctx, err, "search failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "search response cannot be nil")
+		return *new(api1.SearchNotebooksResponse), werror.ErrorWithContextParams(ctx, "search response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -506,11 +478,10 @@ func (c *notebookServiceClient) Search(ctx context.Context, authHeader bearertok
 func (c *notebookServiceClient) Lock(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Lock"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s/lock", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "lock failed")
 	}
 	return nil
@@ -519,11 +490,10 @@ func (c *notebookServiceClient) Lock(ctx context.Context, authHeader bearertoken
 func (c *notebookServiceClient) Unlock(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Unlock"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s/unlock", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unlock failed")
 	}
 	return nil
@@ -532,11 +502,10 @@ func (c *notebookServiceClient) Unlock(ctx context.Context, authHeader bearertok
 func (c *notebookServiceClient) Archive(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Archive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s/archive", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archive failed")
 	}
 	return nil
@@ -545,11 +514,10 @@ func (c *notebookServiceClient) Archive(ctx context.Context, authHeader bearerto
 func (c *notebookServiceClient) Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Unarchive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s/unarchive", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchive failed")
 	}
 	return nil
@@ -558,32 +526,29 @@ func (c *notebookServiceClient) Unarchive(ctx context.Context, authHeader bearer
 func (c *notebookServiceClient) Delete(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Delete"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "delete failed")
 	}
 	return nil
 }
 
 func (c *notebookServiceClient) GetSnapshotHistory(ctx context.Context, authHeader bearertoken.Token, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error) {
-	var defaultReturnVal api1.GetSnapshotHistoryResponse
 	var returnVal *api1.GetSnapshotHistoryResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSnapshotHistory"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/snapshot-history"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getSnapshotHistory failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.GetSnapshotHistoryResponse), werror.WrapWithContextParams(ctx, err, "getSnapshotHistory failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getSnapshotHistory response cannot be nil")
+		return *new(api1.GetSnapshotHistoryResponse), werror.ErrorWithContextParams(ctx, "getSnapshotHistory response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -715,91 +680,81 @@ type notebookServiceClientWithTokenProvider struct {
 }
 
 func (c *notebookServiceClientWithTokenProvider) Create(ctx context.Context, requestArg api1.CreateNotebookRequest) (api1.Notebook, error) {
-	var defaultReturnVal api1.Notebook
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.Notebook), err
 	}
 	return c.client.Create(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *notebookServiceClientWithTokenProvider) Update(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookRequest) (api1.Notebook, error) {
-	var defaultReturnVal api1.Notebook
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.Notebook), err
 	}
 	return c.client.Update(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
 func (c *notebookServiceClientWithTokenProvider) Get(ctx context.Context, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error) {
-	var defaultReturnVal api1.Notebook
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.Notebook), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), ridArg, snapshotArg)
 }
 
 func (c *notebookServiceClientWithTokenProvider) BatchGet(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.Notebook, error) {
-	var defaultReturnVal []api1.Notebook
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGet(ctx, bearertoken.Token(token), ridsArg)
 }
 
 func (c *notebookServiceClientWithTokenProvider) BatchGetMetadata(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.NotebookMetadataWithRid, error) {
-	var defaultReturnVal []api1.NotebookMetadataWithRid
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetMetadata(ctx, bearertoken.Token(token), ridsArg)
 }
 
 func (c *notebookServiceClientWithTokenProvider) UpdateMetadata(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookMetadataRequest) (api1.NotebookMetadata, error) {
-	var defaultReturnVal api1.NotebookMetadata
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.NotebookMetadata), err
 	}
 	return c.client.UpdateMetadata(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
 func (c *notebookServiceClientWithTokenProvider) GetUsedRefNames(ctx context.Context, ridArg api2.NotebookRid) ([]api3.DataSourceRefName, error) {
-	var defaultReturnVal []api3.DataSourceRefName
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetUsedRefNames(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *notebookServiceClientWithTokenProvider) UpdateRefNames(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateRefNameRequest) (api1.Notebook, error) {
-	var defaultReturnVal api1.Notebook
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.Notebook), err
 	}
 	return c.client.UpdateRefNames(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
 func (c *notebookServiceClientWithTokenProvider) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api1.GetAllLabelsAndPropertiesResponse, error) {
-	var defaultReturnVal api1.GetAllLabelsAndPropertiesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.GetAllLabelsAndPropertiesResponse), err
 	}
 	return c.client.GetAllLabelsAndProperties(ctx, bearertoken.Token(token), workspacesArg)
 }
 
 func (c *notebookServiceClientWithTokenProvider) Search(ctx context.Context, requestArg api1.SearchNotebooksRequest) (api1.SearchNotebooksResponse, error) {
-	var defaultReturnVal api1.SearchNotebooksResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.SearchNotebooksResponse), err
 	}
 	return c.client.Search(ctx, bearertoken.Token(token), requestArg)
 }
@@ -845,10 +800,9 @@ func (c *notebookServiceClientWithTokenProvider) Delete(ctx context.Context, rid
 }
 
 func (c *notebookServiceClientWithTokenProvider) GetSnapshotHistory(ctx context.Context, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error) {
-	var defaultReturnVal api1.GetSnapshotHistoryResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.GetSnapshotHistoryResponse), err
 	}
 	return c.client.GetSnapshotHistory(ctx, bearertoken.Token(token), requestArg)
 }
@@ -942,158 +896,142 @@ func NewRunServiceClient(client httpclient.Client) RunServiceClient {
 }
 
 func (c *runServiceClient) CreateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api4.CreateRunRequest) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateRun"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(detailsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createRun failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api11.Run), werror.WrapWithContextParams(ctx, err, "createRun failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createRun response cannot be nil")
+		return *new(api11.Run), werror.ErrorWithContextParams(ctx, "createRun response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) UpdateRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, detailsArg api4.UpdateRunRequest) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateRun"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(detailsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateRun failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api11.Run), werror.WrapWithContextParams(ctx, err, "updateRun failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateRun response cannot be nil")
+		return *new(api11.Run), werror.ErrorWithContextParams(ctx, "updateRun response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) AddDataSourcesToRun(ctx context.Context, authHeader bearertoken.Token, runRidArg api4.RunRid, requestArg map[api3.DataSourceRefName]api4.CreateRunDataSource) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("AddDataSourcesToRun"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/%s/data-sources", url.PathEscape(fmt.Sprint(runRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "addDataSourcesToRun failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api11.Run), werror.WrapWithContextParams(ctx, err, "addDataSourcesToRun failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "addDataSourcesToRun response cannot be nil")
+		return *new(api11.Run), werror.ErrorWithContextParams(ctx, "addDataSourcesToRun response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) CreateOrUpdateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api4.CreateOrUpdateRunRequest) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateOrUpdateRun"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/create-or-update"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(detailsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createOrUpdateRun failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api11.Run), werror.WrapWithContextParams(ctx, err, "createOrUpdateRun failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createOrUpdateRun response cannot be nil")
+		return *new(api11.Run), werror.ErrorWithContextParams(ctx, "createOrUpdateRun response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) GetRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRun"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getRun failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api11.Run), werror.WrapWithContextParams(ctx, err, "getRun failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getRun response cannot be nil")
+		return *new(api11.Run), werror.ErrorWithContextParams(ctx, "getRun response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) GetRunWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid) (api11.RunWithDataReviewMetrics, error) {
-	var defaultReturnVal api11.RunWithDataReviewMetrics
 	var returnVal *api11.RunWithDataReviewMetrics
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRunWithDataReviewMetrics"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/%s/with-data-review-metrics", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getRunWithDataReviewMetrics failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api11.RunWithDataReviewMetrics), werror.WrapWithContextParams(ctx, err, "getRunWithDataReviewMetrics failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getRunWithDataReviewMetrics response cannot be nil")
+		return *new(api11.RunWithDataReviewMetrics), werror.ErrorWithContextParams(ctx, "getRunWithDataReviewMetrics response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) GetRunWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid) (api11.RunWithDataReviewSummary, error) {
-	var defaultReturnVal api11.RunWithDataReviewSummary
 	var returnVal *api11.RunWithDataReviewSummary
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRunWithDataReviewSummary"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/%s/with-data-review-summary", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getRunWithDataReviewSummary failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api11.RunWithDataReviewSummary), werror.WrapWithContextParams(ctx, err, "getRunWithDataReviewSummary failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getRunWithDataReviewSummary response cannot be nil")
+		return *new(api11.RunWithDataReviewSummary), werror.ErrorWithContextParams(ctx, "getRunWithDataReviewSummary response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) GetRunById(ctx context.Context, authHeader bearertoken.Token, getRunByIdRequestArg api4.GetRunByIdRequest) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRunById"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/by-id"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(getRunByIdRequestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getRunById failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api11.Run), werror.WrapWithContextParams(ctx, err, "getRunById failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getRunById response cannot be nil")
+		return *new(api11.Run), werror.ErrorWithContextParams(ctx, "getRunById response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -1102,13 +1040,12 @@ func (c *runServiceClient) GetRuns(ctx context.Context, authHeader bearertoken.T
 	var returnVal map[api4.RunRid]api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRuns"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/multiple"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getRuns failed")
 	}
 	if returnVal == nil {
@@ -1118,21 +1055,19 @@ func (c *runServiceClient) GetRuns(ctx context.Context, authHeader bearertoken.T
 }
 
 func (c *runServiceClient) GetRunsByAsset(ctx context.Context, authHeader bearertoken.Token, requestArg api4.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error) {
-	var defaultReturnVal api11.GetRunsByAssetResponse
 	var returnVal *api11.GetRunsByAssetResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRunsByAsset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/by-asset"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getRunsByAsset failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api11.GetRunsByAssetResponse), werror.WrapWithContextParams(ctx, err, "getRunsByAsset failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getRunsByAsset response cannot be nil")
+		return *new(api11.GetRunsByAssetResponse), werror.ErrorWithContextParams(ctx, "getRunsByAsset response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -1141,13 +1076,12 @@ func (c *runServiceClient) GetLatestRunForAssets(ctx context.Context, authHeader
 	var returnVal map[api2.AssetRid]api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetLatestRunForAssets"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/by-assets/latest"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getLatestRunForAssets failed")
 	}
 	if returnVal == nil {
@@ -1157,11 +1091,9 @@ func (c *runServiceClient) GetLatestRunForAssets(ctx context.Context, authHeader
 }
 
 func (c *runServiceClient) GetAllRunsPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error) {
-	var defaultReturnVal api4.AllRunsPropertiesAndLabelsResponse
 	var returnVal *api4.AllRunsPropertiesAndLabelsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAllRunsPropertiesAndLabels"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/all-runs-properties-labels"))
 	queryParams := make(url.Values)
@@ -1171,81 +1103,73 @@ func (c *runServiceClient) GetAllRunsPropertiesAndLabels(ctx context.Context, au
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAllRunsPropertiesAndLabels failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api4.AllRunsPropertiesAndLabelsResponse), werror.WrapWithContextParams(ctx, err, "getAllRunsPropertiesAndLabels failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAllRunsPropertiesAndLabels response cannot be nil")
+		return *new(api4.AllRunsPropertiesAndLabelsResponse), werror.ErrorWithContextParams(ctx, "getAllRunsPropertiesAndLabels response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) SearchRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsResponse, error) {
-	var defaultReturnVal api11.SearchRunsResponse
 	var returnVal *api11.SearchRunsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchRuns"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/search-runs"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchRuns failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api11.SearchRunsResponse), werror.WrapWithContextParams(ctx, err, "searchRuns failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchRuns response cannot be nil")
+		return *new(api11.SearchRunsResponse), werror.ErrorWithContextParams(ctx, "searchRuns response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) SearchRunsWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error) {
-	var defaultReturnVal api11.SearchRunsWithDataReviewMetricsResponse
 	var returnVal *api11.SearchRunsWithDataReviewMetricsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchRunsWithDataReviewMetrics"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/search-runs-with-data-review-metrics"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchRunsWithDataReviewMetrics failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api11.SearchRunsWithDataReviewMetricsResponse), werror.WrapWithContextParams(ctx, err, "searchRunsWithDataReviewMetrics failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchRunsWithDataReviewMetrics response cannot be nil")
+		return *new(api11.SearchRunsWithDataReviewMetricsResponse), werror.ErrorWithContextParams(ctx, "searchRunsWithDataReviewMetrics response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) SearchRunsWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error) {
-	var defaultReturnVal api11.SearchRunsWithDataReviewSummaryResponse
 	var returnVal *api11.SearchRunsWithDataReviewSummaryResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchRunsWithDataReviewSummary"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/search-runs-with-data-review-summary"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchRunsWithDataReviewSummary failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api11.SearchRunsWithDataReviewSummaryResponse), werror.WrapWithContextParams(ctx, err, "searchRunsWithDataReviewSummary failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchRunsWithDataReviewSummary response cannot be nil")
+		return *new(api11.SearchRunsWithDataReviewSummaryResponse), werror.ErrorWithContextParams(ctx, "searchRunsWithDataReviewSummary response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) ArchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
-	var defaultReturnVal bool
 	var returnVal *bool
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveRun"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/archive-run/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	queryParams := make(url.Values)
@@ -1255,21 +1179,19 @@ func (c *runServiceClient) ArchiveRun(ctx context.Context, authHeader bearertoke
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "archiveRun failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(bool), werror.WrapWithContextParams(ctx, err, "archiveRun failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "archiveRun response cannot be nil")
+		return *new(bool), werror.ErrorWithContextParams(ctx, "archiveRun response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *runServiceClient) UnarchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
-	var defaultReturnVal bool
 	var returnVal *bool
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveRun"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/unarchive-run/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	queryParams := make(url.Values)
@@ -1279,11 +1201,11 @@ func (c *runServiceClient) UnarchiveRun(ctx context.Context, authHeader bearerto
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "unarchiveRun failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(bool), werror.WrapWithContextParams(ctx, err, "unarchiveRun failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "unarchiveRun response cannot be nil")
+		return *new(bool), werror.ErrorWithContextParams(ctx, "unarchiveRun response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -1291,12 +1213,11 @@ func (c *runServiceClient) UnarchiveRun(ctx context.Context, authHeader bearerto
 func (c *runServiceClient) ArchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.ArchiveRunsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveRuns"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/archive-run"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archiveRuns failed")
 	}
 	return nil
@@ -1305,12 +1226,11 @@ func (c *runServiceClient) ArchiveRuns(ctx context.Context, authHeader bearertok
 func (c *runServiceClient) UnarchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.UnarchiveRunsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveRuns"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/unarchive-run"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchiveRuns failed")
 	}
 	return nil
@@ -1320,7 +1240,6 @@ func (c *runServiceClient) GetDataSourceRefNameAndTypeList(ctx context.Context, 
 	var returnVal []api4.RefNameAndType
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDataSourceRefNameAndTypeList"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/data-source-ref-names-and-types"))
 	queryParams := make(url.Values)
@@ -1330,7 +1249,7 @@ func (c *runServiceClient) GetDataSourceRefNameAndTypeList(ctx context.Context, 
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getDataSourceRefNameAndTypeList failed")
 	}
 	if returnVal == nil {
@@ -1342,12 +1261,11 @@ func (c *runServiceClient) GetDataSourceRefNameAndTypeList(ctx context.Context, 
 func (c *runServiceClient) UpdateRunAttachment(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateRunAttachment"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/%s/attachments", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "updateRunAttachment failed")
 	}
 	return nil
@@ -1536,154 +1454,137 @@ type runServiceClientWithTokenProvider struct {
 }
 
 func (c *runServiceClientWithTokenProvider) CreateRun(ctx context.Context, detailsArg api4.CreateRunRequest) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.Run), err
 	}
 	return c.client.CreateRun(ctx, bearertoken.Token(token), detailsArg)
 }
 
 func (c *runServiceClientWithTokenProvider) UpdateRun(ctx context.Context, ridArg api4.RunRid, detailsArg api4.UpdateRunRequest) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.Run), err
 	}
 	return c.client.UpdateRun(ctx, bearertoken.Token(token), ridArg, detailsArg)
 }
 
 func (c *runServiceClientWithTokenProvider) AddDataSourcesToRun(ctx context.Context, runRidArg api4.RunRid, requestArg map[api3.DataSourceRefName]api4.CreateRunDataSource) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.Run), err
 	}
 	return c.client.AddDataSourcesToRun(ctx, bearertoken.Token(token), runRidArg, requestArg)
 }
 
 func (c *runServiceClientWithTokenProvider) CreateOrUpdateRun(ctx context.Context, detailsArg api4.CreateOrUpdateRunRequest) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.Run), err
 	}
 	return c.client.CreateOrUpdateRun(ctx, bearertoken.Token(token), detailsArg)
 }
 
 func (c *runServiceClientWithTokenProvider) GetRun(ctx context.Context, ridArg api4.RunRid) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.Run), err
 	}
 	return c.client.GetRun(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *runServiceClientWithTokenProvider) GetRunWithDataReviewMetrics(ctx context.Context, ridArg api4.RunRid) (api11.RunWithDataReviewMetrics, error) {
-	var defaultReturnVal api11.RunWithDataReviewMetrics
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.RunWithDataReviewMetrics), err
 	}
 	return c.client.GetRunWithDataReviewMetrics(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *runServiceClientWithTokenProvider) GetRunWithDataReviewSummary(ctx context.Context, ridArg api4.RunRid) (api11.RunWithDataReviewSummary, error) {
-	var defaultReturnVal api11.RunWithDataReviewSummary
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.RunWithDataReviewSummary), err
 	}
 	return c.client.GetRunWithDataReviewSummary(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *runServiceClientWithTokenProvider) GetRunById(ctx context.Context, getRunByIdRequestArg api4.GetRunByIdRequest) (api11.Run, error) {
-	var defaultReturnVal api11.Run
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.Run), err
 	}
 	return c.client.GetRunById(ctx, bearertoken.Token(token), getRunByIdRequestArg)
 }
 
 func (c *runServiceClientWithTokenProvider) GetRuns(ctx context.Context, ridsArg []api4.RunRid) (map[api4.RunRid]api11.Run, error) {
-	var defaultReturnVal map[api4.RunRid]api11.Run
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetRuns(ctx, bearertoken.Token(token), ridsArg)
 }
 
 func (c *runServiceClientWithTokenProvider) GetRunsByAsset(ctx context.Context, requestArg api4.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error) {
-	var defaultReturnVal api11.GetRunsByAssetResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.GetRunsByAssetResponse), err
 	}
 	return c.client.GetRunsByAsset(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *runServiceClientWithTokenProvider) GetLatestRunForAssets(ctx context.Context, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error) {
-	var defaultReturnVal map[api2.AssetRid]api11.Run
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetLatestRunForAssets(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *runServiceClientWithTokenProvider) GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error) {
-	var defaultReturnVal api4.AllRunsPropertiesAndLabelsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api4.AllRunsPropertiesAndLabelsResponse), err
 	}
 	return c.client.GetAllRunsPropertiesAndLabels(ctx, bearertoken.Token(token), workspacesArg)
 }
 
 func (c *runServiceClientWithTokenProvider) SearchRuns(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsResponse, error) {
-	var defaultReturnVal api11.SearchRunsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.SearchRunsResponse), err
 	}
 	return c.client.SearchRuns(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *runServiceClientWithTokenProvider) SearchRunsWithDataReviewMetrics(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error) {
-	var defaultReturnVal api11.SearchRunsWithDataReviewMetricsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.SearchRunsWithDataReviewMetricsResponse), err
 	}
 	return c.client.SearchRunsWithDataReviewMetrics(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *runServiceClientWithTokenProvider) SearchRunsWithDataReviewSummary(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error) {
-	var defaultReturnVal api11.SearchRunsWithDataReviewSummaryResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api11.SearchRunsWithDataReviewSummaryResponse), err
 	}
 	return c.client.SearchRunsWithDataReviewSummary(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *runServiceClientWithTokenProvider) ArchiveRun(ctx context.Context, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
-	var defaultReturnVal bool
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(bool), err
 	}
 	return c.client.ArchiveRun(ctx, bearertoken.Token(token), ridArg, includeLinkedWorkbooksArg)
 }
 
 func (c *runServiceClientWithTokenProvider) UnarchiveRun(ctx context.Context, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
-	var defaultReturnVal bool
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(bool), err
 	}
 	return c.client.UnarchiveRun(ctx, bearertoken.Token(token), ridArg, includeLinkedWorkbooksArg)
 }
@@ -1705,10 +1606,9 @@ func (c *runServiceClientWithTokenProvider) UnarchiveRuns(ctx context.Context, r
 }
 
 func (c *runServiceClientWithTokenProvider) GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error) {
-	var defaultReturnVal []api4.RefNameAndType
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetDataSourceRefNameAndTypeList(ctx, bearertoken.Token(token), workspacesArg)
 }
@@ -1775,31 +1675,27 @@ func NewTemplateServiceClient(client httpclient.Client) TemplateServiceClient {
 }
 
 func (c *templateServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg api5.CreateTemplateRequest) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	var returnVal *api5.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "create failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "create response cannot be nil")
+		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *templateServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	var returnVal *api5.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/%s", url.PathEscape(fmt.Sprint(templateRidArg))))
 	queryParams := make(url.Values)
@@ -1812,11 +1708,11 @@ func (c *templateServiceClient) Get(ctx context.Context, authHeader bearertoken.
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "get failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -1825,13 +1721,12 @@ func (c *templateServiceClient) BatchGetMetadata(ctx context.Context, authHeader
 	var returnVal []api5.TemplateSummary
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/batch-get-metadata"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetMetadata failed")
 	}
 	if returnVal == nil {
@@ -1841,11 +1736,9 @@ func (c *templateServiceClient) BatchGetMetadata(ctx context.Context, authHeader
 }
 
 func (c *templateServiceClient) SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.SaveTemplateRequest) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	var returnVal *api5.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SaveWorkingState"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/%s/save-working-state", url.PathEscape(fmt.Sprint(templateRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
@@ -1856,11 +1749,11 @@ func (c *templateServiceClient) SaveWorkingState(ctx context.Context, authHeader
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "saveWorkingState failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "saveWorkingState failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "saveWorkingState response cannot be nil")
+		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "saveWorkingState response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -1869,7 +1762,6 @@ func (c *templateServiceClient) GetUsedRefNames(ctx context.Context, authHeader 
 	var returnVal []api3.DataSourceRefName
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetUsedRefNames"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/%s/ref-names", url.PathEscape(fmt.Sprint(templateRidArg))))
 	queryParams := make(url.Values)
@@ -1882,7 +1774,7 @@ func (c *templateServiceClient) GetUsedRefNames(ctx context.Context, authHeader 
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getUsedRefNames failed")
 	}
 	if returnVal == nil {
@@ -1892,11 +1784,9 @@ func (c *templateServiceClient) GetUsedRefNames(ctx context.Context, authHeader 
 }
 
 func (c *templateServiceClient) UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.UpdateRefNameRequest) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	var returnVal *api5.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateRefNames"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/%s/update-ref-names", url.PathEscape(fmt.Sprint(templateRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
@@ -1907,21 +1797,19 @@ func (c *templateServiceClient) UpdateRefNames(ctx context.Context, authHeader b
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateRefNames failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "updateRefNames failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateRefNames response cannot be nil")
+		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "updateRefNames response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *templateServiceClient) Commit(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.CommitTemplateRequest) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	var returnVal *api5.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Commit"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/%s/commit", url.PathEscape(fmt.Sprint(templateRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
@@ -1932,61 +1820,55 @@ func (c *templateServiceClient) Commit(ctx context.Context, authHeader bearertok
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "commit failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "commit failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "commit response cannot be nil")
+		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "commit response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *templateServiceClient) UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, requestArg api5.UpdateMetadataRequest) (api5.TemplateMetadata, error) {
-	var defaultReturnVal api5.TemplateMetadata
 	var returnVal *api5.TemplateMetadata
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/%s/metadata", url.PathEscape(fmt.Sprint(templateRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api5.TemplateMetadata), werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
+		return *new(api5.TemplateMetadata), werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *templateServiceClient) SearchTemplates(ctx context.Context, authHeader bearertoken.Token, requestArg api5.SearchTemplatesRequest) (api5.SearchTemplatesResponse, error) {
-	var defaultReturnVal api5.SearchTemplatesResponse
 	var returnVal *api5.SearchTemplatesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchTemplates"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/search"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchTemplates failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api5.SearchTemplatesResponse), werror.WrapWithContextParams(ctx, err, "searchTemplates failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchTemplates response cannot be nil")
+		return *new(api5.SearchTemplatesResponse), werror.ErrorWithContextParams(ctx, "searchTemplates response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *templateServiceClient) GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api5.GetAllLabelsAndPropertiesResponse, error) {
-	var defaultReturnVal api5.GetAllLabelsAndPropertiesResponse
 	var returnVal *api5.GetAllLabelsAndPropertiesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAllLabelsAndProperties"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/get-all-labels-properties"))
 	queryParams := make(url.Values)
@@ -1996,31 +1878,29 @@ func (c *templateServiceClient) GetAllLabelsAndProperties(ctx context.Context, a
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAllLabelsAndProperties failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api5.GetAllLabelsAndPropertiesResponse), werror.WrapWithContextParams(ctx, err, "getAllLabelsAndProperties failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAllLabelsAndProperties response cannot be nil")
+		return *new(api5.GetAllLabelsAndPropertiesResponse), werror.ErrorWithContextParams(ctx, "getAllLabelsAndProperties response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *templateServiceClient) MergeToMain(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, requestArg api5.MergeToMainRequest) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	var returnVal *api5.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("MergeToMain"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/%s/merge-to-main", url.PathEscape(fmt.Sprint(templateRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "mergeToMain failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "mergeToMain failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "mergeToMain response cannot be nil")
+		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "mergeToMain response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -2133,100 +2013,89 @@ type templateServiceClientWithTokenProvider struct {
 }
 
 func (c *templateServiceClientWithTokenProvider) Create(ctx context.Context, requestArg api5.CreateTemplateRequest) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api5.Template), err
 	}
 	return c.client.Create(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *templateServiceClientWithTokenProvider) Get(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api5.Template), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), templateRidArg, branchArg, commitArg)
 }
 
 func (c *templateServiceClientWithTokenProvider) BatchGetMetadata(ctx context.Context, ridsArg []api2.TemplateRid) ([]api5.TemplateSummary, error) {
-	var defaultReturnVal []api5.TemplateSummary
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetMetadata(ctx, bearertoken.Token(token), ridsArg)
 }
 
 func (c *templateServiceClientWithTokenProvider) SaveWorkingState(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.SaveTemplateRequest) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api5.Template), err
 	}
 	return c.client.SaveWorkingState(ctx, bearertoken.Token(token), templateRidArg, branchArg, requestArg)
 }
 
 func (c *templateServiceClientWithTokenProvider) GetUsedRefNames(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) ([]api3.DataSourceRefName, error) {
-	var defaultReturnVal []api3.DataSourceRefName
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetUsedRefNames(ctx, bearertoken.Token(token), templateRidArg, branchArg, commitArg)
 }
 
 func (c *templateServiceClientWithTokenProvider) UpdateRefNames(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.UpdateRefNameRequest) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api5.Template), err
 	}
 	return c.client.UpdateRefNames(ctx, bearertoken.Token(token), templateRidArg, branchArg, requestArg)
 }
 
 func (c *templateServiceClientWithTokenProvider) Commit(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.CommitTemplateRequest) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api5.Template), err
 	}
 	return c.client.Commit(ctx, bearertoken.Token(token), templateRidArg, branchArg, requestArg)
 }
 
 func (c *templateServiceClientWithTokenProvider) UpdateMetadata(ctx context.Context, templateRidArg api2.TemplateRid, requestArg api5.UpdateMetadataRequest) (api5.TemplateMetadata, error) {
-	var defaultReturnVal api5.TemplateMetadata
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api5.TemplateMetadata), err
 	}
 	return c.client.UpdateMetadata(ctx, bearertoken.Token(token), templateRidArg, requestArg)
 }
 
 func (c *templateServiceClientWithTokenProvider) SearchTemplates(ctx context.Context, requestArg api5.SearchTemplatesRequest) (api5.SearchTemplatesResponse, error) {
-	var defaultReturnVal api5.SearchTemplatesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api5.SearchTemplatesResponse), err
 	}
 	return c.client.SearchTemplates(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *templateServiceClientWithTokenProvider) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api5.GetAllLabelsAndPropertiesResponse, error) {
-	var defaultReturnVal api5.GetAllLabelsAndPropertiesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api5.GetAllLabelsAndPropertiesResponse), err
 	}
 	return c.client.GetAllLabelsAndProperties(ctx, bearertoken.Token(token), workspacesArg)
 }
 
 func (c *templateServiceClientWithTokenProvider) MergeToMain(ctx context.Context, templateRidArg api2.TemplateRid, requestArg api5.MergeToMainRequest) (api5.Template, error) {
-	var defaultReturnVal api5.Template
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api5.Template), err
 	}
 	return c.client.MergeToMain(ctx, bearertoken.Token(token), templateRidArg, requestArg)
 }
@@ -2261,20 +2130,18 @@ func NewUnitsServiceClient(client httpclient.Client) UnitsServiceClient {
 }
 
 func (c *unitsServiceClient) GetAllUnits(ctx context.Context, authHeader bearertoken.Token) (api6.GetUnitsResponse, error) {
-	var defaultReturnVal api6.GetUnitsResponse
 	var returnVal *api6.GetUnitsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAllUnits"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/units/v1/units"))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAllUnits failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api6.GetUnitsResponse), werror.WrapWithContextParams(ctx, err, "getAllUnits failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAllUnits response cannot be nil")
+		return *new(api6.GetUnitsResponse), werror.ErrorWithContextParams(ctx, "getAllUnits response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -2283,13 +2150,12 @@ func (c *unitsServiceClient) GetUnit(ctx context.Context, authHeader bearertoken
 	var returnVal *api6.Unit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetUnit"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/units/v1/units/get-unit"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(unitArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getUnit failed")
 	}
 	return returnVal, nil
@@ -2299,13 +2165,12 @@ func (c *unitsServiceClient) GetBatchUnits(ctx context.Context, authHeader beare
 	var returnVal map[api6.UnitSymbol]api6.Unit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetBatchUnits"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/units/v1/units/get-batch-units"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(unitsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getBatchUnits failed")
 	}
 	if returnVal == nil {
@@ -2318,13 +2183,12 @@ func (c *unitsServiceClient) GetCommensurableUnits(ctx context.Context, authHead
 	var returnVal []api6.Unit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCommensurableUnits"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/units/v1/units/commensurable-units"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(unitArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getCommensurableUnits failed")
 	}
 	if returnVal == nil {
@@ -2389,37 +2253,33 @@ type unitsServiceClientWithTokenProvider struct {
 }
 
 func (c *unitsServiceClientWithTokenProvider) GetAllUnits(ctx context.Context) (api6.GetUnitsResponse, error) {
-	var defaultReturnVal api6.GetUnitsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api6.GetUnitsResponse), err
 	}
 	return c.client.GetAllUnits(ctx, bearertoken.Token(token))
 }
 
 func (c *unitsServiceClientWithTokenProvider) GetUnit(ctx context.Context, unitArg api6.UnitSymbol) (*api6.Unit, error) {
-	var defaultReturnVal *api6.Unit
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetUnit(ctx, bearertoken.Token(token), unitArg)
 }
 
 func (c *unitsServiceClientWithTokenProvider) GetBatchUnits(ctx context.Context, unitsArg []api6.UnitSymbol) (map[api6.UnitSymbol]api6.Unit, error) {
-	var defaultReturnVal map[api6.UnitSymbol]api6.Unit
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetBatchUnits(ctx, bearertoken.Token(token), unitsArg)
 }
 
 func (c *unitsServiceClientWithTokenProvider) GetCommensurableUnits(ctx context.Context, unitArg api6.UnitSymbol) ([]api6.Unit, error) {
-	var defaultReturnVal []api6.Unit
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetCommensurableUnits(ctx, bearertoken.Token(token), unitArg)
 }
@@ -2524,60 +2384,54 @@ func NewVersioningServiceClient(client httpclient.Client) VersioningServiceClien
 }
 
 func (c *versioningServiceClient) CreateBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateBranchRequest) (api.Branch, error) {
-	var defaultReturnVal api.Branch
 	var returnVal *api.Branch
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateBranch"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/branch", url.PathEscape(fmt.Sprint(resourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createBranch failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.Branch), werror.WrapWithContextParams(ctx, err, "createBranch failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createBranch response cannot be nil")
+		return *new(api.Branch), werror.ErrorWithContextParams(ctx, "createBranch response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *versioningServiceClient) CreateTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateTagRequest) (api.Tag, error) {
-	var defaultReturnVal api.Tag
 	var returnVal *api.Tag
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateTag"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/tag", url.PathEscape(fmt.Sprint(resourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createTag failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.Tag), werror.WrapWithContextParams(ctx, err, "createTag failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createTag response cannot be nil")
+		return *new(api.Tag), werror.ErrorWithContextParams(ctx, "createTag response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *versioningServiceClient) GetCommit(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId) (api.Commit, error) {
-	var defaultReturnVal api.Commit
 	var returnVal *api.Commit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCommit"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/commit/%s", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(commitIdArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getCommit failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.Commit), werror.WrapWithContextParams(ctx, err, "getCommit failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getCommit response cannot be nil")
+		return *new(api.Commit), werror.ErrorWithContextParams(ctx, "getCommit response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -2586,13 +2440,12 @@ func (c *versioningServiceClient) BatchGetCommits(ctx context.Context, authHeade
 	var returnVal []api.Commit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetCommits"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/commit/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(resourceAndCommitIdsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetCommits failed")
 	}
 	if returnVal == nil {
@@ -2602,69 +2455,61 @@ func (c *versioningServiceClient) BatchGetCommits(ctx context.Context, authHeade
 }
 
 func (c *versioningServiceClient) GetCommitByBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Commit, error) {
-	var defaultReturnVal api.Commit
 	var returnVal *api.Commit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCommitByBranch"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/branch/%s/commit", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(branchNameArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getCommitByBranch failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.Commit), werror.WrapWithContextParams(ctx, err, "getCommitByBranch failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getCommitByBranch response cannot be nil")
+		return *new(api.Commit), werror.ErrorWithContextParams(ctx, "getCommitByBranch response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *versioningServiceClient) GetCommitByTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Commit, error) {
-	var defaultReturnVal api.Commit
 	var returnVal *api.Commit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCommitByTag"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/tag/%s/commit", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(tagNameArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getCommitByTag failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.Commit), werror.WrapWithContextParams(ctx, err, "getCommitByTag failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getCommitByTag response cannot be nil")
+		return *new(api.Commit), werror.ErrorWithContextParams(ctx, "getCommitByTag response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *versioningServiceClient) GetLeastCommonAncestor(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.GetLeastCommonAncestorRequest) (api.CommitId, error) {
-	var defaultReturnVal api.CommitId
 	var returnVal *api.CommitId
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetLeastCommonAncestor"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/commit/least-common-ancestor", url.PathEscape(fmt.Sprint(resourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getLeastCommonAncestor failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.CommitId), werror.WrapWithContextParams(ctx, err, "getLeastCommonAncestor failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getLeastCommonAncestor response cannot be nil")
+		return *new(api.CommitId), werror.ErrorWithContextParams(ctx, "getLeastCommonAncestor response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *versioningServiceClient) GetCommitHistory(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token) (api.CommitHistory, error) {
-	var defaultReturnVal api.CommitHistory
 	var returnVal *api.CommitHistory
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCommitHistory"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/commit/%s/history", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(commitIdArg))))
 	queryParams := make(url.Values)
@@ -2677,11 +2522,11 @@ func (c *versioningServiceClient) GetCommitHistory(ctx context.Context, authHead
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getCommitHistory failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.CommitHistory), werror.WrapWithContextParams(ctx, err, "getCommitHistory failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getCommitHistory response cannot be nil")
+		return *new(api.CommitHistory), werror.ErrorWithContextParams(ctx, "getCommitHistory response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -2689,32 +2534,29 @@ func (c *versioningServiceClient) GetCommitHistory(ctx context.Context, authHead
 func (c *versioningServiceClient) PersistCommits(ctx context.Context, authHeader bearertoken.Token, requestArg []api.ResourceAndCommitId) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("PersistCommits"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/commit/persist"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "persistCommits failed")
 	}
 	return nil
 }
 
 func (c *versioningServiceClient) GetBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Branch, error) {
-	var defaultReturnVal api.Branch
 	var returnVal *api.Branch
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetBranch"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/branch/%s", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(branchNameArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getBranch failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.Branch), werror.WrapWithContextParams(ctx, err, "getBranch failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getBranch response cannot be nil")
+		return *new(api.Branch), werror.ErrorWithContextParams(ctx, "getBranch response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -2723,12 +2565,11 @@ func (c *versioningServiceClient) GetBranches(ctx context.Context, authHeader be
 	var returnVal []api.Branch
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetBranches"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/branch", url.PathEscape(fmt.Sprint(resourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getBranches failed")
 	}
 	if returnVal == nil {
@@ -2741,13 +2582,12 @@ func (c *versioningServiceClient) BatchGetBranches(ctx context.Context, authHead
 	var returnVal []api.Branch
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetBranches"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/branch/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(resourceAndBranchesArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetBranches failed")
 	}
 	if returnVal == nil {
@@ -2757,20 +2597,18 @@ func (c *versioningServiceClient) BatchGetBranches(ctx context.Context, authHead
 }
 
 func (c *versioningServiceClient) GetTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Tag, error) {
-	var defaultReturnVal api.Tag
 	var returnVal *api.Tag
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetTag"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/tag/%s", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(tagNameArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getTag failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.Tag), werror.WrapWithContextParams(ctx, err, "getTag failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getTag response cannot be nil")
+		return *new(api.Tag), werror.ErrorWithContextParams(ctx, "getTag response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -2779,13 +2617,12 @@ func (c *versioningServiceClient) BatchGetTags(ctx context.Context, authHeader b
 	var returnVal []api.Tag
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetTags"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/tag/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(resourceAndCommitsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetTags failed")
 	}
 	if returnVal == nil {
@@ -2798,12 +2635,11 @@ func (c *versioningServiceClient) GetTagsByResource(ctx context.Context, authHea
 	var returnVal []api.Tag
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetTagsByResource"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/tag", url.PathEscape(fmt.Sprint(resourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getTagsByResource failed")
 	}
 	if returnVal == nil {
@@ -2815,11 +2651,10 @@ func (c *versioningServiceClient) GetTagsByResource(ctx context.Context, authHea
 func (c *versioningServiceClient) DeleteBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteBranch"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/branch/%s", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(branchNameArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "deleteBranch failed")
 	}
 	return nil
@@ -2828,12 +2663,11 @@ func (c *versioningServiceClient) DeleteBranch(ctx context.Context, authHeader b
 func (c *versioningServiceClient) DeleteBranches(ctx context.Context, authHeader bearertoken.Token, resourceAndBranchesArg []api.ResourceAndBranchName) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteBranches"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/branch/batch-delete"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(resourceAndBranchesArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "deleteBranches failed")
 	}
 	return nil
@@ -2842,11 +2676,10 @@ func (c *versioningServiceClient) DeleteBranches(ctx context.Context, authHeader
 func (c *versioningServiceClient) DeleteTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteTag"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/versioning/%s/tag/%s", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(tagNameArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "deleteTag failed")
 	}
 	return nil
@@ -3034,73 +2867,65 @@ type versioningServiceClientWithTokenProvider struct {
 }
 
 func (c *versioningServiceClientWithTokenProvider) CreateBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateBranchRequest) (api.Branch, error) {
-	var defaultReturnVal api.Branch
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Branch), err
 	}
 	return c.client.CreateBranch(ctx, bearertoken.Token(token), resourceRidArg, requestArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) CreateTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateTagRequest) (api.Tag, error) {
-	var defaultReturnVal api.Tag
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Tag), err
 	}
 	return c.client.CreateTag(ctx, bearertoken.Token(token), resourceRidArg, requestArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) GetCommit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId) (api.Commit, error) {
-	var defaultReturnVal api.Commit
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Commit), err
 	}
 	return c.client.GetCommit(ctx, bearertoken.Token(token), resourceRidArg, commitIdArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) BatchGetCommits(ctx context.Context, resourceAndCommitIdsArg []api.ResourceAndCommitId) ([]api.Commit, error) {
-	var defaultReturnVal []api.Commit
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetCommits(ctx, bearertoken.Token(token), resourceAndCommitIdsArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) GetCommitByBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Commit, error) {
-	var defaultReturnVal api.Commit
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Commit), err
 	}
 	return c.client.GetCommitByBranch(ctx, bearertoken.Token(token), resourceRidArg, branchNameArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) GetCommitByTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Commit, error) {
-	var defaultReturnVal api.Commit
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Commit), err
 	}
 	return c.client.GetCommitByTag(ctx, bearertoken.Token(token), resourceRidArg, tagNameArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) GetLeastCommonAncestor(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.GetLeastCommonAncestorRequest) (api.CommitId, error) {
-	var defaultReturnVal api.CommitId
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.CommitId), err
 	}
 	return c.client.GetLeastCommonAncestor(ctx, bearertoken.Token(token), resourceRidArg, requestArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) GetCommitHistory(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token) (api.CommitHistory, error) {
-	var defaultReturnVal api.CommitHistory
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.CommitHistory), err
 	}
 	return c.client.GetCommitHistory(ctx, bearertoken.Token(token), resourceRidArg, commitIdArg, pageSizeArg, nextPageTokenArg)
 }
@@ -3114,55 +2939,49 @@ func (c *versioningServiceClientWithTokenProvider) PersistCommits(ctx context.Co
 }
 
 func (c *versioningServiceClientWithTokenProvider) GetBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Branch, error) {
-	var defaultReturnVal api.Branch
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Branch), err
 	}
 	return c.client.GetBranch(ctx, bearertoken.Token(token), resourceRidArg, branchNameArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) GetBranches(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api.Branch, error) {
-	var defaultReturnVal []api.Branch
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetBranches(ctx, bearertoken.Token(token), resourceRidArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) BatchGetBranches(ctx context.Context, resourceAndBranchesArg []api.ResourceAndBranchName) ([]api.Branch, error) {
-	var defaultReturnVal []api.Branch
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetBranches(ctx, bearertoken.Token(token), resourceAndBranchesArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) GetTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Tag, error) {
-	var defaultReturnVal api.Tag
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Tag), err
 	}
 	return c.client.GetTag(ctx, bearertoken.Token(token), resourceRidArg, tagNameArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) BatchGetTags(ctx context.Context, resourceAndCommitsArg []api.ResourceAndCommitId) ([]api.Tag, error) {
-	var defaultReturnVal []api.Tag
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetTags(ctx, bearertoken.Token(token), resourceAndCommitsArg)
 }
 
 func (c *versioningServiceClientWithTokenProvider) GetTagsByResource(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api.Tag, error) {
-	var defaultReturnVal []api.Tag
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetTagsByResource(ctx, bearertoken.Token(token), resourceRidArg)
 }

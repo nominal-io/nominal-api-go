@@ -78,21 +78,19 @@ func NewEventServiceClient(client httpclient.Client) EventServiceClient {
 }
 
 func (c *eventServiceClient) CreateEvent(ctx context.Context, authHeader bearertoken.Token, requestArg CreateEvent) (Event, error) {
-	var defaultReturnVal Event
 	var returnVal *Event
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateEvent"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/events"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createEvent failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(Event), werror.WrapWithContextParams(ctx, err, "createEvent failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createEvent response cannot be nil")
+		return *new(Event), werror.ErrorWithContextParams(ctx, "createEvent response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -101,13 +99,12 @@ func (c *eventServiceClient) GetEvents(ctx context.Context, authHeader bearertok
 	var returnVal []Event
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetEvents"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/get-events"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getEvents failed")
 	}
 	if returnVal == nil {
@@ -120,13 +117,12 @@ func (c *eventServiceClient) BatchGetEvents(ctx context.Context, authHeader bear
 	var returnVal []Event
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetEvents"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/events/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetEvents failed")
 	}
 	if returnVal == nil {
@@ -139,13 +135,12 @@ func (c *eventServiceClient) BatchFilterEvents(ctx context.Context, authHeader b
 	var returnVal []Event
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchFilterEvents"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/events/batch-filter-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchFilterEvents failed")
 	}
 	if returnVal == nil {
@@ -155,61 +150,55 @@ func (c *eventServiceClient) BatchFilterEvents(ctx context.Context, authHeader b
 }
 
 func (c *eventServiceClient) UpdateEvent(ctx context.Context, authHeader bearertoken.Token, requestArg UpdateEvent) (Event, error) {
-	var defaultReturnVal Event
 	var returnVal *Event
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateEvent"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/update-event"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateEvent failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(Event), werror.WrapWithContextParams(ctx, err, "updateEvent failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateEvent response cannot be nil")
+		return *new(Event), werror.ErrorWithContextParams(ctx, "updateEvent response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *eventServiceClient) BatchUpdateEvent(ctx context.Context, authHeader bearertoken.Token, requestArg BatchUpdateEventRequest) (BatchUpdateEventResponse, error) {
-	var defaultReturnVal BatchUpdateEventResponse
 	var returnVal *BatchUpdateEventResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchUpdateEvent"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/events/batch-update"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchUpdateEvent failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchUpdateEventResponse), werror.WrapWithContextParams(ctx, err, "batchUpdateEvent failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchUpdateEvent response cannot be nil")
+		return *new(BatchUpdateEventResponse), werror.ErrorWithContextParams(ctx, "batchUpdateEvent response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *eventServiceClient) BatchUpdateDisposition(ctx context.Context, authHeader bearertoken.Token, requestArg BatchUpdateDispositionRequest) (BatchUpdateDispositionResponse, error) {
-	var defaultReturnVal BatchUpdateDispositionResponse
 	var returnVal *BatchUpdateDispositionResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchUpdateDisposition"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/update-disposition"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchUpdateDisposition failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchUpdateDispositionResponse), werror.WrapWithContextParams(ctx, err, "batchUpdateDisposition failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchUpdateDisposition response cannot be nil")
+		return *new(BatchUpdateDispositionResponse), werror.ErrorWithContextParams(ctx, "batchUpdateDisposition response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -217,12 +206,11 @@ func (c *eventServiceClient) BatchUpdateDisposition(ctx context.Context, authHea
 func (c *eventServiceClient) ArchiveEvent(ctx context.Context, authHeader bearertoken.Token, requestArg ArchiveEvent) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveEvent"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/archive-event"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archiveEvent failed")
 	}
 	return nil
@@ -231,12 +219,11 @@ func (c *eventServiceClient) ArchiveEvent(ctx context.Context, authHeader bearer
 func (c *eventServiceClient) BatchArchiveEvent(ctx context.Context, authHeader bearertoken.Token, requestArg []rids.EventRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchArchiveEvent"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/batch-archive-events"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "batchArchiveEvent failed")
 	}
 	return nil
@@ -245,113 +232,102 @@ func (c *eventServiceClient) BatchArchiveEvent(ctx context.Context, authHeader b
 func (c *eventServiceClient) BatchUnarchiveEvent(ctx context.Context, authHeader bearertoken.Token, requestArg []rids.EventRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchUnarchiveEvent"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/batch-unarchive-events"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "batchUnarchiveEvent failed")
 	}
 	return nil
 }
 
 func (c *eventServiceClient) SearchEvents(ctx context.Context, authHeader bearertoken.Token, requestArg SearchEventsRequest) (SearchEventsResponse, error) {
-	var defaultReturnVal SearchEventsResponse
 	var returnVal *SearchEventsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchEvents"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/search-events"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchEvents failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchEventsResponse), werror.WrapWithContextParams(ctx, err, "searchEvents failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchEvents response cannot be nil")
+		return *new(SearchEventsResponse), werror.ErrorWithContextParams(ctx, "searchEvents response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *eventServiceClient) AggregateEvents(ctx context.Context, authHeader bearertoken.Token, requestArg AggregateEventsRequest) (AggregateEventsResponse, error) {
-	var defaultReturnVal AggregateEventsResponse
 	var returnVal *AggregateEventsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("AggregateEvents"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/aggregate-events"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "aggregateEvents failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(AggregateEventsResponse), werror.WrapWithContextParams(ctx, err, "aggregateEvents failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "aggregateEvents response cannot be nil")
+		return *new(AggregateEventsResponse), werror.ErrorWithContextParams(ctx, "aggregateEvents response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *eventServiceClient) BatchAggregateEvents(ctx context.Context, authHeader bearertoken.Token, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error) {
-	var defaultReturnVal BatchAggregateEventsResponse
 	var returnVal *BatchAggregateEventsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchAggregateEvents"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/aggregate-events/batch"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchAggregateEvents failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchAggregateEventsResponse), werror.WrapWithContextParams(ctx, err, "batchAggregateEvents failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchAggregateEvents response cannot be nil")
+		return *new(BatchAggregateEventsResponse), werror.ErrorWithContextParams(ctx, "batchAggregateEvents response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *eventServiceClient) GetEventsHistogram(ctx context.Context, authHeader bearertoken.Token, requestArg EventsHistogramRequest) (EventsHistogramResponse, error) {
-	var defaultReturnVal EventsHistogramResponse
 	var returnVal *EventsHistogramResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetEventsHistogram"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/histogram"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getEventsHistogram failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(EventsHistogramResponse), werror.WrapWithContextParams(ctx, err, "getEventsHistogram failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getEventsHistogram response cannot be nil")
+		return *new(EventsHistogramResponse), werror.ErrorWithContextParams(ctx, "getEventsHistogram response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *eventServiceClient) ListPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, requestArg ListPropertiesAndLabelsRequest) (metadata.ListPropertiesAndLabelsResponse, error) {
-	var defaultReturnVal metadata.ListPropertiesAndLabelsResponse
 	var returnVal *metadata.ListPropertiesAndLabelsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListPropertiesAndLabels"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/event/v1/list-properties-labels"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "listPropertiesAndLabels failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(metadata.ListPropertiesAndLabelsResponse), werror.WrapWithContextParams(ctx, err, "listPropertiesAndLabels failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "listPropertiesAndLabels response cannot be nil")
+		return *new(metadata.ListPropertiesAndLabelsResponse), werror.ErrorWithContextParams(ctx, "listPropertiesAndLabels response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -490,64 +466,57 @@ type eventServiceClientWithTokenProvider struct {
 }
 
 func (c *eventServiceClientWithTokenProvider) CreateEvent(ctx context.Context, requestArg CreateEvent) (Event, error) {
-	var defaultReturnVal Event
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Event), err
 	}
 	return c.client.CreateEvent(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) GetEvents(ctx context.Context, requestArg GetEvents) ([]Event, error) {
-	var defaultReturnVal []Event
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetEvents(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) BatchGetEvents(ctx context.Context, requestArg []rids.EventRid) ([]Event, error) {
-	var defaultReturnVal []Event
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetEvents(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) BatchFilterEvents(ctx context.Context, requestArg BatchFilterEventsRequest) ([]Event, error) {
-	var defaultReturnVal []Event
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchFilterEvents(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) UpdateEvent(ctx context.Context, requestArg UpdateEvent) (Event, error) {
-	var defaultReturnVal Event
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Event), err
 	}
 	return c.client.UpdateEvent(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) BatchUpdateEvent(ctx context.Context, requestArg BatchUpdateEventRequest) (BatchUpdateEventResponse, error) {
-	var defaultReturnVal BatchUpdateEventResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchUpdateEventResponse), err
 	}
 	return c.client.BatchUpdateEvent(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) BatchUpdateDisposition(ctx context.Context, requestArg BatchUpdateDispositionRequest) (BatchUpdateDispositionResponse, error) {
-	var defaultReturnVal BatchUpdateDispositionResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchUpdateDispositionResponse), err
 	}
 	return c.client.BatchUpdateDisposition(ctx, bearertoken.Token(token), requestArg)
 }
@@ -577,46 +546,41 @@ func (c *eventServiceClientWithTokenProvider) BatchUnarchiveEvent(ctx context.Co
 }
 
 func (c *eventServiceClientWithTokenProvider) SearchEvents(ctx context.Context, requestArg SearchEventsRequest) (SearchEventsResponse, error) {
-	var defaultReturnVal SearchEventsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(SearchEventsResponse), err
 	}
 	return c.client.SearchEvents(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) AggregateEvents(ctx context.Context, requestArg AggregateEventsRequest) (AggregateEventsResponse, error) {
-	var defaultReturnVal AggregateEventsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(AggregateEventsResponse), err
 	}
 	return c.client.AggregateEvents(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) BatchAggregateEvents(ctx context.Context, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error) {
-	var defaultReturnVal BatchAggregateEventsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(BatchAggregateEventsResponse), err
 	}
 	return c.client.BatchAggregateEvents(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) GetEventsHistogram(ctx context.Context, requestArg EventsHistogramRequest) (EventsHistogramResponse, error) {
-	var defaultReturnVal EventsHistogramResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(EventsHistogramResponse), err
 	}
 	return c.client.GetEventsHistogram(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *eventServiceClientWithTokenProvider) ListPropertiesAndLabels(ctx context.Context, requestArg ListPropertiesAndLabelsRequest) (metadata.ListPropertiesAndLabelsResponse, error) {
-	var defaultReturnVal metadata.ListPropertiesAndLabelsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(metadata.ListPropertiesAndLabelsResponse), err
 	}
 	return c.client.ListPropertiesAndLabels(ctx, bearertoken.Token(token), requestArg)
 }

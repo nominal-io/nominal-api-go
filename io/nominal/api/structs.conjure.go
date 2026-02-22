@@ -178,7 +178,7 @@ type SerializableError struct {
 
 func (o SerializableError) MarshalJSON() ([]byte, error) {
 	if o.Params == nil {
-		o.Params = make(map[string]string, 0)
+		o.Params = make(map[string]string)
 	}
 	type _tmpSerializableError SerializableError
 	return safejson.Marshal(_tmpSerializableError(o))
@@ -191,7 +191,7 @@ func (o *SerializableError) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawSerializableError.Params == nil {
-		rawSerializableError.Params = make(map[string]string, 0)
+		rawSerializableError.Params = make(map[string]string)
 	}
 	*o = SerializableError(rawSerializableError)
 	return nil

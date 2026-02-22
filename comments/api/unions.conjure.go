@@ -97,7 +97,7 @@ func (u *CommentParent) AcceptFuncs(resourceFunc func(CommentParentResource) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CommentParent type")
 		}
 		return unknownFunc(u.typ)
 	case "resource":
@@ -113,11 +113,11 @@ func (u *CommentParent) AcceptFuncs(resourceFunc func(CommentParentResource) err
 	}
 }
 
-func (u *CommentParent) ResourceNoopSuccess(CommentParentResource) error {
+func (u *CommentParent) ResourceNoopSuccess(_ CommentParentResource) error {
 	return nil
 }
 
-func (u *CommentParent) CommentNoopSuccess(CommentParentComment) error {
+func (u *CommentParent) CommentNoopSuccess(_ CommentParentComment) error {
 	return nil
 }
 

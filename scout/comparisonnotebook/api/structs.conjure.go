@@ -65,7 +65,7 @@ type ComparisonScatterPlotDefinitionV1 struct {
 	Variables        []ComparisonScatterPlotVariable `json:"variables"`
 	Axes             []ScatterPlotValueAxes          `json:"axes"`
 	// optional for backcompatibility.
-	VisualizationOptions *ComparisonScatterPlotVizOptions `conjure-docs:"optional for backcompatibility." json:"visualizationOptions,omitempty"`
+	VisualizationOptions *ComparisonScatterPlotVizOptions `json:"visualizationOptions,omitempty"`
 }
 
 func (o ComparisonScatterPlotDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -113,9 +113,9 @@ func (o *ComparisonScatterPlotDefinitionV1) UnmarshalYAML(unmarshal func(interfa
 
 type ComparisonScatterPlotVariable struct {
 	// the axisId when the variable is used as the x variable.
-	XAxisId api.AxisId `conjure-docs:"the axisId when the variable is used as the x variable." json:"xAxisId"`
+	XAxisId api.AxisId `json:"xAxisId"`
 	// the axisId when the variable is used as the y variable.
-	YAxisId         api.AxisId      `conjure-docs:"the axisId when the variable is used as the y variable." json:"yAxisId"`
+	YAxisId         api.AxisId      `json:"yAxisId"`
 	Locator         VariableLocator `json:"locator"`
 	AggregationType AggregationType `json:"aggregationType"`
 }
@@ -161,7 +161,7 @@ type ComparisonTableColumn struct {
 	Locator              VariableLocator                           `json:"locator"`
 	VisualizationOptions ComparisonTableColumnVisualizationOptions `json:"visualizationOptions"`
 	// optional for backcompatibility.
-	AggregationType *AggregationType `conjure-docs:"optional for backcompatibility." json:"aggregationType,omitempty"`
+	AggregationType *AggregationType `json:"aggregationType,omitempty"`
 }
 
 func (o ComparisonTableColumn) MarshalYAML() (interface{}, error) {
@@ -299,7 +299,7 @@ type ComparisonTableVisualizationOptions struct {
 
 func (o ComparisonTableVisualizationOptions) MarshalJSON() ([]byte, error) {
 	if o.AggregationColors == nil {
-		o.AggregationColors = make(map[VariableName]api1.HexColor, 0)
+		o.AggregationColors = make(map[VariableName]api1.HexColor)
 	}
 	type _tmpComparisonTableVisualizationOptions ComparisonTableVisualizationOptions
 	return safejson.Marshal(_tmpComparisonTableVisualizationOptions(o))
@@ -312,7 +312,7 @@ func (o *ComparisonTableVisualizationOptions) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawComparisonTableVisualizationOptions.AggregationColors == nil {
-		rawComparisonTableVisualizationOptions.AggregationColors = make(map[VariableName]api1.HexColor, 0)
+		rawComparisonTableVisualizationOptions.AggregationColors = make(map[VariableName]api1.HexColor)
 	}
 	*o = ComparisonTableVisualizationOptions(rawComparisonTableVisualizationOptions)
 	return nil
@@ -343,7 +343,7 @@ type ComparisonTimeSeriesPlotDefinitionV1 struct {
 	RangeAggregation *RangeAggregationDefinition        `json:"rangeAggregation,omitempty"`
 	Variables        []ComparisonTimeSeriesPlotVariable `json:"variables"`
 	// a list of value ranges, where each variable is assigned to a y-axis
-	ValueAxes     []api.ValueAxis                   `conjure-docs:"a list of value ranges, where each variable is assigned to a y-axis" json:"valueAxes"`
+	ValueAxes     []api.ValueAxis                   `json:"valueAxes"`
 	GroupBy       ComparisonTimeSeriesGroupBy       `json:"groupBy"`
 	DisplayOption ComparisonTimeSeriesDisplayOption `json:"displayOption"`
 }
@@ -393,7 +393,7 @@ func (o *ComparisonTimeSeriesPlotDefinitionV1) UnmarshalYAML(unmarshal func(inte
 
 type ComparisonTimeSeriesPlotVariable struct {
 	// the axisId when the variable is used as the y variable.
-	YAxisId api.AxisId      `conjure-docs:"the axisId when the variable is used as the y variable." json:"yAxisId"`
+	YAxisId api.AxisId      `json:"yAxisId"`
 	Locator VariableLocator `json:"locator"`
 }
 
@@ -416,15 +416,15 @@ func (o *ComparisonTimeSeriesPlotVariable) UnmarshalYAML(unmarshal func(interfac
 type ComparisonWorkbookContent struct {
 	ChannelVariables ComparisonChannelVariableMap `json:"channelVariables"`
 	// visualizations. Charts is a legacy term.
-	Charts ComparisonVizDefinitionMap `conjure-docs:"visualizations. Charts is a legacy term." json:"charts"`
+	Charts ComparisonVizDefinitionMap `json:"charts"`
 }
 
 func (o ComparisonWorkbookContent) MarshalJSON() ([]byte, error) {
 	if o.ChannelVariables == nil {
-		o.ChannelVariables = make(map[VariableName]ChannelVariable, 0)
+		o.ChannelVariables = make(map[VariableName]ChannelVariable)
 	}
 	if o.Charts == nil {
-		o.Charts = make(map[api2.VizId]VizDefinition, 0)
+		o.Charts = make(map[api2.VizId]VizDefinition)
 	}
 	type _tmpComparisonWorkbookContent ComparisonWorkbookContent
 	return safejson.Marshal(_tmpComparisonWorkbookContent(o))
@@ -437,10 +437,10 @@ func (o *ComparisonWorkbookContent) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawComparisonWorkbookContent.ChannelVariables == nil {
-		rawComparisonWorkbookContent.ChannelVariables = make(map[VariableName]ChannelVariable, 0)
+		rawComparisonWorkbookContent.ChannelVariables = make(map[VariableName]ChannelVariable)
 	}
 	if rawComparisonWorkbookContent.Charts == nil {
-		rawComparisonWorkbookContent.Charts = make(map[api2.VizId]VizDefinition, 0)
+		rawComparisonWorkbookContent.Charts = make(map[api2.VizId]VizDefinition)
 	}
 	*o = ComparisonWorkbookContent(rawComparisonWorkbookContent)
 	return nil
@@ -468,7 +468,7 @@ type ComparisonWorkbookContext struct {
 
 func (o ComparisonWorkbookContext) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[VariableName]VariableLocator, 0)
+		o.Variables = make(map[VariableName]VariableLocator)
 	}
 	type _tmpComparisonWorkbookContext ComparisonWorkbookContext
 	return safejson.Marshal(_tmpComparisonWorkbookContext(o))
@@ -481,7 +481,7 @@ func (o *ComparisonWorkbookContext) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawComparisonWorkbookContext.Variables == nil {
-		rawComparisonWorkbookContext.Variables = make(map[VariableName]VariableLocator, 0)
+		rawComparisonWorkbookContext.Variables = make(map[VariableName]VariableLocator)
 	}
 	*o = ComparisonWorkbookContext(rawComparisonWorkbookContext)
 	return nil
@@ -647,7 +647,7 @@ type RangeAggregationDefinition struct {
 	DataScope ComparisonWorkbookDataScope `json:"dataScope"`
 	Condition ComputeNodeWithContext      `json:"condition"`
 	// determines the window of data included in the visualization. Currently only applied on assets.
-	TimeWindow *TimeWindow `conjure-docs:"determines the window of data included in the visualization. Currently only applied on assets." json:"timeWindow,omitempty"`
+	TimeWindow *TimeWindow `json:"timeWindow,omitempty"`
 }
 
 func (o RangeAggregationDefinition) MarshalYAML() (interface{}, error) {

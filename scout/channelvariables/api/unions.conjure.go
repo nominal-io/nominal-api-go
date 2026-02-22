@@ -84,7 +84,7 @@ func (u *ComputeSpec) AcceptFuncs(v1Func func(ComputeSpecV1) error, unknownFunc 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComputeSpec type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -95,7 +95,7 @@ func (u *ComputeSpec) AcceptFuncs(v1Func func(ComputeSpecV1) error, unknownFunc 
 	}
 }
 
-func (u *ComputeSpec) V1NoopSuccess(ComputeSpecV1) error {
+func (u *ComputeSpec) V1NoopSuccess(_ ComputeSpecV1) error {
 	return nil
 }
 
@@ -233,7 +233,7 @@ func (u *VariableLocator) AcceptFuncs(variableFunc func(api.VariableName) error,
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VariableLocator type")
 		}
 		return unknownFunc(u.typ)
 	case "variable":
@@ -249,11 +249,11 @@ func (u *VariableLocator) AcceptFuncs(variableFunc func(api.VariableName) error,
 	}
 }
 
-func (u *VariableLocator) VariableNoopSuccess(api.VariableName) error {
+func (u *VariableLocator) VariableNoopSuccess(_ api.VariableName) error {
 	return nil
 }
 
-func (u *VariableLocator) SeriesNoopSuccess(api1.ChannelLocator) error {
+func (u *VariableLocator) SeriesNoopSuccess(_ api1.ChannelLocator) error {
 	return nil
 }
 

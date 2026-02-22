@@ -125,7 +125,7 @@ func (u *ClientMessage) AcceptFuncs(subscribeFunc func(map[SubscriptionId]Stream
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ClientMessage type")
 		}
 		return unknownFunc(u.typ)
 	case "subscribe":
@@ -151,19 +151,19 @@ func (u *ClientMessage) AcceptFuncs(subscribeFunc func(map[SubscriptionId]Stream
 	}
 }
 
-func (u *ClientMessage) SubscribeNoopSuccess(map[SubscriptionId]StreamingComputeNodeSubscription) error {
+func (u *ClientMessage) SubscribeNoopSuccess(_ map[SubscriptionId]StreamingComputeNodeSubscription) error {
 	return nil
 }
 
-func (u *ClientMessage) UnsubscribeNoopSuccess([]SubscriptionId) error {
+func (u *ClientMessage) UnsubscribeNoopSuccess(_ []SubscriptionId) error {
 	return nil
 }
 
-func (u *ClientMessage) PingNoopSuccess(Ping) error {
+func (u *ClientMessage) PingNoopSuccess(_ Ping) error {
 	return nil
 }
 
-func (u *ClientMessage) PongNoopSuccess(Pong) error {
+func (u *ClientMessage) PongNoopSuccess(_ Pong) error {
 	return nil
 }
 
@@ -529,7 +529,7 @@ func (u *ComputeNodeAppendResponse) AcceptFuncs(range_Func func([]api.Range) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComputeNodeAppendResponse type")
 		}
 		return unknownFunc(u.typ)
 	case "range":
@@ -615,63 +615,63 @@ func (u *ComputeNodeAppendResponse) AcceptFuncs(range_Func func([]api.Range) err
 	}
 }
 
-func (u *ComputeNodeAppendResponse) RangeNoopSuccess([]api.Range) error {
+func (u *ComputeNodeAppendResponse) RangeNoopSuccess(_ []api.Range) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) EnumPointNoopSuccess(*api.EnumPoint) error {
+func (u *ComputeNodeAppendResponse) EnumPointNoopSuccess(_ *api.EnumPoint) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) NumericPointNoopSuccess(*api.NumericPoint) error {
+func (u *ComputeNodeAppendResponse) NumericPointNoopSuccess(_ *api.NumericPoint) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) SinglePointNoopSuccess(*api.SinglePoint) error {
+func (u *ComputeNodeAppendResponse) SinglePointNoopSuccess(_ *api.SinglePoint) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) LogPointNoopSuccess(*api.LogPoint) error {
+func (u *ComputeNodeAppendResponse) LogPointNoopSuccess(_ *api.LogPoint) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) RangeValueNoopSuccess(*api.Range) error {
+func (u *ComputeNodeAppendResponse) RangeValueNoopSuccess(_ *api.Range) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) NumericNoopSuccess(api.NumericPlot) error {
+func (u *ComputeNodeAppendResponse) NumericNoopSuccess(_ api.NumericPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) EnumNoopSuccess(api.EnumPlot) error {
+func (u *ComputeNodeAppendResponse) EnumNoopSuccess(_ api.EnumPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) BucketedNumericNoopSuccess(api.BucketedNumericPlot) error {
+func (u *ComputeNodeAppendResponse) BucketedNumericNoopSuccess(_ api.BucketedNumericPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) BucketedEnumNoopSuccess(api.BucketedEnumPlot) error {
+func (u *ComputeNodeAppendResponse) BucketedEnumNoopSuccess(_ api.BucketedEnumPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) ArrowNumericNoopSuccess(api.ArrowNumericPlot) error {
+func (u *ComputeNodeAppendResponse) ArrowNumericNoopSuccess(_ api.ArrowNumericPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) ArrowEnumNoopSuccess(api.ArrowEnumPlot) error {
+func (u *ComputeNodeAppendResponse) ArrowEnumNoopSuccess(_ api.ArrowEnumPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) ArrowBucketedNumericNoopSuccess(api.ArrowBucketedNumericPlot) error {
+func (u *ComputeNodeAppendResponse) ArrowBucketedNumericNoopSuccess(_ api.ArrowBucketedNumericPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) ArrowBucketedEnumNoopSuccess(api.ArrowBucketedEnumPlot) error {
+func (u *ComputeNodeAppendResponse) ArrowBucketedEnumNoopSuccess(_ api.ArrowBucketedEnumPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) GroupedNoopSuccess(GroupedComputeNodeAppendResponses) error {
+func (u *ComputeNodeAppendResponse) GroupedNoopSuccess(_ GroupedComputeNodeAppendResponses) error {
 	return nil
 }
 
@@ -1071,7 +1071,7 @@ func (u *HealthMessage) AcceptFuncs(pingFunc func(Ping) error, pongFunc func(Pon
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in HealthMessage type")
 		}
 		return unknownFunc(u.typ)
 	case "ping":
@@ -1097,19 +1097,19 @@ func (u *HealthMessage) AcceptFuncs(pingFunc func(Ping) error, pongFunc func(Pon
 	}
 }
 
-func (u *HealthMessage) PingNoopSuccess(Ping) error {
+func (u *HealthMessage) PingNoopSuccess(_ Ping) error {
 	return nil
 }
 
-func (u *HealthMessage) PongNoopSuccess(Pong) error {
+func (u *HealthMessage) PongNoopSuccess(_ Pong) error {
 	return nil
 }
 
-func (u *HealthMessage) ShutdownNoticeNoopSuccess(ShutdownNotice) error {
+func (u *HealthMessage) ShutdownNoticeNoopSuccess(_ ShutdownNotice) error {
 	return nil
 }
 
-func (u *HealthMessage) ClientMessageErrorNoopSuccess(ClientMessageError) error {
+func (u *HealthMessage) ClientMessageErrorNoopSuccess(_ ClientMessageError) error {
 	return nil
 }
 
@@ -1281,7 +1281,7 @@ func (u *ResultConfiguration) AcceptFuncs(appendOnlyFunc func(AppendOnlyConfig) 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ResultConfiguration type")
 		}
 		return unknownFunc(u.typ)
 	case "appendOnly":
@@ -1292,7 +1292,7 @@ func (u *ResultConfiguration) AcceptFuncs(appendOnlyFunc func(AppendOnlyConfig) 
 	}
 }
 
-func (u *ResultConfiguration) AppendOnlyNoopSuccess(AppendOnlyConfig) error {
+func (u *ResultConfiguration) AppendOnlyNoopSuccess(_ AppendOnlyConfig) error {
 	return nil
 }
 
@@ -1444,7 +1444,7 @@ func (u *ServerMessage) AcceptFuncs(subscriptionUpdateFunc func(SubscriptionUpda
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ServerMessage type")
 		}
 		return unknownFunc(u.typ)
 	case "subscriptionUpdate":
@@ -1465,15 +1465,15 @@ func (u *ServerMessage) AcceptFuncs(subscriptionUpdateFunc func(SubscriptionUpda
 	}
 }
 
-func (u *ServerMessage) SubscriptionUpdateNoopSuccess(SubscriptionUpdateMessage) error {
+func (u *ServerMessage) SubscriptionUpdateNoopSuccess(_ SubscriptionUpdateMessage) error {
 	return nil
 }
 
-func (u *ServerMessage) SubscriptionCreationNoopSuccess(SubscriptionCreationMessage) error {
+func (u *ServerMessage) SubscriptionCreationNoopSuccess(_ SubscriptionCreationMessage) error {
 	return nil
 }
 
-func (u *ServerMessage) HealthNoopSuccess(HealthMessage) error {
+func (u *ServerMessage) HealthNoopSuccess(_ HealthMessage) error {
 	return nil
 }
 
@@ -1643,7 +1643,7 @@ func (u *SubscriptionCreation) AcceptFuncs(successFunc func(SubscriptionCreation
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SubscriptionCreation type")
 		}
 		return unknownFunc(u.typ)
 	case "success":
@@ -1659,11 +1659,11 @@ func (u *SubscriptionCreation) AcceptFuncs(successFunc func(SubscriptionCreation
 	}
 }
 
-func (u *SubscriptionCreation) SuccessNoopSuccess(SubscriptionCreationSuccess) error {
+func (u *SubscriptionCreation) SuccessNoopSuccess(_ SubscriptionCreationSuccess) error {
 	return nil
 }
 
-func (u *SubscriptionCreation) ErrorNoopSuccess(SubscriptionCreationError) error {
+func (u *SubscriptionCreation) ErrorNoopSuccess(_ SubscriptionCreationError) error {
 	return nil
 }
 
@@ -1831,7 +1831,7 @@ func (u *SubscriptionUpdate) AcceptFuncs(fullFunc func(FullResult) error, append
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SubscriptionUpdate type")
 		}
 		return unknownFunc(u.typ)
 	case "full":
@@ -1852,15 +1852,15 @@ func (u *SubscriptionUpdate) AcceptFuncs(fullFunc func(FullResult) error, append
 	}
 }
 
-func (u *SubscriptionUpdate) FullNoopSuccess(FullResult) error {
+func (u *SubscriptionUpdate) FullNoopSuccess(_ FullResult) error {
 	return nil
 }
 
-func (u *SubscriptionUpdate) AppendNoopSuccess(AppendResult) error {
+func (u *SubscriptionUpdate) AppendNoopSuccess(_ AppendResult) error {
 	return nil
 }
 
-func (u *SubscriptionUpdate) ErrorNoopSuccess(SubscriptionUpdateError) error {
+func (u *SubscriptionUpdate) ErrorNoopSuccess(_ SubscriptionUpdateError) error {
 	return nil
 }
 

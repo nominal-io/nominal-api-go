@@ -28,6 +28,19 @@ func (a *ModuleApplicationRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a ModuleApplicationRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ModuleApplicationRid) UnmarshalJSON(data []byte) error {
+	var rawModuleApplicationRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawModuleApplicationRid); err != nil {
+		return err
+	}
+	*a = ModuleApplicationRid(rawModuleApplicationRid)
+	return nil
+}
+
 func (a ModuleApplicationRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -58,6 +71,19 @@ func (a ModuleRid) MarshalText() ([]byte, error) {
 func (a *ModuleRid) UnmarshalText(data []byte) error {
 	var rawModuleRid rid.ResourceIdentifier
 	if err := rawModuleRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = ModuleRid(rawModuleRid)
+	return nil
+}
+
+func (a ModuleRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ModuleRid) UnmarshalJSON(data []byte) error {
+	var rawModuleRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawModuleRid); err != nil {
 		return err
 	}
 	*a = ModuleRid(rawModuleRid)

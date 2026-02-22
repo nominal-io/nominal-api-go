@@ -38,81 +38,73 @@ func NewSeriesCacheServiceClient(client httpclient.Client) SeriesCacheServiceCli
 }
 
 func (c *seriesCacheServiceClient) GetChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, getChunksParametersArg api1.GetChunksParameters) (api1.GetChunksResponse, error) {
-	var defaultReturnVal api1.GetChunksResponse
 	var returnVal *api1.GetChunksResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetChunks"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/series-cache/v1/logical-series/%s/get-chunks", url.PathEscape(fmt.Sprint(logicalSeriesRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(getChunksParametersArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getChunks failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.GetChunksResponse), werror.WrapWithContextParams(ctx, err, "getChunks failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getChunks response cannot be nil")
+		return *new(api1.GetChunksResponse), werror.ErrorWithContextParams(ctx, "getChunks response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *seriesCacheServiceClient) CreateChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, createChunksParametersArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error) {
-	var defaultReturnVal api1.CreateChunksResponse
 	var returnVal *api1.CreateChunksResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateChunks"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/series-cache/v1/logical-series/%s/create-chunks", url.PathEscape(fmt.Sprint(logicalSeriesRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(createChunksParametersArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createChunks failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.CreateChunksResponse), werror.WrapWithContextParams(ctx, err, "createChunks failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createChunks response cannot be nil")
+		return *new(api1.CreateChunksResponse), werror.ErrorWithContextParams(ctx, "createChunks response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *seriesCacheServiceClient) BatchCreateChunks(ctx context.Context, authHeader bearertoken.Token, requestArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error) {
-	var defaultReturnVal api1.CreateChunksResponse
 	var returnVal *api1.CreateChunksResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchCreateChunks"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/series-cache/v1/batch-create-chunks"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchCreateChunks failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.CreateChunksResponse), werror.WrapWithContextParams(ctx, err, "batchCreateChunks failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchCreateChunks response cannot be nil")
+		return *new(api1.CreateChunksResponse), werror.ErrorWithContextParams(ctx, "batchCreateChunks response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *seriesCacheServiceClient) DeleteChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, requestArg api1.DeleteChunksParameters) (api1.DeleteChunksResponse, error) {
-	var defaultReturnVal api1.DeleteChunksResponse
 	var returnVal *api1.DeleteChunksResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteChunks"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/series-cache/v1/logical-series/%s/delete-chunks", url.PathEscape(fmt.Sprint(logicalSeriesRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "deleteChunks failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.DeleteChunksResponse), werror.WrapWithContextParams(ctx, err, "deleteChunks failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "deleteChunks response cannot be nil")
+		return *new(api1.DeleteChunksResponse), werror.ErrorWithContextParams(ctx, "deleteChunks response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -166,37 +158,33 @@ type seriesCacheServiceClientWithTokenProvider struct {
 }
 
 func (c *seriesCacheServiceClientWithTokenProvider) GetChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, getChunksParametersArg api1.GetChunksParameters) (api1.GetChunksResponse, error) {
-	var defaultReturnVal api1.GetChunksResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.GetChunksResponse), err
 	}
 	return c.client.GetChunks(ctx, bearertoken.Token(token), logicalSeriesRidArg, getChunksParametersArg)
 }
 
 func (c *seriesCacheServiceClientWithTokenProvider) CreateChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, createChunksParametersArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error) {
-	var defaultReturnVal api1.CreateChunksResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.CreateChunksResponse), err
 	}
 	return c.client.CreateChunks(ctx, bearertoken.Token(token), logicalSeriesRidArg, createChunksParametersArg)
 }
 
 func (c *seriesCacheServiceClientWithTokenProvider) BatchCreateChunks(ctx context.Context, requestArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error) {
-	var defaultReturnVal api1.CreateChunksResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.CreateChunksResponse), err
 	}
 	return c.client.BatchCreateChunks(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *seriesCacheServiceClientWithTokenProvider) DeleteChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, requestArg api1.DeleteChunksParameters) (api1.DeleteChunksResponse, error) {
-	var defaultReturnVal api1.DeleteChunksResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.DeleteChunksResponse), err
 	}
 	return c.client.DeleteChunks(ctx, bearertoken.Token(token), logicalSeriesRidArg, requestArg)
 }

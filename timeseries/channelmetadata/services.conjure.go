@@ -40,81 +40,73 @@ func NewChannelMetadataServiceClient(client httpclient.Client) ChannelMetadataSe
 }
 
 func (c *channelMetadataServiceClient) GetChannelMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetChannelMetadataRequest) (api.ChannelMetadata, error) {
-	var defaultReturnVal api.ChannelMetadata
 	var returnVal *api.ChannelMetadata
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetChannelMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/channel-metadata/v1/channel-metadata/get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getChannelMetadata failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.ChannelMetadata), werror.WrapWithContextParams(ctx, err, "getChannelMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getChannelMetadata response cannot be nil")
+		return *new(api.ChannelMetadata), werror.ErrorWithContextParams(ctx, "getChannelMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *channelMetadataServiceClient) BatchGetChannelMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetChannelMetadataRequest) (api.BatchGetChannelMetadataResponse, error) {
-	var defaultReturnVal api.BatchGetChannelMetadataResponse
 	var returnVal *api.BatchGetChannelMetadataResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetChannelMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/channel-metadata/v1/channel-metadata/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGetChannelMetadata failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchGetChannelMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchGetChannelMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGetChannelMetadata response cannot be nil")
+		return *new(api.BatchGetChannelMetadataResponse), werror.ErrorWithContextParams(ctx, "batchGetChannelMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *channelMetadataServiceClient) UpdateChannelMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.UpdateChannelMetadataRequest) (api.ChannelMetadata, error) {
-	var defaultReturnVal api.ChannelMetadata
 	var returnVal *api.ChannelMetadata
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateChannelMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/channel-metadata/v1/channel-metadata/update"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateChannelMetadata failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.ChannelMetadata), werror.WrapWithContextParams(ctx, err, "updateChannelMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateChannelMetadata response cannot be nil")
+		return *new(api.ChannelMetadata), werror.ErrorWithContextParams(ctx, "updateChannelMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *channelMetadataServiceClient) BatchUpdateChannelMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchUpdateChannelMetadataRequest) (api.BatchUpdateChannelMetadataResponse, error) {
-	var defaultReturnVal api.BatchUpdateChannelMetadataResponse
 	var returnVal *api.BatchUpdateChannelMetadataResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchUpdateChannelMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/channel-metadata/v1/channel-metadata/batch-update"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchUpdateChannelMetadata failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchUpdateChannelMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchUpdateChannelMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchUpdateChannelMetadata response cannot be nil")
+		return *new(api.BatchUpdateChannelMetadataResponse), werror.ErrorWithContextParams(ctx, "batchUpdateChannelMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -172,37 +164,33 @@ type channelMetadataServiceClientWithTokenProvider struct {
 }
 
 func (c *channelMetadataServiceClientWithTokenProvider) GetChannelMetadata(ctx context.Context, requestArg api.GetChannelMetadataRequest) (api.ChannelMetadata, error) {
-	var defaultReturnVal api.ChannelMetadata
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.ChannelMetadata), err
 	}
 	return c.client.GetChannelMetadata(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *channelMetadataServiceClientWithTokenProvider) BatchGetChannelMetadata(ctx context.Context, requestArg api.BatchGetChannelMetadataRequest) (api.BatchGetChannelMetadataResponse, error) {
-	var defaultReturnVal api.BatchGetChannelMetadataResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BatchGetChannelMetadataResponse), err
 	}
 	return c.client.BatchGetChannelMetadata(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *channelMetadataServiceClientWithTokenProvider) UpdateChannelMetadata(ctx context.Context, requestArg api.UpdateChannelMetadataRequest) (api.ChannelMetadata, error) {
-	var defaultReturnVal api.ChannelMetadata
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.ChannelMetadata), err
 	}
 	return c.client.UpdateChannelMetadata(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *channelMetadataServiceClientWithTokenProvider) BatchUpdateChannelMetadata(ctx context.Context, requestArg api.BatchUpdateChannelMetadataRequest) (api.BatchUpdateChannelMetadataResponse, error) {
-	var defaultReturnVal api.BatchUpdateChannelMetadataResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BatchUpdateChannelMetadataResponse), err
 	}
 	return c.client.BatchUpdateChannelMetadata(ctx, bearertoken.Token(token), requestArg)
 }

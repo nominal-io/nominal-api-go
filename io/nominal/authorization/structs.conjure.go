@@ -81,12 +81,12 @@ func (o *AuthorizationRequest) UnmarshalYAML(unmarshal func(interface{}) error) 
 
 type CreateApiKeyRequest struct {
 	// The name of the API key to create.
-	ApiKeyName string `conjure-docs:"The name of the API key to create." json:"apiKeyName"`
+	ApiKeyName string `json:"apiKeyName"`
 	/*
 	   The number of days after which the API key will expire.
 	   If omitted, the API key will not expire.
 	*/
-	ExpiresAfterDays *safelong.SafeLong `conjure-docs:"The number of days after which the API key will expire.\nIf omitted, the API key will not expire." json:"expiresAfterDays,omitempty"`
+	ExpiresAfterDays *safelong.SafeLong `json:"expiresAfterDays,omitempty"`
 }
 
 func (o CreateApiKeyRequest) MarshalYAML() (interface{}, error) {
@@ -153,7 +153,8 @@ This ID token should generally be short lived since it is fungible with a Nomina
 via this endpoint.
 */
 type GetAccessTokenRequest struct {
-	IdToken string `json:"idToken"`
+	IdToken     string  `json:"idToken"`
+	AccessToken *string `json:"accessToken,omitempty"`
 }
 
 func (o GetAccessTokenRequest) MarshalYAML() (interface{}, error) {
@@ -237,11 +238,11 @@ func (o *IsEmailAllowedResponse) UnmarshalYAML(unmarshal func(interface{}) error
 
 type ListApiKeyRequest struct {
 	// If true, include deleted API keys in the response. Defaults to false.
-	IncludeDeleted *bool `conjure-docs:"If true, include deleted API keys in the response. Defaults to false." json:"includeDeleted,omitempty"`
+	IncludeDeleted *bool `json:"includeDeleted,omitempty"`
 	// If true, include expired API keys in the response. Defaults to false.
-	IncludeExpired *bool `conjure-docs:"If true, include expired API keys in the response. Defaults to false." json:"includeExpired,omitempty"`
+	IncludeExpired *bool `json:"includeExpired,omitempty"`
 	// The maximum number of API keys to return. Defaults to 100.
-	PageSize      *int       `conjure-docs:"The maximum number of API keys to return. Defaults to 100." json:"pageSize,omitempty"`
+	PageSize      *int       `json:"pageSize,omitempty"`
 	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
 }
 

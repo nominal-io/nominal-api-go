@@ -85,13 +85,12 @@ func (c *authorizationServiceClient) Authorize(ctx context.Context, authHeader b
 	var returnVal []rid.ResourceIdentifier
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Authorize"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/authorize"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "authorize failed")
 	}
 	if returnVal == nil {
@@ -104,13 +103,12 @@ func (c *authorizationServiceClient) BatchGetWorkspaceForResource(ctx context.Co
 	var returnVal map[rid.ResourceIdentifier]rids.WorkspaceRid
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetWorkspaceForResource"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/batch-get-workspace-for-resource"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetWorkspaceForResource failed")
 	}
 	if returnVal == nil {
@@ -122,12 +120,11 @@ func (c *authorizationServiceClient) BatchGetWorkspaceForResource(ctx context.Co
 func (c *authorizationServiceClient) RegisterInWorkspace(ctx context.Context, authHeader bearertoken.Token, requestArg RegisterInWorkspaceRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("RegisterInWorkspace"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/register-in-workspace"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "registerInWorkspace failed")
 	}
 	return nil
@@ -136,148 +133,133 @@ func (c *authorizationServiceClient) RegisterInWorkspace(ctx context.Context, au
 func (c *authorizationServiceClient) CheckAdmin(ctx context.Context, authHeader bearertoken.Token) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CheckAdmin"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/checkAdmin"))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "checkAdmin failed")
 	}
 	return nil
 }
 
 func (c *authorizationServiceClient) IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error) {
-	var defaultReturnVal IsEmailAllowedResponse
 	var returnVal *IsEmailAllowedResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("IsEmailAllowed"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/is-email-allowed"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "isEmailAllowed failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(IsEmailAllowedResponse), werror.WrapWithContextParams(ctx, err, "isEmailAllowed failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "isEmailAllowed response cannot be nil")
+		return *new(IsEmailAllowedResponse), werror.ErrorWithContextParams(ctx, "isEmailAllowed response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authorizationServiceClient) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
-	var defaultReturnVal OktaRegistrationResponse
 	var returnVal *OktaRegistrationResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("IsEmailAllowedOkta"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/is-email-allowed-okta"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "isEmailAllowedOkta failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(OktaRegistrationResponse), werror.WrapWithContextParams(ctx, err, "isEmailAllowedOkta failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "isEmailAllowedOkta response cannot be nil")
+		return *new(OktaRegistrationResponse), werror.ErrorWithContextParams(ctx, "isEmailAllowedOkta response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authorizationServiceClient) GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error) {
-	var defaultReturnVal GetAccessTokenResponse
 	var returnVal *GetAccessTokenResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAccessToken"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/access-token"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAccessToken failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GetAccessTokenResponse), werror.WrapWithContextParams(ctx, err, "getAccessToken failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAccessToken response cannot be nil")
+		return *new(GetAccessTokenResponse), werror.ErrorWithContextParams(ctx, "getAccessToken response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authorizationServiceClient) RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error) {
-	var defaultReturnVal RefreshAccessTokenResponse
 	var returnVal *RefreshAccessTokenResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("RefreshAccessToken"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/refresh-access-token"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "refreshAccessToken failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(RefreshAccessTokenResponse), werror.WrapWithContextParams(ctx, err, "refreshAccessToken failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "refreshAccessToken response cannot be nil")
+		return *new(RefreshAccessTokenResponse), werror.ErrorWithContextParams(ctx, "refreshAccessToken response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authorizationServiceClient) CreateApiKey(ctx context.Context, authHeader bearertoken.Token, requestArg CreateApiKeyRequest) (CreateApiKeyResponse, error) {
-	var defaultReturnVal CreateApiKeyResponse
 	var returnVal *CreateApiKeyResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateApiKey"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/api-key"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createApiKey failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(CreateApiKeyResponse), werror.WrapWithContextParams(ctx, err, "createApiKey failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createApiKey response cannot be nil")
+		return *new(CreateApiKeyResponse), werror.ErrorWithContextParams(ctx, "createApiKey response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authorizationServiceClient) ListApiKeysInOrg(ctx context.Context, authHeader bearertoken.Token, requestArg ListApiKeyRequest) (ListApiKeyResponse, error) {
-	var defaultReturnVal ListApiKeyResponse
 	var returnVal *ListApiKeyResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListApiKeysInOrg"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/api-keys/org"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "listApiKeysInOrg failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(ListApiKeyResponse), werror.WrapWithContextParams(ctx, err, "listApiKeysInOrg failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "listApiKeysInOrg response cannot be nil")
+		return *new(ListApiKeyResponse), werror.ErrorWithContextParams(ctx, "listApiKeysInOrg response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authorizationServiceClient) ListUserApiKeys(ctx context.Context, authHeader bearertoken.Token, requestArg ListApiKeyRequest) (ListApiKeyResponse, error) {
-	var defaultReturnVal ListApiKeyResponse
 	var returnVal *ListApiKeyResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListUserApiKeys"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/api-keys/user"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "listUserApiKeys failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(ListApiKeyResponse), werror.WrapWithContextParams(ctx, err, "listUserApiKeys failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "listUserApiKeys response cannot be nil")
+		return *new(ListApiKeyResponse), werror.ErrorWithContextParams(ctx, "listUserApiKeys response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -285,11 +267,10 @@ func (c *authorizationServiceClient) ListUserApiKeys(ctx context.Context, authHe
 func (c *authorizationServiceClient) RevokeApiKey(ctx context.Context, authHeader bearertoken.Token, ridArg ApiKeyRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("RevokeApiKey"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/api-key/%s/delete", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "revokeApiKey failed")
 	}
 	return nil
@@ -420,19 +401,17 @@ type authorizationServiceClientWithTokenProvider struct {
 }
 
 func (c *authorizationServiceClientWithTokenProvider) Authorize(ctx context.Context, requestArg AuthorizationRequest) ([]rid.ResourceIdentifier, error) {
-	var defaultReturnVal []rid.ResourceIdentifier
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.Authorize(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *authorizationServiceClientWithTokenProvider) BatchGetWorkspaceForResource(ctx context.Context, requestArg []rid.ResourceIdentifier) (map[rid.ResourceIdentifier]rids.WorkspaceRid, error) {
-	var defaultReturnVal map[rid.ResourceIdentifier]rids.WorkspaceRid
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetWorkspaceForResource(ctx, bearertoken.Token(token), requestArg)
 }
@@ -470,28 +449,25 @@ func (c *authorizationServiceClientWithTokenProvider) RefreshAccessToken(ctx con
 }
 
 func (c *authorizationServiceClientWithTokenProvider) CreateApiKey(ctx context.Context, requestArg CreateApiKeyRequest) (CreateApiKeyResponse, error) {
-	var defaultReturnVal CreateApiKeyResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(CreateApiKeyResponse), err
 	}
 	return c.client.CreateApiKey(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *authorizationServiceClientWithTokenProvider) ListApiKeysInOrg(ctx context.Context, requestArg ListApiKeyRequest) (ListApiKeyResponse, error) {
-	var defaultReturnVal ListApiKeyResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ListApiKeyResponse), err
 	}
 	return c.client.ListApiKeysInOrg(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *authorizationServiceClientWithTokenProvider) ListUserApiKeys(ctx context.Context, requestArg ListApiKeyRequest) (ListApiKeyResponse, error) {
-	var defaultReturnVal ListApiKeyResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ListApiKeyResponse), err
 	}
 	return c.client.ListUserApiKeys(ctx, bearertoken.Token(token), requestArg)
 }
@@ -522,20 +498,18 @@ func NewInternalApiKeyServiceClient(client httpclient.Client) InternalApiKeyServ
 }
 
 func (c *internalApiKeyServiceClient) GetAccessTokenFromApiKeyValue(ctx context.Context, requestArg GetAccessTokenFromApiKeyRequest) (GetAccessTokenResponse, error) {
-	var defaultReturnVal GetAccessTokenResponse
 	var returnVal *GetAccessTokenResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAccessTokenFromApiKeyValue"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithPathf("/api-key-internal/v1/access-token"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAccessTokenFromApiKeyValue failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GetAccessTokenResponse), werror.WrapWithContextParams(ctx, err, "getAccessTokenFromApiKeyValue failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAccessTokenFromApiKeyValue response cannot be nil")
+		return *new(GetAccessTokenResponse), werror.ErrorWithContextParams(ctx, "getAccessTokenFromApiKeyValue response cannot be nil")
 	}
 	return *returnVal, nil
 }

@@ -53,7 +53,7 @@ type SetFavoritesListRequest struct {
 	   The resources to set as the user's favorites. Note that the provided list will overwrite
 	   all the user's previous favorites.
 	*/
-	Resources []FavoriteResource `conjure-docs:"The resources to set as the user's favorites. Note that the provided list will overwrite \nall the user's previous favorites." json:"resources"`
+	Resources []FavoriteResource `json:"resources"`
 }
 
 func (o SetFavoritesListRequest) MarshalJSON() ([]byte, error) {

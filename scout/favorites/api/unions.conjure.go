@@ -169,7 +169,7 @@ func (u *FavoriteResource) AcceptFuncs(assetFunc func(api.AssetRid) error, runFu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FavoriteResource type")
 		}
 		return unknownFunc(u.typ)
 	case "asset":
@@ -210,31 +210,31 @@ func (u *FavoriteResource) AcceptFuncs(assetFunc func(api.AssetRid) error, runFu
 	}
 }
 
-func (u *FavoriteResource) AssetNoopSuccess(api.AssetRid) error {
+func (u *FavoriteResource) AssetNoopSuccess(_ api.AssetRid) error {
 	return nil
 }
 
-func (u *FavoriteResource) RunNoopSuccess(api1.RunRid) error {
+func (u *FavoriteResource) RunNoopSuccess(_ api1.RunRid) error {
 	return nil
 }
 
-func (u *FavoriteResource) NotebookNoopSuccess(api.NotebookRid) error {
+func (u *FavoriteResource) NotebookNoopSuccess(_ api.NotebookRid) error {
 	return nil
 }
 
-func (u *FavoriteResource) NotebookTemplateNoopSuccess(api.TemplateRid) error {
+func (u *FavoriteResource) NotebookTemplateNoopSuccess(_ api.TemplateRid) error {
 	return nil
 }
 
-func (u *FavoriteResource) ChecklistNoopSuccess(api.ChecklistRid) error {
+func (u *FavoriteResource) ChecklistNoopSuccess(_ api.ChecklistRid) error {
 	return nil
 }
 
-func (u *FavoriteResource) SavedViewNoopSuccess(api.SavedViewRid) error {
+func (u *FavoriteResource) SavedViewNoopSuccess(_ api.SavedViewRid) error {
 	return nil
 }
 
-func (u *FavoriteResource) ProcedureNoopSuccess(rids.ProcedureRid) error {
+func (u *FavoriteResource) ProcedureNoopSuccess(_ rids.ProcedureRid) error {
 	return nil
 }
 

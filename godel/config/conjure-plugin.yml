@@ -1,4 +1,6 @@
-version: 1
+version: 2
 projects:
   scout-service-api:
     ir-locator: ../scout/scout-service-api/build/conjure-ir/scout-service-api.conjure.json
+    output-dir: .
+    omit-top-level-project-dir: true

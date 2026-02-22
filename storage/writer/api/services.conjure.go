@@ -37,12 +37,11 @@ func NewDirectNominalChannelWriterServiceClient(client httpclient.Client) Direct
 func (c *directNominalChannelWriterServiceClient) WriteBatches(ctx context.Context, authHeader bearertoken.Token, requestArg WriteBatchesRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("WriteBatches"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/direct-writer/v1"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "writeBatches failed")
 	}
 	return nil
@@ -265,12 +264,11 @@ func NewNominalChannelWriterServiceClient(client httpclient.Client) NominalChann
 func (c *nominalChannelWriterServiceClient) WriteBatches(ctx context.Context, authHeader bearertoken.Token, requestArg WriteBatchesRequestExternal) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("WriteBatches"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/writer/v1"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "writeBatches failed")
 	}
 	return nil
@@ -279,12 +277,11 @@ func (c *nominalChannelWriterServiceClient) WriteBatches(ctx context.Context, au
 func (c *nominalChannelWriterServiceClient) WriteColumnBatches(ctx context.Context, authHeader bearertoken.Token, requestArg WriteColumnBatchesRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("WriteColumnBatches"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/writer/v1/columnar"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "writeColumnBatches failed")
 	}
 	return nil
@@ -293,12 +290,11 @@ func (c *nominalChannelWriterServiceClient) WriteColumnBatches(ctx context.Conte
 func (c *nominalChannelWriterServiceClient) WriteTelegrafBatches(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg WriteTelegrafBatchesRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("WriteTelegrafBatches"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/writer/v1/telegraf/%s", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "writeTelegrafBatches failed")
 	}
 	return nil
@@ -307,32 +303,29 @@ func (c *nominalChannelWriterServiceClient) WriteTelegrafBatches(ctx context.Con
 func (c *nominalChannelWriterServiceClient) WritePrometheusBatches(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg httpclient.RequestBody) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("WritePrometheusBatches"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/writer/v1/prometheus/%s", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithBinaryRequestBody(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "writePrometheusBatches failed")
 	}
 	return nil
 }
 
 func (c *nominalChannelWriterServiceClient) PrometheusRemoteWriteHealthCheck(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.NominalDataSourceOrDatasetRid) (bool, error) {
-	var defaultReturnVal bool
 	var returnVal *bool
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("PrometheusRemoteWriteHealthCheck"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/writer/v1/prometheus/%s", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "prometheusRemoteWriteHealthCheck failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(bool), werror.WrapWithContextParams(ctx, err, "prometheusRemoteWriteHealthCheck failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "prometheusRemoteWriteHealthCheck response cannot be nil")
+		return *new(bool), werror.ErrorWithContextParams(ctx, "prometheusRemoteWriteHealthCheck response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -340,12 +333,11 @@ func (c *nominalChannelWriterServiceClient) PrometheusRemoteWriteHealthCheck(ctx
 func (c *nominalChannelWriterServiceClient) WriteNominalBatches(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg httpclient.RequestBody) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("WriteNominalBatches"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/writer/v1/nominal/%s", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithBinaryRequestBody(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "writeNominalBatches failed")
 	}
 	return nil
@@ -354,12 +346,11 @@ func (c *nominalChannelWriterServiceClient) WriteNominalBatches(ctx context.Cont
 func (c *nominalChannelWriterServiceClient) WriteLogs(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg WriteLogsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("WriteLogs"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/storage/writer/v1/logs/%s", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "writeLogs failed")
 	}
 	return nil
@@ -608,10 +599,9 @@ func (c *nominalChannelWriterServiceClientWithTokenProvider) WritePrometheusBatc
 }
 
 func (c *nominalChannelWriterServiceClientWithTokenProvider) PrometheusRemoteWriteHealthCheck(ctx context.Context, dataSourceRidArg rids.NominalDataSourceOrDatasetRid) (bool, error) {
-	var defaultReturnVal bool
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(bool), err
 	}
 	return c.client.PrometheusRemoteWriteHealthCheck(ctx, bearertoken.Token(token), dataSourceRidArg)
 }

@@ -45,7 +45,7 @@ type AutomaticCheckEvaluation struct {
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
 	   The check implementation index will correspond to the implementation index of the check condition.
 	*/
-	CheckImplementationIndex *int                          `conjure-docs:"Checks can define a single range computation which can evaluate over multiple implementations of a context.\nThe check implementation index will correspond to the implementation index of the check condition." json:"checkImplementationIndex,omitempty"`
+	CheckImplementationIndex *int                          `json:"checkImplementationIndex,omitempty"`
 	DataReviewRid            api.DataReviewRid             `json:"dataReviewRid"`
 	State                    AutomaticCheckEvaluationState `json:"state"`
 }
@@ -421,7 +421,7 @@ func (o *BatchCheckAlertActionResponse) UnmarshalYAML(unmarshal func(interface{}
 type BatchInitiateDataReviewRequest struct {
 	Requests []CreateDataReviewRequest `json:"requests"`
 	// If provided, checklist violations will be sent to the specified integrations.
-	NotificationConfigurations []api2.NotificationConfiguration `conjure-docs:"If provided, checklist violations will be sent to the specified integrations." json:"notificationConfigurations"`
+	NotificationConfigurations []api2.NotificationConfiguration `json:"notificationConfigurations"`
 }
 
 func (o BatchInitiateDataReviewRequest) MarshalJSON() ([]byte, error) {
@@ -673,17 +673,17 @@ func (o *CheckAlertActionLogEntry) UnmarshalYAML(unmarshal func(interface{}) err
 
 type CheckAlertsHistogramRequest struct {
 	// Defaults to 100. Throws if larger than 1_000.
-	NumBins *int `conjure-docs:"Defaults to 100. Throws if larger than 1_000." json:"numBins,omitempty"`
+	NumBins *int `json:"numBins,omitempty"`
 	// Matches on check name
-	SearchText *string `conjure-docs:"Matches on check name" json:"searchText,omitempty"`
+	SearchText *string `json:"searchText,omitempty"`
 	// Represents the data points on the x-axis of a histogram.
-	DistributionVariable HistogramDistributionVariable `conjure-docs:"Represents the data points on the x-axis of a histogram." json:"distributionVariable"`
+	DistributionVariable HistogramDistributionVariable `json:"distributionVariable"`
 	// The variable that divides the data into distinct groups for comparison within the histogram.
-	SubGroupVariable *HistogramSubGroupVariable `conjure-docs:"The variable that divides the data into distinct groups for comparison within the histogram." json:"subGroupVariable,omitempty"`
+	SubGroupVariable *HistogramSubGroupVariable `json:"subGroupVariable,omitempty"`
 	// Filters to start times after this time, inclusive.
-	StartTimeAfter api3.Timestamp `conjure-docs:"Filters to start times after this time, inclusive." json:"startTimeAfter"`
+	StartTimeAfter api3.Timestamp `json:"startTimeAfter"`
 	// Filters to start times before this time, exclusive.
-	StartTimeBefore     api3.Timestamp             `conjure-docs:"Filters to start times before this time, exclusive." json:"startTimeBefore"`
+	StartTimeBefore     api3.Timestamp             `json:"startTimeBefore"`
 	Status              *[]CheckAlertStatus        `json:"status,omitempty"`
 	CheckRids           *[]api.CheckRid            `json:"checkRids,omitempty"`
 	DataReviewRids      *[]api.DataReviewRid       `json:"dataReviewRids,omitempty"`
@@ -699,12 +699,12 @@ type CheckAlertsHistogramRequest struct {
 	   To be deprecated. Use archivedStatuses instead. If not present, will not show archived data reviews
 	   in search results.
 	*/
-	ShowArchived *bool `conjure-docs:"To be deprecated. Use archivedStatuses instead. If not present, will not show archived data reviews \nin search results." json:"showArchived,omitempty"`
+	ShowArchived *bool `json:"showArchived,omitempty"`
 	/*
 	   Filters search on check alerts based on the archived statuses provided.
 	   Default is NOT_ARCHIVED only if none are provided.
 	*/
-	ArchivedStatuses *[]api3.ArchivedStatus `conjure-docs:"Filters search on check alerts based on the archived statuses provided. \nDefault is NOT_ARCHIVED only if none are provided." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api3.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o CheckAlertsHistogramRequest) MarshalJSON() ([]byte, error) {
@@ -1031,7 +1031,7 @@ type CloseWithFurtherAction struct {
 	   Defines the strategy for reopening the alert and any alerts linked via an associated notebook. If not
 	   provided, the alert will be closed naively and throw if it leaves a linked notebook in an invalid state.
 	*/
-	Strategy *CloseStrategy `conjure-docs:"Defines the strategy for reopening the alert and any alerts linked via an associated notebook. If not \nprovided, the alert will be closed naively and throw if it leaves a linked notebook in an invalid state." json:"strategy,omitempty"`
+	Strategy *CloseStrategy `json:"strategy,omitempty"`
 }
 
 func (o CloseWithFurtherAction) MarshalYAML() (interface{}, error) {
@@ -1060,7 +1060,7 @@ type CloseWithIgnoreAlert struct {
 	   Defines the strategy for closing the alert and any alerts linked via an associated notebook. If not
 	   provided, the default strategy is closeAllLinkedAlerts.
 	*/
-	Strategy *CloseStrategy `conjure-docs:"Defines the strategy for closing the alert and any alerts linked via an associated notebook. If not \nprovided, the default strategy is closeAllLinkedAlerts." json:"strategy,omitempty"`
+	Strategy *CloseStrategy `json:"strategy,omitempty"`
 }
 
 func (o CloseWithIgnoreAlert) MarshalYAML() (interface{}, error) {
@@ -1107,7 +1107,7 @@ Asset RID is required only for multi-asset runs.
 type CreateDataReviewRequest struct {
 	RunRid api5.RunRid `json:"runRid"`
 	// Selects asset to execute data review on. Required for multi-asset runs.
-	AssetRid     *api.AssetRid    `conjure-docs:"Selects asset to execute data review on. Required for multi-asset runs." json:"assetRid,omitempty"`
+	AssetRid     *api.AssetRid    `json:"assetRid,omitempty"`
 	ChecklistRid api.ChecklistRid `json:"checklistRid"`
 	Commit       *api6.CommitId   `json:"commit,omitempty"`
 }
@@ -1338,21 +1338,21 @@ type FindDataReviewsRequest struct {
 	   It is recommended to set this to true and pass in asset RIDs for multi-asset runs.
 	   Toggling this option has no effect if no asset RIDs are supplied.
 	*/
-	FilterByBothRunsAndAssets *bool               `conjure-docs:"If true, results are filtered to data reviews w/ both run and asset in the requested runs/assets.\nDefaults to false, where assets are converted to runs and all data reviews under the linked runs\n(including data reviews on other assets sharing the parent run) will be returned.\nIt is recommended to set this to true and pass in asset RIDs for multi-asset runs.\nToggling this option has no effect if no asset RIDs are supplied." json:"filterByBothRunsAndAssets,omitempty"`
+	FilterByBothRunsAndAssets *bool               `json:"filterByBothRunsAndAssets,omitempty"`
 	ChecklistRefs             []api1.ChecklistRef `json:"checklistRefs"`
 	NextPageToken             *api3.Token         `json:"nextPageToken,omitempty"`
 	// Defaults to 1000. Will throw if larger than 1000.
-	PageSize *int `conjure-docs:"Defaults to 1000. Will throw if larger than 1000." json:"pageSize,omitempty"`
+	PageSize *int `json:"pageSize,omitempty"`
 	/*
 	   To be deprecated. Use archivedStatuses instead. Allows for inclusion of archived data reviews
 	   in search results alongside non-archived ones. Defaults to false if not specified.
 	*/
-	ShowArchived *bool `conjure-docs:"To be deprecated. Use archivedStatuses instead. Allows for inclusion of archived data reviews \nin search results alongside non-archived ones. Defaults to false if not specified." json:"showArchived,omitempty"`
+	ShowArchived *bool `json:"showArchived,omitempty"`
 	/*
 	   Filters search on data reviews based on the archived statuses provided.
 	   Default is NOT_ARCHIVED only if none are provided.
 	*/
-	ArchivedStatuses *[]api3.ArchivedStatus `conjure-docs:"Filters search on data reviews based on the archived statuses provided. \nDefault is NOT_ARCHIVED only if none are provided." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api3.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o FindDataReviewsRequest) MarshalJSON() ([]byte, error) {
@@ -1555,7 +1555,7 @@ type HistogramPriorityBucket struct {
 
 func (o HistogramPriorityBucket) MarshalJSON() ([]byte, error) {
 	if o.Counts == nil {
-		o.Counts = make(map[api4.Priority]int, 0)
+		o.Counts = make(map[api4.Priority]int)
 	}
 	type _tmpHistogramPriorityBucket HistogramPriorityBucket
 	return safejson.Marshal(_tmpHistogramPriorityBucket(o))
@@ -1568,7 +1568,7 @@ func (o *HistogramPriorityBucket) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawHistogramPriorityBucket.Counts == nil {
-		rawHistogramPriorityBucket.Counts = make(map[api4.Priority]int, 0)
+		rawHistogramPriorityBucket.Counts = make(map[api4.Priority]int)
 	}
 	*o = HistogramPriorityBucket(rawHistogramPriorityBucket)
 	return nil
@@ -1634,7 +1634,7 @@ type HistogramStatusBucket struct {
 
 func (o HistogramStatusBucket) MarshalJSON() ([]byte, error) {
 	if o.Counts == nil {
-		o.Counts = make(map[CheckAlertStatus]int, 0)
+		o.Counts = make(map[CheckAlertStatus]int)
 	}
 	type _tmpHistogramStatusBucket HistogramStatusBucket
 	return safejson.Marshal(_tmpHistogramStatusBucket(o))
@@ -1647,7 +1647,7 @@ func (o *HistogramStatusBucket) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawHistogramStatusBucket.Counts == nil {
-		rawHistogramStatusBucket.Counts = make(map[CheckAlertStatus]int, 0)
+		rawHistogramStatusBucket.Counts = make(map[CheckAlertStatus]int)
 	}
 	*o = HistogramStatusBucket(rawHistogramStatusBucket)
 	return nil
@@ -1693,7 +1693,7 @@ type LinkNotebook struct {
 	   Defines the strategy for reconciling the alert with any linked alerts via the associated notebook. If not
 	   provided, the alert will be linked naively and throw if it leaves a linked notebook in an invalid state.
 	*/
-	Strategy *LinkNotebookStrategy `conjure-docs:"Defines the strategy for reconciling the alert with any linked alerts via the associated notebook. If not\nprovided, the alert will be linked naively and throw if it leaves a linked notebook in an invalid state." json:"strategy,omitempty"`
+	Strategy *LinkNotebookStrategy `json:"strategy,omitempty"`
 }
 
 func (o LinkNotebook) MarshalYAML() (interface{}, error) {
@@ -1968,7 +1968,7 @@ type Reopen struct {
 	   Defines the strategy for reopening the alert and any alerts linked via an associated notebook. If not
 	   provided, the default strategy is reopenAllLinkedAlerts.
 	*/
-	Strategy *ReopenStrategy `conjure-docs:"Defines the strategy for reopening the alert and any alerts linked via an associated notebook. If not \nprovided, the default strategy is reopenAllLinkedAlerts." json:"strategy,omitempty"`
+	Strategy *ReopenStrategy `json:"strategy,omitempty"`
 }
 
 func (o Reopen) MarshalYAML() (interface{}, error) {
@@ -2095,15 +2095,15 @@ func (o *RerunFailedAutomaticChecksRequest) UnmarshalYAML(unmarshal func(interfa
 type SearchCheckAlertsRequest struct {
 	NextPageToken *api3.Token `json:"nextPageToken,omitempty"`
 	// Defaults to 100. Will throw if larger than 1_000.
-	PageSize *int `conjure-docs:"Defaults to 100. Will throw if larger than 1_000." json:"pageSize,omitempty"`
+	PageSize *int `json:"pageSize,omitempty"`
 	// If not present, will sort by start time in descending order.
-	SortBy *SearchCheckAlertsSortOptions `conjure-docs:"If not present, will sort by start time in descending order." json:"sortBy,omitempty"`
+	SortBy *SearchCheckAlertsSortOptions `json:"sortBy,omitempty"`
 	// Matches on check name
-	SearchText *string `conjure-docs:"Matches on check name" json:"searchText,omitempty"`
+	SearchText *string `json:"searchText,omitempty"`
 	// Filters to start times after this time, inclusive.
-	After *api3.Timestamp `conjure-docs:"Filters to start times after this time, inclusive." json:"after,omitempty"`
+	After *api3.Timestamp `json:"after,omitempty"`
 	// Filters to start times before this time, exclusive.
-	Before              *api3.Timestamp            `conjure-docs:"Filters to start times before this time, exclusive." json:"before,omitempty"`
+	Before              *api3.Timestamp            `json:"before,omitempty"`
 	Status              *[]CheckAlertStatus        `json:"status,omitempty"`
 	CheckRids           *[]api.CheckRid            `json:"checkRids,omitempty"`
 	DataReviewRids      *[]api.DataReviewRid       `json:"dataReviewRids,omitempty"`
@@ -2119,12 +2119,12 @@ type SearchCheckAlertsRequest struct {
 	   To be deprecated. Use archivedStatuses instead. If true, includes archived check alerts in the search
 	   results. If not present or false, will not show archived data reviews in search results
 	*/
-	ShowArchived *bool `conjure-docs:"To be deprecated. Use archivedStatuses instead. If true, includes archived check alerts in the search \nresults. If not present or false, will not show archived data reviews in search results" json:"showArchived,omitempty"`
+	ShowArchived *bool `json:"showArchived,omitempty"`
 	/*
 	   Filters search on check alerts based on the archived statuses provided.
 	   Default is NOT_ARCHIVED only if none are provided.
 	*/
-	ArchivedStatuses *[]api3.ArchivedStatus `conjure-docs:"Filters search on check alerts based on the archived statuses provided.\nDefault is NOT_ARCHIVED only if none are provided." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api3.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchCheckAlertsRequest) MarshalJSON() ([]byte, error) {

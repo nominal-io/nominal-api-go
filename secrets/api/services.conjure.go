@@ -31,20 +31,18 @@ func NewInternalSecretServiceClient(client httpclient.Client) InternalSecretServ
 }
 
 func (c *internalSecretServiceClient) GetDecrypted(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) (DecryptedSecret, error) {
-	var defaultReturnVal DecryptedSecret
 	var returnVal *DecryptedSecret
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDecrypted"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/secrets/internal/v1/secrets/%s/decrypted", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getDecrypted failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(DecryptedSecret), werror.WrapWithContextParams(ctx, err, "getDecrypted failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getDecrypted response cannot be nil")
+		return *new(DecryptedSecret), werror.ErrorWithContextParams(ctx, "getDecrypted response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -81,10 +79,9 @@ type internalSecretServiceClientWithTokenProvider struct {
 }
 
 func (c *internalSecretServiceClientWithTokenProvider) GetDecrypted(ctx context.Context, ridArg SecretRid) (DecryptedSecret, error) {
-	var defaultReturnVal DecryptedSecret
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(DecryptedSecret), err
 	}
 	return c.client.GetDecrypted(ctx, bearertoken.Token(token), ridArg)
 }
@@ -121,80 +118,72 @@ func NewSecretServiceClient(client httpclient.Client) SecretServiceClient {
 }
 
 func (c *secretServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg CreateSecretRequest) (Secret, error) {
-	var defaultReturnVal Secret
 	var returnVal *Secret
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/secrets/v1/secrets"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "create failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(Secret), werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "create response cannot be nil")
+		return *new(Secret), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *secretServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) (Secret, error) {
-	var defaultReturnVal Secret
 	var returnVal *Secret
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/secrets/v1/secrets/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "get failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(Secret), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(Secret), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *secretServiceClient) GetBatch(ctx context.Context, authHeader bearertoken.Token, requestArg GetSecretsRequest) (GetSecretsResponse, error) {
-	var defaultReturnVal GetSecretsResponse
 	var returnVal *GetSecretsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetBatch"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/secrets/v1/secrets/batch"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getBatch failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GetSecretsResponse), werror.WrapWithContextParams(ctx, err, "getBatch failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getBatch response cannot be nil")
+		return *new(GetSecretsResponse), werror.ErrorWithContextParams(ctx, "getBatch response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *secretServiceClient) Update(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid, requestArg UpdateSecretRequest) (Secret, error) {
-	var defaultReturnVal Secret
 	var returnVal *Secret
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Update"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/secrets/v1/secrets/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "update failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(Secret), werror.WrapWithContextParams(ctx, err, "update failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "update response cannot be nil")
+		return *new(Secret), werror.ErrorWithContextParams(ctx, "update response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -202,11 +191,10 @@ func (c *secretServiceClient) Update(ctx context.Context, authHeader bearertoken
 func (c *secretServiceClient) Delete(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Delete"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/secrets/v1/secrets/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "delete failed")
 	}
 	return nil
@@ -215,11 +203,10 @@ func (c *secretServiceClient) Delete(ctx context.Context, authHeader bearertoken
 func (c *secretServiceClient) Archive(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Archive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/secrets/v1/secrets/%s/archive", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archive failed")
 	}
 	return nil
@@ -228,32 +215,29 @@ func (c *secretServiceClient) Archive(ctx context.Context, authHeader bearertoke
 func (c *secretServiceClient) Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Unarchive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/secrets/v1/secrets/%s/unarchive", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchive failed")
 	}
 	return nil
 }
 
 func (c *secretServiceClient) Search(ctx context.Context, authHeader bearertoken.Token, requestArg SearchSecretsRequest) (SearchSecretsResponse, error) {
-	var defaultReturnVal SearchSecretsResponse
 	var returnVal *SearchSecretsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Search"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/secrets/v1/secrets/search"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "search failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchSecretsResponse), werror.WrapWithContextParams(ctx, err, "search failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "search response cannot be nil")
+		return *new(SearchSecretsResponse), werror.ErrorWithContextParams(ctx, "search response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -332,37 +316,33 @@ type secretServiceClientWithTokenProvider struct {
 }
 
 func (c *secretServiceClientWithTokenProvider) Create(ctx context.Context, requestArg CreateSecretRequest) (Secret, error) {
-	var defaultReturnVal Secret
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Secret), err
 	}
 	return c.client.Create(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *secretServiceClientWithTokenProvider) Get(ctx context.Context, ridArg SecretRid) (Secret, error) {
-	var defaultReturnVal Secret
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Secret), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *secretServiceClientWithTokenProvider) GetBatch(ctx context.Context, requestArg GetSecretsRequest) (GetSecretsResponse, error) {
-	var defaultReturnVal GetSecretsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(GetSecretsResponse), err
 	}
 	return c.client.GetBatch(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *secretServiceClientWithTokenProvider) Update(ctx context.Context, ridArg SecretRid, requestArg UpdateSecretRequest) (Secret, error) {
-	var defaultReturnVal Secret
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Secret), err
 	}
 	return c.client.Update(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
@@ -392,10 +372,9 @@ func (c *secretServiceClientWithTokenProvider) Unarchive(ctx context.Context, ri
 }
 
 func (c *secretServiceClientWithTokenProvider) Search(ctx context.Context, requestArg SearchSecretsRequest) (SearchSecretsResponse, error) {
-	var defaultReturnVal SearchSecretsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(SearchSecretsResponse), err
 	}
 	return c.client.Search(ctx, bearertoken.Token(token), requestArg)
 }

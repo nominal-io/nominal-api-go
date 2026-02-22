@@ -27,6 +27,19 @@ func (a *ChartThemeRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a ChartThemeRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ChartThemeRid) UnmarshalJSON(data []byte) error {
+	var rawChartThemeRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawChartThemeRid); err != nil {
+		return err
+	}
+	*a = ChartThemeRid(rawChartThemeRid)
+	return nil
+}
+
 func (a ChartThemeRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {

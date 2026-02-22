@@ -26,7 +26,7 @@ type Attachment struct {
 
 func (o Attachment) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -42,7 +42,7 @@ func (o *Attachment) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawAttachment.Properties == nil {
-		rawAttachment.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawAttachment.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawAttachment.Labels == nil {
 		rawAttachment.Labels = make([]api.Label, 0)
@@ -102,12 +102,12 @@ type CreateAttachmentRequest struct {
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the attachment. If not provided, the attachment will be created in\nthe default workspace for the user's organization, if the default workspace for the\norganization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o CreateAttachmentRequest) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -123,7 +123,7 @@ func (o *CreateAttachmentRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateAttachmentRequest.Properties == nil {
-		rawCreateAttachmentRequest.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawCreateAttachmentRequest.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	if rawCreateAttachmentRequest.Labels == nil {
 		rawCreateAttachmentRequest.Labels = make([]api.Label, 0)

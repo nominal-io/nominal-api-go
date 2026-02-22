@@ -1551,6 +1551,155 @@ func (e *TooManyTagKeysRequested) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type tooManyTagValuesRequested struct {
+	MaxTagValues int `json:"maxTagValues"`
+}
+
+func (o tooManyTagValuesRequested) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *tooManyTagValuesRequested) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewTooManyTagValuesRequested returns new instance of TooManyTagValuesRequested error.
+func NewTooManyTagValuesRequested(maxTagValuesArg int) *TooManyTagValuesRequested {
+	return &TooManyTagValuesRequested{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooManyTagValuesRequested: tooManyTagValuesRequested{MaxTagValues: maxTagValuesArg}}
+}
+
+// WrapWithTooManyTagValuesRequested returns new instance of TooManyTagValuesRequested error wrapping an existing error.
+func WrapWithTooManyTagValuesRequested(err error, maxTagValuesArg int) *TooManyTagValuesRequested {
+	return &TooManyTagValuesRequested{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooManyTagValuesRequested: tooManyTagValuesRequested{MaxTagValues: maxTagValuesArg}}
+}
+
+// TooManyTagValuesRequested is an error type.
+type TooManyTagValuesRequested struct {
+	errorInstanceID uuid.UUID
+	tooManyTagValuesRequested
+	cause error
+	stack werror.StackTrace
+}
+
+// IsTooManyTagValuesRequested returns true if err is an instance of TooManyTagValuesRequested.
+func IsTooManyTagValuesRequested(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*TooManyTagValuesRequested)
+	return ok
+}
+
+func (e *TooManyTagValuesRequested) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT DataSource:TooManyTagValuesRequested (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *TooManyTagValuesRequested) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *TooManyTagValuesRequested) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *TooManyTagValuesRequested) Message() string {
+	return "INVALID_ARGUMENT DataSource:TooManyTagValuesRequested"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *TooManyTagValuesRequested) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *TooManyTagValuesRequested) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *TooManyTagValuesRequested) Name() string {
+	return "DataSource:TooManyTagValuesRequested"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *TooManyTagValuesRequested) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *TooManyTagValuesRequested) Parameters() map[string]interface{} {
+	return map[string]interface{}{"maxTagValues": e.MaxTagValues}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *TooManyTagValuesRequested) safeParams() map[string]interface{} {
+	return map[string]interface{}{"maxTagValues": e.MaxTagValues, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyTagValuesRequested) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *TooManyTagValuesRequested) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyTagValuesRequested) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e TooManyTagValuesRequested) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.tooManyTagValuesRequested)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "DataSource:TooManyTagValuesRequested", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *TooManyTagValuesRequested) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters tooManyTagValuesRequested
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.tooManyTagValuesRequested = parameters
+	return nil
+}
+
 func init() {
 	conjureerrors.RegisterErrorType("DataSource:CannotGetTagsForNonSeriesDataSource", reflect.TypeOf(CannotGetTagsForNonSeriesDataSource{}))
 	conjureerrors.RegisterErrorType("DataSource:DataSourceNotFound", reflect.TypeOf(DataSourceNotFound{}))
@@ -1562,4 +1711,5 @@ func init() {
 	conjureerrors.RegisterErrorType("DataSource:RequestedPageOffsetTooLarge", reflect.TypeOf(RequestedPageOffsetTooLarge{}))
 	conjureerrors.RegisterErrorType("DataSource:RequestedPageSizeTooLarge", reflect.TypeOf(RequestedPageSizeTooLarge{}))
 	conjureerrors.RegisterErrorType("DataSource:TooManyTagKeysRequested", reflect.TypeOf(TooManyTagKeysRequested{}))
+	conjureerrors.RegisterErrorType("DataSource:TooManyTagValuesRequested", reflect.TypeOf(TooManyTagValuesRequested{}))
 }

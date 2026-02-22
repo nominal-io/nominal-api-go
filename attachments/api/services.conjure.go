@@ -44,60 +44,54 @@ func NewAttachmentServiceClient(client httpclient.Client) AttachmentServiceClien
 }
 
 func (c *attachmentServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg CreateAttachmentRequest) (Attachment, error) {
-	var defaultReturnVal Attachment
 	var returnVal *Attachment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/attachments/v1/attachments"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "create failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(Attachment), werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "create response cannot be nil")
+		return *new(Attachment), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *attachmentServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) (Attachment, error) {
-	var defaultReturnVal Attachment
 	var returnVal *Attachment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/attachments/v1/attachments/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "get failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(Attachment), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(Attachment), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *attachmentServiceClient) GetBatch(ctx context.Context, authHeader bearertoken.Token, requestArg GetAttachmentsRequest) (GetAttachmentsResponse, error) {
-	var defaultReturnVal GetAttachmentsResponse
 	var returnVal *GetAttachmentsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetBatch"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/attachments/v1/attachments/batch"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getBatch failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GetAttachmentsResponse), werror.WrapWithContextParams(ctx, err, "getBatch failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getBatch response cannot be nil")
+		return *new(GetAttachmentsResponse), werror.ErrorWithContextParams(ctx, "getBatch response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -105,12 +99,11 @@ func (c *attachmentServiceClient) GetBatch(ctx context.Context, authHeader beare
 func (c *attachmentServiceClient) GetContent(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) (io.ReadCloser, error) {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetContent"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/attachments/v1/attachments/%s/content", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRawResponseBody())
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	resp, err := c.client.Do(ctx, requestParams...)
+	resp, err := c.client.Get(ctx, requestParams...)
 	if err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getContent failed")
 	}
@@ -118,40 +111,36 @@ func (c *attachmentServiceClient) GetContent(ctx context.Context, authHeader bea
 }
 
 func (c *attachmentServiceClient) GetUri(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) (AttachmentUri, error) {
-	var defaultReturnVal AttachmentUri
 	var returnVal *AttachmentUri
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetUri"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/attachments/v1/attachments/%s/uri", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getUri failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(AttachmentUri), werror.WrapWithContextParams(ctx, err, "getUri failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getUri response cannot be nil")
+		return *new(AttachmentUri), werror.ErrorWithContextParams(ctx, "getUri response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *attachmentServiceClient) Update(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid, requestArg UpdateAttachmentRequest) (Attachment, error) {
-	var defaultReturnVal Attachment
 	var returnVal *Attachment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Update"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/attachments/v1/attachments/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "update failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(Attachment), werror.WrapWithContextParams(ctx, err, "update failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "update response cannot be nil")
+		return *new(Attachment), werror.ErrorWithContextParams(ctx, "update response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -159,11 +148,10 @@ func (c *attachmentServiceClient) Update(ctx context.Context, authHeader bearert
 func (c *attachmentServiceClient) Archive(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Archive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/attachments/v1/attachments/%s/archive", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archive failed")
 	}
 	return nil
@@ -172,11 +160,10 @@ func (c *attachmentServiceClient) Archive(ctx context.Context, authHeader bearer
 func (c *attachmentServiceClient) Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Unarchive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/attachments/v1/attachments/%s/unarchive", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchive failed")
 	}
 	return nil
@@ -253,55 +240,49 @@ type attachmentServiceClientWithTokenProvider struct {
 }
 
 func (c *attachmentServiceClientWithTokenProvider) Create(ctx context.Context, requestArg CreateAttachmentRequest) (Attachment, error) {
-	var defaultReturnVal Attachment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Attachment), err
 	}
 	return c.client.Create(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *attachmentServiceClientWithTokenProvider) Get(ctx context.Context, ridArg rids.AttachmentRid) (Attachment, error) {
-	var defaultReturnVal Attachment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Attachment), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *attachmentServiceClientWithTokenProvider) GetBatch(ctx context.Context, requestArg GetAttachmentsRequest) (GetAttachmentsResponse, error) {
-	var defaultReturnVal GetAttachmentsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(GetAttachmentsResponse), err
 	}
 	return c.client.GetBatch(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *attachmentServiceClientWithTokenProvider) GetContent(ctx context.Context, ridArg rids.AttachmentRid) (io.ReadCloser, error) {
-	var defaultReturnVal io.ReadCloser
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetContent(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *attachmentServiceClientWithTokenProvider) GetUri(ctx context.Context, ridArg rids.AttachmentRid) (AttachmentUri, error) {
-	var defaultReturnVal AttachmentUri
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(AttachmentUri), err
 	}
 	return c.client.GetUri(ctx, bearertoken.Token(token), ridArg)
 }
 
 func (c *attachmentServiceClientWithTokenProvider) Update(ctx context.Context, ridArg rids.AttachmentRid, requestArg UpdateAttachmentRequest) (Attachment, error) {
-	var defaultReturnVal Attachment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Attachment), err
 	}
 	return c.client.Update(ctx, bearertoken.Token(token), ridArg, requestArg)
 }

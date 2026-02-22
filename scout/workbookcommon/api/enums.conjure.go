@@ -6,6 +6,64 @@ import (
 	"strings"
 )
 
+// The align to value for an event offset. If the queried event is a moment, the offset will be the moment timestamp regardless of the align to value.
+type EventAlignTo struct {
+	val EventAlignTo_Value
+}
+
+type EventAlignTo_Value string
+
+const (
+	EventAlignTo_START   EventAlignTo_Value = "START"
+	EventAlignTo_END     EventAlignTo_Value = "END"
+	EventAlignTo_UNKNOWN EventAlignTo_Value = "UNKNOWN"
+)
+
+// EventAlignTo_Values returns all known variants of EventAlignTo.
+func EventAlignTo_Values() []EventAlignTo_Value {
+	return []EventAlignTo_Value{EventAlignTo_START, EventAlignTo_END}
+}
+
+func New_EventAlignTo(value EventAlignTo_Value) EventAlignTo {
+	return EventAlignTo{val: value}
+}
+
+// IsUnknown returns false for all known variants of EventAlignTo and true otherwise.
+func (e EventAlignTo) IsUnknown() bool {
+	switch e.val {
+	case EventAlignTo_START, EventAlignTo_END:
+		return false
+	}
+	return true
+}
+
+func (e EventAlignTo) Value() EventAlignTo_Value {
+	if e.IsUnknown() {
+		return EventAlignTo_UNKNOWN
+	}
+	return e.val
+}
+
+func (e EventAlignTo) String() string {
+	return string(e.val)
+}
+
+func (e EventAlignTo) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *EventAlignTo) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_EventAlignTo(EventAlignTo_Value(v))
+	case "START":
+		*e = New_EventAlignTo(EventAlignTo_START)
+	case "END":
+		*e = New_EventAlignTo(EventAlignTo_END)
+	}
+	return nil
+}
+
 // The align to value for a run offset.
 type RunAlignTo struct {
 	val RunAlignTo_Value

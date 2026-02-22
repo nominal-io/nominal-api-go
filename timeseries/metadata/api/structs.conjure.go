@@ -203,7 +203,7 @@ type BatchGetSeriesMetadataResponse struct {
 
 func (o BatchGetSeriesMetadataResponse) MarshalJSON() ([]byte, error) {
 	if o.Responses == nil {
-		o.Responses = make(map[rids.DataSourceRid][]SeriesMetadata, 0)
+		o.Responses = make(map[rids.DataSourceRid][]SeriesMetadata)
 	}
 	type _tmpBatchGetSeriesMetadataResponse BatchGetSeriesMetadataResponse
 	return safejson.Marshal(_tmpBatchGetSeriesMetadataResponse(o))
@@ -216,7 +216,7 @@ func (o *BatchGetSeriesMetadataResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawBatchGetSeriesMetadataResponse.Responses == nil {
-		rawBatchGetSeriesMetadataResponse.Responses = make(map[rids.DataSourceRid][]SeriesMetadata, 0)
+		rawBatchGetSeriesMetadataResponse.Responses = make(map[rids.DataSourceRid][]SeriesMetadata)
 	}
 	*o = BatchGetSeriesMetadataResponse(rawBatchGetSeriesMetadataResponse)
 	return nil
@@ -265,7 +265,7 @@ type CreateSeriesMetadataRequest struct {
 	   This name should be unique amongst SeriesMetadata within the data source. All series created from this
 	   metadata will share this name.
 	*/
-	Channel       api.Channel        `conjure-docs:"This name should be unique amongst SeriesMetadata within the data source. All series created from this\nmetadata will share this name." json:"channel"`
+	Channel       api.Channel        `json:"channel"`
 	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
 	Locator       LocatorTemplate    `json:"locator"`
 	Unit          *api.Unit          `json:"unit,omitempty"`
@@ -275,12 +275,12 @@ type CreateSeriesMetadataRequest struct {
 
 	   Deprecated: Deprecated. Should not be used.
 	*/
-	Tags map[api.TagName]api.TagValue `conjure-docs:"Tags specified here will take precedence over tags specified in the RunDatasource, in the case that both specify the same TagName." json:"tags"`
+	Tags map[api.TagName]api.TagValue `json:"tags"`
 }
 
 func (o CreateSeriesMetadataRequest) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpCreateSeriesMetadataRequest CreateSeriesMetadataRequest
 	return safejson.Marshal(_tmpCreateSeriesMetadataRequest(o))
@@ -293,7 +293,7 @@ func (o *CreateSeriesMetadataRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateSeriesMetadataRequest.Tags == nil {
-		rawCreateSeriesMetadataRequest.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawCreateSeriesMetadataRequest.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = CreateSeriesMetadataRequest(rawCreateSeriesMetadataRequest)
 	return nil
@@ -328,7 +328,7 @@ type CreateVideoSeriesRequest struct {
 
 func (o CreateVideoSeriesRequest) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpCreateVideoSeriesRequest CreateVideoSeriesRequest
 	return safejson.Marshal(_tmpCreateVideoSeriesRequest(o))
@@ -341,7 +341,7 @@ func (o *CreateVideoSeriesRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateVideoSeriesRequest.Tags == nil {
-		rawCreateVideoSeriesRequest.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawCreateVideoSeriesRequest.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = CreateVideoSeriesRequest(rawCreateVideoSeriesRequest)
 	return nil
@@ -411,7 +411,7 @@ type Influx2LocatorTemplate struct {
 	Bucket      api1.BucketName      `json:"bucket"`
 	Measurement api1.MeasurementName `json:"measurement"`
 	// If omitted, defaults to `_value`. Can be used to extract tag values.
-	ValueColumn *string         `conjure-docs:"If omitted, defaults to \"_value\". Can be used to extract tag values." json:"valueColumn,omitempty"`
+	ValueColumn *string         `json:"valueColumn,omitempty"`
 	Field       api1.FieldName  `json:"field"`
 	Type        api1.InfluxType `json:"type"`
 }
@@ -465,13 +465,13 @@ type SeriesMetadata struct {
 
 	   Deprecated: Deprecated. Should not be used.
 	*/
-	Tags           map[api.TagName]api.TagValue `conjure-docs:"Tags specified here will take precedence over tags specified in the RunDatasource, in the case that both specify the same TagName." json:"tags"`
+	Tags           map[api.TagName]api.TagValue `json:"tags"`
 	SeriesDataType *api.SeriesDataType          `json:"seriesDataType,omitempty"`
 }
 
 func (o SeriesMetadata) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpSeriesMetadata SeriesMetadata
 	return safejson.Marshal(_tmpSeriesMetadata(o))
@@ -484,7 +484,7 @@ func (o *SeriesMetadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawSeriesMetadata.Tags == nil {
-		rawSeriesMetadata.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawSeriesMetadata.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = SeriesMetadata(rawSeriesMetadata)
 	return nil
@@ -622,7 +622,7 @@ func (o *VideoLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) error) 
 type VisualCrossingLocatorTemplate struct {
 	Field api1.FieldName `json:"field"`
 	// Defaults to HISTORY.
-	Endpoint *api1.VisualCrossingEndpointUri `conjure-docs:"Defaults to HISTORY." json:"endpoint,omitempty"`
+	Endpoint *api1.VisualCrossingEndpointUri `json:"endpoint,omitempty"`
 	Type     api1.VisualCrossingType         `json:"type"`
 }
 

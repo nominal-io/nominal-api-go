@@ -28,6 +28,19 @@ func (a *BranchRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a BranchRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *BranchRid) UnmarshalJSON(data []byte) error {
+	var rawBranchRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawBranchRid); err != nil {
+		return err
+	}
+	*a = BranchRid(rawBranchRid)
+	return nil
+}
+
 func (a BranchRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -60,6 +73,19 @@ func (a TagRid) MarshalText() ([]byte, error) {
 func (a *TagRid) UnmarshalText(data []byte) error {
 	var rawTagRid rid.ResourceIdentifier
 	if err := rawTagRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = TagRid(rawTagRid)
+	return nil
+}
+
+func (a TagRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *TagRid) UnmarshalJSON(data []byte) error {
+	var rawTagRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawTagRid); err != nil {
 		return err
 	}
 	*a = TagRid(rawTagRid)

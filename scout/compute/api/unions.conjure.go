@@ -98,7 +98,7 @@ func (u *ArrowArrayPlot) AcceptFuncs(bucketedNumericFunc func(BucketedNumericArr
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ArrowArrayPlot type")
 		}
 		return unknownFunc(u.typ)
 	case "bucketedNumeric":
@@ -114,11 +114,11 @@ func (u *ArrowArrayPlot) AcceptFuncs(bucketedNumericFunc func(BucketedNumericArr
 	}
 }
 
-func (u *ArrowArrayPlot) BucketedNumericNoopSuccess(BucketedNumericArrayPlot) error {
+func (u *ArrowArrayPlot) BucketedNumericNoopSuccess(_ BucketedNumericArrayPlot) error {
 	return nil
 }
 
-func (u *ArrowArrayPlot) BucketedEnumNoopSuccess(BucketedEnumArrayPlot) error {
+func (u *ArrowArrayPlot) BucketedEnumNoopSuccess(_ BucketedEnumArrayPlot) error {
 	return nil
 }
 
@@ -328,7 +328,7 @@ func (u *BitOperationFunction) AcceptFuncs(andFunc func(BitAndFunction) error, o
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in BitOperationFunction type")
 		}
 		return unknownFunc(u.typ)
 	case "and":
@@ -364,27 +364,27 @@ func (u *BitOperationFunction) AcceptFuncs(andFunc func(BitAndFunction) error, o
 	}
 }
 
-func (u *BitOperationFunction) AndNoopSuccess(BitAndFunction) error {
+func (u *BitOperationFunction) AndNoopSuccess(_ BitAndFunction) error {
 	return nil
 }
 
-func (u *BitOperationFunction) OrNoopSuccess(BitOrFunction) error {
+func (u *BitOperationFunction) OrNoopSuccess(_ BitOrFunction) error {
 	return nil
 }
 
-func (u *BitOperationFunction) XorNoopSuccess(BitXorFunction) error {
+func (u *BitOperationFunction) XorNoopSuccess(_ BitXorFunction) error {
 	return nil
 }
 
-func (u *BitOperationFunction) ShiftRightNoopSuccess(BitShiftRightFunction) error {
+func (u *BitOperationFunction) ShiftRightNoopSuccess(_ BitShiftRightFunction) error {
 	return nil
 }
 
-func (u *BitOperationFunction) ShiftLeftNoopSuccess(BitShiftLeftFunction) error {
+func (u *BitOperationFunction) ShiftLeftNoopSuccess(_ BitShiftLeftFunction) error {
 	return nil
 }
 
-func (u *BitOperationFunction) BitTestNoopSuccess(BitTestFunction) error {
+func (u *BitOperationFunction) BitTestNoopSuccess(_ BitTestFunction) error {
 	return nil
 }
 
@@ -616,7 +616,7 @@ func (u *ChannelSeries) AcceptFuncs(dataSourceFunc func(DataSourceChannel) error
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ChannelSeries type")
 		}
 		return unknownFunc(u.typ)
 	case "dataSource":
@@ -637,15 +637,15 @@ func (u *ChannelSeries) AcceptFuncs(dataSourceFunc func(DataSourceChannel) error
 	}
 }
 
-func (u *ChannelSeries) DataSourceNoopSuccess(DataSourceChannel) error {
+func (u *ChannelSeries) DataSourceNoopSuccess(_ DataSourceChannel) error {
 	return nil
 }
 
-func (u *ChannelSeries) AssetNoopSuccess(AssetChannel) error {
+func (u *ChannelSeries) AssetNoopSuccess(_ AssetChannel) error {
 	return nil
 }
 
-func (u *ChannelSeries) RunNoopSuccess(RunChannel) error {
+func (u *ChannelSeries) RunNoopSuccess(_ RunChannel) error {
 	return nil
 }
 
@@ -730,71 +730,73 @@ func NewChannelSeriesFromRun(v RunChannel) ChannelSeries {
 }
 
 type ComputeNodeResponse struct {
-	typ                  string
-	range_               *[]Range
-	rangesSummary        *RangesSummary
-	rangeValue           **Range
-	numeric              *NumericPlot
-	bucketedNumeric      *BucketedNumericPlot
-	numericPoint         **NumericPoint
-	singlePoint          **SinglePoint
-	arrowNumeric         *ArrowNumericPlot
-	arrowBucketedNumeric *ArrowBucketedNumericPlot
-	enum                 *EnumPlot
-	enumPoint            **EnumPoint
-	bucketedEnum         *BucketedEnumPlot
-	arrowEnum            *ArrowEnumPlot
-	arrowBucketedEnum    *ArrowBucketedEnumPlot
-	pagedLog             *PagedLogPlot
-	logPoint             **LogPoint
-	cartesian            *CartesianPlot
-	bucketedCartesian    *BucketedCartesianPlot
-	bucketedCartesian3d  *BucketedCartesian3dPlot
-	frequencyDomain      *FrequencyDomainPlot
-	frequencyDomainV2    *FrequencyDomainPlotV2
-	numericHistogram     *NumericHistogramPlot
-	enumHistogram        *EnumHistogramPlot
-	curveFit             *CurveFitResult
-	grouped              *GroupedComputeNodeResponses
-	array                *ArrowArrayPlot
-	bucketedStruct       *ArrowBucketedStructPlot
-	fullResolution       *ArrowFullResolutionPlot
+	typ                     string
+	range_                  *[]Range
+	rangesSummary           *RangesSummary
+	rangeValue              **Range
+	numeric                 *NumericPlot
+	bucketedNumeric         *BucketedNumericPlot
+	numericPoint            **NumericPoint
+	singlePoint             **SinglePoint
+	arrowNumeric            *ArrowNumericPlot
+	arrowBucketedNumeric    *ArrowBucketedNumericPlot
+	enum                    *EnumPlot
+	enumPoint               **EnumPoint
+	bucketedEnum            *BucketedEnumPlot
+	arrowEnum               *ArrowEnumPlot
+	arrowBucketedEnum       *ArrowBucketedEnumPlot
+	pagedLog                *PagedLogPlot
+	logPoint                **LogPoint
+	cartesian               *CartesianPlot
+	bucketedCartesian       *BucketedCartesianPlot
+	bucketedCartesian3d     *BucketedCartesian3dPlot
+	frequencyDomain         *FrequencyDomainPlot
+	frequencyDomainV2       *FrequencyDomainPlotV2
+	bucketedFrequencyDomain *BucketedFrequencyDomainPlot
+	numericHistogram        *NumericHistogramPlot
+	enumHistogram           *EnumHistogramPlot
+	curveFit                *CurveFitResult
+	grouped                 *GroupedComputeNodeResponses
+	array                   *ArrowArrayPlot
+	bucketedStruct          *ArrowBucketedStructPlot
+	fullResolution          *ArrowFullResolutionPlot
 }
 
 type computeNodeResponseDeserializer struct {
-	Type                 string                       `json:"type"`
-	Range                *[]Range                     `json:"range"`
-	RangesSummary        *RangesSummary               `json:"rangesSummary"`
-	RangeValue           **Range                      `json:"rangeValue"`
-	Numeric              *NumericPlot                 `json:"numeric"`
-	BucketedNumeric      *BucketedNumericPlot         `json:"bucketedNumeric"`
-	NumericPoint         **NumericPoint               `json:"numericPoint"`
-	SinglePoint          **SinglePoint                `json:"singlePoint"`
-	ArrowNumeric         *ArrowNumericPlot            `json:"arrowNumeric"`
-	ArrowBucketedNumeric *ArrowBucketedNumericPlot    `json:"arrowBucketedNumeric"`
-	Enum                 *EnumPlot                    `json:"enum"`
-	EnumPoint            **EnumPoint                  `json:"enumPoint"`
-	BucketedEnum         *BucketedEnumPlot            `json:"bucketedEnum"`
-	ArrowEnum            *ArrowEnumPlot               `json:"arrowEnum"`
-	ArrowBucketedEnum    *ArrowBucketedEnumPlot       `json:"arrowBucketedEnum"`
-	PagedLog             *PagedLogPlot                `json:"pagedLog"`
-	LogPoint             **LogPoint                   `json:"logPoint"`
-	Cartesian            *CartesianPlot               `json:"cartesian"`
-	BucketedCartesian    *BucketedCartesianPlot       `json:"bucketedCartesian"`
-	BucketedCartesian3d  *BucketedCartesian3dPlot     `json:"bucketedCartesian3d"`
-	FrequencyDomain      *FrequencyDomainPlot         `json:"frequencyDomain"`
-	FrequencyDomainV2    *FrequencyDomainPlotV2       `json:"frequencyDomainV2"`
-	NumericHistogram     *NumericHistogramPlot        `json:"numericHistogram"`
-	EnumHistogram        *EnumHistogramPlot           `json:"enumHistogram"`
-	CurveFit             *CurveFitResult              `json:"curveFit"`
-	Grouped              *GroupedComputeNodeResponses `json:"grouped"`
-	Array                *ArrowArrayPlot              `json:"array"`
-	BucketedStruct       *ArrowBucketedStructPlot     `json:"bucketedStruct"`
-	FullResolution       *ArrowFullResolutionPlot     `json:"fullResolution"`
+	Type                    string                       `json:"type"`
+	Range                   *[]Range                     `json:"range"`
+	RangesSummary           *RangesSummary               `json:"rangesSummary"`
+	RangeValue              **Range                      `json:"rangeValue"`
+	Numeric                 *NumericPlot                 `json:"numeric"`
+	BucketedNumeric         *BucketedNumericPlot         `json:"bucketedNumeric"`
+	NumericPoint            **NumericPoint               `json:"numericPoint"`
+	SinglePoint             **SinglePoint                `json:"singlePoint"`
+	ArrowNumeric            *ArrowNumericPlot            `json:"arrowNumeric"`
+	ArrowBucketedNumeric    *ArrowBucketedNumericPlot    `json:"arrowBucketedNumeric"`
+	Enum                    *EnumPlot                    `json:"enum"`
+	EnumPoint               **EnumPoint                  `json:"enumPoint"`
+	BucketedEnum            *BucketedEnumPlot            `json:"bucketedEnum"`
+	ArrowEnum               *ArrowEnumPlot               `json:"arrowEnum"`
+	ArrowBucketedEnum       *ArrowBucketedEnumPlot       `json:"arrowBucketedEnum"`
+	PagedLog                *PagedLogPlot                `json:"pagedLog"`
+	LogPoint                **LogPoint                   `json:"logPoint"`
+	Cartesian               *CartesianPlot               `json:"cartesian"`
+	BucketedCartesian       *BucketedCartesianPlot       `json:"bucketedCartesian"`
+	BucketedCartesian3d     *BucketedCartesian3dPlot     `json:"bucketedCartesian3d"`
+	FrequencyDomain         *FrequencyDomainPlot         `json:"frequencyDomain"`
+	FrequencyDomainV2       *FrequencyDomainPlotV2       `json:"frequencyDomainV2"`
+	BucketedFrequencyDomain *BucketedFrequencyDomainPlot `json:"bucketedFrequencyDomain"`
+	NumericHistogram        *NumericHistogramPlot        `json:"numericHistogram"`
+	EnumHistogram           *EnumHistogramPlot           `json:"enumHistogram"`
+	CurveFit                *CurveFitResult              `json:"curveFit"`
+	Grouped                 *GroupedComputeNodeResponses `json:"grouped"`
+	Array                   *ArrowArrayPlot              `json:"array"`
+	BucketedStruct          *ArrowBucketedStructPlot     `json:"bucketedStruct"`
+	FullResolution          *ArrowFullResolutionPlot     `json:"fullResolution"`
 }
 
 func (u *computeNodeResponseDeserializer) toStruct() ComputeNodeResponse {
-	return ComputeNodeResponse{typ: u.Type, range_: u.Range, rangesSummary: u.RangesSummary, rangeValue: u.RangeValue, numeric: u.Numeric, bucketedNumeric: u.BucketedNumeric, numericPoint: u.NumericPoint, singlePoint: u.SinglePoint, arrowNumeric: u.ArrowNumeric, arrowBucketedNumeric: u.ArrowBucketedNumeric, enum: u.Enum, enumPoint: u.EnumPoint, bucketedEnum: u.BucketedEnum, arrowEnum: u.ArrowEnum, arrowBucketedEnum: u.ArrowBucketedEnum, pagedLog: u.PagedLog, logPoint: u.LogPoint, cartesian: u.Cartesian, bucketedCartesian: u.BucketedCartesian, bucketedCartesian3d: u.BucketedCartesian3d, frequencyDomain: u.FrequencyDomain, frequencyDomainV2: u.FrequencyDomainV2, numericHistogram: u.NumericHistogram, enumHistogram: u.EnumHistogram, curveFit: u.CurveFit, grouped: u.Grouped, array: u.Array, bucketedStruct: u.BucketedStruct, fullResolution: u.FullResolution}
+	return ComputeNodeResponse{typ: u.Type, range_: u.Range, rangesSummary: u.RangesSummary, rangeValue: u.RangeValue, numeric: u.Numeric, bucketedNumeric: u.BucketedNumeric, numericPoint: u.NumericPoint, singlePoint: u.SinglePoint, arrowNumeric: u.ArrowNumeric, arrowBucketedNumeric: u.ArrowBucketedNumeric, enum: u.Enum, enumPoint: u.EnumPoint, bucketedEnum: u.BucketedEnum, arrowEnum: u.ArrowEnum, arrowBucketedEnum: u.ArrowBucketedEnum, pagedLog: u.PagedLog, logPoint: u.LogPoint, cartesian: u.Cartesian, bucketedCartesian: u.BucketedCartesian, bucketedCartesian3d: u.BucketedCartesian3d, frequencyDomain: u.FrequencyDomain, frequencyDomainV2: u.FrequencyDomainV2, bucketedFrequencyDomain: u.BucketedFrequencyDomain, numericHistogram: u.NumericHistogram, enumHistogram: u.EnumHistogram, curveFit: u.CurveFit, grouped: u.Grouped, array: u.Array, bucketedStruct: u.BucketedStruct, fullResolution: u.FullResolution}
 }
 
 func (u *ComputeNodeResponse) toSerializer() (interface{}, error) {
@@ -974,6 +976,14 @@ func (u *ComputeNodeResponse) toSerializer() (interface{}, error) {
 			Type              string                `json:"type"`
 			FrequencyDomainV2 FrequencyDomainPlotV2 `json:"frequencyDomainV2"`
 		}{Type: "frequencyDomainV2", FrequencyDomainV2: *u.frequencyDomainV2}, nil
+	case "bucketedFrequencyDomain":
+		if u.bucketedFrequencyDomain == nil {
+			return nil, fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
+		}
+		return struct {
+			Type                    string                      `json:"type"`
+			BucketedFrequencyDomain BucketedFrequencyDomainPlot `json:"bucketedFrequencyDomain"`
+		}{Type: "bucketedFrequencyDomain", BucketedFrequencyDomain: *u.bucketedFrequencyDomain}, nil
 	case "numericHistogram":
 		if u.numericHistogram == nil {
 			return nil, fmt.Errorf("field \"numericHistogram\" is required")
@@ -1117,6 +1127,10 @@ func (u *ComputeNodeResponse) UnmarshalJSON(data []byte) error {
 		if u.frequencyDomainV2 == nil {
 			return fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
+	case "bucketedFrequencyDomain":
+		if u.bucketedFrequencyDomain == nil {
+			return fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
+		}
 	case "numericHistogram":
 		if u.numericHistogram == nil {
 			return fmt.Errorf("field \"numericHistogram\" is required")
@@ -1165,11 +1179,11 @@ func (u *ComputeNodeResponse) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ComputeNodeResponse) AcceptFuncs(range_Func func([]Range) error, rangesSummaryFunc func(RangesSummary) error, rangeValueFunc func(*Range) error, numericFunc func(NumericPlot) error, bucketedNumericFunc func(BucketedNumericPlot) error, numericPointFunc func(*NumericPoint) error, singlePointFunc func(*SinglePoint) error, arrowNumericFunc func(ArrowNumericPlot) error, arrowBucketedNumericFunc func(ArrowBucketedNumericPlot) error, enumFunc func(EnumPlot) error, enumPointFunc func(*EnumPoint) error, bucketedEnumFunc func(BucketedEnumPlot) error, arrowEnumFunc func(ArrowEnumPlot) error, arrowBucketedEnumFunc func(ArrowBucketedEnumPlot) error, pagedLogFunc func(PagedLogPlot) error, logPointFunc func(*LogPoint) error, cartesianFunc func(CartesianPlot) error, bucketedCartesianFunc func(BucketedCartesianPlot) error, bucketedCartesian3dFunc func(BucketedCartesian3dPlot) error, frequencyDomainFunc func(FrequencyDomainPlot) error, frequencyDomainV2Func func(FrequencyDomainPlotV2) error, numericHistogramFunc func(NumericHistogramPlot) error, enumHistogramFunc func(EnumHistogramPlot) error, curveFitFunc func(CurveFitResult) error, groupedFunc func(GroupedComputeNodeResponses) error, arrayFunc func(ArrowArrayPlot) error, bucketedStructFunc func(ArrowBucketedStructPlot) error, fullResolutionFunc func(ArrowFullResolutionPlot) error, unknownFunc func(string) error) error {
+func (u *ComputeNodeResponse) AcceptFuncs(range_Func func([]Range) error, rangesSummaryFunc func(RangesSummary) error, rangeValueFunc func(*Range) error, numericFunc func(NumericPlot) error, bucketedNumericFunc func(BucketedNumericPlot) error, numericPointFunc func(*NumericPoint) error, singlePointFunc func(*SinglePoint) error, arrowNumericFunc func(ArrowNumericPlot) error, arrowBucketedNumericFunc func(ArrowBucketedNumericPlot) error, enumFunc func(EnumPlot) error, enumPointFunc func(*EnumPoint) error, bucketedEnumFunc func(BucketedEnumPlot) error, arrowEnumFunc func(ArrowEnumPlot) error, arrowBucketedEnumFunc func(ArrowBucketedEnumPlot) error, pagedLogFunc func(PagedLogPlot) error, logPointFunc func(*LogPoint) error, cartesianFunc func(CartesianPlot) error, bucketedCartesianFunc func(BucketedCartesianPlot) error, bucketedCartesian3dFunc func(BucketedCartesian3dPlot) error, frequencyDomainFunc func(FrequencyDomainPlot) error, frequencyDomainV2Func func(FrequencyDomainPlotV2) error, bucketedFrequencyDomainFunc func(BucketedFrequencyDomainPlot) error, numericHistogramFunc func(NumericHistogramPlot) error, enumHistogramFunc func(EnumHistogramPlot) error, curveFitFunc func(CurveFitResult) error, groupedFunc func(GroupedComputeNodeResponses) error, arrayFunc func(ArrowArrayPlot) error, bucketedStructFunc func(ArrowBucketedStructPlot) error, fullResolutionFunc func(ArrowFullResolutionPlot) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComputeNodeResponse type")
 		}
 		return unknownFunc(u.typ)
 	case "range":
@@ -1282,6 +1296,11 @@ func (u *ComputeNodeResponse) AcceptFuncs(range_Func func([]Range) error, ranges
 			return fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
 		return frequencyDomainV2Func(*u.frequencyDomainV2)
+	case "bucketedFrequencyDomain":
+		if u.bucketedFrequencyDomain == nil {
+			return fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
+		}
+		return bucketedFrequencyDomainFunc(*u.bucketedFrequencyDomain)
 	case "numericHistogram":
 		if u.numericHistogram == nil {
 			return fmt.Errorf("field \"numericHistogram\" is required")
@@ -1320,115 +1339,119 @@ func (u *ComputeNodeResponse) AcceptFuncs(range_Func func([]Range) error, ranges
 	}
 }
 
-func (u *ComputeNodeResponse) RangeNoopSuccess([]Range) error {
+func (u *ComputeNodeResponse) RangeNoopSuccess(_ []Range) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) RangesSummaryNoopSuccess(RangesSummary) error {
+func (u *ComputeNodeResponse) RangesSummaryNoopSuccess(_ RangesSummary) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) RangeValueNoopSuccess(*Range) error {
+func (u *ComputeNodeResponse) RangeValueNoopSuccess(_ *Range) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) NumericNoopSuccess(NumericPlot) error {
+func (u *ComputeNodeResponse) NumericNoopSuccess(_ NumericPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) BucketedNumericNoopSuccess(BucketedNumericPlot) error {
+func (u *ComputeNodeResponse) BucketedNumericNoopSuccess(_ BucketedNumericPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) NumericPointNoopSuccess(*NumericPoint) error {
+func (u *ComputeNodeResponse) NumericPointNoopSuccess(_ *NumericPoint) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) SinglePointNoopSuccess(*SinglePoint) error {
+func (u *ComputeNodeResponse) SinglePointNoopSuccess(_ *SinglePoint) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) ArrowNumericNoopSuccess(ArrowNumericPlot) error {
+func (u *ComputeNodeResponse) ArrowNumericNoopSuccess(_ ArrowNumericPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) ArrowBucketedNumericNoopSuccess(ArrowBucketedNumericPlot) error {
+func (u *ComputeNodeResponse) ArrowBucketedNumericNoopSuccess(_ ArrowBucketedNumericPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) EnumNoopSuccess(EnumPlot) error {
+func (u *ComputeNodeResponse) EnumNoopSuccess(_ EnumPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) EnumPointNoopSuccess(*EnumPoint) error {
+func (u *ComputeNodeResponse) EnumPointNoopSuccess(_ *EnumPoint) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) BucketedEnumNoopSuccess(BucketedEnumPlot) error {
+func (u *ComputeNodeResponse) BucketedEnumNoopSuccess(_ BucketedEnumPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) ArrowEnumNoopSuccess(ArrowEnumPlot) error {
+func (u *ComputeNodeResponse) ArrowEnumNoopSuccess(_ ArrowEnumPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) ArrowBucketedEnumNoopSuccess(ArrowBucketedEnumPlot) error {
+func (u *ComputeNodeResponse) ArrowBucketedEnumNoopSuccess(_ ArrowBucketedEnumPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) PagedLogNoopSuccess(PagedLogPlot) error {
+func (u *ComputeNodeResponse) PagedLogNoopSuccess(_ PagedLogPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) LogPointNoopSuccess(*LogPoint) error {
+func (u *ComputeNodeResponse) LogPointNoopSuccess(_ *LogPoint) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) CartesianNoopSuccess(CartesianPlot) error {
+func (u *ComputeNodeResponse) CartesianNoopSuccess(_ CartesianPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) BucketedCartesianNoopSuccess(BucketedCartesianPlot) error {
+func (u *ComputeNodeResponse) BucketedCartesianNoopSuccess(_ BucketedCartesianPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) BucketedCartesian3dNoopSuccess(BucketedCartesian3dPlot) error {
+func (u *ComputeNodeResponse) BucketedCartesian3dNoopSuccess(_ BucketedCartesian3dPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) FrequencyDomainNoopSuccess(FrequencyDomainPlot) error {
+func (u *ComputeNodeResponse) FrequencyDomainNoopSuccess(_ FrequencyDomainPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) FrequencyDomainV2NoopSuccess(FrequencyDomainPlotV2) error {
+func (u *ComputeNodeResponse) FrequencyDomainV2NoopSuccess(_ FrequencyDomainPlotV2) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) NumericHistogramNoopSuccess(NumericHistogramPlot) error {
+func (u *ComputeNodeResponse) BucketedFrequencyDomainNoopSuccess(_ BucketedFrequencyDomainPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) EnumHistogramNoopSuccess(EnumHistogramPlot) error {
+func (u *ComputeNodeResponse) NumericHistogramNoopSuccess(_ NumericHistogramPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) CurveFitNoopSuccess(CurveFitResult) error {
+func (u *ComputeNodeResponse) EnumHistogramNoopSuccess(_ EnumHistogramPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) GroupedNoopSuccess(GroupedComputeNodeResponses) error {
+func (u *ComputeNodeResponse) CurveFitNoopSuccess(_ CurveFitResult) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) ArrayNoopSuccess(ArrowArrayPlot) error {
+func (u *ComputeNodeResponse) GroupedNoopSuccess(_ GroupedComputeNodeResponses) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) BucketedStructNoopSuccess(ArrowBucketedStructPlot) error {
+func (u *ComputeNodeResponse) ArrayNoopSuccess(_ ArrowArrayPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeResponse) FullResolutionNoopSuccess(ArrowFullResolutionPlot) error {
+func (u *ComputeNodeResponse) BucketedStructNoopSuccess(_ ArrowBucketedStructPlot) error {
+	return nil
+}
+
+func (u *ComputeNodeResponse) FullResolutionNoopSuccess(_ ArrowFullResolutionPlot) error {
 	return nil
 }
 
@@ -1553,6 +1576,11 @@ func (u *ComputeNodeResponse) Accept(v ComputeNodeResponseVisitor) error {
 			return fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
 		return v.VisitFrequencyDomainV2(*u.frequencyDomainV2)
+	case "bucketedFrequencyDomain":
+		if u.bucketedFrequencyDomain == nil {
+			return fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
+		}
+		return v.VisitBucketedFrequencyDomain(*u.bucketedFrequencyDomain)
 	case "numericHistogram":
 		if u.numericHistogram == nil {
 			return fmt.Errorf("field \"numericHistogram\" is required")
@@ -1613,6 +1641,7 @@ type ComputeNodeResponseVisitor interface {
 	VisitBucketedCartesian3d(v BucketedCartesian3dPlot) error
 	VisitFrequencyDomain(v FrequencyDomainPlot) error
 	VisitFrequencyDomainV2(v FrequencyDomainPlotV2) error
+	VisitBucketedFrequencyDomain(v BucketedFrequencyDomainPlot) error
 	VisitNumericHistogram(v NumericHistogramPlot) error
 	VisitEnumHistogram(v EnumHistogramPlot) error
 	VisitCurveFit(v CurveFitResult) error
@@ -1740,6 +1769,11 @@ func (u *ComputeNodeResponse) AcceptWithContext(ctx context.Context, v ComputeNo
 			return fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
 		return v.VisitFrequencyDomainV2WithContext(ctx, *u.frequencyDomainV2)
+	case "bucketedFrequencyDomain":
+		if u.bucketedFrequencyDomain == nil {
+			return fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
+		}
+		return v.VisitBucketedFrequencyDomainWithContext(ctx, *u.bucketedFrequencyDomain)
 	case "numericHistogram":
 		if u.numericHistogram == nil {
 			return fmt.Errorf("field \"numericHistogram\" is required")
@@ -1800,6 +1834,7 @@ type ComputeNodeResponseVisitorWithContext interface {
 	VisitBucketedCartesian3dWithContext(ctx context.Context, v BucketedCartesian3dPlot) error
 	VisitFrequencyDomainWithContext(ctx context.Context, v FrequencyDomainPlot) error
 	VisitFrequencyDomainV2WithContext(ctx context.Context, v FrequencyDomainPlotV2) error
+	VisitBucketedFrequencyDomainWithContext(ctx context.Context, v BucketedFrequencyDomainPlot) error
 	VisitNumericHistogramWithContext(ctx context.Context, v NumericHistogramPlot) error
 	VisitEnumHistogramWithContext(ctx context.Context, v EnumHistogramPlot) error
 	VisitCurveFitWithContext(ctx context.Context, v CurveFitResult) error
@@ -1892,6 +1927,10 @@ func NewComputeNodeResponseFromFrequencyDomain(v FrequencyDomainPlot) ComputeNod
 
 func NewComputeNodeResponseFromFrequencyDomainV2(v FrequencyDomainPlotV2) ComputeNodeResponse {
 	return ComputeNodeResponse{typ: "frequencyDomainV2", frequencyDomainV2: &v}
+}
+
+func NewComputeNodeResponseFromBucketedFrequencyDomain(v BucketedFrequencyDomainPlot) ComputeNodeResponse {
+	return ComputeNodeResponse{typ: "bucketedFrequencyDomain", bucketedFrequencyDomain: &v}
 }
 
 func NewComputeNodeResponseFromNumericHistogram(v NumericHistogramPlot) ComputeNodeResponse {
@@ -2008,7 +2047,7 @@ func (u *ComputeNodeResult) AcceptFuncs(successFunc func(ComputeNodeResponse) er
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComputeNodeResult type")
 		}
 		return unknownFunc(u.typ)
 	case "success":
@@ -2024,11 +2063,11 @@ func (u *ComputeNodeResult) AcceptFuncs(successFunc func(ComputeNodeResponse) er
 	}
 }
 
-func (u *ComputeNodeResult) SuccessNoopSuccess(ComputeNodeResponse) error {
+func (u *ComputeNodeResult) SuccessNoopSuccess(_ ComputeNodeResponse) error {
 	return nil
 }
 
-func (u *ComputeNodeResult) ErrorNoopSuccess(ErrorResult) error {
+func (u *ComputeNodeResult) ErrorNoopSuccess(_ ErrorResult) error {
 	return nil
 }
 
@@ -2196,7 +2235,7 @@ func (u *ComputeUnitResult) AcceptFuncs(singleFunc func(UnitResult) error, carte
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComputeUnitResult type")
 		}
 		return unknownFunc(u.typ)
 	case "single":
@@ -2217,15 +2256,15 @@ func (u *ComputeUnitResult) AcceptFuncs(singleFunc func(UnitResult) error, carte
 	}
 }
 
-func (u *ComputeUnitResult) SingleNoopSuccess(UnitResult) error {
+func (u *ComputeUnitResult) SingleNoopSuccess(_ UnitResult) error {
 	return nil
 }
 
-func (u *ComputeUnitResult) CartesianNoopSuccess(CartesianUnitResult) error {
+func (u *ComputeUnitResult) CartesianNoopSuccess(_ CartesianUnitResult) error {
 	return nil
 }
 
-func (u *ComputeUnitResult) Cartesian3dNoopSuccess(Cartesian3dUnitResult) error {
+func (u *ComputeUnitResult) Cartesian3dNoopSuccess(_ Cartesian3dUnitResult) error {
 	return nil
 }
 
@@ -2423,7 +2462,7 @@ func (u *CurveFitDetails) AcceptFuncs(exponentialFunc func(ExponentialCurve) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CurveFitDetails type")
 		}
 		return unknownFunc(u.typ)
 	case "exponential":
@@ -2449,19 +2488,19 @@ func (u *CurveFitDetails) AcceptFuncs(exponentialFunc func(ExponentialCurve) err
 	}
 }
 
-func (u *CurveFitDetails) ExponentialNoopSuccess(ExponentialCurve) error {
+func (u *CurveFitDetails) ExponentialNoopSuccess(_ ExponentialCurve) error {
 	return nil
 }
 
-func (u *CurveFitDetails) LogarithmicNoopSuccess(LogarithmicCurve) error {
+func (u *CurveFitDetails) LogarithmicNoopSuccess(_ LogarithmicCurve) error {
 	return nil
 }
 
-func (u *CurveFitDetails) PolynomialNoopSuccess(PolynomialCurve) error {
+func (u *CurveFitDetails) PolynomialNoopSuccess(_ PolynomialCurve) error {
 	return nil
 }
 
-func (u *CurveFitDetails) PowerNoopSuccess(PowerCurve) error {
+func (u *CurveFitDetails) PowerNoopSuccess(_ PowerCurve) error {
 	return nil
 }
 
@@ -2675,7 +2714,7 @@ func (u *CurveResultDetails) AcceptFuncs(exponentialFunc func(ExponentialResultD
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CurveResultDetails type")
 		}
 		return unknownFunc(u.typ)
 	case "exponential":
@@ -2701,19 +2740,19 @@ func (u *CurveResultDetails) AcceptFuncs(exponentialFunc func(ExponentialResultD
 	}
 }
 
-func (u *CurveResultDetails) ExponentialNoopSuccess(ExponentialResultDetails) error {
+func (u *CurveResultDetails) ExponentialNoopSuccess(_ ExponentialResultDetails) error {
 	return nil
 }
 
-func (u *CurveResultDetails) LogarithmicNoopSuccess(LogarithmicResultDetails) error {
+func (u *CurveResultDetails) LogarithmicNoopSuccess(_ LogarithmicResultDetails) error {
 	return nil
 }
 
-func (u *CurveResultDetails) PolynomialNoopSuccess(PolynomialResultDetails) error {
+func (u *CurveResultDetails) PolynomialNoopSuccess(_ PolynomialResultDetails) error {
 	return nil
 }
 
-func (u *CurveResultDetails) PowerNoopSuccess(PowerResultDetails) error {
+func (u *CurveResultDetails) PowerNoopSuccess(_ PowerResultDetails) error {
 	return nil
 }
 
@@ -2899,7 +2938,7 @@ func (u *DecimateStrategy) AcceptFuncs(resolutionFunc func(DecimateWithResolutio
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DecimateStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "resolution":
@@ -2915,11 +2954,11 @@ func (u *DecimateStrategy) AcceptFuncs(resolutionFunc func(DecimateWithResolutio
 	}
 }
 
-func (u *DecimateStrategy) ResolutionNoopSuccess(DecimateWithResolution) error {
+func (u *DecimateStrategy) ResolutionNoopSuccess(_ DecimateWithResolution) error {
 	return nil
 }
 
-func (u *DecimateStrategy) BucketsNoopSuccess(DecimateWithBuckets) error {
+func (u *DecimateStrategy) BucketsNoopSuccess(_ DecimateWithBuckets) error {
 	return nil
 }
 
@@ -3073,7 +3112,7 @@ func (u *DoubleConstant) AcceptFuncs(literalFunc func(float64) error, variableFu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DoubleConstant type")
 		}
 		return unknownFunc(u.typ)
 	case "literal":
@@ -3089,11 +3128,11 @@ func (u *DoubleConstant) AcceptFuncs(literalFunc func(float64) error, variableFu
 	}
 }
 
-func (u *DoubleConstant) LiteralNoopSuccess(float64) error {
+func (u *DoubleConstant) LiteralNoopSuccess(_ float64) error {
 	return nil
 }
 
-func (u *DoubleConstant) VariableNoopSuccess(VariableName) error {
+func (u *DoubleConstant) VariableNoopSuccess(_ VariableName) error {
 	return nil
 }
 
@@ -3247,7 +3286,7 @@ func (u *EnumResampleInterpolationConfiguration) AcceptFuncs(forwardFillResample
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EnumResampleInterpolationConfiguration type")
 		}
 		return unknownFunc(u.typ)
 	case "forwardFillResampleInterpolationConfiguration":
@@ -3263,11 +3302,11 @@ func (u *EnumResampleInterpolationConfiguration) AcceptFuncs(forwardFillResample
 	}
 }
 
-func (u *EnumResampleInterpolationConfiguration) ForwardFillResampleInterpolationConfigurationNoopSuccess(ForwardFillResampleInterpolationConfiguration) error {
+func (u *EnumResampleInterpolationConfiguration) ForwardFillResampleInterpolationConfigurationNoopSuccess(_ ForwardFillResampleInterpolationConfiguration) error {
 	return nil
 }
 
-func (u *EnumResampleInterpolationConfiguration) ConstantResampleInterpolationConfigurationNoopSuccess(EnumConstantResampleInterpolationConfiguration) error {
+func (u *EnumResampleInterpolationConfiguration) ConstantResampleInterpolationConfigurationNoopSuccess(_ EnumConstantResampleInterpolationConfiguration) error {
 	return nil
 }
 
@@ -3421,7 +3460,7 @@ func (u *EventsEnumValueSource) AcceptFuncs(propertyFunc func(StringConstant) er
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EventsEnumValueSource type")
 		}
 		return unknownFunc(u.typ)
 	case "property":
@@ -3437,11 +3476,11 @@ func (u *EventsEnumValueSource) AcceptFuncs(propertyFunc func(StringConstant) er
 	}
 }
 
-func (u *EventsEnumValueSource) PropertyNoopSuccess(StringConstant) error {
+func (u *EventsEnumValueSource) PropertyNoopSuccess(_ StringConstant) error {
 	return nil
 }
 
-func (u *EventsEnumValueSource) LevelNoopSuccess(api.Empty) error {
+func (u *EventsEnumValueSource) LevelNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
@@ -3609,7 +3648,7 @@ func (u *FrequencyDomainPlotV2) AcceptFuncs(realFunc func(FrequencyDomainPlot) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FrequencyDomainPlotV2 type")
 		}
 		return unknownFunc(u.typ)
 	case "real":
@@ -3630,15 +3669,15 @@ func (u *FrequencyDomainPlotV2) AcceptFuncs(realFunc func(FrequencyDomainPlot) e
 	}
 }
 
-func (u *FrequencyDomainPlotV2) RealNoopSuccess(FrequencyDomainPlot) error {
+func (u *FrequencyDomainPlotV2) RealNoopSuccess(_ FrequencyDomainPlot) error {
 	return nil
 }
 
-func (u *FrequencyDomainPlotV2) ComplexNoopSuccess(FrequencyDomainPlotComplex) error {
+func (u *FrequencyDomainPlotV2) ComplexNoopSuccess(_ FrequencyDomainPlotComplex) error {
 	return nil
 }
 
-func (u *FrequencyDomainPlotV2) MagnitudeAndPhaseNoopSuccess(FrequencyDomainPlotMagnitudeAndPhase) error {
+func (u *FrequencyDomainPlotV2) MagnitudeAndPhaseNoopSuccess(_ FrequencyDomainPlotMagnitudeAndPhase) error {
 	return nil
 }
 
@@ -3722,6 +3761,141 @@ func NewFrequencyDomainPlotV2FromMagnitudeAndPhase(v FrequencyDomainPlotMagnitud
 	return FrequencyDomainPlotV2{typ: "magnitudeAndPhase", magnitudeAndPhase: &v}
 }
 
+type FrequencySummarizationStrategy struct {
+	typ     string
+	buckets *FrequencyDecimateWithBuckets
+}
+
+type frequencySummarizationStrategyDeserializer struct {
+	Type    string                        `json:"type"`
+	Buckets *FrequencyDecimateWithBuckets `json:"buckets"`
+}
+
+func (u *frequencySummarizationStrategyDeserializer) toStruct() FrequencySummarizationStrategy {
+	return FrequencySummarizationStrategy{typ: u.Type, buckets: u.Buckets}
+}
+
+func (u *FrequencySummarizationStrategy) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "buckets":
+		if u.buckets == nil {
+			return nil, fmt.Errorf("field \"buckets\" is required")
+		}
+		return struct {
+			Type    string                       `json:"type"`
+			Buckets FrequencyDecimateWithBuckets `json:"buckets"`
+		}{Type: "buckets", Buckets: *u.buckets}, nil
+	}
+}
+
+func (u FrequencySummarizationStrategy) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *FrequencySummarizationStrategy) UnmarshalJSON(data []byte) error {
+	var deser frequencySummarizationStrategyDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "buckets":
+		if u.buckets == nil {
+			return fmt.Errorf("field \"buckets\" is required")
+		}
+	}
+	return nil
+}
+
+func (u FrequencySummarizationStrategy) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *FrequencySummarizationStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *FrequencySummarizationStrategy) AcceptFuncs(bucketsFunc func(FrequencyDecimateWithBuckets) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in FrequencySummarizationStrategy type")
+		}
+		return unknownFunc(u.typ)
+	case "buckets":
+		if u.buckets == nil {
+			return fmt.Errorf("field \"buckets\" is required")
+		}
+		return bucketsFunc(*u.buckets)
+	}
+}
+
+func (u *FrequencySummarizationStrategy) BucketsNoopSuccess(_ FrequencyDecimateWithBuckets) error {
+	return nil
+}
+
+func (u *FrequencySummarizationStrategy) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *FrequencySummarizationStrategy) Accept(v FrequencySummarizationStrategyVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "buckets":
+		if u.buckets == nil {
+			return fmt.Errorf("field \"buckets\" is required")
+		}
+		return v.VisitBuckets(*u.buckets)
+	}
+}
+
+type FrequencySummarizationStrategyVisitor interface {
+	VisitBuckets(v FrequencyDecimateWithBuckets) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *FrequencySummarizationStrategy) AcceptWithContext(ctx context.Context, v FrequencySummarizationStrategyVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "buckets":
+		if u.buckets == nil {
+			return fmt.Errorf("field \"buckets\" is required")
+		}
+		return v.VisitBucketsWithContext(ctx, *u.buckets)
+	}
+}
+
+type FrequencySummarizationStrategyVisitorWithContext interface {
+	VisitBucketsWithContext(ctx context.Context, v FrequencyDecimateWithBuckets) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewFrequencySummarizationStrategyFromBuckets(v FrequencyDecimateWithBuckets) FrequencySummarizationStrategy {
+	return FrequencySummarizationStrategy{typ: "buckets", buckets: &v}
+}
+
 type Grouping struct {
 	typ            string
 	tagsWithValues *map[string]string
@@ -3794,7 +3968,7 @@ func (u *Grouping) AcceptFuncs(tagsWithValuesFunc func(map[string]string) error,
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Grouping type")
 		}
 		return unknownFunc(u.typ)
 	case "tagsWithValues":
@@ -3805,7 +3979,7 @@ func (u *Grouping) AcceptFuncs(tagsWithValuesFunc func(map[string]string) error,
 	}
 }
 
-func (u *Grouping) TagsWithValuesNoopSuccess(map[string]string) error {
+func (u *Grouping) TagsWithValuesNoopSuccess(_ map[string]string) error {
 	return nil
 }
 
@@ -3943,7 +4117,7 @@ func (u *IntegerConstant) AcceptFuncs(literalFunc func(int) error, variableFunc 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in IntegerConstant type")
 		}
 		return unknownFunc(u.typ)
 	case "literal":
@@ -3959,11 +4133,11 @@ func (u *IntegerConstant) AcceptFuncs(literalFunc func(int) error, variableFunc 
 	}
 }
 
-func (u *IntegerConstant) LiteralNoopSuccess(int) error {
+func (u *IntegerConstant) LiteralNoopSuccess(_ int) error {
 	return nil
 }
 
-func (u *IntegerConstant) VariableNoopSuccess(VariableName) error {
+func (u *IntegerConstant) VariableNoopSuccess(_ VariableName) error {
 	return nil
 }
 
@@ -4117,7 +4291,7 @@ func (u *LogFilterOperator) AcceptFuncs(regexFilterFunc func(LogRegexFilterOpera
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in LogFilterOperator type")
 		}
 		return unknownFunc(u.typ)
 	case "regexFilter":
@@ -4133,11 +4307,11 @@ func (u *LogFilterOperator) AcceptFuncs(regexFilterFunc func(LogRegexFilterOpera
 	}
 }
 
-func (u *LogFilterOperator) RegexFilterNoopSuccess(LogRegexFilterOperator) error {
+func (u *LogFilterOperator) RegexFilterNoopSuccess(_ LogRegexFilterOperator) error {
 	return nil
 }
 
-func (u *LogFilterOperator) ExactMatchCaseInsensitiveFilterNoopSuccess(LogExactMatchCaseInsensitiveFilter) error {
+func (u *LogFilterOperator) ExactMatchCaseInsensitiveFilterNoopSuccess(_ LogExactMatchCaseInsensitiveFilter) error {
 	return nil
 }
 
@@ -4277,7 +4451,7 @@ func (u *ModuleVersionReference) AcceptFuncs(pinnedFunc func(PinnedModuleVersion
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ModuleVersionReference type")
 		}
 		return unknownFunc(u.typ)
 	case "pinned":
@@ -4288,7 +4462,7 @@ func (u *ModuleVersionReference) AcceptFuncs(pinnedFunc func(PinnedModuleVersion
 	}
 }
 
-func (u *ModuleVersionReference) PinnedNoopSuccess(PinnedModuleVersionReference) error {
+func (u *ModuleVersionReference) PinnedNoopSuccess(_ PinnedModuleVersionReference) error {
 	return nil
 }
 
@@ -4440,7 +4614,7 @@ func (u *NegativeValueConfiguration) AcceptFuncs(allowNegativeValuesFunc func(Al
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NegativeValueConfiguration type")
 		}
 		return unknownFunc(u.typ)
 	case "allowNegativeValues":
@@ -4461,15 +4635,15 @@ func (u *NegativeValueConfiguration) AcceptFuncs(allowNegativeValuesFunc func(Al
 	}
 }
 
-func (u *NegativeValueConfiguration) AllowNegativeValuesNoopSuccess(AllowNegativeValues) error {
+func (u *NegativeValueConfiguration) AllowNegativeValuesNoopSuccess(_ AllowNegativeValues) error {
 	return nil
 }
 
-func (u *NegativeValueConfiguration) SetNegativeValuesToZeroNoopSuccess(SetNegativeValuesToZero) error {
+func (u *NegativeValueConfiguration) SetNegativeValuesToZeroNoopSuccess(_ SetNegativeValuesToZero) error {
 	return nil
 }
 
-func (u *NegativeValueConfiguration) ExcludeNegativeValuesNoopSuccess(ExcludeNegativeValues) error {
+func (u *NegativeValueConfiguration) ExcludeNegativeValuesNoopSuccess(_ ExcludeNegativeValues) error {
 	return nil
 }
 
@@ -4639,7 +4813,7 @@ func (u *NumericHistogramBucketStrategy) AcceptFuncs(bucketCountFunc func(Intege
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NumericHistogramBucketStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "bucketCount":
@@ -4655,11 +4829,11 @@ func (u *NumericHistogramBucketStrategy) AcceptFuncs(bucketCountFunc func(Intege
 	}
 }
 
-func (u *NumericHistogramBucketStrategy) BucketCountNoopSuccess(IntegerConstant) error {
+func (u *NumericHistogramBucketStrategy) BucketCountNoopSuccess(_ IntegerConstant) error {
 	return nil
 }
 
-func (u *NumericHistogramBucketStrategy) BucketWidthAndOffsetNoopSuccess(NumericHistogramBucketWidthAndOffset) error {
+func (u *NumericHistogramBucketStrategy) BucketWidthAndOffsetNoopSuccess(_ NumericHistogramBucketWidthAndOffset) error {
 	return nil
 }
 
@@ -4813,7 +4987,7 @@ func (u *NumericResampleInterpolationConfiguration) AcceptFuncs(forwardFillResam
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NumericResampleInterpolationConfiguration type")
 		}
 		return unknownFunc(u.typ)
 	case "forwardFillResampleInterpolationConfiguration":
@@ -4829,11 +5003,11 @@ func (u *NumericResampleInterpolationConfiguration) AcceptFuncs(forwardFillResam
 	}
 }
 
-func (u *NumericResampleInterpolationConfiguration) ForwardFillResampleInterpolationConfigurationNoopSuccess(ForwardFillResampleInterpolationConfiguration) error {
+func (u *NumericResampleInterpolationConfiguration) ForwardFillResampleInterpolationConfigurationNoopSuccess(_ ForwardFillResampleInterpolationConfiguration) error {
 	return nil
 }
 
-func (u *NumericResampleInterpolationConfiguration) ConstantResampleInterpolationConfigurationNoopSuccess(NumericConstantResampleInterpolationConfiguration) error {
+func (u *NumericResampleInterpolationConfiguration) ConstantResampleInterpolationConfigurationNoopSuccess(_ NumericConstantResampleInterpolationConfiguration) error {
 	return nil
 }
 
@@ -4987,7 +5161,7 @@ func (u *OutputRangeStart) AcceptFuncs(firstPointMatchingConditionFunc func(Firs
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in OutputRangeStart type")
 		}
 		return unknownFunc(u.typ)
 	case "firstPointMatchingCondition":
@@ -5003,11 +5177,11 @@ func (u *OutputRangeStart) AcceptFuncs(firstPointMatchingConditionFunc func(Firs
 	}
 }
 
-func (u *OutputRangeStart) FirstPointMatchingConditionNoopSuccess(FirstPointMatchingCondition) error {
+func (u *OutputRangeStart) FirstPointMatchingConditionNoopSuccess(_ FirstPointMatchingCondition) error {
 	return nil
 }
 
-func (u *OutputRangeStart) AfterPersistenceWindowNoopSuccess(AfterPersistenceWindow) error {
+func (u *OutputRangeStart) AfterPersistenceWindowNoopSuccess(_ AfterPersistenceWindow) error {
 	return nil
 }
 
@@ -5147,7 +5321,7 @@ func (u *PageStrategy) AcceptFuncs(pageInfoFunc func(PageInfo) error, unknownFun
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in PageStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "pageInfo":
@@ -5158,7 +5332,7 @@ func (u *PageStrategy) AcceptFuncs(pageInfoFunc func(PageInfo) error, unknownFun
 	}
 }
 
-func (u *PageStrategy) PageInfoNoopSuccess(PageInfo) error {
+func (u *PageStrategy) PageInfoNoopSuccess(_ PageInfo) error {
 	return nil
 }
 
@@ -5282,7 +5456,7 @@ func (u *PageToken) AcceptFuncs(timestampAndIdFunc func(TimestampAndId) error, u
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in PageToken type")
 		}
 		return unknownFunc(u.typ)
 	case "timestampAndId":
@@ -5293,7 +5467,7 @@ func (u *PageToken) AcceptFuncs(timestampAndIdFunc func(TimestampAndId) error, u
 	}
 }
 
-func (u *PageToken) TimestampAndIdNoopSuccess(TimestampAndId) error {
+func (u *PageToken) TimestampAndIdNoopSuccess(_ TimestampAndId) error {
 	return nil
 }
 
@@ -5515,7 +5689,7 @@ func (u *RangeAggregationOperation) AcceptFuncs(sumFunc func(Summation) error, r
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in RangeAggregationOperation type")
 		}
 		return unknownFunc(u.typ)
 	case "sum":
@@ -5561,35 +5735,35 @@ func (u *RangeAggregationOperation) AcceptFuncs(sumFunc func(Summation) error, r
 	}
 }
 
-func (u *RangeAggregationOperation) SumNoopSuccess(Summation) error {
+func (u *RangeAggregationOperation) SumNoopSuccess(_ Summation) error {
 	return nil
 }
 
-func (u *RangeAggregationOperation) RootMeanSquareNoopSuccess(RootMeanSquare) error {
+func (u *RangeAggregationOperation) RootMeanSquareNoopSuccess(_ RootMeanSquare) error {
 	return nil
 }
 
-func (u *RangeAggregationOperation) AverageNoopSuccess(Average) error {
+func (u *RangeAggregationOperation) AverageNoopSuccess(_ Average) error {
 	return nil
 }
 
-func (u *RangeAggregationOperation) MinNoopSuccess(Minimum) error {
+func (u *RangeAggregationOperation) MinNoopSuccess(_ Minimum) error {
 	return nil
 }
 
-func (u *RangeAggregationOperation) MaxNoopSuccess(Maximum) error {
+func (u *RangeAggregationOperation) MaxNoopSuccess(_ Maximum) error {
 	return nil
 }
 
-func (u *RangeAggregationOperation) StandardDeviationNoopSuccess(StandardDeviation) error {
+func (u *RangeAggregationOperation) StandardDeviationNoopSuccess(_ StandardDeviation) error {
 	return nil
 }
 
-func (u *RangeAggregationOperation) CountNoopSuccess(Count) error {
+func (u *RangeAggregationOperation) CountNoopSuccess(_ Count) error {
 	return nil
 }
 
-func (u *RangeAggregationOperation) AllNoopSuccess(api.Empty) error {
+func (u *RangeAggregationOperation) AllNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
@@ -5859,7 +6033,7 @@ func (u *RangeValue) AcceptFuncs(doubleFunc func(float64) error, aggregationFunc
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in RangeValue type")
 		}
 		return unknownFunc(u.typ)
 	case "double":
@@ -5880,15 +6054,15 @@ func (u *RangeValue) AcceptFuncs(doubleFunc func(float64) error, aggregationFunc
 	}
 }
 
-func (u *RangeValue) DoubleNoopSuccess(float64) error {
+func (u *RangeValue) DoubleNoopSuccess(_ float64) error {
 	return nil
 }
 
-func (u *RangeValue) AggregationNoopSuccess(RangeAggregation) error {
+func (u *RangeValue) AggregationNoopSuccess(_ RangeAggregation) error {
 	return nil
 }
 
-func (u *RangeValue) NoPointsInRangeNoopSuccess(api.Empty) error {
+func (u *RangeValue) NoPointsInRangeNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
@@ -6114,7 +6288,7 @@ func (u *RollingOperator) AcceptFuncs(averageFunc func(Average) error, countFunc
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in RollingOperator type")
 		}
 		return unknownFunc(u.typ)
 	case "average":
@@ -6150,27 +6324,27 @@ func (u *RollingOperator) AcceptFuncs(averageFunc func(Average) error, countFunc
 	}
 }
 
-func (u *RollingOperator) AverageNoopSuccess(Average) error {
+func (u *RollingOperator) AverageNoopSuccess(_ Average) error {
 	return nil
 }
 
-func (u *RollingOperator) CountNoopSuccess(Count) error {
+func (u *RollingOperator) CountNoopSuccess(_ Count) error {
 	return nil
 }
 
-func (u *RollingOperator) MinNoopSuccess(Minimum) error {
+func (u *RollingOperator) MinNoopSuccess(_ Minimum) error {
 	return nil
 }
 
-func (u *RollingOperator) MaxNoopSuccess(Maximum) error {
+func (u *RollingOperator) MaxNoopSuccess(_ Maximum) error {
 	return nil
 }
 
-func (u *RollingOperator) StandardDeviationNoopSuccess(StandardDeviation) error {
+func (u *RollingOperator) StandardDeviationNoopSuccess(_ StandardDeviation) error {
 	return nil
 }
 
-func (u *RollingOperator) SumNoopSuccess(Sum) error {
+func (u *RollingOperator) SumNoopSuccess(_ Sum) error {
 	return nil
 }
 
@@ -6388,7 +6562,7 @@ func (u *ScatterSummarizationStrategy) AcceptFuncs(spatialFunc func(SpatialDecim
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ScatterSummarizationStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "spatial":
@@ -6404,11 +6578,11 @@ func (u *ScatterSummarizationStrategy) AcceptFuncs(spatialFunc func(SpatialDecim
 	}
 }
 
-func (u *ScatterSummarizationStrategy) SpatialNoopSuccess(SpatialDecimateStrategy) error {
+func (u *ScatterSummarizationStrategy) SpatialNoopSuccess(_ SpatialDecimateStrategy) error {
 	return nil
 }
 
-func (u *ScatterSummarizationStrategy) TemporalNoopSuccess(TemporalDecimateStrategy) error {
+func (u *ScatterSummarizationStrategy) TemporalNoopSuccess(_ TemporalDecimateStrategy) error {
 	return nil
 }
 
@@ -6590,7 +6764,7 @@ func (u *SignalFilterConfiguration) AcceptFuncs(lowPassFunc func(LowPassConfigur
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SignalFilterConfiguration type")
 		}
 		return unknownFunc(u.typ)
 	case "lowPass":
@@ -6616,19 +6790,19 @@ func (u *SignalFilterConfiguration) AcceptFuncs(lowPassFunc func(LowPassConfigur
 	}
 }
 
-func (u *SignalFilterConfiguration) LowPassNoopSuccess(LowPassConfiguration) error {
+func (u *SignalFilterConfiguration) LowPassNoopSuccess(_ LowPassConfiguration) error {
 	return nil
 }
 
-func (u *SignalFilterConfiguration) HighPassNoopSuccess(HighPassConfiguration) error {
+func (u *SignalFilterConfiguration) HighPassNoopSuccess(_ HighPassConfiguration) error {
 	return nil
 }
 
-func (u *SignalFilterConfiguration) BandPassNoopSuccess(BandPassConfiguration) error {
+func (u *SignalFilterConfiguration) BandPassNoopSuccess(_ BandPassConfiguration) error {
 	return nil
 }
 
-func (u *SignalFilterConfiguration) BandStopNoopSuccess(BandStopConfiguration) error {
+func (u *SignalFilterConfiguration) BandStopNoopSuccess(_ BandStopConfiguration) error {
 	return nil
 }
 
@@ -6814,7 +6988,7 @@ func (u *StringConstant) AcceptFuncs(literalFunc func(string) error, variableFun
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in StringConstant type")
 		}
 		return unknownFunc(u.typ)
 	case "literal":
@@ -6830,11 +7004,11 @@ func (u *StringConstant) AcceptFuncs(literalFunc func(string) error, variableFun
 	}
 }
 
-func (u *StringConstant) LiteralNoopSuccess(string) error {
+func (u *StringConstant) LiteralNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *StringConstant) VariableNoopSuccess(VariableName) error {
+func (u *StringConstant) VariableNoopSuccess(_ VariableName) error {
 	return nil
 }
 
@@ -6988,7 +7162,7 @@ func (u *StringSetConstant) AcceptFuncs(literalFunc func([]string) error, variab
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in StringSetConstant type")
 		}
 		return unknownFunc(u.typ)
 	case "literal":
@@ -7004,11 +7178,11 @@ func (u *StringSetConstant) AcceptFuncs(literalFunc func([]string) error, variab
 	}
 }
 
-func (u *StringSetConstant) LiteralNoopSuccess([]string) error {
+func (u *StringSetConstant) LiteralNoopSuccess(_ []string) error {
 	return nil
 }
 
-func (u *StringSetConstant) VariableNoopSuccess(VariableName) error {
+func (u *StringSetConstant) VariableNoopSuccess(_ VariableName) error {
 	return nil
 }
 
@@ -7176,7 +7350,7 @@ func (u *SummarizationStrategy) AcceptFuncs(decimateFunc func(DecimateStrategy) 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SummarizationStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "decimate":
@@ -7197,15 +7371,15 @@ func (u *SummarizationStrategy) AcceptFuncs(decimateFunc func(DecimateStrategy) 
 	}
 }
 
-func (u *SummarizationStrategy) DecimateNoopSuccess(DecimateStrategy) error {
+func (u *SummarizationStrategy) DecimateNoopSuccess(_ DecimateStrategy) error {
 	return nil
 }
 
-func (u *SummarizationStrategy) PageNoopSuccess(PageStrategy) error {
+func (u *SummarizationStrategy) PageNoopSuccess(_ PageStrategy) error {
 	return nil
 }
 
-func (u *SummarizationStrategy) TruncateNoopSuccess(TruncateStrategy) error {
+func (u *SummarizationStrategy) TruncateNoopSuccess(_ TruncateStrategy) error {
 	return nil
 }
 
@@ -7379,7 +7553,7 @@ func (u *TagFilters) AcceptFuncs(singleFunc func(TagFilter) error, andFunc func(
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TagFilters type")
 		}
 		return unknownFunc(u.typ)
 	case "single":
@@ -7395,11 +7569,11 @@ func (u *TagFilters) AcceptFuncs(singleFunc func(TagFilter) error, andFunc func(
 	}
 }
 
-func (u *TagFilters) SingleNoopSuccess(TagFilter) error {
+func (u *TagFilters) SingleNoopSuccess(_ TagFilter) error {
 	return nil
 }
 
-func (u *TagFilters) AndNoopSuccess([]TagFilters) error {
+func (u *TagFilters) AndNoopSuccess(_ []TagFilters) error {
 	return nil
 }
 
@@ -7553,7 +7727,7 @@ func (u *Threshold) AcceptFuncs(absoluteFunc func(AbsoluteThreshold) error, perc
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Threshold type")
 		}
 		return unknownFunc(u.typ)
 	case "absolute":
@@ -7569,11 +7743,11 @@ func (u *Threshold) AcceptFuncs(absoluteFunc func(AbsoluteThreshold) error, perc
 	}
 }
 
-func (u *Threshold) AbsoluteNoopSuccess(AbsoluteThreshold) error {
+func (u *Threshold) AbsoluteNoopSuccess(_ AbsoluteThreshold) error {
 	return nil
 }
 
-func (u *Threshold) PercentageNoopSuccess(PercentageThreshold) error {
+func (u *Threshold) PercentageNoopSuccess(_ PercentageThreshold) error {
 	return nil
 }
 
@@ -7727,7 +7901,7 @@ func (u *TimestampConstant) AcceptFuncs(literalFunc func(api.Timestamp) error, v
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimestampConstant type")
 		}
 		return unknownFunc(u.typ)
 	case "literal":
@@ -7743,11 +7917,11 @@ func (u *TimestampConstant) AcceptFuncs(literalFunc func(api.Timestamp) error, v
 	}
 }
 
-func (u *TimestampConstant) LiteralNoopSuccess(api.Timestamp) error {
+func (u *TimestampConstant) LiteralNoopSuccess(_ api.Timestamp) error {
 	return nil
 }
 
-func (u *TimestampConstant) VariableNoopSuccess(VariableName) error {
+func (u *TimestampConstant) VariableNoopSuccess(_ VariableName) error {
 	return nil
 }
 
@@ -7887,7 +8061,7 @@ func (u *TruncateStrategy) AcceptFuncs(maxPointsToReturnFunc func(int) error, un
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TruncateStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "maxPointsToReturn":
@@ -7898,7 +8072,7 @@ func (u *TruncateStrategy) AcceptFuncs(maxPointsToReturnFunc func(int) error, un
 	}
 }
 
-func (u *TruncateStrategy) MaxPointsToReturnNoopSuccess(int) error {
+func (u *TruncateStrategy) MaxPointsToReturnNoopSuccess(_ int) error {
 	return nil
 }
 
@@ -8050,7 +8224,7 @@ func (u *UnitComputationError) AcceptFuncs(incompatibleUnitsOperationFunc func(I
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UnitComputationError type")
 		}
 		return unknownFunc(u.typ)
 	case "incompatibleUnitsOperation":
@@ -8071,15 +8245,15 @@ func (u *UnitComputationError) AcceptFuncs(incompatibleUnitsOperationFunc func(I
 	}
 }
 
-func (u *UnitComputationError) IncompatibleUnitsOperationNoopSuccess(IncompatibleUnitOperation) error {
+func (u *UnitComputationError) IncompatibleUnitsOperationNoopSuccess(_ IncompatibleUnitOperation) error {
 	return nil
 }
 
-func (u *UnitComputationError) UnitsMissingNoopSuccess(UnitsMissing) error {
+func (u *UnitComputationError) UnitsMissingNoopSuccess(_ UnitsMissing) error {
 	return nil
 }
 
-func (u *UnitComputationError) ErrorNoopSuccess(api.SerializableError) error {
+func (u *UnitComputationError) ErrorNoopSuccess(_ api.SerializableError) error {
 	return nil
 }
 
@@ -8249,7 +8423,7 @@ func (u *UnitResult) AcceptFuncs(successFunc func(api1.UnitSymbol) error, noUnit
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in UnitResult type")
 		}
 		return unknownFunc(u.typ)
 	case "success":
@@ -8265,11 +8439,11 @@ func (u *UnitResult) AcceptFuncs(successFunc func(api1.UnitSymbol) error, noUnit
 	}
 }
 
-func (u *UnitResult) SuccessNoopSuccess(api1.UnitSymbol) error {
+func (u *UnitResult) SuccessNoopSuccess(_ api1.UnitSymbol) error {
 	return nil
 }
 
-func (u *UnitResult) NoUnitAvailableNoopSuccess([]UnitComputationError) error {
+func (u *UnitResult) NoUnitAvailableNoopSuccess(_ []UnitComputationError) error {
 	return nil
 }
 
@@ -8466,7 +8640,7 @@ func (u *Value) AcceptFuncs(stringValueFunc func(string) error, float64ValueFunc
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Value type")
 		}
 		return unknownFunc(u.typ)
 	case "stringValue":
@@ -8497,23 +8671,23 @@ func (u *Value) AcceptFuncs(stringValueFunc func(string) error, float64ValueFunc
 	}
 }
 
-func (u *Value) StringValueNoopSuccess(string) error {
+func (u *Value) StringValueNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *Value) Float64ValueNoopSuccess(float64) error {
+func (u *Value) Float64ValueNoopSuccess(_ float64) error {
 	return nil
 }
 
-func (u *Value) Int64ValueNoopSuccess(string) error {
+func (u *Value) Int64ValueNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *Value) ArrayValueNoopSuccess([]*Value) error {
+func (u *Value) ArrayValueNoopSuccess(_ []*Value) error {
 	return nil
 }
 
-func (u *Value) StructValueNoopSuccess(interface{}) error {
+func (u *Value) StructValueNoopSuccess(_ interface{}) error {
 	return nil
 }
 

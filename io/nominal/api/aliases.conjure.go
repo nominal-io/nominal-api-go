@@ -34,6 +34,19 @@ func (a *LogicalSeriesRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a LogicalSeriesRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *LogicalSeriesRid) UnmarshalJSON(data []byte) error {
+	var rawLogicalSeriesRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawLogicalSeriesRid); err != nil {
+		return err
+	}
+	*a = LogicalSeriesRid(rawLogicalSeriesRid)
+	return nil
+}
+
 func (a LogicalSeriesRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -74,6 +87,19 @@ func (a *SeriesArchetypeRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a SeriesArchetypeRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(SeriesMetadataRid(a))
+}
+
+func (a *SeriesArchetypeRid) UnmarshalJSON(data []byte) error {
+	var rawSeriesArchetypeRid SeriesMetadataRid
+	if err := safejson.Unmarshal(data, &rawSeriesArchetypeRid); err != nil {
+		return err
+	}
+	*a = SeriesArchetypeRid(rawSeriesArchetypeRid)
+	return nil
+}
+
 func (a SeriesArchetypeRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -103,6 +129,19 @@ func (a SeriesMetadataRid) MarshalText() ([]byte, error) {
 func (a *SeriesMetadataRid) UnmarshalText(data []byte) error {
 	var rawSeriesMetadataRid rid.ResourceIdentifier
 	if err := rawSeriesMetadataRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = SeriesMetadataRid(rawSeriesMetadataRid)
+	return nil
+}
+
+func (a SeriesMetadataRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *SeriesMetadataRid) UnmarshalJSON(data []byte) error {
+	var rawSeriesMetadataRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawSeriesMetadataRid); err != nil {
 		return err
 	}
 	*a = SeriesMetadataRid(rawSeriesMetadataRid)

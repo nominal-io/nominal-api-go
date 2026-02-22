@@ -38,3 +38,5 @@ func (a *TimeRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
+
+type WorkbookDataScopeInputName string

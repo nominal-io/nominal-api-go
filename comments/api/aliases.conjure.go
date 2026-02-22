@@ -27,6 +27,19 @@ func (a *CommentRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a CommentRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *CommentRid) UnmarshalJSON(data []byte) error {
+	var rawCommentRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawCommentRid); err != nil {
+		return err
+	}
+	*a = CommentRid(rawCommentRid)
+	return nil
+}
+
 func (a CommentRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -56,6 +69,19 @@ func (a ReactionRid) MarshalText() ([]byte, error) {
 func (a *ReactionRid) UnmarshalText(data []byte) error {
 	var rawReactionRid rid.ResourceIdentifier
 	if err := rawReactionRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = ReactionRid(rawReactionRid)
+	return nil
+}
+
+func (a ReactionRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ReactionRid) UnmarshalJSON(data []byte) error {
+	var rawReactionRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawReactionRid); err != nil {
 		return err
 	}
 	*a = ReactionRid(rawReactionRid)

@@ -27,6 +27,19 @@ func (a *ApiKeyRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a ApiKeyRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ApiKeyRid) UnmarshalJSON(data []byte) error {
+	var rawApiKeyRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawApiKeyRid); err != nil {
+		return err
+	}
+	*a = ApiKeyRid(rawApiKeyRid)
+	return nil
+}
+
 func (a ApiKeyRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -57,6 +70,19 @@ func (a AssetRid) MarshalText() ([]byte, error) {
 func (a *AssetRid) UnmarshalText(data []byte) error {
 	var rawAssetRid rid.ResourceIdentifier
 	if err := rawAssetRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = AssetRid(rawAssetRid)
+	return nil
+}
+
+func (a AssetRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *AssetRid) UnmarshalJSON(data []byte) error {
+	var rawAssetRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawAssetRid); err != nil {
 		return err
 	}
 	*a = AssetRid(rawAssetRid)
@@ -98,6 +124,19 @@ func (a *CheckAlertRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a CheckAlertRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *CheckAlertRid) UnmarshalJSON(data []byte) error {
+	var rawCheckAlertRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawCheckAlertRid); err != nil {
+		return err
+	}
+	*a = CheckAlertRid(rawCheckAlertRid)
+	return nil
+}
+
 func (a CheckAlertRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -127,6 +166,19 @@ func (a CheckLineageRid) MarshalText() ([]byte, error) {
 func (a *CheckLineageRid) UnmarshalText(data []byte) error {
 	var rawCheckLineageRid rid.ResourceIdentifier
 	if err := rawCheckLineageRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = CheckLineageRid(rawCheckLineageRid)
+	return nil
+}
+
+func (a CheckLineageRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *CheckLineageRid) UnmarshalJSON(data []byte) error {
+	var rawCheckLineageRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawCheckLineageRid); err != nil {
 		return err
 	}
 	*a = CheckLineageRid(rawCheckLineageRid)
@@ -168,6 +220,19 @@ func (a *CheckRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a CheckRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *CheckRid) UnmarshalJSON(data []byte) error {
+	var rawCheckRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawCheckRid); err != nil {
+		return err
+	}
+	*a = CheckRid(rawCheckRid)
+	return nil
+}
+
 func (a CheckRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -197,6 +262,19 @@ func (a ChecklistRid) MarshalText() ([]byte, error) {
 func (a *ChecklistRid) UnmarshalText(data []byte) error {
 	var rawChecklistRid rid.ResourceIdentifier
 	if err := rawChecklistRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = ChecklistRid(rawChecklistRid)
+	return nil
+}
+
+func (a ChecklistRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ChecklistRid) UnmarshalJSON(data []byte) error {
+	var rawChecklistRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawChecklistRid); err != nil {
 		return err
 	}
 	*a = ChecklistRid(rawChecklistRid)
@@ -238,6 +316,19 @@ func (a *DataReviewRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a DataReviewRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *DataReviewRid) UnmarshalJSON(data []byte) error {
+	var rawDataReviewRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawDataReviewRid); err != nil {
+		return err
+	}
+	*a = DataReviewRid(rawDataReviewRid)
+	return nil
+}
+
 func (a DataReviewRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -267,6 +358,19 @@ func (a FunctionLineageRid) MarshalText() ([]byte, error) {
 func (a *FunctionLineageRid) UnmarshalText(data []byte) error {
 	var rawFunctionLineageRid rid.ResourceIdentifier
 	if err := rawFunctionLineageRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = FunctionLineageRid(rawFunctionLineageRid)
+	return nil
+}
+
+func (a FunctionLineageRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *FunctionLineageRid) UnmarshalJSON(data []byte) error {
+	var rawFunctionLineageRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawFunctionLineageRid); err != nil {
 		return err
 	}
 	*a = FunctionLineageRid(rawFunctionLineageRid)
@@ -308,6 +412,19 @@ func (a *FunctionRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a FunctionRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *FunctionRid) UnmarshalJSON(data []byte) error {
+	var rawFunctionRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawFunctionRid); err != nil {
+		return err
+	}
+	*a = FunctionRid(rawFunctionRid)
+	return nil
+}
+
 func (a FunctionRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -337,6 +454,19 @@ func (a GroupRid) MarshalText() ([]byte, error) {
 func (a *GroupRid) UnmarshalText(data []byte) error {
 	var rawGroupRid rid.ResourceIdentifier
 	if err := rawGroupRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = GroupRid(rawGroupRid)
+	return nil
+}
+
+func (a GroupRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *GroupRid) UnmarshalJSON(data []byte) error {
+	var rawGroupRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawGroupRid); err != nil {
 		return err
 	}
 	*a = GroupRid(rawGroupRid)
@@ -378,6 +508,19 @@ func (a *MarkingRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a MarkingRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *MarkingRid) UnmarshalJSON(data []byte) error {
+	var rawMarkingRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawMarkingRid); err != nil {
+		return err
+	}
+	*a = MarkingRid(rawMarkingRid)
+	return nil
+}
+
 func (a MarkingRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -407,6 +550,19 @@ func (a NotebookRid) MarshalText() ([]byte, error) {
 func (a *NotebookRid) UnmarshalText(data []byte) error {
 	var rawNotebookRid rid.ResourceIdentifier
 	if err := rawNotebookRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = NotebookRid(rawNotebookRid)
+	return nil
+}
+
+func (a NotebookRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *NotebookRid) UnmarshalJSON(data []byte) error {
+	var rawNotebookRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawNotebookRid); err != nil {
 		return err
 	}
 	*a = NotebookRid(rawNotebookRid)
@@ -449,6 +605,19 @@ func (a *SavedViewRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a SavedViewRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *SavedViewRid) UnmarshalJSON(data []byte) error {
+	var rawSavedViewRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawSavedViewRid); err != nil {
+		return err
+	}
+	*a = SavedViewRid(rawSavedViewRid)
+	return nil
+}
+
 func (a SavedViewRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -478,6 +647,19 @@ func (a SnapshotRid) MarshalText() ([]byte, error) {
 func (a *SnapshotRid) UnmarshalText(data []byte) error {
 	var rawSnapshotRid rid.ResourceIdentifier
 	if err := rawSnapshotRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = SnapshotRid(rawSnapshotRid)
+	return nil
+}
+
+func (a SnapshotRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *SnapshotRid) UnmarshalJSON(data []byte) error {
+	var rawSnapshotRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawSnapshotRid); err != nil {
 		return err
 	}
 	*a = SnapshotRid(rawSnapshotRid)
@@ -519,6 +701,19 @@ func (a *TemplateRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a TemplateRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *TemplateRid) UnmarshalJSON(data []byte) error {
+	var rawTemplateRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawTemplateRid); err != nil {
+		return err
+	}
+	*a = TemplateRid(rawTemplateRid)
+	return nil
+}
+
 func (a TemplateRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -554,6 +749,19 @@ func (a *TypeRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a TypeRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *TypeRid) UnmarshalJSON(data []byte) error {
+	var rawTypeRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawTypeRid); err != nil {
+		return err
+	}
+	*a = TypeRid(rawTypeRid)
+	return nil
+}
+
 func (a TypeRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {
@@ -583,6 +791,19 @@ func (a UserRid) MarshalText() ([]byte, error) {
 func (a *UserRid) UnmarshalText(data []byte) error {
 	var rawUserRid rid.ResourceIdentifier
 	if err := rawUserRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = UserRid(rawUserRid)
+	return nil
+}
+
+func (a UserRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *UserRid) UnmarshalJSON(data []byte) error {
+	var rawUserRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawUserRid); err != nil {
 		return err
 	}
 	*a = UserRid(rawUserRid)

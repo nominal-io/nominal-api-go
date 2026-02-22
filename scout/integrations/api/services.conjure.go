@@ -22,6 +22,18 @@ type IntegrationsServiceClient interface {
 	CreateSlackWebhook(ctx context.Context, authHeader bearertoken.Token, codeArg string, stateArg string) error
 	// Creates a new integration.
 	CreateIntegration(ctx context.Context, authHeader bearertoken.Token, createIntegrationRequestArg CreateIntegrationRequest) (Integration, error)
+	/*
+	   Creates a new webhook integration with HMAC signing.
+	   Returns the integration and the server-generated signing key.
+	   The signing key is only returned once — store it securely.
+	*/
+	CreateSecureWebhookIntegration(ctx context.Context, authHeader bearertoken.Token, requestArg CreateSecureWebhookIntegrationRequest) (CreateSecureWebhookIntegrationResponse, error)
+	/*
+	   Sends a message to a secure webhook integration with HMAC-SHA256 signature.
+	   Implements retry logic with exponential backoff based on merged delivery configuration.
+	   Request configuration overrides take precedence over integration's stored configuration.
+	*/
+	SendSecureWebhookMessage(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid, requestArg SendSecureWebhookMessageRequest) (SendSecureWebhookMessageResponse, error)
 	// Deletes an integration by archiving.
 	DeleteIntegration(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid) error
 	// Updates the metadata of an integration.
@@ -37,6 +49,12 @@ type IntegrationsServiceClient interface {
 	ListIntegrations(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) ([]Integration, error)
 	// Sends a string message to the specified integration from a checklist execution.
 	SendMessage(ctx context.Context, authHeader bearertoken.Token, requestArg SendMessageRequest) error
+	/*
+	   Rotates the HMAC signing key for a webhook integration.
+	   The old key is immediately invalidated and a new key is generated and returned.
+	   This is the only way to retrieve the signing key after initial creation.
+	*/
+	RotateSecureWebhookIntegrationSigningKey(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid) (RotateWebhookSigningKeyResponse, error)
 }
 
 type integrationsServiceClient struct {
@@ -48,11 +66,9 @@ func NewIntegrationsServiceClient(client httpclient.Client) IntegrationsServiceC
 }
 
 func (c *integrationsServiceClient) GenerateSlackWebhookLink(ctx context.Context, authHeader bearertoken.Token, workspaceArg *rids.WorkspaceRid, isGovSlackArg *bool) (GenerateSlackWebhookResponse, error) {
-	var defaultReturnVal GenerateSlackWebhookResponse
 	var returnVal *GenerateSlackWebhookResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GenerateSlackWebhookLink"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/slack-oauth/init-webhook"))
 	queryParams := make(url.Values)
@@ -65,11 +81,11 @@ func (c *integrationsServiceClient) GenerateSlackWebhookLink(ctx context.Context
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "generateSlackWebhookLink failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(GenerateSlackWebhookResponse), werror.WrapWithContextParams(ctx, err, "generateSlackWebhookLink failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "generateSlackWebhookLink response cannot be nil")
+		return *new(GenerateSlackWebhookResponse), werror.ErrorWithContextParams(ctx, "generateSlackWebhookLink response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -77,7 +93,6 @@ func (c *integrationsServiceClient) GenerateSlackWebhookLink(ctx context.Context
 func (c *integrationsServiceClient) CreateSlackWebhook(ctx context.Context, authHeader bearertoken.Token, codeArg string, stateArg string) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateSlackWebhook"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/slack-oauth/redirect"))
 	queryParams := make(url.Values)
@@ -85,28 +100,62 @@ func (c *integrationsServiceClient) CreateSlackWebhook(ctx context.Context, auth
 	queryParams.Set("state", fmt.Sprint(stateArg))
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "createSlackWebhook failed")
 	}
 	return nil
 }
 
 func (c *integrationsServiceClient) CreateIntegration(ctx context.Context, authHeader bearertoken.Token, createIntegrationRequestArg CreateIntegrationRequest) (Integration, error) {
-	var defaultReturnVal Integration
 	var returnVal *Integration
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateIntegration"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(createIntegrationRequestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createIntegration failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(Integration), werror.WrapWithContextParams(ctx, err, "createIntegration failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createIntegration response cannot be nil")
+		return *new(Integration), werror.ErrorWithContextParams(ctx, "createIntegration response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *integrationsServiceClient) CreateSecureWebhookIntegration(ctx context.Context, authHeader bearertoken.Token, requestArg CreateSecureWebhookIntegrationRequest) (CreateSecureWebhookIntegrationResponse, error) {
+	var returnVal *CreateSecureWebhookIntegrationResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateSecureWebhookIntegration"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/internal/secure-webhook"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(CreateSecureWebhookIntegrationResponse), werror.WrapWithContextParams(ctx, err, "createSecureWebhookIntegration failed")
+	}
+	if returnVal == nil {
+		return *new(CreateSecureWebhookIntegrationResponse), werror.ErrorWithContextParams(ctx, "createSecureWebhookIntegration response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *integrationsServiceClient) SendSecureWebhookMessage(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid, requestArg SendSecureWebhookMessageRequest) (SendSecureWebhookMessageResponse, error) {
+	var returnVal *SendSecureWebhookMessageResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("SendSecureWebhookMessage"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/internal/secure-webhook/%s", url.PathEscape(fmt.Sprint(integrationRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SendSecureWebhookMessageResponse), werror.WrapWithContextParams(ctx, err, "sendSecureWebhookMessage failed")
+	}
+	if returnVal == nil {
+		return *new(SendSecureWebhookMessageResponse), werror.ErrorWithContextParams(ctx, "sendSecureWebhookMessage response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -114,71 +163,64 @@ func (c *integrationsServiceClient) CreateIntegration(ctx context.Context, authH
 func (c *integrationsServiceClient) DeleteIntegration(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteIntegration"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/%s", url.PathEscape(fmt.Sprint(integrationRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "deleteIntegration failed")
 	}
 	return nil
 }
 
 func (c *integrationsServiceClient) UpdateIntegrationMetadata(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid, requestArg UpdateIntegrationRequest) (Integration, error) {
-	var defaultReturnVal Integration
 	var returnVal *Integration
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateIntegrationMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/%s", url.PathEscape(fmt.Sprint(integrationRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateIntegrationMetadata failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(Integration), werror.WrapWithContextParams(ctx, err, "updateIntegrationMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateIntegrationMetadata response cannot be nil")
+		return *new(Integration), werror.ErrorWithContextParams(ctx, "updateIntegrationMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *integrationsServiceClient) UpdateIntegrationDetails(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid, requestArg UpdateIntegrationDetailsRequest) (Integration, error) {
-	var defaultReturnVal Integration
 	var returnVal *Integration
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateIntegrationDetails"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/%s/details", url.PathEscape(fmt.Sprint(integrationRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateIntegrationDetails failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(Integration), werror.WrapWithContextParams(ctx, err, "updateIntegrationDetails failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateIntegrationDetails response cannot be nil")
+		return *new(Integration), werror.ErrorWithContextParams(ctx, "updateIntegrationDetails response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *integrationsServiceClient) GetIntegration(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid) (Integration, error) {
-	var defaultReturnVal Integration
 	var returnVal *Integration
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIntegration"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/%s", url.PathEscape(fmt.Sprint(integrationRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getIntegration failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(Integration), werror.WrapWithContextParams(ctx, err, "getIntegration failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getIntegration response cannot be nil")
+		return *new(Integration), werror.ErrorWithContextParams(ctx, "getIntegration response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -187,7 +229,6 @@ func (c *integrationsServiceClient) ListIntegrations(ctx context.Context, authHe
 	var returnVal []Integration
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListIntegrations"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/list"))
 	queryParams := make(url.Values)
@@ -197,7 +238,7 @@ func (c *integrationsServiceClient) ListIntegrations(ctx context.Context, authHe
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "listIntegrations failed")
 	}
 	if returnVal == nil {
@@ -209,15 +250,31 @@ func (c *integrationsServiceClient) ListIntegrations(ctx context.Context, authHe
 func (c *integrationsServiceClient) SendMessage(ctx context.Context, authHeader bearertoken.Token, requestArg SendMessageRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SendMessage"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/send-message"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "sendMessage failed")
 	}
 	return nil
+}
+
+func (c *integrationsServiceClient) RotateSecureWebhookIntegrationSigningKey(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid) (RotateWebhookSigningKeyResponse, error) {
+	var returnVal *RotateWebhookSigningKeyResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("RotateSecureWebhookIntegrationSigningKey"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/integrations/internal/%s/rotate-signing-key", url.PathEscape(fmt.Sprint(integrationRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(RotateWebhookSigningKeyResponse), werror.WrapWithContextParams(ctx, err, "rotateSecureWebhookIntegrationSigningKey failed")
+	}
+	if returnVal == nil {
+		return *new(RotateWebhookSigningKeyResponse), werror.ErrorWithContextParams(ctx, "rotateSecureWebhookIntegrationSigningKey response cannot be nil")
+	}
+	return *returnVal, nil
 }
 
 // Service for managing integrations with external services.
@@ -228,6 +285,18 @@ type IntegrationsServiceClientWithAuth interface {
 	CreateSlackWebhook(ctx context.Context, codeArg string, stateArg string) error
 	// Creates a new integration.
 	CreateIntegration(ctx context.Context, createIntegrationRequestArg CreateIntegrationRequest) (Integration, error)
+	/*
+	   Creates a new webhook integration with HMAC signing.
+	   Returns the integration and the server-generated signing key.
+	   The signing key is only returned once — store it securely.
+	*/
+	CreateSecureWebhookIntegration(ctx context.Context, requestArg CreateSecureWebhookIntegrationRequest) (CreateSecureWebhookIntegrationResponse, error)
+	/*
+	   Sends a message to a secure webhook integration with HMAC-SHA256 signature.
+	   Implements retry logic with exponential backoff based on merged delivery configuration.
+	   Request configuration overrides take precedence over integration's stored configuration.
+	*/
+	SendSecureWebhookMessage(ctx context.Context, integrationRidArg IntegrationRid, requestArg SendSecureWebhookMessageRequest) (SendSecureWebhookMessageResponse, error)
 	// Deletes an integration by archiving.
 	DeleteIntegration(ctx context.Context, integrationRidArg IntegrationRid) error
 	// Updates the metadata of an integration.
@@ -243,6 +312,12 @@ type IntegrationsServiceClientWithAuth interface {
 	ListIntegrations(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]Integration, error)
 	// Sends a string message to the specified integration from a checklist execution.
 	SendMessage(ctx context.Context, requestArg SendMessageRequest) error
+	/*
+	   Rotates the HMAC signing key for a webhook integration.
+	   The old key is immediately invalidated and a new key is generated and returned.
+	   This is the only way to retrieve the signing key after initial creation.
+	*/
+	RotateSecureWebhookIntegrationSigningKey(ctx context.Context, integrationRidArg IntegrationRid) (RotateWebhookSigningKeyResponse, error)
 }
 
 func NewIntegrationsServiceClientWithAuth(client IntegrationsServiceClient, authHeader bearertoken.Token) IntegrationsServiceClientWithAuth {
@@ -264,6 +339,14 @@ func (c *integrationsServiceClientWithAuth) CreateSlackWebhook(ctx context.Conte
 
 func (c *integrationsServiceClientWithAuth) CreateIntegration(ctx context.Context, createIntegrationRequestArg CreateIntegrationRequest) (Integration, error) {
 	return c.client.CreateIntegration(ctx, c.authHeader, createIntegrationRequestArg)
+}
+
+func (c *integrationsServiceClientWithAuth) CreateSecureWebhookIntegration(ctx context.Context, requestArg CreateSecureWebhookIntegrationRequest) (CreateSecureWebhookIntegrationResponse, error) {
+	return c.client.CreateSecureWebhookIntegration(ctx, c.authHeader, requestArg)
+}
+
+func (c *integrationsServiceClientWithAuth) SendSecureWebhookMessage(ctx context.Context, integrationRidArg IntegrationRid, requestArg SendSecureWebhookMessageRequest) (SendSecureWebhookMessageResponse, error) {
+	return c.client.SendSecureWebhookMessage(ctx, c.authHeader, integrationRidArg, requestArg)
 }
 
 func (c *integrationsServiceClientWithAuth) DeleteIntegration(ctx context.Context, integrationRidArg IntegrationRid) error {
@@ -290,6 +373,10 @@ func (c *integrationsServiceClientWithAuth) SendMessage(ctx context.Context, req
 	return c.client.SendMessage(ctx, c.authHeader, requestArg)
 }
 
+func (c *integrationsServiceClientWithAuth) RotateSecureWebhookIntegrationSigningKey(ctx context.Context, integrationRidArg IntegrationRid) (RotateWebhookSigningKeyResponse, error) {
+	return c.client.RotateSecureWebhookIntegrationSigningKey(ctx, c.authHeader, integrationRidArg)
+}
+
 func NewIntegrationsServiceClientWithTokenProvider(client IntegrationsServiceClient, tokenProvider httpclient.TokenProvider) IntegrationsServiceClientWithAuth {
 	return &integrationsServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
 }
@@ -300,10 +387,9 @@ type integrationsServiceClientWithTokenProvider struct {
 }
 
 func (c *integrationsServiceClientWithTokenProvider) GenerateSlackWebhookLink(ctx context.Context, workspaceArg *rids.WorkspaceRid, isGovSlackArg *bool) (GenerateSlackWebhookResponse, error) {
-	var defaultReturnVal GenerateSlackWebhookResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(GenerateSlackWebhookResponse), err
 	}
 	return c.client.GenerateSlackWebhookLink(ctx, bearertoken.Token(token), workspaceArg, isGovSlackArg)
 }
@@ -317,12 +403,27 @@ func (c *integrationsServiceClientWithTokenProvider) CreateSlackWebhook(ctx cont
 }
 
 func (c *integrationsServiceClientWithTokenProvider) CreateIntegration(ctx context.Context, createIntegrationRequestArg CreateIntegrationRequest) (Integration, error) {
-	var defaultReturnVal Integration
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Integration), err
 	}
 	return c.client.CreateIntegration(ctx, bearertoken.Token(token), createIntegrationRequestArg)
+}
+
+func (c *integrationsServiceClientWithTokenProvider) CreateSecureWebhookIntegration(ctx context.Context, requestArg CreateSecureWebhookIntegrationRequest) (CreateSecureWebhookIntegrationResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(CreateSecureWebhookIntegrationResponse), err
+	}
+	return c.client.CreateSecureWebhookIntegration(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *integrationsServiceClientWithTokenProvider) SendSecureWebhookMessage(ctx context.Context, integrationRidArg IntegrationRid, requestArg SendSecureWebhookMessageRequest) (SendSecureWebhookMessageResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(SendSecureWebhookMessageResponse), err
+	}
+	return c.client.SendSecureWebhookMessage(ctx, bearertoken.Token(token), integrationRidArg, requestArg)
 }
 
 func (c *integrationsServiceClientWithTokenProvider) DeleteIntegration(ctx context.Context, integrationRidArg IntegrationRid) error {
@@ -334,37 +435,33 @@ func (c *integrationsServiceClientWithTokenProvider) DeleteIntegration(ctx conte
 }
 
 func (c *integrationsServiceClientWithTokenProvider) UpdateIntegrationMetadata(ctx context.Context, integrationRidArg IntegrationRid, requestArg UpdateIntegrationRequest) (Integration, error) {
-	var defaultReturnVal Integration
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Integration), err
 	}
 	return c.client.UpdateIntegrationMetadata(ctx, bearertoken.Token(token), integrationRidArg, requestArg)
 }
 
 func (c *integrationsServiceClientWithTokenProvider) UpdateIntegrationDetails(ctx context.Context, integrationRidArg IntegrationRid, requestArg UpdateIntegrationDetailsRequest) (Integration, error) {
-	var defaultReturnVal Integration
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Integration), err
 	}
 	return c.client.UpdateIntegrationDetails(ctx, bearertoken.Token(token), integrationRidArg, requestArg)
 }
 
 func (c *integrationsServiceClientWithTokenProvider) GetIntegration(ctx context.Context, integrationRidArg IntegrationRid) (Integration, error) {
-	var defaultReturnVal Integration
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(Integration), err
 	}
 	return c.client.GetIntegration(ctx, bearertoken.Token(token), integrationRidArg)
 }
 
 func (c *integrationsServiceClientWithTokenProvider) ListIntegrations(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]Integration, error) {
-	var defaultReturnVal []Integration
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.ListIntegrations(ctx, bearertoken.Token(token), workspacesArg)
 }
@@ -375,4 +472,12 @@ func (c *integrationsServiceClientWithTokenProvider) SendMessage(ctx context.Con
 		return err
 	}
 	return c.client.SendMessage(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *integrationsServiceClientWithTokenProvider) RotateSecureWebhookIntegrationSigningKey(ctx context.Context, integrationRidArg IntegrationRid) (RotateWebhookSigningKeyResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(RotateWebhookSigningKeyResponse), err
+	}
+	return c.client.RotateSecureWebhookIntegrationSigningKey(ctx, bearertoken.Token(token), integrationRidArg)
 }

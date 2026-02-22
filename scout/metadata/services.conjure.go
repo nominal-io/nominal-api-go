@@ -30,21 +30,19 @@ func NewResourceMetadataServiceClient(client httpclient.Client) ResourceMetadata
 }
 
 func (c *resourceMetadataServiceClient) ListPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, requestArg ListPropertiesAndLabelsRequest) (ListPropertiesAndLabelsResponse, error) {
-	var defaultReturnVal ListPropertiesAndLabelsResponse
 	var returnVal *ListPropertiesAndLabelsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListPropertiesAndLabels"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/metadata/list-properties-labels"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "listPropertiesAndLabels failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(ListPropertiesAndLabelsResponse), werror.WrapWithContextParams(ctx, err, "listPropertiesAndLabels failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "listPropertiesAndLabels response cannot be nil")
+		return *new(ListPropertiesAndLabelsResponse), werror.ErrorWithContextParams(ctx, "listPropertiesAndLabels response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -81,10 +79,9 @@ type resourceMetadataServiceClientWithTokenProvider struct {
 }
 
 func (c *resourceMetadataServiceClientWithTokenProvider) ListPropertiesAndLabels(ctx context.Context, requestArg ListPropertiesAndLabelsRequest) (ListPropertiesAndLabelsResponse, error) {
-	var defaultReturnVal ListPropertiesAndLabelsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(ListPropertiesAndLabelsResponse), err
 	}
 	return c.client.ListPropertiesAndLabels(ctx, bearertoken.Token(token), requestArg)
 }

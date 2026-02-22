@@ -12,19 +12,19 @@ import (
 
 type ChartTheme struct {
 	// Unique resource identifier for the theme.
-	Rid ChartThemeRid `conjure-docs:"Unique resource identifier for the theme." json:"rid"`
+	Rid ChartThemeRid `json:"rid"`
 	// The name of the theme as defined by the user.
-	Name string `conjure-docs:"The name of the theme as defined by the user." json:"name"`
+	Name string `json:"name"`
 	// The rid of the user who first created the theme.
-	CreatedBy rid.ResourceIdentifier `conjure-docs:"The rid of the user who first created the theme." json:"createdBy"`
+	CreatedBy rid.ResourceIdentifier `json:"createdBy"`
 	// The time the theme was created.
-	CreatedAt datetime.DateTime `conjure-docs:"The time the theme was created." json:"createdAt"`
+	CreatedAt datetime.DateTime `json:"createdAt"`
 	// The rid of the user who last updated the theme.
-	UpdatedBy *rid.ResourceIdentifier `conjure-docs:"The rid of the user who last updated the theme." json:"updatedBy,omitempty"`
+	UpdatedBy *rid.ResourceIdentifier `json:"updatedBy,omitempty"`
 	// The rid of the user who last updated the theme.
-	UpdatedAt *datetime.DateTime `conjure-docs:"The rid of the user who last updated the theme." json:"updatedAt,omitempty"`
+	UpdatedAt *datetime.DateTime `json:"updatedAt,omitempty"`
 	// Specifies the chart theme styling (e.g. font, legends, axes)
-	Content ChartThemeContent `conjure-docs:"Specifies the chart theme styling (e.g. font, legends, axes)" json:"content"`
+	Content ChartThemeContent `json:"content"`
 }
 
 func (o ChartTheme) MarshalYAML() (interface{}, error) {
@@ -45,46 +45,46 @@ func (o *ChartTheme) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type ChartThemeContentV1 struct {
 	// Whether to show a title in the export.
-	TitleEnabled bool `conjure-docs:"Whether to show a title in the export." json:"titleEnabled"`
+	TitleEnabled bool `json:"titleEnabled"`
 	// How to align the text of the title.
-	TitleAlignment TextAlignment `conjure-docs:"How to align the text of the title." json:"titleAlignment"`
+	TitleAlignment TextAlignment `json:"titleAlignment"`
 	// Font size of the title.
-	TitleFontSize int `conjure-docs:"Font size of the title." json:"titleFontSize"`
+	TitleFontSize int `json:"titleFontSize"`
 	// Font color of the title.
-	TitleFontColor HexColor `conjure-docs:"Font color of the title." json:"titleFontColor"`
+	TitleFontColor HexColor `json:"titleFontColor"`
 	// Whether to show a caption in the export.
-	CaptionEnabled bool `conjure-docs:"Whether to show a caption in the export." json:"captionEnabled"`
+	CaptionEnabled bool `json:"captionEnabled"`
 	// How to align the text of the caption.
-	CaptionAlignment TextAlignment `conjure-docs:"How to align the text of the caption." json:"captionAlignment"`
+	CaptionAlignment TextAlignment `json:"captionAlignment"`
 	// Font size of the caption.
-	CaptionFontSize int `conjure-docs:"Font size of the caption." json:"captionFontSize"`
+	CaptionFontSize int `json:"captionFontSize"`
 	// Font color of the caption.
-	CaptionFontColor HexColor `conjure-docs:"Font color of the caption." json:"captionFontColor"`
+	CaptionFontColor HexColor `json:"captionFontColor"`
 	/*
 	   Whether to include a default background with the export.
 	   (`false` indicates that the background should be transparent)
 	*/
-	BackgroundEnabled bool `conjure-docs:"Whether to include a default background with the export.\n(\"false\" indicates that the background should be transparent)" json:"backgroundEnabled"`
+	BackgroundEnabled bool `json:"backgroundEnabled"`
 	// Whether to include a legend in the export.
-	LegendEnabled bool `conjure-docs:"Whether to include a legend in the export." json:"legendEnabled"`
+	LegendEnabled bool `json:"legendEnabled"`
 	// Which side the legend should appear on.
-	LegendPosition LegendPosition `conjure-docs:"Which side the legend should appear on." json:"legendPosition"`
+	LegendPosition LegendPosition `json:"legendPosition"`
 	// Font size of the legend.
-	LegendFontSize int `conjure-docs:"Font size of the legend." json:"legendFontSize"`
+	LegendFontSize int `json:"legendFontSize"`
 	// Font color of the legend.
-	LegendFontColor HexColor `conjure-docs:"Font color of the legend." json:"legendFontColor"`
+	LegendFontColor HexColor `json:"legendFontColor"`
 	// Where on the chart the legend should be placed.
-	LegendPlacement LegendPlacement `conjure-docs:"Where on the chart the legend should be placed." json:"legendPlacement"`
+	LegendPlacement LegendPlacement `json:"legendPlacement"`
 	// Whether rows will be separated.
-	RowGapEnabled bool `conjure-docs:"Whether rows will be separated." json:"rowGapEnabled"`
+	RowGapEnabled bool `json:"rowGapEnabled"`
 	// The size of the row gap.
-	RowGapSize *int `conjure-docs:"The size of the row gap." json:"rowGapSize,omitempty"`
+	RowGapSize *int `json:"rowGapSize,omitempty"`
 	// The relative width of the chart export.
-	AspectRatioWidth int `conjure-docs:"The relative width of the chart export." json:"aspectRatioWidth"`
+	AspectRatioWidth int `json:"aspectRatioWidth"`
 	// The relative height of the chart export.
-	AspectRatioHeight int `conjure-docs:"The relative height of the chart export." json:"aspectRatioHeight"`
+	AspectRatioHeight int `json:"aspectRatioHeight"`
 	// Theme parameters specific to chart types.
-	ChartTypeThemes ChartTypeThemes `conjure-docs:"Theme parameters specific to chart types." json:"chartTypeThemes"`
+	ChartTypeThemes ChartTypeThemes `json:"chartTypeThemes"`
 }
 
 func (o ChartThemeContentV1) MarshalYAML() (interface{}, error) {
@@ -106,7 +106,7 @@ func (o *ChartThemeContentV1) UnmarshalYAML(unmarshal func(interface{}) error) e
 // Theme parameters specific to chart types.
 type ChartTypeThemes struct {
 	// The theme specific to parameters of the time series chart.
-	TimeSeries TimeSeriesChartTheme `conjure-docs:"The theme specific to parameters of the time series chart." json:"timeSeries"`
+	TimeSeries TimeSeriesChartTheme `json:"timeSeries"`
 }
 
 func (o ChartTypeThemes) MarshalYAML() (interface{}, error) {
@@ -127,14 +127,14 @@ func (o *ChartTypeThemes) UnmarshalYAML(unmarshal func(interface{}) error) error
 
 type CreateChartThemeRequest struct {
 	// The name of the theme.
-	Name string `conjure-docs:"The name of the theme." json:"name"`
+	Name string `json:"name"`
 	// The theme fields.
-	Content ChartThemeContent `conjure-docs:"The theme fields." json:"content"`
+	Content ChartThemeContent `json:"content"`
 	/*
 	   The workspace in which to create the theme. If not provided, the theme will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the theme. If not provided, the theme will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o CreateChartThemeRequest) MarshalYAML() (interface{}, error) {
@@ -156,15 +156,15 @@ func (o *CreateChartThemeRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 // Theme parameters specific to the time series chart.
 type TimeSeriesChartThemeV1 struct {
 	// The font size of the x-axis ticks.
-	XAxisTickFontSize int `conjure-docs:"The font size of the x-axis ticks." json:"xAxisTickFontSize"`
+	XAxisTickFontSize int `json:"xAxisTickFontSize"`
 	// The font color of the x-axis ticks.
-	XAxisTickFontColor HexColor `conjure-docs:"The font color of the x-axis ticks." json:"xAxisTickFontColor"`
+	XAxisTickFontColor HexColor `json:"xAxisTickFontColor"`
 	// The font size of the y-axis labels.
-	YAxisTitleFontSize int `conjure-docs:"The font size of the y-axis labels." json:"yAxisTitleFontSize"`
+	YAxisTitleFontSize int `json:"yAxisTitleFontSize"`
 	// The font size of the y-axis ticks.
-	YAxisTickFontSize int `conjure-docs:"The font size of the y-axis ticks." json:"yAxisTickFontSize"`
+	YAxisTickFontSize int `json:"yAxisTickFontSize"`
 	// The line thickness in px of the threshold line.
-	ThresholdLineWidth *int `conjure-docs:"The line thickness in px of the threshold line." json:"thresholdLineWidth,omitempty"`
+	ThresholdLineWidth *int `json:"thresholdLineWidth,omitempty"`
 }
 
 func (o TimeSeriesChartThemeV1) MarshalYAML() (interface{}, error) {
@@ -185,9 +185,9 @@ func (o *TimeSeriesChartThemeV1) UnmarshalYAML(unmarshal func(interface{}) error
 
 type UpdateChartThemeRequest struct {
 	// The name of the theme.
-	Name string `conjure-docs:"The name of the theme." json:"name"`
+	Name string `json:"name"`
 	// The theme fields.
-	Content ChartThemeContent `conjure-docs:"The theme fields." json:"content"`
+	Content ChartThemeContent `json:"content"`
 }
 
 func (o UpdateChartThemeRequest) MarshalYAML() (interface{}, error) {

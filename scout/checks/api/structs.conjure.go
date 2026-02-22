@@ -107,7 +107,7 @@ type BatchGetChecklistMetadataResponse struct {
 
 func (o BatchGetChecklistMetadataResponse) MarshalJSON() ([]byte, error) {
 	if o.Metadata == nil {
-		o.Metadata = make(map[api.ChecklistRid]ChecklistMetadata, 0)
+		o.Metadata = make(map[api.ChecklistRid]ChecklistMetadata)
 	}
 	type _tmpBatchGetChecklistMetadataResponse BatchGetChecklistMetadataResponse
 	return safejson.Marshal(_tmpBatchGetChecklistMetadataResponse(o))
@@ -120,7 +120,7 @@ func (o *BatchGetChecklistMetadataResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawBatchGetChecklistMetadataResponse.Metadata == nil {
-		rawBatchGetChecklistMetadataResponse.Metadata = make(map[api.ChecklistRid]ChecklistMetadata, 0)
+		rawBatchGetChecklistMetadataResponse.Metadata = make(map[api.ChecklistRid]ChecklistMetadata)
 	}
 	*o = BatchGetChecklistMetadataResponse(rawBatchGetChecklistMetadataResponse)
 	return nil
@@ -196,7 +196,7 @@ type Check struct {
 	// Deprecated: charts are no longer versioned resources.
 	Chart *api.VersionedVizId `json:"chart,omitempty"`
 	// If omitted, this check represents a manual check.
-	Condition *CheckCondition `conjure-docs:"If omitted, this check represents a manual check." json:"condition,omitempty"`
+	Condition *CheckCondition `json:"condition,omitempty"`
 }
 
 func (o Check) MarshalYAML() (interface{}, error) {
@@ -223,7 +223,7 @@ type CheckContext struct {
 
 func (o CheckContext) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api3.VariableName]VariableLocator, 0)
+		o.Variables = make(map[api3.VariableName]VariableLocator)
 	}
 	type _tmpCheckContext CheckContext
 	return safejson.Marshal(_tmpCheckContext(o))
@@ -236,7 +236,7 @@ func (o *CheckContext) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCheckContext.Variables == nil {
-		rawCheckContext.Variables = make(map[api3.VariableName]VariableLocator, 0)
+		rawCheckContext.Variables = make(map[api3.VariableName]VariableLocator)
 	}
 	*o = CheckContext(rawCheckContext)
 	return nil
@@ -267,7 +267,7 @@ type CheckJobSpec struct {
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
 	   The check implementation index will correspond to the implementation index of the check condition.
 	*/
-	CheckImplementationIndex *int                             `conjure-docs:"Checks can define a single range computation which can evaluate over multiple implementations of a context.\nThe check implementation index will correspond to the implementation index of the check condition." json:"checkImplementationIndex,omitempty"`
+	CheckImplementationIndex *int                             `json:"checkImplementationIndex,omitempty"`
 	CheckEvaluationRid       rids.AutomaticCheckEvaluationRid `json:"checkEvaluationRid"`
 	CheckCondition           CheckCondition                   `json:"checkCondition"`
 	Start                    api2.Timestamp                   `json:"start"`
@@ -306,7 +306,7 @@ type ChecklistMetadata struct {
 
 func (o ChecklistMetadata) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api2.PropertyName]api2.PropertyValue, 0)
+		o.Properties = make(map[api2.PropertyName]api2.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api2.Label, 0)
@@ -322,7 +322,7 @@ func (o *ChecklistMetadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawChecklistMetadata.Properties == nil {
-		rawChecklistMetadata.Properties = make(map[api2.PropertyName]api2.PropertyValue, 0)
+		rawChecklistMetadata.Properties = make(map[api2.PropertyName]api2.PropertyValue)
 	}
 	if rawChecklistMetadata.Labels == nil {
 		rawChecklistMetadata.Labels = make([]api2.Label, 0)
@@ -401,12 +401,12 @@ type CommitChecklistRequest struct {
 	   Variables that can be used in checks. Variables are resolved in order of declaration.
 	   If variable `a` depends on variable `b`, then `b` must be defined before `a` in the list.
 	*/
-	ChecklistVariables []UnresolvedChecklistVariable `conjure-docs:"Variables that can be used in checks. Variables are resolved in order of declaration.\nIf variable \"a\" depends on variable \"b\", then \"b\" must be defined before \"a\" in the list." json:"checklistVariables"`
+	ChecklistVariables []UnresolvedChecklistVariable `json:"checklistVariables"`
 	/*
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommit *api5.CommitId `conjure-docs:"If present, will validate that the latest commit matches this id,\nand otherwise throw CommitConflict." json:"latestCommit,omitempty"`
+	LatestCommit *api5.CommitId `json:"latestCommit,omitempty"`
 }
 
 func (o CommitChecklistRequest) MarshalJSON() ([]byte, error) {
@@ -478,7 +478,7 @@ type CreateCheckRequest struct {
 	   Identifies the lineage of checks this check belongs to. If not specified, a new lineage will be created.
 	   This is named checkLineageRid for historical reasons but is actually a UUID.
 	*/
-	CheckLineageRid          *uuid.UUID    `conjure-docs:"Identifies the lineage of checks this check belongs to. If not specified, a new lineage will be created.\nThis is named checkLineageRid for historical reasons but is actually a UUID." json:"checkLineageRid,omitempty"`
+	CheckLineageRid          *uuid.UUID    `json:"checkLineageRid,omitempty"`
 	Title                    string        `json:"title"`
 	Description              string        `json:"description"`
 	AutoGeneratedTitle       *string       `json:"autoGeneratedTitle,omitempty"`
@@ -489,10 +489,10 @@ type CreateCheckRequest struct {
 	   If the check is executed through a data review, the event will have this type.
 	   Defaults to ERROR.
 	*/
-	GeneratedEventType   *event.EventType `conjure-docs:"The event type that will be used for events generated from an execution of this check.\nIf the check is executed through a data review, the event will have this type.\nDefaults to ERROR." json:"generatedEventType,omitempty"`
+	GeneratedEventType   *event.EventType `json:"generatedEventType,omitempty"`
 	GeneratedEventLabels *[]api2.Label    `json:"generatedEventLabels,omitempty"`
 	// This field should not be omitted.
-	Condition *UnresolvedCheckCondition `conjure-docs:"This field should not be omitted." json:"condition,omitempty"`
+	Condition *UnresolvedCheckCondition `json:"condition,omitempty"`
 }
 
 func (o CreateCheckRequest) MarshalYAML() (interface{}, error) {
@@ -523,14 +523,14 @@ type CreateChecklistRequest struct {
 	   Variables that can be used in checks. Variables are resolved in order of declaration.
 	   If variable `a` depends on variable `b`, then `b` must be defined before `a` in the list.
 	*/
-	ChecklistVariables []UnresolvedChecklistVariable `conjure-docs:"Variables that can be used in checks. Variables are resolved in order of declaration.\nIf variable \"a\" depends on variable \"b\", then \"b\" must be defined before \"a\" in the list." json:"checklistVariables"`
+	ChecklistVariables []UnresolvedChecklistVariable `json:"checklistVariables"`
 	// Default value is true.
-	IsPublished *bool `conjure-docs:"Default value is true." json:"isPublished,omitempty"`
+	IsPublished *bool `json:"isPublished,omitempty"`
 	/*
 	   The workspace in which to create the checklist. If not provided, the checklist will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the checklist. If not provided, the checklist will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o CreateChecklistRequest) MarshalJSON() ([]byte, error) {
@@ -538,7 +538,7 @@ func (o CreateChecklistRequest) MarshalJSON() ([]byte, error) {
 		o.Checks = make([]CreateChecklistEntryRequest, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api2.PropertyName]api2.PropertyValue, 0)
+		o.Properties = make(map[api2.PropertyName]api2.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api2.Label, 0)
@@ -560,7 +560,7 @@ func (o *CreateChecklistRequest) UnmarshalJSON(data []byte) error {
 		rawCreateChecklistRequest.Checks = make([]CreateChecklistEntryRequest, 0)
 	}
 	if rawCreateChecklistRequest.Properties == nil {
-		rawCreateChecklistRequest.Properties = make(map[api2.PropertyName]api2.PropertyValue, 0)
+		rawCreateChecklistRequest.Properties = make(map[api2.PropertyName]api2.PropertyValue)
 	}
 	if rawCreateChecklistRequest.Labels == nil {
 		rawCreateChecklistRequest.Labels = make([]api2.Label, 0)
@@ -644,7 +644,7 @@ type GetAllLabelsAndPropertiesResponse struct {
 
 func (o GetAllLabelsAndPropertiesResponse) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api2.PropertyName][]api2.PropertyValue, 0)
+		o.Properties = make(map[api2.PropertyName][]api2.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api2.Label, 0)
@@ -660,7 +660,7 @@ func (o *GetAllLabelsAndPropertiesResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawGetAllLabelsAndPropertiesResponse.Properties == nil {
-		rawGetAllLabelsAndPropertiesResponse.Properties = make(map[api2.PropertyName][]api2.PropertyValue, 0)
+		rawGetAllLabelsAndPropertiesResponse.Properties = make(map[api2.PropertyName][]api2.PropertyValue)
 	}
 	if rawGetAllLabelsAndPropertiesResponse.Labels == nil {
 		rawGetAllLabelsAndPropertiesResponse.Labels = make([]api2.Label, 0)
@@ -705,13 +705,13 @@ func (o *InProgress) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type MergeToMainRequest struct {
 	// If "main", the request will throw.
-	BranchName api5.BranchName `conjure-docs:"If \"main\", the request will throw." json:"branchName"`
+	BranchName api5.BranchName `json:"branchName"`
 	Message    string          `json:"message"`
 	/*
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommitOnMain *api5.CommitId `conjure-docs:"If present, will validate that the latest commit matches this id,\nand otherwise throw CommitConflict." json:"latestCommitOnMain,omitempty"`
+	LatestCommitOnMain *api5.CommitId `json:"latestCommitOnMain,omitempty"`
 }
 
 func (o MergeToMainRequest) MarshalYAML() (interface{}, error) {
@@ -740,7 +740,7 @@ type NumRangesConditionV1 struct {
 
 func (o NumRangesConditionV1) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api3.VariableName]api1.ChannelLocator, 0)
+		o.Variables = make(map[api3.VariableName]api1.ChannelLocator)
 	}
 	type _tmpNumRangesConditionV1 NumRangesConditionV1
 	return safejson.Marshal(_tmpNumRangesConditionV1(o))
@@ -753,7 +753,7 @@ func (o *NumRangesConditionV1) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNumRangesConditionV1.Variables == nil {
-		rawNumRangesConditionV1.Variables = make(map[api3.VariableName]api1.ChannelLocator, 0)
+		rawNumRangesConditionV1.Variables = make(map[api3.VariableName]api1.ChannelLocator)
 	}
 	*o = NumRangesConditionV1(rawNumRangesConditionV1)
 	return nil
@@ -785,7 +785,7 @@ type NumRangesConditionV2 struct {
 
 func (o NumRangesConditionV2) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api3.VariableName]VariableLocator, 0)
+		o.Variables = make(map[api3.VariableName]VariableLocator)
 	}
 	type _tmpNumRangesConditionV2 NumRangesConditionV2
 	return safejson.Marshal(_tmpNumRangesConditionV2(o))
@@ -798,7 +798,7 @@ func (o *NumRangesConditionV2) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNumRangesConditionV2.Variables == nil {
-		rawNumRangesConditionV2.Variables = make(map[api3.VariableName]VariableLocator, 0)
+		rawNumRangesConditionV2.Variables = make(map[api3.VariableName]VariableLocator)
 	}
 	*o = NumRangesConditionV2(rawNumRangesConditionV2)
 	return nil
@@ -832,7 +832,7 @@ type NumRangesConditionV3 struct {
 
 func (o NumRangesConditionV3) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api3.VariableName]VariableLocator, 0)
+		o.Variables = make(map[api3.VariableName]VariableLocator)
 	}
 	type _tmpNumRangesConditionV3 NumRangesConditionV3
 	return safejson.Marshal(_tmpNumRangesConditionV3(o))
@@ -845,7 +845,7 @@ func (o *NumRangesConditionV3) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawNumRangesConditionV3.Variables == nil {
-		rawNumRangesConditionV3.Variables = make(map[api3.VariableName]VariableLocator, 0)
+		rawNumRangesConditionV3.Variables = make(map[api3.VariableName]VariableLocator)
 	}
 	*o = NumRangesConditionV3(rawNumRangesConditionV3)
 	return nil
@@ -873,7 +873,7 @@ type ParameterizedNumRangesConditionV1 struct {
 	   Each permutation of check context in the list will be executed as a new a stand-alone check. Violations
 	   produced will be associated with the context of the index.
 	*/
-	Implementations []CheckContext `conjure-docs:"Each permutation of check context in the list will be executed as a new a stand-alone check. Violations\nproduced will be associated with the context of the index." json:"implementations"`
+	Implementations []CheckContext `json:"implementations"`
 }
 
 func (o ParameterizedNumRangesConditionV1) MarshalJSON() ([]byte, error) {
@@ -941,12 +941,12 @@ type SaveChecklistRequest struct {
 	   Variables that can be used in checks. Variables are resolved in order of declaration.
 	   If variable `a` depends on variable `b`, then `b` must be defined before `a` in the list.
 	*/
-	ChecklistVariables []UnresolvedChecklistVariable `conjure-docs:"Variables that can be used in checks. Variables are resolved in order of declaration.\nIf variable \"a\" depends on variable \"b\", then \"b\" must be defined before \"a\" in the list." json:"checklistVariables"`
+	ChecklistVariables []UnresolvedChecklistVariable `json:"checklistVariables"`
 	/*
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommit *api5.CommitId `conjure-docs:"If present, will validate that the latest commit matches this id,\nand otherwise throw CommitConflict." json:"latestCommit,omitempty"`
+	LatestCommit *api5.CommitId `json:"latestCommit,omitempty"`
 }
 
 func (o SaveChecklistRequest) MarshalJSON() ([]byte, error) {
@@ -995,10 +995,10 @@ func (o *SaveChecklistRequest) UnmarshalYAML(unmarshal func(interface{}) error) 
 type SearchChecklistsRequest struct {
 	Query ChecklistSearchQuery `json:"query"`
 	// If not present, will sort by LAST_USED in descending order.
-	SortBy        *SortOptions `conjure-docs:"If not present, will sort by LAST_USED in descending order." json:"sortBy,omitempty"`
+	SortBy        *SortOptions `json:"sortBy,omitempty"`
 	NextPageToken *api2.Token  `json:"nextPageToken,omitempty"`
 	// Defaults to 100. Will throw if larger than 1000.
-	PageSize *int `conjure-docs:"Defaults to 100. Will throw if larger than 1000." json:"pageSize,omitempty"`
+	PageSize *int `json:"pageSize,omitempty"`
 	/*
 	   Deprecated: Use search filters instead. If no archive search filters are provided, the search will default to
 	   returning NOT_ARCHIVED.
@@ -1240,7 +1240,7 @@ type UnresolvedNumRangesConditionV2 struct {
 
 func (o UnresolvedNumRangesConditionV2) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api3.VariableName]UnresolvedVariableLocator, 0)
+		o.Variables = make(map[api3.VariableName]UnresolvedVariableLocator)
 	}
 	type _tmpUnresolvedNumRangesConditionV2 UnresolvedNumRangesConditionV2
 	return safejson.Marshal(_tmpUnresolvedNumRangesConditionV2(o))
@@ -1253,7 +1253,7 @@ func (o *UnresolvedNumRangesConditionV2) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawUnresolvedNumRangesConditionV2.Variables == nil {
-		rawUnresolvedNumRangesConditionV2.Variables = make(map[api3.VariableName]UnresolvedVariableLocator, 0)
+		rawUnresolvedNumRangesConditionV2.Variables = make(map[api3.VariableName]UnresolvedVariableLocator)
 	}
 	*o = UnresolvedNumRangesConditionV2(rawUnresolvedNumRangesConditionV2)
 	return nil
@@ -1284,12 +1284,12 @@ type UnresolvedNumRangesConditionV3 struct {
 	   Default overrides for the variables used in the check condition. These variables can be overridden
 	   at checklist execution time.
 	*/
-	Variables map[api3.VariableName]UnresolvedVariableLocator `conjure-docs:"Default overrides for the variables used in the check condition. These variables can be overridden\nat checklist execution time." json:"variables"`
+	Variables map[api3.VariableName]UnresolvedVariableLocator `json:"variables"`
 }
 
 func (o UnresolvedNumRangesConditionV3) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api3.VariableName]UnresolvedVariableLocator, 0)
+		o.Variables = make(map[api3.VariableName]UnresolvedVariableLocator)
 	}
 	type _tmpUnresolvedNumRangesConditionV3 UnresolvedNumRangesConditionV3
 	return safejson.Marshal(_tmpUnresolvedNumRangesConditionV3(o))
@@ -1302,7 +1302,7 @@ func (o *UnresolvedNumRangesConditionV3) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawUnresolvedNumRangesConditionV3.Variables == nil {
-		rawUnresolvedNumRangesConditionV3.Variables = make(map[api3.VariableName]UnresolvedVariableLocator, 0)
+		rawUnresolvedNumRangesConditionV3.Variables = make(map[api3.VariableName]UnresolvedVariableLocator)
 	}
 	*o = UnresolvedNumRangesConditionV3(rawUnresolvedNumRangesConditionV3)
 	return nil
@@ -1330,7 +1330,7 @@ type UnresolvedParameterizedNumRangesConditionV1 struct {
 	   Each permutation of check context in the list will be executed as a new a stand-alone check. Violations
 	   produced will be associated with the context of the index.
 	*/
-	Implementations []UnresolvedVariables `conjure-docs:"Each permutation of check context in the list will be executed as a new a stand-alone check. Violations\nproduced will be associated with the context of the index." json:"implementations"`
+	Implementations []UnresolvedVariables `json:"implementations"`
 }
 
 func (o UnresolvedParameterizedNumRangesConditionV1) MarshalJSON() ([]byte, error) {
@@ -1376,7 +1376,7 @@ type UnresolvedVariables struct {
 
 func (o UnresolvedVariables) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api3.VariableName]UnresolvedVariableLocator, 0)
+		o.Variables = make(map[api3.VariableName]UnresolvedVariableLocator)
 	}
 	type _tmpUnresolvedVariables UnresolvedVariables
 	return safejson.Marshal(_tmpUnresolvedVariables(o))
@@ -1389,7 +1389,7 @@ func (o *UnresolvedVariables) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawUnresolvedVariables.Variables == nil {
-		rawUnresolvedVariables.Variables = make(map[api3.VariableName]UnresolvedVariableLocator, 0)
+		rawUnresolvedVariables.Variables = make(map[api3.VariableName]UnresolvedVariableLocator)
 	}
 	*o = UnresolvedVariables(rawUnresolvedVariables)
 	return nil
@@ -1447,7 +1447,7 @@ type VersionedChecklist struct {
 	   Variables that can be used in checks. Variables are resolved in order of declaration.
 	   If variable `a` depends on variable `b`, then `b` must be defined before `a` in the list.
 	*/
-	ChecklistVariables []ChecklistVariable `conjure-docs:"Variables that can be used in checks. Variables are resolved in order of declaration.\nIf variable \"a\" depends on variable \"b\", then \"b\" must be defined before \"a\" in the list." json:"checklistVariables"`
+	ChecklistVariables []ChecklistVariable `json:"checklistVariables"`
 }
 
 func (o VersionedChecklist) MarshalJSON() ([]byte, error) {

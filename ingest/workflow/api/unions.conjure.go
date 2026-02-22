@@ -110,7 +110,7 @@ func (u *McapProtoChannels) AcceptFuncs(allFunc func(Empty) error, includeTopics
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in McapProtoChannels type")
 		}
 		return unknownFunc(u.typ)
 	case "all":
@@ -131,15 +131,15 @@ func (u *McapProtoChannels) AcceptFuncs(allFunc func(Empty) error, includeTopics
 	}
 }
 
-func (u *McapProtoChannels) AllNoopSuccess(Empty) error {
+func (u *McapProtoChannels) AllNoopSuccess(_ Empty) error {
 	return nil
 }
 
-func (u *McapProtoChannels) IncludeTopicsNoopSuccess([]McapTopicName) error {
+func (u *McapProtoChannels) IncludeTopicsNoopSuccess(_ []McapTopicName) error {
 	return nil
 }
 
-func (u *McapProtoChannels) ExcludeTopicsNoopSuccess([]McapTopicName) error {
+func (u *McapProtoChannels) ExcludeTopicsNoopSuccess(_ []McapTopicName) error {
 	return nil
 }
 

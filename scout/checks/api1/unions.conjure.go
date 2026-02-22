@@ -83,7 +83,7 @@ func (u *JobResult) AcceptFuncs(checkJobResultFunc func(CheckJobResult) error, u
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in JobResult type")
 		}
 		return unknownFunc(u.typ)
 	case "checkJobResult":
@@ -94,7 +94,7 @@ func (u *JobResult) AcceptFuncs(checkJobResultFunc func(CheckJobResult) error, u
 	}
 }
 
-func (u *JobResult) CheckJobResultNoopSuccess(CheckJobResult) error {
+func (u *JobResult) CheckJobResultNoopSuccess(_ CheckJobResult) error {
 	return nil
 }
 
@@ -246,7 +246,7 @@ func (u *JobStatus) AcceptFuncs(inProgressFunc func(api.InProgress) error, compl
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in JobStatus type")
 		}
 		return unknownFunc(u.typ)
 	case "inProgress":
@@ -267,15 +267,15 @@ func (u *JobStatus) AcceptFuncs(inProgressFunc func(api.InProgress) error, compl
 	}
 }
 
-func (u *JobStatus) InProgressNoopSuccess(api.InProgress) error {
+func (u *JobStatus) InProgressNoopSuccess(_ api.InProgress) error {
 	return nil
 }
 
-func (u *JobStatus) CompletedNoopSuccess(Completed) error {
+func (u *JobStatus) CompletedNoopSuccess(_ Completed) error {
 	return nil
 }
 
-func (u *JobStatus) FailedNoopSuccess(api.Failed) error {
+func (u *JobStatus) FailedNoopSuccess(_ api.Failed) error {
 	return nil
 }
 

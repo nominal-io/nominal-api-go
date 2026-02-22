@@ -112,7 +112,7 @@ func (u *ApiScrapingConfig) AcceptFuncs(allChannelsFunc func(AllChannelsConnecti
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ApiScrapingConfig type")
 		}
 		return unknownFunc(u.typ)
 	case "allChannels":
@@ -133,15 +133,15 @@ func (u *ApiScrapingConfig) AcceptFuncs(allChannelsFunc func(AllChannelsConnecti
 	}
 }
 
-func (u *ApiScrapingConfig) AllChannelsNoopSuccess(AllChannelsConnectionsScrapingConfig) error {
+func (u *ApiScrapingConfig) AllChannelsNoopSuccess(_ AllChannelsConnectionsScrapingConfig) error {
 	return nil
 }
 
-func (u *ApiScrapingConfig) ChannelAllowListNoopSuccess(ChannelAllowListConnectionsScrapingConfig) error {
+func (u *ApiScrapingConfig) ChannelAllowListNoopSuccess(_ ChannelAllowListConnectionsScrapingConfig) error {
 	return nil
 }
 
-func (u *ApiScrapingConfig) ChannelBlockListNoopSuccess(ChannelBlockListConnectionsScrapingConfig) error {
+func (u *ApiScrapingConfig) ChannelBlockListNoopSuccess(_ ChannelBlockListConnectionsScrapingConfig) error {
 	return nil
 }
 
@@ -395,7 +395,7 @@ func (u *ConnectionDetails) AcceptFuncs(timescaleFunc func(TimescaleConnectionDe
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ConnectionDetails type")
 		}
 		return unknownFunc(u.typ)
 	case "timescale":
@@ -441,35 +441,35 @@ func (u *ConnectionDetails) AcceptFuncs(timescaleFunc func(TimescaleConnectionDe
 	}
 }
 
-func (u *ConnectionDetails) TimescaleNoopSuccess(TimescaleConnectionDetails) error {
+func (u *ConnectionDetails) TimescaleNoopSuccess(_ TimescaleConnectionDetails) error {
 	return nil
 }
 
-func (u *ConnectionDetails) InfluxNoopSuccess(Influx2ConnectionDetails) error {
+func (u *ConnectionDetails) InfluxNoopSuccess(_ Influx2ConnectionDetails) error {
 	return nil
 }
 
-func (u *ConnectionDetails) Influx1NoopSuccess(Influx1ConnectionDetails) error {
+func (u *ConnectionDetails) Influx1NoopSuccess(_ Influx1ConnectionDetails) error {
 	return nil
 }
 
-func (u *ConnectionDetails) NominalNoopSuccess(NominalConnectionDetails) error {
+func (u *ConnectionDetails) NominalNoopSuccess(_ NominalConnectionDetails) error {
 	return nil
 }
 
-func (u *ConnectionDetails) TimestreamNoopSuccess(TimestreamConnectionDetails) error {
+func (u *ConnectionDetails) TimestreamNoopSuccess(_ TimestreamConnectionDetails) error {
 	return nil
 }
 
-func (u *ConnectionDetails) VisualCrossingNoopSuccess(VisualCrossingConnectionDetails) error {
+func (u *ConnectionDetails) VisualCrossingNoopSuccess(_ VisualCrossingConnectionDetails) error {
 	return nil
 }
 
-func (u *ConnectionDetails) BigQueryNoopSuccess(BigQueryConnectionDetails) error {
+func (u *ConnectionDetails) BigQueryNoopSuccess(_ BigQueryConnectionDetails) error {
 	return nil
 }
 
-func (u *ConnectionDetails) ApiNoopSuccess(ApiConnectionDetails) error {
+func (u *ConnectionDetails) ApiNoopSuccess(_ ApiConnectionDetails) error {
 	return nil
 }
 
@@ -719,7 +719,7 @@ func (u *HeaderValue) AcceptFuncs(plainFunc func(string) error, secretRidFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in HeaderValue type")
 		}
 		return unknownFunc(u.typ)
 	case "plain":
@@ -735,11 +735,11 @@ func (u *HeaderValue) AcceptFuncs(plainFunc func(string) error, secretRidFunc fu
 	}
 }
 
-func (u *HeaderValue) PlainNoopSuccess(string) error {
+func (u *HeaderValue) PlainNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *HeaderValue) SecretRidNoopSuccess(SecretRid) error {
+func (u *HeaderValue) SecretRidNoopSuccess(_ SecretRid) error {
 	return nil
 }
 
@@ -907,7 +907,7 @@ func (u *InfluxChannelNameComponent) AcceptFuncs(bucketFunc func(api.Empty) erro
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in InfluxChannelNameComponent type")
 		}
 		return unknownFunc(u.typ)
 	case "bucket":
@@ -928,15 +928,15 @@ func (u *InfluxChannelNameComponent) AcceptFuncs(bucketFunc func(api.Empty) erro
 	}
 }
 
-func (u *InfluxChannelNameComponent) BucketNoopSuccess(api.Empty) error {
+func (u *InfluxChannelNameComponent) BucketNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
-func (u *InfluxChannelNameComponent) MeasurementNoopSuccess(api.Empty) error {
+func (u *InfluxChannelNameComponent) MeasurementNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
-func (u *InfluxChannelNameComponent) FieldNoopSuccess(api.Empty) error {
+func (u *InfluxChannelNameComponent) FieldNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
@@ -1120,7 +1120,7 @@ func (u *InfluxScrapingFilter) AcceptFuncs(notFunc func(InfluxScrapingFilter) er
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in InfluxScrapingFilter type")
 		}
 		return unknownFunc(u.typ)
 	case "not":
@@ -1141,15 +1141,15 @@ func (u *InfluxScrapingFilter) AcceptFuncs(notFunc func(InfluxScrapingFilter) er
 	}
 }
 
-func (u *InfluxScrapingFilter) NotNoopSuccess(InfluxScrapingFilter) error {
+func (u *InfluxScrapingFilter) NotNoopSuccess(_ InfluxScrapingFilter) error {
 	return nil
 }
 
-func (u *InfluxScrapingFilter) MatchBucketNoopSuccess([]BucketName) error {
+func (u *InfluxScrapingFilter) MatchBucketNoopSuccess(_ []BucketName) error {
 	return nil
 }
 
-func (u *InfluxScrapingFilter) MatchMeasurementNoopSuccess([]MeasurementName) error {
+func (u *InfluxScrapingFilter) MatchMeasurementNoopSuccess(_ []MeasurementName) error {
 	return nil
 }
 
@@ -1319,7 +1319,7 @@ func (u *NominalChannelNameComponent) AcceptFuncs(channelFunc func(api.Empty) er
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NominalChannelNameComponent type")
 		}
 		return unknownFunc(u.typ)
 	case "channel":
@@ -1335,11 +1335,11 @@ func (u *NominalChannelNameComponent) AcceptFuncs(channelFunc func(api.Empty) er
 	}
 }
 
-func (u *NominalChannelNameComponent) ChannelNoopSuccess(api.Empty) error {
+func (u *NominalChannelNameComponent) ChannelNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
-func (u *NominalChannelNameComponent) ValueOfTagWithNameNoopSuccess(api.TagName) error {
+func (u *NominalChannelNameComponent) ValueOfTagWithNameNoopSuccess(_ api.TagName) error {
 	return nil
 }
 
@@ -1493,7 +1493,7 @@ func (u *PivotedTimescaleChannelNameComponent) AcceptFuncs(tableFunc func(api.Em
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in PivotedTimescaleChannelNameComponent type")
 		}
 		return unknownFunc(u.typ)
 	case "table":
@@ -1509,11 +1509,11 @@ func (u *PivotedTimescaleChannelNameComponent) AcceptFuncs(tableFunc func(api.Em
 	}
 }
 
-func (u *PivotedTimescaleChannelNameComponent) TableNoopSuccess(api.Empty) error {
+func (u *PivotedTimescaleChannelNameComponent) TableNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
-func (u *PivotedTimescaleChannelNameComponent) NameNoopSuccess(api.Empty) error {
+func (u *PivotedTimescaleChannelNameComponent) NameNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
@@ -1737,7 +1737,7 @@ func (u *ScrapingConfig) AcceptFuncs(influxFunc func(InfluxScrapingConfig) error
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ScrapingConfig type")
 		}
 		return unknownFunc(u.typ)
 	case "influx":
@@ -1778,31 +1778,31 @@ func (u *ScrapingConfig) AcceptFuncs(influxFunc func(InfluxScrapingConfig) error
 	}
 }
 
-func (u *ScrapingConfig) InfluxNoopSuccess(InfluxScrapingConfig) error {
+func (u *ScrapingConfig) InfluxNoopSuccess(_ InfluxScrapingConfig) error {
 	return nil
 }
 
-func (u *ScrapingConfig) NominalNoopSuccess(NominalScrapingConfig) error {
+func (u *ScrapingConfig) NominalNoopSuccess(_ NominalScrapingConfig) error {
 	return nil
 }
 
-func (u *ScrapingConfig) TimestreamNoopSuccess(TimestreamScrapingConfig) error {
+func (u *ScrapingConfig) TimestreamNoopSuccess(_ TimestreamScrapingConfig) error {
 	return nil
 }
 
-func (u *ScrapingConfig) TimescaleNoopSuccess(PivotedTimescaleScrapingConfig) error {
+func (u *ScrapingConfig) TimescaleNoopSuccess(_ PivotedTimescaleScrapingConfig) error {
 	return nil
 }
 
-func (u *ScrapingConfig) VisualCrossingNoopSuccess(VisualCrossingScrapingConfig) error {
+func (u *ScrapingConfig) VisualCrossingNoopSuccess(_ VisualCrossingScrapingConfig) error {
 	return nil
 }
 
-func (u *ScrapingConfig) BigQueryNoopSuccess(BigQueryScrapingConfig) error {
+func (u *ScrapingConfig) BigQueryNoopSuccess(_ BigQueryScrapingConfig) error {
 	return nil
 }
 
-func (u *ScrapingConfig) ApiNoopSuccess(ApiScrapingConfig) error {
+func (u *ScrapingConfig) ApiNoopSuccess(_ ApiScrapingConfig) error {
 	return nil
 }
 
@@ -2050,7 +2050,7 @@ func (u *TimescaleScrapingFilter) AcceptFuncs(notFunc func(TimescaleScrapingFilt
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimescaleScrapingFilter type")
 		}
 		return unknownFunc(u.typ)
 	case "not":
@@ -2071,15 +2071,15 @@ func (u *TimescaleScrapingFilter) AcceptFuncs(notFunc func(TimescaleScrapingFilt
 	}
 }
 
-func (u *TimescaleScrapingFilter) NotNoopSuccess(TimescaleScrapingFilter) error {
+func (u *TimescaleScrapingFilter) NotNoopSuccess(_ TimescaleScrapingFilter) error {
 	return nil
 }
 
-func (u *TimescaleScrapingFilter) MatchTableNoopSuccess([]TableName) error {
+func (u *TimescaleScrapingFilter) MatchTableNoopSuccess(_ []TableName) error {
 	return nil
 }
 
-func (u *TimescaleScrapingFilter) MatchSchemaNoopSuccess([]SchemaName) error {
+func (u *TimescaleScrapingFilter) MatchSchemaNoopSuccess(_ []SchemaName) error {
 	return nil
 }
 
@@ -2277,7 +2277,7 @@ func (u *TimestreamChannelNameComponent) AcceptFuncs(tableFunc func(api.Empty) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimestreamChannelNameComponent type")
 		}
 		return unknownFunc(u.typ)
 	case "table":
@@ -2303,19 +2303,19 @@ func (u *TimestreamChannelNameComponent) AcceptFuncs(tableFunc func(api.Empty) e
 	}
 }
 
-func (u *TimestreamChannelNameComponent) TableNoopSuccess(api.Empty) error {
+func (u *TimestreamChannelNameComponent) TableNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
-func (u *TimestreamChannelNameComponent) MeasureNoopSuccess(api.Empty) error {
+func (u *TimestreamChannelNameComponent) MeasureNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
-func (u *TimestreamChannelNameComponent) AttributeNoopSuccess(api.Empty) error {
+func (u *TimestreamChannelNameComponent) AttributeNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
-func (u *TimestreamChannelNameComponent) ValueOfTagWithNameNoopSuccess(api.TagName) error {
+func (u *TimestreamChannelNameComponent) ValueOfTagWithNameNoopSuccess(_ api.TagName) error {
 	return nil
 }
 
@@ -2487,7 +2487,7 @@ func (u *TimestreamScrapingFilter) AcceptFuncs(matchTableFunc func([]TableName) 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimestreamScrapingFilter type")
 		}
 		return unknownFunc(u.typ)
 	case "matchTable":
@@ -2498,7 +2498,7 @@ func (u *TimestreamScrapingFilter) AcceptFuncs(matchTableFunc func([]TableName) 
 	}
 }
 
-func (u *TimestreamScrapingFilter) MatchTableNoopSuccess([]TableName) error {
+func (u *TimestreamScrapingFilter) MatchTableNoopSuccess(_ []TableName) error {
 	return nil
 }
 

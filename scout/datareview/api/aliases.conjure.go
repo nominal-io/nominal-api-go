@@ -27,6 +27,19 @@ func (a *ManualCheckEvaluationRid) UnmarshalText(data []byte) error {
 	return nil
 }
 
+func (a ManualCheckEvaluationRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ManualCheckEvaluationRid) UnmarshalJSON(data []byte) error {
+	var rawManualCheckEvaluationRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawManualCheckEvaluationRid); err != nil {
+		return err
+	}
+	*a = ManualCheckEvaluationRid(rawManualCheckEvaluationRid)
+	return nil
+}
+
 func (a ManualCheckEvaluationRid) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(a)
 	if err != nil {

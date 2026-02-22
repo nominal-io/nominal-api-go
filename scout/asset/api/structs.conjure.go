@@ -21,7 +21,7 @@ type AddDataScopesToAssetRequest struct {
 	   Throws if any existing data scopes have data scope names that conflict with the data scope names
 	   in the request.
 	*/
-	DataScopes []CreateAssetDataScope `conjure-docs:"The data scopes to add to the asset.\n\nThrows if any existing data scopes have data scope names that conflict with the data scope names\nin the request." json:"dataScopes"`
+	DataScopes []CreateAssetDataScope `json:"dataScopes"`
 }
 
 func (o AddDataScopesToAssetRequest) MarshalJSON() ([]byte, error) {
@@ -70,27 +70,27 @@ type Asset struct {
 	   Labels associated with the asset. These labels do not have a time dimension.
 	   To associate labels with a range of time, create a time range on the asset with labels.
 	*/
-	Labels []api1.Label `conjure-docs:"Labels associated with the asset. These labels do not have a time dimension.\nTo associate labels with a range of time, create a time range on the asset with labels." json:"labels"`
+	Labels []api1.Label `json:"labels"`
 	/*
 	   Links associated with the asset. These links do not have a time dimension.
 	   To associate links with a range of time, create a time range on the asset with links.
 	*/
-	Links []api2.Link `conjure-docs:"Links associated with the asset. These links do not have a time dimension.\nTo associate links with a range of time, create a time range on the asset with links." json:"links"`
+	Links []api2.Link `json:"links"`
 	// The data scopes associated with the asset.
-	DataScopes  []DataScope             `conjure-docs:"The data scopes associated with the asset." json:"dataScopes"`
+	DataScopes  []DataScope             `json:"dataScopes"`
 	CreatedBy   *rid.ResourceIdentifier `json:"createdBy,omitempty"`
 	CreatedAt   datetime.DateTime       `json:"createdAt"`
 	UpdatedAt   datetime.DateTime       `json:"updatedAt"`
 	Attachments []rids.AttachmentRid    `json:"attachments"`
 	Type        *api.TypeRid            `json:"type,omitempty"`
 	// Auto created assets are considered staged by default.
-	IsStaged   bool `conjure-docs:"Auto created assets are considered staged by default." json:"isStaged"`
+	IsStaged   bool `json:"isStaged"`
 	IsArchived bool `json:"isArchived"`
 }
 
 func (o Asset) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		o.Properties = make(map[api1.PropertyName]api1.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api1.Label, 0)
@@ -115,7 +115,7 @@ func (o *Asset) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawAsset.Properties == nil {
-		rawAsset.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		rawAsset.Properties = make(map[api1.PropertyName]api1.PropertyValue)
 	}
 	if rawAsset.Labels == nil {
 		rawAsset.Labels = make([]api1.Label, 0)
@@ -157,7 +157,7 @@ type AssetSortOptions struct {
 	   Field to sort by. Includes both field and property-based sorting.
 	   Must be supplied if field is not provided separately.
 	*/
-	SortKey *SortKey `conjure-docs:"Field to sort by. Includes both field and property-based sorting.\nMust be supplied if field is not provided separately." json:"sortKey,omitempty"`
+	SortKey *SortKey `json:"sortKey,omitempty"`
 }
 
 func (o AssetSortOptions) MarshalYAML() (interface{}, error) {
@@ -182,7 +182,7 @@ type AssetTypeDataScopeConfig struct {
 	   Tag names that should be supplied to downscope data for an asset of the asset type. These are not
 	   enforced.
 	*/
-	Tags TagConfig `conjure-docs:"Tag names that should be supplied to downscope data for an asset of the asset type. These are not \nenforced." json:"tags"`
+	Tags TagConfig `json:"tags"`
 }
 
 func (o AssetTypeDataScopeConfig) MarshalYAML() (interface{}, error) {
@@ -269,19 +269,19 @@ func (o *ChannelMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error
 
 type CreateAssetDataScope struct {
 	// The name of the data scope. The name is guaranteed to be be unique within the context of an asset.
-	DataScopeName api3.DataSourceRefName `conjure-docs:"The name of the data scope. The name is guaranteed to be be unique within the context of an asset." json:"dataScopeName"`
+	DataScopeName api3.DataSourceRefName `json:"dataScopeName"`
 	DataSource    api2.DataSource        `json:"dataSource"`
 	Offset        *api2.Duration         `json:"offset,omitempty"`
 	/*
 	   Filters the data source to series matching these tag values. The filtered set of series should be
 	   the ones that belong to the asset.
 	*/
-	SeriesTags map[api1.TagName]api1.TagValue `conjure-docs:"Filters the data source to series matching these tag values. The filtered set of series should be\nthe ones that belong to the asset." json:"seriesTags"`
+	SeriesTags map[api1.TagName]api1.TagValue `json:"seriesTags"`
 }
 
 func (o CreateAssetDataScope) MarshalJSON() ([]byte, error) {
 	if o.SeriesTags == nil {
-		o.SeriesTags = make(map[api1.TagName]api1.TagValue, 0)
+		o.SeriesTags = make(map[api1.TagName]api1.TagValue)
 	}
 	type _tmpCreateAssetDataScope CreateAssetDataScope
 	return safejson.Marshal(_tmpCreateAssetDataScope(o))
@@ -294,7 +294,7 @@ func (o *CreateAssetDataScope) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateAssetDataScope.SeriesTags == nil {
-		rawCreateAssetDataScope.SeriesTags = make(map[api1.TagName]api1.TagValue, 0)
+		rawCreateAssetDataScope.SeriesTags = make(map[api1.TagName]api1.TagValue)
 	}
 	*o = CreateAssetDataScope(rawCreateAssetDataScope)
 	return nil
@@ -323,7 +323,7 @@ type CreateAssetRequest struct {
 	Labels      []api1.Label                             `json:"labels"`
 	Links       []api2.Link                              `json:"links"`
 	// The data scopes associated with the asset.
-	DataScopes  []CreateAssetDataScope `conjure-docs:"The data scopes associated with the asset." json:"dataScopes"`
+	DataScopes  []CreateAssetDataScope `json:"dataScopes"`
 	Attachments []rids.AttachmentRid   `json:"attachments"`
 	Type        *api.TypeRid           `json:"type,omitempty"`
 	/*
@@ -332,12 +332,12 @@ type CreateAssetRequest struct {
 	   organization is configured.
 	   All data scopes, attachments, and the optional asset type must be in the same workspace.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the asset. If not provided, the asset will be created in\nthe default workspace for the user's organization, if the default workspace for the\norganization is configured.\nAll data scopes, attachments, and the optional asset type must be in the same workspace." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 }
 
 func (o CreateAssetRequest) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		o.Properties = make(map[api1.PropertyName]api1.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api1.Label, 0)
@@ -362,7 +362,7 @@ func (o *CreateAssetRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateAssetRequest.Properties == nil {
-		rawCreateAssetRequest.Properties = make(map[api1.PropertyName]api1.PropertyValue, 0)
+		rawCreateAssetRequest.Properties = make(map[api1.PropertyName]api1.PropertyValue)
 	}
 	if rawCreateAssetRequest.Labels == nil {
 		rawCreateAssetRequest.Labels = make([]api1.Label, 0)
@@ -406,17 +406,17 @@ type CreateTypeRequest struct {
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the asset type. If not provided, the asset type will be created in\nthe default workspace for the user's organization, if the default workspace for the\norganization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 	/*
 	   The configuration outlines what a data scope should provide when added to an asset of this type. It is
 	   referenced at data scope creation time, but does not actively modify existing data scopes.
 	*/
-	DatasourceConfigs *map[rids.DataSourceRid]AssetTypeDataScopeConfig `conjure-docs:"The configuration outlines what a data scope should provide when added to an asset of this type. It is \nreferenced at data scope creation time, but does not actively modify existing data scopes." json:"datasourceConfigs,omitempty"`
+	DatasourceConfigs *map[rids.DataSourceRid]AssetTypeDataScopeConfig `json:"datasourceConfigs,omitempty"`
 }
 
 func (o CreateTypeRequest) MarshalJSON() ([]byte, error) {
 	if o.PropertyConfigs == nil {
-		o.PropertyConfigs = make(map[api1.PropertyName]PropertyConfig, 0)
+		o.PropertyConfigs = make(map[api1.PropertyName]PropertyConfig)
 	}
 	type _tmpCreateTypeRequest CreateTypeRequest
 	return safejson.Marshal(_tmpCreateTypeRequest(o))
@@ -429,7 +429,7 @@ func (o *CreateTypeRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateTypeRequest.PropertyConfigs == nil {
-		rawCreateTypeRequest.PropertyConfigs = make(map[api1.PropertyName]PropertyConfig, 0)
+		rawCreateTypeRequest.PropertyConfigs = make(map[api1.PropertyName]PropertyConfig)
 	}
 	*o = CreateTypeRequest(rawCreateTypeRequest)
 	return nil
@@ -453,7 +453,7 @@ func (o *CreateTypeRequest) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 type DataScope struct {
 	// The name of the data scope. The name is guaranteed to be be unique within the context of an asset.
-	DataScopeName api3.DataSourceRefName `conjure-docs:"The name of the data scope. The name is guaranteed to be be unique within the context of an asset." json:"dataScopeName"`
+	DataScopeName api3.DataSourceRefName `json:"dataScopeName"`
 	DataSource    api2.DataSource        `json:"dataSource"`
 	Offset        *api2.Duration         `json:"offset,omitempty"`
 	TimestampType api2.WeakTimestampType `json:"timestampType"`
@@ -461,12 +461,12 @@ type DataScope struct {
 	   Filters the data source to series matching these tag values. The filtered set of series should be
 	   the ones that belong to the asset.
 	*/
-	SeriesTags map[api1.TagName]api1.TagValue `conjure-docs:"Filters the data source to series matching these tag values. The filtered set of series should be\nthe ones that belong to the asset." json:"seriesTags"`
+	SeriesTags map[api1.TagName]api1.TagValue `json:"seriesTags"`
 }
 
 func (o DataScope) MarshalJSON() ([]byte, error) {
 	if o.SeriesTags == nil {
-		o.SeriesTags = make(map[api1.TagName]api1.TagValue, 0)
+		o.SeriesTags = make(map[api1.TagName]api1.TagValue)
 	}
 	type _tmpDataScope DataScope
 	return safejson.Marshal(_tmpDataScope(o))
@@ -479,7 +479,7 @@ func (o *DataScope) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawDataScope.SeriesTags == nil {
-		rawDataScope.SeriesTags = make(map[api1.TagName]api1.TagValue, 0)
+		rawDataScope.SeriesTags = make(map[api1.TagName]api1.TagValue)
 	}
 	*o = DataScope(rawDataScope)
 	return nil
@@ -544,10 +544,10 @@ func (o *RemoveType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type SearchAssetChannelsRequest struct {
 	SearchText string `json:"searchText"`
 	// If not empty, will filter to channels from the selected data scope names.
-	DataScopeNameFilter *[]api3.DataSourceRefName `conjure-docs:"If not empty, will filter to channels from the selected data scope names." json:"dataScopeNameFilter,omitempty"`
+	DataScopeNameFilter *[]api3.DataSourceRefName `json:"dataScopeNameFilter,omitempty"`
 	NextPageToken       *api1.Token               `json:"nextPageToken,omitempty"`
 	// Defaults to 1000. Will throw if larger than 10000. Default pageSize is 100.
-	PageSize *int `conjure-docs:"Defaults to 1000. Will throw if larger than 10000. Default pageSize is 100." json:"pageSize,omitempty"`
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o SearchAssetChannelsRequest) MarshalYAML() (interface{}, error) {
@@ -611,11 +611,11 @@ func (o *SearchAssetChannelsResponse) UnmarshalYAML(unmarshal func(interface{}) 
 type SearchAssetsRequest struct {
 	Sort AssetSortOptions `json:"sort"`
 	// Page sizes greater than 10_000 will be rejected. Default pageSize is 100.
-	PageSize      *int              `conjure-docs:"Page sizes greater than 10_000 will be rejected. Default pageSize is 100." json:"pageSize,omitempty"`
+	PageSize      *int              `json:"pageSize,omitempty"`
 	NextPageToken *api1.Token       `json:"nextPageToken,omitempty"`
 	Query         SearchAssetsQuery `json:"query"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search.
-	ArchivedStatuses *[]api1.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api1.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchAssetsRequest) MarshalYAML() (interface{}, error) {
@@ -679,7 +679,7 @@ func (o *SearchAssetsResponse) UnmarshalYAML(unmarshal func(interface{}) error) 
 type SearchTypesRequest struct {
 	Sort TypeSortOptions `json:"sort"`
 	// Page sizes greater than 10_000 will be rejected. Default pageSize is 100.
-	PageSize      *int             `conjure-docs:"Page sizes greater than 10_000 will be rejected. Default pageSize is 100." json:"pageSize,omitempty"`
+	PageSize      *int             `json:"pageSize,omitempty"`
 	NextPageToken *api1.Token      `json:"nextPageToken,omitempty"`
 	Query         SearchTypesQuery `json:"query"`
 	/*
@@ -774,20 +774,20 @@ type Type struct {
 	PropertyConfigs map[api1.PropertyName]PropertyConfig `json:"propertyConfigs"`
 	CreatedAt       datetime.DateTime                    `json:"createdAt"`
 	// The name of the icon to display for the type. This name maps to a Lucide icon in the frontend.
-	IconName *string `conjure-docs:"The name of the icon to display for the type. This name maps to a Lucide icon in the frontend." json:"iconName,omitempty"`
+	IconName *string `json:"iconName,omitempty"`
 	/*
 	   The configuration outlines what a data scope should provide when added to an asset of this type. It is
 	   referenced at data scope creation time, but does not actively modify existing data scopes.
 	*/
-	DatasourceConfigs map[rids.DataSourceRid]AssetTypeDataScopeConfig `conjure-docs:"The configuration outlines what a data scope should provide when added to an asset of this type. It is \nreferenced at data scope creation time, but does not actively modify existing data scopes." json:"datasourceConfigs"`
+	DatasourceConfigs map[rids.DataSourceRid]AssetTypeDataScopeConfig `json:"datasourceConfigs"`
 }
 
 func (o Type) MarshalJSON() ([]byte, error) {
 	if o.PropertyConfigs == nil {
-		o.PropertyConfigs = make(map[api1.PropertyName]PropertyConfig, 0)
+		o.PropertyConfigs = make(map[api1.PropertyName]PropertyConfig)
 	}
 	if o.DatasourceConfigs == nil {
-		o.DatasourceConfigs = make(map[rids.DataSourceRid]AssetTypeDataScopeConfig, 0)
+		o.DatasourceConfigs = make(map[rids.DataSourceRid]AssetTypeDataScopeConfig)
 	}
 	type _tmpType Type
 	return safejson.Marshal(_tmpType(o))
@@ -800,10 +800,10 @@ func (o *Type) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawType.PropertyConfigs == nil {
-		rawType.PropertyConfigs = make(map[api1.PropertyName]PropertyConfig, 0)
+		rawType.PropertyConfigs = make(map[api1.PropertyName]PropertyConfig)
 	}
 	if rawType.DatasourceConfigs == nil {
-		rawType.DatasourceConfigs = make(map[rids.DataSourceRid]AssetTypeDataScopeConfig, 0)
+		rawType.DatasourceConfigs = make(map[rids.DataSourceRid]AssetTypeDataScopeConfig)
 	}
 	*o = Type(rawType)
 	return nil
@@ -852,7 +852,7 @@ type UpdateAssetRefNamesRequest struct {
 
 func (o UpdateAssetRefNamesRequest) MarshalJSON() ([]byte, error) {
 	if o.DataScopeRefNameUpdates == nil {
-		o.DataScopeRefNameUpdates = make(map[api3.DataSourceRefName]api3.DataSourceRefName, 0)
+		o.DataScopeRefNameUpdates = make(map[api3.DataSourceRefName]api3.DataSourceRefName)
 	}
 	type _tmpUpdateAssetRefNamesRequest UpdateAssetRefNamesRequest
 	return safejson.Marshal(_tmpUpdateAssetRefNamesRequest(o))
@@ -865,7 +865,7 @@ func (o *UpdateAssetRefNamesRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawUpdateAssetRefNamesRequest.DataScopeRefNameUpdates == nil {
-		rawUpdateAssetRefNamesRequest.DataScopeRefNameUpdates = make(map[api3.DataSourceRefName]api3.DataSourceRefName, 0)
+		rawUpdateAssetRefNamesRequest.DataScopeRefNameUpdates = make(map[api3.DataSourceRefName]api3.DataSourceRefName)
 	}
 	*o = UpdateAssetRefNamesRequest(rawUpdateAssetRefNamesRequest)
 	return nil
@@ -894,7 +894,7 @@ type UpdateAssetRequest struct {
 	Labels      *[]api1.Label                             `json:"labels,omitempty"`
 	Links       *[]api2.Link                              `json:"links,omitempty"`
 	// The data scopes for the asset. This will replace all existing data scopes with the scopes specified.
-	DataScopes *[]CreateAssetDataScope  `conjure-docs:"The data scopes for the asset. This will replace all existing data scopes with the scopes specified." json:"dataScopes,omitempty"`
+	DataScopes *[]CreateAssetDataScope  `json:"dataScopes,omitempty"`
 	Type       *UpdateOrRemoveAssetType `json:"type,omitempty"`
 	IsStaged   *bool                    `json:"isStaged,omitempty"`
 }
@@ -976,7 +976,7 @@ type UpdateTypeRequest struct {
 	   The configuration outlines what a data scope should provide when added to an asset of this type. It is
 	   referenced at data scope creation time, but does not actively modify existing data scopes.
 	*/
-	DatasourceConfigs *map[rids.DataSourceRid]AssetTypeDataScopeConfig `conjure-docs:"The configuration outlines what a data scope should provide when added to an asset of this type. It is \nreferenced at data scope creation time, but does not actively modify existing data scopes." json:"datasourceConfigs,omitempty"`
+	DatasourceConfigs *map[rids.DataSourceRid]AssetTypeDataScopeConfig `json:"datasourceConfigs,omitempty"`
 }
 
 func (o UpdateTypeRequest) MarshalYAML() (interface{}, error) {

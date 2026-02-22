@@ -114,7 +114,7 @@ func (u *AbsoluteTimestamp) AcceptFuncs(iso8601Func func(Iso8601Timestamp) error
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in AbsoluteTimestamp type")
 		}
 		return unknownFunc(u.typ)
 	case "iso8601":
@@ -135,15 +135,15 @@ func (u *AbsoluteTimestamp) AcceptFuncs(iso8601Func func(Iso8601Timestamp) error
 	}
 }
 
-func (u *AbsoluteTimestamp) Iso8601NoopSuccess(Iso8601Timestamp) error {
+func (u *AbsoluteTimestamp) Iso8601NoopSuccess(_ Iso8601Timestamp) error {
 	return nil
 }
 
-func (u *AbsoluteTimestamp) EpochOfTimeUnitNoopSuccess(EpochTimestamp) error {
+func (u *AbsoluteTimestamp) EpochOfTimeUnitNoopSuccess(_ EpochTimestamp) error {
 	return nil
 }
 
-func (u *AbsoluteTimestamp) CustomFormatNoopSuccess(CustomTimestamp) error {
+func (u *AbsoluteTimestamp) CustomFormatNoopSuccess(_ CustomTimestamp) error {
 	return nil
 }
 
@@ -314,7 +314,7 @@ func (u *Authentication) AcceptFuncs(userAndPasswordFunc func(UserAndPasswordAut
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Authentication type")
 		}
 		return unknownFunc(u.typ)
 	case "userAndPassword":
@@ -330,11 +330,11 @@ func (u *Authentication) AcceptFuncs(userAndPasswordFunc func(UserAndPasswordAut
 	}
 }
 
-func (u *Authentication) UserAndPasswordNoopSuccess(UserAndPasswordAuthentication) error {
+func (u *Authentication) UserAndPasswordNoopSuccess(_ UserAndPasswordAuthentication) error {
 	return nil
 }
 
-func (u *Authentication) PublicNoopSuccess(PublicAuthentication) error {
+func (u *Authentication) PublicNoopSuccess(_ PublicAuthentication) error {
 	return nil
 }
 
@@ -488,7 +488,7 @@ func (u *DatasetIngestTarget) AcceptFuncs(newFunc func(NewDatasetIngestDestinati
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DatasetIngestTarget type")
 		}
 		return unknownFunc(u.typ)
 	case "new":
@@ -504,11 +504,11 @@ func (u *DatasetIngestTarget) AcceptFuncs(newFunc func(NewDatasetIngestDestinati
 	}
 }
 
-func (u *DatasetIngestTarget) NewNoopSuccess(NewDatasetIngestDestination) error {
+func (u *DatasetIngestTarget) NewNoopSuccess(_ NewDatasetIngestDestination) error {
 	return nil
 }
 
-func (u *DatasetIngestTarget) ExistingNoopSuccess(ExistingDatasetIngestDestination) error {
+func (u *DatasetIngestTarget) ExistingNoopSuccess(_ ExistingDatasetIngestDestination) error {
 	return nil
 }
 
@@ -648,7 +648,7 @@ func (u *DeprecatedNewDataSource) AcceptFuncs(csvFunc func(DeprecatedNewCsv) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DeprecatedNewDataSource type")
 		}
 		return unknownFunc(u.typ)
 	case "csv":
@@ -659,7 +659,7 @@ func (u *DeprecatedNewDataSource) AcceptFuncs(csvFunc func(DeprecatedNewCsv) err
 	}
 }
 
-func (u *DeprecatedNewDataSource) CsvNoopSuccess(DeprecatedNewCsv) error {
+func (u *DeprecatedNewDataSource) CsvNoopSuccess(_ DeprecatedNewCsv) error {
 	return nil
 }
 
@@ -783,7 +783,7 @@ func (u *FileFilter) AcceptFuncs(suffixFunc func(FileSuffix) error, unknownFunc 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FileFilter type")
 		}
 		return unknownFunc(u.typ)
 	case "suffix":
@@ -794,7 +794,7 @@ func (u *FileFilter) AcceptFuncs(suffixFunc func(FileSuffix) error, unknownFunc 
 	}
 }
 
-func (u *FileFilter) SuffixNoopSuccess(FileSuffix) error {
+func (u *FileFilter) SuffixNoopSuccess(_ FileSuffix) error {
 	return nil
 }
 
@@ -946,7 +946,7 @@ func (u *IngestDataSource) AcceptFuncs(existingDataSourceFunc func(rids.DataSour
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in IngestDataSource type")
 		}
 		return unknownFunc(u.typ)
 	case "existingDataSource":
@@ -967,15 +967,15 @@ func (u *IngestDataSource) AcceptFuncs(existingDataSourceFunc func(rids.DataSour
 	}
 }
 
-func (u *IngestDataSource) ExistingDataSourceNoopSuccess(rids.DataSourceRid) error {
+func (u *IngestDataSource) ExistingDataSourceNoopSuccess(_ rids.DataSourceRid) error {
 	return nil
 }
 
-func (u *IngestDataSource) NewDataSourceNoopSuccess(DeprecatedNewDataSource) error {
+func (u *IngestDataSource) NewDataSourceNoopSuccess(_ DeprecatedNewDataSource) error {
 	return nil
 }
 
-func (u *IngestDataSource) NewDataSourceV2NoopSuccess(NewDataSource) error {
+func (u *IngestDataSource) NewDataSourceV2NoopSuccess(_ NewDataSource) error {
 	return nil
 }
 
@@ -1145,7 +1145,7 @@ func (u *IngestDestination) AcceptFuncs(newDatasetFunc func(NewDatasetIngestDest
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in IngestDestination type")
 		}
 		return unknownFunc(u.typ)
 	case "newDataset":
@@ -1161,11 +1161,11 @@ func (u *IngestDestination) AcceptFuncs(newDatasetFunc func(NewDatasetIngestDest
 	}
 }
 
-func (u *IngestDestination) NewDatasetNoopSuccess(NewDatasetIngestDestination) error {
+func (u *IngestDestination) NewDatasetNoopSuccess(_ NewDatasetIngestDestination) error {
 	return nil
 }
 
-func (u *IngestDestination) ExistingDatasetNoopSuccess(ExistingDatasetIngestDestination) error {
+func (u *IngestDestination) ExistingDatasetNoopSuccess(_ ExistingDatasetIngestDestination) error {
 	return nil
 }
 
@@ -1319,7 +1319,7 @@ func (u *IngestDetails) AcceptFuncs(datasetFunc func(IngestDatasetFileDetails) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in IngestDetails type")
 		}
 		return unknownFunc(u.typ)
 	case "dataset":
@@ -1335,11 +1335,11 @@ func (u *IngestDetails) AcceptFuncs(datasetFunc func(IngestDatasetFileDetails) e
 	}
 }
 
-func (u *IngestDetails) DatasetNoopSuccess(IngestDatasetFileDetails) error {
+func (u *IngestDetails) DatasetNoopSuccess(_ IngestDatasetFileDetails) error {
 	return nil
 }
 
-func (u *IngestDetails) VideoNoopSuccess(IngestVideoFileDetails) error {
+func (u *IngestDetails) VideoNoopSuccess(_ IngestVideoFileDetails) error {
 	return nil
 }
 
@@ -1479,7 +1479,7 @@ func (u *IngestJobRequest) AcceptFuncs(ingestRequestFunc func(IngestRequest) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in IngestJobRequest type")
 		}
 		return unknownFunc(u.typ)
 	case "ingestRequest":
@@ -1490,7 +1490,7 @@ func (u *IngestJobRequest) AcceptFuncs(ingestRequestFunc func(IngestRequest) err
 	}
 }
 
-func (u *IngestJobRequest) IngestRequestNoopSuccess(IngestRequest) error {
+func (u *IngestJobRequest) IngestRequestNoopSuccess(_ IngestRequest) error {
 	return nil
 }
 
@@ -1726,7 +1726,7 @@ func (u *IngestOptions) AcceptFuncs(dataflashFunc func(DataflashOpts) error, mca
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in IngestOptions type")
 		}
 		return unknownFunc(u.typ)
 	case "dataflash":
@@ -1777,39 +1777,39 @@ func (u *IngestOptions) AcceptFuncs(dataflashFunc func(DataflashOpts) error, mca
 	}
 }
 
-func (u *IngestOptions) DataflashNoopSuccess(DataflashOpts) error {
+func (u *IngestOptions) DataflashNoopSuccess(_ DataflashOpts) error {
 	return nil
 }
 
-func (u *IngestOptions) McapProtobufTimeseriesNoopSuccess(McapProtobufTimeseriesOpts) error {
+func (u *IngestOptions) McapProtobufTimeseriesNoopSuccess(_ McapProtobufTimeseriesOpts) error {
 	return nil
 }
 
-func (u *IngestOptions) JournalJsonNoopSuccess(JournalJsonOpts) error {
+func (u *IngestOptions) JournalJsonNoopSuccess(_ JournalJsonOpts) error {
 	return nil
 }
 
-func (u *IngestOptions) CsvNoopSuccess(CsvOpts) error {
+func (u *IngestOptions) CsvNoopSuccess(_ CsvOpts) error {
 	return nil
 }
 
-func (u *IngestOptions) ParquetNoopSuccess(ParquetOpts) error {
+func (u *IngestOptions) ParquetNoopSuccess(_ ParquetOpts) error {
 	return nil
 }
 
-func (u *IngestOptions) VideoNoopSuccess(VideoOpts) error {
+func (u *IngestOptions) VideoNoopSuccess(_ VideoOpts) error {
 	return nil
 }
 
-func (u *IngestOptions) VideoV2NoopSuccess(VideoOptsV2) error {
+func (u *IngestOptions) VideoV2NoopSuccess(_ VideoOptsV2) error {
 	return nil
 }
 
-func (u *IngestOptions) ContainerizedNoopSuccess(ContainerizedOpts) error {
+func (u *IngestOptions) ContainerizedNoopSuccess(_ ContainerizedOpts) error {
 	return nil
 }
 
-func (u *IngestOptions) AvroStreamNoopSuccess(AvroStreamOpts) error {
+func (u *IngestOptions) AvroStreamNoopSuccess(_ AvroStreamOpts) error {
 	return nil
 }
 
@@ -2089,7 +2089,7 @@ func (u *IngestSource) AcceptFuncs(s3Func func(S3IngestSource) error, gcsFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in IngestSource type")
 		}
 		return unknownFunc(u.typ)
 	case "s3":
@@ -2110,15 +2110,15 @@ func (u *IngestSource) AcceptFuncs(s3Func func(S3IngestSource) error, gcsFunc fu
 	}
 }
 
-func (u *IngestSource) S3NoopSuccess(S3IngestSource) error {
+func (u *IngestSource) S3NoopSuccess(_ S3IngestSource) error {
 	return nil
 }
 
-func (u *IngestSource) GcsNoopSuccess(GcsIngestSource) error {
+func (u *IngestSource) GcsNoopSuccess(_ GcsIngestSource) error {
 	return nil
 }
 
-func (u *IngestSource) PresignedFileNoopSuccess(PresignedFileIngestSource) error {
+func (u *IngestSource) PresignedFileNoopSuccess(_ PresignedFileIngestSource) error {
 	return nil
 }
 
@@ -2274,7 +2274,7 @@ func (u *McapChannelConfigType) AcceptFuncs(videoFunc func(McapVideoChannelConfi
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in McapChannelConfigType type")
 		}
 		return unknownFunc(u.typ)
 	case "video":
@@ -2285,7 +2285,7 @@ func (u *McapChannelConfigType) AcceptFuncs(videoFunc func(McapVideoChannelConfi
 	}
 }
 
-func (u *McapChannelConfigType) VideoNoopSuccess(McapVideoChannelConfig) error {
+func (u *McapChannelConfigType) VideoNoopSuccess(_ McapVideoChannelConfig) error {
 	return nil
 }
 
@@ -2437,7 +2437,7 @@ func (u *McapChannels) AcceptFuncs(allFunc func(api.Empty) error, includeFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in McapChannels type")
 		}
 		return unknownFunc(u.typ)
 	case "all":
@@ -2458,15 +2458,15 @@ func (u *McapChannels) AcceptFuncs(allFunc func(api.Empty) error, includeFunc fu
 	}
 }
 
-func (u *McapChannels) AllNoopSuccess(api.Empty) error {
+func (u *McapChannels) AllNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
-func (u *McapChannels) IncludeNoopSuccess([]api.McapChannelLocator) error {
+func (u *McapChannels) IncludeNoopSuccess(_ []api.McapChannelLocator) error {
 	return nil
 }
 
-func (u *McapChannels) ExcludeNoopSuccess([]api.McapChannelLocator) error {
+func (u *McapChannels) ExcludeNoopSuccess(_ []api.McapChannelLocator) error {
 	return nil
 }
 
@@ -2636,7 +2636,7 @@ func (u *McapDestination) AcceptFuncs(videoRidFunc func(rids.VideoRid) error, da
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in McapDestination type")
 		}
 		return unknownFunc(u.typ)
 	case "videoRid":
@@ -2652,11 +2652,11 @@ func (u *McapDestination) AcceptFuncs(videoRidFunc func(rids.VideoRid) error, da
 	}
 }
 
-func (u *McapDestination) VideoRidNoopSuccess(rids.VideoRid) error {
+func (u *McapDestination) VideoRidNoopSuccess(_ rids.VideoRid) error {
 	return nil
 }
 
-func (u *McapDestination) DatasetRidNoopSuccess(rid.ResourceIdentifier) error {
+func (u *McapDestination) DatasetRidNoopSuccess(_ rid.ResourceIdentifier) error {
 	return nil
 }
 
@@ -2810,7 +2810,7 @@ func (u *McapSource) AcceptFuncs(singleChannelFunc func(api.McapChannelLocator) 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in McapSource type")
 		}
 		return unknownFunc(u.typ)
 	case "singleChannel":
@@ -2826,11 +2826,11 @@ func (u *McapSource) AcceptFuncs(singleChannelFunc func(api.McapChannelLocator) 
 	}
 }
 
-func (u *McapSource) SingleChannelNoopSuccess(api.McapChannelLocator) error {
+func (u *McapSource) SingleChannelNoopSuccess(_ api.McapChannelLocator) error {
 	return nil
 }
 
-func (u *McapSource) McapFileNoopSuccess(IngestSource) error {
+func (u *McapSource) McapFileNoopSuccess(_ IngestSource) error {
 	return nil
 }
 
@@ -2971,7 +2971,7 @@ func (u *McapTimestampType) AcceptFuncs(logTimeFunc func(LogTime) error, unknown
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in McapTimestampType type")
 		}
 		return unknownFunc(u.typ)
 	case "logTime":
@@ -2982,7 +2982,7 @@ func (u *McapTimestampType) AcceptFuncs(logTimeFunc func(LogTime) error, unknown
 	}
 }
 
-func (u *McapTimestampType) LogTimeNoopSuccess(LogTime) error {
+func (u *McapTimestampType) LogTimeNoopSuccess(_ LogTime) error {
 	return nil
 }
 
@@ -3134,7 +3134,7 @@ func (u *ScaleParameter) AcceptFuncs(trueFrameRateFunc func(float64) error, endi
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ScaleParameter type")
 		}
 		return unknownFunc(u.typ)
 	case "trueFrameRate":
@@ -3155,15 +3155,15 @@ func (u *ScaleParameter) AcceptFuncs(trueFrameRateFunc func(float64) error, endi
 	}
 }
 
-func (u *ScaleParameter) TrueFrameRateNoopSuccess(float64) error {
+func (u *ScaleParameter) TrueFrameRateNoopSuccess(_ float64) error {
 	return nil
 }
 
-func (u *ScaleParameter) EndingTimestampNoopSuccess(UtcTimestamp) error {
+func (u *ScaleParameter) EndingTimestampNoopSuccess(_ UtcTimestamp) error {
 	return nil
 }
 
-func (u *ScaleParameter) ScaleFactorNoopSuccess(float64) error {
+func (u *ScaleParameter) ScaleFactorNoopSuccess(_ float64) error {
 	return nil
 }
 
@@ -3389,7 +3389,7 @@ func (u *SearchContainerizedExtractorsQuery) AcceptFuncs(searchTextFunc func(str
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchContainerizedExtractorsQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "searchText":
@@ -3425,27 +3425,27 @@ func (u *SearchContainerizedExtractorsQuery) AcceptFuncs(searchTextFunc func(str
 	}
 }
 
-func (u *SearchContainerizedExtractorsQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchContainerizedExtractorsQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchContainerizedExtractorsQuery) LabelNoopSuccess(api.Label) error {
+func (u *SearchContainerizedExtractorsQuery) LabelNoopSuccess(_ api.Label) error {
 	return nil
 }
 
-func (u *SearchContainerizedExtractorsQuery) PropertyNoopSuccess(api.Property) error {
+func (u *SearchContainerizedExtractorsQuery) PropertyNoopSuccess(_ api.Property) error {
 	return nil
 }
 
-func (u *SearchContainerizedExtractorsQuery) AndNoopSuccess([]SearchContainerizedExtractorsQuery) error {
+func (u *SearchContainerizedExtractorsQuery) AndNoopSuccess(_ []SearchContainerizedExtractorsQuery) error {
 	return nil
 }
 
-func (u *SearchContainerizedExtractorsQuery) OrNoopSuccess([]SearchContainerizedExtractorsQuery) error {
+func (u *SearchContainerizedExtractorsQuery) OrNoopSuccess(_ []SearchContainerizedExtractorsQuery) error {
 	return nil
 }
 
-func (u *SearchContainerizedExtractorsQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchContainerizedExtractorsQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
@@ -3649,7 +3649,7 @@ func (u *TimeOffsetSpec) AcceptFuncs(nanosFunc func(api1.Duration) error, unknow
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimeOffsetSpec type")
 		}
 		return unknownFunc(u.typ)
 	case "nanos":
@@ -3660,7 +3660,7 @@ func (u *TimeOffsetSpec) AcceptFuncs(nanosFunc func(api1.Duration) error, unknow
 	}
 }
 
-func (u *TimeOffsetSpec) NanosNoopSuccess(api1.Duration) error {
+func (u *TimeOffsetSpec) NanosNoopSuccess(_ api1.Duration) error {
 	return nil
 }
 
@@ -3798,7 +3798,7 @@ func (u *TimestampType) AcceptFuncs(relativeFunc func(RelativeTimestamp) error, 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimestampType type")
 		}
 		return unknownFunc(u.typ)
 	case "relative":
@@ -3814,11 +3814,11 @@ func (u *TimestampType) AcceptFuncs(relativeFunc func(RelativeTimestamp) error, 
 	}
 }
 
-func (u *TimestampType) RelativeNoopSuccess(RelativeTimestamp) error {
+func (u *TimestampType) RelativeNoopSuccess(_ RelativeTimestamp) error {
 	return nil
 }
 
-func (u *TimestampType) AbsoluteNoopSuccess(AbsoluteTimestamp) error {
+func (u *TimestampType) AbsoluteNoopSuccess(_ AbsoluteTimestamp) error {
 	return nil
 }
 
@@ -3972,7 +3972,7 @@ func (u *VideoIngestTarget) AcceptFuncs(newFunc func(NewVideoIngestDestination) 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VideoIngestTarget type")
 		}
 		return unknownFunc(u.typ)
 	case "new":
@@ -3988,11 +3988,11 @@ func (u *VideoIngestTarget) AcceptFuncs(newFunc func(NewVideoIngestDestination) 
 	}
 }
 
-func (u *VideoIngestTarget) NewNoopSuccess(NewVideoIngestDestination) error {
+func (u *VideoIngestTarget) NewNoopSuccess(_ NewVideoIngestDestination) error {
 	return nil
 }
 
-func (u *VideoIngestTarget) ExistingNoopSuccess(ExistingVideoIngestDestination) error {
+func (u *VideoIngestTarget) ExistingNoopSuccess(_ ExistingVideoIngestDestination) error {
 	return nil
 }
 
@@ -4146,7 +4146,7 @@ func (u *VideoTimestampManifest) AcceptFuncs(noManifestFunc func(NoTimestampMani
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VideoTimestampManifest type")
 		}
 		return unknownFunc(u.typ)
 	case "noManifest":
@@ -4162,11 +4162,11 @@ func (u *VideoTimestampManifest) AcceptFuncs(noManifestFunc func(NoTimestampMani
 	}
 }
 
-func (u *VideoTimestampManifest) NoManifestNoopSuccess(NoTimestampManifest) error {
+func (u *VideoTimestampManifest) NoManifestNoopSuccess(_ NoTimestampManifest) error {
 	return nil
 }
 
-func (u *VideoTimestampManifest) TimestampManifestsNoopSuccess(TimestampManifest) error {
+func (u *VideoTimestampManifest) TimestampManifestsNoopSuccess(_ TimestampManifest) error {
 	return nil
 }
 

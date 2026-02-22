@@ -1535,6 +1535,154 @@ func (e *GranularityMismatch) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type icebergNotSupported struct{}
+
+func (o icebergNotSupported) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *icebergNotSupported) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewIcebergNotSupported returns new instance of IcebergNotSupported error.
+func NewIcebergNotSupported() *IcebergNotSupported {
+	return &IcebergNotSupported{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), icebergNotSupported: icebergNotSupported{}}
+}
+
+// WrapWithIcebergNotSupported returns new instance of IcebergNotSupported error wrapping an existing error.
+func WrapWithIcebergNotSupported(err error) *IcebergNotSupported {
+	return &IcebergNotSupported{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, icebergNotSupported: icebergNotSupported{}}
+}
+
+// IcebergNotSupported is an error type.
+// Iceberg support currently not enabled for new datasets for this environment.
+type IcebergNotSupported struct {
+	errorInstanceID uuid.UUID
+	icebergNotSupported
+	cause error
+	stack werror.StackTrace
+}
+
+// IsIcebergNotSupported returns true if err is an instance of IcebergNotSupported.
+func IsIcebergNotSupported(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*IcebergNotSupported)
+	return ok
+}
+
+func (e *IcebergNotSupported) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Catalog:IcebergNotSupported (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *IcebergNotSupported) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *IcebergNotSupported) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *IcebergNotSupported) Message() string {
+	return "INVALID_ARGUMENT Catalog:IcebergNotSupported"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *IcebergNotSupported) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *IcebergNotSupported) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *IcebergNotSupported) Name() string {
+	return "Catalog:IcebergNotSupported"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *IcebergNotSupported) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *IcebergNotSupported) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *IcebergNotSupported) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *IcebergNotSupported) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *IcebergNotSupported) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *IcebergNotSupported) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e IcebergNotSupported) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.icebergNotSupported)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Catalog:IcebergNotSupported", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *IcebergNotSupported) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters icebergNotSupported
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.icebergNotSupported = parameters
+	return nil
+}
+
 type invalidStateForAddingAdditionalFile struct {
 	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
 }
@@ -1999,6 +2147,7 @@ func init() {
 	conjureerrors.RegisterErrorType("Catalog:DatasetNotFound", reflect.TypeOf(DatasetNotFound{}))
 	conjureerrors.RegisterErrorType("Catalog:DatasetsNotFound", reflect.TypeOf(DatasetsNotFound{}))
 	conjureerrors.RegisterErrorType("Catalog:GranularityMismatch", reflect.TypeOf(GranularityMismatch{}))
+	conjureerrors.RegisterErrorType("Catalog:IcebergNotSupported", reflect.TypeOf(IcebergNotSupported{}))
 	conjureerrors.RegisterErrorType("Catalog:InvalidStateForAddingAdditionalFile", reflect.TypeOf(InvalidStateForAddingAdditionalFile{}))
 	conjureerrors.RegisterErrorType("Scout:RunNotFound", reflect.TypeOf(RunNotFound{}))
 	conjureerrors.RegisterErrorType("Catalog:VideoFileNotFound", reflect.TypeOf(VideoFileNotFound{}))

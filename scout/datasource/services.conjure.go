@@ -76,141 +76,127 @@ func NewDataSourceServiceClient(client httpclient.Client) DataSourceServiceClien
 }
 
 func (c *dataSourceServiceClient) SearchChannels(ctx context.Context, authHeader bearertoken.Token, queryArg api.SearchChannelsRequest) (api.SearchChannelsResponse, error) {
-	var defaultReturnVal api.SearchChannelsResponse
 	var returnVal *api.SearchChannelsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchChannels"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/search-channels"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(queryArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchChannels failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SearchChannelsResponse), werror.WrapWithContextParams(ctx, err, "searchChannels failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchChannels response cannot be nil")
+		return *new(api.SearchChannelsResponse), werror.ErrorWithContextParams(ctx, "searchChannels response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataSourceServiceClient) SearchFilteredChannels(ctx context.Context, authHeader bearertoken.Token, queryArg api.SearchFilteredChannelsRequest) (api.SearchFilteredChannelsResponse, error) {
-	var defaultReturnVal api.SearchFilteredChannelsResponse
 	var returnVal *api.SearchFilteredChannelsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchFilteredChannels"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/search-filtered-channels"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(queryArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchFilteredChannels failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SearchFilteredChannelsResponse), werror.WrapWithContextParams(ctx, err, "searchFilteredChannels failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchFilteredChannels response cannot be nil")
+		return *new(api.SearchFilteredChannelsResponse), werror.ErrorWithContextParams(ctx, "searchFilteredChannels response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataSourceServiceClient) SearchHierarchicalChannels(ctx context.Context, authHeader bearertoken.Token, queryArg api.SearchHierarchicalChannelsRequest) (api.SearchHierarchicalChannelsResponse, error) {
-	var defaultReturnVal api.SearchHierarchicalChannelsResponse
 	var returnVal *api.SearchHierarchicalChannelsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchHierarchicalChannels"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/search-hierarchical-channels"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(queryArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchHierarchicalChannels failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SearchHierarchicalChannelsResponse), werror.WrapWithContextParams(ctx, err, "searchHierarchicalChannels failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchHierarchicalChannels response cannot be nil")
+		return *new(api.SearchHierarchicalChannelsResponse), werror.ErrorWithContextParams(ctx, "searchHierarchicalChannels response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataSourceServiceClient) IndexChannelPrefixTree(ctx context.Context, authHeader bearertoken.Token, requestArg api.IndexChannelPrefixTreeRequest) (api.ChannelPrefixTree, error) {
-	var defaultReturnVal api.ChannelPrefixTree
 	var returnVal *api.ChannelPrefixTree
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("IndexChannelPrefixTree"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/index-channel-prefix-tree"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "indexChannelPrefixTree failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.ChannelPrefixTree), werror.WrapWithContextParams(ctx, err, "indexChannelPrefixTree failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "indexChannelPrefixTree response cannot be nil")
+		return *new(api.ChannelPrefixTree), werror.ErrorWithContextParams(ctx, "indexChannelPrefixTree response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataSourceServiceClient) BatchGetChannelPrefixTrees(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetChannelPrefixTreeRequest) (api.BatchGetChannelPrefixTreeResponse, error) {
-	var defaultReturnVal api.BatchGetChannelPrefixTreeResponse
 	var returnVal *api.BatchGetChannelPrefixTreeResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetChannelPrefixTrees"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/batch-get-channel-prefix-tree"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGetChannelPrefixTrees failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchGetChannelPrefixTreeResponse), werror.WrapWithContextParams(ctx, err, "batchGetChannelPrefixTrees failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGetChannelPrefixTrees response cannot be nil")
+		return *new(api.BatchGetChannelPrefixTreeResponse), werror.ErrorWithContextParams(ctx, "batchGetChannelPrefixTrees response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataSourceServiceClient) GetAvailableTagsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetAvailableTagsForChannelRequest) (api.GetAvailableTagsForChannelResponse, error) {
-	var defaultReturnVal api.GetAvailableTagsForChannelResponse
 	var returnVal *api.GetAvailableTagsForChannelResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAvailableTagsForChannel"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/get-available-tags"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAvailableTagsForChannel failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GetAvailableTagsForChannelResponse), werror.WrapWithContextParams(ctx, err, "getAvailableTagsForChannel failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAvailableTagsForChannel response cannot be nil")
+		return *new(api.GetAvailableTagsForChannelResponse), werror.ErrorWithContextParams(ctx, "getAvailableTagsForChannel response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataSourceServiceClient) GetDataScopeBounds(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetDataScopeBoundsRequest) (api.BatchGetDataScopeBoundsResponse, error) {
-	var defaultReturnVal api.BatchGetDataScopeBoundsResponse
 	var returnVal *api.BatchGetDataScopeBoundsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDataScopeBounds"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/get-data-scope-bounds"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getDataScopeBounds failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchGetDataScopeBoundsResponse), werror.WrapWithContextParams(ctx, err, "getDataScopeBounds failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getDataScopeBounds response cannot be nil")
+		return *new(api.BatchGetDataScopeBoundsResponse), werror.ErrorWithContextParams(ctx, "getDataScopeBounds response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -219,13 +205,12 @@ func (c *dataSourceServiceClient) GetTagValuesForDataSource(ctx context.Context,
 	var returnVal map[api1.TagName][]api1.TagValue
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetTagValuesForDataSource"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/%s/get-tags", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getTagValuesForDataSource failed")
 	}
 	if returnVal == nil {
@@ -235,41 +220,37 @@ func (c *dataSourceServiceClient) GetTagValuesForDataSource(ctx context.Context,
 }
 
 func (c *dataSourceServiceClient) GetAvailableTagKeys(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error) {
-	var defaultReturnVal api.GetAvailableTagKeysResponse
 	var returnVal *api.GetAvailableTagKeysResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAvailableTagKeys"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/%s/get-tag-keys", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAvailableTagKeys failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GetAvailableTagKeysResponse), werror.WrapWithContextParams(ctx, err, "getAvailableTagKeys failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAvailableTagKeys response cannot be nil")
+		return *new(api.GetAvailableTagKeysResponse), werror.ErrorWithContextParams(ctx, "getAvailableTagKeys response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *dataSourceServiceClient) GetAvailableTagValues(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error) {
-	var defaultReturnVal api.GetAvailableTagValuesResponse
 	var returnVal *api.GetAvailableTagValuesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAvailableTagValues"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/%s/get-tag-values", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getAvailableTagValues failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GetAvailableTagValuesResponse), werror.WrapWithContextParams(ctx, err, "getAvailableTagValues failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getAvailableTagValues response cannot be nil")
+		return *new(api.GetAvailableTagValuesResponse), werror.ErrorWithContextParams(ctx, "getAvailableTagValues response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -384,91 +365,81 @@ type dataSourceServiceClientWithTokenProvider struct {
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) SearchChannels(ctx context.Context, queryArg api.SearchChannelsRequest) (api.SearchChannelsResponse, error) {
-	var defaultReturnVal api.SearchChannelsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.SearchChannelsResponse), err
 	}
 	return c.client.SearchChannels(ctx, bearertoken.Token(token), queryArg)
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) SearchFilteredChannels(ctx context.Context, queryArg api.SearchFilteredChannelsRequest) (api.SearchFilteredChannelsResponse, error) {
-	var defaultReturnVal api.SearchFilteredChannelsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.SearchFilteredChannelsResponse), err
 	}
 	return c.client.SearchFilteredChannels(ctx, bearertoken.Token(token), queryArg)
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) SearchHierarchicalChannels(ctx context.Context, queryArg api.SearchHierarchicalChannelsRequest) (api.SearchHierarchicalChannelsResponse, error) {
-	var defaultReturnVal api.SearchHierarchicalChannelsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.SearchHierarchicalChannelsResponse), err
 	}
 	return c.client.SearchHierarchicalChannels(ctx, bearertoken.Token(token), queryArg)
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) IndexChannelPrefixTree(ctx context.Context, requestArg api.IndexChannelPrefixTreeRequest) (api.ChannelPrefixTree, error) {
-	var defaultReturnVal api.ChannelPrefixTree
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.ChannelPrefixTree), err
 	}
 	return c.client.IndexChannelPrefixTree(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) BatchGetChannelPrefixTrees(ctx context.Context, requestArg api.BatchGetChannelPrefixTreeRequest) (api.BatchGetChannelPrefixTreeResponse, error) {
-	var defaultReturnVal api.BatchGetChannelPrefixTreeResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BatchGetChannelPrefixTreeResponse), err
 	}
 	return c.client.BatchGetChannelPrefixTrees(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) GetAvailableTagsForChannel(ctx context.Context, requestArg api.GetAvailableTagsForChannelRequest) (api.GetAvailableTagsForChannelResponse, error) {
-	var defaultReturnVal api.GetAvailableTagsForChannelResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.GetAvailableTagsForChannelResponse), err
 	}
 	return c.client.GetAvailableTagsForChannel(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) GetDataScopeBounds(ctx context.Context, requestArg api.BatchGetDataScopeBoundsRequest) (api.BatchGetDataScopeBoundsResponse, error) {
-	var defaultReturnVal api.BatchGetDataScopeBoundsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BatchGetDataScopeBoundsResponse), err
 	}
 	return c.client.GetDataScopeBounds(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) GetTagValuesForDataSource(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetTagValuesForDataSourceRequest) (map[api1.TagName][]api1.TagValue, error) {
-	var defaultReturnVal map[api1.TagName][]api1.TagValue
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetTagValuesForDataSource(ctx, bearertoken.Token(token), dataSourceRidArg, requestArg)
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) GetAvailableTagKeys(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error) {
-	var defaultReturnVal api.GetAvailableTagKeysResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.GetAvailableTagKeysResponse), err
 	}
 	return c.client.GetAvailableTagKeys(ctx, bearertoken.Token(token), dataSourceRidArg, requestArg)
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) GetAvailableTagValues(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error) {
-	var defaultReturnVal api.GetAvailableTagValuesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.GetAvailableTagValuesResponse), err
 	}
 	return c.client.GetAvailableTagValues(ctx, bearertoken.Token(token), dataSourceRidArg, requestArg)
 }

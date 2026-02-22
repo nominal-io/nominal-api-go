@@ -13,7 +13,7 @@ This is written as manifest.json in the OUTPUT_DIR by the container.
 */
 type ExtractorManifest struct {
 	// List of output files produced by the extractor
-	Outputs []ManifestOutput `conjure-docs:"List of output files produced by the extractor" json:"outputs"`
+	Outputs []ManifestOutput `json:"outputs"`
 }
 
 func (o ExtractorManifest) MarshalJSON() ([]byte, error) {
@@ -59,7 +59,7 @@ This is uploaded to S3 by yeeter and read by the Temporal activity to orchestrat
 */
 type ExtractorUploadMetadata struct {
 	// List of uploaded files with their S3 locations and manifest metadata
-	Uploads []UploadMetadata `conjure-docs:"List of uploaded files with their S3 locations and manifest metadata" json:"uploads"`
+	Uploads []UploadMetadata `json:"uploads"`
 }
 
 func (o ExtractorUploadMetadata) MarshalJSON() ([]byte, error) {
@@ -105,27 +105,27 @@ This is written by the container in manifest.json.
 */
 type ManifestOutput struct {
 	// The type of ingestion for this output file
-	IngestType ManifestIngestType `conjure-docs:"The type of ingestion for this output file" json:"ingestType"`
+	IngestType ManifestIngestType `json:"ingestType"`
 	/*
 	   Relative path to the output file within OUTPUT_DIR.
 	   Example: "telemetry.csv" or "data/sensor_readings.parquet"
 	*/
-	RelativePath string `conjure-docs:"Relative path to the output file within OUTPUT_DIR.\nExample: \"telemetry.csv\" or \"data/sensor_readings.parquet\"" json:"relativePath"`
+	RelativePath string `json:"relativePath"`
 	/*
 	   Optional mapping of tag names to column names for CSV/Parquet ingestion.
 	   Example: {"vehicle_id": "veh_id", "mission_id": "msn_id"}
 	*/
-	TagColumns map[string]string `conjure-docs:"Optional mapping of tag names to column names for CSV/Parquet ingestion.\nExample: {\"vehicle_id\": \"veh_id\", \"mission_id\": \"msn_id\"}" json:"tagColumns"`
+	TagColumns map[string]string `json:"tagColumns"`
 	/*
 	   Optional prefix to prepend to channel names during ingestion.
 	   Example: "telemetry/" would create channels like "telemetry/speed", "telemetry/altitude"
 	*/
-	ChannelPrefix *string `conjure-docs:"Optional prefix to prepend to channel names during ingestion.\nExample: \"telemetry/\" would create channels like \"telemetry/speed\", \"telemetry/altitude\"" json:"channelPrefix,omitempty"`
+	ChannelPrefix *string `json:"channelPrefix,omitempty"`
 }
 
 func (o ManifestOutput) MarshalJSON() ([]byte, error) {
 	if o.TagColumns == nil {
-		o.TagColumns = make(map[string]string, 0)
+		o.TagColumns = make(map[string]string)
 	}
 	type _tmpManifestOutput ManifestOutput
 	return safejson.Marshal(_tmpManifestOutput(o))
@@ -138,7 +138,7 @@ func (o *ManifestOutput) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawManifestOutput.TagColumns == nil {
-		rawManifestOutput.TagColumns = make(map[string]string, 0)
+		rawManifestOutput.TagColumns = make(map[string]string)
 	}
 	*o = ManifestOutput(rawManifestOutput)
 	return nil
@@ -166,11 +166,11 @@ Enriches the original manifest entry with S3 upload information.
 */
 type UploadMetadata struct {
 	// Full S3 key where the file was uploaded
-	S3Key string `conjure-docs:"Full S3 key where the file was uploaded" json:"s3Key"`
+	S3Key string `json:"s3Key"`
 	// S3 bucket name where the file was uploaded
-	S3Bucket string `conjure-docs:"S3 bucket name where the file was uploaded" json:"s3Bucket"`
+	S3Bucket string `json:"s3Bucket"`
 	// The original manifest entry from the container's manifest.yaml
-	ManifestOutput ManifestOutput `conjure-docs:"The original manifest entry from the container's manifest.yaml" json:"manifestOutput"`
+	ManifestOutput ManifestOutput `json:"manifestOutput"`
 }
 
 func (o UploadMetadata) MarshalYAML() (interface{}, error) {

@@ -7,7 +7,8 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	"github.com/nominal-io/nominal-api-go/scout/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/api"
+	"github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -84,7 +85,7 @@ func (u *AxisThresholdGroup) AcceptFuncs(lineThresholdsFunc func(LineThresholdGr
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in AxisThresholdGroup type")
 		}
 		return unknownFunc(u.typ)
 	case "lineThresholds":
@@ -95,7 +96,7 @@ func (u *AxisThresholdGroup) AcceptFuncs(lineThresholdsFunc func(LineThresholdGr
 	}
 }
 
-func (u *AxisThresholdGroup) LineThresholdsNoopSuccess(LineThresholdGroup) error {
+func (u *AxisThresholdGroup) LineThresholdsNoopSuccess(_ LineThresholdGroup) error {
 	return nil
 }
 
@@ -219,7 +220,7 @@ func (u *BitFlagMapVisualisation) AcceptFuncs(rawFunc func(BitFlagMapRawVisualis
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in BitFlagMapVisualisation type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -230,7 +231,7 @@ func (u *BitFlagMapVisualisation) AcceptFuncs(rawFunc func(BitFlagMapRawVisualis
 	}
 }
 
-func (u *BitFlagMapVisualisation) RawNoopSuccess(BitFlagMapRawVisualisation) error {
+func (u *BitFlagMapVisualisation) RawNoopSuccess(_ BitFlagMapRawVisualisation) error {
 	return nil
 }
 
@@ -354,7 +355,7 @@ func (u *CartesianChartDefinition) AcceptFuncs(v1Func func(CartesianChartDefinit
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CartesianChartDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -365,7 +366,7 @@ func (u *CartesianChartDefinition) AcceptFuncs(v1Func func(CartesianChartDefinit
 	}
 }
 
-func (u *CartesianChartDefinition) V1NoopSuccess(CartesianChartDefinitionV1) error {
+func (u *CartesianChartDefinition) V1NoopSuccess(_ CartesianChartDefinitionV1) error {
 	return nil
 }
 
@@ -489,7 +490,7 @@ func (u *ChecklistChartDefinition) AcceptFuncs(v1Func func(ChecklistChartDefinit
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ChecklistChartDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -500,7 +501,7 @@ func (u *ChecklistChartDefinition) AcceptFuncs(v1Func func(ChecklistChartDefinit
 	}
 }
 
-func (u *ChecklistChartDefinition) V1NoopSuccess(ChecklistChartDefinitionV1) error {
+func (u *ChecklistChartDefinition) V1NoopSuccess(_ ChecklistChartDefinitionV1) error {
 	return nil
 }
 
@@ -552,16 +553,151 @@ func NewChecklistChartDefinitionFromV1(v ChecklistChartDefinitionV1) ChecklistCh
 	return ChecklistChartDefinition{typ: "v1", v1: &v}
 }
 
+type ColorBy struct {
+	typ               string
+	secondaryVariable *api.ChannelVariableName
+}
+
+type colorByDeserializer struct {
+	Type              string                   `json:"type"`
+	SecondaryVariable *api.ChannelVariableName `json:"secondaryVariable"`
+}
+
+func (u *colorByDeserializer) toStruct() ColorBy {
+	return ColorBy{typ: u.Type, secondaryVariable: u.SecondaryVariable}
+}
+
+func (u *ColorBy) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "secondaryVariable":
+		if u.secondaryVariable == nil {
+			return nil, fmt.Errorf("field \"secondaryVariable\" is required")
+		}
+		return struct {
+			Type              string                  `json:"type"`
+			SecondaryVariable api.ChannelVariableName `json:"secondaryVariable"`
+		}{Type: "secondaryVariable", SecondaryVariable: *u.secondaryVariable}, nil
+	}
+}
+
+func (u ColorBy) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ColorBy) UnmarshalJSON(data []byte) error {
+	var deser colorByDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "secondaryVariable":
+		if u.secondaryVariable == nil {
+			return fmt.Errorf("field \"secondaryVariable\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ColorBy) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ColorBy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ColorBy) AcceptFuncs(secondaryVariableFunc func(api.ChannelVariableName) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ColorBy type")
+		}
+		return unknownFunc(u.typ)
+	case "secondaryVariable":
+		if u.secondaryVariable == nil {
+			return fmt.Errorf("field \"secondaryVariable\" is required")
+		}
+		return secondaryVariableFunc(*u.secondaryVariable)
+	}
+}
+
+func (u *ColorBy) SecondaryVariableNoopSuccess(_ api.ChannelVariableName) error {
+	return nil
+}
+
+func (u *ColorBy) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ColorBy) Accept(v ColorByVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "secondaryVariable":
+		if u.secondaryVariable == nil {
+			return fmt.Errorf("field \"secondaryVariable\" is required")
+		}
+		return v.VisitSecondaryVariable(*u.secondaryVariable)
+	}
+}
+
+type ColorByVisitor interface {
+	VisitSecondaryVariable(v api.ChannelVariableName) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ColorBy) AcceptWithContext(ctx context.Context, v ColorByVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "secondaryVariable":
+		if u.secondaryVariable == nil {
+			return fmt.Errorf("field \"secondaryVariable\" is required")
+		}
+		return v.VisitSecondaryVariableWithContext(ctx, *u.secondaryVariable)
+	}
+}
+
+type ColorByVisitorWithContext interface {
+	VisitSecondaryVariableWithContext(ctx context.Context, v api.ChannelVariableName) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewColorByFromSecondaryVariable(v api.ChannelVariableName) ColorBy {
+	return ColorBy{typ: "secondaryVariable", secondaryVariable: &v}
+}
+
 type ColorStyle struct {
 	typ    string
-	mapped *map[string]api.HexColor
-	single *api.HexColor
+	mapped *map[string]api1.HexColor
+	single *api1.HexColor
 }
 
 type colorStyleDeserializer struct {
-	Type   string                   `json:"type"`
-	Mapped *map[string]api.HexColor `json:"mapped"`
-	Single *api.HexColor            `json:"single"`
+	Type   string                    `json:"type"`
+	Mapped *map[string]api1.HexColor `json:"mapped"`
+	Single *api1.HexColor            `json:"single"`
 }
 
 func (u *colorStyleDeserializer) toStruct() ColorStyle {
@@ -577,16 +713,16 @@ func (u *ColorStyle) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"mapped\" is required")
 		}
 		return struct {
-			Type   string                  `json:"type"`
-			Mapped map[string]api.HexColor `json:"mapped"`
+			Type   string                   `json:"type"`
+			Mapped map[string]api1.HexColor `json:"mapped"`
 		}{Type: "mapped", Mapped: *u.mapped}, nil
 	case "single":
 		if u.single == nil {
 			return nil, fmt.Errorf("field \"single\" is required")
 		}
 		return struct {
-			Type   string       `json:"type"`
-			Single api.HexColor `json:"single"`
+			Type   string        `json:"type"`
+			Single api1.HexColor `json:"single"`
 		}{Type: "single", Single: *u.single}, nil
 	}
 }
@@ -634,11 +770,11 @@ func (u *ColorStyle) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ColorStyle) AcceptFuncs(mappedFunc func(map[string]api.HexColor) error, singleFunc func(api.HexColor) error, unknownFunc func(string) error) error {
+func (u *ColorStyle) AcceptFuncs(mappedFunc func(map[string]api1.HexColor) error, singleFunc func(api1.HexColor) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ColorStyle type")
 		}
 		return unknownFunc(u.typ)
 	case "mapped":
@@ -654,11 +790,11 @@ func (u *ColorStyle) AcceptFuncs(mappedFunc func(map[string]api.HexColor) error,
 	}
 }
 
-func (u *ColorStyle) MappedNoopSuccess(map[string]api.HexColor) error {
+func (u *ColorStyle) MappedNoopSuccess(_ map[string]api1.HexColor) error {
 	return nil
 }
 
-func (u *ColorStyle) SingleNoopSuccess(api.HexColor) error {
+func (u *ColorStyle) SingleNoopSuccess(_ api1.HexColor) error {
 	return nil
 }
 
@@ -687,8 +823,8 @@ func (u *ColorStyle) Accept(v ColorStyleVisitor) error {
 }
 
 type ColorStyleVisitor interface {
-	VisitMapped(v map[string]api.HexColor) error
-	VisitSingle(v api.HexColor) error
+	VisitMapped(v map[string]api1.HexColor) error
+	VisitSingle(v api1.HexColor) error
 	VisitUnknown(typeName string) error
 }
 
@@ -713,16 +849,16 @@ func (u *ColorStyle) AcceptWithContext(ctx context.Context, v ColorStyleVisitorW
 }
 
 type ColorStyleVisitorWithContext interface {
-	VisitMappedWithContext(ctx context.Context, v map[string]api.HexColor) error
-	VisitSingleWithContext(ctx context.Context, v api.HexColor) error
+	VisitMappedWithContext(ctx context.Context, v map[string]api1.HexColor) error
+	VisitSingleWithContext(ctx context.Context, v api1.HexColor) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewColorStyleFromMapped(v map[string]api.HexColor) ColorStyle {
+func NewColorStyleFromMapped(v map[string]api1.HexColor) ColorStyle {
 	return ColorStyle{typ: "mapped", mapped: &v}
 }
 
-func NewColorStyleFromSingle(v api.HexColor) ColorStyle {
+func NewColorStyleFromSingle(v api1.HexColor) ColorStyle {
 	return ColorStyle{typ: "single", single: &v}
 }
 
@@ -812,7 +948,7 @@ func (u *DecimalPlaces) AcceptFuncs(fixedFunc func(FixedDecimalPlaces) error, ma
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DecimalPlaces type")
 		}
 		return unknownFunc(u.typ)
 	case "fixed":
@@ -828,11 +964,11 @@ func (u *DecimalPlaces) AcceptFuncs(fixedFunc func(FixedDecimalPlaces) error, ma
 	}
 }
 
-func (u *DecimalPlaces) FixedNoopSuccess(FixedDecimalPlaces) error {
+func (u *DecimalPlaces) FixedNoopSuccess(_ FixedDecimalPlaces) error {
 	return nil
 }
 
-func (u *DecimalPlaces) MaxNoopSuccess(MaxDecimalPlaces) error {
+func (u *DecimalPlaces) MaxNoopSuccess(_ MaxDecimalPlaces) error {
 	return nil
 }
 
@@ -1000,7 +1136,7 @@ func (u *DisconnectedValueVisualization) AcceptFuncs(alwaysConnectFunc func(Alwa
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in DisconnectedValueVisualization type")
 		}
 		return unknownFunc(u.typ)
 	case "alwaysConnect":
@@ -1021,15 +1157,15 @@ func (u *DisconnectedValueVisualization) AcceptFuncs(alwaysConnectFunc func(Alwa
 	}
 }
 
-func (u *DisconnectedValueVisualization) AlwaysConnectNoopSuccess(AlwaysConnectDisconnectedValues) error {
+func (u *DisconnectedValueVisualization) AlwaysConnectNoopSuccess(_ AlwaysConnectDisconnectedValues) error {
 	return nil
 }
 
-func (u *DisconnectedValueVisualization) NeverNoopSuccess(NeverConnectDisconnectedValues) error {
+func (u *DisconnectedValueVisualization) NeverNoopSuccess(_ NeverConnectDisconnectedValues) error {
 	return nil
 }
 
-func (u *DisconnectedValueVisualization) ThresholdNoopSuccess(ThresholdDisconnectedValues) error {
+func (u *DisconnectedValueVisualization) ThresholdNoopSuccess(_ ThresholdDisconnectedValues) error {
 	return nil
 }
 
@@ -1185,7 +1321,7 @@ func (u *EnumArrayVisualisation) AcceptFuncs(rawFunc func(EnumArrayRawVisualisat
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EnumArrayVisualisation type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -1196,7 +1332,7 @@ func (u *EnumArrayVisualisation) AcceptFuncs(rawFunc func(EnumArrayRawVisualisat
 	}
 }
 
-func (u *EnumArrayVisualisation) RawNoopSuccess(EnumArrayRawVisualisation) error {
+func (u *EnumArrayVisualisation) RawNoopSuccess(_ EnumArrayRawVisualisation) error {
 	return nil
 }
 
@@ -1362,7 +1498,7 @@ func (u *EnumDisplayStyle) AcceptFuncs(stackedFunc func(EnumDisplayStyleStacked)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EnumDisplayStyle type")
 		}
 		return unknownFunc(u.typ)
 	case "stacked":
@@ -1388,19 +1524,19 @@ func (u *EnumDisplayStyle) AcceptFuncs(stackedFunc func(EnumDisplayStyleStacked)
 	}
 }
 
-func (u *EnumDisplayStyle) StackedNoopSuccess(EnumDisplayStyleStacked) error {
+func (u *EnumDisplayStyle) StackedNoopSuccess(_ EnumDisplayStyleStacked) error {
 	return nil
 }
 
-func (u *EnumDisplayStyle) InlineNoopSuccess(EnumDisplayStyleInline) error {
+func (u *EnumDisplayStyle) InlineNoopSuccess(_ EnumDisplayStyleInline) error {
 	return nil
 }
 
-func (u *EnumDisplayStyle) BarNoopSuccess(EnumDisplayStyleBar) error {
+func (u *EnumDisplayStyle) BarNoopSuccess(_ EnumDisplayStyleBar) error {
 	return nil
 }
 
-func (u *EnumDisplayStyle) LineNoopSuccess(EnumDisplayStyleLine) error {
+func (u *EnumDisplayStyle) LineNoopSuccess(_ EnumDisplayStyleLine) error {
 	return nil
 }
 
@@ -1586,7 +1722,7 @@ func (u *EnumGroupBySort) AcceptFuncs(customFunc func(EnumGroupBySortCustom) err
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EnumGroupBySort type")
 		}
 		return unknownFunc(u.typ)
 	case "custom":
@@ -1602,11 +1738,11 @@ func (u *EnumGroupBySort) AcceptFuncs(customFunc func(EnumGroupBySortCustom) err
 	}
 }
 
-func (u *EnumGroupBySort) CustomNoopSuccess(EnumGroupBySortCustom) error {
+func (u *EnumGroupBySort) CustomNoopSuccess(_ EnumGroupBySortCustom) error {
 	return nil
 }
 
-func (u *EnumGroupBySort) AlphabeticalNoopSuccess(ValueSort) error {
+func (u *EnumGroupBySort) AlphabeticalNoopSuccess(_ ValueSort) error {
 	return nil
 }
 
@@ -1746,7 +1882,7 @@ func (u *EnumValueVisualisation) AcceptFuncs(rawFunc func(EnumRawVisualisation) 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EnumValueVisualisation type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -1757,7 +1893,7 @@ func (u *EnumValueVisualisation) AcceptFuncs(rawFunc func(EnumRawVisualisation) 
 	}
 }
 
-func (u *EnumValueVisualisation) RawNoopSuccess(EnumRawVisualisation) error {
+func (u *EnumValueVisualisation) RawNoopSuccess(_ EnumRawVisualisation) error {
 	return nil
 }
 
@@ -1881,7 +2017,7 @@ func (u *FloatingLegend) AcceptFuncs(perRowFunc func(PerRowFloatingLegends) erro
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FloatingLegend type")
 		}
 		return unknownFunc(u.typ)
 	case "perRow":
@@ -1892,7 +2028,7 @@ func (u *FloatingLegend) AcceptFuncs(perRowFunc func(PerRowFloatingLegends) erro
 	}
 }
 
-func (u *FloatingLegend) PerRowNoopSuccess(PerRowFloatingLegends) error {
+func (u *FloatingLegend) PerRowNoopSuccess(_ PerRowFloatingLegends) error {
 	return nil
 }
 
@@ -1942,6 +2078,141 @@ type FloatingLegendVisitorWithContext interface {
 
 func NewFloatingLegendFromPerRow(v PerRowFloatingLegends) FloatingLegend {
 	return FloatingLegend{typ: "perRow", perRow: &v}
+}
+
+type FloatingLegendPosition struct {
+	typ    string
+	preset *FloatingLegendPresetPosition
+}
+
+type floatingLegendPositionDeserializer struct {
+	Type   string                        `json:"type"`
+	Preset *FloatingLegendPresetPosition `json:"preset"`
+}
+
+func (u *floatingLegendPositionDeserializer) toStruct() FloatingLegendPosition {
+	return FloatingLegendPosition{typ: u.Type, preset: u.Preset}
+}
+
+func (u *FloatingLegendPosition) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "preset":
+		if u.preset == nil {
+			return nil, fmt.Errorf("field \"preset\" is required")
+		}
+		return struct {
+			Type   string                       `json:"type"`
+			Preset FloatingLegendPresetPosition `json:"preset"`
+		}{Type: "preset", Preset: *u.preset}, nil
+	}
+}
+
+func (u FloatingLegendPosition) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *FloatingLegendPosition) UnmarshalJSON(data []byte) error {
+	var deser floatingLegendPositionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+	}
+	return nil
+}
+
+func (u FloatingLegendPosition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *FloatingLegendPosition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *FloatingLegendPosition) AcceptFuncs(presetFunc func(FloatingLegendPresetPosition) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in FloatingLegendPosition type")
+		}
+		return unknownFunc(u.typ)
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+		return presetFunc(*u.preset)
+	}
+}
+
+func (u *FloatingLegendPosition) PresetNoopSuccess(_ FloatingLegendPresetPosition) error {
+	return nil
+}
+
+func (u *FloatingLegendPosition) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *FloatingLegendPosition) Accept(v FloatingLegendPositionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+		return v.VisitPreset(*u.preset)
+	}
+}
+
+type FloatingLegendPositionVisitor interface {
+	VisitPreset(v FloatingLegendPresetPosition) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *FloatingLegendPosition) AcceptWithContext(ctx context.Context, v FloatingLegendPositionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "preset":
+		if u.preset == nil {
+			return fmt.Errorf("field \"preset\" is required")
+		}
+		return v.VisitPresetWithContext(ctx, *u.preset)
+	}
+}
+
+type FloatingLegendPositionVisitorWithContext interface {
+	VisitPresetWithContext(ctx context.Context, v FloatingLegendPresetPosition) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewFloatingLegendPositionFromPreset(v FloatingLegendPresetPosition) FloatingLegendPosition {
+	return FloatingLegendPosition{typ: "preset", preset: &v}
 }
 
 type FrequencyChartDefinition struct {
@@ -2030,7 +2301,7 @@ func (u *FrequencyChartDefinition) AcceptFuncs(v1Func func(FrequencyChartDefinit
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FrequencyChartDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -2046,11 +2317,11 @@ func (u *FrequencyChartDefinition) AcceptFuncs(v1Func func(FrequencyChartDefinit
 	}
 }
 
-func (u *FrequencyChartDefinition) V1NoopSuccess(FrequencyChartDefinitionV1) error {
+func (u *FrequencyChartDefinition) V1NoopSuccess(_ FrequencyChartDefinitionV1) error {
 	return nil
 }
 
-func (u *FrequencyChartDefinition) V2NoopSuccess(FrequencyChartDefinitionV2) error {
+func (u *FrequencyChartDefinition) V2NoopSuccess(_ FrequencyChartDefinitionV2) error {
 	return nil
 }
 
@@ -2260,7 +2531,7 @@ func (u *FrequencyPlotType) AcceptFuncs(fftFunc func(FrequencyPlotTypeFft) error
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FrequencyPlotType type")
 		}
 		return unknownFunc(u.typ)
 	case "fft":
@@ -2296,27 +2567,27 @@ func (u *FrequencyPlotType) AcceptFuncs(fftFunc func(FrequencyPlotTypeFft) error
 	}
 }
 
-func (u *FrequencyPlotType) FftNoopSuccess(FrequencyPlotTypeFft) error {
+func (u *FrequencyPlotType) FftNoopSuccess(_ FrequencyPlotTypeFft) error {
 	return nil
 }
 
-func (u *FrequencyPlotType) PeriodogramNoopSuccess(FrequencyPlotTypePeriodogram) error {
+func (u *FrequencyPlotType) PeriodogramNoopSuccess(_ FrequencyPlotTypePeriodogram) error {
 	return nil
 }
 
-func (u *FrequencyPlotType) PsdNoopSuccess(FrequencyPlotTypePsd) error {
+func (u *FrequencyPlotType) PsdNoopSuccess(_ FrequencyPlotTypePsd) error {
 	return nil
 }
 
-func (u *FrequencyPlotType) CpsdNoopSuccess(FrequencyPlotTypeCpsd) error {
+func (u *FrequencyPlotType) CpsdNoopSuccess(_ FrequencyPlotTypeCpsd) error {
 	return nil
 }
 
-func (u *FrequencyPlotType) NyquistNoopSuccess(FrequencyPlotTypeNyquist) error {
+func (u *FrequencyPlotType) NyquistNoopSuccess(_ FrequencyPlotTypeNyquist) error {
 	return nil
 }
 
-func (u *FrequencyPlotType) BodeNoopSuccess(FrequencyPlotTypeBode) error {
+func (u *FrequencyPlotType) BodeNoopSuccess(_ FrequencyPlotTypeBode) error {
 	return nil
 }
 
@@ -2534,7 +2805,7 @@ func (u *FrequencyPlotV2) AcceptFuncs(singleFunc func(FrequencyPlot) error, mult
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FrequencyPlotV2 type")
 		}
 		return unknownFunc(u.typ)
 	case "single":
@@ -2550,11 +2821,11 @@ func (u *FrequencyPlotV2) AcceptFuncs(singleFunc func(FrequencyPlot) error, mult
 	}
 }
 
-func (u *FrequencyPlotV2) SingleNoopSuccess(FrequencyPlot) error {
+func (u *FrequencyPlotV2) SingleNoopSuccess(_ FrequencyPlot) error {
 	return nil
 }
 
-func (u *FrequencyPlotV2) MultivariateNoopSuccess(FrequencyPlotMultivariate) error {
+func (u *FrequencyPlotV2) MultivariateNoopSuccess(_ FrequencyPlotMultivariate) error {
 	return nil
 }
 
@@ -2694,7 +2965,7 @@ func (u *Geo3dDefinition) AcceptFuncs(v1Func func(Geo3dDefinitionV1) error, unkn
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Geo3dDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -2705,7 +2976,7 @@ func (u *Geo3dDefinition) AcceptFuncs(v1Func func(Geo3dDefinitionV1) error, unkn
 	}
 }
 
-func (u *Geo3dDefinition) V1NoopSuccess(Geo3dDefinitionV1) error {
+func (u *Geo3dDefinition) V1NoopSuccess(_ Geo3dDefinitionV1) error {
 	return nil
 }
 
@@ -2843,7 +3114,7 @@ func (u *Geo3dModel) AcceptFuncs(default_Func func(Geo3dDefaultModel) error, cus
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Geo3dModel type")
 		}
 		return unknownFunc(u.typ)
 	case "default":
@@ -2859,11 +3130,11 @@ func (u *Geo3dModel) AcceptFuncs(default_Func func(Geo3dDefaultModel) error, cus
 	}
 }
 
-func (u *Geo3dModel) DefaultNoopSuccess(Geo3dDefaultModel) error {
+func (u *Geo3dModel) DefaultNoopSuccess(_ Geo3dDefaultModel) error {
 	return nil
 }
 
-func (u *Geo3dModel) CustomNoopSuccess(Geo3dCustomModel) error {
+func (u *Geo3dModel) CustomNoopSuccess(_ Geo3dCustomModel) error {
 	return nil
 }
 
@@ -3003,7 +3274,7 @@ func (u *Geo3dOrientation) AcceptFuncs(principalAxesFunc func(Geo3dOrientationPr
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Geo3dOrientation type")
 		}
 		return unknownFunc(u.typ)
 	case "principalAxes":
@@ -3014,7 +3285,7 @@ func (u *Geo3dOrientation) AcceptFuncs(principalAxesFunc func(Geo3dOrientationPr
 	}
 }
 
-func (u *Geo3dOrientation) PrincipalAxesNoopSuccess(Geo3dOrientationPrincipalAxes) error {
+func (u *Geo3dOrientation) PrincipalAxesNoopSuccess(_ Geo3dOrientationPrincipalAxes) error {
 	return nil
 }
 
@@ -3064,141 +3335,6 @@ type Geo3dOrientationVisitorWithContext interface {
 
 func NewGeo3dOrientationFromPrincipalAxes(v Geo3dOrientationPrincipalAxes) Geo3dOrientation {
 	return Geo3dOrientation{typ: "principalAxes", principalAxes: &v}
-}
-
-type Geo3dOrientationStatic struct {
-	typ           string
-	principalAxes *Geo3dOrientationStaticPrincipalAxes
-}
-
-type geo3dOrientationStaticDeserializer struct {
-	Type          string                               `json:"type"`
-	PrincipalAxes *Geo3dOrientationStaticPrincipalAxes `json:"principalAxes"`
-}
-
-func (u *geo3dOrientationStaticDeserializer) toStruct() Geo3dOrientationStatic {
-	return Geo3dOrientationStatic{typ: u.Type, principalAxes: u.PrincipalAxes}
-}
-
-func (u *Geo3dOrientationStatic) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "principalAxes":
-		if u.principalAxes == nil {
-			return nil, fmt.Errorf("field \"principalAxes\" is required")
-		}
-		return struct {
-			Type          string                              `json:"type"`
-			PrincipalAxes Geo3dOrientationStaticPrincipalAxes `json:"principalAxes"`
-		}{Type: "principalAxes", PrincipalAxes: *u.principalAxes}, nil
-	}
-}
-
-func (u Geo3dOrientationStatic) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *Geo3dOrientationStatic) UnmarshalJSON(data []byte) error {
-	var deser geo3dOrientationStaticDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "principalAxes":
-		if u.principalAxes == nil {
-			return fmt.Errorf("field \"principalAxes\" is required")
-		}
-	}
-	return nil
-}
-
-func (u Geo3dOrientationStatic) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *Geo3dOrientationStatic) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *Geo3dOrientationStatic) AcceptFuncs(principalAxesFunc func(Geo3dOrientationStaticPrincipalAxes) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "principalAxes":
-		if u.principalAxes == nil {
-			return fmt.Errorf("field \"principalAxes\" is required")
-		}
-		return principalAxesFunc(*u.principalAxes)
-	}
-}
-
-func (u *Geo3dOrientationStatic) PrincipalAxesNoopSuccess(Geo3dOrientationStaticPrincipalAxes) error {
-	return nil
-}
-
-func (u *Geo3dOrientationStatic) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *Geo3dOrientationStatic) Accept(v Geo3dOrientationStaticVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
-	case "principalAxes":
-		if u.principalAxes == nil {
-			return fmt.Errorf("field \"principalAxes\" is required")
-		}
-		return v.VisitPrincipalAxes(*u.principalAxes)
-	}
-}
-
-type Geo3dOrientationStaticVisitor interface {
-	VisitPrincipalAxes(v Geo3dOrientationStaticPrincipalAxes) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *Geo3dOrientationStatic) AcceptWithContext(ctx context.Context, v Geo3dOrientationStaticVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "principalAxes":
-		if u.principalAxes == nil {
-			return fmt.Errorf("field \"principalAxes\" is required")
-		}
-		return v.VisitPrincipalAxesWithContext(ctx, *u.principalAxes)
-	}
-}
-
-type Geo3dOrientationStaticVisitorWithContext interface {
-	VisitPrincipalAxesWithContext(ctx context.Context, v Geo3dOrientationStaticPrincipalAxes) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewGeo3dOrientationStaticFromPrincipalAxes(v Geo3dOrientationStaticPrincipalAxes) Geo3dOrientationStatic {
-	return Geo3dOrientationStatic{typ: "principalAxes", principalAxes: &v}
 }
 
 type Geo3dPosition struct {
@@ -3287,7 +3423,7 @@ func (u *Geo3dPosition) AcceptFuncs(wgs84Func func(Geo3dPositionWgs84) error, ec
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Geo3dPosition type")
 		}
 		return unknownFunc(u.typ)
 	case "wgs84":
@@ -3303,11 +3439,11 @@ func (u *Geo3dPosition) AcceptFuncs(wgs84Func func(Geo3dPositionWgs84) error, ec
 	}
 }
 
-func (u *Geo3dPosition) Wgs84NoopSuccess(Geo3dPositionWgs84) error {
+func (u *Geo3dPosition) Wgs84NoopSuccess(_ Geo3dPositionWgs84) error {
 	return nil
 }
 
-func (u *Geo3dPosition) EcefNoopSuccess(Geo3dPositionEcef) error {
+func (u *Geo3dPosition) EcefNoopSuccess(_ Geo3dPositionEcef) error {
 	return nil
 }
 
@@ -3375,221 +3511,37 @@ func NewGeo3dPositionFromEcef(v Geo3dPositionEcef) Geo3dPosition {
 	return Geo3dPosition{typ: "ecef", ecef: &v}
 }
 
-type Geo3dPositionStatic struct {
-	typ   string
-	wgs84 *Geo3dPositionStaticWgs84
-	ecef  *Geo3dPositionStaticEcef
-}
-
-type geo3dPositionStaticDeserializer struct {
-	Type  string                    `json:"type"`
-	Wgs84 *Geo3dPositionStaticWgs84 `json:"wgs84"`
-	Ecef  *Geo3dPositionStaticEcef  `json:"ecef"`
-}
-
-func (u *geo3dPositionStaticDeserializer) toStruct() Geo3dPositionStatic {
-	return Geo3dPositionStatic{typ: u.Type, wgs84: u.Wgs84, ecef: u.Ecef}
-}
-
-func (u *Geo3dPositionStatic) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "wgs84":
-		if u.wgs84 == nil {
-			return nil, fmt.Errorf("field \"wgs84\" is required")
-		}
-		return struct {
-			Type  string                   `json:"type"`
-			Wgs84 Geo3dPositionStaticWgs84 `json:"wgs84"`
-		}{Type: "wgs84", Wgs84: *u.wgs84}, nil
-	case "ecef":
-		if u.ecef == nil {
-			return nil, fmt.Errorf("field \"ecef\" is required")
-		}
-		return struct {
-			Type string                  `json:"type"`
-			Ecef Geo3dPositionStaticEcef `json:"ecef"`
-		}{Type: "ecef", Ecef: *u.ecef}, nil
-	}
-}
-
-func (u Geo3dPositionStatic) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *Geo3dPositionStatic) UnmarshalJSON(data []byte) error {
-	var deser geo3dPositionStaticDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "wgs84":
-		if u.wgs84 == nil {
-			return fmt.Errorf("field \"wgs84\" is required")
-		}
-	case "ecef":
-		if u.ecef == nil {
-			return fmt.Errorf("field \"ecef\" is required")
-		}
-	}
-	return nil
-}
-
-func (u Geo3dPositionStatic) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *Geo3dPositionStatic) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *Geo3dPositionStatic) AcceptFuncs(wgs84Func func(Geo3dPositionStaticWgs84) error, ecefFunc func(Geo3dPositionStaticEcef) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "wgs84":
-		if u.wgs84 == nil {
-			return fmt.Errorf("field \"wgs84\" is required")
-		}
-		return wgs84Func(*u.wgs84)
-	case "ecef":
-		if u.ecef == nil {
-			return fmt.Errorf("field \"ecef\" is required")
-		}
-		return ecefFunc(*u.ecef)
-	}
-}
-
-func (u *Geo3dPositionStatic) Wgs84NoopSuccess(Geo3dPositionStaticWgs84) error {
-	return nil
-}
-
-func (u *Geo3dPositionStatic) EcefNoopSuccess(Geo3dPositionStaticEcef) error {
-	return nil
-}
-
-func (u *Geo3dPositionStatic) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *Geo3dPositionStatic) Accept(v Geo3dPositionStaticVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
-	case "wgs84":
-		if u.wgs84 == nil {
-			return fmt.Errorf("field \"wgs84\" is required")
-		}
-		return v.VisitWgs84(*u.wgs84)
-	case "ecef":
-		if u.ecef == nil {
-			return fmt.Errorf("field \"ecef\" is required")
-		}
-		return v.VisitEcef(*u.ecef)
-	}
-}
-
-type Geo3dPositionStaticVisitor interface {
-	VisitWgs84(v Geo3dPositionStaticWgs84) error
-	VisitEcef(v Geo3dPositionStaticEcef) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *Geo3dPositionStatic) AcceptWithContext(ctx context.Context, v Geo3dPositionStaticVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "wgs84":
-		if u.wgs84 == nil {
-			return fmt.Errorf("field \"wgs84\" is required")
-		}
-		return v.VisitWgs84WithContext(ctx, *u.wgs84)
-	case "ecef":
-		if u.ecef == nil {
-			return fmt.Errorf("field \"ecef\" is required")
-		}
-		return v.VisitEcefWithContext(ctx, *u.ecef)
-	}
-}
-
-type Geo3dPositionStaticVisitorWithContext interface {
-	VisitWgs84WithContext(ctx context.Context, v Geo3dPositionStaticWgs84) error
-	VisitEcefWithContext(ctx context.Context, v Geo3dPositionStaticEcef) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewGeo3dPositionStaticFromWgs84(v Geo3dPositionStaticWgs84) Geo3dPositionStatic {
-	return Geo3dPositionStatic{typ: "wgs84", wgs84: &v}
-}
-
-func NewGeo3dPositionStaticFromEcef(v Geo3dPositionStaticEcef) Geo3dPositionStatic {
-	return Geo3dPositionStatic{typ: "ecef", ecef: &v}
-}
-
-// Orientation configuration for a sensor.
+// Sensor orientation configuration.
 type Geo3dSensorOrientationConfig struct {
-	typ     string
-	static  *Geo3dOrientationStatic
-	channel *Geo3dOrientation
-	nadir   *Geo3dSensorOrientationNadir
-	zenith  *Geo3dSensorOrientationZenith
+	typ         string
+	eulerAngles *Geo3dOrientationEulerAngles
+	nadir       *Geo3dSensorOrientationNadir
+	zenith      *Geo3dSensorOrientationZenith
 }
 
 type geo3dSensorOrientationConfigDeserializer struct {
-	Type    string                        `json:"type"`
-	Static  *Geo3dOrientationStatic       `json:"static"`
-	Channel *Geo3dOrientation             `json:"channel"`
-	Nadir   *Geo3dSensorOrientationNadir  `json:"nadir"`
-	Zenith  *Geo3dSensorOrientationZenith `json:"zenith"`
+	Type        string                        `json:"type"`
+	EulerAngles *Geo3dOrientationEulerAngles  `json:"eulerAngles"`
+	Nadir       *Geo3dSensorOrientationNadir  `json:"nadir"`
+	Zenith      *Geo3dSensorOrientationZenith `json:"zenith"`
 }
 
 func (u *geo3dSensorOrientationConfigDeserializer) toStruct() Geo3dSensorOrientationConfig {
-	return Geo3dSensorOrientationConfig{typ: u.Type, static: u.Static, channel: u.Channel, nadir: u.Nadir, zenith: u.Zenith}
+	return Geo3dSensorOrientationConfig{typ: u.Type, eulerAngles: u.EulerAngles, nadir: u.Nadir, zenith: u.Zenith}
 }
 
 func (u *Geo3dSensorOrientationConfig) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "static":
-		if u.static == nil {
-			return nil, fmt.Errorf("field \"static\" is required")
+	case "eulerAngles":
+		if u.eulerAngles == nil {
+			return nil, fmt.Errorf("field \"eulerAngles\" is required")
 		}
 		return struct {
-			Type   string                 `json:"type"`
-			Static Geo3dOrientationStatic `json:"static"`
-		}{Type: "static", Static: *u.static}, nil
-	case "channel":
-		if u.channel == nil {
-			return nil, fmt.Errorf("field \"channel\" is required")
-		}
-		return struct {
-			Type    string           `json:"type"`
-			Channel Geo3dOrientation `json:"channel"`
-		}{Type: "channel", Channel: *u.channel}, nil
+			Type        string                      `json:"type"`
+			EulerAngles Geo3dOrientationEulerAngles `json:"eulerAngles"`
+		}{Type: "eulerAngles", EulerAngles: *u.eulerAngles}, nil
 	case "nadir":
 		if u.nadir == nil {
 			return nil, fmt.Errorf("field \"nadir\" is required")
@@ -3624,13 +3576,9 @@ func (u *Geo3dSensorOrientationConfig) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "static":
-		if u.static == nil {
-			return fmt.Errorf("field \"static\" is required")
-		}
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
+	case "eulerAngles":
+		if u.eulerAngles == nil {
+			return fmt.Errorf("field \"eulerAngles\" is required")
 		}
 	case "nadir":
 		if u.nadir == nil {
@@ -3660,23 +3608,18 @@ func (u *Geo3dSensorOrientationConfig) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Geo3dSensorOrientationConfig) AcceptFuncs(staticFunc func(Geo3dOrientationStatic) error, channelFunc func(Geo3dOrientation) error, nadirFunc func(Geo3dSensorOrientationNadir) error, zenithFunc func(Geo3dSensorOrientationZenith) error, unknownFunc func(string) error) error {
+func (u *Geo3dSensorOrientationConfig) AcceptFuncs(eulerAnglesFunc func(Geo3dOrientationEulerAngles) error, nadirFunc func(Geo3dSensorOrientationNadir) error, zenithFunc func(Geo3dSensorOrientationZenith) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Geo3dSensorOrientationConfig type")
 		}
 		return unknownFunc(u.typ)
-	case "static":
-		if u.static == nil {
-			return fmt.Errorf("field \"static\" is required")
+	case "eulerAngles":
+		if u.eulerAngles == nil {
+			return fmt.Errorf("field \"eulerAngles\" is required")
 		}
-		return staticFunc(*u.static)
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
-		}
-		return channelFunc(*u.channel)
+		return eulerAnglesFunc(*u.eulerAngles)
 	case "nadir":
 		if u.nadir == nil {
 			return fmt.Errorf("field \"nadir\" is required")
@@ -3690,19 +3633,15 @@ func (u *Geo3dSensorOrientationConfig) AcceptFuncs(staticFunc func(Geo3dOrientat
 	}
 }
 
-func (u *Geo3dSensorOrientationConfig) StaticNoopSuccess(Geo3dOrientationStatic) error {
+func (u *Geo3dSensorOrientationConfig) EulerAnglesNoopSuccess(_ Geo3dOrientationEulerAngles) error {
 	return nil
 }
 
-func (u *Geo3dSensorOrientationConfig) ChannelNoopSuccess(Geo3dOrientation) error {
+func (u *Geo3dSensorOrientationConfig) NadirNoopSuccess(_ Geo3dSensorOrientationNadir) error {
 	return nil
 }
 
-func (u *Geo3dSensorOrientationConfig) NadirNoopSuccess(Geo3dSensorOrientationNadir) error {
-	return nil
-}
-
-func (u *Geo3dSensorOrientationConfig) ZenithNoopSuccess(Geo3dSensorOrientationZenith) error {
+func (u *Geo3dSensorOrientationConfig) ZenithNoopSuccess(_ Geo3dSensorOrientationZenith) error {
 	return nil
 }
 
@@ -3717,16 +3656,11 @@ func (u *Geo3dSensorOrientationConfig) Accept(v Geo3dSensorOrientationConfigVisi
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "static":
-		if u.static == nil {
-			return fmt.Errorf("field \"static\" is required")
+	case "eulerAngles":
+		if u.eulerAngles == nil {
+			return fmt.Errorf("field \"eulerAngles\" is required")
 		}
-		return v.VisitStatic(*u.static)
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
-		}
-		return v.VisitChannel(*u.channel)
+		return v.VisitEulerAngles(*u.eulerAngles)
 	case "nadir":
 		if u.nadir == nil {
 			return fmt.Errorf("field \"nadir\" is required")
@@ -3741,8 +3675,7 @@ func (u *Geo3dSensorOrientationConfig) Accept(v Geo3dSensorOrientationConfigVisi
 }
 
 type Geo3dSensorOrientationConfigVisitor interface {
-	VisitStatic(v Geo3dOrientationStatic) error
-	VisitChannel(v Geo3dOrientation) error
+	VisitEulerAngles(v Geo3dOrientationEulerAngles) error
 	VisitNadir(v Geo3dSensorOrientationNadir) error
 	VisitZenith(v Geo3dSensorOrientationZenith) error
 	VisitUnknown(typeName string) error
@@ -3755,16 +3688,11 @@ func (u *Geo3dSensorOrientationConfig) AcceptWithContext(ctx context.Context, v 
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "static":
-		if u.static == nil {
-			return fmt.Errorf("field \"static\" is required")
+	case "eulerAngles":
+		if u.eulerAngles == nil {
+			return fmt.Errorf("field \"eulerAngles\" is required")
 		}
-		return v.VisitStaticWithContext(ctx, *u.static)
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
-		}
-		return v.VisitChannelWithContext(ctx, *u.channel)
+		return v.VisitEulerAnglesWithContext(ctx, *u.eulerAngles)
 	case "nadir":
 		if u.nadir == nil {
 			return fmt.Errorf("field \"nadir\" is required")
@@ -3779,19 +3707,14 @@ func (u *Geo3dSensorOrientationConfig) AcceptWithContext(ctx context.Context, v 
 }
 
 type Geo3dSensorOrientationConfigVisitorWithContext interface {
-	VisitStaticWithContext(ctx context.Context, v Geo3dOrientationStatic) error
-	VisitChannelWithContext(ctx context.Context, v Geo3dOrientation) error
+	VisitEulerAnglesWithContext(ctx context.Context, v Geo3dOrientationEulerAngles) error
 	VisitNadirWithContext(ctx context.Context, v Geo3dSensorOrientationNadir) error
 	VisitZenithWithContext(ctx context.Context, v Geo3dSensorOrientationZenith) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewGeo3dSensorOrientationConfigFromStatic(v Geo3dOrientationStatic) Geo3dSensorOrientationConfig {
-	return Geo3dSensorOrientationConfig{typ: "static", static: &v}
-}
-
-func NewGeo3dSensorOrientationConfigFromChannel(v Geo3dOrientation) Geo3dSensorOrientationConfig {
-	return Geo3dSensorOrientationConfig{typ: "channel", channel: &v}
+func NewGeo3dSensorOrientationConfigFromEulerAngles(v Geo3dOrientationEulerAngles) Geo3dSensorOrientationConfig {
+	return Geo3dSensorOrientationConfig{typ: "eulerAngles", eulerAngles: &v}
 }
 
 func NewGeo3dSensorOrientationConfigFromNadir(v Geo3dSensorOrientationNadir) Geo3dSensorOrientationConfig {
@@ -3802,67 +3725,57 @@ func NewGeo3dSensorOrientationConfigFromZenith(v Geo3dSensorOrientationZenith) G
 	return Geo3dSensorOrientationConfig{typ: "zenith", zenith: &v}
 }
 
-// Determines how a sensor's position is specified.
-type Geo3dSensorPositionConfig struct {
-	typ      string
-	static   *Geo3dPositionStatic
-	channel  *Geo3dPosition
-	model    *string
-	waypoint *string
+// Sensor shape configuration.
+type Geo3dSensorShape struct {
+	typ         string
+	conic       *Geo3dSensorShapeConic
+	rectangular *Geo3dSensorShapeRectangular
+	spherical   *Geo3dSensorShapeSpherical
 }
 
-type geo3dSensorPositionConfigDeserializer struct {
-	Type     string               `json:"type"`
-	Static   *Geo3dPositionStatic `json:"static"`
-	Channel  *Geo3dPosition       `json:"channel"`
-	Model    *string              `json:"model"`
-	Waypoint *string              `json:"waypoint"`
+type geo3dSensorShapeDeserializer struct {
+	Type        string                       `json:"type"`
+	Conic       *Geo3dSensorShapeConic       `json:"conic"`
+	Rectangular *Geo3dSensorShapeRectangular `json:"rectangular"`
+	Spherical   *Geo3dSensorShapeSpherical   `json:"spherical"`
 }
 
-func (u *geo3dSensorPositionConfigDeserializer) toStruct() Geo3dSensorPositionConfig {
-	return Geo3dSensorPositionConfig{typ: u.Type, static: u.Static, channel: u.Channel, model: u.Model, waypoint: u.Waypoint}
+func (u *geo3dSensorShapeDeserializer) toStruct() Geo3dSensorShape {
+	return Geo3dSensorShape{typ: u.Type, conic: u.Conic, rectangular: u.Rectangular, spherical: u.Spherical}
 }
 
-func (u *Geo3dSensorPositionConfig) toSerializer() (interface{}, error) {
+func (u *Geo3dSensorShape) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "static":
-		if u.static == nil {
-			return nil, fmt.Errorf("field \"static\" is required")
+	case "conic":
+		if u.conic == nil {
+			return nil, fmt.Errorf("field \"conic\" is required")
 		}
 		return struct {
-			Type   string              `json:"type"`
-			Static Geo3dPositionStatic `json:"static"`
-		}{Type: "static", Static: *u.static}, nil
-	case "channel":
-		if u.channel == nil {
-			return nil, fmt.Errorf("field \"channel\" is required")
+			Type  string                `json:"type"`
+			Conic Geo3dSensorShapeConic `json:"conic"`
+		}{Type: "conic", Conic: *u.conic}, nil
+	case "rectangular":
+		if u.rectangular == nil {
+			return nil, fmt.Errorf("field \"rectangular\" is required")
 		}
 		return struct {
-			Type    string        `json:"type"`
-			Channel Geo3dPosition `json:"channel"`
-		}{Type: "channel", Channel: *u.channel}, nil
-	case "model":
-		if u.model == nil {
-			return nil, fmt.Errorf("field \"model\" is required")
+			Type        string                      `json:"type"`
+			Rectangular Geo3dSensorShapeRectangular `json:"rectangular"`
+		}{Type: "rectangular", Rectangular: *u.rectangular}, nil
+	case "spherical":
+		if u.spherical == nil {
+			return nil, fmt.Errorf("field \"spherical\" is required")
 		}
 		return struct {
-			Type  string `json:"type"`
-			Model string `json:"model"`
-		}{Type: "model", Model: *u.model}, nil
-	case "waypoint":
-		if u.waypoint == nil {
-			return nil, fmt.Errorf("field \"waypoint\" is required")
-		}
-		return struct {
-			Type     string `json:"type"`
-			Waypoint string `json:"waypoint"`
-		}{Type: "waypoint", Waypoint: *u.waypoint}, nil
+			Type      string                    `json:"type"`
+			Spherical Geo3dSensorShapeSpherical `json:"spherical"`
+		}{Type: "spherical", Spherical: *u.spherical}, nil
 	}
 }
 
-func (u Geo3dSensorPositionConfig) MarshalJSON() ([]byte, error) {
+func (u Geo3dSensorShape) MarshalJSON() ([]byte, error) {
 	ser, err := u.toSerializer()
 	if err != nil {
 		return nil, err
@@ -3870,34 +3783,30 @@ func (u Geo3dSensorPositionConfig) MarshalJSON() ([]byte, error) {
 	return safejson.Marshal(ser)
 }
 
-func (u *Geo3dSensorPositionConfig) UnmarshalJSON(data []byte) error {
-	var deser geo3dSensorPositionConfigDeserializer
+func (u *Geo3dSensorShape) UnmarshalJSON(data []byte) error {
+	var deser geo3dSensorShapeDeserializer
 	if err := safejson.Unmarshal(data, &deser); err != nil {
 		return err
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "static":
-		if u.static == nil {
-			return fmt.Errorf("field \"static\" is required")
+	case "conic":
+		if u.conic == nil {
+			return fmt.Errorf("field \"conic\" is required")
 		}
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
+	case "rectangular":
+		if u.rectangular == nil {
+			return fmt.Errorf("field \"rectangular\" is required")
 		}
-	case "model":
-		if u.model == nil {
-			return fmt.Errorf("field \"model\" is required")
-		}
-	case "waypoint":
-		if u.waypoint == nil {
-			return fmt.Errorf("field \"waypoint\" is required")
+	case "spherical":
+		if u.spherical == nil {
+			return fmt.Errorf("field \"spherical\" is required")
 		}
 	}
 	return nil
 }
 
-func (u Geo3dSensorPositionConfig) MarshalYAML() (interface{}, error) {
+func (u Geo3dSensorShape) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(u)
 	if err != nil {
 		return nil, err
@@ -3905,7 +3814,7 @@ func (u Geo3dSensorPositionConfig) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (u *Geo3dSensorPositionConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (u *Geo3dSensorShape) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -3913,146 +3822,257 @@ func (u *Geo3dSensorPositionConfig) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Geo3dSensorPositionConfig) AcceptFuncs(staticFunc func(Geo3dPositionStatic) error, channelFunc func(Geo3dPosition) error, modelFunc func(string) error, waypointFunc func(string) error, unknownFunc func(string) error) error {
+func (u *Geo3dSensorShape) AcceptFuncs(conicFunc func(Geo3dSensorShapeConic) error, rectangularFunc func(Geo3dSensorShapeRectangular) error, sphericalFunc func(Geo3dSensorShapeSpherical) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Geo3dSensorShape type")
 		}
 		return unknownFunc(u.typ)
-	case "static":
-		if u.static == nil {
-			return fmt.Errorf("field \"static\" is required")
+	case "conic":
+		if u.conic == nil {
+			return fmt.Errorf("field \"conic\" is required")
 		}
-		return staticFunc(*u.static)
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
+		return conicFunc(*u.conic)
+	case "rectangular":
+		if u.rectangular == nil {
+			return fmt.Errorf("field \"rectangular\" is required")
 		}
-		return channelFunc(*u.channel)
-	case "model":
-		if u.model == nil {
-			return fmt.Errorf("field \"model\" is required")
+		return rectangularFunc(*u.rectangular)
+	case "spherical":
+		if u.spherical == nil {
+			return fmt.Errorf("field \"spherical\" is required")
 		}
-		return modelFunc(*u.model)
-	case "waypoint":
-		if u.waypoint == nil {
-			return fmt.Errorf("field \"waypoint\" is required")
-		}
-		return waypointFunc(*u.waypoint)
+		return sphericalFunc(*u.spherical)
 	}
 }
 
-func (u *Geo3dSensorPositionConfig) StaticNoopSuccess(Geo3dPositionStatic) error {
+func (u *Geo3dSensorShape) ConicNoopSuccess(_ Geo3dSensorShapeConic) error {
 	return nil
 }
 
-func (u *Geo3dSensorPositionConfig) ChannelNoopSuccess(Geo3dPosition) error {
+func (u *Geo3dSensorShape) RectangularNoopSuccess(_ Geo3dSensorShapeRectangular) error {
 	return nil
 }
 
-func (u *Geo3dSensorPositionConfig) ModelNoopSuccess(string) error {
+func (u *Geo3dSensorShape) SphericalNoopSuccess(_ Geo3dSensorShapeSpherical) error {
 	return nil
 }
 
-func (u *Geo3dSensorPositionConfig) WaypointNoopSuccess(string) error {
-	return nil
-}
-
-func (u *Geo3dSensorPositionConfig) ErrorOnUnknown(typeName string) error {
+func (u *Geo3dSensorShape) ErrorOnUnknown(typeName string) error {
 	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
-func (u *Geo3dSensorPositionConfig) Accept(v Geo3dSensorPositionConfigVisitor) error {
+func (u *Geo3dSensorShape) Accept(v Geo3dSensorShapeVisitor) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "static":
-		if u.static == nil {
-			return fmt.Errorf("field \"static\" is required")
+	case "conic":
+		if u.conic == nil {
+			return fmt.Errorf("field \"conic\" is required")
 		}
-		return v.VisitStatic(*u.static)
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
+		return v.VisitConic(*u.conic)
+	case "rectangular":
+		if u.rectangular == nil {
+			return fmt.Errorf("field \"rectangular\" is required")
 		}
-		return v.VisitChannel(*u.channel)
-	case "model":
-		if u.model == nil {
-			return fmt.Errorf("field \"model\" is required")
+		return v.VisitRectangular(*u.rectangular)
+	case "spherical":
+		if u.spherical == nil {
+			return fmt.Errorf("field \"spherical\" is required")
 		}
-		return v.VisitModel(*u.model)
-	case "waypoint":
-		if u.waypoint == nil {
-			return fmt.Errorf("field \"waypoint\" is required")
-		}
-		return v.VisitWaypoint(*u.waypoint)
+		return v.VisitSpherical(*u.spherical)
 	}
 }
 
-type Geo3dSensorPositionConfigVisitor interface {
-	VisitStatic(v Geo3dPositionStatic) error
-	VisitChannel(v Geo3dPosition) error
-	VisitModel(v string) error
-	VisitWaypoint(v string) error
+type Geo3dSensorShapeVisitor interface {
+	VisitConic(v Geo3dSensorShapeConic) error
+	VisitRectangular(v Geo3dSensorShapeRectangular) error
+	VisitSpherical(v Geo3dSensorShapeSpherical) error
 	VisitUnknown(typeName string) error
 }
 
-func (u *Geo3dSensorPositionConfig) AcceptWithContext(ctx context.Context, v Geo3dSensorPositionConfigVisitorWithContext) error {
+func (u *Geo3dSensorShape) AcceptWithContext(ctx context.Context, v Geo3dSensorShapeVisitorWithContext) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "static":
-		if u.static == nil {
-			return fmt.Errorf("field \"static\" is required")
+	case "conic":
+		if u.conic == nil {
+			return fmt.Errorf("field \"conic\" is required")
 		}
-		return v.VisitStaticWithContext(ctx, *u.static)
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
+		return v.VisitConicWithContext(ctx, *u.conic)
+	case "rectangular":
+		if u.rectangular == nil {
+			return fmt.Errorf("field \"rectangular\" is required")
 		}
-		return v.VisitChannelWithContext(ctx, *u.channel)
-	case "model":
-		if u.model == nil {
-			return fmt.Errorf("field \"model\" is required")
+		return v.VisitRectangularWithContext(ctx, *u.rectangular)
+	case "spherical":
+		if u.spherical == nil {
+			return fmt.Errorf("field \"spherical\" is required")
 		}
-		return v.VisitModelWithContext(ctx, *u.model)
-	case "waypoint":
-		if u.waypoint == nil {
-			return fmt.Errorf("field \"waypoint\" is required")
-		}
-		return v.VisitWaypointWithContext(ctx, *u.waypoint)
+		return v.VisitSphericalWithContext(ctx, *u.spherical)
 	}
 }
 
-type Geo3dSensorPositionConfigVisitorWithContext interface {
-	VisitStaticWithContext(ctx context.Context, v Geo3dPositionStatic) error
-	VisitChannelWithContext(ctx context.Context, v Geo3dPosition) error
-	VisitModelWithContext(ctx context.Context, v string) error
-	VisitWaypointWithContext(ctx context.Context, v string) error
+type Geo3dSensorShapeVisitorWithContext interface {
+	VisitConicWithContext(ctx context.Context, v Geo3dSensorShapeConic) error
+	VisitRectangularWithContext(ctx context.Context, v Geo3dSensorShapeRectangular) error
+	VisitSphericalWithContext(ctx context.Context, v Geo3dSensorShapeSpherical) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewGeo3dSensorPositionConfigFromStatic(v Geo3dPositionStatic) Geo3dSensorPositionConfig {
-	return Geo3dSensorPositionConfig{typ: "static", static: &v}
+func NewGeo3dSensorShapeFromConic(v Geo3dSensorShapeConic) Geo3dSensorShape {
+	return Geo3dSensorShape{typ: "conic", conic: &v}
 }
 
-func NewGeo3dSensorPositionConfigFromChannel(v Geo3dPosition) Geo3dSensorPositionConfig {
-	return Geo3dSensorPositionConfig{typ: "channel", channel: &v}
+func NewGeo3dSensorShapeFromRectangular(v Geo3dSensorShapeRectangular) Geo3dSensorShape {
+	return Geo3dSensorShape{typ: "rectangular", rectangular: &v}
 }
 
-func NewGeo3dSensorPositionConfigFromModel(v string) Geo3dSensorPositionConfig {
-	return Geo3dSensorPositionConfig{typ: "model", model: &v}
+func NewGeo3dSensorShapeFromSpherical(v Geo3dSensorShapeSpherical) Geo3dSensorShape {
+	return Geo3dSensorShape{typ: "spherical", spherical: &v}
 }
 
-func NewGeo3dSensorPositionConfigFromWaypoint(v string) Geo3dSensorPositionConfig {
-	return Geo3dSensorPositionConfig{typ: "waypoint", waypoint: &v}
+// A rectangular frustum shaped sensor volume.
+type Geo3dSensorShapeRectangular struct {
+	typ         string
+	includedFov *Geo3dSensorShapeRectangularIncludedFov
+}
+
+type geo3dSensorShapeRectangularDeserializer struct {
+	Type        string                                  `json:"type"`
+	IncludedFov *Geo3dSensorShapeRectangularIncludedFov `json:"includedFov"`
+}
+
+func (u *geo3dSensorShapeRectangularDeserializer) toStruct() Geo3dSensorShapeRectangular {
+	return Geo3dSensorShapeRectangular{typ: u.Type, includedFov: u.IncludedFov}
+}
+
+func (u *Geo3dSensorShapeRectangular) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "includedFov":
+		if u.includedFov == nil {
+			return nil, fmt.Errorf("field \"includedFov\" is required")
+		}
+		return struct {
+			Type        string                                 `json:"type"`
+			IncludedFov Geo3dSensorShapeRectangularIncludedFov `json:"includedFov"`
+		}{Type: "includedFov", IncludedFov: *u.includedFov}, nil
+	}
+}
+
+func (u Geo3dSensorShapeRectangular) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *Geo3dSensorShapeRectangular) UnmarshalJSON(data []byte) error {
+	var deser geo3dSensorShapeRectangularDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "includedFov":
+		if u.includedFov == nil {
+			return fmt.Errorf("field \"includedFov\" is required")
+		}
+	}
+	return nil
+}
+
+func (u Geo3dSensorShapeRectangular) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *Geo3dSensorShapeRectangular) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *Geo3dSensorShapeRectangular) AcceptFuncs(includedFovFunc func(Geo3dSensorShapeRectangularIncludedFov) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in Geo3dSensorShapeRectangular type")
+		}
+		return unknownFunc(u.typ)
+	case "includedFov":
+		if u.includedFov == nil {
+			return fmt.Errorf("field \"includedFov\" is required")
+		}
+		return includedFovFunc(*u.includedFov)
+	}
+}
+
+func (u *Geo3dSensorShapeRectangular) IncludedFovNoopSuccess(_ Geo3dSensorShapeRectangularIncludedFov) error {
+	return nil
+}
+
+func (u *Geo3dSensorShapeRectangular) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *Geo3dSensorShapeRectangular) Accept(v Geo3dSensorShapeRectangularVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "includedFov":
+		if u.includedFov == nil {
+			return fmt.Errorf("field \"includedFov\" is required")
+		}
+		return v.VisitIncludedFov(*u.includedFov)
+	}
+}
+
+type Geo3dSensorShapeRectangularVisitor interface {
+	VisitIncludedFov(v Geo3dSensorShapeRectangularIncludedFov) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *Geo3dSensorShapeRectangular) AcceptWithContext(ctx context.Context, v Geo3dSensorShapeRectangularVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "includedFov":
+		if u.includedFov == nil {
+			return fmt.Errorf("field \"includedFov\" is required")
+		}
+		return v.VisitIncludedFovWithContext(ctx, *u.includedFov)
+	}
+}
+
+type Geo3dSensorShapeRectangularVisitorWithContext interface {
+	VisitIncludedFovWithContext(ctx context.Context, v Geo3dSensorShapeRectangularIncludedFov) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewGeo3dSensorShapeRectangularFromIncludedFov(v Geo3dSensorShapeRectangularIncludedFov) Geo3dSensorShapeRectangular {
+	return Geo3dSensorShapeRectangular{typ: "includedFov", includedFov: &v}
 }
 
 // Additional static objects on the map, such as a point representing a tower
@@ -4128,7 +4148,7 @@ func (u *GeoCustomFeature) AcceptFuncs(pointFunc func(GeoPoint) error, unknownFu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in GeoCustomFeature type")
 		}
 		return unknownFunc(u.typ)
 	case "point":
@@ -4139,7 +4159,7 @@ func (u *GeoCustomFeature) AcceptFuncs(pointFunc func(GeoPoint) error, unknownFu
 	}
 }
 
-func (u *GeoCustomFeature) PointNoopSuccess(GeoPoint) error {
+func (u *GeoCustomFeature) PointNoopSuccess(_ GeoPoint) error {
 	return nil
 }
 
@@ -4189,142 +4209,6 @@ type GeoCustomFeatureVisitorWithContext interface {
 
 func NewGeoCustomFeatureFromPoint(v GeoPoint) GeoCustomFeature {
 	return GeoCustomFeature{typ: "point", point: &v}
-}
-
-// Specifies how values of a secondary channel should be visualized.
-type GeoSecondaryPlotVisualizationOption struct {
-	typ      string
-	asColors *ValueToColorMap
-}
-
-type geoSecondaryPlotVisualizationOptionDeserializer struct {
-	Type     string           `json:"type"`
-	AsColors *ValueToColorMap `json:"asColors"`
-}
-
-func (u *geoSecondaryPlotVisualizationOptionDeserializer) toStruct() GeoSecondaryPlotVisualizationOption {
-	return GeoSecondaryPlotVisualizationOption{typ: u.Type, asColors: u.AsColors}
-}
-
-func (u *GeoSecondaryPlotVisualizationOption) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "asColors":
-		if u.asColors == nil {
-			return nil, fmt.Errorf("field \"asColors\" is required")
-		}
-		return struct {
-			Type     string          `json:"type"`
-			AsColors ValueToColorMap `json:"asColors"`
-		}{Type: "asColors", AsColors: *u.asColors}, nil
-	}
-}
-
-func (u GeoSecondaryPlotVisualizationOption) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *GeoSecondaryPlotVisualizationOption) UnmarshalJSON(data []byte) error {
-	var deser geoSecondaryPlotVisualizationOptionDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "asColors":
-		if u.asColors == nil {
-			return fmt.Errorf("field \"asColors\" is required")
-		}
-	}
-	return nil
-}
-
-func (u GeoSecondaryPlotVisualizationOption) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *GeoSecondaryPlotVisualizationOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *GeoSecondaryPlotVisualizationOption) AcceptFuncs(asColorsFunc func(ValueToColorMap) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "asColors":
-		if u.asColors == nil {
-			return fmt.Errorf("field \"asColors\" is required")
-		}
-		return asColorsFunc(*u.asColors)
-	}
-}
-
-func (u *GeoSecondaryPlotVisualizationOption) AsColorsNoopSuccess(ValueToColorMap) error {
-	return nil
-}
-
-func (u *GeoSecondaryPlotVisualizationOption) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *GeoSecondaryPlotVisualizationOption) Accept(v GeoSecondaryPlotVisualizationOptionVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
-	case "asColors":
-		if u.asColors == nil {
-			return fmt.Errorf("field \"asColors\" is required")
-		}
-		return v.VisitAsColors(*u.asColors)
-	}
-}
-
-type GeoSecondaryPlotVisualizationOptionVisitor interface {
-	VisitAsColors(v ValueToColorMap) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *GeoSecondaryPlotVisualizationOption) AcceptWithContext(ctx context.Context, v GeoSecondaryPlotVisualizationOptionVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "asColors":
-		if u.asColors == nil {
-			return fmt.Errorf("field \"asColors\" is required")
-		}
-		return v.VisitAsColorsWithContext(ctx, *u.asColors)
-	}
-}
-
-type GeoSecondaryPlotVisualizationOptionVisitorWithContext interface {
-	VisitAsColorsWithContext(ctx context.Context, v ValueToColorMap) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewGeoSecondaryPlotVisualizationOptionFromAsColors(v ValueToColorMap) GeoSecondaryPlotVisualizationOption {
-	return GeoSecondaryPlotVisualizationOption{typ: "asColors", asColors: &v}
 }
 
 type GeoVizDefinition struct {
@@ -4399,7 +4283,7 @@ func (u *GeoVizDefinition) AcceptFuncs(v1Func func(GeoVizDefinitionV1) error, un
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in GeoVizDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -4410,7 +4294,7 @@ func (u *GeoVizDefinition) AcceptFuncs(v1Func func(GeoVizDefinitionV1) error, un
 	}
 }
 
-func (u *GeoVizDefinition) V1NoopSuccess(GeoVizDefinitionV1) error {
+func (u *GeoVizDefinition) V1NoopSuccess(_ GeoVizDefinitionV1) error {
 	return nil
 }
 
@@ -4534,7 +4418,7 @@ func (u *HistogramChartDefinition) AcceptFuncs(v1Func func(HistogramChartDefinit
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in HistogramChartDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -4545,7 +4429,7 @@ func (u *HistogramChartDefinition) AcceptFuncs(v1Func func(HistogramChartDefinit
 	}
 }
 
-func (u *HistogramChartDefinition) V1NoopSuccess(HistogramChartDefinitionV1) error {
+func (u *HistogramChartDefinition) V1NoopSuccess(_ HistogramChartDefinitionV1) error {
 	return nil
 }
 
@@ -4669,7 +4553,7 @@ func (u *LineStyle) AcceptFuncs(v1Func func(LineStyleV1) error, unknownFunc func
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in LineStyle type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -4680,7 +4564,7 @@ func (u *LineStyle) AcceptFuncs(v1Func func(LineStyleV1) error, unknownFunc func
 	}
 }
 
-func (u *LineStyle) V1NoopSuccess(LineStyleV1) error {
+func (u *LineStyle) V1NoopSuccess(_ LineStyleV1) error {
 	return nil
 }
 
@@ -4804,7 +4688,7 @@ func (u *LogPanelDefinition) AcceptFuncs(v1Func func(LogPanelDefinitionV1) error
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in LogPanelDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -4815,7 +4699,7 @@ func (u *LogPanelDefinition) AcceptFuncs(v1Func func(LogPanelDefinitionV1) error
 	}
 }
 
-func (u *LogPanelDefinition) V1NoopSuccess(LogPanelDefinitionV1) error {
+func (u *LogPanelDefinition) V1NoopSuccess(_ LogPanelDefinitionV1) error {
 	return nil
 }
 
@@ -4939,7 +4823,7 @@ func (u *NumericArrayVisualisation) AcceptFuncs(rawFunc func(NumericArrayRawVisu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NumericArrayVisualisation type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -4950,7 +4834,7 @@ func (u *NumericArrayVisualisation) AcceptFuncs(rawFunc func(NumericArrayRawVisu
 	}
 }
 
-func (u *NumericArrayVisualisation) RawNoopSuccess(NumericArrayRawVisualisation) error {
+func (u *NumericArrayVisualisation) RawNoopSuccess(_ NumericArrayRawVisualisation) error {
 	return nil
 }
 
@@ -5074,7 +4958,7 @@ func (u *NumericGroupBySort) AcceptFuncs(valueFunc func(ValueSort) error, unknow
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NumericGroupBySort type")
 		}
 		return unknownFunc(u.typ)
 	case "value":
@@ -5085,7 +4969,7 @@ func (u *NumericGroupBySort) AcceptFuncs(valueFunc func(ValueSort) error, unknow
 	}
 }
 
-func (u *NumericGroupBySort) ValueNoopSuccess(ValueSort) error {
+func (u *NumericGroupBySort) ValueNoopSuccess(_ ValueSort) error {
 	return nil
 }
 
@@ -5223,7 +5107,7 @@ func (u *NumericValueVisualisation) AcceptFuncs(rawFunc func(NumericRawVisualisa
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NumericValueVisualisation type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -5239,11 +5123,11 @@ func (u *NumericValueVisualisation) AcceptFuncs(rawFunc func(NumericRawVisualisa
 	}
 }
 
-func (u *NumericValueVisualisation) RawNoopSuccess(NumericRawVisualisation) error {
+func (u *NumericValueVisualisation) RawNoopSuccess(_ NumericRawVisualisation) error {
 	return nil
 }
 
-func (u *NumericValueVisualisation) BarGaugeNoopSuccess(NumericBarGaugeVisualisation) error {
+func (u *NumericValueVisualisation) BarGaugeNoopSuccess(_ NumericBarGaugeVisualisation) error {
 	return nil
 }
 
@@ -5397,7 +5281,7 @@ func (u *NumericValueVisualisationV2) AcceptFuncs(rawFunc func(NumericRawVisuali
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NumericValueVisualisationV2 type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -5413,11 +5297,11 @@ func (u *NumericValueVisualisationV2) AcceptFuncs(rawFunc func(NumericRawVisuali
 	}
 }
 
-func (u *NumericValueVisualisationV2) RawNoopSuccess(NumericRawVisualisationV2) error {
+func (u *NumericValueVisualisationV2) RawNoopSuccess(_ NumericRawVisualisationV2) error {
 	return nil
 }
 
-func (u *NumericValueVisualisationV2) BarNoopSuccess(NumericBarVisualisationV2) error {
+func (u *NumericValueVisualisationV2) BarNoopSuccess(_ NumericBarVisualisationV2) error {
 	return nil
 }
 
@@ -5585,7 +5469,7 @@ func (u *PanelBucketStrategy) AcceptFuncs(autoFunc func(PanelBucketStrategyAuto)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in PanelBucketStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "auto":
@@ -5606,15 +5490,15 @@ func (u *PanelBucketStrategy) AcceptFuncs(autoFunc func(PanelBucketStrategyAuto)
 	}
 }
 
-func (u *PanelBucketStrategy) AutoNoopSuccess(PanelBucketStrategyAuto) error {
+func (u *PanelBucketStrategy) AutoNoopSuccess(_ PanelBucketStrategyAuto) error {
 	return nil
 }
 
-func (u *PanelBucketStrategy) FixedNoopSuccess(PanelBucketStrategyFixed) error {
+func (u *PanelBucketStrategy) FixedNoopSuccess(_ PanelBucketStrategyFixed) error {
 	return nil
 }
 
-func (u *PanelBucketStrategy) DurationNoopSuccess(PanelBucketStrategyDuration) error {
+func (u *PanelBucketStrategy) DurationNoopSuccess(_ PanelBucketStrategyDuration) error {
 	return nil
 }
 
@@ -5784,7 +5668,7 @@ func (u *PersistValueOverlay) AcceptFuncs(byValueFunc func(PersistByValue) error
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in PersistValueOverlay type")
 		}
 		return unknownFunc(u.typ)
 	case "byValue":
@@ -5800,11 +5684,11 @@ func (u *PersistValueOverlay) AcceptFuncs(byValueFunc func(PersistByValue) error
 	}
 }
 
-func (u *PersistValueOverlay) ByValueNoopSuccess(PersistByValue) error {
+func (u *PersistValueOverlay) ByValueNoopSuccess(_ PersistByValue) error {
 	return nil
 }
 
-func (u *PersistValueOverlay) AllNoopSuccess(PersistAll) error {
+func (u *PersistValueOverlay) AllNoopSuccess(_ PersistAll) error {
 	return nil
 }
 
@@ -5958,7 +5842,7 @@ func (u *PlotColoringConfiguration) AcceptFuncs(rowIndependentFunc func(RowIndep
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in PlotColoringConfiguration type")
 		}
 		return unknownFunc(u.typ)
 	case "rowIndependent":
@@ -5974,11 +5858,11 @@ func (u *PlotColoringConfiguration) AcceptFuncs(rowIndependentFunc func(RowIndep
 	}
 }
 
-func (u *PlotColoringConfiguration) RowIndependentNoopSuccess(RowIndependentPlotColoringConfiguration) error {
+func (u *PlotColoringConfiguration) RowIndependentNoopSuccess(_ RowIndependentPlotColoringConfiguration) error {
 	return nil
 }
 
-func (u *PlotColoringConfiguration) RowSharedNoopSuccess(RowSharedPlotColoringConfiguration) error {
+func (u *PlotColoringConfiguration) RowSharedNoopSuccess(_ RowSharedPlotColoringConfiguration) error {
 	return nil
 }
 
@@ -6118,7 +6002,7 @@ func (u *PlotlyPanelDefinition) AcceptFuncs(v1Func func(PlotlyPanelDefinitionV1)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in PlotlyPanelDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -6129,7 +6013,7 @@ func (u *PlotlyPanelDefinition) AcceptFuncs(v1Func func(PlotlyPanelDefinitionV1)
 	}
 }
 
-func (u *PlotlyPanelDefinition) V1NoopSuccess(PlotlyPanelDefinitionV1) error {
+func (u *PlotlyPanelDefinition) V1NoopSuccess(_ PlotlyPanelDefinitionV1) error {
 	return nil
 }
 
@@ -6267,7 +6151,7 @@ func (u *ProcedureVizDefinition) AcceptFuncs(v1Func func(ProcedureVizDefinitionV
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ProcedureVizDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -6283,11 +6167,11 @@ func (u *ProcedureVizDefinition) AcceptFuncs(v1Func func(ProcedureVizDefinitionV
 	}
 }
 
-func (u *ProcedureVizDefinition) V1NoopSuccess(ProcedureVizDefinitionV1) error {
+func (u *ProcedureVizDefinition) V1NoopSuccess(_ ProcedureVizDefinitionV1) error {
 	return nil
 }
 
-func (u *ProcedureVizDefinition) V2NoopSuccess(ProcedureVizDefinitionV2) error {
+func (u *ProcedureVizDefinition) V2NoopSuccess(_ ProcedureVizDefinitionV2) error {
 	return nil
 }
 
@@ -6441,7 +6325,7 @@ func (u *ProcedureVizId) AcceptFuncs(executionRidFunc func(rids.ProcedureExecuti
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ProcedureVizId type")
 		}
 		return unknownFunc(u.typ)
 	case "executionRid":
@@ -6457,11 +6341,11 @@ func (u *ProcedureVizId) AcceptFuncs(executionRidFunc func(rids.ProcedureExecuti
 	}
 }
 
-func (u *ProcedureVizId) ExecutionRidNoopSuccess(rids.ProcedureExecutionRid) error {
+func (u *ProcedureVizId) ExecutionRidNoopSuccess(_ rids.ProcedureExecutionRid) error {
 	return nil
 }
 
-func (u *ProcedureVizId) TemplateRidNoopSuccess(rids.ProcedureRid) error {
+func (u *ProcedureVizId) TemplateRidNoopSuccess(_ rids.ProcedureRid) error {
 	return nil
 }
 
@@ -6601,7 +6485,7 @@ func (u *RangeGroupBySort) AcceptFuncs(valueFunc func(ValueSort) error, unknownF
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in RangeGroupBySort type")
 		}
 		return unknownFunc(u.typ)
 	case "value":
@@ -6612,7 +6496,7 @@ func (u *RangeGroupBySort) AcceptFuncs(valueFunc func(ValueSort) error, unknownF
 	}
 }
 
-func (u *RangeGroupBySort) ValueNoopSuccess(ValueSort) error {
+func (u *RangeGroupBySort) ValueNoopSuccess(_ ValueSort) error {
 	return nil
 }
 
@@ -6736,7 +6620,7 @@ func (u *RangeValueVisualisation) AcceptFuncs(rawFunc func(RangeRawVisualisation
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in RangeValueVisualisation type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -6747,7 +6631,7 @@ func (u *RangeValueVisualisation) AcceptFuncs(rawFunc func(RangeRawVisualisation
 	}
 }
 
-func (u *RangeValueVisualisation) RawNoopSuccess(RangeRawVisualisation) error {
+func (u *RangeValueVisualisation) RawNoopSuccess(_ RangeRawVisualisation) error {
 	return nil
 }
 
@@ -6797,6 +6681,316 @@ type RangeValueVisualisationVisitorWithContext interface {
 
 func NewRangeValueVisualisationFromRaw(v RangeRawVisualisation) RangeValueVisualisation {
 	return RangeValueVisualisation{typ: "raw", raw: &v}
+}
+
+type ScatterDecimation struct {
+	typ      string
+	temporal *TemporalDecimation
+	spatial  *SpatialDecimation
+}
+
+type scatterDecimationDeserializer struct {
+	Type     string              `json:"type"`
+	Temporal *TemporalDecimation `json:"temporal"`
+	Spatial  *SpatialDecimation  `json:"spatial"`
+}
+
+func (u *scatterDecimationDeserializer) toStruct() ScatterDecimation {
+	return ScatterDecimation{typ: u.Type, temporal: u.Temporal, spatial: u.Spatial}
+}
+
+func (u *ScatterDecimation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "temporal":
+		if u.temporal == nil {
+			return nil, fmt.Errorf("field \"temporal\" is required")
+		}
+		return struct {
+			Type     string             `json:"type"`
+			Temporal TemporalDecimation `json:"temporal"`
+		}{Type: "temporal", Temporal: *u.temporal}, nil
+	case "spatial":
+		if u.spatial == nil {
+			return nil, fmt.Errorf("field \"spatial\" is required")
+		}
+		return struct {
+			Type    string            `json:"type"`
+			Spatial SpatialDecimation `json:"spatial"`
+		}{Type: "spatial", Spatial: *u.spatial}, nil
+	}
+}
+
+func (u ScatterDecimation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ScatterDecimation) UnmarshalJSON(data []byte) error {
+	var deser scatterDecimationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "temporal":
+		if u.temporal == nil {
+			return fmt.Errorf("field \"temporal\" is required")
+		}
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ScatterDecimation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ScatterDecimation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ScatterDecimation) AcceptFuncs(temporalFunc func(TemporalDecimation) error, spatialFunc func(SpatialDecimation) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ScatterDecimation type")
+		}
+		return unknownFunc(u.typ)
+	case "temporal":
+		if u.temporal == nil {
+			return fmt.Errorf("field \"temporal\" is required")
+		}
+		return temporalFunc(*u.temporal)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return spatialFunc(*u.spatial)
+	}
+}
+
+func (u *ScatterDecimation) TemporalNoopSuccess(_ TemporalDecimation) error {
+	return nil
+}
+
+func (u *ScatterDecimation) SpatialNoopSuccess(_ SpatialDecimation) error {
+	return nil
+}
+
+func (u *ScatterDecimation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ScatterDecimation) Accept(v ScatterDecimationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "temporal":
+		if u.temporal == nil {
+			return fmt.Errorf("field \"temporal\" is required")
+		}
+		return v.VisitTemporal(*u.temporal)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatial(*u.spatial)
+	}
+}
+
+type ScatterDecimationVisitor interface {
+	VisitTemporal(v TemporalDecimation) error
+	VisitSpatial(v SpatialDecimation) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ScatterDecimation) AcceptWithContext(ctx context.Context, v ScatterDecimationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "temporal":
+		if u.temporal == nil {
+			return fmt.Errorf("field \"temporal\" is required")
+		}
+		return v.VisitTemporalWithContext(ctx, *u.temporal)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatialWithContext(ctx, *u.spatial)
+	}
+}
+
+type ScatterDecimationVisitorWithContext interface {
+	VisitTemporalWithContext(ctx context.Context, v TemporalDecimation) error
+	VisitSpatialWithContext(ctx context.Context, v SpatialDecimation) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewScatterDecimationFromTemporal(v TemporalDecimation) ScatterDecimation {
+	return ScatterDecimation{typ: "temporal", temporal: &v}
+}
+
+func NewScatterDecimationFromSpatial(v SpatialDecimation) ScatterDecimation {
+	return ScatterDecimation{typ: "spatial", spatial: &v}
+}
+
+// Specifies how values of a secondary channel should be visualized.
+type SecondaryVariableOptions struct {
+	typ      string
+	asColors *ValueToColorMap
+}
+
+type secondaryVariableOptionsDeserializer struct {
+	Type     string           `json:"type"`
+	AsColors *ValueToColorMap `json:"asColors"`
+}
+
+func (u *secondaryVariableOptionsDeserializer) toStruct() SecondaryVariableOptions {
+	return SecondaryVariableOptions{typ: u.Type, asColors: u.AsColors}
+}
+
+func (u *SecondaryVariableOptions) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "asColors":
+		if u.asColors == nil {
+			return nil, fmt.Errorf("field \"asColors\" is required")
+		}
+		return struct {
+			Type     string          `json:"type"`
+			AsColors ValueToColorMap `json:"asColors"`
+		}{Type: "asColors", AsColors: *u.asColors}, nil
+	}
+}
+
+func (u SecondaryVariableOptions) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *SecondaryVariableOptions) UnmarshalJSON(data []byte) error {
+	var deser secondaryVariableOptionsDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "asColors":
+		if u.asColors == nil {
+			return fmt.Errorf("field \"asColors\" is required")
+		}
+	}
+	return nil
+}
+
+func (u SecondaryVariableOptions) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *SecondaryVariableOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *SecondaryVariableOptions) AcceptFuncs(asColorsFunc func(ValueToColorMap) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in SecondaryVariableOptions type")
+		}
+		return unknownFunc(u.typ)
+	case "asColors":
+		if u.asColors == nil {
+			return fmt.Errorf("field \"asColors\" is required")
+		}
+		return asColorsFunc(*u.asColors)
+	}
+}
+
+func (u *SecondaryVariableOptions) AsColorsNoopSuccess(_ ValueToColorMap) error {
+	return nil
+}
+
+func (u *SecondaryVariableOptions) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *SecondaryVariableOptions) Accept(v SecondaryVariableOptionsVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "asColors":
+		if u.asColors == nil {
+			return fmt.Errorf("field \"asColors\" is required")
+		}
+		return v.VisitAsColors(*u.asColors)
+	}
+}
+
+type SecondaryVariableOptionsVisitor interface {
+	VisitAsColors(v ValueToColorMap) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *SecondaryVariableOptions) AcceptWithContext(ctx context.Context, v SecondaryVariableOptionsVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "asColors":
+		if u.asColors == nil {
+			return fmt.Errorf("field \"asColors\" is required")
+		}
+		return v.VisitAsColorsWithContext(ctx, *u.asColors)
+	}
+}
+
+type SecondaryVariableOptionsVisitorWithContext interface {
+	VisitAsColorsWithContext(ctx context.Context, v ValueToColorMap) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewSecondaryVariableOptionsFromAsColors(v ValueToColorMap) SecondaryVariableOptions {
+	return SecondaryVariableOptions{typ: "asColors", asColors: &v}
 }
 
 type StalenessVisualisation struct {
@@ -6885,7 +7079,7 @@ func (u *StalenessVisualisation) AcceptFuncs(rawFunc func(NumericRawVisualisatio
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in StalenessVisualisation type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -6901,11 +7095,11 @@ func (u *StalenessVisualisation) AcceptFuncs(rawFunc func(NumericRawVisualisatio
 	}
 }
 
-func (u *StalenessVisualisation) RawNoopSuccess(NumericRawVisualisationV2) error {
+func (u *StalenessVisualisation) RawNoopSuccess(_ NumericRawVisualisationV2) error {
 	return nil
 }
 
-func (u *StalenessVisualisation) BarNoopSuccess(NumericBarVisualisationV2) error {
+func (u *StalenessVisualisation) BarNoopSuccess(_ NumericBarVisualisationV2) error {
 	return nil
 }
 
@@ -7045,7 +7239,7 @@ func (u *StructVisualisation) AcceptFuncs(rawFunc func(StructRawVisualisation) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in StructVisualisation type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -7056,7 +7250,7 @@ func (u *StructVisualisation) AcceptFuncs(rawFunc func(StructRawVisualisation) e
 	}
 }
 
-func (u *StructVisualisation) RawNoopSuccess(StructRawVisualisation) error {
+func (u *StructVisualisation) RawNoopSuccess(_ StructRawVisualisation) error {
 	return nil
 }
 
@@ -7180,7 +7374,7 @@ func (u *TimeSeriesChartDefinition) AcceptFuncs(v1Func func(TimeSeriesChartDefin
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimeSeriesChartDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -7191,7 +7385,7 @@ func (u *TimeSeriesChartDefinition) AcceptFuncs(v1Func func(TimeSeriesChartDefin
 	}
 }
 
-func (u *TimeSeriesChartDefinition) V1NoopSuccess(TimeSeriesChartDefinitionV1) error {
+func (u *TimeSeriesChartDefinition) V1NoopSuccess(_ TimeSeriesChartDefinitionV1) error {
 	return nil
 }
 
@@ -7343,7 +7537,7 @@ func (u *TimeSeriesPlotConfig) AcceptFuncs(numericFunc func(TimeSeriesNumericPlo
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TimeSeriesPlotConfig type")
 		}
 		return unknownFunc(u.typ)
 	case "numeric":
@@ -7364,15 +7558,15 @@ func (u *TimeSeriesPlotConfig) AcceptFuncs(numericFunc func(TimeSeriesNumericPlo
 	}
 }
 
-func (u *TimeSeriesPlotConfig) NumericNoopSuccess(TimeSeriesNumericPlot) error {
+func (u *TimeSeriesPlotConfig) NumericNoopSuccess(_ TimeSeriesNumericPlot) error {
 	return nil
 }
 
-func (u *TimeSeriesPlotConfig) RangeNoopSuccess(TimeSeriesRangePlot) error {
+func (u *TimeSeriesPlotConfig) RangeNoopSuccess(_ TimeSeriesRangePlot) error {
 	return nil
 }
 
-func (u *TimeSeriesPlotConfig) EnumNoopSuccess(TimeSeriesEnumPlot) error {
+func (u *TimeSeriesPlotConfig) EnumNoopSuccess(_ TimeSeriesEnumPlot) error {
 	return nil
 }
 
@@ -7528,7 +7722,7 @@ func (u *TraceComputeConfig) AcceptFuncs(scatter3dFunc func(Scatter3dTraceComput
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in TraceComputeConfig type")
 		}
 		return unknownFunc(u.typ)
 	case "scatter3d":
@@ -7539,7 +7733,7 @@ func (u *TraceComputeConfig) AcceptFuncs(scatter3dFunc func(Scatter3dTraceComput
 	}
 }
 
-func (u *TraceComputeConfig) Scatter3dNoopSuccess(Scatter3dTraceComputeConfig) error {
+func (u *TraceComputeConfig) Scatter3dNoopSuccess(_ Scatter3dTraceComputeConfig) error {
 	return nil
 }
 
@@ -7761,7 +7955,7 @@ func (u *ValueTableCellConfig) AcceptFuncs(numericFunc func(NumericCellConfig) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ValueTableCellConfig type")
 		}
 		return unknownFunc(u.typ)
 	case "numeric":
@@ -7807,35 +8001,35 @@ func (u *ValueTableCellConfig) AcceptFuncs(numericFunc func(NumericCellConfig) e
 	}
 }
 
-func (u *ValueTableCellConfig) NumericNoopSuccess(NumericCellConfig) error {
+func (u *ValueTableCellConfig) NumericNoopSuccess(_ NumericCellConfig) error {
 	return nil
 }
 
-func (u *ValueTableCellConfig) EnumNoopSuccess(EnumCellConfig) error {
+func (u *ValueTableCellConfig) EnumNoopSuccess(_ EnumCellConfig) error {
 	return nil
 }
 
-func (u *ValueTableCellConfig) RangeNoopSuccess(RangeCellConfig) error {
+func (u *ValueTableCellConfig) RangeNoopSuccess(_ RangeCellConfig) error {
 	return nil
 }
 
-func (u *ValueTableCellConfig) BitFlagMapNoopSuccess(BitFlagMapCellConfig) error {
+func (u *ValueTableCellConfig) BitFlagMapNoopSuccess(_ BitFlagMapCellConfig) error {
 	return nil
 }
 
-func (u *ValueTableCellConfig) StalenessNoopSuccess(StalenessCellConfig) error {
+func (u *ValueTableCellConfig) StalenessNoopSuccess(_ StalenessCellConfig) error {
 	return nil
 }
 
-func (u *ValueTableCellConfig) NumericArrayNoopSuccess(NumericArrayCellConfig) error {
+func (u *ValueTableCellConfig) NumericArrayNoopSuccess(_ NumericArrayCellConfig) error {
 	return nil
 }
 
-func (u *ValueTableCellConfig) EnumArrayNoopSuccess(EnumArrayCellConfig) error {
+func (u *ValueTableCellConfig) EnumArrayNoopSuccess(_ EnumArrayCellConfig) error {
 	return nil
 }
 
-func (u *ValueTableCellConfig) StructNoopSuccess(StructCellConfig) error {
+func (u *ValueTableCellConfig) StructNoopSuccess(_ StructCellConfig) error {
 	return nil
 }
 
@@ -8099,7 +8293,7 @@ func (u *ValueTableChannel) AcceptFuncs(numericFunc func(NumericValueChannel) er
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ValueTableChannel type")
 		}
 		return unknownFunc(u.typ)
 	case "numeric":
@@ -8120,15 +8314,15 @@ func (u *ValueTableChannel) AcceptFuncs(numericFunc func(NumericValueChannel) er
 	}
 }
 
-func (u *ValueTableChannel) NumericNoopSuccess(NumericValueChannel) error {
+func (u *ValueTableChannel) NumericNoopSuccess(_ NumericValueChannel) error {
 	return nil
 }
 
-func (u *ValueTableChannel) EnumNoopSuccess(EnumValueChannel) error {
+func (u *ValueTableChannel) EnumNoopSuccess(_ EnumValueChannel) error {
 	return nil
 }
 
-func (u *ValueTableChannel) RangeNoopSuccess(RangeValueChannel) error {
+func (u *ValueTableChannel) RangeNoopSuccess(_ RangeValueChannel) error {
 	return nil
 }
 
@@ -8298,7 +8492,7 @@ func (u *ValueTableDefinition) AcceptFuncs(v1Func func(ValueTableDefinitionV1) e
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ValueTableDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -8314,11 +8508,11 @@ func (u *ValueTableDefinition) AcceptFuncs(v1Func func(ValueTableDefinitionV1) e
 	}
 }
 
-func (u *ValueTableDefinition) V1NoopSuccess(ValueTableDefinitionV1) error {
+func (u *ValueTableDefinition) V1NoopSuccess(_ ValueTableDefinitionV1) error {
 	return nil
 }
 
-func (u *ValueTableDefinition) V2NoopSuccess(ValueTableDefinitionV2) error {
+func (u *ValueTableDefinition) V2NoopSuccess(_ ValueTableDefinitionV2) error {
 	return nil
 }
 
@@ -8458,7 +8652,7 @@ func (u *ValueTableLayout) AcceptFuncs(gridFunc func(ValueTableLayoutGrid) error
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ValueTableLayout type")
 		}
 		return unknownFunc(u.typ)
 	case "grid":
@@ -8469,7 +8663,7 @@ func (u *ValueTableLayout) AcceptFuncs(gridFunc func(ValueTableLayoutGrid) error
 	}
 }
 
-func (u *ValueTableLayout) GridNoopSuccess(ValueTableLayoutGrid) error {
+func (u *ValueTableLayout) GridNoopSuccess(_ ValueTableLayoutGrid) error {
 	return nil
 }
 
@@ -8521,19 +8715,23 @@ func NewValueTableLayoutFromGrid(v ValueTableLayoutGrid) ValueTableLayout {
 	return ValueTableLayout{typ: "grid", grid: &v}
 }
 
-// Specifies an assignment of colors across several values.
+// Color interpolations for numeric and enum values.
 type ValueToColorMap struct {
-	typ     string
-	numeric *map[api.HexColor]float64
+	typ           string
+	numeric       *map[api1.HexColor]float64
+	numericPreset *NumericPresetColorRange
+	enum          *map[string]api1.HexColor
 }
 
 type valueToColorMapDeserializer struct {
-	Type    string                    `json:"type"`
-	Numeric *map[api.HexColor]float64 `json:"numeric"`
+	Type          string                     `json:"type"`
+	Numeric       *map[api1.HexColor]float64 `json:"numeric"`
+	NumericPreset *NumericPresetColorRange   `json:"numericPreset"`
+	Enum          *map[string]api1.HexColor  `json:"enum"`
 }
 
 func (u *valueToColorMapDeserializer) toStruct() ValueToColorMap {
-	return ValueToColorMap{typ: u.Type, numeric: u.Numeric}
+	return ValueToColorMap{typ: u.Type, numeric: u.Numeric, numericPreset: u.NumericPreset, enum: u.Enum}
 }
 
 func (u *ValueToColorMap) toSerializer() (interface{}, error) {
@@ -8545,9 +8743,25 @@ func (u *ValueToColorMap) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"numeric\" is required")
 		}
 		return struct {
-			Type    string                   `json:"type"`
-			Numeric map[api.HexColor]float64 `json:"numeric"`
+			Type    string                    `json:"type"`
+			Numeric map[api1.HexColor]float64 `json:"numeric"`
 		}{Type: "numeric", Numeric: *u.numeric}, nil
+	case "numericPreset":
+		if u.numericPreset == nil {
+			return nil, fmt.Errorf("field \"numericPreset\" is required")
+		}
+		return struct {
+			Type          string                  `json:"type"`
+			NumericPreset NumericPresetColorRange `json:"numericPreset"`
+		}{Type: "numericPreset", NumericPreset: *u.numericPreset}, nil
+	case "enum":
+		if u.enum == nil {
+			return nil, fmt.Errorf("field \"enum\" is required")
+		}
+		return struct {
+			Type string                   `json:"type"`
+			Enum map[string]api1.HexColor `json:"enum"`
+		}{Type: "enum", Enum: *u.enum}, nil
 	}
 }
 
@@ -8570,6 +8784,14 @@ func (u *ValueToColorMap) UnmarshalJSON(data []byte) error {
 		if u.numeric == nil {
 			return fmt.Errorf("field \"numeric\" is required")
 		}
+	case "numericPreset":
+		if u.numericPreset == nil {
+			return fmt.Errorf("field \"numericPreset\" is required")
+		}
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
 	}
 	return nil
 }
@@ -8590,11 +8812,11 @@ func (u *ValueToColorMap) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ValueToColorMap) AcceptFuncs(numericFunc func(map[api.HexColor]float64) error, unknownFunc func(string) error) error {
+func (u *ValueToColorMap) AcceptFuncs(numericFunc func(map[api1.HexColor]float64) error, numericPresetFunc func(NumericPresetColorRange) error, enumFunc func(map[string]api1.HexColor) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ValueToColorMap type")
 		}
 		return unknownFunc(u.typ)
 	case "numeric":
@@ -8602,10 +8824,28 @@ func (u *ValueToColorMap) AcceptFuncs(numericFunc func(map[api.HexColor]float64)
 			return fmt.Errorf("field \"numeric\" is required")
 		}
 		return numericFunc(*u.numeric)
+	case "numericPreset":
+		if u.numericPreset == nil {
+			return fmt.Errorf("field \"numericPreset\" is required")
+		}
+		return numericPresetFunc(*u.numericPreset)
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+		return enumFunc(*u.enum)
 	}
 }
 
-func (u *ValueToColorMap) NumericNoopSuccess(map[api.HexColor]float64) error {
+func (u *ValueToColorMap) NumericNoopSuccess(_ map[api1.HexColor]float64) error {
+	return nil
+}
+
+func (u *ValueToColorMap) NumericPresetNoopSuccess(_ NumericPresetColorRange) error {
+	return nil
+}
+
+func (u *ValueToColorMap) EnumNoopSuccess(_ map[string]api1.HexColor) error {
 	return nil
 }
 
@@ -8625,11 +8865,23 @@ func (u *ValueToColorMap) Accept(v ValueToColorMapVisitor) error {
 			return fmt.Errorf("field \"numeric\" is required")
 		}
 		return v.VisitNumeric(*u.numeric)
+	case "numericPreset":
+		if u.numericPreset == nil {
+			return fmt.Errorf("field \"numericPreset\" is required")
+		}
+		return v.VisitNumericPreset(*u.numericPreset)
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+		return v.VisitEnum(*u.enum)
 	}
 }
 
 type ValueToColorMapVisitor interface {
-	VisitNumeric(v map[api.HexColor]float64) error
+	VisitNumeric(v map[api1.HexColor]float64) error
+	VisitNumericPreset(v NumericPresetColorRange) error
+	VisitEnum(v map[string]api1.HexColor) error
 	VisitUnknown(typeName string) error
 }
 
@@ -8645,16 +8897,172 @@ func (u *ValueToColorMap) AcceptWithContext(ctx context.Context, v ValueToColorM
 			return fmt.Errorf("field \"numeric\" is required")
 		}
 		return v.VisitNumericWithContext(ctx, *u.numeric)
+	case "numericPreset":
+		if u.numericPreset == nil {
+			return fmt.Errorf("field \"numericPreset\" is required")
+		}
+		return v.VisitNumericPresetWithContext(ctx, *u.numericPreset)
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+		return v.VisitEnumWithContext(ctx, *u.enum)
 	}
 }
 
 type ValueToColorMapVisitorWithContext interface {
-	VisitNumericWithContext(ctx context.Context, v map[api.HexColor]float64) error
+	VisitNumericWithContext(ctx context.Context, v map[api1.HexColor]float64) error
+	VisitNumericPresetWithContext(ctx context.Context, v NumericPresetColorRange) error
+	VisitEnumWithContext(ctx context.Context, v map[string]api1.HexColor) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewValueToColorMapFromNumeric(v map[api.HexColor]float64) ValueToColorMap {
+func NewValueToColorMapFromNumeric(v map[api1.HexColor]float64) ValueToColorMap {
 	return ValueToColorMap{typ: "numeric", numeric: &v}
+}
+
+func NewValueToColorMapFromNumericPreset(v NumericPresetColorRange) ValueToColorMap {
+	return ValueToColorMap{typ: "numericPreset", numericPreset: &v}
+}
+
+func NewValueToColorMapFromEnum(v map[string]api1.HexColor) ValueToColorMap {
+	return ValueToColorMap{typ: "enum", enum: &v}
+}
+
+// Variable to store either a static numerical value or channel string name.
+type VariableStaticOrChannel struct {
+	typ           string
+	staticNumeric *float64
+}
+
+type variableStaticOrChannelDeserializer struct {
+	Type          string   `json:"type"`
+	StaticNumeric *float64 `json:"staticNumeric"`
+}
+
+func (u *variableStaticOrChannelDeserializer) toStruct() VariableStaticOrChannel {
+	return VariableStaticOrChannel{typ: u.Type, staticNumeric: u.StaticNumeric}
+}
+
+func (u *VariableStaticOrChannel) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "staticNumeric":
+		if u.staticNumeric == nil {
+			return nil, fmt.Errorf("field \"staticNumeric\" is required")
+		}
+		return struct {
+			Type          string  `json:"type"`
+			StaticNumeric float64 `json:"staticNumeric"`
+		}{Type: "staticNumeric", StaticNumeric: *u.staticNumeric}, nil
+	}
+}
+
+func (u VariableStaticOrChannel) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *VariableStaticOrChannel) UnmarshalJSON(data []byte) error {
+	var deser variableStaticOrChannelDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "staticNumeric":
+		if u.staticNumeric == nil {
+			return fmt.Errorf("field \"staticNumeric\" is required")
+		}
+	}
+	return nil
+}
+
+func (u VariableStaticOrChannel) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *VariableStaticOrChannel) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *VariableStaticOrChannel) AcceptFuncs(staticNumericFunc func(float64) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in VariableStaticOrChannel type")
+		}
+		return unknownFunc(u.typ)
+	case "staticNumeric":
+		if u.staticNumeric == nil {
+			return fmt.Errorf("field \"staticNumeric\" is required")
+		}
+		return staticNumericFunc(*u.staticNumeric)
+	}
+}
+
+func (u *VariableStaticOrChannel) StaticNumericNoopSuccess(_ float64) error {
+	return nil
+}
+
+func (u *VariableStaticOrChannel) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *VariableStaticOrChannel) Accept(v VariableStaticOrChannelVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "staticNumeric":
+		if u.staticNumeric == nil {
+			return fmt.Errorf("field \"staticNumeric\" is required")
+		}
+		return v.VisitStaticNumeric(*u.staticNumeric)
+	}
+}
+
+type VariableStaticOrChannelVisitor interface {
+	VisitStaticNumeric(v float64) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *VariableStaticOrChannel) AcceptWithContext(ctx context.Context, v VariableStaticOrChannelVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "staticNumeric":
+		if u.staticNumeric == nil {
+			return fmt.Errorf("field \"staticNumeric\" is required")
+		}
+		return v.VisitStaticNumericWithContext(ctx, *u.staticNumeric)
+	}
+}
+
+type VariableStaticOrChannelVisitorWithContext interface {
+	VisitStaticNumericWithContext(ctx context.Context, v float64) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewVariableStaticOrChannelFromStaticNumeric(v float64) VariableStaticOrChannel {
+	return VariableStaticOrChannel{typ: "staticNumeric", staticNumeric: &v}
 }
 
 type VideoVizDefinition struct {
@@ -8743,7 +9151,7 @@ func (u *VideoVizDefinition) AcceptFuncs(v1Func func(VideoVizDefinitionV1) error
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VideoVizDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "v1":
@@ -8759,11 +9167,11 @@ func (u *VideoVizDefinition) AcceptFuncs(v1Func func(VideoVizDefinitionV1) error
 	}
 }
 
-func (u *VideoVizDefinition) V1NoopSuccess(VideoVizDefinitionV1) error {
+func (u *VideoVizDefinition) V1NoopSuccess(_ VideoVizDefinitionV1) error {
 	return nil
 }
 
-func (u *VideoVizDefinition) V2NoopSuccess(VideoVizDefinitionV2) error {
+func (u *VideoVizDefinition) V2NoopSuccess(_ VideoVizDefinitionV2) error {
 	return nil
 }
 
@@ -9057,7 +9465,7 @@ func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition)
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VizDefinition type")
 		}
 		return unknownFunc(u.typ)
 	case "cartesian":
@@ -9123,51 +9531,51 @@ func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition)
 	}
 }
 
-func (u *VizDefinition) CartesianNoopSuccess(CartesianChartDefinition) error {
+func (u *VizDefinition) CartesianNoopSuccess(_ CartesianChartDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) ChecklistNoopSuccess(ChecklistChartDefinition) error {
+func (u *VizDefinition) ChecklistNoopSuccess(_ ChecklistChartDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) FrequencyNoopSuccess(FrequencyChartDefinition) error {
+func (u *VizDefinition) FrequencyNoopSuccess(_ FrequencyChartDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) GeoNoopSuccess(GeoVizDefinition) error {
+func (u *VizDefinition) GeoNoopSuccess(_ GeoVizDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) Geo3dNoopSuccess(Geo3dDefinition) error {
+func (u *VizDefinition) Geo3dNoopSuccess(_ Geo3dDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) HistogramNoopSuccess(HistogramChartDefinition) error {
+func (u *VizDefinition) HistogramNoopSuccess(_ HistogramChartDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) LogNoopSuccess(LogPanelDefinition) error {
+func (u *VizDefinition) LogNoopSuccess(_ LogPanelDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) PlotlyNoopSuccess(PlotlyPanelDefinition) error {
+func (u *VizDefinition) PlotlyNoopSuccess(_ PlotlyPanelDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) TimeSeriesNoopSuccess(TimeSeriesChartDefinition) error {
+func (u *VizDefinition) TimeSeriesNoopSuccess(_ TimeSeriesChartDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) ValueTableNoopSuccess(ValueTableDefinition) error {
+func (u *VizDefinition) ValueTableNoopSuccess(_ ValueTableDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) VideoNoopSuccess(VideoVizDefinition) error {
+func (u *VizDefinition) VideoNoopSuccess(_ VideoVizDefinition) error {
 	return nil
 }
 
-func (u *VizDefinition) ProcedureNoopSuccess(ProcedureVizDefinition) error {
+func (u *VizDefinition) ProcedureNoopSuccess(_ ProcedureVizDefinition) error {
 	return nil
 }
 

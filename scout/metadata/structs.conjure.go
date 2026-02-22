@@ -34,9 +34,9 @@ func (o *CreatedAtQuery) UnmarshalYAML(unmarshal func(interface{}) error) error 
 
 type ListPropertiesAndLabelsRequest struct {
 	// If omitted, all resource types are included.
-	ResourceTypes *[]ResourceType `conjure-docs:"If omitted, all resource types are included." json:"resourceTypes,omitempty"`
+	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
 	// If omitted, results will come from all workspaces the user belongs to.
-	Workspaces *[]rids.WorkspaceRid `conjure-docs:"If omitted, results will come from all workspaces the user belongs to." json:"workspaces,omitempty"`
+	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty"`
 }
 
 func (o ListPropertiesAndLabelsRequest) MarshalYAML() (interface{}, error) {
@@ -62,7 +62,7 @@ type ListPropertiesAndLabelsResponse struct {
 
 func (o ListPropertiesAndLabelsResponse) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName][]api1.PropertyValue, 0)
+		o.Properties = make(map[api1.PropertyName][]api1.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api1.Label, 0)
@@ -78,7 +78,7 @@ func (o *ListPropertiesAndLabelsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawListPropertiesAndLabelsResponse.Properties == nil {
-		rawListPropertiesAndLabelsResponse.Properties = make(map[api1.PropertyName][]api1.PropertyValue, 0)
+		rawListPropertiesAndLabelsResponse.Properties = make(map[api1.PropertyName][]api1.PropertyValue)
 	}
 	if rawListPropertiesAndLabelsResponse.Labels == nil {
 		rawListPropertiesAndLabelsResponse.Labels = make([]api1.Label, 0)

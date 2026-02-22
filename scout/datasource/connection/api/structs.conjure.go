@@ -33,9 +33,9 @@ func (o *AllChannelsConnectionsScrapingConfig) UnmarshalYAML(unmarshal func(inte
 
 type ApiConnectionDetails struct {
 	// The URI to connect to hit the endpoints specified in the spec.
-	ApiUri string `conjure-docs:"The URI to connect to hit the endpoints specified in the spec." json:"apiUri"`
+	ApiUri string `json:"apiUri"`
 	// Secret Rid of token secret stored in Secrets Service.
-	TokenSecretRid SecretRid `conjure-docs:"Secret Rid of token secret stored in Secrets Service." json:"tokenSecretRid"`
+	TokenSecretRid SecretRid `json:"tokenSecretRid"`
 }
 
 func (o ApiConnectionDetails) MarshalYAML() (interface{}, error) {
@@ -56,11 +56,11 @@ func (o *ApiConnectionDetails) UnmarshalYAML(unmarshal func(interface{}) error) 
 
 type BigQueryChannelNameComponent struct {
 	// Whether to include the project name in the channel name.
-	IncludeProject bool `conjure-docs:"Whether to include the project name in the channel name." json:"includeProject"`
+	IncludeProject bool `json:"includeProject"`
 	// Whether to include the dataset name in the channel name.
-	IncludeDataset bool `conjure-docs:"Whether to include the dataset name in the channel name." json:"includeDataset"`
+	IncludeDataset bool `json:"includeDataset"`
 	// Whether to include the table name in the channel name.
-	IncludeTable bool `conjure-docs:"Whether to include the table name in the channel name." json:"includeTable"`
+	IncludeTable bool `json:"includeTable"`
 }
 
 func (o BigQueryChannelNameComponent) MarshalYAML() (interface{}, error) {
@@ -81,15 +81,15 @@ func (o *BigQueryChannelNameComponent) UnmarshalYAML(unmarshal func(interface{})
 
 type BigQueryConnectionDetails struct {
 	// The region of the BigQuery Project (e.g. "us-east1")
-	Region LocationName `conjure-docs:"The region of the BigQuery Project (e.g. \"us-east1\")" json:"region"`
+	Region LocationName `json:"region"`
 	// The name of the BigQuery Project
-	Project ProjectName `conjure-docs:"The name of the BigQuery Project" json:"project"`
+	Project ProjectName `json:"project"`
 	// The name of the dataset within the project
-	Dataset DatasetName `conjure-docs:"The name of the dataset within the project" json:"dataset"`
+	Dataset DatasetName `json:"dataset"`
 	// The name of the table within the dataset
-	Table TableName `conjure-docs:"The name of the table within the dataset" json:"table"`
+	Table TableName `json:"table"`
 	// Secret Rid of service account key stored in Secrets Service.
-	ServiceAccountKeySecretRid SecretRid `conjure-docs:"Secret Rid of service account key stored in Secrets Service." json:"serviceAccountKeySecretRid"`
+	ServiceAccountKeySecretRid SecretRid `json:"serviceAccountKeySecretRid"`
 }
 
 func (o BigQueryConnectionDetails) MarshalYAML() (interface{}, error) {
@@ -110,20 +110,20 @@ func (o *BigQueryConnectionDetails) UnmarshalYAML(unmarshal func(interface{}) er
 
 type BigQueryScrapingConfig struct {
 	// The name of the column that holds the timestamp.
-	TimeColumn ColumnName `conjure-docs:"The name of the column that holds the timestamp." json:"timeColumn"`
+	TimeColumn ColumnName `json:"timeColumn"`
 	// The name of the columns that should be interpreted as tag columns
-	TagColumns []ColumnName `conjure-docs:"The name of the columns that should be interpreted as tag columns" json:"tagColumns"`
+	TagColumns []ColumnName `json:"tagColumns"`
 	/*
 	   channelNameComponents will be combined, together with separator, to form
 	   a fully qualified channel name. By default, we don't add anything
 	   to the column name.
 	*/
-	ChannelNameComponents *BigQueryChannelNameComponent `conjure-docs:"channelNameComponents will be combined, together with separator, to form\na fully qualified channel name. By default, we don't add anything\nto the column name." json:"channelNameComponents,omitempty"`
+	ChannelNameComponents *BigQueryChannelNameComponent `json:"channelNameComponents,omitempty"`
 	/*
 	   The separator that delimits the parts of the channel name. If
 	   ommitted, the default is a ".".
 	*/
-	Separator *string `conjure-docs:"The separator that delimits the parts of the channel name. If\nommitted, the default is a \".\"." json:"separator,omitempty"`
+	Separator *string `json:"separator,omitempty"`
 }
 
 func (o BigQueryScrapingConfig) MarshalJSON() ([]byte, error) {
@@ -165,7 +165,7 @@ func (o *BigQueryScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) error
 
 type ChannelAllowListConnectionsScrapingConfig struct {
 	// Only channels in this set will be scraped. Must not be empty.
-	ChannelAllowList []api.Channel `conjure-docs:"Only channels in this set will be scraped. Must not be empty." json:"channelAllowList"`
+	ChannelAllowList []api.Channel `json:"channelAllowList"`
 }
 
 func (o ChannelAllowListConnectionsScrapingConfig) MarshalJSON() ([]byte, error) {
@@ -207,7 +207,7 @@ func (o *ChannelAllowListConnectionsScrapingConfig) UnmarshalYAML(unmarshal func
 
 type ChannelBlockListConnectionsScrapingConfig struct {
 	// Only channels not in this set will be scraped. Must not be empty.
-	ChannelBlockList []api.Channel `conjure-docs:"Only channels not in this set will be scraped. Must not be empty." json:"channelBlockList"`
+	ChannelBlockList []api.Channel `json:"channelBlockList"`
 }
 
 func (o ChannelBlockListConnectionsScrapingConfig) MarshalJSON() ([]byte, error) {
@@ -250,18 +250,18 @@ func (o *ChannelBlockListConnectionsScrapingConfig) UnmarshalYAML(unmarshal func
 type Connection struct {
 	Rid ConnectionRid `json:"rid"`
 	// The display name of the connection. For example: "Nominal production TimescaleDB"
-	DisplayName       string            `conjure-docs:"The display name of the connection. For example: \"Nominal production TimescaleDB\"" json:"displayName"`
+	DisplayName       string            `json:"displayName"`
 	Description       *string           `json:"description,omitempty"`
 	ConnectionDetails ConnectionDetails `json:"connectionDetails"`
 	/*
 	   Additional tag names that should be supplied to construct a fully qualified series. These are suggested,
 	   rather than strictly required.
 	*/
-	RequiredTagNames []api.TagName     `conjure-docs:"Additional tag names that should be supplied to construct a fully qualified series. These are suggested,\nrather than strictly required." json:"requiredTagNames"`
+	RequiredTagNames []api.TagName     `json:"requiredTagNames"`
 	Metadata         map[string]string `json:"metadata"`
 	Scraping         *ScrapingConfig   `json:"scraping,omitempty"`
 	// The connection will be scraped iff this flag is set and scrapingConfig is present.
-	ShouldScrape     bool             `conjure-docs:"The connection will be scraped iff this flag is set and scrapingConfig is present." json:"shouldScrape"`
+	ShouldScrape     bool             `json:"shouldScrape"`
 	Limits           *LimitsConfig    `json:"limits,omitempty"`
 	ConnectionStatus ConnectionStatus `json:"connectionStatus"`
 	IsArchived       bool             `json:"isArchived"`
@@ -272,7 +272,7 @@ func (o Connection) MarshalJSON() ([]byte, error) {
 		o.RequiredTagNames = make([]api.TagName, 0)
 	}
 	if o.Metadata == nil {
-		o.Metadata = make(map[string]string, 0)
+		o.Metadata = make(map[string]string)
 	}
 	type _tmpConnection Connection
 	return safejson.Marshal(_tmpConnection(o))
@@ -288,7 +288,7 @@ func (o *Connection) UnmarshalJSON(data []byte) error {
 		rawConnection.RequiredTagNames = make([]api.TagName, 0)
 	}
 	if rawConnection.Metadata == nil {
-		rawConnection.Metadata = make(map[string]string, 0)
+		rawConnection.Metadata = make(map[string]string)
 	}
 	*o = Connection(rawConnection)
 	return nil
@@ -312,15 +312,15 @@ func (o *Connection) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type ConnectionPlottingConfiguration struct {
 	// The maximum number of points to return per page for undecimated queries
-	MaxUndecimatedPointsPerPage *int `conjure-docs:"The maximum number of points to return per page for undecimated queries" json:"maxUndecimatedPointsPerPage,omitempty"`
+	MaxUndecimatedPointsPerPage *int `json:"maxUndecimatedPointsPerPage,omitempty"`
 	// The maximum range (in nanoseconds) for unbounded queries
-	MaxUnboundedRange *safelong.SafeLong `conjure-docs:"The maximum range (in nanoseconds) for unbounded queries" json:"maxUnboundedRange,omitempty"`
+	MaxUnboundedRange *safelong.SafeLong `json:"maxUnboundedRange,omitempty"`
 	// The maximum number of page reads per second for undecimated queries
-	MaxUndecimatedPageReadsPerSecond *float64 `conjure-docs:"The maximum number of page reads per second for undecimated queries" json:"maxUndecimatedPageReadsPerSecond,omitempty"`
+	MaxUndecimatedPageReadsPerSecond *float64 `json:"maxUndecimatedPageReadsPerSecond,omitempty"`
 	// The maximum number of permits per second for queries
-	MaxPermitsPerSecond *float64 `conjure-docs:"The maximum number of permits per second for queries" json:"maxPermitsPerSecond,omitempty"`
+	MaxPermitsPerSecond *float64 `json:"maxPermitsPerSecond,omitempty"`
 	// The maximum number of connections to the database
-	MaxConnections *int `conjure-docs:"The maximum number of connections to the database" json:"maxConnections,omitempty"`
+	MaxConnections *int `json:"maxConnections,omitempty"`
 }
 
 func (o ConnectionPlottingConfiguration) MarshalYAML() (interface{}, error) {
@@ -364,15 +364,15 @@ type CreateConnection struct {
 	Description       *string           `json:"description,omitempty"`
 	ConnectionDetails ConnectionDetails `json:"connectionDetails"`
 	// Metadata information about the connection which is not relevant to the DB connection itself.
-	Metadata map[string]string `conjure-docs:"Metadata information about the connection which is not relevant to the DB connection itself." json:"metadata"`
+	Metadata map[string]string `json:"metadata"`
 	// Additional tag name that are required to construct a fully qualified series.
-	RequiredTagNames []api.TagName `conjure-docs:"Additional tag name that are required to construct a fully qualified series." json:"requiredTagNames"`
+	RequiredTagNames []api.TagName `json:"requiredTagNames"`
 	/*
 	   In most cases, this does not to be set by the user. Throws if populated for Nominal connections, which
 	   have their tags automatically indexed in the underlying database. Tags for external connections are
 	   periodically scraped. Tags should only be updated  manually for Visual crossing connections.
 	*/
-	AvailableTagValues *map[api.TagName][]api.TagValue `conjure-docs:"In most cases, this does not to be set by the user. Throws if populated for Nominal connections, which \nhave their tags automatically indexed in the underlying database. Tags for external connections are \nperiodically scraped. Tags should only be updated  manually for Visual crossing connections." json:"availableTagValues,omitempty"`
+	AvailableTagValues *map[api.TagName][]api.TagValue `json:"availableTagValues,omitempty"`
 	Scraping           *ScrapingConfig                 `json:"scraping,omitempty"`
 	ShouldScrape       bool                            `json:"shouldScrape"`
 	Limits             *LimitsConfig                   `json:"limits,omitempty"`
@@ -380,17 +380,17 @@ type CreateConnection struct {
 	   The workspace in which to create the connection. If not provided, the connection will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `conjure-docs:"The workspace in which to create the connection. If not provided, the connection will be created in the default workspace for\nthe user's organization, if the default workspace for the organization is configured." json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
 	/*
 	   The markings to apply to the created connection.
 	   If not provided, the connection will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api1.MarkingRid `conjure-docs:"The markings to apply to the created connection.\nIf not provided, the connection will be visible to all users in the same workspace." json:"markingRids"`
+	MarkingRids []api1.MarkingRid `json:"markingRids"`
 }
 
 func (o CreateConnection) MarshalJSON() ([]byte, error) {
 	if o.Metadata == nil {
-		o.Metadata = make(map[string]string, 0)
+		o.Metadata = make(map[string]string)
 	}
 	if o.RequiredTagNames == nil {
 		o.RequiredTagNames = make([]api.TagName, 0)
@@ -409,7 +409,7 @@ func (o *CreateConnection) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawCreateConnection.Metadata == nil {
-		rawCreateConnection.Metadata = make(map[string]string, 0)
+		rawCreateConnection.Metadata = make(map[string]string)
 	}
 	if rawCreateConnection.RequiredTagNames == nil {
 		rawCreateConnection.RequiredTagNames = make([]api.TagName, 0)
@@ -462,13 +462,13 @@ type Influx1ConnectionDetails struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`
 	// A map of header name to value
-	Headers     map[string]HeaderValue `conjure-docs:"A map of header name to value" json:"headers"`
+	Headers     map[string]HeaderValue `json:"headers"`
 	Credentials *PasswordCredentials   `json:"credentials,omitempty"`
 }
 
 func (o Influx1ConnectionDetails) MarshalJSON() ([]byte, error) {
 	if o.Headers == nil {
-		o.Headers = make(map[string]HeaderValue, 0)
+		o.Headers = make(map[string]HeaderValue)
 	}
 	type _tmpInflux1ConnectionDetails Influx1ConnectionDetails
 	return safejson.Marshal(_tmpInflux1ConnectionDetails(o))
@@ -481,7 +481,7 @@ func (o *Influx1ConnectionDetails) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawInflux1ConnectionDetails.Headers == nil {
-		rawInflux1ConnectionDetails.Headers = make(map[string]HeaderValue, 0)
+		rawInflux1ConnectionDetails.Headers = make(map[string]HeaderValue)
 	}
 	*o = Influx1ConnectionDetails(rawInflux1ConnectionDetails)
 	return nil
@@ -507,15 +507,15 @@ type Influx2ConnectionDetails struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`
 	// A map of header name to value
-	Headers map[string]HeaderValue `conjure-docs:"A map of header name to value" json:"headers"`
+	Headers map[string]HeaderValue `json:"headers"`
 	Org     influx.OrgId           `json:"org"`
 	// Secret Rid of token secret stored in Secrets Service.
-	TokenSecretRid SecretRid `conjure-docs:"Secret Rid of token secret stored in Secrets Service." json:"tokenSecretRid"`
+	TokenSecretRid SecretRid `json:"tokenSecretRid"`
 }
 
 func (o Influx2ConnectionDetails) MarshalJSON() ([]byte, error) {
 	if o.Headers == nil {
-		o.Headers = make(map[string]HeaderValue, 0)
+		o.Headers = make(map[string]HeaderValue)
 	}
 	type _tmpInflux2ConnectionDetails Influx2ConnectionDetails
 	return safejson.Marshal(_tmpInflux2ConnectionDetails(o))
@@ -528,7 +528,7 @@ func (o *Influx2ConnectionDetails) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawInflux2ConnectionDetails.Headers == nil {
-		rawInflux2ConnectionDetails.Headers = make(map[string]HeaderValue, 0)
+		rawInflux2ConnectionDetails.Headers = make(map[string]HeaderValue)
 	}
 	*o = Influx2ConnectionDetails(rawInflux2ConnectionDetails)
 	return nil
@@ -552,7 +552,7 @@ func (o *Influx2ConnectionDetails) UnmarshalYAML(unmarshal func(interface{}) err
 
 type InfluxScrapingConfig struct {
 	// Filters are ANDed together
-	Filter                      []InfluxScrapingFilter                  `conjure-docs:"Filters are ANDed together" json:"filter"`
+	Filter                      []InfluxScrapingFilter                  `json:"filter"`
 	SeriesArchetypeConstruction InfluxSeriesArchetypeConstructionConfig `json:"seriesArchetypeConstruction"`
 }
 
@@ -726,7 +726,7 @@ type NominalScrapingConfig struct {
 	   channelNameComponents will be combined, together with separator, to form
 	   a fully qualified channel name.
 	*/
-	ChannelNameComponents []NominalChannelNameComponent `conjure-docs:"channelNameComponents will be combined, together with separator, to form\na fully qualified channel name." json:"channelNameComponents"`
+	ChannelNameComponents []NominalChannelNameComponent `json:"channelNameComponents"`
 	Separator             string                        `json:"separator"`
 }
 
@@ -770,7 +770,7 @@ func (o *NominalScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) error)
 type PasswordCredentials struct {
 	Username string `json:"username"`
 	// Secret Rid of password secret stored in Secrets Service.
-	PasswordSecretRid SecretRid `conjure-docs:"Secret Rid of password secret stored in Secrets Service." json:"passwordSecretRid"`
+	PasswordSecretRid SecretRid `json:"passwordSecretRid"`
 }
 
 func (o PasswordCredentials) MarshalYAML() (interface{}, error) {
@@ -801,23 +801,23 @@ type PivotedTimescaleScrapingConfig struct {
 	   filters in this list. To exclude chunks of data, it's possible to use
 	   a not filter.
 	*/
-	Filter []TimescaleScrapingFilter `conjure-docs:"In order for data to be picked up by the scraper, it must match all\nfilters in this list. To exclude chunks of data, it's possible to use \na not filter." json:"filter"`
+	Filter []TimescaleScrapingFilter `json:"filter"`
 	// The name of the column that holds the timestamp.
-	TimeColumn ColumnName `conjure-docs:"The name of the column that holds the timestamp." json:"timeColumn"`
+	TimeColumn ColumnName `json:"timeColumn"`
 	// The name of the column that holds the series name.
-	NameColumn ColumnName `conjure-docs:"The name of the column that holds the series name." json:"nameColumn"`
+	NameColumn ColumnName `json:"nameColumn"`
 	// The name of the column that holds the series values.
-	ValueColumn ColumnName `conjure-docs:"The name of the column that holds the series values." json:"valueColumn"`
+	ValueColumn ColumnName `json:"valueColumn"`
 	/*
 	   The names of the columns that comprise a dimension. They should have a database index for efficient filtering. We do not discover
 	   dimensions based on hypertable schema because they are not necessarily configured properly.
 	*/
-	DimensionColumns []ColumnName `conjure-docs:"The names of the columns that comprise a dimension. They should have a database index for efficient filtering. We do not discover\ndimensions based on hypertable schema because they are not necessarily configured properly." json:"dimensionColumns"`
+	DimensionColumns []ColumnName `json:"dimensionColumns"`
 	/*
 	   channelNameComponents will be combined, together with separator, to form
 	   a fully qualified channel name.
 	*/
-	ChannelNameComponents []PivotedTimescaleChannelNameComponent `conjure-docs:"channelNameComponents will be combined, together with separator, to form\na fully qualified channel name." json:"channelNameComponents"`
+	ChannelNameComponents []PivotedTimescaleChannelNameComponent `json:"channelNameComponents"`
 	Separator             string                                 `json:"separator"`
 }
 
@@ -896,9 +896,9 @@ type TimescaleConnectionDetails struct {
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
 	// This is also the reference to the secret containing the password
-	Username string `conjure-docs:"This is also the reference to the secret containing the password" json:"username"`
+	Username string `json:"username"`
 	// Secret Rid of password secret stored in Secrets Service.
-	PasswordSecretRid SecretRid `conjure-docs:"Secret Rid of password secret stored in Secrets Service." json:"passwordSecretRid"`
+	PasswordSecretRid SecretRid `json:"passwordSecretRid"`
 }
 
 func (o TimescaleConnectionDetails) MarshalYAML() (interface{}, error) {
@@ -919,15 +919,15 @@ func (o *TimescaleConnectionDetails) UnmarshalYAML(unmarshal func(interface{}) e
 
 type TimestreamConnectionDetails struct {
 	// The role ARN owned by Nominal that has permission to assume the externalRoleArn.
-	NominalRoleArn string `conjure-docs:"The role ARN owned by Nominal that has permission to assume the externalRoleArn." json:"nominalRoleArn"`
+	NominalRoleArn string `json:"nominalRoleArn"`
 	// AWS region that contains the Nominal role.
-	NominalRoleRegion string `conjure-docs:"AWS region that contains the Nominal role." json:"nominalRoleRegion"`
+	NominalRoleRegion string `json:"nominalRoleRegion"`
 	// AWS region that contains the Timestream instance.
-	ExternalRegion string `conjure-docs:"AWS region that contains the Timestream instance." json:"externalRegion"`
+	ExternalRegion string `json:"externalRegion"`
 	// The role ARN used to make queries to Timestream. This role is owned by the AWS account that owns the Timestream instance.
-	ExternalRoleArn string `conjure-docs:"The role ARN used to make queries to Timestream. This role is owned by the AWS account that owns the Timestream instance." json:"externalRoleArn"`
+	ExternalRoleArn string `json:"externalRoleArn"`
 	// Database inside of the Timestream instance to connect to.
-	Database string `conjure-docs:"Database inside of the Timestream instance to connect to." json:"database"`
+	Database string `json:"database"`
 }
 
 func (o TimestreamConnectionDetails) MarshalYAML() (interface{}, error) {
@@ -951,18 +951,18 @@ type TimestreamScrapingConfig struct {
 	   In order for data to be picked up by the scraper, it must match all
 	   filters in this list.
 	*/
-	Filter []TimestreamScrapingFilter `conjure-docs:"In order for data to be picked up by the scraper, it must match all\nfilters in this list." json:"filter"`
+	Filter []TimestreamScrapingFilter `json:"filter"`
 	/*
 	   channelNameComponents will be combined, together with separator, to form
 	   a fully qualified channel name.
 	*/
-	ChannelNameComponents []TimestreamChannelNameComponent `conjure-docs:"channelNameComponents will be combined, together with separator, to form\na fully qualified channel name." json:"channelNameComponents"`
+	ChannelNameComponents []TimestreamChannelNameComponent `json:"channelNameComponents"`
 	Separator             string                           `json:"separator"`
 	/*
 	   The maximum time in hours to look back over series data to find unique measure and tag combinations.
 	   If not specified, the default look back period will be used.
 	*/
-	MaxLookBackPeriodHours *int `conjure-docs:"The maximum time in hours to look back over series data to find unique measure and tag combinations.\nIf not specified, the default look back period will be used." json:"maxLookBackPeriodHours,omitempty"`
+	MaxLookBackPeriodHours *int `json:"maxLookBackPeriodHours,omitempty"`
 }
 
 func (o TimestreamScrapingConfig) MarshalJSON() ([]byte, error) {
@@ -1020,7 +1020,7 @@ type UpdateConnectionRequest struct {
 	   have their tags automatically indexed in the underlying database. Tags for external connections are
 	   periodically scraped. Tags should only be updated manually for Visual crossing connections.
 	*/
-	AvailableTagValues *map[api.TagName][]api.TagValue `conjure-docs:"In most cases, this does not to be set by the user. Throws if populated for Nominal connections, which \nhave their tags automatically indexed in the underlying database. Tags for external connections are \nperiodically scraped. Tags should only be updated manually for Visual crossing connections." json:"availableTagValues,omitempty"`
+	AvailableTagValues *map[api.TagName][]api.TagValue `json:"availableTagValues,omitempty"`
 	Scraping           *ScrapingConfig                 `json:"scraping,omitempty"`
 	ShouldScrape       *bool                           `json:"shouldScrape,omitempty"`
 	Limits             *LimitsConfig                   `json:"limits,omitempty"`
@@ -1068,7 +1068,7 @@ func (o *VisualCrossingAvailableSeries) UnmarshalYAML(unmarshal func(interface{}
 
 type VisualCrossingConnectionDetails struct {
 	// Secret Rid of API key stored in Secrets Service.
-	ApiKeySecretRid SecretRid `conjure-docs:"Secret Rid of API key stored in Secrets Service." json:"apiKeySecretRid"`
+	ApiKeySecretRid SecretRid `json:"apiKeySecretRid"`
 }
 
 func (o VisualCrossingConnectionDetails) MarshalYAML() (interface{}, error) {
@@ -1093,7 +1093,7 @@ type VisualCrossingScrapingConfig struct {
 
 	   Deprecated: No longer used for anything
 	*/
-	AvailableSeries []VisualCrossingAvailableSeries `conjure-docs:"list of available channels" json:"availableSeries"`
+	AvailableSeries []VisualCrossingAvailableSeries `json:"availableSeries"`
 }
 
 func (o VisualCrossingScrapingConfig) MarshalJSON() ([]byte, error) {

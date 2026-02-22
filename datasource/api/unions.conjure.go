@@ -97,7 +97,7 @@ func (u *ChannelOrPrefix) AcceptFuncs(channelFunc func(ChannelMetadata) error, p
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ChannelOrPrefix type")
 		}
 		return unknownFunc(u.typ)
 	case "channel":
@@ -113,11 +113,11 @@ func (u *ChannelOrPrefix) AcceptFuncs(channelFunc func(ChannelMetadata) error, p
 	}
 }
 
-func (u *ChannelOrPrefix) ChannelNoopSuccess(ChannelMetadata) error {
+func (u *ChannelOrPrefix) ChannelNoopSuccess(_ ChannelMetadata) error {
 	return nil
 }
 
-func (u *ChannelOrPrefix) PrefixNoopSuccess(DataSourcePrefixNode) error {
+func (u *ChannelOrPrefix) PrefixNoopSuccess(_ DataSourcePrefixNode) error {
 	return nil
 }
 
@@ -271,7 +271,7 @@ func (u *SeriesMetadataRidOrLogicalSeriesRid) AcceptFuncs(seriesArchetypeFunc fu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SeriesMetadataRidOrLogicalSeriesRid type")
 		}
 		return unknownFunc(u.typ)
 	case "seriesArchetype":
@@ -287,11 +287,11 @@ func (u *SeriesMetadataRidOrLogicalSeriesRid) AcceptFuncs(seriesArchetypeFunc fu
 	}
 }
 
-func (u *SeriesMetadataRidOrLogicalSeriesRid) SeriesArchetypeNoopSuccess(api.SeriesMetadataRid) error {
+func (u *SeriesMetadataRidOrLogicalSeriesRid) SeriesArchetypeNoopSuccess(_ api.SeriesMetadataRid) error {
 	return nil
 }
 
-func (u *SeriesMetadataRidOrLogicalSeriesRid) LogicalSeriesNoopSuccess(api.LogicalSeriesRid) error {
+func (u *SeriesMetadataRidOrLogicalSeriesRid) LogicalSeriesNoopSuccess(_ api.LogicalSeriesRid) error {
 	return nil
 }
 

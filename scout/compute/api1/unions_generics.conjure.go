@@ -78,6 +78,135 @@ type ArraySeriesVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type BooleanSeriesWithT[T any] BooleanSeries
+
+func (u *BooleanSeriesWithT[T]) Accept(ctx context.Context, v BooleanSeriesVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "greaterThan":
+		if u.greaterThan == nil {
+			return result, fmt.Errorf("field \"greaterThan\" is required")
+		}
+		return v.VisitGreaterThan(ctx, *u.greaterThan)
+	case "lessThan":
+		if u.lessThan == nil {
+			return result, fmt.Errorf("field \"lessThan\" is required")
+		}
+		return v.VisitLessThan(ctx, *u.lessThan)
+	case "equalTo":
+		if u.equalTo == nil {
+			return result, fmt.Errorf("field \"equalTo\" is required")
+		}
+		return v.VisitEqualTo(ctx, *u.equalTo)
+	case "notEqualTo":
+		if u.notEqualTo == nil {
+			return result, fmt.Errorf("field \"notEqualTo\" is required")
+		}
+		return v.VisitNotEqualTo(ctx, *u.notEqualTo)
+	case "greaterThanOrEqualTo":
+		if u.greaterThanOrEqualTo == nil {
+			return result, fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
+		}
+		return v.VisitGreaterThanOrEqualTo(ctx, *u.greaterThanOrEqualTo)
+	case "lessThanOrEqualTo":
+		if u.lessThanOrEqualTo == nil {
+			return result, fmt.Errorf("field \"lessThanOrEqualTo\" is required")
+		}
+		return v.VisitLessThanOrEqualTo(ctx, *u.lessThanOrEqualTo)
+	}
+}
+
+func (u *BooleanSeriesWithT[T]) AcceptFuncs(greaterThanFunc func(GreaterThanSeries) (T, error), lessThanFunc func(LessThanSeries) (T, error), equalToFunc func(EqualToSeries) (T, error), notEqualToFunc func(NotEqualToSeries) (T, error), greaterThanOrEqualToFunc func(GreaterThanOrEqualToSeries) (T, error), lessThanOrEqualToFunc func(LessThanOrEqualToSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "greaterThan":
+		if u.greaterThan == nil {
+			return result, fmt.Errorf("field \"greaterThan\" is required")
+		}
+		return greaterThanFunc(*u.greaterThan)
+	case "lessThan":
+		if u.lessThan == nil {
+			return result, fmt.Errorf("field \"lessThan\" is required")
+		}
+		return lessThanFunc(*u.lessThan)
+	case "equalTo":
+		if u.equalTo == nil {
+			return result, fmt.Errorf("field \"equalTo\" is required")
+		}
+		return equalToFunc(*u.equalTo)
+	case "notEqualTo":
+		if u.notEqualTo == nil {
+			return result, fmt.Errorf("field \"notEqualTo\" is required")
+		}
+		return notEqualToFunc(*u.notEqualTo)
+	case "greaterThanOrEqualTo":
+		if u.greaterThanOrEqualTo == nil {
+			return result, fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
+		}
+		return greaterThanOrEqualToFunc(*u.greaterThanOrEqualTo)
+	case "lessThanOrEqualTo":
+		if u.lessThanOrEqualTo == nil {
+			return result, fmt.Errorf("field \"lessThanOrEqualTo\" is required")
+		}
+		return lessThanOrEqualToFunc(*u.lessThanOrEqualTo)
+	}
+}
+
+func (u *BooleanSeriesWithT[T]) GreaterThanNoopSuccess(GreaterThanSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BooleanSeriesWithT[T]) LessThanNoopSuccess(LessThanSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BooleanSeriesWithT[T]) EqualToNoopSuccess(EqualToSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BooleanSeriesWithT[T]) NotEqualToNoopSuccess(NotEqualToSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BooleanSeriesWithT[T]) GreaterThanOrEqualToNoopSuccess(GreaterThanOrEqualToSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BooleanSeriesWithT[T]) LessThanOrEqualToNoopSuccess(LessThanOrEqualToSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BooleanSeriesWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type BooleanSeriesVisitorWithT[T any] interface {
+	VisitGreaterThan(ctx context.Context, v GreaterThanSeries) (T, error)
+	VisitLessThan(ctx context.Context, v LessThanSeries) (T, error)
+	VisitEqualTo(ctx context.Context, v EqualToSeries) (T, error)
+	VisitNotEqualTo(ctx context.Context, v NotEqualToSeries) (T, error)
+	VisitGreaterThanOrEqualTo(ctx context.Context, v GreaterThanOrEqualToSeries) (T, error)
+	VisitLessThanOrEqualTo(ctx context.Context, v LessThanOrEqualToSeries) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type CartesianWithT[T any] Cartesian
 
 func (u *CartesianWithT[T]) Accept(ctx context.Context, v CartesianVisitorWithT[T]) (T, error) {
@@ -363,6 +492,11 @@ func (u *ComputeNodeWithT[T]) Accept(ctx context.Context, v ComputeNodeVisitorWi
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
+	case "boolean":
+		if u.boolean == nil {
+			return result, fmt.Errorf("field \"boolean\" is required")
+		}
+		return v.VisitBoolean(ctx, *u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return result, fmt.Errorf("field \"enum\" is required")
@@ -406,7 +540,7 @@ func (u *ComputeNodeWithT[T]) Accept(ctx context.Context, v ComputeNodeVisitorWi
 	}
 }
 
-func (u *ComputeNodeWithT[T]) AcceptFuncs(enumFunc func(EnumSeries) (T, error), numericFunc func(NumericSeries) (T, error), logFunc func(LogSeries) (T, error), rangesFunc func(RangeSeries) (T, error), arrayFunc func(ArraySeries) (T, error), struct_Func func(StructSeries) (T, error), curveFitFunc func(CurveFit) (T, error), rawFunc func(api.Reference) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ComputeNodeWithT[T]) AcceptFuncs(booleanFunc func(BooleanSeries) (T, error), enumFunc func(EnumSeries) (T, error), numericFunc func(NumericSeries) (T, error), logFunc func(LogSeries) (T, error), rangesFunc func(RangeSeries) (T, error), arrayFunc func(ArraySeries) (T, error), struct_Func func(StructSeries) (T, error), curveFitFunc func(CurveFit) (T, error), rawFunc func(api.Reference) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -414,6 +548,11 @@ func (u *ComputeNodeWithT[T]) AcceptFuncs(enumFunc func(EnumSeries) (T, error), 
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
+	case "boolean":
+		if u.boolean == nil {
+			return result, fmt.Errorf("field \"boolean\" is required")
+		}
+		return booleanFunc(*u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return result, fmt.Errorf("field \"enum\" is required")
@@ -455,6 +594,11 @@ func (u *ComputeNodeWithT[T]) AcceptFuncs(enumFunc func(EnumSeries) (T, error), 
 		}
 		return rawFunc(*u.raw)
 	}
+}
+
+func (u *ComputeNodeWithT[T]) BooleanNoopSuccess(BooleanSeries) (T, error) {
+	var result T
+	return result, nil
 }
 
 func (u *ComputeNodeWithT[T]) EnumNoopSuccess(EnumSeries) (T, error) {
@@ -503,6 +647,7 @@ func (u *ComputeNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type ComputeNodeVisitorWithT[T any] interface {
+	VisitBoolean(ctx context.Context, v BooleanSeries) (T, error)
 	VisitEnum(ctx context.Context, v EnumSeries) (T, error)
 	VisitNumeric(ctx context.Context, v NumericSeries) (T, error)
 	VisitLog(ctx context.Context, v LogSeries) (T, error)
@@ -1642,6 +1787,11 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 			return result, fmt.Errorf("field \"min\" is required")
 		}
 		return v.VisitMin(ctx, *u.min)
+	case "zScore":
+		if u.zScore == nil {
+			return result, fmt.Errorf("field \"zScore\" is required")
+		}
+		return v.VisitZScore(ctx, *u.zScore)
 	case "offset":
 		if u.offset == nil {
 			return result, fmt.Errorf("field \"offset\" is required")
@@ -1790,7 +1940,7 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 	}
 }
 
-func (u *NumericSeriesWithT[T]) AcceptFuncs(aggregateFunc func(AggregateNumericSeries) (T, error), arithmeticFunc func(ArithmeticSeries) (T, error), bitOperationFunc func(BitOperationSeries) (T, error), countDuplicateFunc func(EnumCountDuplicateSeries) (T, error), cumulativeSumFunc func(CumulativeSumSeries) (T, error), derivativeFunc func(DerivativeSeries) (T, error), integralFunc func(IntegralSeries) (T, error), maxFunc func(MaxSeries) (T, error), meanFunc func(MeanSeries) (T, error), minFunc func(MinSeries) (T, error), offsetFunc func(OffsetSeries) (T, error), productFunc func(ProductSeries) (T, error), rawFunc func(api.Reference) (T, error), channelFunc func(api.ChannelSeries) (T, error), derivedFunc func(DerivedSeries) (T, error), resampleFunc func(NumericResampleSeries) (T, error), rollingOperationFunc func(RollingOperationSeries) (T, error), signalFilterFunc func(SignalFilterSeries) (T, error), sumFunc func(SumSeries) (T, error), scaleFunc func(ScaleSeries) (T, error), timeDifferenceFunc func(TimeDifferenceSeries) (T, error), absoluteTimestampFunc func(AbsoluteTimestampSeries) (T, error), timeRangeFilterFunc func(NumericTimeRangeFilterSeries) (T, error), timeShiftFunc func(NumericTimeShiftSeries) (T, error), unaryArithmeticFunc func(UnaryArithmeticSeries) (T, error), binaryArithmeticFunc func(BinaryArithmeticSeries) (T, error), unionFunc func(NumericUnionSeries) (T, error), unitConversionFunc func(UnitConversionSeries) (T, error), valueDifferenceFunc func(ValueDifferenceSeries) (T, error), filterTransformationFunc func(NumericFilterTransformationSeries) (T, error), thresholdFilterFunc func(NumericThresholdFilterSeries) (T, error), approximateFilterFunc func(NumericApproximateFilterSeries) (T, error), select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) (T, error), selectNewestPointsFunc func(SelectNewestPointsSeries) (T, error), aggregateUnderRangesFunc func(AggregateUnderRangesSeries) (T, error), filterByExpressionFunc func(FilterByExpressionSeries) (T, error), enumToNumericFunc func(EnumToNumericSeries) (T, error), refpropFunc func(RefpropSeries) (T, error), extractFromStructFunc func(ExtractNumericFromStructSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *NumericSeriesWithT[T]) AcceptFuncs(aggregateFunc func(AggregateNumericSeries) (T, error), arithmeticFunc func(ArithmeticSeries) (T, error), bitOperationFunc func(BitOperationSeries) (T, error), countDuplicateFunc func(EnumCountDuplicateSeries) (T, error), cumulativeSumFunc func(CumulativeSumSeries) (T, error), derivativeFunc func(DerivativeSeries) (T, error), integralFunc func(IntegralSeries) (T, error), maxFunc func(MaxSeries) (T, error), meanFunc func(MeanSeries) (T, error), minFunc func(MinSeries) (T, error), zScoreFunc func(ZscoreSeries) (T, error), offsetFunc func(OffsetSeries) (T, error), productFunc func(ProductSeries) (T, error), rawFunc func(api.Reference) (T, error), channelFunc func(api.ChannelSeries) (T, error), derivedFunc func(DerivedSeries) (T, error), resampleFunc func(NumericResampleSeries) (T, error), rollingOperationFunc func(RollingOperationSeries) (T, error), signalFilterFunc func(SignalFilterSeries) (T, error), sumFunc func(SumSeries) (T, error), scaleFunc func(ScaleSeries) (T, error), timeDifferenceFunc func(TimeDifferenceSeries) (T, error), absoluteTimestampFunc func(AbsoluteTimestampSeries) (T, error), timeRangeFilterFunc func(NumericTimeRangeFilterSeries) (T, error), timeShiftFunc func(NumericTimeShiftSeries) (T, error), unaryArithmeticFunc func(UnaryArithmeticSeries) (T, error), binaryArithmeticFunc func(BinaryArithmeticSeries) (T, error), unionFunc func(NumericUnionSeries) (T, error), unitConversionFunc func(UnitConversionSeries) (T, error), valueDifferenceFunc func(ValueDifferenceSeries) (T, error), filterTransformationFunc func(NumericFilterTransformationSeries) (T, error), thresholdFilterFunc func(NumericThresholdFilterSeries) (T, error), approximateFilterFunc func(NumericApproximateFilterSeries) (T, error), select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) (T, error), selectNewestPointsFunc func(SelectNewestPointsSeries) (T, error), aggregateUnderRangesFunc func(AggregateUnderRangesSeries) (T, error), filterByExpressionFunc func(FilterByExpressionSeries) (T, error), enumToNumericFunc func(EnumToNumericSeries) (T, error), refpropFunc func(RefpropSeries) (T, error), extractFromStructFunc func(ExtractNumericFromStructSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1848,6 +1998,11 @@ func (u *NumericSeriesWithT[T]) AcceptFuncs(aggregateFunc func(AggregateNumericS
 			return result, fmt.Errorf("field \"min\" is required")
 		}
 		return minFunc(*u.min)
+	case "zScore":
+		if u.zScore == nil {
+			return result, fmt.Errorf("field \"zScore\" is required")
+		}
+		return zScoreFunc(*u.zScore)
 	case "offset":
 		if u.offset == nil {
 			return result, fmt.Errorf("field \"offset\" is required")
@@ -2046,6 +2201,11 @@ func (u *NumericSeriesWithT[T]) MinNoopSuccess(MinSeries) (T, error) {
 	return result, nil
 }
 
+func (u *NumericSeriesWithT[T]) ZScoreNoopSuccess(ZscoreSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *NumericSeriesWithT[T]) OffsetNoopSuccess(OffsetSeries) (T, error) {
 	var result T
 	return result, nil
@@ -2207,6 +2367,7 @@ type NumericSeriesVisitorWithT[T any] interface {
 	VisitMax(ctx context.Context, v MaxSeries) (T, error)
 	VisitMean(ctx context.Context, v MeanSeries) (T, error)
 	VisitMin(ctx context.Context, v MinSeries) (T, error)
+	VisitZScore(ctx context.Context, v ZscoreSeries) (T, error)
 	VisitOffset(ctx context.Context, v OffsetSeries) (T, error)
 	VisitProduct(ctx context.Context, v ProductSeries) (T, error)
 	VisitRaw(ctx context.Context, v api.Reference) (T, error)
@@ -2752,6 +2913,11 @@ func (u *SeriesWithT[T]) Accept(ctx context.Context, v SeriesVisitorWithT[T]) (T
 			return result, fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRaw(ctx, *u.raw)
+	case "boolean":
+		if u.boolean == nil {
+			return result, fmt.Errorf("field \"boolean\" is required")
+		}
+		return v.VisitBoolean(ctx, *u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return result, fmt.Errorf("field \"enum\" is required")
@@ -2780,7 +2946,7 @@ func (u *SeriesWithT[T]) Accept(ctx context.Context, v SeriesVisitorWithT[T]) (T
 	}
 }
 
-func (u *SeriesWithT[T]) AcceptFuncs(rawFunc func(api.Reference) (T, error), enumFunc func(EnumSeries) (T, error), numericFunc func(NumericSeries) (T, error), logFunc func(LogSeries) (T, error), arrayFunc func(ArraySeries) (T, error), struct_Func func(StructSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SeriesWithT[T]) AcceptFuncs(rawFunc func(api.Reference) (T, error), booleanFunc func(BooleanSeries) (T, error), enumFunc func(EnumSeries) (T, error), numericFunc func(NumericSeries) (T, error), logFunc func(LogSeries) (T, error), arrayFunc func(ArraySeries) (T, error), struct_Func func(StructSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2793,6 +2959,11 @@ func (u *SeriesWithT[T]) AcceptFuncs(rawFunc func(api.Reference) (T, error), enu
 			return result, fmt.Errorf("field \"raw\" is required")
 		}
 		return rawFunc(*u.raw)
+	case "boolean":
+		if u.boolean == nil {
+			return result, fmt.Errorf("field \"boolean\" is required")
+		}
+		return booleanFunc(*u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return result, fmt.Errorf("field \"enum\" is required")
@@ -2822,6 +2993,11 @@ func (u *SeriesWithT[T]) AcceptFuncs(rawFunc func(api.Reference) (T, error), enu
 }
 
 func (u *SeriesWithT[T]) RawNoopSuccess(api.Reference) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SeriesWithT[T]) BooleanNoopSuccess(BooleanSeries) (T, error) {
 	var result T
 	return result, nil
 }
@@ -2858,6 +3034,7 @@ func (u *SeriesWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type SeriesVisitorWithT[T any] interface {
 	VisitRaw(ctx context.Context, v api.Reference) (T, error)
+	VisitBoolean(ctx context.Context, v BooleanSeries) (T, error)
 	VisitEnum(ctx context.Context, v EnumSeries) (T, error)
 	VisitNumeric(ctx context.Context, v NumericSeries) (T, error)
 	VisitLog(ctx context.Context, v LogSeries) (T, error)

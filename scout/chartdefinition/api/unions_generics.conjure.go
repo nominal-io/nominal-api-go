@@ -9,7 +9,8 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	"github.com/nominal-io/nominal-api-go/scout/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/api"
+	"github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
 )
 
 type AxisThresholdGroupWithT[T any] AxisThresholdGroup
@@ -208,6 +209,55 @@ type ChecklistChartDefinitionVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type ColorByWithT[T any] ColorBy
+
+func (u *ColorByWithT[T]) Accept(ctx context.Context, v ColorByVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "secondaryVariable":
+		if u.secondaryVariable == nil {
+			return result, fmt.Errorf("field \"secondaryVariable\" is required")
+		}
+		return v.VisitSecondaryVariable(ctx, *u.secondaryVariable)
+	}
+}
+
+func (u *ColorByWithT[T]) AcceptFuncs(secondaryVariableFunc func(api.ChannelVariableName) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "secondaryVariable":
+		if u.secondaryVariable == nil {
+			return result, fmt.Errorf("field \"secondaryVariable\" is required")
+		}
+		return secondaryVariableFunc(*u.secondaryVariable)
+	}
+}
+
+func (u *ColorByWithT[T]) SecondaryVariableNoopSuccess(api.ChannelVariableName) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ColorByWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ColorByVisitorWithT[T any] interface {
+	VisitSecondaryVariable(ctx context.Context, v api.ChannelVariableName) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type ColorStyleWithT[T any] ColorStyle
 
 func (u *ColorStyleWithT[T]) Accept(ctx context.Context, v ColorStyleVisitorWithT[T]) (T, error) {
@@ -231,7 +281,7 @@ func (u *ColorStyleWithT[T]) Accept(ctx context.Context, v ColorStyleVisitorWith
 	}
 }
 
-func (u *ColorStyleWithT[T]) AcceptFuncs(mappedFunc func(map[string]api.HexColor) (T, error), singleFunc func(api.HexColor) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ColorStyleWithT[T]) AcceptFuncs(mappedFunc func(map[string]api1.HexColor) (T, error), singleFunc func(api1.HexColor) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -252,12 +302,12 @@ func (u *ColorStyleWithT[T]) AcceptFuncs(mappedFunc func(map[string]api.HexColor
 	}
 }
 
-func (u *ColorStyleWithT[T]) MappedNoopSuccess(map[string]api.HexColor) (T, error) {
+func (u *ColorStyleWithT[T]) MappedNoopSuccess(map[string]api1.HexColor) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *ColorStyleWithT[T]) SingleNoopSuccess(api.HexColor) (T, error) {
+func (u *ColorStyleWithT[T]) SingleNoopSuccess(api1.HexColor) (T, error) {
 	var result T
 	return result, nil
 }
@@ -268,8 +318,8 @@ func (u *ColorStyleWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type ColorStyleVisitorWithT[T any] interface {
-	VisitMapped(ctx context.Context, v map[string]api.HexColor) (T, error)
-	VisitSingle(ctx context.Context, v api.HexColor) (T, error)
+	VisitMapped(ctx context.Context, v map[string]api1.HexColor) (T, error)
+	VisitSingle(ctx context.Context, v api1.HexColor) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -728,6 +778,55 @@ type FloatingLegendVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type FloatingLegendPositionWithT[T any] FloatingLegendPosition
+
+func (u *FloatingLegendPositionWithT[T]) Accept(ctx context.Context, v FloatingLegendPositionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "preset":
+		if u.preset == nil {
+			return result, fmt.Errorf("field \"preset\" is required")
+		}
+		return v.VisitPreset(ctx, *u.preset)
+	}
+}
+
+func (u *FloatingLegendPositionWithT[T]) AcceptFuncs(presetFunc func(FloatingLegendPresetPosition) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "preset":
+		if u.preset == nil {
+			return result, fmt.Errorf("field \"preset\" is required")
+		}
+		return presetFunc(*u.preset)
+	}
+}
+
+func (u *FloatingLegendPositionWithT[T]) PresetNoopSuccess(FloatingLegendPresetPosition) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *FloatingLegendPositionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type FloatingLegendPositionVisitorWithT[T any] interface {
+	VisitPreset(ctx context.Context, v FloatingLegendPresetPosition) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type FrequencyChartDefinitionWithT[T any] FrequencyChartDefinition
 
 func (u *FrequencyChartDefinitionWithT[T]) Accept(ctx context.Context, v FrequencyChartDefinitionVisitorWithT[T]) (T, error) {
@@ -1150,55 +1249,6 @@ type Geo3dOrientationVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
-type Geo3dOrientationStaticWithT[T any] Geo3dOrientationStatic
-
-func (u *Geo3dOrientationStaticWithT[T]) Accept(ctx context.Context, v Geo3dOrientationStaticVisitorWithT[T]) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(ctx, u.typ)
-	case "principalAxes":
-		if u.principalAxes == nil {
-			return result, fmt.Errorf("field \"principalAxes\" is required")
-		}
-		return v.VisitPrincipalAxes(ctx, *u.principalAxes)
-	}
-}
-
-func (u *Geo3dOrientationStaticWithT[T]) AcceptFuncs(principalAxesFunc func(Geo3dOrientationStaticPrincipalAxes) (T, error), unknownFunc func(string) (T, error)) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "principalAxes":
-		if u.principalAxes == nil {
-			return result, fmt.Errorf("field \"principalAxes\" is required")
-		}
-		return principalAxesFunc(*u.principalAxes)
-	}
-}
-
-func (u *Geo3dOrientationStaticWithT[T]) PrincipalAxesNoopSuccess(Geo3dOrientationStaticPrincipalAxes) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *Geo3dOrientationStaticWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
-	var result T
-	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-type Geo3dOrientationStaticVisitorWithT[T any] interface {
-	VisitPrincipalAxes(ctx context.Context, v Geo3dOrientationStaticPrincipalAxes) (T, error)
-	VisitUnknown(ctx context.Context, typ string) (T, error)
-}
-
 type Geo3dPositionWithT[T any] Geo3dPosition
 
 func (u *Geo3dPositionWithT[T]) Accept(ctx context.Context, v Geo3dPositionVisitorWithT[T]) (T, error) {
@@ -1264,71 +1314,6 @@ type Geo3dPositionVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
-type Geo3dPositionStaticWithT[T any] Geo3dPositionStatic
-
-func (u *Geo3dPositionStaticWithT[T]) Accept(ctx context.Context, v Geo3dPositionStaticVisitorWithT[T]) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(ctx, u.typ)
-	case "wgs84":
-		if u.wgs84 == nil {
-			return result, fmt.Errorf("field \"wgs84\" is required")
-		}
-		return v.VisitWgs84(ctx, *u.wgs84)
-	case "ecef":
-		if u.ecef == nil {
-			return result, fmt.Errorf("field \"ecef\" is required")
-		}
-		return v.VisitEcef(ctx, *u.ecef)
-	}
-}
-
-func (u *Geo3dPositionStaticWithT[T]) AcceptFuncs(wgs84Func func(Geo3dPositionStaticWgs84) (T, error), ecefFunc func(Geo3dPositionStaticEcef) (T, error), unknownFunc func(string) (T, error)) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "wgs84":
-		if u.wgs84 == nil {
-			return result, fmt.Errorf("field \"wgs84\" is required")
-		}
-		return wgs84Func(*u.wgs84)
-	case "ecef":
-		if u.ecef == nil {
-			return result, fmt.Errorf("field \"ecef\" is required")
-		}
-		return ecefFunc(*u.ecef)
-	}
-}
-
-func (u *Geo3dPositionStaticWithT[T]) Wgs84NoopSuccess(Geo3dPositionStaticWgs84) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *Geo3dPositionStaticWithT[T]) EcefNoopSuccess(Geo3dPositionStaticEcef) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *Geo3dPositionStaticWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
-	var result T
-	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-type Geo3dPositionStaticVisitorWithT[T any] interface {
-	VisitWgs84(ctx context.Context, v Geo3dPositionStaticWgs84) (T, error)
-	VisitEcef(ctx context.Context, v Geo3dPositionStaticEcef) (T, error)
-	VisitUnknown(ctx context.Context, typ string) (T, error)
-}
-
 type Geo3dSensorOrientationConfigWithT[T any] Geo3dSensorOrientationConfig
 
 func (u *Geo3dSensorOrientationConfigWithT[T]) Accept(ctx context.Context, v Geo3dSensorOrientationConfigVisitorWithT[T]) (T, error) {
@@ -1339,16 +1324,11 @@ func (u *Geo3dSensorOrientationConfigWithT[T]) Accept(ctx context.Context, v Geo
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
-	case "static":
-		if u.static == nil {
-			return result, fmt.Errorf("field \"static\" is required")
+	case "eulerAngles":
+		if u.eulerAngles == nil {
+			return result, fmt.Errorf("field \"eulerAngles\" is required")
 		}
-		return v.VisitStatic(ctx, *u.static)
-	case "channel":
-		if u.channel == nil {
-			return result, fmt.Errorf("field \"channel\" is required")
-		}
-		return v.VisitChannel(ctx, *u.channel)
+		return v.VisitEulerAngles(ctx, *u.eulerAngles)
 	case "nadir":
 		if u.nadir == nil {
 			return result, fmt.Errorf("field \"nadir\" is required")
@@ -1362,7 +1342,7 @@ func (u *Geo3dSensorOrientationConfigWithT[T]) Accept(ctx context.Context, v Geo
 	}
 }
 
-func (u *Geo3dSensorOrientationConfigWithT[T]) AcceptFuncs(staticFunc func(Geo3dOrientationStatic) (T, error), channelFunc func(Geo3dOrientation) (T, error), nadirFunc func(Geo3dSensorOrientationNadir) (T, error), zenithFunc func(Geo3dSensorOrientationZenith) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *Geo3dSensorOrientationConfigWithT[T]) AcceptFuncs(eulerAnglesFunc func(Geo3dOrientationEulerAngles) (T, error), nadirFunc func(Geo3dSensorOrientationNadir) (T, error), zenithFunc func(Geo3dSensorOrientationZenith) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1370,16 +1350,11 @@ func (u *Geo3dSensorOrientationConfigWithT[T]) AcceptFuncs(staticFunc func(Geo3d
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "static":
-		if u.static == nil {
-			return result, fmt.Errorf("field \"static\" is required")
+	case "eulerAngles":
+		if u.eulerAngles == nil {
+			return result, fmt.Errorf("field \"eulerAngles\" is required")
 		}
-		return staticFunc(*u.static)
-	case "channel":
-		if u.channel == nil {
-			return result, fmt.Errorf("field \"channel\" is required")
-		}
-		return channelFunc(*u.channel)
+		return eulerAnglesFunc(*u.eulerAngles)
 	case "nadir":
 		if u.nadir == nil {
 			return result, fmt.Errorf("field \"nadir\" is required")
@@ -1393,12 +1368,7 @@ func (u *Geo3dSensorOrientationConfigWithT[T]) AcceptFuncs(staticFunc func(Geo3d
 	}
 }
 
-func (u *Geo3dSensorOrientationConfigWithT[T]) StaticNoopSuccess(Geo3dOrientationStatic) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *Geo3dSensorOrientationConfigWithT[T]) ChannelNoopSuccess(Geo3dOrientation) (T, error) {
+func (u *Geo3dSensorOrientationConfigWithT[T]) EulerAnglesNoopSuccess(Geo3dOrientationEulerAngles) (T, error) {
 	var result T
 	return result, nil
 }
@@ -1419,16 +1389,15 @@ func (u *Geo3dSensorOrientationConfigWithT[T]) ErrorOnUnknown(typeName string) (
 }
 
 type Geo3dSensorOrientationConfigVisitorWithT[T any] interface {
-	VisitStatic(ctx context.Context, v Geo3dOrientationStatic) (T, error)
-	VisitChannel(ctx context.Context, v Geo3dOrientation) (T, error)
+	VisitEulerAngles(ctx context.Context, v Geo3dOrientationEulerAngles) (T, error)
 	VisitNadir(ctx context.Context, v Geo3dSensorOrientationNadir) (T, error)
 	VisitZenith(ctx context.Context, v Geo3dSensorOrientationZenith) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
-type Geo3dSensorPositionConfigWithT[T any] Geo3dSensorPositionConfig
+type Geo3dSensorShapeWithT[T any] Geo3dSensorShape
 
-func (u *Geo3dSensorPositionConfigWithT[T]) Accept(ctx context.Context, v Geo3dSensorPositionConfigVisitorWithT[T]) (T, error) {
+func (u *Geo3dSensorShapeWithT[T]) Accept(ctx context.Context, v Geo3dSensorShapeVisitorWithT[T]) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1436,30 +1405,25 @@ func (u *Geo3dSensorPositionConfigWithT[T]) Accept(ctx context.Context, v Geo3dS
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
-	case "static":
-		if u.static == nil {
-			return result, fmt.Errorf("field \"static\" is required")
+	case "conic":
+		if u.conic == nil {
+			return result, fmt.Errorf("field \"conic\" is required")
 		}
-		return v.VisitStatic(ctx, *u.static)
-	case "channel":
-		if u.channel == nil {
-			return result, fmt.Errorf("field \"channel\" is required")
+		return v.VisitConic(ctx, *u.conic)
+	case "rectangular":
+		if u.rectangular == nil {
+			return result, fmt.Errorf("field \"rectangular\" is required")
 		}
-		return v.VisitChannel(ctx, *u.channel)
-	case "model":
-		if u.model == nil {
-			return result, fmt.Errorf("field \"model\" is required")
+		return v.VisitRectangular(ctx, *u.rectangular)
+	case "spherical":
+		if u.spherical == nil {
+			return result, fmt.Errorf("field \"spherical\" is required")
 		}
-		return v.VisitModel(ctx, *u.model)
-	case "waypoint":
-		if u.waypoint == nil {
-			return result, fmt.Errorf("field \"waypoint\" is required")
-		}
-		return v.VisitWaypoint(ctx, *u.waypoint)
+		return v.VisitSpherical(ctx, *u.spherical)
 	}
 }
 
-func (u *Geo3dSensorPositionConfigWithT[T]) AcceptFuncs(staticFunc func(Geo3dPositionStatic) (T, error), channelFunc func(Geo3dPosition) (T, error), modelFunc func(string) (T, error), waypointFunc func(string) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *Geo3dSensorShapeWithT[T]) AcceptFuncs(conicFunc func(Geo3dSensorShapeConic) (T, error), rectangularFunc func(Geo3dSensorShapeRectangular) (T, error), sphericalFunc func(Geo3dSensorShapeSpherical) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1467,59 +1431,97 @@ func (u *Geo3dSensorPositionConfigWithT[T]) AcceptFuncs(staticFunc func(Geo3dPos
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "static":
-		if u.static == nil {
-			return result, fmt.Errorf("field \"static\" is required")
+	case "conic":
+		if u.conic == nil {
+			return result, fmt.Errorf("field \"conic\" is required")
 		}
-		return staticFunc(*u.static)
-	case "channel":
-		if u.channel == nil {
-			return result, fmt.Errorf("field \"channel\" is required")
+		return conicFunc(*u.conic)
+	case "rectangular":
+		if u.rectangular == nil {
+			return result, fmt.Errorf("field \"rectangular\" is required")
 		}
-		return channelFunc(*u.channel)
-	case "model":
-		if u.model == nil {
-			return result, fmt.Errorf("field \"model\" is required")
+		return rectangularFunc(*u.rectangular)
+	case "spherical":
+		if u.spherical == nil {
+			return result, fmt.Errorf("field \"spherical\" is required")
 		}
-		return modelFunc(*u.model)
-	case "waypoint":
-		if u.waypoint == nil {
-			return result, fmt.Errorf("field \"waypoint\" is required")
-		}
-		return waypointFunc(*u.waypoint)
+		return sphericalFunc(*u.spherical)
 	}
 }
 
-func (u *Geo3dSensorPositionConfigWithT[T]) StaticNoopSuccess(Geo3dPositionStatic) (T, error) {
+func (u *Geo3dSensorShapeWithT[T]) ConicNoopSuccess(Geo3dSensorShapeConic) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *Geo3dSensorPositionConfigWithT[T]) ChannelNoopSuccess(Geo3dPosition) (T, error) {
+func (u *Geo3dSensorShapeWithT[T]) RectangularNoopSuccess(Geo3dSensorShapeRectangular) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *Geo3dSensorPositionConfigWithT[T]) ModelNoopSuccess(string) (T, error) {
+func (u *Geo3dSensorShapeWithT[T]) SphericalNoopSuccess(Geo3dSensorShapeSpherical) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *Geo3dSensorPositionConfigWithT[T]) WaypointNoopSuccess(string) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *Geo3dSensorPositionConfigWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+func (u *Geo3dSensorShapeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
-type Geo3dSensorPositionConfigVisitorWithT[T any] interface {
-	VisitStatic(ctx context.Context, v Geo3dPositionStatic) (T, error)
-	VisitChannel(ctx context.Context, v Geo3dPosition) (T, error)
-	VisitModel(ctx context.Context, v string) (T, error)
-	VisitWaypoint(ctx context.Context, v string) (T, error)
+type Geo3dSensorShapeVisitorWithT[T any] interface {
+	VisitConic(ctx context.Context, v Geo3dSensorShapeConic) (T, error)
+	VisitRectangular(ctx context.Context, v Geo3dSensorShapeRectangular) (T, error)
+	VisitSpherical(ctx context.Context, v Geo3dSensorShapeSpherical) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type Geo3dSensorShapeRectangularWithT[T any] Geo3dSensorShapeRectangular
+
+func (u *Geo3dSensorShapeRectangularWithT[T]) Accept(ctx context.Context, v Geo3dSensorShapeRectangularVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "includedFov":
+		if u.includedFov == nil {
+			return result, fmt.Errorf("field \"includedFov\" is required")
+		}
+		return v.VisitIncludedFov(ctx, *u.includedFov)
+	}
+}
+
+func (u *Geo3dSensorShapeRectangularWithT[T]) AcceptFuncs(includedFovFunc func(Geo3dSensorShapeRectangularIncludedFov) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "includedFov":
+		if u.includedFov == nil {
+			return result, fmt.Errorf("field \"includedFov\" is required")
+		}
+		return includedFovFunc(*u.includedFov)
+	}
+}
+
+func (u *Geo3dSensorShapeRectangularWithT[T]) IncludedFovNoopSuccess(Geo3dSensorShapeRectangularIncludedFov) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dSensorShapeRectangularWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type Geo3dSensorShapeRectangularVisitorWithT[T any] interface {
+	VisitIncludedFov(ctx context.Context, v Geo3dSensorShapeRectangularIncludedFov) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1569,55 +1571,6 @@ func (u *GeoCustomFeatureWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type GeoCustomFeatureVisitorWithT[T any] interface {
 	VisitPoint(ctx context.Context, v GeoPoint) (T, error)
-	VisitUnknown(ctx context.Context, typ string) (T, error)
-}
-
-type GeoSecondaryPlotVisualizationOptionWithT[T any] GeoSecondaryPlotVisualizationOption
-
-func (u *GeoSecondaryPlotVisualizationOptionWithT[T]) Accept(ctx context.Context, v GeoSecondaryPlotVisualizationOptionVisitorWithT[T]) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(ctx, u.typ)
-	case "asColors":
-		if u.asColors == nil {
-			return result, fmt.Errorf("field \"asColors\" is required")
-		}
-		return v.VisitAsColors(ctx, *u.asColors)
-	}
-}
-
-func (u *GeoSecondaryPlotVisualizationOptionWithT[T]) AcceptFuncs(asColorsFunc func(ValueToColorMap) (T, error), unknownFunc func(string) (T, error)) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "asColors":
-		if u.asColors == nil {
-			return result, fmt.Errorf("field \"asColors\" is required")
-		}
-		return asColorsFunc(*u.asColors)
-	}
-}
-
-func (u *GeoSecondaryPlotVisualizationOptionWithT[T]) AsColorsNoopSuccess(ValueToColorMap) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *GeoSecondaryPlotVisualizationOptionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
-	var result T
-	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-type GeoSecondaryPlotVisualizationOptionVisitorWithT[T any] interface {
-	VisitAsColors(ctx context.Context, v ValueToColorMap) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -2533,6 +2486,120 @@ type RangeValueVisualisationVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type ScatterDecimationWithT[T any] ScatterDecimation
+
+func (u *ScatterDecimationWithT[T]) Accept(ctx context.Context, v ScatterDecimationVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "temporal":
+		if u.temporal == nil {
+			return result, fmt.Errorf("field \"temporal\" is required")
+		}
+		return v.VisitTemporal(ctx, *u.temporal)
+	case "spatial":
+		if u.spatial == nil {
+			return result, fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatial(ctx, *u.spatial)
+	}
+}
+
+func (u *ScatterDecimationWithT[T]) AcceptFuncs(temporalFunc func(TemporalDecimation) (T, error), spatialFunc func(SpatialDecimation) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "temporal":
+		if u.temporal == nil {
+			return result, fmt.Errorf("field \"temporal\" is required")
+		}
+		return temporalFunc(*u.temporal)
+	case "spatial":
+		if u.spatial == nil {
+			return result, fmt.Errorf("field \"spatial\" is required")
+		}
+		return spatialFunc(*u.spatial)
+	}
+}
+
+func (u *ScatterDecimationWithT[T]) TemporalNoopSuccess(TemporalDecimation) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ScatterDecimationWithT[T]) SpatialNoopSuccess(SpatialDecimation) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ScatterDecimationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ScatterDecimationVisitorWithT[T any] interface {
+	VisitTemporal(ctx context.Context, v TemporalDecimation) (T, error)
+	VisitSpatial(ctx context.Context, v SpatialDecimation) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type SecondaryVariableOptionsWithT[T any] SecondaryVariableOptions
+
+func (u *SecondaryVariableOptionsWithT[T]) Accept(ctx context.Context, v SecondaryVariableOptionsVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "asColors":
+		if u.asColors == nil {
+			return result, fmt.Errorf("field \"asColors\" is required")
+		}
+		return v.VisitAsColors(ctx, *u.asColors)
+	}
+}
+
+func (u *SecondaryVariableOptionsWithT[T]) AcceptFuncs(asColorsFunc func(ValueToColorMap) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "asColors":
+		if u.asColors == nil {
+			return result, fmt.Errorf("field \"asColors\" is required")
+		}
+		return asColorsFunc(*u.asColors)
+	}
+}
+
+func (u *SecondaryVariableOptionsWithT[T]) AsColorsNoopSuccess(ValueToColorMap) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SecondaryVariableOptionsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type SecondaryVariableOptionsVisitorWithT[T any] interface {
+	VisitAsColors(ctx context.Context, v ValueToColorMap) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type StalenessVisualisationWithT[T any] StalenessVisualisation
 
 func (u *StalenessVisualisationWithT[T]) Accept(ctx context.Context, v StalenessVisualisationVisitorWithT[T]) (T, error) {
@@ -3197,10 +3264,20 @@ func (u *ValueToColorMapWithT[T]) Accept(ctx context.Context, v ValueToColorMapV
 			return result, fmt.Errorf("field \"numeric\" is required")
 		}
 		return v.VisitNumeric(ctx, *u.numeric)
+	case "numericPreset":
+		if u.numericPreset == nil {
+			return result, fmt.Errorf("field \"numericPreset\" is required")
+		}
+		return v.VisitNumericPreset(ctx, *u.numericPreset)
+	case "enum":
+		if u.enum == nil {
+			return result, fmt.Errorf("field \"enum\" is required")
+		}
+		return v.VisitEnum(ctx, *u.enum)
 	}
 }
 
-func (u *ValueToColorMapWithT[T]) AcceptFuncs(numericFunc func(map[api.HexColor]float64) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ValueToColorMapWithT[T]) AcceptFuncs(numericFunc func(map[api1.HexColor]float64) (T, error), numericPresetFunc func(NumericPresetColorRange) (T, error), enumFunc func(map[string]api1.HexColor) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -3213,10 +3290,30 @@ func (u *ValueToColorMapWithT[T]) AcceptFuncs(numericFunc func(map[api.HexColor]
 			return result, fmt.Errorf("field \"numeric\" is required")
 		}
 		return numericFunc(*u.numeric)
+	case "numericPreset":
+		if u.numericPreset == nil {
+			return result, fmt.Errorf("field \"numericPreset\" is required")
+		}
+		return numericPresetFunc(*u.numericPreset)
+	case "enum":
+		if u.enum == nil {
+			return result, fmt.Errorf("field \"enum\" is required")
+		}
+		return enumFunc(*u.enum)
 	}
 }
 
-func (u *ValueToColorMapWithT[T]) NumericNoopSuccess(map[api.HexColor]float64) (T, error) {
+func (u *ValueToColorMapWithT[T]) NumericNoopSuccess(map[api1.HexColor]float64) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValueToColorMapWithT[T]) NumericPresetNoopSuccess(NumericPresetColorRange) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValueToColorMapWithT[T]) EnumNoopSuccess(map[string]api1.HexColor) (T, error) {
 	var result T
 	return result, nil
 }
@@ -3227,7 +3324,58 @@ func (u *ValueToColorMapWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type ValueToColorMapVisitorWithT[T any] interface {
-	VisitNumeric(ctx context.Context, v map[api.HexColor]float64) (T, error)
+	VisitNumeric(ctx context.Context, v map[api1.HexColor]float64) (T, error)
+	VisitNumericPreset(ctx context.Context, v NumericPresetColorRange) (T, error)
+	VisitEnum(ctx context.Context, v map[string]api1.HexColor) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type VariableStaticOrChannelWithT[T any] VariableStaticOrChannel
+
+func (u *VariableStaticOrChannelWithT[T]) Accept(ctx context.Context, v VariableStaticOrChannelVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "staticNumeric":
+		if u.staticNumeric == nil {
+			return result, fmt.Errorf("field \"staticNumeric\" is required")
+		}
+		return v.VisitStaticNumeric(ctx, *u.staticNumeric)
+	}
+}
+
+func (u *VariableStaticOrChannelWithT[T]) AcceptFuncs(staticNumericFunc func(float64) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "staticNumeric":
+		if u.staticNumeric == nil {
+			return result, fmt.Errorf("field \"staticNumeric\" is required")
+		}
+		return staticNumericFunc(*u.staticNumeric)
+	}
+}
+
+func (u *VariableStaticOrChannelWithT[T]) StaticNumericNoopSuccess(float64) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *VariableStaticOrChannelWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type VariableStaticOrChannelVisitorWithT[T any] interface {
+	VisitStaticNumeric(ctx context.Context, v float64) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

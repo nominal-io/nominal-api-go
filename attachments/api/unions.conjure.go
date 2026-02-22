@@ -154,7 +154,7 @@ func (u *SearchAttachmentsQuery) AcceptFuncs(searchTextFunc func(string) error, 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchAttachmentsQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "searchText":
@@ -190,27 +190,27 @@ func (u *SearchAttachmentsQuery) AcceptFuncs(searchTextFunc func(string) error, 
 	}
 }
 
-func (u *SearchAttachmentsQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchAttachmentsQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchAttachmentsQuery) LabelNoopSuccess(api.Label) error {
+func (u *SearchAttachmentsQuery) LabelNoopSuccess(_ api.Label) error {
 	return nil
 }
 
-func (u *SearchAttachmentsQuery) PropertyNoopSuccess(api.Property) error {
+func (u *SearchAttachmentsQuery) PropertyNoopSuccess(_ api.Property) error {
 	return nil
 }
 
-func (u *SearchAttachmentsQuery) AndNoopSuccess([]SearchAttachmentsQuery) error {
+func (u *SearchAttachmentsQuery) AndNoopSuccess(_ []SearchAttachmentsQuery) error {
 	return nil
 }
 
-func (u *SearchAttachmentsQuery) OrNoopSuccess([]SearchAttachmentsQuery) error {
+func (u *SearchAttachmentsQuery) OrNoopSuccess(_ []SearchAttachmentsQuery) error {
 	return nil
 }
 
-func (u *SearchAttachmentsQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchAttachmentsQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 

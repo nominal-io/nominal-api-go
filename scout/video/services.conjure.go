@@ -73,40 +73,36 @@ func NewVideoFileServiceClient(client httpclient.Client) VideoFileServiceClient 
 }
 
 func (c *videoFileServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateVideoFileRequest) (api.VideoFile, error) {
-	var defaultReturnVal api.VideoFile
 	var returnVal *api.VideoFile
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "create failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.VideoFile), werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "create response cannot be nil")
+		return *new(api.VideoFile), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *videoFileServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (api.VideoFile, error) {
-	var defaultReturnVal api.VideoFile
 	var returnVal *api.VideoFile
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/%s", url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "get failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.VideoFile), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(api.VideoFile), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -115,13 +111,12 @@ func (c *videoFileServiceClient) BatchGet(ctx context.Context, authHeader bearer
 	var returnVal []api.VideoFile
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGet"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/batchGet"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(videoFileRidsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGet failed")
 	}
 	if returnVal == nil {
@@ -134,13 +129,12 @@ func (c *videoFileServiceClient) ListFilesInVideo(ctx context.Context, authHeade
 	var returnVal []api.VideoFile
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListFilesInVideo"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/list-files-in-video"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(videoRidArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "listFilesInVideo failed")
 	}
 	if returnVal == nil {
@@ -150,41 +144,37 @@ func (c *videoFileServiceClient) ListFilesInVideo(ctx context.Context, authHeade
 }
 
 func (c *videoFileServiceClient) ListFilesInVideoPaginated(ctx context.Context, authHeader bearertoken.Token, videoRidArg api.ListFilesInVideoRequest) (api.ListFilesInVideoResponse, error) {
-	var defaultReturnVal api.ListFilesInVideoResponse
 	var returnVal *api.ListFilesInVideoResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListFilesInVideoPaginated"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/list-files-in-video-paginated"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(videoRidArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "listFilesInVideoPaginated failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.ListFilesInVideoResponse), werror.WrapWithContextParams(ctx, err, "listFilesInVideoPaginated failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "listFilesInVideoPaginated response cannot be nil")
+		return *new(api.ListFilesInVideoResponse), werror.ErrorWithContextParams(ctx, "listFilesInVideoPaginated response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *videoFileServiceClient) Update(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid, requestArg api.UpdateVideoFileRequest) (api.VideoFile, error) {
-	var defaultReturnVal api.VideoFile
 	var returnVal *api.VideoFile
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Update"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/%s", url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "update failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api.VideoFile), werror.WrapWithContextParams(ctx, err, "update failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "update response cannot be nil")
+		return *new(api.VideoFile), werror.ErrorWithContextParams(ctx, "update response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -192,11 +182,10 @@ func (c *videoFileServiceClient) Update(ctx context.Context, authHeader bearerto
 func (c *videoFileServiceClient) Delete(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Delete"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/%s", url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "delete failed")
 	}
 	return nil
@@ -205,11 +194,10 @@ func (c *videoFileServiceClient) Delete(ctx context.Context, authHeader bearerto
 func (c *videoFileServiceClient) Archive(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Archive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/%s/archive", url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archive failed")
 	}
 	return nil
@@ -218,31 +206,28 @@ func (c *videoFileServiceClient) Archive(ctx context.Context, authHeader bearert
 func (c *videoFileServiceClient) Unarchive(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Unarchive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/%s/unarchive", url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchive failed")
 	}
 	return nil
 }
 
 func (c *videoFileServiceClient) GetIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (api.GetIngestStatusResponse, error) {
-	var defaultReturnVal api.GetIngestStatusResponse
 	var returnVal *api.GetIngestStatusResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIngestStatus"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/%s/ingest-status", url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getIngestStatus failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.GetIngestStatusResponse), werror.WrapWithContextParams(ctx, err, "getIngestStatus failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getIngestStatus response cannot be nil")
+		return *new(api.GetIngestStatusResponse), werror.ErrorWithContextParams(ctx, "getIngestStatus response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -251,13 +236,12 @@ func (c *videoFileServiceClient) BatchGetIngestStatus(ctx context.Context, authH
 	var returnVal map[rids.VideoFileRid]api.VideoFileIngestStatus
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetIngestStatus"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/videos/batch-get-ingest-status"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(videoFileRidsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetIngestStatus failed")
 	}
 	if returnVal == nil {
@@ -269,12 +253,11 @@ func (c *videoFileServiceClient) BatchGetIngestStatus(ctx context.Context, authH
 func (c *videoFileServiceClient) UpdateIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid, requestArg api.UpdateIngestStatusRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateIngestStatus"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/videos/%s/ingest-status", url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "updateIngestStatus failed")
 	}
 	return nil
@@ -284,12 +267,11 @@ func (c *videoFileServiceClient) GetSegmentSummaries(ctx context.Context, authHe
 	var returnVal []api.SegmentSummary
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentSummaries"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/%s/segment-summaries", url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentSummaries failed")
 	}
 	if returnVal == nil {
@@ -301,12 +283,11 @@ func (c *videoFileServiceClient) GetSegmentSummaries(ctx context.Context, authHe
 func (c *videoFileServiceClient) GetPlaylist(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (io.ReadCloser, error) {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetPlaylist"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/%s/playlist", url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithRawResponseBody())
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	resp, err := c.client.Do(ctx, requestParams...)
+	resp, err := c.client.Get(ctx, requestParams...)
 	if err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getPlaylist failed")
 	}
@@ -433,55 +414,49 @@ type videoFileServiceClientWithTokenProvider struct {
 }
 
 func (c *videoFileServiceClientWithTokenProvider) Create(ctx context.Context, requestArg api.CreateVideoFileRequest) (api.VideoFile, error) {
-	var defaultReturnVal api.VideoFile
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.VideoFile), err
 	}
 	return c.client.Create(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoFileServiceClientWithTokenProvider) Get(ctx context.Context, videoFileRidArg rids.VideoFileRid) (api.VideoFile, error) {
-	var defaultReturnVal api.VideoFile
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.VideoFile), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), videoFileRidArg)
 }
 
 func (c *videoFileServiceClientWithTokenProvider) BatchGet(ctx context.Context, videoFileRidsArg []rids.VideoFileRid) ([]api.VideoFile, error) {
-	var defaultReturnVal []api.VideoFile
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGet(ctx, bearertoken.Token(token), videoFileRidsArg)
 }
 
 func (c *videoFileServiceClientWithTokenProvider) ListFilesInVideo(ctx context.Context, videoRidArg rids.VideoRid) ([]api.VideoFile, error) {
-	var defaultReturnVal []api.VideoFile
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.ListFilesInVideo(ctx, bearertoken.Token(token), videoRidArg)
 }
 
 func (c *videoFileServiceClientWithTokenProvider) ListFilesInVideoPaginated(ctx context.Context, videoRidArg api.ListFilesInVideoRequest) (api.ListFilesInVideoResponse, error) {
-	var defaultReturnVal api.ListFilesInVideoResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.ListFilesInVideoResponse), err
 	}
 	return c.client.ListFilesInVideoPaginated(ctx, bearertoken.Token(token), videoRidArg)
 }
 
 func (c *videoFileServiceClientWithTokenProvider) Update(ctx context.Context, videoFileRidArg rids.VideoFileRid, requestArg api.UpdateVideoFileRequest) (api.VideoFile, error) {
-	var defaultReturnVal api.VideoFile
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.VideoFile), err
 	}
 	return c.client.Update(ctx, bearertoken.Token(token), videoFileRidArg, requestArg)
 }
@@ -511,19 +486,17 @@ func (c *videoFileServiceClientWithTokenProvider) Unarchive(ctx context.Context,
 }
 
 func (c *videoFileServiceClientWithTokenProvider) GetIngestStatus(ctx context.Context, videoFileRidArg rids.VideoFileRid) (api.GetIngestStatusResponse, error) {
-	var defaultReturnVal api.GetIngestStatusResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.GetIngestStatusResponse), err
 	}
 	return c.client.GetIngestStatus(ctx, bearertoken.Token(token), videoFileRidArg)
 }
 
 func (c *videoFileServiceClientWithTokenProvider) BatchGetIngestStatus(ctx context.Context, videoFileRidsArg []rids.VideoFileRid) (map[rids.VideoFileRid]api.VideoFileIngestStatus, error) {
-	var defaultReturnVal map[rids.VideoFileRid]api.VideoFileIngestStatus
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetIngestStatus(ctx, bearertoken.Token(token), videoFileRidsArg)
 }
@@ -537,19 +510,17 @@ func (c *videoFileServiceClientWithTokenProvider) UpdateIngestStatus(ctx context
 }
 
 func (c *videoFileServiceClientWithTokenProvider) GetSegmentSummaries(ctx context.Context, videoFileRidArg rids.VideoFileRid) ([]api.SegmentSummary, error) {
-	var defaultReturnVal []api.SegmentSummary
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetSegmentSummaries(ctx, bearertoken.Token(token), videoFileRidArg)
 }
 
 func (c *videoFileServiceClientWithTokenProvider) GetPlaylist(ctx context.Context, videoFileRidArg rids.VideoFileRid) (io.ReadCloser, error) {
-	var defaultReturnVal io.ReadCloser
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetPlaylist(ctx, bearertoken.Token(token), videoFileRidArg)
 }
@@ -584,73 +555,66 @@ func NewVideoSegmentServiceClient(client httpclient.Client) VideoSegmentServiceC
 func (c *videoSegmentServiceClient) CreateSegments(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.CreateSegmentsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateSegments"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/create-segments", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "createSegments failed")
 	}
 	return nil
 }
 
 func (c *videoSegmentServiceClient) CreateVideoFileSegments(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, videoFileRidArg rids.VideoFileRid, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error) {
-	var defaultReturnVal api.CreateSegmentsResponse
 	var returnVal *api.CreateSegmentsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateVideoFileSegments"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/%s/create-segments", url.PathEscape(fmt.Sprint(videoRidArg)), url.PathEscape(fmt.Sprint(videoFileRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createVideoFileSegments failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.CreateSegmentsResponse), werror.WrapWithContextParams(ctx, err, "createVideoFileSegments failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createVideoFileSegments response cannot be nil")
+		return *new(api.CreateSegmentsResponse), werror.ErrorWithContextParams(ctx, "createVideoFileSegments response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *videoSegmentServiceClient) CreateVideoStreamSegments(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, streamUuidArg uuid.UUID, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error) {
-	var defaultReturnVal api.CreateSegmentsResponse
 	var returnVal *api.CreateSegmentsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateVideoStreamSegments"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/streams/%s/create-segments", url.PathEscape(fmt.Sprint(videoRidArg)), url.PathEscape(fmt.Sprint(streamUuidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createVideoStreamSegments failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.CreateSegmentsResponse), werror.WrapWithContextParams(ctx, err, "createVideoStreamSegments failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createVideoStreamSegments response cannot be nil")
+		return *new(api.CreateSegmentsResponse), werror.ErrorWithContextParams(ctx, "createVideoStreamSegments response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *videoSegmentServiceClient) CreateSegmentsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSegmentsV2Request) (api.CreateSegmentsV2Response, error) {
-	var defaultReturnVal api.CreateSegmentsV2Response
 	var returnVal *api.CreateSegmentsV2Response
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateSegmentsV2"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/create-segments"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createSegmentsV2 failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.CreateSegmentsV2Response), werror.WrapWithContextParams(ctx, err, "createSegmentsV2 failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createSegmentsV2 response cannot be nil")
+		return *new(api.CreateSegmentsV2Response), werror.ErrorWithContextParams(ctx, "createSegmentsV2 response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -659,13 +623,12 @@ func (c *videoSegmentServiceClient) GetSegmentByTimestamp(ctx context.Context, a
 	var returnVal *api.Segment
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentByTimestamp"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/get-segment-by-timestamp", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentByTimestamp failed")
 	}
 	return returnVal, nil
@@ -737,37 +700,33 @@ func (c *videoSegmentServiceClientWithTokenProvider) CreateSegments(ctx context.
 }
 
 func (c *videoSegmentServiceClientWithTokenProvider) CreateVideoFileSegments(ctx context.Context, videoRidArg rids.VideoRid, videoFileRidArg rids.VideoFileRid, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error) {
-	var defaultReturnVal api.CreateSegmentsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.CreateSegmentsResponse), err
 	}
 	return c.client.CreateVideoFileSegments(ctx, bearertoken.Token(token), videoRidArg, videoFileRidArg, requestArg)
 }
 
 func (c *videoSegmentServiceClientWithTokenProvider) CreateVideoStreamSegments(ctx context.Context, videoRidArg rids.VideoRid, streamUuidArg uuid.UUID, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error) {
-	var defaultReturnVal api.CreateSegmentsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.CreateSegmentsResponse), err
 	}
 	return c.client.CreateVideoStreamSegments(ctx, bearertoken.Token(token), videoRidArg, streamUuidArg, requestArg)
 }
 
 func (c *videoSegmentServiceClientWithTokenProvider) CreateSegmentsV2(ctx context.Context, requestArg api.CreateSegmentsV2Request) (api.CreateSegmentsV2Response, error) {
-	var defaultReturnVal api.CreateSegmentsV2Response
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.CreateSegmentsV2Response), err
 	}
 	return c.client.CreateSegmentsV2(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoSegmentServiceClientWithTokenProvider) GetSegmentByTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error) {
-	var defaultReturnVal *api.Segment
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetSegmentByTimestamp(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
@@ -873,7 +832,7 @@ type VideoServiceClient interface {
 	   MediaMTX segment upload endpoint. Receives video segments from MediaMTX hooks.
 	   Validates JWT and logs session. Future: create video segments from uploaded files.
 	*/
-	UploadSegmentFromMediaMtx(ctx context.Context, authHeader bearertoken.Token, streamPathArg string, filePathArg string, durationArg string, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error
+	UploadSegmentFromMediaMtx(ctx context.Context, authHeader bearertoken.Token, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error
 }
 
 type videoServiceClient struct {
@@ -885,100 +844,90 @@ func NewVideoServiceClient(client httpclient.Client) VideoServiceClient {
 }
 
 func (c *videoServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.Video, error) {
-	var defaultReturnVal api.Video
 	var returnVal *api.Video
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "get failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.Video), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(api.Video), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *videoServiceClient) BatchGet(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetVideosRequest) (api.GetVideosResponse, error) {
-	var defaultReturnVal api.GetVideosResponse
 	var returnVal *api.GetVideosResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGet"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/batchGet"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGet failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GetVideosResponse), werror.WrapWithContextParams(ctx, err, "batchGet failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGet response cannot be nil")
+		return *new(api.GetVideosResponse), werror.ErrorWithContextParams(ctx, "batchGet response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *videoServiceClient) Search(ctx context.Context, authHeader bearertoken.Token, requestArg api.SearchVideosRequest) (api.SearchVideosResponse, error) {
-	var defaultReturnVal api.SearchVideosResponse
 	var returnVal *api.SearchVideosResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Search"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/search"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "search failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SearchVideosResponse), werror.WrapWithContextParams(ctx, err, "search failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "search response cannot be nil")
+		return *new(api.SearchVideosResponse), werror.ErrorWithContextParams(ctx, "search response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *videoServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateVideoRequest) (api.Video, error) {
-	var defaultReturnVal api.Video
 	var returnVal *api.Video
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "create failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.Video), werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "create response cannot be nil")
+		return *new(api.Video), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *videoServiceClient) UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.UpdateVideoMetadataRequest) (api.Video, error) {
-	var defaultReturnVal api.Video
 	var returnVal *api.Video
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateMetadata"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api.Video), werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
+		return *new(api.Video), werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -986,32 +935,29 @@ func (c *videoServiceClient) UpdateMetadata(ctx context.Context, authHeader bear
 func (c *videoServiceClient) UpdateIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.UpdateIngestStatus) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateIngestStatus"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/ingest-status", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "updateIngestStatus failed")
 	}
 	return nil
 }
 
 func (c *videoServiceClient) GetIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.DetailedIngestStatus, error) {
-	var defaultReturnVal api.DetailedIngestStatus
 	var returnVal *api.DetailedIngestStatus
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIngestStatus"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/ingest-status", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getIngestStatus failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.DetailedIngestStatus), werror.WrapWithContextParams(ctx, err, "getIngestStatus failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getIngestStatus response cannot be nil")
+		return *new(api.DetailedIngestStatus), werror.ErrorWithContextParams(ctx, "getIngestStatus response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -1020,13 +966,12 @@ func (c *videoServiceClient) BatchGetIngestStatus(ctx context.Context, authHeade
 	var returnVal map[rids.VideoRid]api.DetailedIngestStatus
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetIngestStatus"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/batch-get-ingest-status"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(videoRidsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "batchGetIngestStatus failed")
 	}
 	if returnVal == nil {
@@ -1039,13 +984,12 @@ func (c *videoServiceClient) GetEnrichedIngestStatus(ctx context.Context, authHe
 	var returnVal *api.EnrichedVideoIngestStatus
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetEnrichedIngestStatus"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/enriched-ingest-status"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getEnrichedIngestStatus failed")
 	}
 	return returnVal, nil
@@ -1054,11 +998,10 @@ func (c *videoServiceClient) GetEnrichedIngestStatus(ctx context.Context, authHe
 func (c *videoServiceClient) Archive(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Archive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/archive", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archive failed")
 	}
 	return nil
@@ -1067,11 +1010,10 @@ func (c *videoServiceClient) Archive(ctx context.Context, authHeader bearertoken
 func (c *videoServiceClient) Unarchive(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Unarchive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/unarchive", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchive failed")
 	}
 	return nil
@@ -1080,7 +1022,6 @@ func (c *videoServiceClient) Unarchive(ctx context.Context, authHeader bearertok
 func (c *videoServiceClient) GetPlaylist(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, startArg *string, endArg *string) (io.ReadCloser, error) {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetPlaylist"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/playlist", url.PathEscape(fmt.Sprint(videoRidArg))))
 	queryParams := make(url.Values)
@@ -1093,7 +1034,7 @@ func (c *videoServiceClient) GetPlaylist(ctx context.Context, authHeader bearert
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithRawResponseBody())
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	resp, err := c.client.Do(ctx, requestParams...)
+	resp, err := c.client.Get(ctx, requestParams...)
 	if err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getPlaylist failed")
 	}
@@ -1104,12 +1045,11 @@ func (c *videoServiceClient) GetSegmentSummaries(ctx context.Context, authHeader
 	var returnVal []api.SegmentSummary
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentSummaries"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/segment-summaries", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentSummaries failed")
 	}
 	if returnVal == nil {
@@ -1121,13 +1061,12 @@ func (c *videoServiceClient) GetSegmentSummaries(ctx context.Context, authHeader
 func (c *videoServiceClient) GetPlaylistInBounds(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetPlaylistInBoundsRequest) (io.ReadCloser, error) {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetPlaylistInBounds"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/playlist-in-bounds", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRawResponseBody())
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	resp, err := c.client.Do(ctx, requestParams...)
+	resp, err := c.client.Post(ctx, requestParams...)
 	if err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getPlaylistInBounds failed")
 	}
@@ -1137,13 +1076,12 @@ func (c *videoServiceClient) GetPlaylistInBounds(ctx context.Context, authHeader
 func (c *videoServiceClient) GetPlaylistInBoundsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error) {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetPlaylistInBoundsV2"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/playlist-in-bounds"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRawResponseBody())
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	resp, err := c.client.Do(ctx, requestParams...)
+	resp, err := c.client.Post(ctx, requestParams...)
 	if err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getPlaylistInBoundsV2 failed")
 	}
@@ -1153,7 +1091,6 @@ func (c *videoServiceClient) GetPlaylistInBoundsV2(ctx context.Context, authHead
 func (c *videoServiceClient) GetPlaylistV2(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error) {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetPlaylistV2"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/playlist"))
 	queryParams := make(url.Values)
@@ -1175,7 +1112,7 @@ func (c *videoServiceClient) GetPlaylistV2(ctx context.Context, authHeader beare
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithRawResponseBody())
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	resp, err := c.client.Do(ctx, requestParams...)
+	resp, err := c.client.Get(ctx, requestParams...)
 	if err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getPlaylistV2 failed")
 	}
@@ -1186,13 +1123,12 @@ func (c *videoServiceClient) GetSegmentSummariesInBounds(ctx context.Context, au
 	var returnVal []api.SegmentSummary
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentSummariesInBounds"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/segment-summaries-in-bounds", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentSummariesInBounds failed")
 	}
 	if returnVal == nil {
@@ -1205,13 +1141,12 @@ func (c *videoServiceClient) GetSegmentSummariesInBoundsV2(ctx context.Context, 
 	var returnVal []api.SegmentSummaryV2
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentSummariesInBoundsV2"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/segment-summaries-in-bounds"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentSummariesInBoundsV2 failed")
 	}
 	if returnVal == nil {
@@ -1224,13 +1159,12 @@ func (c *videoServiceClient) GetSegmentMetadataV2(ctx context.Context, authHeade
 	var returnVal *api.VideoChannelSegmentsMetadata
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentMetadataV2"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/segment-metadata"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentMetadataV2 failed")
 	}
 	return returnVal, nil
@@ -1240,53 +1174,48 @@ func (c *videoServiceClient) GetSegmentByTimestampV2(ctx context.Context, authHe
 	var returnVal *api.SegmentV2
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentByTimestampV2"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/get-segment-by-timestamp"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentByTimestampV2 failed")
 	}
 	return returnVal, nil
 }
 
 func (c *videoServiceClient) GetFileSummaries(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error) {
-	var defaultReturnVal api.GetFileSummariesResponse
 	var returnVal *api.GetFileSummariesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetFileSummaries"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/get-ranges-with-existing-segment-data", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getFileSummaries failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GetFileSummariesResponse), werror.WrapWithContextParams(ctx, err, "getFileSummaries failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getFileSummaries response cannot be nil")
+		return *new(api.GetFileSummariesResponse), werror.ErrorWithContextParams(ctx, "getFileSummaries response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *videoServiceClient) GenerateWhipStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.GenerateWhipStreamResponse, error) {
-	var defaultReturnVal api.GenerateWhipStreamResponse
 	var returnVal *api.GenerateWhipStreamResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GenerateWhipStream"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/streaming/whip", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "generateWhipStream failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GenerateWhipStreamResponse), werror.WrapWithContextParams(ctx, err, "generateWhipStream failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "generateWhipStream response cannot be nil")
+		return *new(api.GenerateWhipStreamResponse), werror.ErrorWithContextParams(ctx, "generateWhipStream response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -1295,21 +1224,19 @@ func (c *videoServiceClient) GenerateWhepStream(ctx context.Context, authHeader 
 	var returnVal *api.GenerateWhepStreamResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GenerateWhepStream"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/streaming/whep", url.PathEscape(fmt.Sprint(videoRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "generateWhepStream failed")
 	}
 	return returnVal, nil
 }
 
-func (c *videoServiceClient) UploadSegmentFromMediaMtx(ctx context.Context, authHeader bearertoken.Token, streamPathArg string, filePathArg string, durationArg string, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {
+func (c *videoServiceClient) UploadSegmentFromMediaMtx(ctx context.Context, authHeader bearertoken.Token, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UploadSegmentFromMediaMtx"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/segment/upload"))
 	requestParams = append(requestParams, httpclient.WithBinaryRequestBody(bodyArg))
@@ -1318,9 +1245,11 @@ func (c *videoServiceClient) UploadSegmentFromMediaMtx(ctx context.Context, auth
 	queryParams.Set("streamPath", fmt.Sprint(streamPathArg))
 	queryParams.Set("filePath", fmt.Sprint(filePathArg))
 	queryParams.Set("duration", fmt.Sprint(durationArg))
+	queryParams.Set("minTimestampSeconds", fmt.Sprint(minTimestampSecondsArg))
+	queryParams.Set("minTimestampNanos", fmt.Sprint(minTimestampNanosArg))
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "uploadSegmentFromMediaMtx failed")
 	}
 	return nil
@@ -1427,7 +1356,7 @@ type VideoServiceClientWithAuth interface {
 	   MediaMTX segment upload endpoint. Receives video segments from MediaMTX hooks.
 	   Validates JWT and logs session. Future: create video segments from uploaded files.
 	*/
-	UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error
+	UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error
 }
 
 func NewVideoServiceClientWithAuth(client VideoServiceClient, authHeader bearertoken.Token) VideoServiceClientWithAuth {
@@ -1531,8 +1460,8 @@ func (c *videoServiceClientWithAuth) GenerateWhepStream(ctx context.Context, vid
 	return c.client.GenerateWhepStream(ctx, c.authHeader, videoRidArg)
 }
 
-func (c *videoServiceClientWithAuth) UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {
-	return c.client.UploadSegmentFromMediaMtx(ctx, c.authHeader, streamPathArg, filePathArg, durationArg, contentLengthArg, bodyArg)
+func (c *videoServiceClientWithAuth) UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {
+	return c.client.UploadSegmentFromMediaMtx(ctx, c.authHeader, streamPathArg, filePathArg, durationArg, minTimestampSecondsArg, minTimestampNanosArg, contentLengthArg, bodyArg)
 }
 
 func NewVideoServiceClientWithTokenProvider(client VideoServiceClient, tokenProvider httpclient.TokenProvider) VideoServiceClientWithAuth {
@@ -1545,46 +1474,41 @@ type videoServiceClientWithTokenProvider struct {
 }
 
 func (c *videoServiceClientWithTokenProvider) Get(ctx context.Context, videoRidArg rids.VideoRid) (api.Video, error) {
-	var defaultReturnVal api.Video
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Video), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), videoRidArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) BatchGet(ctx context.Context, requestArg api.GetVideosRequest) (api.GetVideosResponse, error) {
-	var defaultReturnVal api.GetVideosResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.GetVideosResponse), err
 	}
 	return c.client.BatchGet(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) Search(ctx context.Context, requestArg api.SearchVideosRequest) (api.SearchVideosResponse, error) {
-	var defaultReturnVal api.SearchVideosResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.SearchVideosResponse), err
 	}
 	return c.client.Search(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) Create(ctx context.Context, requestArg api.CreateVideoRequest) (api.Video, error) {
-	var defaultReturnVal api.Video
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Video), err
 	}
 	return c.client.Create(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) UpdateMetadata(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.UpdateVideoMetadataRequest) (api.Video, error) {
-	var defaultReturnVal api.Video
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Video), err
 	}
 	return c.client.UpdateMetadata(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
@@ -1598,28 +1522,25 @@ func (c *videoServiceClientWithTokenProvider) UpdateIngestStatus(ctx context.Con
 }
 
 func (c *videoServiceClientWithTokenProvider) GetIngestStatus(ctx context.Context, videoRidArg rids.VideoRid) (api.DetailedIngestStatus, error) {
-	var defaultReturnVal api.DetailedIngestStatus
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.DetailedIngestStatus), err
 	}
 	return c.client.GetIngestStatus(ctx, bearertoken.Token(token), videoRidArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) BatchGetIngestStatus(ctx context.Context, videoRidsArg []rids.VideoRid) (map[rids.VideoRid]api.DetailedIngestStatus, error) {
-	var defaultReturnVal map[rids.VideoRid]api.DetailedIngestStatus
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.BatchGetIngestStatus(ctx, bearertoken.Token(token), videoRidsArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetEnrichedIngestStatus(ctx context.Context, requestArg api.GetEnrichedVideoIngestStatusRequest) (*api.EnrichedVideoIngestStatus, error) {
-	var defaultReturnVal *api.EnrichedVideoIngestStatus
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetEnrichedIngestStatus(ctx, bearertoken.Token(token), requestArg)
 }
@@ -1641,117 +1562,105 @@ func (c *videoServiceClientWithTokenProvider) Unarchive(ctx context.Context, vid
 }
 
 func (c *videoServiceClientWithTokenProvider) GetPlaylist(ctx context.Context, videoRidArg rids.VideoRid, startArg *string, endArg *string) (io.ReadCloser, error) {
-	var defaultReturnVal io.ReadCloser
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetPlaylist(ctx, bearertoken.Token(token), videoRidArg, startArg, endArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetSegmentSummaries(ctx context.Context, videoRidArg rids.VideoRid) ([]api.SegmentSummary, error) {
-	var defaultReturnVal []api.SegmentSummary
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetSegmentSummaries(ctx, bearertoken.Token(token), videoRidArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetPlaylistInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetPlaylistInBoundsRequest) (io.ReadCloser, error) {
-	var defaultReturnVal io.ReadCloser
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetPlaylistInBounds(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetPlaylistInBoundsV2(ctx context.Context, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error) {
-	var defaultReturnVal io.ReadCloser
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetPlaylistInBoundsV2(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetPlaylistV2(ctx context.Context, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error) {
-	var defaultReturnVal io.ReadCloser
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetPlaylistV2(ctx, bearertoken.Token(token), dataSourceRidArg, assetRidArg, dataScopeNameArg, channelArg, tagsArg, startArg, endArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetSegmentSummariesInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentSummariesInBoundsRequest) ([]api.SegmentSummary, error) {
-	var defaultReturnVal []api.SegmentSummary
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetSegmentSummariesInBounds(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetSegmentSummariesInBoundsV2(ctx context.Context, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummaryV2, error) {
-	var defaultReturnVal []api.SegmentSummaryV2
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetSegmentSummariesInBoundsV2(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetSegmentMetadataV2(ctx context.Context, requestArg api.GetSegmentMetadataForChannelRequest) (*api.VideoChannelSegmentsMetadata, error) {
-	var defaultReturnVal *api.VideoChannelSegmentsMetadata
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetSegmentMetadataV2(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetSegmentByTimestampV2(ctx context.Context, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error) {
-	var defaultReturnVal *api.SegmentV2
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetSegmentByTimestampV2(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetFileSummaries(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error) {
-	var defaultReturnVal api.GetFileSummariesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.GetFileSummariesResponse), err
 	}
 	return c.client.GetFileSummaries(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GenerateWhipStream(ctx context.Context, videoRidArg rids.VideoRid) (api.GenerateWhipStreamResponse, error) {
-	var defaultReturnVal api.GenerateWhipStreamResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.GenerateWhipStreamResponse), err
 	}
 	return c.client.GenerateWhipStream(ctx, bearertoken.Token(token), videoRidArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GenerateWhepStream(ctx context.Context, videoRidArg rids.VideoRid) (*api.GenerateWhepStreamResponse, error) {
-	var defaultReturnVal *api.GenerateWhepStreamResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GenerateWhepStream(ctx, bearertoken.Token(token), videoRidArg)
 }
 
-func (c *videoServiceClientWithTokenProvider) UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {
+func (c *videoServiceClientWithTokenProvider) UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
 	}
-	return c.client.UploadSegmentFromMediaMtx(ctx, bearertoken.Token(token), streamPathArg, filePathArg, durationArg, contentLengthArg, bodyArg)
+	return c.client.UploadSegmentFromMediaMtx(ctx, bearertoken.Token(token), streamPathArg, filePathArg, durationArg, minTimestampSecondsArg, minTimestampNanosArg, contentLengthArg, bodyArg)
 }

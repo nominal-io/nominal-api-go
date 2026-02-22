@@ -13,24 +13,24 @@ import (
 // Batch of data to stream for a single channel with their associated timestamps.
 type ColumnBatch struct {
 	// Channel within nominal to stream data to.
-	Channel api.Channel `conjure-docs:"Channel within nominal to stream data to." json:"channel"`
+	Channel api.Channel `json:"channel"`
 	// Mapping of key-value pairs to provide as tags to all points within the batch
-	Tags map[api.TagName]api.TagValue `conjure-docs:"Mapping of key-value pairs to provide as tags to all points within the batch" json:"tags"`
+	Tags map[api.TagName]api.TagValue `json:"tags"`
 	/*
 	   List of timestamp values that correspond to the provided list of column values. The number of timestamps
 	   provided MUST match the number of columnar values provided, otherwise a 400 error will be returned.
 	*/
-	Timestamps []api.Timestamp `conjure-docs:"List of timestamp values that correspond to the provided list of column values. The number of timestamps\nprovided MUST match the number of columnar values provided, otherwise a 400 error will be returned." json:"timestamps"`
+	Timestamps []api.Timestamp `json:"timestamps"`
 	/*
 	   List of time series values that should be ingested to a single channel. The number of columnar values
 	   provided MUST match the number of timestamps provided, otherwise a 400 error will be returned.
 	*/
-	Values ColumnValues `conjure-docs:"List of time series values that should be ingested to a single channel. The number of columnar values\nprovided MUST match the number of timestamps provided, otherwise a 400 error will be returned." json:"values"`
+	Values ColumnValues `json:"values"`
 }
 
 func (o ColumnBatch) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	if o.Timestamps == nil {
 		o.Timestamps = make([]api.Timestamp, 0)
@@ -46,7 +46,7 @@ func (o *ColumnBatch) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawColumnBatch.Tags == nil {
-		rawColumnBatch.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawColumnBatch.Tags = make(map[api.TagName]api.TagValue)
 	}
 	if rawColumnBatch.Timestamps == nil {
 		rawColumnBatch.Timestamps = make([]api.Timestamp, 0)
@@ -183,7 +183,7 @@ type LogValue struct {
 
 func (o LogValue) MarshalJSON() ([]byte, error) {
 	if o.Args == nil {
-		o.Args = make(map[string]string, 0)
+		o.Args = make(map[string]string)
 	}
 	type _tmpLogValue LogValue
 	return safejson.Marshal(_tmpLogValue(o))
@@ -196,7 +196,7 @@ func (o *LogValue) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawLogValue.Args == nil {
-		rawLogValue.Args = make(map[string]string, 0)
+		rawLogValue.Args = make(map[string]string)
 	}
 	*o = LogValue(rawLogValue)
 	return nil
@@ -226,7 +226,7 @@ type RecordsBatch struct {
 
 func (o RecordsBatch) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpRecordsBatch RecordsBatch
 	return safejson.Marshal(_tmpRecordsBatch(o))
@@ -239,7 +239,7 @@ func (o *RecordsBatch) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawRecordsBatch.Tags == nil {
-		rawRecordsBatch.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawRecordsBatch.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = RecordsBatch(rawRecordsBatch)
 	return nil
@@ -269,7 +269,7 @@ type RecordsBatchExternal struct {
 
 func (o RecordsBatchExternal) MarshalJSON() ([]byte, error) {
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpRecordsBatchExternal RecordsBatchExternal
 	return safejson.Marshal(_tmpRecordsBatchExternal(o))
@@ -282,7 +282,7 @@ func (o *RecordsBatchExternal) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawRecordsBatchExternal.Tags == nil {
-		rawRecordsBatchExternal.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawRecordsBatchExternal.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = RecordsBatchExternal(rawRecordsBatchExternal)
 	return nil
@@ -390,19 +390,19 @@ func (o *StructPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type TelegrafMetric struct {
 	// The values are expected to be either numeric or string values
-	Fields map[Field]interface{} `conjure-docs:"The values are expected to be either numeric or string values" json:"fields"`
+	Fields map[Field]interface{} `json:"fields"`
 	// The measurement name. Measurement name and field are concatenated when creating the Nominal channel name.
-	Name      MeasurementName              `conjure-docs:"The measurement name. Measurement name and field are concatenated when creating the Nominal channel name." json:"name"`
+	Name      MeasurementName              `json:"name"`
 	Tags      map[api.TagName]api.TagValue `json:"tags"`
 	Timestamp interface{}                  `json:"timestamp"`
 }
 
 func (o TelegrafMetric) MarshalJSON() ([]byte, error) {
 	if o.Fields == nil {
-		o.Fields = make(map[Field]interface{}, 0)
+		o.Fields = make(map[Field]interface{})
 	}
 	if o.Tags == nil {
-		o.Tags = make(map[api.TagName]api.TagValue, 0)
+		o.Tags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpTelegrafMetric TelegrafMetric
 	return safejson.Marshal(_tmpTelegrafMetric(o))
@@ -415,10 +415,10 @@ func (o *TelegrafMetric) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawTelegrafMetric.Fields == nil {
-		rawTelegrafMetric.Fields = make(map[Field]interface{}, 0)
+		rawTelegrafMetric.Fields = make(map[Field]interface{})
 	}
 	if rawTelegrafMetric.Tags == nil {
-		rawTelegrafMetric.Tags = make(map[api.TagName]api.TagValue, 0)
+		rawTelegrafMetric.Tags = make(map[api.TagName]api.TagValue)
 	}
 	*o = TelegrafMetric(rawTelegrafMetric)
 	return nil
@@ -469,7 +469,7 @@ type WriteBatchesRequest struct {
 
 	   Deprecated: Should not be used.
 	*/
-	AsynchronousInsert *bool `conjure-docs:"Is always true - setting this to false will do nothing." json:"asynchronousInsert,omitempty"`
+	AsynchronousInsert *bool `json:"asynchronousInsert,omitempty"`
 }
 
 func (o WriteBatchesRequest) MarshalJSON() ([]byte, error) {
@@ -517,7 +517,7 @@ type WriteBatchesRequestExternal struct {
 
 	   Deprecated: Should not be used.
 	*/
-	AsynchronousInsert *bool `conjure-docs:"Is always true - setting this to false will do nothing." json:"asynchronousInsert,omitempty"`
+	AsynchronousInsert *bool `json:"asynchronousInsert,omitempty"`
 }
 
 func (o WriteBatchesRequestExternal) MarshalJSON() ([]byte, error) {
@@ -559,9 +559,9 @@ func (o *WriteBatchesRequestExternal) UnmarshalYAML(unmarshal func(interface{}) 
 
 type WriteColumnBatchesRequest struct {
 	// Batches of columnar data to stream to Nominal. Each channel's data are provided as a column batch.
-	Batches []ColumnBatch `conjure-docs:"Batches of columnar data to stream to Nominal. Each channel's data are provided as a column batch." json:"batches"`
+	Batches []ColumnBatch `json:"batches"`
 	// RID of the datasource (e.g., for a Connection) or dataset to stream data into.
-	DataSourceRid rids.NominalDataSourceOrDatasetRid `conjure-docs:"RID of the datasource (e.g., for a Connection) or dataset to stream data into." json:"dataSourceRid"`
+	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid"`
 }
 
 func (o WriteColumnBatchesRequest) MarshalJSON() ([]byte, error) {
@@ -607,7 +607,7 @@ type WriteLogsRequest struct {
 	   If provided, the channel to which to write logs.
 	   If not provided, defaults to "logs"
 	*/
-	Channel *api.Channel `conjure-docs:"If provided, the channel to which to write logs.\nIf not provided, defaults to \"logs\"" json:"channel,omitempty"`
+	Channel *api.Channel `json:"channel,omitempty"`
 }
 
 func (o WriteLogsRequest) MarshalJSON() ([]byte, error) {
@@ -653,7 +653,7 @@ type WriteStructsRequest struct {
 	   If provided, the channel to which to write structs.
 	   If not provided, defaults to "structs"
 	*/
-	Channel *api.Channel `conjure-docs:"If provided, the channel to which to write structs.\nIf not provided, defaults to \"structs\"" json:"channel,omitempty"`
+	Channel *api.Channel `json:"channel,omitempty"`
 }
 
 func (o WriteStructsRequest) MarshalJSON() ([]byte, error) {

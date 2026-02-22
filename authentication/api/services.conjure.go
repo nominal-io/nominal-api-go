@@ -76,138 +76,124 @@ func NewAuthenticationServiceV2Client(client httpclient.Client) AuthenticationSe
 }
 
 func (c *authenticationServiceV2Client) GetMyProfile(ctx context.Context, authHeader bearertoken.Token) (UserV2, error) {
-	var defaultReturnVal UserV2
 	var returnVal *UserV2
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetMyProfile"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/profile"))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getMyProfile failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(UserV2), werror.WrapWithContextParams(ctx, err, "getMyProfile failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getMyProfile response cannot be nil")
+		return *new(UserV2), werror.ErrorWithContextParams(ctx, "getMyProfile response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) UpdateMyProfile(ctx context.Context, authHeader bearertoken.Token, updateMyProfileRequestArg UpdateMyProfileRequest) (UserV2, error) {
-	var defaultReturnVal UserV2
 	var returnVal *UserV2
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateMyProfile"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/profile"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(updateMyProfileRequestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateMyProfile failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(UserV2), werror.WrapWithContextParams(ctx, err, "updateMyProfile failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateMyProfile response cannot be nil")
+		return *new(UserV2), werror.ErrorWithContextParams(ctx, "updateMyProfile response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) GetMySettings(ctx context.Context, authHeader bearertoken.Token) (UserSettings, error) {
-	var defaultReturnVal UserSettings
 	var returnVal *UserSettings
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetMySettings"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/settings"))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getMySettings failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(UserSettings), werror.WrapWithContextParams(ctx, err, "getMySettings failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getMySettings response cannot be nil")
+		return *new(UserSettings), werror.ErrorWithContextParams(ctx, "getMySettings response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) UpdateMySettings(ctx context.Context, authHeader bearertoken.Token, userSettingsArg UserSettings) (UserSettings, error) {
-	var defaultReturnVal UserSettings
 	var returnVal *UserSettings
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateMySettings"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/settings"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(userSettingsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateMySettings failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(UserSettings), werror.WrapWithContextParams(ctx, err, "updateMySettings failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateMySettings response cannot be nil")
+		return *new(UserSettings), werror.ErrorWithContextParams(ctx, "updateMySettings response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) GetMyOrgSettings(ctx context.Context, authHeader bearertoken.Token) (OrgSettings, error) {
-	var defaultReturnVal OrgSettings
 	var returnVal *OrgSettings
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetMyOrgSettings"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/org/settings"))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getMyOrgSettings failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(OrgSettings), werror.WrapWithContextParams(ctx, err, "getMyOrgSettings failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getMyOrgSettings response cannot be nil")
+		return *new(OrgSettings), werror.ErrorWithContextParams(ctx, "getMyOrgSettings response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) UpdateMyOrgSettings(ctx context.Context, authHeader bearertoken.Token, orgSettingsArg OrgSettings) (OrgSettings, error) {
-	var defaultReturnVal OrgSettings
 	var returnVal *OrgSettings
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateMyOrgSettings"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/org/settings"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(orgSettingsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateMyOrgSettings failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(OrgSettings), werror.WrapWithContextParams(ctx, err, "updateMyOrgSettings failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateMyOrgSettings response cannot be nil")
+		return *new(OrgSettings), werror.ErrorWithContextParams(ctx, "updateMyOrgSettings response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) SearchUsersV2(ctx context.Context, authHeader bearertoken.Token, requestArg SearchUsersRequest) (SearchUsersResponseV2, error) {
-	var defaultReturnVal SearchUsersResponseV2
 	var returnVal *SearchUsersResponseV2
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchUsersV2"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/users"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchUsersV2 failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchUsersResponseV2), werror.WrapWithContextParams(ctx, err, "searchUsersV2 failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchUsersV2 response cannot be nil")
+		return *new(SearchUsersResponseV2), werror.ErrorWithContextParams(ctx, "searchUsersV2 response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -216,13 +202,12 @@ func (c *authenticationServiceV2Client) GetUsers(ctx context.Context, authHeader
 	var returnVal []UserV2
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetUsers"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/users/batch"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(userRidsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getUsers failed")
 	}
 	if returnVal == nil {
@@ -232,117 +217,105 @@ func (c *authenticationServiceV2Client) GetUsers(ctx context.Context, authHeader
 }
 
 func (c *authenticationServiceV2Client) GetUser(ctx context.Context, authHeader bearertoken.Token, userRidArg UserRid) (UserV2, error) {
-	var defaultReturnVal UserV2
 	var returnVal *UserV2
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetUser"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/users/%s", url.PathEscape(fmt.Sprint(userRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getUser failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(UserV2), werror.WrapWithContextParams(ctx, err, "getUser failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getUser response cannot be nil")
+		return *new(UserV2), werror.ErrorWithContextParams(ctx, "getUser response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) GetJwks(ctx context.Context) (Jwks, error) {
-	var defaultReturnVal Jwks
 	var returnVal *Jwks
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetJwks"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/jwks"))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getJwks failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(Jwks), werror.WrapWithContextParams(ctx, err, "getJwks failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getJwks response cannot be nil")
+		return *new(Jwks), werror.ErrorWithContextParams(ctx, "getJwks response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) GenerateMediaMtxToken(ctx context.Context, authHeader bearertoken.Token, requestArg GenerateMediaMtxTokenRequest) (GenerateMediaMtxTokenResponse, error) {
-	var defaultReturnVal GenerateMediaMtxTokenResponse
 	var returnVal *GenerateMediaMtxTokenResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GenerateMediaMtxToken"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/mediamtx/token"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "generateMediaMtxToken failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GenerateMediaMtxTokenResponse), werror.WrapWithContextParams(ctx, err, "generateMediaMtxToken failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "generateMediaMtxToken response cannot be nil")
+		return *new(GenerateMediaMtxTokenResponse), werror.ErrorWithContextParams(ctx, "generateMediaMtxToken response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) GetMyCoachmarkDismissals(ctx context.Context, authHeader bearertoken.Token, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error) {
-	var defaultReturnVal GetCoachmarkDismissalsResponse
 	var returnVal *GetCoachmarkDismissalsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetMyCoachmarkDismissals"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismissals"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getMyCoachmarkDismissals failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GetCoachmarkDismissalsResponse), werror.WrapWithContextParams(ctx, err, "getMyCoachmarkDismissals failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getMyCoachmarkDismissals response cannot be nil")
+		return *new(GetCoachmarkDismissalsResponse), werror.ErrorWithContextParams(ctx, "getMyCoachmarkDismissals response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) DismissMyCoachmark(ctx context.Context, authHeader bearertoken.Token, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error) {
-	var defaultReturnVal CoachmarkDismissal
 	var returnVal *CoachmarkDismissal
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DismissMyCoachmark"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismiss"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "dismissMyCoachmark failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(CoachmarkDismissal), werror.WrapWithContextParams(ctx, err, "dismissMyCoachmark failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "dismissMyCoachmark response cannot be nil")
+		return *new(CoachmarkDismissal), werror.ErrorWithContextParams(ctx, "dismissMyCoachmark response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *authenticationServiceV2Client) IsMyCoachmarkDismissed(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) (bool, error) {
-	var defaultReturnVal bool
 	var returnVal *bool
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("IsMyCoachmarkDismissed"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismissed/%s", url.PathEscape(fmt.Sprint(coachmarkIdArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "isMyCoachmarkDismissed failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(bool), werror.WrapWithContextParams(ctx, err, "isMyCoachmarkDismissed failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "isMyCoachmarkDismissed response cannot be nil")
+		return *new(bool), werror.ErrorWithContextParams(ctx, "isMyCoachmarkDismissed response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -350,11 +323,10 @@ func (c *authenticationServiceV2Client) IsMyCoachmarkDismissed(ctx context.Conte
 func (c *authenticationServiceV2Client) ResetMyCoachmarkDismissal(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ResetMyCoachmarkDismissal"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismissals/%s", url.PathEscape(fmt.Sprint(coachmarkIdArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "resetMyCoachmarkDismissal failed")
 	}
 	return nil
@@ -493,82 +465,73 @@ type authenticationServiceV2ClientWithTokenProvider struct {
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) GetMyProfile(ctx context.Context) (UserV2, error) {
-	var defaultReturnVal UserV2
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(UserV2), err
 	}
 	return c.client.GetMyProfile(ctx, bearertoken.Token(token))
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) UpdateMyProfile(ctx context.Context, updateMyProfileRequestArg UpdateMyProfileRequest) (UserV2, error) {
-	var defaultReturnVal UserV2
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(UserV2), err
 	}
 	return c.client.UpdateMyProfile(ctx, bearertoken.Token(token), updateMyProfileRequestArg)
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) GetMySettings(ctx context.Context) (UserSettings, error) {
-	var defaultReturnVal UserSettings
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(UserSettings), err
 	}
 	return c.client.GetMySettings(ctx, bearertoken.Token(token))
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) UpdateMySettings(ctx context.Context, userSettingsArg UserSettings) (UserSettings, error) {
-	var defaultReturnVal UserSettings
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(UserSettings), err
 	}
 	return c.client.UpdateMySettings(ctx, bearertoken.Token(token), userSettingsArg)
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) GetMyOrgSettings(ctx context.Context) (OrgSettings, error) {
-	var defaultReturnVal OrgSettings
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(OrgSettings), err
 	}
 	return c.client.GetMyOrgSettings(ctx, bearertoken.Token(token))
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) UpdateMyOrgSettings(ctx context.Context, orgSettingsArg OrgSettings) (OrgSettings, error) {
-	var defaultReturnVal OrgSettings
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(OrgSettings), err
 	}
 	return c.client.UpdateMyOrgSettings(ctx, bearertoken.Token(token), orgSettingsArg)
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) SearchUsersV2(ctx context.Context, requestArg SearchUsersRequest) (SearchUsersResponseV2, error) {
-	var defaultReturnVal SearchUsersResponseV2
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(SearchUsersResponseV2), err
 	}
 	return c.client.SearchUsersV2(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) GetUsers(ctx context.Context, userRidsArg []UserRid) ([]UserV2, error) {
-	var defaultReturnVal []UserV2
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetUsers(ctx, bearertoken.Token(token), userRidsArg)
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) GetUser(ctx context.Context, userRidArg UserRid) (UserV2, error) {
-	var defaultReturnVal UserV2
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(UserV2), err
 	}
 	return c.client.GetUser(ctx, bearertoken.Token(token), userRidArg)
 }
@@ -578,37 +541,33 @@ func (c *authenticationServiceV2ClientWithTokenProvider) GetJwks(ctx context.Con
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) GenerateMediaMtxToken(ctx context.Context, requestArg GenerateMediaMtxTokenRequest) (GenerateMediaMtxTokenResponse, error) {
-	var defaultReturnVal GenerateMediaMtxTokenResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(GenerateMediaMtxTokenResponse), err
 	}
 	return c.client.GenerateMediaMtxToken(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) GetMyCoachmarkDismissals(ctx context.Context, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error) {
-	var defaultReturnVal GetCoachmarkDismissalsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(GetCoachmarkDismissalsResponse), err
 	}
 	return c.client.GetMyCoachmarkDismissals(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) DismissMyCoachmark(ctx context.Context, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error) {
-	var defaultReturnVal CoachmarkDismissal
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(CoachmarkDismissal), err
 	}
 	return c.client.DismissMyCoachmark(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *authenticationServiceV2ClientWithTokenProvider) IsMyCoachmarkDismissed(ctx context.Context, coachmarkIdArg string) (bool, error) {
-	var defaultReturnVal bool
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(bool), err
 	}
 	return c.client.IsMyCoachmarkDismissed(ctx, bearertoken.Token(token), coachmarkIdArg)
 }

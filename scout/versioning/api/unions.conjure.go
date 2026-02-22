@@ -83,7 +83,7 @@ func (u *CompactionStrategy) AcceptFuncs(olderThanDaysFunc func(int) error, unkn
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CompactionStrategy type")
 		}
 		return unknownFunc(u.typ)
 	case "olderThanDays":
@@ -94,7 +94,7 @@ func (u *CompactionStrategy) AcceptFuncs(olderThanDaysFunc func(int) error, unkn
 	}
 }
 
-func (u *CompactionStrategy) OlderThanDaysNoopSuccess(int) error {
+func (u *CompactionStrategy) OlderThanDaysNoopSuccess(_ int) error {
 	return nil
 }
 

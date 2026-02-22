@@ -12,6 +12,71 @@ import (
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 )
 
+type DataScopeInputValueWithT[T any] DataScopeInputValue
+
+func (u *DataScopeInputValueWithT[T]) Accept(ctx context.Context, v DataScopeInputValueVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "asset":
+		if u.asset == nil {
+			return result, fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAsset(ctx, *u.asset)
+	case "run":
+		if u.run == nil {
+			return result, fmt.Errorf("field \"run\" is required")
+		}
+		return v.VisitRun(ctx, *u.run)
+	}
+}
+
+func (u *DataScopeInputValueWithT[T]) AcceptFuncs(assetFunc func(AssetDataScopeInputValue) (T, error), runFunc func(RunDataScopeInputValue) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "asset":
+		if u.asset == nil {
+			return result, fmt.Errorf("field \"asset\" is required")
+		}
+		return assetFunc(*u.asset)
+	case "run":
+		if u.run == nil {
+			return result, fmt.Errorf("field \"run\" is required")
+		}
+		return runFunc(*u.run)
+	}
+}
+
+func (u *DataScopeInputValueWithT[T]) AssetNoopSuccess(AssetDataScopeInputValue) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DataScopeInputValueWithT[T]) RunNoopSuccess(RunDataScopeInputValue) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DataScopeInputValueWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type DataScopeInputValueVisitorWithT[T any] interface {
+	VisitAsset(ctx context.Context, v AssetDataScopeInputValue) (T, error)
+	VisitRun(ctx context.Context, v RunDataScopeInputValue) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type InputTypeWithT[T any] InputType
 
 func (u *InputTypeWithT[T]) Accept(ctx context.Context, v InputTypeVisitorWithT[T]) (T, error) {
@@ -81,10 +146,15 @@ func (u *OffsetWithT[T]) Accept(ctx context.Context, v OffsetVisitorWithT[T]) (T
 			return result, fmt.Errorf("field \"runAlign\" is required")
 		}
 		return v.VisitRunAlign(ctx, *u.runAlign)
+	case "eventAlign":
+		if u.eventAlign == nil {
+			return result, fmt.Errorf("field \"eventAlign\" is required")
+		}
+		return v.VisitEventAlign(ctx, *u.eventAlign)
 	}
 }
 
-func (u *OffsetWithT[T]) AcceptFuncs(customFunc func(api.UserDuration) (T, error), runAlignFunc func(RunAlignment) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *OffsetWithT[T]) AcceptFuncs(customFunc func(api.UserDuration) (T, error), runAlignFunc func(RunAlignment) (T, error), eventAlignFunc func(EventAlignment) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -102,6 +172,11 @@ func (u *OffsetWithT[T]) AcceptFuncs(customFunc func(api.UserDuration) (T, error
 			return result, fmt.Errorf("field \"runAlign\" is required")
 		}
 		return runAlignFunc(*u.runAlign)
+	case "eventAlign":
+		if u.eventAlign == nil {
+			return result, fmt.Errorf("field \"eventAlign\" is required")
+		}
+		return eventAlignFunc(*u.eventAlign)
 	}
 }
 
@@ -115,6 +190,11 @@ func (u *OffsetWithT[T]) RunAlignNoopSuccess(RunAlignment) (T, error) {
 	return result, nil
 }
 
+func (u *OffsetWithT[T]) EventAlignNoopSuccess(EventAlignment) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *OffsetWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -123,6 +203,7 @@ func (u *OffsetWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type OffsetVisitorWithT[T any] interface {
 	VisitCustom(ctx context.Context, v api.UserDuration) (T, error)
 	VisitRunAlign(ctx context.Context, v RunAlignment) (T, error)
+	VisitEventAlign(ctx context.Context, v EventAlignment) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -237,6 +318,55 @@ func (u *UnifiedWorkbookContentWithT[T]) ErrorOnUnknown(typeName string) (T, err
 type UnifiedWorkbookContentVisitorWithT[T any] interface {
 	VisitWorkbook(ctx context.Context, v WorkbookContent) (T, error)
 	VisitComparisonWorkbook(ctx context.Context, v api1.ComparisonWorkbookContent) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type WorkbookDataScopeInputsWithT[T any] WorkbookDataScopeInputs
+
+func (u *WorkbookDataScopeInputsWithT[T]) Accept(ctx context.Context, v WorkbookDataScopeInputsVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *WorkbookDataScopeInputsWithT[T]) AcceptFuncs(v1Func func(WorkbookDataScopeInputsV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *WorkbookDataScopeInputsWithT[T]) V1NoopSuccess(WorkbookDataScopeInputsV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookDataScopeInputsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type WorkbookDataScopeInputsVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v WorkbookDataScopeInputsV1) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

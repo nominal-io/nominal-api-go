@@ -65,61 +65,55 @@ func NewAssetServiceClient(client httpclient.Client) AssetServiceClient {
 }
 
 func (c *assetServiceClient) CreateAsset(ctx context.Context, authHeader bearertoken.Token, detailsArg api.CreateAssetRequest) (api.Asset, error) {
-	var defaultReturnVal api.Asset
 	var returnVal *api.Asset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateAsset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/asset"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(detailsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createAsset failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.Asset), werror.WrapWithContextParams(ctx, err, "createAsset failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createAsset response cannot be nil")
+		return *new(api.Asset), werror.ErrorWithContextParams(ctx, "createAsset response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *assetServiceClient) UpdateAsset(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, detailsArg api.UpdateAssetRequest) (api.Asset, error) {
-	var defaultReturnVal api.Asset
 	var returnVal *api.Asset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateAsset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/asset/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(detailsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateAsset failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api.Asset), werror.WrapWithContextParams(ctx, err, "updateAsset failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateAsset response cannot be nil")
+		return *new(api.Asset), werror.ErrorWithContextParams(ctx, "updateAsset response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *assetServiceClient) AddDataScopesToAsset(ctx context.Context, authHeader bearertoken.Token, assetRidArg api1.AssetRid, requestArg api.AddDataScopesToAssetRequest) (api.Asset, error) {
-	var defaultReturnVal api.Asset
 	var returnVal *api.Asset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("AddDataScopesToAsset"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/asset/%s/data-sources", url.PathEscape(fmt.Sprint(assetRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "addDataScopesToAsset failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.Asset), werror.WrapWithContextParams(ctx, err, "addDataScopesToAsset failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "addDataScopesToAsset response cannot be nil")
+		return *new(api.Asset), werror.ErrorWithContextParams(ctx, "addDataScopesToAsset response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -128,13 +122,12 @@ func (c *assetServiceClient) GetAssets(ctx context.Context, authHeader bearertok
 	var returnVal map[api1.AssetRid]api.Asset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAssets"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/asset/multiple"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getAssets failed")
 	}
 	if returnVal == nil {
@@ -147,12 +140,11 @@ func (c *assetServiceClient) GetAssetsByDataSource(ctx context.Context, authHead
 	var returnVal []api.Asset
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAssetsByDataSource"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/asset/by-data-source/%s", url.PathEscape(fmt.Sprint(dataSourceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getAssetsByDataSource failed")
 	}
 	if returnVal == nil {
@@ -164,7 +156,6 @@ func (c *assetServiceClient) GetAssetsByDataSource(ctx context.Context, authHead
 func (c *assetServiceClient) Archive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, includeLinkedWorkbooksArg *bool) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Archive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/archive/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	queryParams := make(url.Values)
@@ -173,7 +164,7 @@ func (c *assetServiceClient) Archive(ctx context.Context, authHeader bearertoken
 	}
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archive failed")
 	}
 	return nil
@@ -182,7 +173,6 @@ func (c *assetServiceClient) Archive(ctx context.Context, authHeader bearertoken
 func (c *assetServiceClient) Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, includeLinkedWorkbooksArg *bool) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Unarchive"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/unarchive/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	queryParams := make(url.Values)
@@ -191,48 +181,44 @@ func (c *assetServiceClient) Unarchive(ctx context.Context, authHeader bearertok
 	}
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchive failed")
 	}
 	return nil
 }
 
 func (c *assetServiceClient) SearchAssets(ctx context.Context, authHeader bearertoken.Token, searchAssetsRequestArg api.SearchAssetsRequest) (api.SearchAssetsResponse, error) {
-	var defaultReturnVal api.SearchAssetsResponse
 	var returnVal *api.SearchAssetsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchAssets"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/search-assets"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(searchAssetsRequestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchAssets failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SearchAssetsResponse), werror.WrapWithContextParams(ctx, err, "searchAssets failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchAssets response cannot be nil")
+		return *new(api.SearchAssetsResponse), werror.ErrorWithContextParams(ctx, "searchAssets response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *assetServiceClient) SearchTypes(ctx context.Context, authHeader bearertoken.Token, searchTypesRequestArg api.SearchTypesRequest) (api.SearchTypesResponse, error) {
-	var defaultReturnVal api.SearchTypesResponse
 	var returnVal *api.SearchTypesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchTypes"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/search-types"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(searchTypesRequestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchTypes failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SearchTypesResponse), werror.WrapWithContextParams(ctx, err, "searchTypes failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchTypes response cannot be nil")
+		return *new(api.SearchTypesResponse), werror.ErrorWithContextParams(ctx, "searchTypes response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -240,12 +226,11 @@ func (c *assetServiceClient) SearchTypes(ctx context.Context, authHeader bearert
 func (c *assetServiceClient) UpdateAssetAttachments(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, requestArg api.UpdateAttachmentsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateAssetAttachments"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/asset/%s/attachments", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "updateAssetAttachments failed")
 	}
 	return nil
@@ -254,53 +239,48 @@ func (c *assetServiceClient) UpdateAssetAttachments(ctx context.Context, authHea
 func (c *assetServiceClient) UpdateAssetRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, requestArg api.UpdateAssetRefNamesRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateAssetRefNames"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/asset/%s/ref-names", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "updateAssetRefNames failed")
 	}
 	return nil
 }
 
 func (c *assetServiceClient) CreateType(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateTypeRequest) (api.Type, error) {
-	var defaultReturnVal api.Type
 	var returnVal *api.Type
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateType"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/type"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createType failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.Type), werror.WrapWithContextParams(ctx, err, "createType failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createType response cannot be nil")
+		return *new(api.Type), werror.ErrorWithContextParams(ctx, "createType response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *assetServiceClient) UpdateType(ctx context.Context, authHeader bearertoken.Token, typeRidArg api1.TypeRid, requestArg api.UpdateTypeRequest) (api.Type, error) {
-	var defaultReturnVal api.Type
 	var returnVal *api.Type
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateType"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/type/%s", url.PathEscape(fmt.Sprint(typeRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateType failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api.Type), werror.WrapWithContextParams(ctx, err, "updateType failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateType response cannot be nil")
+		return *new(api.Type), werror.ErrorWithContextParams(ctx, "updateType response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -309,13 +289,12 @@ func (c *assetServiceClient) GetTypes(ctx context.Context, authHeader bearertoke
 	var returnVal map[api1.TypeRid]api.Type
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetTypes"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/type/multiple"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(ridsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getTypes failed")
 	}
 	if returnVal == nil {
@@ -328,13 +307,12 @@ func (c *assetServiceClient) GetTypesForDatasource(ctx context.Context, authHead
 	var returnVal []api.Type
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetTypesForDatasource"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/type/datasource"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(datasourceRidArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "getTypesForDatasource failed")
 	}
 	if returnVal == nil {
@@ -346,11 +324,10 @@ func (c *assetServiceClient) GetTypesForDatasource(ctx context.Context, authHead
 func (c *assetServiceClient) DeleteType(ctx context.Context, authHeader bearertoken.Token, ridArg api1.TypeRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteType"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("DELETE"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/type/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "deleteType failed")
 	}
 	return nil
@@ -359,11 +336,10 @@ func (c *assetServiceClient) DeleteType(ctx context.Context, authHeader bearerto
 func (c *assetServiceClient) ArchiveType(ctx context.Context, authHeader bearertoken.Token, ridArg api1.TypeRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveType"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/type/archive/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archiveType failed")
 	}
 	return nil
@@ -372,11 +348,10 @@ func (c *assetServiceClient) ArchiveType(ctx context.Context, authHeader bearert
 func (c *assetServiceClient) UnarchiveType(ctx context.Context, authHeader bearertoken.Token, ridArg api1.TypeRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveType"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/type/unarchive/%s", url.PathEscape(fmt.Sprint(ridArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchiveType failed")
 	}
 	return nil
@@ -513,46 +488,41 @@ type assetServiceClientWithTokenProvider struct {
 }
 
 func (c *assetServiceClientWithTokenProvider) CreateAsset(ctx context.Context, detailsArg api.CreateAssetRequest) (api.Asset, error) {
-	var defaultReturnVal api.Asset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Asset), err
 	}
 	return c.client.CreateAsset(ctx, bearertoken.Token(token), detailsArg)
 }
 
 func (c *assetServiceClientWithTokenProvider) UpdateAsset(ctx context.Context, ridArg api1.AssetRid, detailsArg api.UpdateAssetRequest) (api.Asset, error) {
-	var defaultReturnVal api.Asset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Asset), err
 	}
 	return c.client.UpdateAsset(ctx, bearertoken.Token(token), ridArg, detailsArg)
 }
 
 func (c *assetServiceClientWithTokenProvider) AddDataScopesToAsset(ctx context.Context, assetRidArg api1.AssetRid, requestArg api.AddDataScopesToAssetRequest) (api.Asset, error) {
-	var defaultReturnVal api.Asset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Asset), err
 	}
 	return c.client.AddDataScopesToAsset(ctx, bearertoken.Token(token), assetRidArg, requestArg)
 }
 
 func (c *assetServiceClientWithTokenProvider) GetAssets(ctx context.Context, ridsArg []api1.AssetRid) (map[api1.AssetRid]api.Asset, error) {
-	var defaultReturnVal map[api1.AssetRid]api.Asset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetAssets(ctx, bearertoken.Token(token), ridsArg)
 }
 
 func (c *assetServiceClientWithTokenProvider) GetAssetsByDataSource(ctx context.Context, dataSourceRidArg rids.DataSourceRid) ([]api.Asset, error) {
-	var defaultReturnVal []api.Asset
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetAssetsByDataSource(ctx, bearertoken.Token(token), dataSourceRidArg)
 }
@@ -574,19 +544,17 @@ func (c *assetServiceClientWithTokenProvider) Unarchive(ctx context.Context, rid
 }
 
 func (c *assetServiceClientWithTokenProvider) SearchAssets(ctx context.Context, searchAssetsRequestArg api.SearchAssetsRequest) (api.SearchAssetsResponse, error) {
-	var defaultReturnVal api.SearchAssetsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.SearchAssetsResponse), err
 	}
 	return c.client.SearchAssets(ctx, bearertoken.Token(token), searchAssetsRequestArg)
 }
 
 func (c *assetServiceClientWithTokenProvider) SearchTypes(ctx context.Context, searchTypesRequestArg api.SearchTypesRequest) (api.SearchTypesResponse, error) {
-	var defaultReturnVal api.SearchTypesResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.SearchTypesResponse), err
 	}
 	return c.client.SearchTypes(ctx, bearertoken.Token(token), searchTypesRequestArg)
 }
@@ -608,37 +576,33 @@ func (c *assetServiceClientWithTokenProvider) UpdateAssetRefNames(ctx context.Co
 }
 
 func (c *assetServiceClientWithTokenProvider) CreateType(ctx context.Context, requestArg api.CreateTypeRequest) (api.Type, error) {
-	var defaultReturnVal api.Type
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Type), err
 	}
 	return c.client.CreateType(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *assetServiceClientWithTokenProvider) UpdateType(ctx context.Context, typeRidArg api1.TypeRid, requestArg api.UpdateTypeRequest) (api.Type, error) {
-	var defaultReturnVal api.Type
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.Type), err
 	}
 	return c.client.UpdateType(ctx, bearertoken.Token(token), typeRidArg, requestArg)
 }
 
 func (c *assetServiceClientWithTokenProvider) GetTypes(ctx context.Context, ridsArg []api1.TypeRid) (map[api1.TypeRid]api.Type, error) {
-	var defaultReturnVal map[api1.TypeRid]api.Type
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetTypes(ctx, bearertoken.Token(token), ridsArg)
 }
 
 func (c *assetServiceClientWithTokenProvider) GetTypesForDatasource(ctx context.Context, datasourceRidArg rids.DataSourceRid) ([]api.Type, error) {
-	var defaultReturnVal []api.Type
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.GetTypesForDatasource(ctx, bearertoken.Token(token), datasourceRidArg)
 }

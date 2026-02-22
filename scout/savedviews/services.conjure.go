@@ -51,100 +51,90 @@ func NewSavedViewServiceClient(client httpclient.Client) SavedViewServiceClient 
 }
 
 func (c *savedViewServiceClient) CreateSavedView(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSavedViewRequest) (api.CreateSavedViewResponse, error) {
-	var defaultReturnVal api.CreateSavedViewResponse
 	var returnVal *api.CreateSavedViewResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateSavedView"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "createSavedView failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.CreateSavedViewResponse), werror.WrapWithContextParams(ctx, err, "createSavedView failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "createSavedView response cannot be nil")
+		return *new(api.CreateSavedViewResponse), werror.ErrorWithContextParams(ctx, "createSavedView response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *savedViewServiceClient) GetSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid) (api.GetSavedViewResponse, error) {
-	var defaultReturnVal api.GetSavedViewResponse
 	var returnVal *api.GetSavedViewResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSavedView"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1/%s", url.PathEscape(fmt.Sprint(savedViewRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getSavedView failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.GetSavedViewResponse), werror.WrapWithContextParams(ctx, err, "getSavedView failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getSavedView response cannot be nil")
+		return *new(api.GetSavedViewResponse), werror.ErrorWithContextParams(ctx, "getSavedView response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *savedViewServiceClient) BatchGetSavedViews(ctx context.Context, authHeader bearertoken.Token, savedViewRidsArg []api1.SavedViewRid) (api.BatchGetSavedViewsResponse, error) {
-	var defaultReturnVal api.BatchGetSavedViewsResponse
 	var returnVal *api.BatchGetSavedViewsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetSavedViews"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1/batch-get"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(savedViewRidsArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchGetSavedViews failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchGetSavedViewsResponse), werror.WrapWithContextParams(ctx, err, "batchGetSavedViews failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchGetSavedViews response cannot be nil")
+		return *new(api.BatchGetSavedViewsResponse), werror.ErrorWithContextParams(ctx, "batchGetSavedViews response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *savedViewServiceClient) SearchSavedViews(ctx context.Context, authHeader bearertoken.Token, requestArg api.SearchSavedViewsRequest) (api.SearchSavedViewsResponse, error) {
-	var defaultReturnVal api.SearchSavedViewsResponse
 	var returnVal *api.SearchSavedViewsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchSavedViews"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1/search"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "searchSavedViews failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SearchSavedViewsResponse), werror.WrapWithContextParams(ctx, err, "searchSavedViews failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "searchSavedViews response cannot be nil")
+		return *new(api.SearchSavedViewsResponse), werror.ErrorWithContextParams(ctx, "searchSavedViews response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *savedViewServiceClient) UpdateSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid, requestArg api.UpdateSavedViewRequest) (api.UpdateSavedViewResponse, error) {
-	var defaultReturnVal api.UpdateSavedViewResponse
 	var returnVal *api.UpdateSavedViewResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateSavedView"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1/%s", url.PathEscape(fmt.Sprint(savedViewRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "updateSavedView failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api.UpdateSavedViewResponse), werror.WrapWithContextParams(ctx, err, "updateSavedView failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "updateSavedView response cannot be nil")
+		return *new(api.UpdateSavedViewResponse), werror.ErrorWithContextParams(ctx, "updateSavedView response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -152,11 +142,10 @@ func (c *savedViewServiceClient) UpdateSavedView(ctx context.Context, authHeader
 func (c *savedViewServiceClient) ArchiveSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveSavedView"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1/%s/archive", url.PathEscape(fmt.Sprint(savedViewRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "archiveSavedView failed")
 	}
 	return nil
@@ -165,11 +154,10 @@ func (c *savedViewServiceClient) ArchiveSavedView(ctx context.Context, authHeade
 func (c *savedViewServiceClient) UnarchiveSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveSavedView"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/saved-views/v1/%s/unarchive", url.PathEscape(fmt.Sprint(savedViewRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "unarchiveSavedView failed")
 	}
 	return nil
@@ -249,46 +237,41 @@ type savedViewServiceClientWithTokenProvider struct {
 }
 
 func (c *savedViewServiceClientWithTokenProvider) CreateSavedView(ctx context.Context, requestArg api.CreateSavedViewRequest) (api.CreateSavedViewResponse, error) {
-	var defaultReturnVal api.CreateSavedViewResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.CreateSavedViewResponse), err
 	}
 	return c.client.CreateSavedView(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *savedViewServiceClientWithTokenProvider) GetSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid) (api.GetSavedViewResponse, error) {
-	var defaultReturnVal api.GetSavedViewResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.GetSavedViewResponse), err
 	}
 	return c.client.GetSavedView(ctx, bearertoken.Token(token), savedViewRidArg)
 }
 
 func (c *savedViewServiceClientWithTokenProvider) BatchGetSavedViews(ctx context.Context, savedViewRidsArg []api1.SavedViewRid) (api.BatchGetSavedViewsResponse, error) {
-	var defaultReturnVal api.BatchGetSavedViewsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BatchGetSavedViewsResponse), err
 	}
 	return c.client.BatchGetSavedViews(ctx, bearertoken.Token(token), savedViewRidsArg)
 }
 
 func (c *savedViewServiceClientWithTokenProvider) SearchSavedViews(ctx context.Context, requestArg api.SearchSavedViewsRequest) (api.SearchSavedViewsResponse, error) {
-	var defaultReturnVal api.SearchSavedViewsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.SearchSavedViewsResponse), err
 	}
 	return c.client.SearchSavedViews(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *savedViewServiceClientWithTokenProvider) UpdateSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid, requestArg api.UpdateSavedViewRequest) (api.UpdateSavedViewResponse, error) {
-	var defaultReturnVal api.UpdateSavedViewResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.UpdateSavedViewResponse), err
 	}
 	return c.client.UpdateSavedView(ctx, bearertoken.Token(token), savedViewRidArg, requestArg)
 }

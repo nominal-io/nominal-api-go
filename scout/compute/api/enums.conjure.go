@@ -1316,6 +1316,73 @@ func (e *PeriodogramMethod) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// Identifies where a compute query originated from. Used for observability (perf metrics, ClickHouse log_comment)
+type QuerySource struct {
+	val QuerySource_Value
+}
+
+type QuerySource_Value string
+
+const (
+	QuerySource_WORKBOOK            QuerySource_Value = "WORKBOOK"
+	QuerySource_CHECKLIST           QuerySource_Value = "CHECKLIST"
+	QuerySource_STREAMING_CHECKLIST QuerySource_Value = "STREAMING_CHECKLIST"
+	QuerySource_EXPORT              QuerySource_Value = "EXPORT"
+	QuerySource_PERSISTENT_COMPUTE  QuerySource_Value = "PERSISTENT_COMPUTE"
+	QuerySource_UNKNOWN             QuerySource_Value = "UNKNOWN"
+)
+
+// QuerySource_Values returns all known variants of QuerySource.
+func QuerySource_Values() []QuerySource_Value {
+	return []QuerySource_Value{QuerySource_WORKBOOK, QuerySource_CHECKLIST, QuerySource_STREAMING_CHECKLIST, QuerySource_EXPORT, QuerySource_PERSISTENT_COMPUTE}
+}
+
+func New_QuerySource(value QuerySource_Value) QuerySource {
+	return QuerySource{val: value}
+}
+
+// IsUnknown returns false for all known variants of QuerySource and true otherwise.
+func (e QuerySource) IsUnknown() bool {
+	switch e.val {
+	case QuerySource_WORKBOOK, QuerySource_CHECKLIST, QuerySource_STREAMING_CHECKLIST, QuerySource_EXPORT, QuerySource_PERSISTENT_COMPUTE:
+		return false
+	}
+	return true
+}
+
+func (e QuerySource) Value() QuerySource_Value {
+	if e.IsUnknown() {
+		return QuerySource_UNKNOWN
+	}
+	return e.val
+}
+
+func (e QuerySource) String() string {
+	return string(e.val)
+}
+
+func (e QuerySource) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *QuerySource) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_QuerySource(QuerySource_Value(v))
+	case "WORKBOOK":
+		*e = New_QuerySource(QuerySource_WORKBOOK)
+	case "CHECKLIST":
+		*e = New_QuerySource(QuerySource_CHECKLIST)
+	case "STREAMING_CHECKLIST":
+		*e = New_QuerySource(QuerySource_STREAMING_CHECKLIST)
+	case "EXPORT":
+		*e = New_QuerySource(QuerySource_EXPORT)
+	case "PERSISTENT_COMPUTE":
+		*e = New_QuerySource(QuerySource_PERSISTENT_COMPUTE)
+	}
+	return nil
+}
+
 type RangePaddingConfiguration struct {
 	val RangePaddingConfiguration_Value
 }

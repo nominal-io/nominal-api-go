@@ -85,7 +85,7 @@ func (u *CartesianNode) AcceptFuncs(scatterFunc func(ScatterNode) error, unknown
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in CartesianNode type")
 		}
 		return unknownFunc(u.typ)
 	case "scatter":
@@ -96,7 +96,7 @@ func (u *CartesianNode) AcceptFuncs(scatterFunc func(ScatterNode) error, unknown
 	}
 }
 
-func (u *CartesianNode) ScatterNoopSuccess(ScatterNode) error {
+func (u *CartesianNode) ScatterNoopSuccess(_ ScatterNode) error {
 	return nil
 }
 
@@ -276,7 +276,7 @@ func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRangesNode) error,
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in ComputableNode type")
 		}
 		return unknownFunc(u.typ)
 	case "ranges":
@@ -307,23 +307,23 @@ func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRangesNode) error,
 	}
 }
 
-func (u *ComputableNode) RangesNoopSuccess(SummarizeRangesNode) error {
+func (u *ComputableNode) RangesNoopSuccess(_ SummarizeRangesNode) error {
 	return nil
 }
 
-func (u *ComputableNode) SeriesNoopSuccess(SummarizeSeriesNode) error {
+func (u *ComputableNode) SeriesNoopSuccess(_ SummarizeSeriesNode) error {
 	return nil
 }
 
-func (u *ComputableNode) ValueNoopSuccess(SelectValueNode) error {
+func (u *ComputableNode) ValueNoopSuccess(_ SelectValueNode) error {
 	return nil
 }
 
-func (u *ComputableNode) CartesianNoopSuccess(SummarizeCartesianNode) error {
+func (u *ComputableNode) CartesianNoopSuccess(_ SummarizeCartesianNode) error {
 	return nil
 }
 
-func (u *ComputableNode) FrequencyNoopSuccess(FrequencyDomainNode) error {
+func (u *ComputableNode) FrequencyNoopSuccess(_ FrequencyDomainNode) error {
 	return nil
 }
 
@@ -553,7 +553,7 @@ func (u *EnumSeriesNode) AcceptFuncs(rawFunc func(api.Reference) error, timeRang
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in EnumSeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -579,19 +579,19 @@ func (u *EnumSeriesNode) AcceptFuncs(rawFunc func(api.Reference) error, timeRang
 	}
 }
 
-func (u *EnumSeriesNode) RawNoopSuccess(api.Reference) error {
+func (u *EnumSeriesNode) RawNoopSuccess(_ api.Reference) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) TimeRangeFilterNoopSuccess(EnumTimeRangeFilterSeriesNode) error {
+func (u *EnumSeriesNode) TimeRangeFilterNoopSuccess(_ EnumTimeRangeFilterSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) TimeShiftNoopSuccess(EnumTimeShiftSeriesNode) error {
+func (u *EnumSeriesNode) TimeShiftNoopSuccess(_ EnumTimeShiftSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) UnionNoopSuccess(EnumUnionSeriesNode) error {
+func (u *EnumSeriesNode) UnionNoopSuccess(_ EnumUnionSeriesNode) error {
 	return nil
 }
 
@@ -763,7 +763,7 @@ func (u *FrequencyDomainNode) AcceptFuncs(fftFunc func(FftNode) error, unknownFu
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in FrequencyDomainNode type")
 		}
 		return unknownFunc(u.typ)
 	case "fft":
@@ -774,7 +774,7 @@ func (u *FrequencyDomainNode) AcceptFuncs(fftFunc func(FftNode) error, unknownFu
 	}
 }
 
-func (u *FrequencyDomainNode) FftNoopSuccess(FftNode) error {
+func (u *FrequencyDomainNode) FftNoopSuccess(_ FftNode) error {
 	return nil
 }
 
@@ -1052,7 +1052,7 @@ func (u *NumericSeriesNode) AcceptFuncs(rawFunc func(api.Reference) error, arith
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in NumericSeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -1118,51 +1118,51 @@ func (u *NumericSeriesNode) AcceptFuncs(rawFunc func(api.Reference) error, arith
 	}
 }
 
-func (u *NumericSeriesNode) RawNoopSuccess(api.Reference) error {
+func (u *NumericSeriesNode) RawNoopSuccess(_ api.Reference) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) ArithmeticNoopSuccess(ArithmeticSeriesNode) error {
+func (u *NumericSeriesNode) ArithmeticNoopSuccess(_ ArithmeticSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) BitOperationNoopSuccess(BitOperationSeriesNode) error {
+func (u *NumericSeriesNode) BitOperationNoopSuccess(_ BitOperationSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) CumulativeSumNoopSuccess(CumulativeSumSeriesNode) error {
+func (u *NumericSeriesNode) CumulativeSumNoopSuccess(_ CumulativeSumSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) DerivativeNoopSuccess(DerivativeSeriesNode) error {
+func (u *NumericSeriesNode) DerivativeNoopSuccess(_ DerivativeSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) RollingOperationNoopSuccess(RollingOperationSeriesNode) error {
+func (u *NumericSeriesNode) RollingOperationNoopSuccess(_ RollingOperationSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) UnaryArithmeticNoopSuccess(UnaryArithmeticSeriesNode) error {
+func (u *NumericSeriesNode) UnaryArithmeticNoopSuccess(_ UnaryArithmeticSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) TimeDifferenceNoopSuccess(TimeDifferenceSeriesNode) error {
+func (u *NumericSeriesNode) TimeDifferenceNoopSuccess(_ TimeDifferenceSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) TimeRangeFilterNoopSuccess(NumericTimeRangeFilterSeriesNode) error {
+func (u *NumericSeriesNode) TimeRangeFilterNoopSuccess(_ NumericTimeRangeFilterSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) TimeShiftNoopSuccess(NumericTimeShiftSeriesNode) error {
+func (u *NumericSeriesNode) TimeShiftNoopSuccess(_ NumericTimeShiftSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) UnionNoopSuccess(NumericUnionSeriesNode) error {
+func (u *NumericSeriesNode) UnionNoopSuccess(_ NumericUnionSeriesNode) error {
 	return nil
 }
 
-func (u *NumericSeriesNode) ValueDifferenceNoopSuccess(ValueDifferenceSeriesNode) error {
+func (u *NumericSeriesNode) ValueDifferenceNoopSuccess(_ ValueDifferenceSeriesNode) error {
 	return nil
 }
 
@@ -1518,7 +1518,7 @@ func (u *RangesNode) AcceptFuncs(onChangeFunc func(OnChangeRangesNode) error, en
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in RangesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "onChange":
@@ -1549,23 +1549,23 @@ func (u *RangesNode) AcceptFuncs(onChangeFunc func(OnChangeRangesNode) error, en
 	}
 }
 
-func (u *RangesNode) OnChangeNoopSuccess(OnChangeRangesNode) error {
+func (u *RangesNode) OnChangeNoopSuccess(_ OnChangeRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) EnumFilterNoopSuccess(EnumFilterRangesNode) error {
+func (u *RangesNode) EnumFilterNoopSuccess(_ EnumFilterRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) ThresholdNoopSuccess(ThresholdingRangesNode) error {
+func (u *RangesNode) ThresholdNoopSuccess(_ ThresholdingRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) UnionRangeNoopSuccess(UnionRangesNode) error {
+func (u *RangesNode) UnionRangeNoopSuccess(_ UnionRangesNode) error {
 	return nil
 }
 
-func (u *RangesNode) IntersectRangeNoopSuccess(IntersectRangesNode) error {
+func (u *RangesNode) IntersectRangeNoopSuccess(_ IntersectRangesNode) error {
 	return nil
 }
 
@@ -1767,7 +1767,7 @@ func (u *SelectValueNode) AcceptFuncs(firstPointFunc func(SeriesNode) error, fir
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SelectValueNode type")
 		}
 		return unknownFunc(u.typ)
 	case "firstPoint":
@@ -1783,11 +1783,11 @@ func (u *SelectValueNode) AcceptFuncs(firstPointFunc func(SeriesNode) error, fir
 	}
 }
 
-func (u *SelectValueNode) FirstPointNoopSuccess(SeriesNode) error {
+func (u *SelectValueNode) FirstPointNoopSuccess(_ SeriesNode) error {
 	return nil
 }
 
-func (u *SelectValueNode) FirstRangeNoopSuccess(RangesNode) error {
+func (u *SelectValueNode) FirstRangeNoopSuccess(_ RangesNode) error {
 	return nil
 }
 
@@ -1955,7 +1955,7 @@ func (u *SeriesNode) AcceptFuncs(rawFunc func(api.Reference) error, enumFunc fun
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SeriesNode type")
 		}
 		return unknownFunc(u.typ)
 	case "raw":
@@ -1976,15 +1976,15 @@ func (u *SeriesNode) AcceptFuncs(rawFunc func(api.Reference) error, enumFunc fun
 	}
 }
 
-func (u *SeriesNode) RawNoopSuccess(api.Reference) error {
+func (u *SeriesNode) RawNoopSuccess(_ api.Reference) error {
 	return nil
 }
 
-func (u *SeriesNode) EnumNoopSuccess(EnumSeriesNode) error {
+func (u *SeriesNode) EnumNoopSuccess(_ EnumSeriesNode) error {
 	return nil
 }
 
-func (u *SeriesNode) NumericNoopSuccess(NumericSeriesNode) error {
+func (u *SeriesNode) NumericNoopSuccess(_ NumericSeriesNode) error {
 	return nil
 }
 
@@ -2140,7 +2140,7 @@ func (u *VariableValue) AcceptFuncs(timestampFunc func(api1.Timestamp) error, un
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in VariableValue type")
 		}
 		return unknownFunc(u.typ)
 	case "timestamp":
@@ -2151,7 +2151,7 @@ func (u *VariableValue) AcceptFuncs(timestampFunc func(api1.Timestamp) error, un
 	}
 }
 
-func (u *VariableValue) TimestampNoopSuccess(api1.Timestamp) error {
+func (u *VariableValue) TimestampNoopSuccess(_ api1.Timestamp) error {
 	return nil
 }
 
@@ -2275,7 +2275,7 @@ func (u *Window) AcceptFuncs(durationFunc func(api2.Duration) error, unknownFunc
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in Window type")
 		}
 		return unknownFunc(u.typ)
 	case "duration":
@@ -2286,7 +2286,7 @@ func (u *Window) AcceptFuncs(durationFunc func(api2.Duration) error, unknownFunc
 	}
 }
 
-func (u *Window) DurationNoopSuccess(api2.Duration) error {
+func (u *Window) DurationNoopSuccess(_ api2.Duration) error {
 	return nil
 }
 

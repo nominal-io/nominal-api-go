@@ -61,121 +61,109 @@ func NewComputeServiceClient(client httpclient.Client) ComputeServiceClient {
 }
 
 func (c *computeServiceClient) Compute(ctx context.Context, authHeader bearertoken.Token, requestArg ComputeNodeRequest) (api.ComputeNodeResponse, error) {
-	var defaultReturnVal api.ComputeNodeResponse
 	var returnVal *api.ComputeNodeResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Compute"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/compute/v2/compute"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "compute failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.ComputeNodeResponse), werror.WrapWithContextParams(ctx, err, "compute failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "compute response cannot be nil")
+		return *new(api.ComputeNodeResponse), werror.ErrorWithContextParams(ctx, "compute response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *computeServiceClient) ParameterizedCompute(ctx context.Context, authHeader bearertoken.Token, requestArg ParameterizedComputeNodeRequest) (api.ParameterizedComputeNodeResponse, error) {
-	var defaultReturnVal api.ParameterizedComputeNodeResponse
 	var returnVal *api.ParameterizedComputeNodeResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ParameterizedCompute"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/compute/v2/compute/parameterized"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "parameterizedCompute failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.ParameterizedComputeNodeResponse), werror.WrapWithContextParams(ctx, err, "parameterizedCompute failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "parameterizedCompute response cannot be nil")
+		return *new(api.ParameterizedComputeNodeResponse), werror.ErrorWithContextParams(ctx, "parameterizedCompute response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *computeServiceClient) ComputeUnits(ctx context.Context, authHeader bearertoken.Token, requestArg ComputeUnitsRequest) (api.ComputeUnitResult, error) {
-	var defaultReturnVal api.ComputeUnitResult
 	var returnVal *api.ComputeUnitResult
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ComputeUnits"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/compute/v2/compute/units"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "computeUnits failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.ComputeUnitResult), werror.WrapWithContextParams(ctx, err, "computeUnits failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "computeUnits response cannot be nil")
+		return *new(api.ComputeUnitResult), werror.ErrorWithContextParams(ctx, "computeUnits response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *computeServiceClient) BatchComputeWithUnits(ctx context.Context, authHeader bearertoken.Token, requestArg BatchComputeWithUnitsRequest) (api.BatchComputeWithUnitsResponse, error) {
-	var defaultReturnVal api.BatchComputeWithUnitsResponse
 	var returnVal *api.BatchComputeWithUnitsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchComputeWithUnits"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/compute/v2/compute/batch"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchComputeWithUnits failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchComputeWithUnitsResponse), werror.WrapWithContextParams(ctx, err, "batchComputeWithUnits failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchComputeWithUnits response cannot be nil")
+		return *new(api.BatchComputeWithUnitsResponse), werror.ErrorWithContextParams(ctx, "batchComputeWithUnits response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *computeServiceClient) BatchComputeUnits(ctx context.Context, authHeader bearertoken.Token, requestArg BatchComputeUnitsRequest) (api.BatchComputeUnitResult, error) {
-	var defaultReturnVal api.BatchComputeUnitResult
 	var returnVal *api.BatchComputeUnitResult
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchComputeUnits"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/compute/v2/compute/batch-units"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "batchComputeUnits failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchComputeUnitResult), werror.WrapWithContextParams(ctx, err, "batchComputeUnits failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "batchComputeUnits response cannot be nil")
+		return *new(api.BatchComputeUnitResult), werror.ErrorWithContextParams(ctx, "batchComputeUnits response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *computeServiceClient) ComputeWithUnits(ctx context.Context, authHeader bearertoken.Token, requestArg ComputeWithUnitsRequest) (api.ComputeWithUnitsResponse, error) {
-	var defaultReturnVal api.ComputeWithUnitsResponse
 	var returnVal *api.ComputeWithUnitsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ComputeWithUnits"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/compute/v2/computeWithUnits"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "computeWithUnits failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.ComputeWithUnitsResponse), werror.WrapWithContextParams(ctx, err, "computeWithUnits failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "computeWithUnits response cannot be nil")
+		return *new(api.ComputeWithUnitsResponse), werror.ErrorWithContextParams(ctx, "computeWithUnits response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -262,55 +250,49 @@ type computeServiceClientWithTokenProvider struct {
 }
 
 func (c *computeServiceClientWithTokenProvider) Compute(ctx context.Context, requestArg ComputeNodeRequest) (api.ComputeNodeResponse, error) {
-	var defaultReturnVal api.ComputeNodeResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.ComputeNodeResponse), err
 	}
 	return c.client.Compute(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *computeServiceClientWithTokenProvider) ParameterizedCompute(ctx context.Context, requestArg ParameterizedComputeNodeRequest) (api.ParameterizedComputeNodeResponse, error) {
-	var defaultReturnVal api.ParameterizedComputeNodeResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.ParameterizedComputeNodeResponse), err
 	}
 	return c.client.ParameterizedCompute(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *computeServiceClientWithTokenProvider) ComputeUnits(ctx context.Context, requestArg ComputeUnitsRequest) (api.ComputeUnitResult, error) {
-	var defaultReturnVal api.ComputeUnitResult
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.ComputeUnitResult), err
 	}
 	return c.client.ComputeUnits(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *computeServiceClientWithTokenProvider) BatchComputeWithUnits(ctx context.Context, requestArg BatchComputeWithUnitsRequest) (api.BatchComputeWithUnitsResponse, error) {
-	var defaultReturnVal api.BatchComputeWithUnitsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BatchComputeWithUnitsResponse), err
 	}
 	return c.client.BatchComputeWithUnits(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *computeServiceClientWithTokenProvider) BatchComputeUnits(ctx context.Context, requestArg BatchComputeUnitsRequest) (api.BatchComputeUnitResult, error) {
-	var defaultReturnVal api.BatchComputeUnitResult
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.BatchComputeUnitResult), err
 	}
 	return c.client.BatchComputeUnits(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *computeServiceClientWithTokenProvider) ComputeWithUnits(ctx context.Context, requestArg ComputeWithUnitsRequest) (api.ComputeWithUnitsResponse, error) {
-	var defaultReturnVal api.ComputeWithUnitsResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.ComputeWithUnitsResponse), err
 	}
 	return c.client.ComputeWithUnits(ctx, bearertoken.Token(token), requestArg)
 }

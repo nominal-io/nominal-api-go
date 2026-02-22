@@ -281,7 +281,7 @@ func (u *SearchTemplatesQuery) AcceptFuncs(andFunc func([]SearchTemplatesQuery) 
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
+			return fmt.Errorf("invalid value in SearchTemplatesQuery type")
 		}
 		return unknownFunc(u.typ)
 	case "and":
@@ -362,63 +362,63 @@ func (u *SearchTemplatesQuery) AcceptFuncs(andFunc func([]SearchTemplatesQuery) 
 	}
 }
 
-func (u *SearchTemplatesQuery) AndNoopSuccess([]SearchTemplatesQuery) error {
+func (u *SearchTemplatesQuery) AndNoopSuccess(_ []SearchTemplatesQuery) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) OrNoopSuccess([]SearchTemplatesQuery) error {
+func (u *SearchTemplatesQuery) OrNoopSuccess(_ []SearchTemplatesQuery) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) NotNoopSuccess(SearchTemplatesQuery) error {
+func (u *SearchTemplatesQuery) NotNoopSuccess(_ SearchTemplatesQuery) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) ExactMatchNoopSuccess(string) error {
+func (u *SearchTemplatesQuery) ExactMatchNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) SearchTextNoopSuccess(string) error {
+func (u *SearchTemplatesQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) LabelNoopSuccess(api.Label) error {
+func (u *SearchTemplatesQuery) LabelNoopSuccess(_ api.Label) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) LabelsNoopSuccess(api1.LabelsFilter) error {
+func (u *SearchTemplatesQuery) LabelsNoopSuccess(_ api1.LabelsFilter) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) PropertyNoopSuccess(api.Property) error {
+func (u *SearchTemplatesQuery) PropertyNoopSuccess(_ api.Property) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) PropertiesNoopSuccess(api1.PropertiesFilter) error {
+func (u *SearchTemplatesQuery) PropertiesNoopSuccess(_ api1.PropertiesFilter) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) CreatedByNoopSuccess(api1.UserRid) error {
+func (u *SearchTemplatesQuery) CreatedByNoopSuccess(_ api1.UserRid) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) IsArchivedNoopSuccess(bool) error {
+func (u *SearchTemplatesQuery) IsArchivedNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) IsPublishedNoopSuccess(bool) error {
+func (u *SearchTemplatesQuery) IsPublishedNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) WorkspaceNoopSuccess(rids.WorkspaceRid) error {
+func (u *SearchTemplatesQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) AuthorIsCurrentUserNoopSuccess(bool) error {
+func (u *SearchTemplatesQuery) AuthorIsCurrentUserNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchTemplatesQuery) AuthorRidsNoopSuccess([]api1.UserRid) error {
+func (u *SearchTemplatesQuery) AuthorRidsNoopSuccess(_ []api1.UserRid) error {
 	return nil
 }
 

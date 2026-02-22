@@ -55,21 +55,19 @@ func NewUploadServiceClient(client httpclient.Client) UploadServiceClient {
 }
 
 func (c *uploadServiceClient) InitiateMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadRequestArg api.InitiateMultipartUploadRequest) (api.InitiateMultipartUploadResponse, error) {
-	var defaultReturnVal api.InitiateMultipartUploadResponse
 	var returnVal *api.InitiateMultipartUploadResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("InitiateMultipartUpload"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/upload/v1/multipart-upload"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(uploadRequestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "initiateMultipartUpload failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.InitiateMultipartUploadResponse), werror.WrapWithContextParams(ctx, err, "initiateMultipartUpload failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "initiateMultipartUpload response cannot be nil")
+		return *new(api.InitiateMultipartUploadResponse), werror.ErrorWithContextParams(ctx, "initiateMultipartUpload response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -78,7 +76,6 @@ func (c *uploadServiceClient) ListParts(ctx context.Context, authHeader bearerto
 	var returnVal []api.PartWithSize
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListParts"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/upload/v1/multipart-upload/%s", url.PathEscape(fmt.Sprint(uploadIdArg))))
 	queryParams := make(url.Values)
@@ -86,7 +83,7 @@ func (c *uploadServiceClient) ListParts(ctx context.Context, authHeader bearerto
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "listParts failed")
 	}
 	if returnVal == nil {
@@ -96,11 +93,9 @@ func (c *uploadServiceClient) ListParts(ctx context.Context, authHeader bearerto
 }
 
 func (c *uploadServiceClient) SignPart(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, partNumberArg int) (api.SignPartResponse, error) {
-	var defaultReturnVal api.SignPartResponse
 	var returnVal *api.SignPartResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SignPart"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/upload/v1/multipart-upload/%s", url.PathEscape(fmt.Sprint(uploadIdArg))))
 	queryParams := make(url.Values)
@@ -109,21 +104,19 @@ func (c *uploadServiceClient) SignPart(ctx context.Context, authHeader bearertok
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "signPart failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SignPartResponse), werror.WrapWithContextParams(ctx, err, "signPart failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "signPart response cannot be nil")
+		return *new(api.SignPartResponse), werror.ErrorWithContextParams(ctx, "signPart response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *uploadServiceClient) CompleteMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error) {
-	var defaultReturnVal api.CompleteMultipartUploadResponse
 	var returnVal *api.CompleteMultipartUploadResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CompleteMultipartUpload"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/upload/v1/multipart-upload/%s/complete", url.PathEscape(fmt.Sprint(uploadIdArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(partsArg))
@@ -132,11 +125,11 @@ func (c *uploadServiceClient) CompleteMultipartUpload(ctx context.Context, authH
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "completeMultipartUpload failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.CompleteMultipartUploadResponse), werror.WrapWithContextParams(ctx, err, "completeMultipartUpload failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "completeMultipartUpload response cannot be nil")
+		return *new(api.CompleteMultipartUploadResponse), werror.ErrorWithContextParams(ctx, "completeMultipartUpload response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -144,25 +137,22 @@ func (c *uploadServiceClient) CompleteMultipartUpload(ctx context.Context, authH
 func (c *uploadServiceClient) AbortMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("AbortMultipartUpload"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/upload/v1/multipart-upload/%s/abort", url.PathEscape(fmt.Sprint(uploadIdArg))))
 	queryParams := make(url.Values)
 	queryParams.Set("key", fmt.Sprint(keyArg))
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "abortMultipartUpload failed")
 	}
 	return nil
 }
 
 func (c *uploadServiceClient) UploadFile(ctx context.Context, authHeader bearertoken.Token, fileNameArg string, sizeBytesArg *safelong.SafeLong, workspaceArg *rids.WorkspaceRid, bodyArg httpclient.RequestBody) (api1.S3Path, error) {
-	var defaultReturnVal api1.S3Path
 	var returnVal *api1.S3Path
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UploadFile"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("POST"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/upload/v1/upload-file"))
 	requestParams = append(requestParams, httpclient.WithBinaryRequestBody(bodyArg))
@@ -177,11 +167,11 @@ func (c *uploadServiceClient) UploadFile(ctx context.Context, authHeader bearert
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "uploadFile failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.S3Path), werror.WrapWithContextParams(ctx, err, "uploadFile failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "uploadFile response cannot be nil")
+		return *new(api1.S3Path), werror.ErrorWithContextParams(ctx, "uploadFile response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -258,37 +248,33 @@ type uploadServiceClientWithTokenProvider struct {
 }
 
 func (c *uploadServiceClientWithTokenProvider) InitiateMultipartUpload(ctx context.Context, uploadRequestArg api.InitiateMultipartUploadRequest) (api.InitiateMultipartUploadResponse, error) {
-	var defaultReturnVal api.InitiateMultipartUploadResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.InitiateMultipartUploadResponse), err
 	}
 	return c.client.InitiateMultipartUpload(ctx, bearertoken.Token(token), uploadRequestArg)
 }
 
 func (c *uploadServiceClientWithTokenProvider) ListParts(ctx context.Context, uploadIdArg string, keyArg string) ([]api.PartWithSize, error) {
-	var defaultReturnVal []api.PartWithSize
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return nil, err
 	}
 	return c.client.ListParts(ctx, bearertoken.Token(token), uploadIdArg, keyArg)
 }
 
 func (c *uploadServiceClientWithTokenProvider) SignPart(ctx context.Context, uploadIdArg string, keyArg string, partNumberArg int) (api.SignPartResponse, error) {
-	var defaultReturnVal api.SignPartResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.SignPartResponse), err
 	}
 	return c.client.SignPart(ctx, bearertoken.Token(token), uploadIdArg, keyArg, partNumberArg)
 }
 
 func (c *uploadServiceClientWithTokenProvider) CompleteMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error) {
-	var defaultReturnVal api.CompleteMultipartUploadResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.CompleteMultipartUploadResponse), err
 	}
 	return c.client.CompleteMultipartUpload(ctx, bearertoken.Token(token), uploadIdArg, keyArg, partsArg)
 }
@@ -302,10 +288,9 @@ func (c *uploadServiceClientWithTokenProvider) AbortMultipartUpload(ctx context.
 }
 
 func (c *uploadServiceClientWithTokenProvider) UploadFile(ctx context.Context, fileNameArg string, sizeBytesArg *safelong.SafeLong, workspaceArg *rids.WorkspaceRid, bodyArg httpclient.RequestBody) (api1.S3Path, error) {
-	var defaultReturnVal api1.S3Path
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api1.S3Path), err
 	}
 	return c.client.UploadFile(ctx, bearertoken.Token(token), fileNameArg, sizeBytesArg, workspaceArg, bodyArg)
 }

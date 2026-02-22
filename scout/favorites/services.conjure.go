@@ -35,11 +35,9 @@ func NewFavoritesServiceClient(client httpclient.Client) FavoritesServiceClient 
 }
 
 func (c *favoritesServiceClient) GetFavoritesList(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid, resourceTypesArg []api.ResourceType) (api.FavoritesListResponse, error) {
-	var defaultReturnVal api.FavoritesListResponse
 	var returnVal *api.FavoritesListResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetFavoritesList"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("GET"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/favorites/workspace/%s", url.PathEscape(fmt.Sprint(workspaceRidArg))))
 	queryParams := make(url.Values)
@@ -49,31 +47,29 @@ func (c *favoritesServiceClient) GetFavoritesList(ctx context.Context, authHeade
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "getFavoritesList failed")
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.FavoritesListResponse), werror.WrapWithContextParams(ctx, err, "getFavoritesList failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "getFavoritesList response cannot be nil")
+		return *new(api.FavoritesListResponse), werror.ErrorWithContextParams(ctx, "getFavoritesList response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
 func (c *favoritesServiceClient) SetFavoritesList(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid, requestArg api.SetFavoritesListRequest) (api.FavoritesListResponse, error) {
-	var defaultReturnVal api.FavoritesListResponse
 	var returnVal *api.FavoritesListResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SetFavoritesList"))
-	requestParams = append(requestParams, httpclient.WithRequestMethod("PUT"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/favorites/workspace/%s", url.PathEscape(fmt.Sprint(workspaceRidArg))))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Do(ctx, requestParams...); err != nil {
-		return defaultReturnVal, werror.WrapWithContextParams(ctx, err, "setFavoritesList failed")
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(api.FavoritesListResponse), werror.WrapWithContextParams(ctx, err, "setFavoritesList failed")
 	}
 	if returnVal == nil {
-		return defaultReturnVal, werror.ErrorWithContextParams(ctx, "setFavoritesList response cannot be nil")
+		return *new(api.FavoritesListResponse), werror.ErrorWithContextParams(ctx, "setFavoritesList response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -116,19 +112,17 @@ type favoritesServiceClientWithTokenProvider struct {
 }
 
 func (c *favoritesServiceClientWithTokenProvider) GetFavoritesList(ctx context.Context, workspaceRidArg rids.WorkspaceRid, resourceTypesArg []api.ResourceType) (api.FavoritesListResponse, error) {
-	var defaultReturnVal api.FavoritesListResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.FavoritesListResponse), err
 	}
 	return c.client.GetFavoritesList(ctx, bearertoken.Token(token), workspaceRidArg, resourceTypesArg)
 }
 
 func (c *favoritesServiceClientWithTokenProvider) SetFavoritesList(ctx context.Context, workspaceRidArg rids.WorkspaceRid, requestArg api.SetFavoritesListRequest) (api.FavoritesListResponse, error) {
-	var defaultReturnVal api.FavoritesListResponse
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return defaultReturnVal, err
+		return *new(api.FavoritesListResponse), err
 	}
 	return c.client.SetFavoritesList(ctx, bearertoken.Token(token), workspaceRidArg, requestArg)
 }

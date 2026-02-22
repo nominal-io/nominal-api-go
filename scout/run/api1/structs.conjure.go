@@ -22,7 +22,7 @@ type DataScopes struct {
 
 func (o DataScopes) MarshalJSON() ([]byte, error) {
 	if o.DataScopes == nil {
-		o.DataScopes = make(map[api.DataSourceRefName]api1.DataScope, 0)
+		o.DataScopes = make(map[api.DataSourceRefName]api1.DataScope)
 	}
 	type _tmpDataScopes DataScopes
 	return safejson.Marshal(_tmpDataScopes(o))
@@ -35,7 +35,7 @@ func (o *DataScopes) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawDataScopes.DataScopes == nil {
-		rawDataScopes.DataScopes = make(map[api.DataSourceRefName]api1.DataScope, 0)
+		rawDataScopes.DataScopes = make(map[api.DataSourceRefName]api1.DataScope)
 	}
 	*o = DataScopes(rawDataScopes)
 	return nil
@@ -114,11 +114,11 @@ type Run struct {
 	CreatedAt   datetime.DateTime                        `json:"createdAt"`
 	UpdatedAt   datetime.DateTime                        `json:"updatedAt"`
 	// Map from asset RIDs to their data scopes
-	AssetDataScopesMap map[api3.AssetRid]DataScopes `conjure-docs:"Map from asset RIDs to their data scopes" json:"assetDataScopesMap"`
+	AssetDataScopesMap map[api3.AssetRid]DataScopes `json:"assetDataScopesMap"`
 	// Deprecated: Use assetDataScopesMap instead. Will be empty for multi-asset runs.
 	AssetDataScopes []api1.DataScope `json:"assetDataScopes"`
 	// Map from refnames to run data sources. Will be empty for multi-asset runs.
-	DataSources map[api.DataSourceRefName]api2.RunDataSource `conjure-docs:"Map from refnames to run data sources. Will be empty for multi-asset runs." json:"dataSources"`
+	DataSources map[api.DataSourceRefName]api2.RunDataSource `json:"dataSources"`
 	Attachments []rids.AttachmentRid                         `json:"attachments"`
 	// Deprecated: Use assets
 	Asset      *api3.AssetRid  `json:"asset,omitempty"`
@@ -128,7 +128,7 @@ type Run struct {
 
 func (o Run) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api4.PropertyName]api4.PropertyValue, 0)
+		o.Properties = make(map[api4.PropertyName]api4.PropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api4.Label, 0)
@@ -137,13 +137,13 @@ func (o Run) MarshalJSON() ([]byte, error) {
 		o.Links = make([]api2.Link, 0)
 	}
 	if o.AssetDataScopesMap == nil {
-		o.AssetDataScopesMap = make(map[api3.AssetRid]DataScopes, 0)
+		o.AssetDataScopesMap = make(map[api3.AssetRid]DataScopes)
 	}
 	if o.AssetDataScopes == nil {
 		o.AssetDataScopes = make([]api1.DataScope, 0)
 	}
 	if o.DataSources == nil {
-		o.DataSources = make(map[api.DataSourceRefName]api2.RunDataSource, 0)
+		o.DataSources = make(map[api.DataSourceRefName]api2.RunDataSource)
 	}
 	if o.Attachments == nil {
 		o.Attachments = make([]rids.AttachmentRid, 0)
@@ -162,7 +162,7 @@ func (o *Run) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawRun.Properties == nil {
-		rawRun.Properties = make(map[api4.PropertyName]api4.PropertyValue, 0)
+		rawRun.Properties = make(map[api4.PropertyName]api4.PropertyValue)
 	}
 	if rawRun.Labels == nil {
 		rawRun.Labels = make([]api4.Label, 0)
@@ -171,13 +171,13 @@ func (o *Run) UnmarshalJSON(data []byte) error {
 		rawRun.Links = make([]api2.Link, 0)
 	}
 	if rawRun.AssetDataScopesMap == nil {
-		rawRun.AssetDataScopesMap = make(map[api3.AssetRid]DataScopes, 0)
+		rawRun.AssetDataScopesMap = make(map[api3.AssetRid]DataScopes)
 	}
 	if rawRun.AssetDataScopes == nil {
 		rawRun.AssetDataScopes = make([]api1.DataScope, 0)
 	}
 	if rawRun.DataSources == nil {
-		rawRun.DataSources = make(map[api.DataSourceRefName]api2.RunDataSource, 0)
+		rawRun.DataSources = make(map[api.DataSourceRefName]api2.RunDataSource)
 	}
 	if rawRun.Attachments == nil {
 		rawRun.Attachments = make([]rids.AttachmentRid, 0)

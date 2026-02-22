@@ -61,7 +61,7 @@ type AggregateEventsResponse struct {
 
 func (o AggregateEventsResponse) MarshalJSON() ([]byte, error) {
 	if o.Values == nil {
-		o.Values = make(map[AggregateType]AggregateValue, 0)
+		o.Values = make(map[AggregateType]AggregateValue)
 	}
 	type _tmpAggregateEventsResponse AggregateEventsResponse
 	return safejson.Marshal(_tmpAggregateEventsResponse(o))
@@ -74,7 +74,7 @@ func (o *AggregateEventsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawAggregateEventsResponse.Values == nil {
-		rawAggregateEventsResponse.Values = make(map[AggregateType]AggregateValue, 0)
+		rawAggregateEventsResponse.Values = make(map[AggregateType]AggregateValue)
 	}
 	*o = AggregateEventsResponse(rawAggregateEventsResponse)
 	return nil
@@ -531,14 +531,14 @@ func (o *CheckOriginMetadata) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 type CreateEvent struct {
 	// Must contain at least one asset rid.
-	AssetRids []api1.AssetRid `conjure-docs:"Must contain at least one asset rid." json:"assetRids"`
+	AssetRids []api1.AssetRid `json:"assetRids"`
 	// If empty, will default to set<EventOrigin.api>.
-	Origins   []EventOrigin `conjure-docs:"If empty, will default to set<EventOrigin.api>." json:"origins"`
+	Origins   []EventOrigin `json:"origins"`
 	Timestamp api.Timestamp `json:"timestamp"`
 	Duration  api2.Duration `json:"duration"`
 	Name      string        `json:"name"`
 	// If not provided, will default to an empty string.
-	Description *string                                `conjure-docs:"If not provided, will default to an empty string." json:"description,omitempty"`
+	Description *string                                `json:"description,omitempty"`
 	Type        EventType                              `json:"type"`
 	Labels      []api.Label                            `json:"labels"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
@@ -556,7 +556,7 @@ func (o CreateEvent) MarshalJSON() ([]byte, error) {
 		o.Labels = make([]api.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	type _tmpCreateEvent CreateEvent
 	return safejson.Marshal(_tmpCreateEvent(o))
@@ -578,7 +578,7 @@ func (o *CreateEvent) UnmarshalJSON(data []byte) error {
 		rawCreateEvent.Labels = make([]api.Label, 0)
 	}
 	if rawCreateEvent.Properties == nil {
-		rawCreateEvent.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawCreateEvent.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	*o = CreateEvent(rawCreateEvent)
 	return nil
@@ -644,7 +644,7 @@ func (o *DataReviewChecksFilter) UnmarshalYAML(unmarshal func(interface{}) error
 type DataReviewEventOrigin struct {
 	DataReviewRid api1.DataReviewRid `json:"dataReviewRid"`
 	// Metadata about the check that created this event.
-	CheckMetadata CheckOriginMetadata `conjure-docs:"Metadata about the check that created this event." json:"checkMetadata"`
+	CheckMetadata CheckOriginMetadata `json:"checkMetadata"`
 }
 
 func (o DataReviewEventOrigin) MarshalYAML() (interface{}, error) {
@@ -709,9 +709,9 @@ type Event struct {
 	Uuid uuid.UUID     `json:"uuid"`
 	Rid  rids.EventRid `json:"rid"`
 	// A set of asset rids associated with the event.
-	AssetRids []api1.AssetRid `conjure-docs:"A set of asset rids associated with the event." json:"assetRids"`
+	AssetRids []api1.AssetRid `json:"assetRids"`
 	// A set of origins associated with the event.
-	Origins     []EventOrigin                          `conjure-docs:"A set of origins associated with the event." json:"origins"`
+	Origins     []EventOrigin                          `json:"origins"`
 	Timestamp   api.Timestamp                          `json:"timestamp"`
 	Duration    api2.Duration                          `json:"duration"`
 	Name        string                                 `json:"name"`
@@ -724,7 +724,7 @@ type Event struct {
 	   The user who created the event.
 	   This field may be missing for legacy events.
 	*/
-	CreatedBy   *api1.UserRid     `conjure-docs:"The user who created the event.\nThis field may be missing for legacy events." json:"createdBy,omitempty"`
+	CreatedBy   *api1.UserRid     `json:"createdBy,omitempty"`
 	Disposition *EventDisposition `json:"disposition,omitempty"`
 }
 
@@ -739,7 +739,7 @@ func (o Event) MarshalJSON() ([]byte, error) {
 		o.Labels = make([]api.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	type _tmpEvent Event
 	return safejson.Marshal(_tmpEvent(o))
@@ -761,7 +761,7 @@ func (o *Event) UnmarshalJSON(data []byte) error {
 		rawEvent.Labels = make([]api.Label, 0)
 	}
 	if rawEvent.Properties == nil {
-		rawEvent.Properties = make(map[api.PropertyName]api.PropertyValue, 0)
+		rawEvent.Properties = make(map[api.PropertyName]api.PropertyValue)
 	}
 	*o = Event(rawEvent)
 	return nil
@@ -877,22 +877,22 @@ type EventsHistogramRequest struct {
 	StartInclusive api.Timestamp `json:"startInclusive"`
 	EndExclusive   api.Timestamp `json:"endExclusive"`
 	// The query to filter the events to be included in the histogram.
-	FilterQuery *HistogramFilterQuery `conjure-docs:"The query to filter the events to be included in the histogram." json:"filterQuery,omitempty"`
+	FilterQuery *HistogramFilterQuery `json:"filterQuery,omitempty"`
 	/*
 	   Filters search on check alerts based on the archived statuses provided.
 	   Default is NOT_ARCHIVED only if none are provided.
 	*/
-	ArchivedStatuses *[]api.ArchivedStatus `conjure-docs:"Filters search on check alerts based on the archived statuses provided. \nDefault is NOT_ARCHIVED only if none are provided." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
 	/*
 	   Defaults to 100. Throws if larger than 1_000.
 	   The resulting histogram may have fewer bins than requested if the requested time window is too small.
 	*/
-	NumBins *int `conjure-docs:"Defaults to 100. Throws if larger than 1_000.\nThe resulting histogram may have fewer bins than requested if the requested time window is too small." json:"numBins,omitempty"`
+	NumBins *int `json:"numBins,omitempty"`
 	/*
 	   Limits the number of events to be included in the histogram.
 	   Defaults to 1_000. Throws if larger than 10_000.
 	*/
-	EventLimit *int `conjure-docs:"Limits the number of events to be included in the histogram.\nDefaults to 1_000. Throws if larger than 10_000." json:"eventLimit,omitempty"`
+	EventLimit *int `json:"eventLimit,omitempty"`
 }
 
 func (o EventsHistogramRequest) MarshalYAML() (interface{}, error) {
@@ -995,7 +995,7 @@ func (o *GetEvents) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type ListPropertiesAndLabelsRequest struct {
 	// If omitted, results will come from all workspaces the user belongs to.
-	Workspaces *[]rids.WorkspaceRid `conjure-docs:"If omitted, results will come from all workspaces the user belongs to." json:"workspaces,omitempty"`
+	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty"`
 }
 
 func (o ListPropertiesAndLabelsRequest) MarshalYAML() (interface{}, error) {
@@ -1081,11 +1081,11 @@ func (o *ProcedureEventOrigin) UnmarshalYAML(unmarshal func(interface{}) error) 
 type SearchEventsRequest struct {
 	Sort SortOptions `json:"sort"`
 	// Will reject page sizes greater than 10k.
-	PageSize      int         `conjure-docs:"Will reject page sizes greater than 10k." json:"pageSize"`
+	PageSize      int         `json:"pageSize"`
 	NextPageToken *api.Token  `json:"nextPageToken,omitempty"`
 	Query         SearchQuery `json:"query"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived events in search.
-	ArchivedStatuses *[]api.ArchivedStatus `conjure-docs:"Default search status is NOT_ARCHIVED if none are provided. Allows for including archived events in search." json:"archivedStatuses,omitempty"`
+	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
 func (o SearchEventsRequest) MarshalYAML() (interface{}, error) {
@@ -1192,7 +1192,7 @@ func (o *StreamingCheckOriginMetadata) UnmarshalYAML(unmarshal func(interface{})
 type StreamingChecklistEventOrigin struct {
 	ChecklistRid api1.ChecklistRid `json:"checklistRid"`
 	// Metadata about the check that created this event.
-	CheckMetadata StreamingCheckOriginMetadata `conjure-docs:"Metadata about the check that created this event." json:"checkMetadata"`
+	CheckMetadata StreamingCheckOriginMetadata `json:"checkMetadata"`
 }
 
 func (o StreamingChecklistEventOrigin) MarshalYAML() (interface{}, error) {
@@ -1235,7 +1235,7 @@ func (o *TemplateEventOrigin) UnmarshalYAML(unmarshal func(interface{}) error) e
 type TimeSeriesChannelAssociation struct {
 	VariableName string `json:"variableName"`
 	// If this variable is grouped, the tags within the groupings this event should associate with
-	Tags *map[string]string `conjure-docs:"If this variable is grouped, the tags within the groupings this event should associate with" json:"tags,omitempty"`
+	Tags *map[string]string `json:"tags,omitempty"`
 }
 
 func (o TimeSeriesChannelAssociation) MarshalYAML() (interface{}, error) {
@@ -1260,7 +1260,7 @@ type UpdateDispositionRequest struct {
 	   The new disposition for the event.
 	   If empty, will remove the disposition from the event.
 	*/
-	Disposition *EventDisposition `conjure-docs:"The new disposition for the event.\nIf empty, will remove the disposition from the event." json:"disposition,omitempty"`
+	Disposition *EventDisposition `json:"disposition,omitempty"`
 }
 
 func (o UpdateDispositionRequest) MarshalYAML() (interface{}, error) {
@@ -1286,12 +1286,12 @@ type UpdateEvent struct {
 	   The unique identifier for the event.
 	   This field is required if the uuid field is not provided.
 	*/
-	Rid *rids.EventRid `conjure-docs:"The unique identifier for the event.\nThis field is required if the uuid field is not provided." json:"rid,omitempty"`
+	Rid *rids.EventRid `json:"rid,omitempty"`
 	/*
 	   If provided, will replace the existing asset rids.
 	   If provided, must contain at least one asset rid.
 	*/
-	AssetRids   *[]api1.AssetRid                        `conjure-docs:"If provided, will replace the existing asset rids.\nIf provided, must contain at least one asset rid." json:"assetRids,omitempty"`
+	AssetRids   *[]api1.AssetRid                        `json:"assetRids,omitempty"`
 	Timestamp   *api.Timestamp                          `json:"timestamp,omitempty"`
 	Duration    *api2.Duration                          `json:"duration,omitempty"`
 	Name        *string                                 `json:"name,omitempty"`
@@ -1323,7 +1323,7 @@ type UpdateEventRequest struct {
 	   If provided, will replace the existing asset rids.
 	   If provided, must contain at least one asset rid.
 	*/
-	AssetRids   *[]api1.AssetRid                        `conjure-docs:"If provided, will replace the existing asset rids.\nIf provided, must contain at least one asset rid." json:"assetRids,omitempty"`
+	AssetRids   *[]api1.AssetRid                        `json:"assetRids,omitempty"`
 	Timestamp   *api.Timestamp                          `json:"timestamp,omitempty"`
 	Duration    *api2.Duration                          `json:"duration,omitempty"`
 	Name        *string                                 `json:"name,omitempty"`
@@ -1352,7 +1352,7 @@ func (o *UpdateEventRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 type WorkbookEventOrigin struct {
 	Rid api1.NotebookRid `json:"rid"`
 	// Data visualizations to associate this event with
-	Data *[]WorkbookDataAssociation `conjure-docs:"Data visualizations to associate this event with" json:"data,omitempty"`
+	Data *[]WorkbookDataAssociation `json:"data,omitempty"`
 }
 
 func (o WorkbookEventOrigin) MarshalYAML() (interface{}, error) {
