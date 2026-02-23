@@ -368,7 +368,8 @@ A data scope input that binds a variable name to an asset or run RID.
 The variable name is the map key.
 */
 type WorkbookDataScopeInput struct {
-	Value DataScopeInputValue `json:"value"`
+	Name  WorkbookDataScopeInputName `json:"name"`
+	Value DataScopeInputValue        `json:"value"`
 }
 
 func (o WorkbookDataScopeInput) MarshalYAML() (interface{}, error) {
@@ -389,12 +390,12 @@ func (o *WorkbookDataScopeInput) UnmarshalYAML(unmarshal func(interface{}) error
 
 // A map of data scope input variable name to its definition.
 type WorkbookDataScopeInputsV1 struct {
-	Inputs map[WorkbookDataScopeInputName]WorkbookDataScopeInput `json:"inputs"`
+	Inputs map[WorkbookDataScopeInputId]WorkbookDataScopeInput `json:"inputs"`
 }
 
 func (o WorkbookDataScopeInputsV1) MarshalJSON() ([]byte, error) {
 	if o.Inputs == nil {
-		o.Inputs = make(map[WorkbookDataScopeInputName]WorkbookDataScopeInput)
+		o.Inputs = make(map[WorkbookDataScopeInputId]WorkbookDataScopeInput)
 	}
 	type _tmpWorkbookDataScopeInputsV1 WorkbookDataScopeInputsV1
 	return safejson.Marshal(_tmpWorkbookDataScopeInputsV1(o))
@@ -407,7 +408,7 @@ func (o *WorkbookDataScopeInputsV1) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawWorkbookDataScopeInputsV1.Inputs == nil {
-		rawWorkbookDataScopeInputsV1.Inputs = make(map[WorkbookDataScopeInputName]WorkbookDataScopeInput)
+		rawWorkbookDataScopeInputsV1.Inputs = make(map[WorkbookDataScopeInputId]WorkbookDataScopeInput)
 	}
 	*o = WorkbookDataScopeInputsV1(rawWorkbookDataScopeInputsV1)
 	return nil

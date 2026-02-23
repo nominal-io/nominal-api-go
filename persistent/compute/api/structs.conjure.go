@@ -414,6 +414,13 @@ type SubscriptionOptions struct {
 	   Defaults to false if not specified.
 	*/
 	UseFlink *bool `json:"useFlink,omitempty"`
+	/*
+	   Configures the lateness threshold for the raw points.
+	   Results will be delayed by the duration specified by this setting.
+	   Note this configuration is only available if we are using Flink.
+	   Defaults to 1 second.
+	*/
+	AllowedLateness *api2.Duration `json:"allowedLateness,omitempty"`
 }
 
 func (o SubscriptionOptions) MarshalYAML() (interface{}, error) {

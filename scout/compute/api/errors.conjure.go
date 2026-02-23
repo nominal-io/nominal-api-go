@@ -5616,6 +5616,157 @@ func (e *MemoryLimitExceeded) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type misalignedScatterPoints struct{}
+
+func (o misalignedScatterPoints) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *misalignedScatterPoints) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewMisalignedScatterPoints returns new instance of MisalignedScatterPoints error.
+func NewMisalignedScatterPoints() *MisalignedScatterPoints {
+	return &MisalignedScatterPoints{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), misalignedScatterPoints: misalignedScatterPoints{}}
+}
+
+// WrapWithMisalignedScatterPoints returns new instance of MisalignedScatterPoints error wrapping an existing error.
+func WrapWithMisalignedScatterPoints(err error) *MisalignedScatterPoints {
+	return &MisalignedScatterPoints{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, misalignedScatterPoints: misalignedScatterPoints{}}
+}
+
+// MisalignedScatterPoints is an error type.
+/*
+No scatter points could be aligned for plotting. This typically means the input series
+do not have overlapping timestamps within the configured interpolation window.
+*/
+type MisalignedScatterPoints struct {
+	errorInstanceID uuid.UUID
+	misalignedScatterPoints
+	cause error
+	stack werror.StackTrace
+}
+
+// IsMisalignedScatterPoints returns true if err is an instance of MisalignedScatterPoints.
+func IsMisalignedScatterPoints(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*MisalignedScatterPoints)
+	return ok
+}
+
+func (e *MisalignedScatterPoints) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:MisalignedScatterPoints (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *MisalignedScatterPoints) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *MisalignedScatterPoints) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *MisalignedScatterPoints) Message() string {
+	return "INVALID_ARGUMENT Compute:MisalignedScatterPoints"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *MisalignedScatterPoints) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *MisalignedScatterPoints) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *MisalignedScatterPoints) Name() string {
+	return "Compute:MisalignedScatterPoints"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *MisalignedScatterPoints) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *MisalignedScatterPoints) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *MisalignedScatterPoints) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *MisalignedScatterPoints) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *MisalignedScatterPoints) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *MisalignedScatterPoints) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e MisalignedScatterPoints) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.misalignedScatterPoints)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:MisalignedScatterPoints", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *MisalignedScatterPoints) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters misalignedScatterPoints
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.misalignedScatterPoints = parameters
+	return nil
+}
+
 type missingFunctionParameter struct {
 	ModuleName    string `json:"moduleName"`
 	ModuleVersion string `json:"moduleVersion"`
@@ -10504,6 +10655,7 @@ func init() {
 	conjureerrors.RegisterErrorType("Compute:InvalidValueMap", reflect.TypeOf(InvalidValueMap{}))
 	conjureerrors.RegisterErrorType("Compute:MaxQuerySizeExceeded", reflect.TypeOf(MaxQuerySizeExceeded{}))
 	conjureerrors.RegisterErrorType("Compute:MemoryLimitExceeded", reflect.TypeOf(MemoryLimitExceeded{}))
+	conjureerrors.RegisterErrorType("Compute:MisalignedScatterPoints", reflect.TypeOf(MisalignedScatterPoints{}))
 	conjureerrors.RegisterErrorType("Compute:MissingFunctionParameter", reflect.TypeOf(MissingFunctionParameter{}))
 	conjureerrors.RegisterErrorType("Compute:MissingModuleApplication", reflect.TypeOf(MissingModuleApplication{}))
 	conjureerrors.RegisterErrorType("Compute:MissingModuleFunction", reflect.TypeOf(MissingModuleFunction{}))
