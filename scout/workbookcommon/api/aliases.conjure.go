@@ -39,4 +39,6 @@ func (a *TimeRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
+// Unique identifier. Needs to be string for back-compatibility but this will usually be a uuid.
+type WorkbookDataScopeInputId string
 type WorkbookDataScopeInputName string
