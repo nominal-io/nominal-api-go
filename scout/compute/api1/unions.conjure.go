@@ -195,6 +195,9 @@ type BooleanSeries struct {
 	notEqualTo           *NotEqualToSeries
 	greaterThanOrEqualTo *GreaterThanOrEqualToSeries
 	lessThanOrEqualTo    *LessThanOrEqualToSeries
+	not                  *NotSeries
+	and                  *AndSeries
+	or                   *OrSeries
 }
 
 type booleanSeriesDeserializer struct {
@@ -205,10 +208,13 @@ type booleanSeriesDeserializer struct {
 	NotEqualTo           *NotEqualToSeries           `json:"notEqualTo"`
 	GreaterThanOrEqualTo *GreaterThanOrEqualToSeries `json:"greaterThanOrEqualTo"`
 	LessThanOrEqualTo    *LessThanOrEqualToSeries    `json:"lessThanOrEqualTo"`
+	Not                  *NotSeries                  `json:"not"`
+	And                  *AndSeries                  `json:"and"`
+	Or                   *OrSeries                   `json:"or"`
 }
 
 func (u *booleanSeriesDeserializer) toStruct() BooleanSeries {
-	return BooleanSeries{typ: u.Type, greaterThan: u.GreaterThan, lessThan: u.LessThan, equalTo: u.EqualTo, notEqualTo: u.NotEqualTo, greaterThanOrEqualTo: u.GreaterThanOrEqualTo, lessThanOrEqualTo: u.LessThanOrEqualTo}
+	return BooleanSeries{typ: u.Type, greaterThan: u.GreaterThan, lessThan: u.LessThan, equalTo: u.EqualTo, notEqualTo: u.NotEqualTo, greaterThanOrEqualTo: u.GreaterThanOrEqualTo, lessThanOrEqualTo: u.LessThanOrEqualTo, not: u.Not, and: u.And, or: u.Or}
 }
 
 func (u *BooleanSeries) toSerializer() (interface{}, error) {
@@ -263,6 +269,30 @@ func (u *BooleanSeries) toSerializer() (interface{}, error) {
 			Type              string                  `json:"type"`
 			LessThanOrEqualTo LessThanOrEqualToSeries `json:"lessThanOrEqualTo"`
 		}{Type: "lessThanOrEqualTo", LessThanOrEqualTo: *u.lessThanOrEqualTo}, nil
+	case "not":
+		if u.not == nil {
+			return nil, fmt.Errorf("field \"not\" is required")
+		}
+		return struct {
+			Type string    `json:"type"`
+			Not  NotSeries `json:"not"`
+		}{Type: "not", Not: *u.not}, nil
+	case "and":
+		if u.and == nil {
+			return nil, fmt.Errorf("field \"and\" is required")
+		}
+		return struct {
+			Type string    `json:"type"`
+			And  AndSeries `json:"and"`
+		}{Type: "and", And: *u.and}, nil
+	case "or":
+		if u.or == nil {
+			return nil, fmt.Errorf("field \"or\" is required")
+		}
+		return struct {
+			Type string   `json:"type"`
+			Or   OrSeries `json:"or"`
+		}{Type: "or", Or: *u.or}, nil
 	}
 }
 
@@ -305,6 +335,18 @@ func (u *BooleanSeries) UnmarshalJSON(data []byte) error {
 		if u.lessThanOrEqualTo == nil {
 			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
 		}
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
 	}
 	return nil
 }
@@ -325,7 +367,7 @@ func (u *BooleanSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *BooleanSeries) AcceptFuncs(greaterThanFunc func(GreaterThanSeries) error, lessThanFunc func(LessThanSeries) error, equalToFunc func(EqualToSeries) error, notEqualToFunc func(NotEqualToSeries) error, greaterThanOrEqualToFunc func(GreaterThanOrEqualToSeries) error, lessThanOrEqualToFunc func(LessThanOrEqualToSeries) error, unknownFunc func(string) error) error {
+func (u *BooleanSeries) AcceptFuncs(greaterThanFunc func(GreaterThanSeries) error, lessThanFunc func(LessThanSeries) error, equalToFunc func(EqualToSeries) error, notEqualToFunc func(NotEqualToSeries) error, greaterThanOrEqualToFunc func(GreaterThanOrEqualToSeries) error, lessThanOrEqualToFunc func(LessThanOrEqualToSeries) error, notFunc func(NotSeries) error, andFunc func(AndSeries) error, orFunc func(OrSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -362,6 +404,21 @@ func (u *BooleanSeries) AcceptFuncs(greaterThanFunc func(GreaterThanSeries) erro
 			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
 		}
 		return lessThanOrEqualToFunc(*u.lessThanOrEqualTo)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return andFunc(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return orFunc(*u.or)
 	}
 }
 
@@ -386,6 +443,18 @@ func (u *BooleanSeries) GreaterThanOrEqualToNoopSuccess(_ GreaterThanOrEqualToSe
 }
 
 func (u *BooleanSeries) LessThanOrEqualToNoopSuccess(_ LessThanOrEqualToSeries) error {
+	return nil
+}
+
+func (u *BooleanSeries) NotNoopSuccess(_ NotSeries) error {
+	return nil
+}
+
+func (u *BooleanSeries) AndNoopSuccess(_ AndSeries) error {
+	return nil
+}
+
+func (u *BooleanSeries) OrNoopSuccess(_ OrSeries) error {
 	return nil
 }
 
@@ -430,6 +499,21 @@ func (u *BooleanSeries) Accept(v BooleanSeriesVisitor) error {
 			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
 		}
 		return v.VisitLessThanOrEqualTo(*u.lessThanOrEqualTo)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(*u.not)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAnd(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOr(*u.or)
 	}
 }
 
@@ -440,6 +524,9 @@ type BooleanSeriesVisitor interface {
 	VisitNotEqualTo(v NotEqualToSeries) error
 	VisitGreaterThanOrEqualTo(v GreaterThanOrEqualToSeries) error
 	VisitLessThanOrEqualTo(v LessThanOrEqualToSeries) error
+	VisitNot(v NotSeries) error
+	VisitAnd(v AndSeries) error
+	VisitOr(v OrSeries) error
 	VisitUnknown(typeName string) error
 }
 
@@ -480,6 +567,21 @@ func (u *BooleanSeries) AcceptWithContext(ctx context.Context, v BooleanSeriesVi
 			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
 		}
 		return v.VisitLessThanOrEqualToWithContext(ctx, *u.lessThanOrEqualTo)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNotWithContext(ctx, *u.not)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAndWithContext(ctx, *u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOrWithContext(ctx, *u.or)
 	}
 }
 
@@ -490,6 +592,9 @@ type BooleanSeriesVisitorWithContext interface {
 	VisitNotEqualToWithContext(ctx context.Context, v NotEqualToSeries) error
 	VisitGreaterThanOrEqualToWithContext(ctx context.Context, v GreaterThanOrEqualToSeries) error
 	VisitLessThanOrEqualToWithContext(ctx context.Context, v LessThanOrEqualToSeries) error
+	VisitNotWithContext(ctx context.Context, v NotSeries) error
+	VisitAndWithContext(ctx context.Context, v AndSeries) error
+	VisitOrWithContext(ctx context.Context, v OrSeries) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -515,6 +620,18 @@ func NewBooleanSeriesFromGreaterThanOrEqualTo(v GreaterThanOrEqualToSeries) Bool
 
 func NewBooleanSeriesFromLessThanOrEqualTo(v LessThanOrEqualToSeries) BooleanSeries {
 	return BooleanSeries{typ: "lessThanOrEqualTo", lessThanOrEqualTo: &v}
+}
+
+func NewBooleanSeriesFromNot(v NotSeries) BooleanSeries {
+	return BooleanSeries{typ: "not", not: &v}
+}
+
+func NewBooleanSeriesFromAnd(v AndSeries) BooleanSeries {
+	return BooleanSeries{typ: "and", and: &v}
+}
+
+func NewBooleanSeriesFromOr(v OrSeries) BooleanSeries {
+	return BooleanSeries{typ: "or", or: &v}
 }
 
 type Cartesian struct {
@@ -788,33 +905,35 @@ func NewCartesian3dFromScatter3d(v Scatter3d) Cartesian3d {
 }
 
 type ComputableNode struct {
-	typ         string
-	ranges      *SummarizeRanges
-	series      *SummarizeSeries
-	value       *SelectValue
-	cartesian   *SummarizeCartesian
-	cartesian3d *SummarizeCartesian3d
-	frequency   *FrequencyDomain
-	frequencyV2 *FrequencyDomainV2
-	histogram   *Histogram
-	curve       *CurveFit
+	typ          string
+	ranges       *SummarizeRanges
+	series       *SummarizeSeries
+	value        *SelectValue
+	cartesian    *SummarizeCartesian
+	cartesian3d  *SummarizeCartesian3d
+	frequency    *FrequencyDomain
+	frequencyV2  *FrequencyDomainV2
+	histogram    *Histogram
+	curve        *CurveFit
+	multivariate *SummarizeMultivariate
 }
 
 type computableNodeDeserializer struct {
-	Type        string                `json:"type"`
-	Ranges      *SummarizeRanges      `json:"ranges"`
-	Series      *SummarizeSeries      `json:"series"`
-	Value       *SelectValue          `json:"value"`
-	Cartesian   *SummarizeCartesian   `json:"cartesian"`
-	Cartesian3d *SummarizeCartesian3d `json:"cartesian3d"`
-	Frequency   *FrequencyDomain      `json:"frequency"`
-	FrequencyV2 *FrequencyDomainV2    `json:"frequencyV2"`
-	Histogram   *Histogram            `json:"histogram"`
-	Curve       *CurveFit             `json:"curve"`
+	Type         string                 `json:"type"`
+	Ranges       *SummarizeRanges       `json:"ranges"`
+	Series       *SummarizeSeries       `json:"series"`
+	Value        *SelectValue           `json:"value"`
+	Cartesian    *SummarizeCartesian    `json:"cartesian"`
+	Cartesian3d  *SummarizeCartesian3d  `json:"cartesian3d"`
+	Frequency    *FrequencyDomain       `json:"frequency"`
+	FrequencyV2  *FrequencyDomainV2     `json:"frequencyV2"`
+	Histogram    *Histogram             `json:"histogram"`
+	Curve        *CurveFit              `json:"curve"`
+	Multivariate *SummarizeMultivariate `json:"multivariate"`
 }
 
 func (u *computableNodeDeserializer) toStruct() ComputableNode {
-	return ComputableNode{typ: u.Type, ranges: u.Ranges, series: u.Series, value: u.Value, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, frequency: u.Frequency, frequencyV2: u.FrequencyV2, histogram: u.Histogram, curve: u.Curve}
+	return ComputableNode{typ: u.Type, ranges: u.Ranges, series: u.Series, value: u.Value, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, frequency: u.Frequency, frequencyV2: u.FrequencyV2, histogram: u.Histogram, curve: u.Curve, multivariate: u.Multivariate}
 }
 
 func (u *ComputableNode) toSerializer() (interface{}, error) {
@@ -893,6 +1012,14 @@ func (u *ComputableNode) toSerializer() (interface{}, error) {
 			Type  string   `json:"type"`
 			Curve CurveFit `json:"curve"`
 		}{Type: "curve", Curve: *u.curve}, nil
+	case "multivariate":
+		if u.multivariate == nil {
+			return nil, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return struct {
+			Type         string                `json:"type"`
+			Multivariate SummarizeMultivariate `json:"multivariate"`
+		}{Type: "multivariate", Multivariate: *u.multivariate}, nil
 	}
 }
 
@@ -947,6 +1074,10 @@ func (u *ComputableNode) UnmarshalJSON(data []byte) error {
 		if u.curve == nil {
 			return fmt.Errorf("field \"curve\" is required")
 		}
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
 	}
 	return nil
 }
@@ -967,7 +1098,7 @@ func (u *ComputableNode) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRanges) error, seriesFunc func(SummarizeSeries) error, valueFunc func(SelectValue) error, cartesianFunc func(SummarizeCartesian) error, cartesian3dFunc func(SummarizeCartesian3d) error, frequencyFunc func(FrequencyDomain) error, frequencyV2Func func(FrequencyDomainV2) error, histogramFunc func(Histogram) error, curveFunc func(CurveFit) error, unknownFunc func(string) error) error {
+func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRanges) error, seriesFunc func(SummarizeSeries) error, valueFunc func(SelectValue) error, cartesianFunc func(SummarizeCartesian) error, cartesian3dFunc func(SummarizeCartesian3d) error, frequencyFunc func(FrequencyDomain) error, frequencyV2Func func(FrequencyDomainV2) error, histogramFunc func(Histogram) error, curveFunc func(CurveFit) error, multivariateFunc func(SummarizeMultivariate) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1019,6 +1150,11 @@ func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRanges) error, ser
 			return fmt.Errorf("field \"curve\" is required")
 		}
 		return curveFunc(*u.curve)
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
+		return multivariateFunc(*u.multivariate)
 	}
 }
 
@@ -1055,6 +1191,10 @@ func (u *ComputableNode) HistogramNoopSuccess(_ Histogram) error {
 }
 
 func (u *ComputableNode) CurveNoopSuccess(_ CurveFit) error {
+	return nil
+}
+
+func (u *ComputableNode) MultivariateNoopSuccess(_ SummarizeMultivariate) error {
 	return nil
 }
 
@@ -1114,6 +1254,11 @@ func (u *ComputableNode) Accept(v ComputableNodeVisitor) error {
 			return fmt.Errorf("field \"curve\" is required")
 		}
 		return v.VisitCurve(*u.curve)
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariate(*u.multivariate)
 	}
 }
 
@@ -1127,6 +1272,7 @@ type ComputableNodeVisitor interface {
 	VisitFrequencyV2(v FrequencyDomainV2) error
 	VisitHistogram(v Histogram) error
 	VisitCurve(v CurveFit) error
+	VisitMultivariate(v SummarizeMultivariate) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1182,6 +1328,11 @@ func (u *ComputableNode) AcceptWithContext(ctx context.Context, v ComputableNode
 			return fmt.Errorf("field \"curve\" is required")
 		}
 		return v.VisitCurveWithContext(ctx, *u.curve)
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariateWithContext(ctx, *u.multivariate)
 	}
 }
 
@@ -1195,6 +1346,7 @@ type ComputableNodeVisitorWithContext interface {
 	VisitFrequencyV2WithContext(ctx context.Context, v FrequencyDomainV2) error
 	VisitHistogramWithContext(ctx context.Context, v Histogram) error
 	VisitCurveWithContext(ctx context.Context, v CurveFit) error
+	VisitMultivariateWithContext(ctx context.Context, v SummarizeMultivariate) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1232,6 +1384,10 @@ func NewComputableNodeFromHistogram(v Histogram) ComputableNode {
 
 func NewComputableNodeFromCurve(v CurveFit) ComputableNode {
 	return ComputableNode{typ: "curve", curve: &v}
+}
+
+func NewComputableNodeFromMultivariate(v SummarizeMultivariate) ComputableNode {
+	return ComputableNode{typ: "multivariate", multivariate: &v}
 }
 
 type ComputeNode struct {
@@ -4262,6 +4418,180 @@ func NewLogSeriesFromTimeShift(v LogTimeShiftSeries) LogSeries {
 	return LogSeries{typ: "timeShift", timeShift: &v}
 }
 
+type MultivariateInput struct {
+	typ     string
+	numeric *MultivariateNumericInput
+	enum    *MultivariateEnumInput
+}
+
+type multivariateInputDeserializer struct {
+	Type    string                    `json:"type"`
+	Numeric *MultivariateNumericInput `json:"numeric"`
+	Enum    *MultivariateEnumInput    `json:"enum"`
+}
+
+func (u *multivariateInputDeserializer) toStruct() MultivariateInput {
+	return MultivariateInput{typ: u.Type, numeric: u.Numeric, enum: u.Enum}
+}
+
+func (u *MultivariateInput) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return nil, fmt.Errorf("field \"numeric\" is required")
+		}
+		return struct {
+			Type    string                   `json:"type"`
+			Numeric MultivariateNumericInput `json:"numeric"`
+		}{Type: "numeric", Numeric: *u.numeric}, nil
+	case "enum":
+		if u.enum == nil {
+			return nil, fmt.Errorf("field \"enum\" is required")
+		}
+		return struct {
+			Type string                `json:"type"`
+			Enum MultivariateEnumInput `json:"enum"`
+		}{Type: "enum", Enum: *u.enum}, nil
+	}
+}
+
+func (u MultivariateInput) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *MultivariateInput) UnmarshalJSON(data []byte) error {
+	var deser multivariateInputDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+	}
+	return nil
+}
+
+func (u MultivariateInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *MultivariateInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *MultivariateInput) AcceptFuncs(numericFunc func(MultivariateNumericInput) error, enumFunc func(MultivariateEnumInput) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in MultivariateInput type")
+		}
+		return unknownFunc(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return numericFunc(*u.numeric)
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+		return enumFunc(*u.enum)
+	}
+}
+
+func (u *MultivariateInput) NumericNoopSuccess(_ MultivariateNumericInput) error {
+	return nil
+}
+
+func (u *MultivariateInput) EnumNoopSuccess(_ MultivariateEnumInput) error {
+	return nil
+}
+
+func (u *MultivariateInput) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *MultivariateInput) Accept(v MultivariateInputVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumeric(*u.numeric)
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+		return v.VisitEnum(*u.enum)
+	}
+}
+
+type MultivariateInputVisitor interface {
+	VisitNumeric(v MultivariateNumericInput) error
+	VisitEnum(v MultivariateEnumInput) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *MultivariateInput) AcceptWithContext(ctx context.Context, v MultivariateInputVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumericWithContext(ctx, *u.numeric)
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+		return v.VisitEnumWithContext(ctx, *u.enum)
+	}
+}
+
+type MultivariateInputVisitorWithContext interface {
+	VisitNumericWithContext(ctx context.Context, v MultivariateNumericInput) error
+	VisitEnumWithContext(ctx context.Context, v MultivariateEnumInput) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewMultivariateInputFromNumeric(v MultivariateNumericInput) MultivariateInput {
+	return MultivariateInput{typ: "numeric", numeric: &v}
+}
+
+func NewMultivariateInputFromEnum(v MultivariateEnumInput) MultivariateInput {
+	return MultivariateInput{typ: "enum", enum: &v}
+}
+
 type Numeric1dArraySeries struct {
 	typ     string
 	channel *api.ChannelSeries
@@ -6134,6 +6464,7 @@ func NewNumericSeriesFromExtractFromStruct(v ExtractNumericFromStructSeries) Num
 type RangeSeries struct {
 	typ                          string
 	approximateThreshold         *ApproximateThresholdRanges
+	booleanToRanges              *BooleanToRanges
 	durationFilter               *DurationFilterRanges
 	enumFilter                   *EnumFilterRanges
 	enumSeriesEqualityRangesNode *EnumSeriesEqualityRanges
@@ -6159,6 +6490,7 @@ type RangeSeries struct {
 type rangeSeriesDeserializer struct {
 	Type                         string                      `json:"type"`
 	ApproximateThreshold         *ApproximateThresholdRanges `json:"approximateThreshold"`
+	BooleanToRanges              *BooleanToRanges            `json:"booleanToRanges"`
 	DurationFilter               *DurationFilterRanges       `json:"durationFilter"`
 	EnumFilter                   *EnumFilterRanges           `json:"enumFilter"`
 	EnumSeriesEqualityRangesNode *EnumSeriesEqualityRanges   `json:"enumSeriesEqualityRangesNode"`
@@ -6182,7 +6514,7 @@ type rangeSeriesDeserializer struct {
 }
 
 func (u *rangeSeriesDeserializer) toStruct() RangeSeries {
-	return RangeSeries{typ: u.Type, approximateThreshold: u.ApproximateThreshold, durationFilter: u.DurationFilter, enumFilter: u.EnumFilter, enumSeriesEqualityRangesNode: u.EnumSeriesEqualityRangesNode, eventsSearch: u.EventsSearch, intersectRange: u.IntersectRange, literalRanges: u.LiteralRanges, minMaxThreshold: u.MinMaxThreshold, not: u.Not, onChange: u.OnChange, peak: u.Peak, rangeNumericAggregation: u.RangeNumericAggregation, raw: u.Raw, derived: u.Derived, seriesCrossoverRangesNode: u.SeriesCrossoverRangesNode, seriesEqualityRangesNode: u.SeriesEqualityRangesNode, stabilityDetection: u.StabilityDetection, staleRange: u.StaleRange, threshold: u.Threshold, unionRange: u.UnionRange, paddedRanges: u.PaddedRanges}
+	return RangeSeries{typ: u.Type, approximateThreshold: u.ApproximateThreshold, booleanToRanges: u.BooleanToRanges, durationFilter: u.DurationFilter, enumFilter: u.EnumFilter, enumSeriesEqualityRangesNode: u.EnumSeriesEqualityRangesNode, eventsSearch: u.EventsSearch, intersectRange: u.IntersectRange, literalRanges: u.LiteralRanges, minMaxThreshold: u.MinMaxThreshold, not: u.Not, onChange: u.OnChange, peak: u.Peak, rangeNumericAggregation: u.RangeNumericAggregation, raw: u.Raw, derived: u.Derived, seriesCrossoverRangesNode: u.SeriesCrossoverRangesNode, seriesEqualityRangesNode: u.SeriesEqualityRangesNode, stabilityDetection: u.StabilityDetection, staleRange: u.StaleRange, threshold: u.Threshold, unionRange: u.UnionRange, paddedRanges: u.PaddedRanges}
 }
 
 func (u *RangeSeries) toSerializer() (interface{}, error) {
@@ -6197,6 +6529,14 @@ func (u *RangeSeries) toSerializer() (interface{}, error) {
 			Type                 string                     `json:"type"`
 			ApproximateThreshold ApproximateThresholdRanges `json:"approximateThreshold"`
 		}{Type: "approximateThreshold", ApproximateThreshold: *u.approximateThreshold}, nil
+	case "booleanToRanges":
+		if u.booleanToRanges == nil {
+			return nil, fmt.Errorf("field \"booleanToRanges\" is required")
+		}
+		return struct {
+			Type            string          `json:"type"`
+			BooleanToRanges BooleanToRanges `json:"booleanToRanges"`
+		}{Type: "booleanToRanges", BooleanToRanges: *u.booleanToRanges}, nil
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return nil, fmt.Errorf("field \"durationFilter\" is required")
@@ -6379,6 +6719,10 @@ func (u *RangeSeries) UnmarshalJSON(data []byte) error {
 		if u.approximateThreshold == nil {
 			return fmt.Errorf("field \"approximateThreshold\" is required")
 		}
+	case "booleanToRanges":
+		if u.booleanToRanges == nil {
+			return fmt.Errorf("field \"booleanToRanges\" is required")
+		}
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
@@ -6479,7 +6823,7 @@ func (u *RangeSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *RangeSeries) AcceptFuncs(approximateThresholdFunc func(ApproximateThresholdRanges) error, durationFilterFunc func(DurationFilterRanges) error, enumFilterFunc func(EnumFilterRanges) error, enumSeriesEqualityRangesNodeFunc func(EnumSeriesEqualityRanges) error, eventsSearchFunc func(EventsSearchRanges) error, intersectRangeFunc func(IntersectRanges) error, literalRangesFunc func(api.LiteralRanges) error, minMaxThresholdFunc func(MinMaxThresholdRanges) error, notFunc func(NotRanges) error, onChangeFunc func(OnChangeRanges) error, peakFunc func(PeakRanges) error, rangeNumericAggregationFunc func(RangesNumericAggregation) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, seriesCrossoverRangesNodeFunc func(SeriesCrossoverRanges) error, seriesEqualityRangesNodeFunc func(SeriesEqualityRanges) error, stabilityDetectionFunc func(StabilityDetectionRanges) error, staleRangeFunc func(StaleRanges) error, thresholdFunc func(ThresholdingRanges) error, unionRangeFunc func(UnionRanges) error, paddedRangesFunc func(PaddedRanges) error, unknownFunc func(string) error) error {
+func (u *RangeSeries) AcceptFuncs(approximateThresholdFunc func(ApproximateThresholdRanges) error, booleanToRangesFunc func(BooleanToRanges) error, durationFilterFunc func(DurationFilterRanges) error, enumFilterFunc func(EnumFilterRanges) error, enumSeriesEqualityRangesNodeFunc func(EnumSeriesEqualityRanges) error, eventsSearchFunc func(EventsSearchRanges) error, intersectRangeFunc func(IntersectRanges) error, literalRangesFunc func(api.LiteralRanges) error, minMaxThresholdFunc func(MinMaxThresholdRanges) error, notFunc func(NotRanges) error, onChangeFunc func(OnChangeRanges) error, peakFunc func(PeakRanges) error, rangeNumericAggregationFunc func(RangesNumericAggregation) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, seriesCrossoverRangesNodeFunc func(SeriesCrossoverRanges) error, seriesEqualityRangesNodeFunc func(SeriesEqualityRanges) error, stabilityDetectionFunc func(StabilityDetectionRanges) error, staleRangeFunc func(StaleRanges) error, thresholdFunc func(ThresholdingRanges) error, unionRangeFunc func(UnionRanges) error, paddedRangesFunc func(PaddedRanges) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -6491,6 +6835,11 @@ func (u *RangeSeries) AcceptFuncs(approximateThresholdFunc func(ApproximateThres
 			return fmt.Errorf("field \"approximateThreshold\" is required")
 		}
 		return approximateThresholdFunc(*u.approximateThreshold)
+	case "booleanToRanges":
+		if u.booleanToRanges == nil {
+			return fmt.Errorf("field \"booleanToRanges\" is required")
+		}
+		return booleanToRangesFunc(*u.booleanToRanges)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
@@ -6598,6 +6947,10 @@ func (u *RangeSeries) ApproximateThresholdNoopSuccess(_ ApproximateThresholdRang
 	return nil
 }
 
+func (u *RangeSeries) BooleanToRangesNoopSuccess(_ BooleanToRanges) error {
+	return nil
+}
+
 func (u *RangeSeries) DurationFilterNoopSuccess(_ DurationFilterRanges) error {
 	return nil
 }
@@ -6694,6 +7047,11 @@ func (u *RangeSeries) Accept(v RangeSeriesVisitor) error {
 			return fmt.Errorf("field \"approximateThreshold\" is required")
 		}
 		return v.VisitApproximateThreshold(*u.approximateThreshold)
+	case "booleanToRanges":
+		if u.booleanToRanges == nil {
+			return fmt.Errorf("field \"booleanToRanges\" is required")
+		}
+		return v.VisitBooleanToRanges(*u.booleanToRanges)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
@@ -6799,6 +7157,7 @@ func (u *RangeSeries) Accept(v RangeSeriesVisitor) error {
 
 type RangeSeriesVisitor interface {
 	VisitApproximateThreshold(v ApproximateThresholdRanges) error
+	VisitBooleanToRanges(v BooleanToRanges) error
 	VisitDurationFilter(v DurationFilterRanges) error
 	VisitEnumFilter(v EnumFilterRanges) error
 	VisitEnumSeriesEqualityRangesNode(v EnumSeriesEqualityRanges) error
@@ -6834,6 +7193,11 @@ func (u *RangeSeries) AcceptWithContext(ctx context.Context, v RangeSeriesVisito
 			return fmt.Errorf("field \"approximateThreshold\" is required")
 		}
 		return v.VisitApproximateThresholdWithContext(ctx, *u.approximateThreshold)
+	case "booleanToRanges":
+		if u.booleanToRanges == nil {
+			return fmt.Errorf("field \"booleanToRanges\" is required")
+		}
+		return v.VisitBooleanToRangesWithContext(ctx, *u.booleanToRanges)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
@@ -6939,6 +7303,7 @@ func (u *RangeSeries) AcceptWithContext(ctx context.Context, v RangeSeriesVisito
 
 type RangeSeriesVisitorWithContext interface {
 	VisitApproximateThresholdWithContext(ctx context.Context, v ApproximateThresholdRanges) error
+	VisitBooleanToRangesWithContext(ctx context.Context, v BooleanToRanges) error
 	VisitDurationFilterWithContext(ctx context.Context, v DurationFilterRanges) error
 	VisitEnumFilterWithContext(ctx context.Context, v EnumFilterRanges) error
 	VisitEnumSeriesEqualityRangesNodeWithContext(ctx context.Context, v EnumSeriesEqualityRanges) error
@@ -6964,6 +7329,10 @@ type RangeSeriesVisitorWithContext interface {
 
 func NewRangeSeriesFromApproximateThreshold(v ApproximateThresholdRanges) RangeSeries {
 	return RangeSeries{typ: "approximateThreshold", approximateThreshold: &v}
+}
+
+func NewRangeSeriesFromBooleanToRanges(v BooleanToRanges) RangeSeries {
+	return RangeSeries{typ: "booleanToRanges", booleanToRanges: &v}
 }
 
 func NewRangeSeriesFromDurationFilter(v DurationFilterRanges) RangeSeries {

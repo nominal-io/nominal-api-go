@@ -4,7 +4,8 @@ package authorization
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/authentication/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"
@@ -150,11 +151,13 @@ func (o *GetAccessTokenFromApiKeyRequest) UnmarshalYAML(unmarshal func(interface
 We accept an OIDC ID token issued by a trusted identity provider as proof of authentication.
 The ID token is validated and exchanged for a Nominal access token.
 This ID token should generally be short lived since it is fungible with a Nominal access token
-via this endpoint.
+via this endpoint. An access token, if provider, is used to get user information from the OIDC
+userinfo endpoint. An org rid should be provided if the user is a member of multiple orgs.
 */
 type GetAccessTokenRequest struct {
-	IdToken     string  `json:"idToken"`
-	AccessToken *string `json:"accessToken,omitempty"`
+	IdToken     string      `json:"idToken"`
+	AccessToken *string     `json:"accessToken,omitempty"`
+	OrgRid      *api.OrgRid `json:"orgRid,omitempty"`
 }
 
 func (o GetAccessTokenRequest) MarshalYAML() (interface{}, error) {
@@ -189,6 +192,68 @@ func (o GetAccessTokenResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *GetAccessTokenResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// We use the claims in the id token to determine which orgs the user belongs to.
+type GetUserOrgsRequest struct {
+	IdToken string `json:"idToken"`
+}
+
+func (o GetUserOrgsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetUserOrgsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetUserOrgsResponse struct {
+	Orgs map[uuid.UUID]string `json:"orgs"`
+}
+
+func (o GetUserOrgsResponse) MarshalJSON() ([]byte, error) {
+	if o.Orgs == nil {
+		o.Orgs = make(map[uuid.UUID]string)
+	}
+	type _tmpGetUserOrgsResponse GetUserOrgsResponse
+	return safejson.Marshal(_tmpGetUserOrgsResponse(o))
+}
+
+func (o *GetUserOrgsResponse) UnmarshalJSON(data []byte) error {
+	type _tmpGetUserOrgsResponse GetUserOrgsResponse
+	var rawGetUserOrgsResponse _tmpGetUserOrgsResponse
+	if err := safejson.Unmarshal(data, &rawGetUserOrgsResponse); err != nil {
+		return err
+	}
+	if rawGetUserOrgsResponse.Orgs == nil {
+		rawGetUserOrgsResponse.Orgs = make(map[uuid.UUID]string)
+	}
+	*o = GetUserOrgsResponse(rawGetUserOrgsResponse)
+	return nil
+}
+
+func (o GetUserOrgsResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetUserOrgsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -242,8 +307,8 @@ type ListApiKeyRequest struct {
 	// If true, include expired API keys in the response. Defaults to false.
 	IncludeExpired *bool `json:"includeExpired,omitempty"`
 	// The maximum number of API keys to return. Defaults to 100.
-	PageSize      *int       `json:"pageSize,omitempty"`
-	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
+	PageSize      *int        `json:"pageSize,omitempty"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
 }
 
 func (o ListApiKeyRequest) MarshalYAML() (interface{}, error) {
@@ -263,8 +328,8 @@ func (o *ListApiKeyRequest) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 type ListApiKeyResponse struct {
-	ApiKeys       []ApiKey   `json:"apiKeys"`
-	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
+	ApiKeys       []ApiKey    `json:"apiKeys"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
 }
 
 func (o ListApiKeyResponse) MarshalJSON() ([]byte, error) {
@@ -451,9 +516,12 @@ func (o *OktaUpdateActionValue) UnmarshalYAML(unmarshal func(interface{}) error)
 We accept an OIDC access token issued by a trusted identity provider to refresh a Nominal access token.
 The access token is validated and exchanged for a Nominal access token. To be used in this endpoint,
 the OIDC access token must contain an email claim.
+The org rid from the expiring session should be provided to deconflict if the user is a member of
+multiple orgs.
 */
 type RefreshAccessTokenRequest struct {
-	AccessToken string `json:"accessToken"`
+	AccessToken string      `json:"accessToken"`
+	OrgRid      *api.OrgRid `json:"orgRid,omitempty"`
 }
 
 func (o RefreshAccessTokenRequest) MarshalYAML() (interface{}, error) {

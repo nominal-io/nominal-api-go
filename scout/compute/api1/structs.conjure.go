@@ -148,6 +148,30 @@ func (o *AggregateUnderRangesSeries) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Combines two boolean series point-wise using logical AND, producing true where both inputs are true and false otherwise.
+type AndSeries struct {
+	Left  BooleanSeries `json:"left"`
+	Right BooleanSeries `json:"right"`
+	// Defaults to forward fill interpolation with a 1s interpolation radius
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
+}
+
+func (o AndSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AndSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Produces a list of ranges for which the threshold condition is satisfied.
 type ApproximateThresholdRanges struct {
 	Input                          NumericSeries                     `json:"input"`
@@ -368,6 +392,39 @@ func (o Bode) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Bode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Converts a boolean series to a range series, where each contiguous run of true values becomes a
+half-open range [start, end). The boolean series is treated as forward-filled: a value holds until the
+next sample. For example, given timestamps [0, 1, 2, 3, 4] and values [true, true, true, false, false],
+the result is a single range [0, 3). When openEnded is false and the series ends with true, the last
+range is closed at the final timestamp, producing a zero-duration range (moment) for isolated true values.
+*/
+type BooleanToRanges struct {
+	Input BooleanSeries `json:"input"`
+	/*
+	   If true, the last range will be open-ended if the last value is true. Defaults to true.
+	   Set to false to close trailing ranges at the last timestamp, which produces zero-duration
+	   ranges (moments) for isolated trailing true values.
+	*/
+	OpenEnded *bool `json:"openEnded,omitempty"`
+}
+
+func (o BooleanToRanges) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BooleanToRanges) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1005,7 +1062,7 @@ func (o *EnumUnionSeries) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Compares two numeric series point-wise, producing 1 where left == right and 0 otherwise.
+// Compares two numeric series point-wise, producing true where left == right and false otherwise.
 type EqualToSeries struct {
 	Left  NumericSeries `json:"left"`
 	Right NumericSeries `json:"right"`
@@ -1416,7 +1473,7 @@ func (o *FunctionVariables) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Compares two numeric series point-wise, producing 1 where left >= right and 0 otherwise.
+// Compares two numeric series point-wise, producing true where left >= right and false otherwise.
 type GreaterThanOrEqualToSeries struct {
 	Left  NumericSeries `json:"left"`
 	Right NumericSeries `json:"right"`
@@ -1440,7 +1497,7 @@ func (o *GreaterThanOrEqualToSeries) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Compares two numeric series point-wise, producing 1 where left > right and 0 otherwise.
+// Compares two numeric series point-wise, producing true where left > right and false otherwise.
 type GreaterThanSeries struct {
 	Left  NumericSeries `json:"left"`
 	Right NumericSeries `json:"right"`
@@ -1535,7 +1592,7 @@ func (o *IntersectRanges) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Compares two numeric series point-wise, producing 1 where left <= right and 0 otherwise.
+// Compares two numeric series point-wise, producing true where left <= right and false otherwise.
 type LessThanOrEqualToSeries struct {
 	Left  NumericSeries `json:"left"`
 	Right NumericSeries `json:"right"`
@@ -1559,7 +1616,7 @@ func (o *LessThanOrEqualToSeries) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Compares two numeric series point-wise, producing 1 where left < right and 0 otherwise.
+// Compares two numeric series point-wise, producing true where left < right and false otherwise.
 type LessThanSeries struct {
 	Left  NumericSeries `json:"left"`
 	Right NumericSeries `json:"right"`
@@ -1845,7 +1902,91 @@ func (o *MinSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Compares two numeric series point-wise, producing 1 where left != right and 0 otherwise.
+type MultivariateEnumInput struct {
+	Series       EnumSeries                         `json:"series"`
+	Aggregations []api1.EnumMultivariateAggregation `json:"aggregations"`
+}
+
+func (o MultivariateEnumInput) MarshalJSON() ([]byte, error) {
+	if o.Aggregations == nil {
+		o.Aggregations = make([]api1.EnumMultivariateAggregation, 0)
+	}
+	type _tmpMultivariateEnumInput MultivariateEnumInput
+	return safejson.Marshal(_tmpMultivariateEnumInput(o))
+}
+
+func (o *MultivariateEnumInput) UnmarshalJSON(data []byte) error {
+	type _tmpMultivariateEnumInput MultivariateEnumInput
+	var rawMultivariateEnumInput _tmpMultivariateEnumInput
+	if err := safejson.Unmarshal(data, &rawMultivariateEnumInput); err != nil {
+		return err
+	}
+	if rawMultivariateEnumInput.Aggregations == nil {
+		rawMultivariateEnumInput.Aggregations = make([]api1.EnumMultivariateAggregation, 0)
+	}
+	*o = MultivariateEnumInput(rawMultivariateEnumInput)
+	return nil
+}
+
+func (o MultivariateEnumInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MultivariateEnumInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type MultivariateNumericInput struct {
+	Series       NumericSeries                         `json:"series"`
+	Aggregations []api1.NumericMultivariateAggregation `json:"aggregations"`
+}
+
+func (o MultivariateNumericInput) MarshalJSON() ([]byte, error) {
+	if o.Aggregations == nil {
+		o.Aggregations = make([]api1.NumericMultivariateAggregation, 0)
+	}
+	type _tmpMultivariateNumericInput MultivariateNumericInput
+	return safejson.Marshal(_tmpMultivariateNumericInput(o))
+}
+
+func (o *MultivariateNumericInput) UnmarshalJSON(data []byte) error {
+	type _tmpMultivariateNumericInput MultivariateNumericInput
+	var rawMultivariateNumericInput _tmpMultivariateNumericInput
+	if err := safejson.Unmarshal(data, &rawMultivariateNumericInput); err != nil {
+		return err
+	}
+	if rawMultivariateNumericInput.Aggregations == nil {
+		rawMultivariateNumericInput.Aggregations = make([]api1.NumericMultivariateAggregation, 0)
+	}
+	*o = MultivariateNumericInput(rawMultivariateNumericInput)
+	return nil
+}
+
+func (o MultivariateNumericInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MultivariateNumericInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Compares two numeric series point-wise, producing true where left != right and false otherwise.
 type NotEqualToSeries struct {
 	Left  NumericSeries `json:"left"`
 	Right NumericSeries `json:"right"`
@@ -1883,6 +2024,27 @@ func (o NotRanges) MarshalYAML() (interface{}, error) {
 }
 
 func (o *NotRanges) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Negates a boolean series point-wise, producing true where the input is false and false where the input is true.
+type NotSeries struct {
+	Operand BooleanSeries `json:"operand"`
+}
+
+func (o NotSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NotSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2208,6 +2370,30 @@ func (o OnChangeRanges) MarshalYAML() (interface{}, error) {
 }
 
 func (o *OnChangeRanges) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Combines two boolean series point-wise using logical OR, producing true where either input is true and false otherwise.
+type OrSeries struct {
+	Left  BooleanSeries `json:"left"`
+	Right BooleanSeries `json:"right"`
+	// Defaults to forward fill interpolation with a 1s interpolation radius
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
+}
+
+func (o OrSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OrSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -3089,6 +3275,68 @@ func (o *SummarizeCartesian3d) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type SummarizeMultivariate struct {
+	/*
+	   List of input series to temporally align at the raw point level, then bucket the aligned
+	   tuples together. The series with the largest tag group acts as the "driver" that determines
+	   which raw timestamps are included in the alignment. All subsequent series are aligned to the
+	   driver's raw timestamps using the interpolation configuration. After alignment, the resulting
+	   (x, y, z, ...) tuples are bucketed into time windows and aggregated.
+	*/
+	Inputs []MultivariateInput `json:"inputs"`
+	// The output format of the response. Defaults to LEGACY (JSON).
+	OutputFormat *api1.OutputFormat `json:"outputFormat,omitempty"`
+	// The number of buckets to return in the response. Maximum is 10,000. Defaults to 1,000 if not specified.
+	BucketCount *int `json:"bucketCount,omitempty"`
+	/*
+	   Controls how the N input series are aligned at the raw point level when producing multivariate buckets.
+
+	   When present, the server may fill forward a series value from the most recent prior raw point
+	   (bounded by the interpolation radius). This alignment happens BEFORE bucketing,
+	   ensuring that aggregated values in each bucket are computed from temporally aligned raw tuples.
+
+	   When absent, the default interpolation configuration is used.
+	*/
+	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
+}
+
+func (o SummarizeMultivariate) MarshalJSON() ([]byte, error) {
+	if o.Inputs == nil {
+		o.Inputs = make([]MultivariateInput, 0)
+	}
+	type _tmpSummarizeMultivariate SummarizeMultivariate
+	return safejson.Marshal(_tmpSummarizeMultivariate(o))
+}
+
+func (o *SummarizeMultivariate) UnmarshalJSON(data []byte) error {
+	type _tmpSummarizeMultivariate SummarizeMultivariate
+	var rawSummarizeMultivariate _tmpSummarizeMultivariate
+	if err := safejson.Unmarshal(data, &rawSummarizeMultivariate); err != nil {
+		return err
+	}
+	if rawSummarizeMultivariate.Inputs == nil {
+		rawSummarizeMultivariate.Inputs = make([]MultivariateInput, 0)
+	}
+	*o = SummarizeMultivariate(rawSummarizeMultivariate)
+	return nil
+}
+
+func (o SummarizeMultivariate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SummarizeMultivariate) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type SummarizeRanges struct {
 	Input RangeSeries `json:"input"`
 	/*
@@ -3318,7 +3566,17 @@ func (o *UnitConversionSeries) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Outputs a new series where each value is the difference between the values of the current and previous point.
+/*
+Calculates the first discrete difference of the input series. For each point, computes the difference between
+the current value and the previous value (current - previous). The first point in the input series is omitted
+from the output since it has no previous point to compare against.
+
+This is equivalent to pandas DataFrame.diff() with period=1. Useful for analyzing changes between consecutive
+data points in time series data, such as detecting value increases or decreases.
+
+Example: For input values [1.0, 1.0, 2.0, 2.5, 1.8], the output would be [0.0, 1.0, 0.5, -0.7] at the
+corresponding timestamps (the first timestamp is omitted).
+*/
 type ValueDifferenceSeries struct {
 	Input NumericSeries `json:"input"`
 	// Defines the strategy for handling negative output values. Defaults to allowNegativeValues if not specified.

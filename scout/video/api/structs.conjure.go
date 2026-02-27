@@ -335,6 +335,28 @@ func (o *CreateVideoRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Response payload for ending an active stream session.
+type EndStreamResponse struct {
+	StreamId string        `json:"streamId"`
+	EndedAt  api.Timestamp `json:"endedAt"`
+}
+
+func (o EndStreamResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EndStreamResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type EnrichedVideoIngestStatus struct {
 	Status           VideoIngestStatus                           `json:"status"`
 	FileIngestStatus map[rids.VideoFileRid]VideoFileIngestStatus `json:"fileIngestStatus"`
@@ -1741,6 +1763,33 @@ func (o VideoOriginMetadata) MarshalYAML() (interface{}, error) {
 }
 
 func (o *VideoOriginMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Metadata for a single video stream session.
+type VideoStream struct {
+	StreamId     string             `json:"streamId"`
+	VideoRid     rids.VideoRid      `json:"videoRid"`
+	StreamStatus string             `json:"streamStatus"`
+	Start        *datetime.DateTime `json:"start,omitempty"`
+	End          *datetime.DateTime `json:"end,omitempty"`
+	CreatedAt    datetime.DateTime  `json:"createdAt"`
+	UpdatedAt    datetime.DateTime  `json:"updatedAt"`
+}
+
+func (o VideoStream) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoStream) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

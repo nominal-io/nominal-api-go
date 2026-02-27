@@ -360,6 +360,61 @@ func (e *EnumFilterOperator) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// Aggregations for enum series in multivariate queries.
+type EnumMultivariateAggregation struct {
+	val EnumMultivariateAggregation_Value
+}
+
+type EnumMultivariateAggregation_Value string
+
+const (
+	EnumMultivariateAggregation_MODE    EnumMultivariateAggregation_Value = "MODE"
+	EnumMultivariateAggregation_UNKNOWN EnumMultivariateAggregation_Value = "UNKNOWN"
+)
+
+// EnumMultivariateAggregation_Values returns all known variants of EnumMultivariateAggregation.
+func EnumMultivariateAggregation_Values() []EnumMultivariateAggregation_Value {
+	return []EnumMultivariateAggregation_Value{EnumMultivariateAggregation_MODE}
+}
+
+func New_EnumMultivariateAggregation(value EnumMultivariateAggregation_Value) EnumMultivariateAggregation {
+	return EnumMultivariateAggregation{val: value}
+}
+
+// IsUnknown returns false for all known variants of EnumMultivariateAggregation and true otherwise.
+func (e EnumMultivariateAggregation) IsUnknown() bool {
+	switch e.val {
+	case EnumMultivariateAggregation_MODE:
+		return false
+	}
+	return true
+}
+
+func (e EnumMultivariateAggregation) Value() EnumMultivariateAggregation_Value {
+	if e.IsUnknown() {
+		return EnumMultivariateAggregation_UNKNOWN
+	}
+	return e.val
+}
+
+func (e EnumMultivariateAggregation) String() string {
+	return string(e.val)
+}
+
+func (e EnumMultivariateAggregation) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *EnumMultivariateAggregation) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_EnumMultivariateAggregation(EnumMultivariateAggregation_Value(v))
+	case "MODE":
+		*e = New_EnumMultivariateAggregation(EnumMultivariateAggregation_MODE)
+	}
+	return nil
+}
+
 type EnumUnionOperation struct {
 	val EnumUnionOperation_Value
 }
@@ -853,6 +908,72 @@ func (e *NumericDataType) UnmarshalText(data []byte) error {
 		*e = New_NumericDataType(NumericDataType_FLOAT64)
 	case "UINT64":
 		*e = New_NumericDataType(NumericDataType_UINT64)
+	}
+	return nil
+}
+
+type NumericMultivariateAggregation struct {
+	val NumericMultivariateAggregation_Value
+}
+
+type NumericMultivariateAggregation_Value string
+
+const (
+	NumericMultivariateAggregation_MEAN    NumericMultivariateAggregation_Value = "MEAN"
+	NumericMultivariateAggregation_MIN     NumericMultivariateAggregation_Value = "MIN"
+	NumericMultivariateAggregation_MAX     NumericMultivariateAggregation_Value = "MAX"
+	NumericMultivariateAggregation_FIRST   NumericMultivariateAggregation_Value = "FIRST"
+	NumericMultivariateAggregation_LAST    NumericMultivariateAggregation_Value = "LAST"
+	NumericMultivariateAggregation_UNKNOWN NumericMultivariateAggregation_Value = "UNKNOWN"
+)
+
+// NumericMultivariateAggregation_Values returns all known variants of NumericMultivariateAggregation.
+func NumericMultivariateAggregation_Values() []NumericMultivariateAggregation_Value {
+	return []NumericMultivariateAggregation_Value{NumericMultivariateAggregation_MEAN, NumericMultivariateAggregation_MIN, NumericMultivariateAggregation_MAX, NumericMultivariateAggregation_FIRST, NumericMultivariateAggregation_LAST}
+}
+
+func New_NumericMultivariateAggregation(value NumericMultivariateAggregation_Value) NumericMultivariateAggregation {
+	return NumericMultivariateAggregation{val: value}
+}
+
+// IsUnknown returns false for all known variants of NumericMultivariateAggregation and true otherwise.
+func (e NumericMultivariateAggregation) IsUnknown() bool {
+	switch e.val {
+	case NumericMultivariateAggregation_MEAN, NumericMultivariateAggregation_MIN, NumericMultivariateAggregation_MAX, NumericMultivariateAggregation_FIRST, NumericMultivariateAggregation_LAST:
+		return false
+	}
+	return true
+}
+
+func (e NumericMultivariateAggregation) Value() NumericMultivariateAggregation_Value {
+	if e.IsUnknown() {
+		return NumericMultivariateAggregation_UNKNOWN
+	}
+	return e.val
+}
+
+func (e NumericMultivariateAggregation) String() string {
+	return string(e.val)
+}
+
+func (e NumericMultivariateAggregation) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *NumericMultivariateAggregation) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_NumericMultivariateAggregation(NumericMultivariateAggregation_Value(v))
+	case "MEAN":
+		*e = New_NumericMultivariateAggregation(NumericMultivariateAggregation_MEAN)
+	case "MIN":
+		*e = New_NumericMultivariateAggregation(NumericMultivariateAggregation_MIN)
+	case "MAX":
+		*e = New_NumericMultivariateAggregation(NumericMultivariateAggregation_MAX)
+	case "FIRST":
+		*e = New_NumericMultivariateAggregation(NumericMultivariateAggregation_FIRST)
+	case "LAST":
+		*e = New_NumericMultivariateAggregation(NumericMultivariateAggregation_LAST)
 	}
 	return nil
 }

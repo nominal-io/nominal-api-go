@@ -8,7 +8,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api-go/timeseries/logicalseries/api"
+	"github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api1 "github.com/nominal-io/nominal-api-go/timeseries/logicalseries/api"
 )
 
 type ArraySeriesNodeWithT[T any] ArraySeriesNode
@@ -116,10 +117,25 @@ func (u *BooleanSeriesNodeWithT[T]) Accept(ctx context.Context, v BooleanSeriesN
 			return result, fmt.Errorf("field \"lessThanOrEqualTo\" is required")
 		}
 		return v.VisitLessThanOrEqualTo(ctx, *u.lessThanOrEqualTo)
+	case "not":
+		if u.not == nil {
+			return result, fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(ctx, *u.not)
+	case "and":
+		if u.and == nil {
+			return result, fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAnd(ctx, *u.and)
+	case "or":
+		if u.or == nil {
+			return result, fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOr(ctx, *u.or)
 	}
 }
 
-func (u *BooleanSeriesNodeWithT[T]) AcceptFuncs(greaterThanFunc func(GreaterThanSeriesNode) (T, error), lessThanFunc func(LessThanSeriesNode) (T, error), equalToFunc func(EqualToSeriesNode) (T, error), notEqualToFunc func(NotEqualToSeriesNode) (T, error), greaterThanOrEqualToFunc func(GreaterThanOrEqualToSeriesNode) (T, error), lessThanOrEqualToFunc func(LessThanOrEqualToSeriesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *BooleanSeriesNodeWithT[T]) AcceptFuncs(greaterThanFunc func(GreaterThanSeriesNode) (T, error), lessThanFunc func(LessThanSeriesNode) (T, error), equalToFunc func(EqualToSeriesNode) (T, error), notEqualToFunc func(NotEqualToSeriesNode) (T, error), greaterThanOrEqualToFunc func(GreaterThanOrEqualToSeriesNode) (T, error), lessThanOrEqualToFunc func(LessThanOrEqualToSeriesNode) (T, error), notFunc func(NotSeriesNode) (T, error), andFunc func(AndSeriesNode) (T, error), orFunc func(OrSeriesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -157,6 +173,21 @@ func (u *BooleanSeriesNodeWithT[T]) AcceptFuncs(greaterThanFunc func(GreaterThan
 			return result, fmt.Errorf("field \"lessThanOrEqualTo\" is required")
 		}
 		return lessThanOrEqualToFunc(*u.lessThanOrEqualTo)
+	case "not":
+		if u.not == nil {
+			return result, fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
+	case "and":
+		if u.and == nil {
+			return result, fmt.Errorf("field \"and\" is required")
+		}
+		return andFunc(*u.and)
+	case "or":
+		if u.or == nil {
+			return result, fmt.Errorf("field \"or\" is required")
+		}
+		return orFunc(*u.or)
 	}
 }
 
@@ -190,6 +221,21 @@ func (u *BooleanSeriesNodeWithT[T]) LessThanOrEqualToNoopSuccess(LessThanOrEqual
 	return result, nil
 }
 
+func (u *BooleanSeriesNodeWithT[T]) NotNoopSuccess(NotSeriesNode) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BooleanSeriesNodeWithT[T]) AndNoopSuccess(AndSeriesNode) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BooleanSeriesNodeWithT[T]) OrNoopSuccess(OrSeriesNode) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *BooleanSeriesNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -202,6 +248,9 @@ type BooleanSeriesNodeVisitorWithT[T any] interface {
 	VisitNotEqualTo(ctx context.Context, v NotEqualToSeriesNode) (T, error)
 	VisitGreaterThanOrEqualTo(ctx context.Context, v GreaterThanOrEqualToSeriesNode) (T, error)
 	VisitLessThanOrEqualTo(ctx context.Context, v LessThanOrEqualToSeriesNode) (T, error)
+	VisitNot(ctx context.Context, v NotSeriesNode) (T, error)
+	VisitAnd(ctx context.Context, v AndSeriesNode) (T, error)
+	VisitOr(ctx context.Context, v OrSeriesNode) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1112,6 +1161,71 @@ type LogSeriesNodeVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type MultivariateInputNodeWithT[T any] MultivariateInputNode
+
+func (u *MultivariateInputNodeWithT[T]) Accept(ctx context.Context, v MultivariateInputNodeVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return result, fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumeric(ctx, *u.numeric)
+	case "enum":
+		if u.enum == nil {
+			return result, fmt.Errorf("field \"enum\" is required")
+		}
+		return v.VisitEnum(ctx, *u.enum)
+	}
+}
+
+func (u *MultivariateInputNodeWithT[T]) AcceptFuncs(numericFunc func(MultivariateNumericInputNode) (T, error), enumFunc func(MultivariateEnumInputNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return result, fmt.Errorf("field \"numeric\" is required")
+		}
+		return numericFunc(*u.numeric)
+	case "enum":
+		if u.enum == nil {
+			return result, fmt.Errorf("field \"enum\" is required")
+		}
+		return enumFunc(*u.enum)
+	}
+}
+
+func (u *MultivariateInputNodeWithT[T]) NumericNoopSuccess(MultivariateNumericInputNode) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *MultivariateInputNodeWithT[T]) EnumNoopSuccess(MultivariateEnumInputNode) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *MultivariateInputNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type MultivariateInputNodeVisitorWithT[T any] interface {
+	VisitNumeric(ctx context.Context, v MultivariateNumericInputNode) (T, error)
+	VisitEnum(ctx context.Context, v MultivariateEnumInputNode) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type NumericArraySeriesNodeWithT[T any] NumericArraySeriesNode
 
 func (u *NumericArraySeriesNodeWithT[T]) Accept(ctx context.Context, v NumericArraySeriesNodeVisitorWithT[T]) (T, error) {
@@ -1861,6 +1975,11 @@ func (u *RangesNodeWithT[T]) Accept(ctx context.Context, v RangesNodeVisitorWith
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
+	case "booleanToRanges":
+		if u.booleanToRanges == nil {
+			return result, fmt.Errorf("field \"booleanToRanges\" is required")
+		}
+		return v.VisitBooleanToRanges(ctx, *u.booleanToRanges)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return result, fmt.Errorf("field \"durationFilter\" is required")
@@ -1944,7 +2063,7 @@ func (u *RangesNodeWithT[T]) Accept(ctx context.Context, v RangesNodeVisitorWith
 	}
 }
 
-func (u *RangesNodeWithT[T]) AcceptFuncs(durationFilterFunc func(DurationFilterRangesNode) (T, error), enumEqualityFunc func(EnumEqualityRangesNode) (T, error), enumFilterFunc func(EnumFilterRangesNode) (T, error), extremaFunc func(ExtremaRangesNode) (T, error), intersectRangeFunc func(IntersectRangesNode) (T, error), literalRangesFunc func(LiteralRangesNode) (T, error), minMaxThresholdFunc func(MinMaxThresholdRangesNode) (T, error), notFunc func(NotRangesNode) (T, error), onChangeFunc func(OnChangeRangesNode) (T, error), rangeNumericAggregationFunc func(RangesNumericAggregationNode) (T, error), seriesCrossoverRangesNodeFunc func(SeriesCrossoverRangesNode) (T, error), staleRangeFunc func(StaleRangesNode) (T, error), stabilityDetectionFunc func(StabilityDetectionRangesNode) (T, error), thresholdFunc func(ThresholdingRangesNode) (T, error), unionRangeFunc func(UnionRangesNode) (T, error), paddedRangesFunc func(PaddedRangesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *RangesNodeWithT[T]) AcceptFuncs(booleanToRangesFunc func(BooleanToRangesNode) (T, error), durationFilterFunc func(DurationFilterRangesNode) (T, error), enumEqualityFunc func(EnumEqualityRangesNode) (T, error), enumFilterFunc func(EnumFilterRangesNode) (T, error), extremaFunc func(ExtremaRangesNode) (T, error), intersectRangeFunc func(IntersectRangesNode) (T, error), literalRangesFunc func(LiteralRangesNode) (T, error), minMaxThresholdFunc func(MinMaxThresholdRangesNode) (T, error), notFunc func(NotRangesNode) (T, error), onChangeFunc func(OnChangeRangesNode) (T, error), rangeNumericAggregationFunc func(RangesNumericAggregationNode) (T, error), seriesCrossoverRangesNodeFunc func(SeriesCrossoverRangesNode) (T, error), staleRangeFunc func(StaleRangesNode) (T, error), stabilityDetectionFunc func(StabilityDetectionRangesNode) (T, error), thresholdFunc func(ThresholdingRangesNode) (T, error), unionRangeFunc func(UnionRangesNode) (T, error), paddedRangesFunc func(PaddedRangesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1952,6 +2071,11 @@ func (u *RangesNodeWithT[T]) AcceptFuncs(durationFilterFunc func(DurationFilterR
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
+	case "booleanToRanges":
+		if u.booleanToRanges == nil {
+			return result, fmt.Errorf("field \"booleanToRanges\" is required")
+		}
+		return booleanToRangesFunc(*u.booleanToRanges)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return result, fmt.Errorf("field \"durationFilter\" is required")
@@ -2033,6 +2157,11 @@ func (u *RangesNodeWithT[T]) AcceptFuncs(durationFilterFunc func(DurationFilterR
 		}
 		return paddedRangesFunc(*u.paddedRanges)
 	}
+}
+
+func (u *RangesNodeWithT[T]) BooleanToRangesNoopSuccess(BooleanToRangesNode) (T, error) {
+	var result T
+	return result, nil
 }
 
 func (u *RangesNodeWithT[T]) DurationFilterNoopSuccess(DurationFilterRangesNode) (T, error) {
@@ -2121,6 +2250,7 @@ func (u *RangesNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type RangesNodeVisitorWithT[T any] interface {
+	VisitBooleanToRanges(ctx context.Context, v BooleanToRangesNode) (T, error)
 	VisitDurationFilter(ctx context.Context, v DurationFilterRangesNode) (T, error)
 	VisitEnumEquality(ctx context.Context, v EnumEqualityRangesNode) (T, error)
 	VisitEnumFilter(ctx context.Context, v EnumFilterRangesNode) (T, error)
@@ -2325,10 +2455,15 @@ func (u *ResolvedNodeWithT[T]) Accept(ctx context.Context, v ResolvedNodeVisitor
 			return result, fmt.Errorf("field \"curve\" is required")
 		}
 		return v.VisitCurve(ctx, *u.curve)
+	case "multivariate":
+		if u.multivariate == nil {
+			return result, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariate(ctx, *u.multivariate)
 	}
 }
 
-func (u *ResolvedNodeWithT[T]) AcceptFuncs(rangesFunc func(SummarizeRangesNode) (T, error), seriesFunc func(SummarizeSeriesNode) (T, error), valueFunc func(SelectValueNode) (T, error), cartesianFunc func(SummarizeCartesianNode) (T, error), cartesian3dFunc func(SummarizeCartesian3dNode) (T, error), frequencyFunc func(FrequencyDomainNode) (T, error), frequencyV2Func func(FrequencyDomainNodeV2) (T, error), histogramFunc func(HistogramNode) (T, error), curveFunc func(CurveFitNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ResolvedNodeWithT[T]) AcceptFuncs(rangesFunc func(SummarizeRangesNode) (T, error), seriesFunc func(SummarizeSeriesNode) (T, error), valueFunc func(SelectValueNode) (T, error), cartesianFunc func(SummarizeCartesianNode) (T, error), cartesian3dFunc func(SummarizeCartesian3dNode) (T, error), frequencyFunc func(FrequencyDomainNode) (T, error), frequencyV2Func func(FrequencyDomainNodeV2) (T, error), histogramFunc func(HistogramNode) (T, error), curveFunc func(CurveFitNode) (T, error), multivariateFunc func(SummarizeMultivariateNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2381,6 +2516,11 @@ func (u *ResolvedNodeWithT[T]) AcceptFuncs(rangesFunc func(SummarizeRangesNode) 
 			return result, fmt.Errorf("field \"curve\" is required")
 		}
 		return curveFunc(*u.curve)
+	case "multivariate":
+		if u.multivariate == nil {
+			return result, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return multivariateFunc(*u.multivariate)
 	}
 }
 
@@ -2429,6 +2569,11 @@ func (u *ResolvedNodeWithT[T]) CurveNoopSuccess(CurveFitNode) (T, error) {
 	return result, nil
 }
 
+func (u *ResolvedNodeWithT[T]) MultivariateNoopSuccess(SummarizeMultivariateNode) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ResolvedNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -2444,6 +2589,152 @@ type ResolvedNodeVisitorWithT[T any] interface {
 	VisitFrequencyV2(ctx context.Context, v FrequencyDomainNodeV2) (T, error)
 	VisitHistogram(ctx context.Context, v HistogramNode) (T, error)
 	VisitCurve(ctx context.Context, v CurveFitNode) (T, error)
+	VisitMultivariate(ctx context.Context, v SummarizeMultivariateNode) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type RollingOperatorWithT[T any] RollingOperator
+
+func (u *RollingOperatorWithT[T]) Accept(ctx context.Context, v RollingOperatorVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "average":
+		if u.average == nil {
+			return result, fmt.Errorf("field \"average\" is required")
+		}
+		return v.VisitAverage(ctx, *u.average)
+	case "count":
+		if u.count == nil {
+			return result, fmt.Errorf("field \"count\" is required")
+		}
+		return v.VisitCount(ctx, *u.count)
+	case "min":
+		if u.min == nil {
+			return result, fmt.Errorf("field \"min\" is required")
+		}
+		return v.VisitMin(ctx, *u.min)
+	case "max":
+		if u.max == nil {
+			return result, fmt.Errorf("field \"max\" is required")
+		}
+		return v.VisitMax(ctx, *u.max)
+	case "percentile":
+		if u.percentile == nil {
+			return result, fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentile(ctx, *u.percentile)
+	case "standardDeviation":
+		if u.standardDeviation == nil {
+			return result, fmt.Errorf("field \"standardDeviation\" is required")
+		}
+		return v.VisitStandardDeviation(ctx, *u.standardDeviation)
+	case "sum":
+		if u.sum == nil {
+			return result, fmt.Errorf("field \"sum\" is required")
+		}
+		return v.VisitSum(ctx, *u.sum)
+	}
+}
+
+func (u *RollingOperatorWithT[T]) AcceptFuncs(averageFunc func(api.Average) (T, error), countFunc func(api.Count) (T, error), minFunc func(api.Minimum) (T, error), maxFunc func(api.Maximum) (T, error), percentileFunc func(ResolvedPercentile) (T, error), standardDeviationFunc func(api.StandardDeviation) (T, error), sumFunc func(api.Sum) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "average":
+		if u.average == nil {
+			return result, fmt.Errorf("field \"average\" is required")
+		}
+		return averageFunc(*u.average)
+	case "count":
+		if u.count == nil {
+			return result, fmt.Errorf("field \"count\" is required")
+		}
+		return countFunc(*u.count)
+	case "min":
+		if u.min == nil {
+			return result, fmt.Errorf("field \"min\" is required")
+		}
+		return minFunc(*u.min)
+	case "max":
+		if u.max == nil {
+			return result, fmt.Errorf("field \"max\" is required")
+		}
+		return maxFunc(*u.max)
+	case "percentile":
+		if u.percentile == nil {
+			return result, fmt.Errorf("field \"percentile\" is required")
+		}
+		return percentileFunc(*u.percentile)
+	case "standardDeviation":
+		if u.standardDeviation == nil {
+			return result, fmt.Errorf("field \"standardDeviation\" is required")
+		}
+		return standardDeviationFunc(*u.standardDeviation)
+	case "sum":
+		if u.sum == nil {
+			return result, fmt.Errorf("field \"sum\" is required")
+		}
+		return sumFunc(*u.sum)
+	}
+}
+
+func (u *RollingOperatorWithT[T]) AverageNoopSuccess(api.Average) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *RollingOperatorWithT[T]) CountNoopSuccess(api.Count) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *RollingOperatorWithT[T]) MinNoopSuccess(api.Minimum) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *RollingOperatorWithT[T]) MaxNoopSuccess(api.Maximum) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *RollingOperatorWithT[T]) PercentileNoopSuccess(ResolvedPercentile) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *RollingOperatorWithT[T]) StandardDeviationNoopSuccess(api.StandardDeviation) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *RollingOperatorWithT[T]) SumNoopSuccess(api.Sum) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *RollingOperatorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type RollingOperatorVisitorWithT[T any] interface {
+	VisitAverage(ctx context.Context, v api.Average) (T, error)
+	VisitCount(ctx context.Context, v api.Count) (T, error)
+	VisitMin(ctx context.Context, v api.Minimum) (T, error)
+	VisitMax(ctx context.Context, v api.Maximum) (T, error)
+	VisitPercentile(ctx context.Context, v ResolvedPercentile) (T, error)
+	VisitStandardDeviation(ctx context.Context, v api.StandardDeviation) (T, error)
+	VisitSum(ctx context.Context, v api.Sum) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -2841,7 +3132,7 @@ func (u *StorageLocatorWithT[T]) Accept(ctx context.Context, v StorageLocatorVis
 	}
 }
 
-func (u *StorageLocatorWithT[T]) AcceptFuncs(nominalFunc func(NominalStorageLocator) (T, error), externalFunc func(api.ExternalStorageLocator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *StorageLocatorWithT[T]) AcceptFuncs(nominalFunc func(NominalStorageLocator) (T, error), externalFunc func(api1.ExternalStorageLocator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2867,7 +3158,7 @@ func (u *StorageLocatorWithT[T]) NominalNoopSuccess(NominalStorageLocator) (T, e
 	return result, nil
 }
 
-func (u *StorageLocatorWithT[T]) ExternalNoopSuccess(api.ExternalStorageLocator) (T, error) {
+func (u *StorageLocatorWithT[T]) ExternalNoopSuccess(api1.ExternalStorageLocator) (T, error) {
 	var result T
 	return result, nil
 }
@@ -2879,7 +3170,7 @@ func (u *StorageLocatorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type StorageLocatorVisitorWithT[T any] interface {
 	VisitNominal(ctx context.Context, v NominalStorageLocator) (T, error)
-	VisitExternal(ctx context.Context, v api.ExternalStorageLocator) (T, error)
+	VisitExternal(ctx context.Context, v api1.ExternalStorageLocator) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

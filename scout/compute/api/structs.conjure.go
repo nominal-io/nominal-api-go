@@ -99,6 +99,32 @@ func (o *ArrowBucketedEnumPlot) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type ArrowBucketedMultivariatePlot struct {
+	// The raw binary containing Arrow IPC stream for BucketedMultivariatePlot
+	ArrowBinary []byte `json:"arrowBinary"`
+	/*
+	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
+	   this list represents the superset of all group by keys used across every individual channel.
+	*/
+	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
+}
+
+func (o ArrowBucketedMultivariatePlot) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ArrowBucketedMultivariatePlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ArrowBucketedNumericPlot struct {
 	// The raw binary containing Arrow IPC stream for BucketedNumericPlot
 	ArrowBinary []byte `json:"arrowBinary"`
@@ -769,6 +795,52 @@ func (o BucketedFrequencyDomainPlot) MarshalYAML() (interface{}, error) {
 }
 
 func (o *BucketedFrequencyDomainPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BucketedMultivariatePlot struct {
+	Buckets []MultivariateBucket `json:"buckets"`
+	/*
+	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
+	   this list represents the superset of all group by keys used across every individual channel.
+	*/
+	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
+}
+
+func (o BucketedMultivariatePlot) MarshalJSON() ([]byte, error) {
+	if o.Buckets == nil {
+		o.Buckets = make([]MultivariateBucket, 0)
+	}
+	type _tmpBucketedMultivariatePlot BucketedMultivariatePlot
+	return safejson.Marshal(_tmpBucketedMultivariatePlot(o))
+}
+
+func (o *BucketedMultivariatePlot) UnmarshalJSON(data []byte) error {
+	type _tmpBucketedMultivariatePlot BucketedMultivariatePlot
+	var rawBucketedMultivariatePlot _tmpBucketedMultivariatePlot
+	if err := safejson.Unmarshal(data, &rawBucketedMultivariatePlot); err != nil {
+		return err
+	}
+	if rawBucketedMultivariatePlot.Buckets == nil {
+		rawBucketedMultivariatePlot.Buckets = make([]MultivariateBucket, 0)
+	}
+	*o = BucketedMultivariatePlot(rawBucketedMultivariatePlot)
+	return nil
+}
+
+func (o BucketedMultivariatePlot) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BucketedMultivariatePlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2386,6 +2458,90 @@ func (o *Minimum) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type MultivariateBucket struct {
+	Timestamp api.Timestamp `json:"timestamp"`
+	// Values for each input series in the bucket.
+	Values []Value `json:"values"`
+}
+
+func (o MultivariateBucket) MarshalJSON() ([]byte, error) {
+	if o.Values == nil {
+		o.Values = make([]Value, 0)
+	}
+	type _tmpMultivariateBucket MultivariateBucket
+	return safejson.Marshal(_tmpMultivariateBucket(o))
+}
+
+func (o *MultivariateBucket) UnmarshalJSON(data []byte) error {
+	type _tmpMultivariateBucket MultivariateBucket
+	var rawMultivariateBucket _tmpMultivariateBucket
+	if err := safejson.Unmarshal(data, &rawMultivariateBucket); err != nil {
+		return err
+	}
+	if rawMultivariateBucket.Values == nil {
+		rawMultivariateBucket.Values = make([]Value, 0)
+	}
+	*o = MultivariateBucket(rawMultivariateBucket)
+	return nil
+}
+
+func (o MultivariateBucket) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MultivariateBucket) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type MultivariateUnitResult struct {
+	Units []UnitResult `json:"units"`
+}
+
+func (o MultivariateUnitResult) MarshalJSON() ([]byte, error) {
+	if o.Units == nil {
+		o.Units = make([]UnitResult, 0)
+	}
+	type _tmpMultivariateUnitResult MultivariateUnitResult
+	return safejson.Marshal(_tmpMultivariateUnitResult(o))
+}
+
+func (o *MultivariateUnitResult) UnmarshalJSON(data []byte) error {
+	type _tmpMultivariateUnitResult MultivariateUnitResult
+	var rawMultivariateUnitResult _tmpMultivariateUnitResult
+	if err := safejson.Unmarshal(data, &rawMultivariateUnitResult); err != nil {
+		return err
+	}
+	if rawMultivariateUnitResult.Units == nil {
+		rawMultivariateUnitResult.Units = make([]UnitResult, 0)
+	}
+	*o = MultivariateUnitResult(rawMultivariateUnitResult)
+	return nil
+}
+
+func (o MultivariateUnitResult) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MultivariateUnitResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type NumericBucket struct {
 	Min   float64           `json:"min"`
 	Max   float64           `json:"max"`
@@ -2772,6 +2928,28 @@ func (o PercentageThreshold) MarshalYAML() (interface{}, error) {
 }
 
 func (o *PercentageThreshold) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// The value at the specified percentile within the time window.
+type Percentile struct {
+	// Percentile to compute, in range [0, 1]. E.g. 0.5 for median, 0.95 for p95.
+	Percentile DoubleConstant `json:"percentile"`
+}
+
+func (o Percentile) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Percentile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

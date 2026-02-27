@@ -249,6 +249,67 @@ type NominalChannelWriterServiceClient interface {
 	   If the payload is compressed, the appropriate Content-Encoding header must be included.
 	*/
 	WriteNominalBatches(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg httpclient.RequestBody) error
+	/*
+	   Synchronously writes to a Nominal data source using the columnar WriteBatchesRequest Protobuf schema.
+
+	   This is the most efficient write format. Unlike the row-oriented writeNominalBatches endpoint, this schema
+	   stores timestamps and values as separate packed arrays per channel, which enables protobuf packed encoding
+	   for value arrays and significantly better compression.
+
+	   The data_source_rid field in the protobuf body identifies the target data source or dataset.
+	   The request must be Protobuf-encoded and accompanied by the appropriate content encoding headers if compressed.
+
+	   The request should follow this Protobuf schema:
+	   ```proto
+	   message WriteBatchesRequest {
+	     repeated RecordsBatch batches = 1;
+	     string data_source_rid = 2;
+	   }
+
+	   message RecordsBatch {
+	     string channel = 1;
+	     map<string, string> tags = 2;
+	     Points points = 3;
+	   }
+
+	   message Points {
+	     repeated Timestamp timestamps = 1;
+	     oneof points {
+	       DoublePoints double_points = 2;
+	       StringPoints string_points = 3;
+	       IntPoints int_points = 5;
+	       ArrayPoints array_points = 6;
+	       StructPoints struct_points = 7;
+	       Uint64Points uint64_points = 8;
+	     }
+	   }
+
+	   // Picosecond precision timestamp.
+	   message Timestamp {
+	     optional int64 seconds = 1;
+	     optional int64 nanos = 2;
+	     optional int32 picos = 3;
+	   }
+
+	   message DoublePoints { repeated double points = 1; }
+	   message StringPoints { repeated string points = 1; }
+	   message IntPoints { repeated int64 points = 1; }
+	   message Uint64Points { repeated uint64 points = 1; }
+	   message StructPoints { repeated string points = 1; }
+
+	   message ArrayPoints {
+	     oneof array_type {
+	       DoubleArrayPoints double_array_points = 1;
+	       StringArrayPoints string_array_points = 2;
+	     }
+	   }
+	   message DoubleArrayPoints { repeated DoubleArrayPoint points = 1; }
+	   message DoubleArrayPoint { repeated double value = 2; }
+	   message StringArrayPoints { repeated StringArrayPoint points = 1; }
+	   message StringArrayPoint { repeated string value = 2; }
+	   ```
+	*/
+	WriteNominalColumnarBatches(ctx context.Context, authHeader bearertoken.Token, requestArg httpclient.RequestBody) error
 	// Synchronously writes logs to a Nominal data source.
 	WriteLogs(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg WriteLogsRequest) error
 }
@@ -339,6 +400,19 @@ func (c *nominalChannelWriterServiceClient) WriteNominalBatches(ctx context.Cont
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "writeNominalBatches failed")
+	}
+	return nil
+}
+
+func (c *nominalChannelWriterServiceClient) WriteNominalColumnarBatches(ctx context.Context, authHeader bearertoken.Token, requestArg httpclient.RequestBody) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("WriteNominalColumnarBatches"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/storage/writer/v1/nominal-columnar"))
+	requestParams = append(requestParams, httpclient.WithBinaryRequestBody(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "writeNominalColumnarBatches failed")
 	}
 	return nil
 }
@@ -516,6 +590,67 @@ type NominalChannelWriterServiceClientWithAuth interface {
 	   If the payload is compressed, the appropriate Content-Encoding header must be included.
 	*/
 	WriteNominalBatches(ctx context.Context, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg httpclient.RequestBody) error
+	/*
+	   Synchronously writes to a Nominal data source using the columnar WriteBatchesRequest Protobuf schema.
+
+	   This is the most efficient write format. Unlike the row-oriented writeNominalBatches endpoint, this schema
+	   stores timestamps and values as separate packed arrays per channel, which enables protobuf packed encoding
+	   for value arrays and significantly better compression.
+
+	   The data_source_rid field in the protobuf body identifies the target data source or dataset.
+	   The request must be Protobuf-encoded and accompanied by the appropriate content encoding headers if compressed.
+
+	   The request should follow this Protobuf schema:
+	   ```proto
+	   message WriteBatchesRequest {
+	     repeated RecordsBatch batches = 1;
+	     string data_source_rid = 2;
+	   }
+
+	   message RecordsBatch {
+	     string channel = 1;
+	     map<string, string> tags = 2;
+	     Points points = 3;
+	   }
+
+	   message Points {
+	     repeated Timestamp timestamps = 1;
+	     oneof points {
+	       DoublePoints double_points = 2;
+	       StringPoints string_points = 3;
+	       IntPoints int_points = 5;
+	       ArrayPoints array_points = 6;
+	       StructPoints struct_points = 7;
+	       Uint64Points uint64_points = 8;
+	     }
+	   }
+
+	   // Picosecond precision timestamp.
+	   message Timestamp {
+	     optional int64 seconds = 1;
+	     optional int64 nanos = 2;
+	     optional int32 picos = 3;
+	   }
+
+	   message DoublePoints { repeated double points = 1; }
+	   message StringPoints { repeated string points = 1; }
+	   message IntPoints { repeated int64 points = 1; }
+	   message Uint64Points { repeated uint64 points = 1; }
+	   message StructPoints { repeated string points = 1; }
+
+	   message ArrayPoints {
+	     oneof array_type {
+	       DoubleArrayPoints double_array_points = 1;
+	       StringArrayPoints string_array_points = 2;
+	     }
+	   }
+	   message DoubleArrayPoints { repeated DoubleArrayPoint points = 1; }
+	   message DoubleArrayPoint { repeated double value = 2; }
+	   message StringArrayPoints { repeated StringArrayPoint points = 1; }
+	   message StringArrayPoint { repeated string value = 2; }
+	   ```
+	*/
+	WriteNominalColumnarBatches(ctx context.Context, requestArg httpclient.RequestBody) error
 	// Synchronously writes logs to a Nominal data source.
 	WriteLogs(ctx context.Context, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg WriteLogsRequest) error
 }
@@ -551,6 +686,10 @@ func (c *nominalChannelWriterServiceClientWithAuth) PrometheusRemoteWriteHealthC
 
 func (c *nominalChannelWriterServiceClientWithAuth) WriteNominalBatches(ctx context.Context, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg httpclient.RequestBody) error {
 	return c.client.WriteNominalBatches(ctx, c.authHeader, dataSourceRidArg, requestArg)
+}
+
+func (c *nominalChannelWriterServiceClientWithAuth) WriteNominalColumnarBatches(ctx context.Context, requestArg httpclient.RequestBody) error {
+	return c.client.WriteNominalColumnarBatches(ctx, c.authHeader, requestArg)
 }
 
 func (c *nominalChannelWriterServiceClientWithAuth) WriteLogs(ctx context.Context, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg WriteLogsRequest) error {
@@ -612,6 +751,14 @@ func (c *nominalChannelWriterServiceClientWithTokenProvider) WriteNominalBatches
 		return err
 	}
 	return c.client.WriteNominalBatches(ctx, bearertoken.Token(token), dataSourceRidArg, requestArg)
+}
+
+func (c *nominalChannelWriterServiceClientWithTokenProvider) WriteNominalColumnarBatches(ctx context.Context, requestArg httpclient.RequestBody) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.WriteNominalColumnarBatches(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *nominalChannelWriterServiceClientWithTokenProvider) WriteLogs(ctx context.Context, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg WriteLogsRequest) error {

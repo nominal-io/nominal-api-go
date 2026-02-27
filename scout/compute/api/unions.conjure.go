@@ -730,73 +730,77 @@ func NewChannelSeriesFromRun(v RunChannel) ChannelSeries {
 }
 
 type ComputeNodeResponse struct {
-	typ                     string
-	range_                  *[]Range
-	rangesSummary           *RangesSummary
-	rangeValue              **Range
-	numeric                 *NumericPlot
-	bucketedNumeric         *BucketedNumericPlot
-	numericPoint            **NumericPoint
-	singlePoint             **SinglePoint
-	arrowNumeric            *ArrowNumericPlot
-	arrowBucketedNumeric    *ArrowBucketedNumericPlot
-	enum                    *EnumPlot
-	enumPoint               **EnumPoint
-	bucketedEnum            *BucketedEnumPlot
-	arrowEnum               *ArrowEnumPlot
-	arrowBucketedEnum       *ArrowBucketedEnumPlot
-	pagedLog                *PagedLogPlot
-	logPoint                **LogPoint
-	cartesian               *CartesianPlot
-	bucketedCartesian       *BucketedCartesianPlot
-	bucketedCartesian3d     *BucketedCartesian3dPlot
-	frequencyDomain         *FrequencyDomainPlot
-	frequencyDomainV2       *FrequencyDomainPlotV2
-	bucketedFrequencyDomain *BucketedFrequencyDomainPlot
-	numericHistogram        *NumericHistogramPlot
-	enumHistogram           *EnumHistogramPlot
-	curveFit                *CurveFitResult
-	grouped                 *GroupedComputeNodeResponses
-	array                   *ArrowArrayPlot
-	bucketedStruct          *ArrowBucketedStructPlot
-	fullResolution          *ArrowFullResolutionPlot
+	typ                       string
+	range_                    *[]Range
+	rangesSummary             *RangesSummary
+	rangeValue                **Range
+	numeric                   *NumericPlot
+	bucketedNumeric           *BucketedNumericPlot
+	numericPoint              **NumericPoint
+	singlePoint               **SinglePoint
+	arrowNumeric              *ArrowNumericPlot
+	arrowBucketedNumeric      *ArrowBucketedNumericPlot
+	enum                      *EnumPlot
+	enumPoint                 **EnumPoint
+	bucketedEnum              *BucketedEnumPlot
+	arrowEnum                 *ArrowEnumPlot
+	arrowBucketedEnum         *ArrowBucketedEnumPlot
+	pagedLog                  *PagedLogPlot
+	logPoint                  **LogPoint
+	cartesian                 *CartesianPlot
+	bucketedCartesian         *BucketedCartesianPlot
+	bucketedCartesian3d       *BucketedCartesian3dPlot
+	frequencyDomain           *FrequencyDomainPlot
+	frequencyDomainV2         *FrequencyDomainPlotV2
+	bucketedFrequencyDomain   *BucketedFrequencyDomainPlot
+	numericHistogram          *NumericHistogramPlot
+	enumHistogram             *EnumHistogramPlot
+	curveFit                  *CurveFitResult
+	grouped                   *GroupedComputeNodeResponses
+	array                     *ArrowArrayPlot
+	bucketedStruct            *ArrowBucketedStructPlot
+	fullResolution            *ArrowFullResolutionPlot
+	arrowBucketedMultivariate *ArrowBucketedMultivariatePlot
+	multivariate              *BucketedMultivariatePlot
 }
 
 type computeNodeResponseDeserializer struct {
-	Type                    string                       `json:"type"`
-	Range                   *[]Range                     `json:"range"`
-	RangesSummary           *RangesSummary               `json:"rangesSummary"`
-	RangeValue              **Range                      `json:"rangeValue"`
-	Numeric                 *NumericPlot                 `json:"numeric"`
-	BucketedNumeric         *BucketedNumericPlot         `json:"bucketedNumeric"`
-	NumericPoint            **NumericPoint               `json:"numericPoint"`
-	SinglePoint             **SinglePoint                `json:"singlePoint"`
-	ArrowNumeric            *ArrowNumericPlot            `json:"arrowNumeric"`
-	ArrowBucketedNumeric    *ArrowBucketedNumericPlot    `json:"arrowBucketedNumeric"`
-	Enum                    *EnumPlot                    `json:"enum"`
-	EnumPoint               **EnumPoint                  `json:"enumPoint"`
-	BucketedEnum            *BucketedEnumPlot            `json:"bucketedEnum"`
-	ArrowEnum               *ArrowEnumPlot               `json:"arrowEnum"`
-	ArrowBucketedEnum       *ArrowBucketedEnumPlot       `json:"arrowBucketedEnum"`
-	PagedLog                *PagedLogPlot                `json:"pagedLog"`
-	LogPoint                **LogPoint                   `json:"logPoint"`
-	Cartesian               *CartesianPlot               `json:"cartesian"`
-	BucketedCartesian       *BucketedCartesianPlot       `json:"bucketedCartesian"`
-	BucketedCartesian3d     *BucketedCartesian3dPlot     `json:"bucketedCartesian3d"`
-	FrequencyDomain         *FrequencyDomainPlot         `json:"frequencyDomain"`
-	FrequencyDomainV2       *FrequencyDomainPlotV2       `json:"frequencyDomainV2"`
-	BucketedFrequencyDomain *BucketedFrequencyDomainPlot `json:"bucketedFrequencyDomain"`
-	NumericHistogram        *NumericHistogramPlot        `json:"numericHistogram"`
-	EnumHistogram           *EnumHistogramPlot           `json:"enumHistogram"`
-	CurveFit                *CurveFitResult              `json:"curveFit"`
-	Grouped                 *GroupedComputeNodeResponses `json:"grouped"`
-	Array                   *ArrowArrayPlot              `json:"array"`
-	BucketedStruct          *ArrowBucketedStructPlot     `json:"bucketedStruct"`
-	FullResolution          *ArrowFullResolutionPlot     `json:"fullResolution"`
+	Type                      string                         `json:"type"`
+	Range                     *[]Range                       `json:"range"`
+	RangesSummary             *RangesSummary                 `json:"rangesSummary"`
+	RangeValue                **Range                        `json:"rangeValue"`
+	Numeric                   *NumericPlot                   `json:"numeric"`
+	BucketedNumeric           *BucketedNumericPlot           `json:"bucketedNumeric"`
+	NumericPoint              **NumericPoint                 `json:"numericPoint"`
+	SinglePoint               **SinglePoint                  `json:"singlePoint"`
+	ArrowNumeric              *ArrowNumericPlot              `json:"arrowNumeric"`
+	ArrowBucketedNumeric      *ArrowBucketedNumericPlot      `json:"arrowBucketedNumeric"`
+	Enum                      *EnumPlot                      `json:"enum"`
+	EnumPoint                 **EnumPoint                    `json:"enumPoint"`
+	BucketedEnum              *BucketedEnumPlot              `json:"bucketedEnum"`
+	ArrowEnum                 *ArrowEnumPlot                 `json:"arrowEnum"`
+	ArrowBucketedEnum         *ArrowBucketedEnumPlot         `json:"arrowBucketedEnum"`
+	PagedLog                  *PagedLogPlot                  `json:"pagedLog"`
+	LogPoint                  **LogPoint                     `json:"logPoint"`
+	Cartesian                 *CartesianPlot                 `json:"cartesian"`
+	BucketedCartesian         *BucketedCartesianPlot         `json:"bucketedCartesian"`
+	BucketedCartesian3d       *BucketedCartesian3dPlot       `json:"bucketedCartesian3d"`
+	FrequencyDomain           *FrequencyDomainPlot           `json:"frequencyDomain"`
+	FrequencyDomainV2         *FrequencyDomainPlotV2         `json:"frequencyDomainV2"`
+	BucketedFrequencyDomain   *BucketedFrequencyDomainPlot   `json:"bucketedFrequencyDomain"`
+	NumericHistogram          *NumericHistogramPlot          `json:"numericHistogram"`
+	EnumHistogram             *EnumHistogramPlot             `json:"enumHistogram"`
+	CurveFit                  *CurveFitResult                `json:"curveFit"`
+	Grouped                   *GroupedComputeNodeResponses   `json:"grouped"`
+	Array                     *ArrowArrayPlot                `json:"array"`
+	BucketedStruct            *ArrowBucketedStructPlot       `json:"bucketedStruct"`
+	FullResolution            *ArrowFullResolutionPlot       `json:"fullResolution"`
+	ArrowBucketedMultivariate *ArrowBucketedMultivariatePlot `json:"arrowBucketedMultivariate"`
+	Multivariate              *BucketedMultivariatePlot      `json:"multivariate"`
 }
 
 func (u *computeNodeResponseDeserializer) toStruct() ComputeNodeResponse {
-	return ComputeNodeResponse{typ: u.Type, range_: u.Range, rangesSummary: u.RangesSummary, rangeValue: u.RangeValue, numeric: u.Numeric, bucketedNumeric: u.BucketedNumeric, numericPoint: u.NumericPoint, singlePoint: u.SinglePoint, arrowNumeric: u.ArrowNumeric, arrowBucketedNumeric: u.ArrowBucketedNumeric, enum: u.Enum, enumPoint: u.EnumPoint, bucketedEnum: u.BucketedEnum, arrowEnum: u.ArrowEnum, arrowBucketedEnum: u.ArrowBucketedEnum, pagedLog: u.PagedLog, logPoint: u.LogPoint, cartesian: u.Cartesian, bucketedCartesian: u.BucketedCartesian, bucketedCartesian3d: u.BucketedCartesian3d, frequencyDomain: u.FrequencyDomain, frequencyDomainV2: u.FrequencyDomainV2, bucketedFrequencyDomain: u.BucketedFrequencyDomain, numericHistogram: u.NumericHistogram, enumHistogram: u.EnumHistogram, curveFit: u.CurveFit, grouped: u.Grouped, array: u.Array, bucketedStruct: u.BucketedStruct, fullResolution: u.FullResolution}
+	return ComputeNodeResponse{typ: u.Type, range_: u.Range, rangesSummary: u.RangesSummary, rangeValue: u.RangeValue, numeric: u.Numeric, bucketedNumeric: u.BucketedNumeric, numericPoint: u.NumericPoint, singlePoint: u.SinglePoint, arrowNumeric: u.ArrowNumeric, arrowBucketedNumeric: u.ArrowBucketedNumeric, enum: u.Enum, enumPoint: u.EnumPoint, bucketedEnum: u.BucketedEnum, arrowEnum: u.ArrowEnum, arrowBucketedEnum: u.ArrowBucketedEnum, pagedLog: u.PagedLog, logPoint: u.LogPoint, cartesian: u.Cartesian, bucketedCartesian: u.BucketedCartesian, bucketedCartesian3d: u.BucketedCartesian3d, frequencyDomain: u.FrequencyDomain, frequencyDomainV2: u.FrequencyDomainV2, bucketedFrequencyDomain: u.BucketedFrequencyDomain, numericHistogram: u.NumericHistogram, enumHistogram: u.EnumHistogram, curveFit: u.CurveFit, grouped: u.Grouped, array: u.Array, bucketedStruct: u.BucketedStruct, fullResolution: u.FullResolution, arrowBucketedMultivariate: u.ArrowBucketedMultivariate, multivariate: u.Multivariate}
 }
 
 func (u *ComputeNodeResponse) toSerializer() (interface{}, error) {
@@ -1040,6 +1044,22 @@ func (u *ComputeNodeResponse) toSerializer() (interface{}, error) {
 			Type           string                  `json:"type"`
 			FullResolution ArrowFullResolutionPlot `json:"fullResolution"`
 		}{Type: "fullResolution", FullResolution: *u.fullResolution}, nil
+	case "arrowBucketedMultivariate":
+		if u.arrowBucketedMultivariate == nil {
+			return nil, fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
+		}
+		return struct {
+			Type                      string                        `json:"type"`
+			ArrowBucketedMultivariate ArrowBucketedMultivariatePlot `json:"arrowBucketedMultivariate"`
+		}{Type: "arrowBucketedMultivariate", ArrowBucketedMultivariate: *u.arrowBucketedMultivariate}, nil
+	case "multivariate":
+		if u.multivariate == nil {
+			return nil, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return struct {
+			Type         string                   `json:"type"`
+			Multivariate BucketedMultivariatePlot `json:"multivariate"`
+		}{Type: "multivariate", Multivariate: *u.multivariate}, nil
 	}
 }
 
@@ -1159,6 +1179,14 @@ func (u *ComputeNodeResponse) UnmarshalJSON(data []byte) error {
 		if u.fullResolution == nil {
 			return fmt.Errorf("field \"fullResolution\" is required")
 		}
+	case "arrowBucketedMultivariate":
+		if u.arrowBucketedMultivariate == nil {
+			return fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
+		}
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
 	}
 	return nil
 }
@@ -1179,7 +1207,7 @@ func (u *ComputeNodeResponse) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ComputeNodeResponse) AcceptFuncs(range_Func func([]Range) error, rangesSummaryFunc func(RangesSummary) error, rangeValueFunc func(*Range) error, numericFunc func(NumericPlot) error, bucketedNumericFunc func(BucketedNumericPlot) error, numericPointFunc func(*NumericPoint) error, singlePointFunc func(*SinglePoint) error, arrowNumericFunc func(ArrowNumericPlot) error, arrowBucketedNumericFunc func(ArrowBucketedNumericPlot) error, enumFunc func(EnumPlot) error, enumPointFunc func(*EnumPoint) error, bucketedEnumFunc func(BucketedEnumPlot) error, arrowEnumFunc func(ArrowEnumPlot) error, arrowBucketedEnumFunc func(ArrowBucketedEnumPlot) error, pagedLogFunc func(PagedLogPlot) error, logPointFunc func(*LogPoint) error, cartesianFunc func(CartesianPlot) error, bucketedCartesianFunc func(BucketedCartesianPlot) error, bucketedCartesian3dFunc func(BucketedCartesian3dPlot) error, frequencyDomainFunc func(FrequencyDomainPlot) error, frequencyDomainV2Func func(FrequencyDomainPlotV2) error, bucketedFrequencyDomainFunc func(BucketedFrequencyDomainPlot) error, numericHistogramFunc func(NumericHistogramPlot) error, enumHistogramFunc func(EnumHistogramPlot) error, curveFitFunc func(CurveFitResult) error, groupedFunc func(GroupedComputeNodeResponses) error, arrayFunc func(ArrowArrayPlot) error, bucketedStructFunc func(ArrowBucketedStructPlot) error, fullResolutionFunc func(ArrowFullResolutionPlot) error, unknownFunc func(string) error) error {
+func (u *ComputeNodeResponse) AcceptFuncs(range_Func func([]Range) error, rangesSummaryFunc func(RangesSummary) error, rangeValueFunc func(*Range) error, numericFunc func(NumericPlot) error, bucketedNumericFunc func(BucketedNumericPlot) error, numericPointFunc func(*NumericPoint) error, singlePointFunc func(*SinglePoint) error, arrowNumericFunc func(ArrowNumericPlot) error, arrowBucketedNumericFunc func(ArrowBucketedNumericPlot) error, enumFunc func(EnumPlot) error, enumPointFunc func(*EnumPoint) error, bucketedEnumFunc func(BucketedEnumPlot) error, arrowEnumFunc func(ArrowEnumPlot) error, arrowBucketedEnumFunc func(ArrowBucketedEnumPlot) error, pagedLogFunc func(PagedLogPlot) error, logPointFunc func(*LogPoint) error, cartesianFunc func(CartesianPlot) error, bucketedCartesianFunc func(BucketedCartesianPlot) error, bucketedCartesian3dFunc func(BucketedCartesian3dPlot) error, frequencyDomainFunc func(FrequencyDomainPlot) error, frequencyDomainV2Func func(FrequencyDomainPlotV2) error, bucketedFrequencyDomainFunc func(BucketedFrequencyDomainPlot) error, numericHistogramFunc func(NumericHistogramPlot) error, enumHistogramFunc func(EnumHistogramPlot) error, curveFitFunc func(CurveFitResult) error, groupedFunc func(GroupedComputeNodeResponses) error, arrayFunc func(ArrowArrayPlot) error, bucketedStructFunc func(ArrowBucketedStructPlot) error, fullResolutionFunc func(ArrowFullResolutionPlot) error, arrowBucketedMultivariateFunc func(ArrowBucketedMultivariatePlot) error, multivariateFunc func(BucketedMultivariatePlot) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1336,6 +1364,16 @@ func (u *ComputeNodeResponse) AcceptFuncs(range_Func func([]Range) error, ranges
 			return fmt.Errorf("field \"fullResolution\" is required")
 		}
 		return fullResolutionFunc(*u.fullResolution)
+	case "arrowBucketedMultivariate":
+		if u.arrowBucketedMultivariate == nil {
+			return fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
+		}
+		return arrowBucketedMultivariateFunc(*u.arrowBucketedMultivariate)
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
+		return multivariateFunc(*u.multivariate)
 	}
 }
 
@@ -1452,6 +1490,14 @@ func (u *ComputeNodeResponse) BucketedStructNoopSuccess(_ ArrowBucketedStructPlo
 }
 
 func (u *ComputeNodeResponse) FullResolutionNoopSuccess(_ ArrowFullResolutionPlot) error {
+	return nil
+}
+
+func (u *ComputeNodeResponse) ArrowBucketedMultivariateNoopSuccess(_ ArrowBucketedMultivariatePlot) error {
+	return nil
+}
+
+func (u *ComputeNodeResponse) MultivariateNoopSuccess(_ BucketedMultivariatePlot) error {
 	return nil
 }
 
@@ -1616,6 +1662,16 @@ func (u *ComputeNodeResponse) Accept(v ComputeNodeResponseVisitor) error {
 			return fmt.Errorf("field \"fullResolution\" is required")
 		}
 		return v.VisitFullResolution(*u.fullResolution)
+	case "arrowBucketedMultivariate":
+		if u.arrowBucketedMultivariate == nil {
+			return fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
+		}
+		return v.VisitArrowBucketedMultivariate(*u.arrowBucketedMultivariate)
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariate(*u.multivariate)
 	}
 }
 
@@ -1649,6 +1705,8 @@ type ComputeNodeResponseVisitor interface {
 	VisitArray(v ArrowArrayPlot) error
 	VisitBucketedStruct(v ArrowBucketedStructPlot) error
 	VisitFullResolution(v ArrowFullResolutionPlot) error
+	VisitArrowBucketedMultivariate(v ArrowBucketedMultivariatePlot) error
+	VisitMultivariate(v BucketedMultivariatePlot) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1809,6 +1867,16 @@ func (u *ComputeNodeResponse) AcceptWithContext(ctx context.Context, v ComputeNo
 			return fmt.Errorf("field \"fullResolution\" is required")
 		}
 		return v.VisitFullResolutionWithContext(ctx, *u.fullResolution)
+	case "arrowBucketedMultivariate":
+		if u.arrowBucketedMultivariate == nil {
+			return fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
+		}
+		return v.VisitArrowBucketedMultivariateWithContext(ctx, *u.arrowBucketedMultivariate)
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariateWithContext(ctx, *u.multivariate)
 	}
 }
 
@@ -1842,6 +1910,8 @@ type ComputeNodeResponseVisitorWithContext interface {
 	VisitArrayWithContext(ctx context.Context, v ArrowArrayPlot) error
 	VisitBucketedStructWithContext(ctx context.Context, v ArrowBucketedStructPlot) error
 	VisitFullResolutionWithContext(ctx context.Context, v ArrowFullResolutionPlot) error
+	VisitArrowBucketedMultivariateWithContext(ctx context.Context, v ArrowBucketedMultivariatePlot) error
+	VisitMultivariateWithContext(ctx context.Context, v BucketedMultivariatePlot) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1959,6 +2029,14 @@ func NewComputeNodeResponseFromBucketedStruct(v ArrowBucketedStructPlot) Compute
 
 func NewComputeNodeResponseFromFullResolution(v ArrowFullResolutionPlot) ComputeNodeResponse {
 	return ComputeNodeResponse{typ: "fullResolution", fullResolution: &v}
+}
+
+func NewComputeNodeResponseFromArrowBucketedMultivariate(v ArrowBucketedMultivariatePlot) ComputeNodeResponse {
+	return ComputeNodeResponse{typ: "arrowBucketedMultivariate", arrowBucketedMultivariate: &v}
+}
+
+func NewComputeNodeResponseFromMultivariate(v BucketedMultivariatePlot) ComputeNodeResponse {
+	return ComputeNodeResponse{typ: "multivariate", multivariate: &v}
 }
 
 type ComputeNodeResult struct {
@@ -2136,21 +2214,23 @@ func NewComputeNodeResultFromError(v ErrorResult) ComputeNodeResult {
 }
 
 type ComputeUnitResult struct {
-	typ         string
-	single      *UnitResult
-	cartesian   *CartesianUnitResult
-	cartesian3d *Cartesian3dUnitResult
+	typ          string
+	single       *UnitResult
+	cartesian    *CartesianUnitResult
+	cartesian3d  *Cartesian3dUnitResult
+	multivariate *MultivariateUnitResult
 }
 
 type computeUnitResultDeserializer struct {
-	Type        string                 `json:"type"`
-	Single      *UnitResult            `json:"single"`
-	Cartesian   *CartesianUnitResult   `json:"cartesian"`
-	Cartesian3d *Cartesian3dUnitResult `json:"cartesian3d"`
+	Type         string                  `json:"type"`
+	Single       *UnitResult             `json:"single"`
+	Cartesian    *CartesianUnitResult    `json:"cartesian"`
+	Cartesian3d  *Cartesian3dUnitResult  `json:"cartesian3d"`
+	Multivariate *MultivariateUnitResult `json:"multivariate"`
 }
 
 func (u *computeUnitResultDeserializer) toStruct() ComputeUnitResult {
-	return ComputeUnitResult{typ: u.Type, single: u.Single, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d}
+	return ComputeUnitResult{typ: u.Type, single: u.Single, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, multivariate: u.Multivariate}
 }
 
 func (u *ComputeUnitResult) toSerializer() (interface{}, error) {
@@ -2181,6 +2261,14 @@ func (u *ComputeUnitResult) toSerializer() (interface{}, error) {
 			Type        string                `json:"type"`
 			Cartesian3d Cartesian3dUnitResult `json:"cartesian3d"`
 		}{Type: "cartesian3d", Cartesian3d: *u.cartesian3d}, nil
+	case "multivariate":
+		if u.multivariate == nil {
+			return nil, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return struct {
+			Type         string                 `json:"type"`
+			Multivariate MultivariateUnitResult `json:"multivariate"`
+		}{Type: "multivariate", Multivariate: *u.multivariate}, nil
 	}
 }
 
@@ -2211,6 +2299,10 @@ func (u *ComputeUnitResult) UnmarshalJSON(data []byte) error {
 		if u.cartesian3d == nil {
 			return fmt.Errorf("field \"cartesian3d\" is required")
 		}
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
 	}
 	return nil
 }
@@ -2231,7 +2323,7 @@ func (u *ComputeUnitResult) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ComputeUnitResult) AcceptFuncs(singleFunc func(UnitResult) error, cartesianFunc func(CartesianUnitResult) error, cartesian3dFunc func(Cartesian3dUnitResult) error, unknownFunc func(string) error) error {
+func (u *ComputeUnitResult) AcceptFuncs(singleFunc func(UnitResult) error, cartesianFunc func(CartesianUnitResult) error, cartesian3dFunc func(Cartesian3dUnitResult) error, multivariateFunc func(MultivariateUnitResult) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2253,6 +2345,11 @@ func (u *ComputeUnitResult) AcceptFuncs(singleFunc func(UnitResult) error, carte
 			return fmt.Errorf("field \"cartesian3d\" is required")
 		}
 		return cartesian3dFunc(*u.cartesian3d)
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
+		return multivariateFunc(*u.multivariate)
 	}
 }
 
@@ -2265,6 +2362,10 @@ func (u *ComputeUnitResult) CartesianNoopSuccess(_ CartesianUnitResult) error {
 }
 
 func (u *ComputeUnitResult) Cartesian3dNoopSuccess(_ Cartesian3dUnitResult) error {
+	return nil
+}
+
+func (u *ComputeUnitResult) MultivariateNoopSuccess(_ MultivariateUnitResult) error {
 	return nil
 }
 
@@ -2294,6 +2395,11 @@ func (u *ComputeUnitResult) Accept(v ComputeUnitResultVisitor) error {
 			return fmt.Errorf("field \"cartesian3d\" is required")
 		}
 		return v.VisitCartesian3d(*u.cartesian3d)
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariate(*u.multivariate)
 	}
 }
 
@@ -2301,6 +2407,7 @@ type ComputeUnitResultVisitor interface {
 	VisitSingle(v UnitResult) error
 	VisitCartesian(v CartesianUnitResult) error
 	VisitCartesian3d(v Cartesian3dUnitResult) error
+	VisitMultivariate(v MultivariateUnitResult) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2326,6 +2433,11 @@ func (u *ComputeUnitResult) AcceptWithContext(ctx context.Context, v ComputeUnit
 			return fmt.Errorf("field \"cartesian3d\" is required")
 		}
 		return v.VisitCartesian3dWithContext(ctx, *u.cartesian3d)
+	case "multivariate":
+		if u.multivariate == nil {
+			return fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariateWithContext(ctx, *u.multivariate)
 	}
 }
 
@@ -2333,6 +2445,7 @@ type ComputeUnitResultVisitorWithContext interface {
 	VisitSingleWithContext(ctx context.Context, v UnitResult) error
 	VisitCartesianWithContext(ctx context.Context, v CartesianUnitResult) error
 	VisitCartesian3dWithContext(ctx context.Context, v Cartesian3dUnitResult) error
+	VisitMultivariateWithContext(ctx context.Context, v MultivariateUnitResult) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -2346,6 +2459,10 @@ func NewComputeUnitResultFromCartesian(v CartesianUnitResult) ComputeUnitResult 
 
 func NewComputeUnitResultFromCartesian3d(v Cartesian3dUnitResult) ComputeUnitResult {
 	return ComputeUnitResult{typ: "cartesian3d", cartesian3d: &v}
+}
+
+func NewComputeUnitResultFromMultivariate(v MultivariateUnitResult) ComputeUnitResult {
+	return ComputeUnitResult{typ: "multivariate", multivariate: &v}
 }
 
 type CurveFitDetails struct {
@@ -6154,6 +6271,7 @@ type RollingOperator struct {
 	max               *Maximum
 	standardDeviation *StandardDeviation
 	sum               *Sum
+	percentile        *Percentile
 }
 
 type rollingOperatorDeserializer struct {
@@ -6164,10 +6282,11 @@ type rollingOperatorDeserializer struct {
 	Max               *Maximum           `json:"max"`
 	StandardDeviation *StandardDeviation `json:"standardDeviation"`
 	Sum               *Sum               `json:"sum"`
+	Percentile        *Percentile        `json:"percentile"`
 }
 
 func (u *rollingOperatorDeserializer) toStruct() RollingOperator {
-	return RollingOperator{typ: u.Type, average: u.Average, count: u.Count, min: u.Min, max: u.Max, standardDeviation: u.StandardDeviation, sum: u.Sum}
+	return RollingOperator{typ: u.Type, average: u.Average, count: u.Count, min: u.Min, max: u.Max, standardDeviation: u.StandardDeviation, sum: u.Sum, percentile: u.Percentile}
 }
 
 func (u *RollingOperator) toSerializer() (interface{}, error) {
@@ -6222,6 +6341,14 @@ func (u *RollingOperator) toSerializer() (interface{}, error) {
 			Type string `json:"type"`
 			Sum  Sum    `json:"sum"`
 		}{Type: "sum", Sum: *u.sum}, nil
+	case "percentile":
+		if u.percentile == nil {
+			return nil, fmt.Errorf("field \"percentile\" is required")
+		}
+		return struct {
+			Type       string     `json:"type"`
+			Percentile Percentile `json:"percentile"`
+		}{Type: "percentile", Percentile: *u.percentile}, nil
 	}
 }
 
@@ -6264,6 +6391,10 @@ func (u *RollingOperator) UnmarshalJSON(data []byte) error {
 		if u.sum == nil {
 			return fmt.Errorf("field \"sum\" is required")
 		}
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
 	}
 	return nil
 }
@@ -6284,7 +6415,7 @@ func (u *RollingOperator) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *RollingOperator) AcceptFuncs(averageFunc func(Average) error, countFunc func(Count) error, minFunc func(Minimum) error, maxFunc func(Maximum) error, standardDeviationFunc func(StandardDeviation) error, sumFunc func(Sum) error, unknownFunc func(string) error) error {
+func (u *RollingOperator) AcceptFuncs(averageFunc func(Average) error, countFunc func(Count) error, minFunc func(Minimum) error, maxFunc func(Maximum) error, standardDeviationFunc func(StandardDeviation) error, sumFunc func(Sum) error, percentileFunc func(Percentile) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -6321,6 +6452,11 @@ func (u *RollingOperator) AcceptFuncs(averageFunc func(Average) error, countFunc
 			return fmt.Errorf("field \"sum\" is required")
 		}
 		return sumFunc(*u.sum)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return percentileFunc(*u.percentile)
 	}
 }
 
@@ -6345,6 +6481,10 @@ func (u *RollingOperator) StandardDeviationNoopSuccess(_ StandardDeviation) erro
 }
 
 func (u *RollingOperator) SumNoopSuccess(_ Sum) error {
+	return nil
+}
+
+func (u *RollingOperator) PercentileNoopSuccess(_ Percentile) error {
 	return nil
 }
 
@@ -6389,6 +6529,11 @@ func (u *RollingOperator) Accept(v RollingOperatorVisitor) error {
 			return fmt.Errorf("field \"sum\" is required")
 		}
 		return v.VisitSum(*u.sum)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentile(*u.percentile)
 	}
 }
 
@@ -6399,6 +6544,7 @@ type RollingOperatorVisitor interface {
 	VisitMax(v Maximum) error
 	VisitStandardDeviation(v StandardDeviation) error
 	VisitSum(v Sum) error
+	VisitPercentile(v Percentile) error
 	VisitUnknown(typeName string) error
 }
 
@@ -6439,6 +6585,11 @@ func (u *RollingOperator) AcceptWithContext(ctx context.Context, v RollingOperat
 			return fmt.Errorf("field \"sum\" is required")
 		}
 		return v.VisitSumWithContext(ctx, *u.sum)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentileWithContext(ctx, *u.percentile)
 	}
 }
 
@@ -6449,6 +6600,7 @@ type RollingOperatorVisitorWithContext interface {
 	VisitMaxWithContext(ctx context.Context, v Maximum) error
 	VisitStandardDeviationWithContext(ctx context.Context, v StandardDeviation) error
 	VisitSumWithContext(ctx context.Context, v Sum) error
+	VisitPercentileWithContext(ctx context.Context, v Percentile) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -6474,6 +6626,10 @@ func NewRollingOperatorFromStandardDeviation(v StandardDeviation) RollingOperato
 
 func NewRollingOperatorFromSum(v Sum) RollingOperator {
 	return RollingOperator{typ: "sum", sum: &v}
+}
+
+func NewRollingOperatorFromPercentile(v Percentile) RollingOperator {
+	return RollingOperator{typ: "percentile", percentile: &v}
 }
 
 type ScatterSummarizationStrategy struct {

@@ -3028,6 +3028,141 @@ func NewGeo3dDefinitionFromV1(v Geo3dDefinitionV1) Geo3dDefinition {
 	return Geo3dDefinition{typ: "v1", v1: &v}
 }
 
+type Geo3dDisplayVectorKind struct {
+	typ string
+	sun *Geo3dDisplayVectorSun
+}
+
+type geo3dDisplayVectorKindDeserializer struct {
+	Type string                 `json:"type"`
+	Sun  *Geo3dDisplayVectorSun `json:"sun"`
+}
+
+func (u *geo3dDisplayVectorKindDeserializer) toStruct() Geo3dDisplayVectorKind {
+	return Geo3dDisplayVectorKind{typ: u.Type, sun: u.Sun}
+}
+
+func (u *Geo3dDisplayVectorKind) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "sun":
+		if u.sun == nil {
+			return nil, fmt.Errorf("field \"sun\" is required")
+		}
+		return struct {
+			Type string                `json:"type"`
+			Sun  Geo3dDisplayVectorSun `json:"sun"`
+		}{Type: "sun", Sun: *u.sun}, nil
+	}
+}
+
+func (u Geo3dDisplayVectorKind) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *Geo3dDisplayVectorKind) UnmarshalJSON(data []byte) error {
+	var deser geo3dDisplayVectorKindDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "sun":
+		if u.sun == nil {
+			return fmt.Errorf("field \"sun\" is required")
+		}
+	}
+	return nil
+}
+
+func (u Geo3dDisplayVectorKind) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *Geo3dDisplayVectorKind) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *Geo3dDisplayVectorKind) AcceptFuncs(sunFunc func(Geo3dDisplayVectorSun) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in Geo3dDisplayVectorKind type")
+		}
+		return unknownFunc(u.typ)
+	case "sun":
+		if u.sun == nil {
+			return fmt.Errorf("field \"sun\" is required")
+		}
+		return sunFunc(*u.sun)
+	}
+}
+
+func (u *Geo3dDisplayVectorKind) SunNoopSuccess(_ Geo3dDisplayVectorSun) error {
+	return nil
+}
+
+func (u *Geo3dDisplayVectorKind) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *Geo3dDisplayVectorKind) Accept(v Geo3dDisplayVectorKindVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "sun":
+		if u.sun == nil {
+			return fmt.Errorf("field \"sun\" is required")
+		}
+		return v.VisitSun(*u.sun)
+	}
+}
+
+type Geo3dDisplayVectorKindVisitor interface {
+	VisitSun(v Geo3dDisplayVectorSun) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *Geo3dDisplayVectorKind) AcceptWithContext(ctx context.Context, v Geo3dDisplayVectorKindVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "sun":
+		if u.sun == nil {
+			return fmt.Errorf("field \"sun\" is required")
+		}
+		return v.VisitSunWithContext(ctx, *u.sun)
+	}
+}
+
+type Geo3dDisplayVectorKindVisitorWithContext interface {
+	VisitSunWithContext(ctx context.Context, v Geo3dDisplayVectorSun) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewGeo3dDisplayVectorKindFromSun(v Geo3dDisplayVectorSun) Geo3dDisplayVectorKind {
+	return Geo3dDisplayVectorKind{typ: "sun", sun: &v}
+}
+
 type Geo3dModel struct {
 	typ      string
 	default_ *Geo3dDefaultModel
