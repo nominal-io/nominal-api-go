@@ -417,7 +417,7 @@ func (o *Computing) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type ExecuteChecklistForAssetsRequest struct {
 	Checklist api2.ChecklistRid `json:"checklist"`
 	Assets    []api2.AssetRid   `json:"assets"`
-	// Checklist violations will be sent to the specified integrations. At least one integration must be specified.
+	// Checklist violations will be sent to the specified integrations. If empty, no notifications will be sent.
 	NotificationConfigurations []api.NotificationConfiguration `json:"notificationConfigurations"`
 	// Delays the evaluation of the streaming checklist. This is useful for when data is delayed.
 	EvaluationDelay api1.Duration `json:"evaluationDelay"`

@@ -48,6 +48,11 @@ type AuthorizationServiceClient interface {
 	// Checks if the email is allowed to register, following Okta "registration inline hook" API.
 	IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
+	   Provides an OIDC ID token to get the orgs that the user is a member of. Throws NotAuthorized if the ID token
+	   is invalid or if the OIDC provider is not known.
+	*/
+	GetUserOrgs(ctx context.Context, requestArg GetUserOrgsRequest) (GetUserOrgsResponse, error)
+	/*
 	   Provide an OIDC ID token to get a Nominal access token suitable for making API requests.
 	   Its expiry will match that of the input ID token, capped at 24h. TODO(MGMT-933): reduce this duration.
 	   Throws NotAuthorized if the ID token is invalid or if the OIDC provider is not known.
@@ -172,6 +177,23 @@ func (c *authorizationServiceClient) IsEmailAllowedOkta(ctx context.Context, req
 	}
 	if returnVal == nil {
 		return *new(OktaRegistrationResponse), werror.ErrorWithContextParams(ctx, "isEmailAllowedOkta response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *authorizationServiceClient) GetUserOrgs(ctx context.Context, requestArg GetUserOrgsRequest) (GetUserOrgsResponse, error) {
+	var returnVal *GetUserOrgsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetUserOrgs"))
+	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/user-orgs"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GetUserOrgsResponse), werror.WrapWithContextParams(ctx, err, "getUserOrgs failed")
+	}
+	if returnVal == nil {
+		return *new(GetUserOrgsResponse), werror.ErrorWithContextParams(ctx, "getUserOrgs response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -309,6 +331,11 @@ type AuthorizationServiceClientWithAuth interface {
 	// Checks if the email is allowed to register, following Okta "registration inline hook" API.
 	IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
+	   Provides an OIDC ID token to get the orgs that the user is a member of. Throws NotAuthorized if the ID token
+	   is invalid or if the OIDC provider is not known.
+	*/
+	GetUserOrgs(ctx context.Context, requestArg GetUserOrgsRequest) (GetUserOrgsResponse, error)
+	/*
 	   Provide an OIDC ID token to get a Nominal access token suitable for making API requests.
 	   Its expiry will match that of the input ID token, capped at 24h. TODO(MGMT-933): reduce this duration.
 	   Throws NotAuthorized if the ID token is invalid or if the OIDC provider is not known.
@@ -365,6 +392,10 @@ func (c *authorizationServiceClientWithAuth) IsEmailAllowed(ctx context.Context,
 
 func (c *authorizationServiceClientWithAuth) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
 	return c.client.IsEmailAllowedOkta(ctx, requestArg)
+}
+
+func (c *authorizationServiceClientWithAuth) GetUserOrgs(ctx context.Context, requestArg GetUserOrgsRequest) (GetUserOrgsResponse, error) {
+	return c.client.GetUserOrgs(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithAuth) GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error) {
@@ -438,6 +469,10 @@ func (c *authorizationServiceClientWithTokenProvider) IsEmailAllowed(ctx context
 
 func (c *authorizationServiceClientWithTokenProvider) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
 	return c.client.IsEmailAllowedOkta(ctx, requestArg)
+}
+
+func (c *authorizationServiceClientWithTokenProvider) GetUserOrgs(ctx context.Context, requestArg GetUserOrgsRequest) (GetUserOrgsResponse, error) {
+	return c.client.GetUserOrgs(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithTokenProvider) GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error) {

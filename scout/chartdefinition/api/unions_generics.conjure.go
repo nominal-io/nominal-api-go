@@ -1135,6 +1135,55 @@ type Geo3dDefinitionVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type Geo3dDisplayVectorKindWithT[T any] Geo3dDisplayVectorKind
+
+func (u *Geo3dDisplayVectorKindWithT[T]) Accept(ctx context.Context, v Geo3dDisplayVectorKindVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "sun":
+		if u.sun == nil {
+			return result, fmt.Errorf("field \"sun\" is required")
+		}
+		return v.VisitSun(ctx, *u.sun)
+	}
+}
+
+func (u *Geo3dDisplayVectorKindWithT[T]) AcceptFuncs(sunFunc func(Geo3dDisplayVectorSun) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "sun":
+		if u.sun == nil {
+			return result, fmt.Errorf("field \"sun\" is required")
+		}
+		return sunFunc(*u.sun)
+	}
+}
+
+func (u *Geo3dDisplayVectorKindWithT[T]) SunNoopSuccess(Geo3dDisplayVectorSun) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *Geo3dDisplayVectorKindWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type Geo3dDisplayVectorKindVisitorWithT[T any] interface {
+	VisitSun(ctx context.Context, v Geo3dDisplayVectorSun) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type Geo3dModelWithT[T any] Geo3dModel
 
 func (u *Geo3dModelWithT[T]) Accept(ctx context.Context, v Geo3dModelVisitorWithT[T]) (T, error) {

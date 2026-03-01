@@ -447,10 +447,20 @@ func (u *ComputeNodeResponseWithT[T]) Accept(ctx context.Context, v ComputeNodeR
 			return result, fmt.Errorf("field \"fullResolution\" is required")
 		}
 		return v.VisitFullResolution(ctx, *u.fullResolution)
+	case "arrowBucketedMultivariate":
+		if u.arrowBucketedMultivariate == nil {
+			return result, fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
+		}
+		return v.VisitArrowBucketedMultivariate(ctx, *u.arrowBucketedMultivariate)
+	case "multivariate":
+		if u.multivariate == nil {
+			return result, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariate(ctx, *u.multivariate)
 	}
 }
 
-func (u *ComputeNodeResponseWithT[T]) AcceptFuncs(range_Func func([]Range) (T, error), rangesSummaryFunc func(RangesSummary) (T, error), rangeValueFunc func(*Range) (T, error), numericFunc func(NumericPlot) (T, error), bucketedNumericFunc func(BucketedNumericPlot) (T, error), numericPointFunc func(*NumericPoint) (T, error), singlePointFunc func(*SinglePoint) (T, error), arrowNumericFunc func(ArrowNumericPlot) (T, error), arrowBucketedNumericFunc func(ArrowBucketedNumericPlot) (T, error), enumFunc func(EnumPlot) (T, error), enumPointFunc func(*EnumPoint) (T, error), bucketedEnumFunc func(BucketedEnumPlot) (T, error), arrowEnumFunc func(ArrowEnumPlot) (T, error), arrowBucketedEnumFunc func(ArrowBucketedEnumPlot) (T, error), pagedLogFunc func(PagedLogPlot) (T, error), logPointFunc func(*LogPoint) (T, error), cartesianFunc func(CartesianPlot) (T, error), bucketedCartesianFunc func(BucketedCartesianPlot) (T, error), bucketedCartesian3dFunc func(BucketedCartesian3dPlot) (T, error), frequencyDomainFunc func(FrequencyDomainPlot) (T, error), frequencyDomainV2Func func(FrequencyDomainPlotV2) (T, error), bucketedFrequencyDomainFunc func(BucketedFrequencyDomainPlot) (T, error), numericHistogramFunc func(NumericHistogramPlot) (T, error), enumHistogramFunc func(EnumHistogramPlot) (T, error), curveFitFunc func(CurveFitResult) (T, error), groupedFunc func(GroupedComputeNodeResponses) (T, error), arrayFunc func(ArrowArrayPlot) (T, error), bucketedStructFunc func(ArrowBucketedStructPlot) (T, error), fullResolutionFunc func(ArrowFullResolutionPlot) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ComputeNodeResponseWithT[T]) AcceptFuncs(range_Func func([]Range) (T, error), rangesSummaryFunc func(RangesSummary) (T, error), rangeValueFunc func(*Range) (T, error), numericFunc func(NumericPlot) (T, error), bucketedNumericFunc func(BucketedNumericPlot) (T, error), numericPointFunc func(*NumericPoint) (T, error), singlePointFunc func(*SinglePoint) (T, error), arrowNumericFunc func(ArrowNumericPlot) (T, error), arrowBucketedNumericFunc func(ArrowBucketedNumericPlot) (T, error), enumFunc func(EnumPlot) (T, error), enumPointFunc func(*EnumPoint) (T, error), bucketedEnumFunc func(BucketedEnumPlot) (T, error), arrowEnumFunc func(ArrowEnumPlot) (T, error), arrowBucketedEnumFunc func(ArrowBucketedEnumPlot) (T, error), pagedLogFunc func(PagedLogPlot) (T, error), logPointFunc func(*LogPoint) (T, error), cartesianFunc func(CartesianPlot) (T, error), bucketedCartesianFunc func(BucketedCartesianPlot) (T, error), bucketedCartesian3dFunc func(BucketedCartesian3dPlot) (T, error), frequencyDomainFunc func(FrequencyDomainPlot) (T, error), frequencyDomainV2Func func(FrequencyDomainPlotV2) (T, error), bucketedFrequencyDomainFunc func(BucketedFrequencyDomainPlot) (T, error), numericHistogramFunc func(NumericHistogramPlot) (T, error), enumHistogramFunc func(EnumHistogramPlot) (T, error), curveFitFunc func(CurveFitResult) (T, error), groupedFunc func(GroupedComputeNodeResponses) (T, error), arrayFunc func(ArrowArrayPlot) (T, error), bucketedStructFunc func(ArrowBucketedStructPlot) (T, error), fullResolutionFunc func(ArrowFullResolutionPlot) (T, error), arrowBucketedMultivariateFunc func(ArrowBucketedMultivariatePlot) (T, error), multivariateFunc func(BucketedMultivariatePlot) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -608,6 +618,16 @@ func (u *ComputeNodeResponseWithT[T]) AcceptFuncs(range_Func func([]Range) (T, e
 			return result, fmt.Errorf("field \"fullResolution\" is required")
 		}
 		return fullResolutionFunc(*u.fullResolution)
+	case "arrowBucketedMultivariate":
+		if u.arrowBucketedMultivariate == nil {
+			return result, fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
+		}
+		return arrowBucketedMultivariateFunc(*u.arrowBucketedMultivariate)
+	case "multivariate":
+		if u.multivariate == nil {
+			return result, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return multivariateFunc(*u.multivariate)
 	}
 }
 
@@ -756,6 +776,16 @@ func (u *ComputeNodeResponseWithT[T]) FullResolutionNoopSuccess(ArrowFullResolut
 	return result, nil
 }
 
+func (u *ComputeNodeResponseWithT[T]) ArrowBucketedMultivariateNoopSuccess(ArrowBucketedMultivariatePlot) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ComputeNodeResponseWithT[T]) MultivariateNoopSuccess(BucketedMultivariatePlot) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ComputeNodeResponseWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -791,6 +821,8 @@ type ComputeNodeResponseVisitorWithT[T any] interface {
 	VisitArray(ctx context.Context, v ArrowArrayPlot) (T, error)
 	VisitBucketedStruct(ctx context.Context, v ArrowBucketedStructPlot) (T, error)
 	VisitFullResolution(ctx context.Context, v ArrowFullResolutionPlot) (T, error)
+	VisitArrowBucketedMultivariate(ctx context.Context, v ArrowBucketedMultivariatePlot) (T, error)
+	VisitMultivariate(ctx context.Context, v BucketedMultivariatePlot) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -884,10 +916,15 @@ func (u *ComputeUnitResultWithT[T]) Accept(ctx context.Context, v ComputeUnitRes
 			return result, fmt.Errorf("field \"cartesian3d\" is required")
 		}
 		return v.VisitCartesian3d(ctx, *u.cartesian3d)
+	case "multivariate":
+		if u.multivariate == nil {
+			return result, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariate(ctx, *u.multivariate)
 	}
 }
 
-func (u *ComputeUnitResultWithT[T]) AcceptFuncs(singleFunc func(UnitResult) (T, error), cartesianFunc func(CartesianUnitResult) (T, error), cartesian3dFunc func(Cartesian3dUnitResult) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ComputeUnitResultWithT[T]) AcceptFuncs(singleFunc func(UnitResult) (T, error), cartesianFunc func(CartesianUnitResult) (T, error), cartesian3dFunc func(Cartesian3dUnitResult) (T, error), multivariateFunc func(MultivariateUnitResult) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -910,6 +947,11 @@ func (u *ComputeUnitResultWithT[T]) AcceptFuncs(singleFunc func(UnitResult) (T, 
 			return result, fmt.Errorf("field \"cartesian3d\" is required")
 		}
 		return cartesian3dFunc(*u.cartesian3d)
+	case "multivariate":
+		if u.multivariate == nil {
+			return result, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return multivariateFunc(*u.multivariate)
 	}
 }
 
@@ -928,6 +970,11 @@ func (u *ComputeUnitResultWithT[T]) Cartesian3dNoopSuccess(Cartesian3dUnitResult
 	return result, nil
 }
 
+func (u *ComputeUnitResultWithT[T]) MultivariateNoopSuccess(MultivariateUnitResult) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ComputeUnitResultWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -937,6 +984,7 @@ type ComputeUnitResultVisitorWithT[T any] interface {
 	VisitSingle(ctx context.Context, v UnitResult) (T, error)
 	VisitCartesian(ctx context.Context, v CartesianUnitResult) (T, error)
 	VisitCartesian3d(ctx context.Context, v Cartesian3dUnitResult) (T, error)
+	VisitMultivariate(ctx context.Context, v MultivariateUnitResult) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -2408,10 +2456,15 @@ func (u *RollingOperatorWithT[T]) Accept(ctx context.Context, v RollingOperatorV
 			return result, fmt.Errorf("field \"sum\" is required")
 		}
 		return v.VisitSum(ctx, *u.sum)
+	case "percentile":
+		if u.percentile == nil {
+			return result, fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentile(ctx, *u.percentile)
 	}
 }
 
-func (u *RollingOperatorWithT[T]) AcceptFuncs(averageFunc func(Average) (T, error), countFunc func(Count) (T, error), minFunc func(Minimum) (T, error), maxFunc func(Maximum) (T, error), standardDeviationFunc func(StandardDeviation) (T, error), sumFunc func(Sum) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *RollingOperatorWithT[T]) AcceptFuncs(averageFunc func(Average) (T, error), countFunc func(Count) (T, error), minFunc func(Minimum) (T, error), maxFunc func(Maximum) (T, error), standardDeviationFunc func(StandardDeviation) (T, error), sumFunc func(Sum) (T, error), percentileFunc func(Percentile) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2449,6 +2502,11 @@ func (u *RollingOperatorWithT[T]) AcceptFuncs(averageFunc func(Average) (T, erro
 			return result, fmt.Errorf("field \"sum\" is required")
 		}
 		return sumFunc(*u.sum)
+	case "percentile":
+		if u.percentile == nil {
+			return result, fmt.Errorf("field \"percentile\" is required")
+		}
+		return percentileFunc(*u.percentile)
 	}
 }
 
@@ -2482,6 +2540,11 @@ func (u *RollingOperatorWithT[T]) SumNoopSuccess(Sum) (T, error) {
 	return result, nil
 }
 
+func (u *RollingOperatorWithT[T]) PercentileNoopSuccess(Percentile) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *RollingOperatorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -2494,6 +2557,7 @@ type RollingOperatorVisitorWithT[T any] interface {
 	VisitMax(ctx context.Context, v Maximum) (T, error)
 	VisitStandardDeviation(ctx context.Context, v StandardDeviation) (T, error)
 	VisitSum(ctx context.Context, v Sum) (T, error)
+	VisitPercentile(ctx context.Context, v Percentile) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

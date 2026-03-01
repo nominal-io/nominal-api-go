@@ -829,6 +829,17 @@ type VideoServiceClient interface {
 	*/
 	GenerateWhepStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (*api.GenerateWhepStreamResponse, error)
 	/*
+	   Returns stream session metadata for a given stream ID scoped to the video.
+	   Enforces read permission on the video.
+	*/
+	GetStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error)
+	/*
+	   Marks the active stream session as ended for the video.
+	   Throws VIDEO_NOT_FOUND if no active stream exists.
+	   Enforces write permission on the video.
+	*/
+	EndStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.EndStreamResponse, error)
+	/*
 	   MediaMTX segment upload endpoint. Receives video segments from MediaMTX hooks.
 	   Validates JWT and logs session. Future: create video segments from uploaded files.
 	*/
@@ -1234,6 +1245,37 @@ func (c *videoServiceClient) GenerateWhepStream(ctx context.Context, authHeader 
 	return returnVal, nil
 }
 
+func (c *videoServiceClient) GetStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error) {
+	var returnVal *api.VideoStream
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetStream"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/streaming/streams/%s", url.PathEscape(fmt.Sprint(videoRidArg)), url.PathEscape(fmt.Sprint(streamIdArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "getStream failed")
+	}
+	return returnVal, nil
+}
+
+func (c *videoServiceClient) EndStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.EndStreamResponse, error) {
+	var returnVal *api.EndStreamResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("EndStream"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/streaming/end", url.PathEscape(fmt.Sprint(videoRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.EndStreamResponse), werror.WrapWithContextParams(ctx, err, "endStream failed")
+	}
+	if returnVal == nil {
+		return *new(api.EndStreamResponse), werror.ErrorWithContextParams(ctx, "endStream response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *videoServiceClient) UploadSegmentFromMediaMtx(ctx context.Context, authHeader bearertoken.Token, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UploadSegmentFromMediaMtx"))
@@ -1353,6 +1395,17 @@ type VideoServiceClientWithAuth interface {
 	*/
 	GenerateWhepStream(ctx context.Context, videoRidArg rids.VideoRid) (*api.GenerateWhepStreamResponse, error)
 	/*
+	   Returns stream session metadata for a given stream ID scoped to the video.
+	   Enforces read permission on the video.
+	*/
+	GetStream(ctx context.Context, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error)
+	/*
+	   Marks the active stream session as ended for the video.
+	   Throws VIDEO_NOT_FOUND if no active stream exists.
+	   Enforces write permission on the video.
+	*/
+	EndStream(ctx context.Context, videoRidArg rids.VideoRid) (api.EndStreamResponse, error)
+	/*
 	   MediaMTX segment upload endpoint. Receives video segments from MediaMTX hooks.
 	   Validates JWT and logs session. Future: create video segments from uploaded files.
 	*/
@@ -1458,6 +1511,14 @@ func (c *videoServiceClientWithAuth) GenerateWhipStream(ctx context.Context, vid
 
 func (c *videoServiceClientWithAuth) GenerateWhepStream(ctx context.Context, videoRidArg rids.VideoRid) (*api.GenerateWhepStreamResponse, error) {
 	return c.client.GenerateWhepStream(ctx, c.authHeader, videoRidArg)
+}
+
+func (c *videoServiceClientWithAuth) GetStream(ctx context.Context, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error) {
+	return c.client.GetStream(ctx, c.authHeader, videoRidArg, streamIdArg)
+}
+
+func (c *videoServiceClientWithAuth) EndStream(ctx context.Context, videoRidArg rids.VideoRid) (api.EndStreamResponse, error) {
+	return c.client.EndStream(ctx, c.authHeader, videoRidArg)
 }
 
 func (c *videoServiceClientWithAuth) UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {
@@ -1655,6 +1716,22 @@ func (c *videoServiceClientWithTokenProvider) GenerateWhepStream(ctx context.Con
 		return nil, err
 	}
 	return c.client.GenerateWhepStream(ctx, bearertoken.Token(token), videoRidArg)
+}
+
+func (c *videoServiceClientWithTokenProvider) GetStream(ctx context.Context, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c.client.GetStream(ctx, bearertoken.Token(token), videoRidArg, streamIdArg)
+}
+
+func (c *videoServiceClientWithTokenProvider) EndStream(ctx context.Context, videoRidArg rids.VideoRid) (api.EndStreamResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.EndStreamResponse), err
+	}
+	return c.client.EndStream(ctx, bearertoken.Token(token), videoRidArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {

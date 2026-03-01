@@ -173,6 +173,11 @@ func (u *ComputeNodeAppendResponseWithT[T]) Accept(ctx context.Context, v Comput
 			return result, fmt.Errorf("field \"bucketedEnum\" is required")
 		}
 		return v.VisitBucketedEnum(ctx, *u.bucketedEnum)
+	case "multivariate":
+		if u.multivariate == nil {
+			return result, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return v.VisitMultivariate(ctx, *u.multivariate)
 	case "arrowNumeric":
 		if u.arrowNumeric == nil {
 			return result, fmt.Errorf("field \"arrowNumeric\" is required")
@@ -193,6 +198,11 @@ func (u *ComputeNodeAppendResponseWithT[T]) Accept(ctx context.Context, v Comput
 			return result, fmt.Errorf("field \"arrowBucketedEnum\" is required")
 		}
 		return v.VisitArrowBucketedEnum(ctx, *u.arrowBucketedEnum)
+	case "arrowBucketedMultivariate":
+		if u.arrowBucketedMultivariate == nil {
+			return result, fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
+		}
+		return v.VisitArrowBucketedMultivariate(ctx, *u.arrowBucketedMultivariate)
 	case "grouped":
 		if u.grouped == nil {
 			return result, fmt.Errorf("field \"grouped\" is required")
@@ -201,7 +211,7 @@ func (u *ComputeNodeAppendResponseWithT[T]) Accept(ctx context.Context, v Comput
 	}
 }
 
-func (u *ComputeNodeAppendResponseWithT[T]) AcceptFuncs(range_Func func([]api.Range) (T, error), enumPointFunc func(*api.EnumPoint) (T, error), numericPointFunc func(*api.NumericPoint) (T, error), singlePointFunc func(*api.SinglePoint) (T, error), logPointFunc func(*api.LogPoint) (T, error), rangeValueFunc func(*api.Range) (T, error), numericFunc func(api.NumericPlot) (T, error), enumFunc func(api.EnumPlot) (T, error), bucketedNumericFunc func(api.BucketedNumericPlot) (T, error), bucketedEnumFunc func(api.BucketedEnumPlot) (T, error), arrowNumericFunc func(api.ArrowNumericPlot) (T, error), arrowEnumFunc func(api.ArrowEnumPlot) (T, error), arrowBucketedNumericFunc func(api.ArrowBucketedNumericPlot) (T, error), arrowBucketedEnumFunc func(api.ArrowBucketedEnumPlot) (T, error), groupedFunc func(GroupedComputeNodeAppendResponses) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ComputeNodeAppendResponseWithT[T]) AcceptFuncs(range_Func func([]api.Range) (T, error), enumPointFunc func(*api.EnumPoint) (T, error), numericPointFunc func(*api.NumericPoint) (T, error), singlePointFunc func(*api.SinglePoint) (T, error), logPointFunc func(*api.LogPoint) (T, error), rangeValueFunc func(*api.Range) (T, error), numericFunc func(api.NumericPlot) (T, error), enumFunc func(api.EnumPlot) (T, error), bucketedNumericFunc func(api.BucketedNumericPlot) (T, error), bucketedEnumFunc func(api.BucketedEnumPlot) (T, error), multivariateFunc func(api.BucketedMultivariatePlot) (T, error), arrowNumericFunc func(api.ArrowNumericPlot) (T, error), arrowEnumFunc func(api.ArrowEnumPlot) (T, error), arrowBucketedNumericFunc func(api.ArrowBucketedNumericPlot) (T, error), arrowBucketedEnumFunc func(api.ArrowBucketedEnumPlot) (T, error), arrowBucketedMultivariateFunc func(api.ArrowBucketedMultivariatePlot) (T, error), groupedFunc func(GroupedComputeNodeAppendResponses) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -264,6 +274,11 @@ func (u *ComputeNodeAppendResponseWithT[T]) AcceptFuncs(range_Func func([]api.Ra
 			return result, fmt.Errorf("field \"bucketedEnum\" is required")
 		}
 		return bucketedEnumFunc(*u.bucketedEnum)
+	case "multivariate":
+		if u.multivariate == nil {
+			return result, fmt.Errorf("field \"multivariate\" is required")
+		}
+		return multivariateFunc(*u.multivariate)
 	case "arrowNumeric":
 		if u.arrowNumeric == nil {
 			return result, fmt.Errorf("field \"arrowNumeric\" is required")
@@ -284,6 +299,11 @@ func (u *ComputeNodeAppendResponseWithT[T]) AcceptFuncs(range_Func func([]api.Ra
 			return result, fmt.Errorf("field \"arrowBucketedEnum\" is required")
 		}
 		return arrowBucketedEnumFunc(*u.arrowBucketedEnum)
+	case "arrowBucketedMultivariate":
+		if u.arrowBucketedMultivariate == nil {
+			return result, fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
+		}
+		return arrowBucketedMultivariateFunc(*u.arrowBucketedMultivariate)
 	case "grouped":
 		if u.grouped == nil {
 			return result, fmt.Errorf("field \"grouped\" is required")
@@ -342,6 +362,11 @@ func (u *ComputeNodeAppendResponseWithT[T]) BucketedEnumNoopSuccess(api.Bucketed
 	return result, nil
 }
 
+func (u *ComputeNodeAppendResponseWithT[T]) MultivariateNoopSuccess(api.BucketedMultivariatePlot) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ComputeNodeAppendResponseWithT[T]) ArrowNumericNoopSuccess(api.ArrowNumericPlot) (T, error) {
 	var result T
 	return result, nil
@@ -358,6 +383,11 @@ func (u *ComputeNodeAppendResponseWithT[T]) ArrowBucketedNumericNoopSuccess(api.
 }
 
 func (u *ComputeNodeAppendResponseWithT[T]) ArrowBucketedEnumNoopSuccess(api.ArrowBucketedEnumPlot) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ComputeNodeAppendResponseWithT[T]) ArrowBucketedMultivariateNoopSuccess(api.ArrowBucketedMultivariatePlot) (T, error) {
 	var result T
 	return result, nil
 }
@@ -383,10 +413,12 @@ type ComputeNodeAppendResponseVisitorWithT[T any] interface {
 	VisitEnum(ctx context.Context, v api.EnumPlot) (T, error)
 	VisitBucketedNumeric(ctx context.Context, v api.BucketedNumericPlot) (T, error)
 	VisitBucketedEnum(ctx context.Context, v api.BucketedEnumPlot) (T, error)
+	VisitMultivariate(ctx context.Context, v api.BucketedMultivariatePlot) (T, error)
 	VisitArrowNumeric(ctx context.Context, v api.ArrowNumericPlot) (T, error)
 	VisitArrowEnum(ctx context.Context, v api.ArrowEnumPlot) (T, error)
 	VisitArrowBucketedNumeric(ctx context.Context, v api.ArrowBucketedNumericPlot) (T, error)
 	VisitArrowBucketedEnum(ctx context.Context, v api.ArrowBucketedEnumPlot) (T, error)
+	VisitArrowBucketedMultivariate(ctx context.Context, v api.ArrowBucketedMultivariatePlot) (T, error)
 	VisitGrouped(ctx context.Context, v GroupedComputeNodeAppendResponses) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

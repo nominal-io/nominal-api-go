@@ -1080,6 +1080,47 @@ func (o *Geo3dDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A display for a vector direction
+type Geo3dDisplayVector struct {
+	VectorId string                 `json:"vectorId"`
+	Kind     Geo3dDisplayVectorKind `json:"kind"`
+	Enabled  bool                   `json:"enabled"`
+}
+
+func (o Geo3dDisplayVector) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dDisplayVector) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type Geo3dDisplayVectorSun struct{}
+
+func (o Geo3dDisplayVectorSun) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dDisplayVectorSun) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Orientation specified as Euler angles yaw/pitch/roll in degrees.
 type Geo3dOrientationEulerAngles struct {
 	Yaw   VariableStaticOrChannel `json:"yaw"`
@@ -1315,6 +1356,7 @@ type GeoPlot3d struct {
 	Position             Geo3dPosition                 `json:"position"`
 	Orientation          Geo3dOrientation              `json:"orientation"`
 	PlotSensors          *[]Geo3dSensor                `json:"plotSensors,omitempty"`
+	DisplayVectors       *[]Geo3dDisplayVector         `json:"displayVectors,omitempty"`
 }
 
 func (o GeoPlot3d) MarshalYAML() (interface{}, error) {

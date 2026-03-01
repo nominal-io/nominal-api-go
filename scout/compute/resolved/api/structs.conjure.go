@@ -6,6 +6,7 @@ import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	api2 "github.com/nominal-io/nominal-api-go/authentication/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/scout/catalog"
 	api1 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	api5 "github.com/nominal-io/nominal-api-go/scout/units/api"
@@ -96,6 +97,28 @@ func (o AggregateNumericSeriesNode) MarshalYAML() (interface{}, error) {
 }
 
 func (o *AggregateNumericSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type AndSeriesNode struct {
+	Left                       BooleanSeriesNode          `json:"left"`
+	Right                      BooleanSeriesNode          `json:"right"`
+	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
+}
+
+func (o AndSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AndSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -257,6 +280,27 @@ func (o *BodeNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BooleanToRangesNode struct {
+	Input     BooleanSeriesNode `json:"input"`
+	OpenEnded bool              `json:"openEnded"`
+}
+
+func (o BooleanToRangesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BooleanToRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Cartesian3dBounds struct {
 	MinX float64 `json:"minX"`
 	MaxX float64 `json:"maxX"`
@@ -282,7 +326,6 @@ func (o *Cartesian3dBounds) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Min/max bounds of an XY Cartesian plot, inclusive.
 type CartesianBounds struct {
 	MinX float64 `json:"minX"`
 	MaxX float64 `json:"maxX"`
@@ -1622,12 +1665,54 @@ func (o *MinSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// A storage locator for Nominal data in the per-org data tables.
+type MultivariateEnumInputNode struct {
+	Series      EnumSeriesNode                   `json:"series"`
+	Aggregation api1.EnumMultivariateAggregation `json:"aggregation"`
+}
+
+func (o MultivariateEnumInputNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MultivariateEnumInputNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type MultivariateNumericInputNode struct {
+	Series      NumericSeriesNode                   `json:"series"`
+	Aggregation api1.NumericMultivariateAggregation `json:"aggregation"`
+}
+
+func (o MultivariateNumericInputNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MultivariateNumericInputNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type NominalStorageLocator struct {
 	DataSourceRid              rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid"`
 	Type                       api4.NominalDataType               `json:"type"`
 	Details                    ClickHouseSeriesResolutionDetails  `json:"details"`
 	IsInMemoryStreamingEnabled bool                               `json:"isInMemoryStreamingEnabled"`
+	DatasetBackingType         catalog.DatasetBackingType         `json:"datasetBackingType"`
 }
 
 func (o NominalStorageLocator) MarshalYAML() (interface{}, error) {
@@ -1681,6 +1766,26 @@ func (o NotRangesNode) MarshalYAML() (interface{}, error) {
 }
 
 func (o *NotRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type NotSeriesNode struct {
+	Operand BooleanSeriesNode `json:"operand"`
+}
+
+func (o NotSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NotSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1961,6 +2066,28 @@ func (o OnChangeRangesNode) MarshalYAML() (interface{}, error) {
 }
 
 func (o *OnChangeRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type OrSeriesNode struct {
+	Left                       BooleanSeriesNode          `json:"left"`
+	Right                      BooleanSeriesNode          `json:"right"`
+	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
+}
+
+func (o OrSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OrSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2327,10 +2454,27 @@ func (o *ResampleConfiguration) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-/*
-A resolved series is a fully-formed read on a raw set of series. The data for series may be stored in the
-Nominal database or externally.
-*/
+// The value at the specified percentile within the time window.
+type ResolvedPercentile struct {
+	Percentile float64 `json:"percentile"`
+}
+
+func (o ResolvedPercentile) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ResolvedPercentile) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ResolvedSeries struct {
 	StorageLocator StorageLocator `json:"storageLocator"`
 	Unit           *api.Unit      `json:"unit,omitempty"`
@@ -2353,9 +2497,9 @@ func (o *ResolvedSeries) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type RollingOperationSeriesNode struct {
-	Input    NumericSeriesNode    `json:"input"`
-	Window   Window               `json:"window"`
-	Operator api1.RollingOperator `json:"operator"`
+	Input    NumericSeriesNode `json:"input"`
+	Window   Window            `json:"window"`
+	Operator RollingOperator   `json:"operator"`
 }
 
 func (o RollingOperationSeriesNode) MarshalYAML() (interface{}, error) {
@@ -2734,6 +2878,50 @@ func (o *SummarizeCartesianNode) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type SummarizeMultivariateNode struct {
+	Inputs                     []MultivariateInputNode    `json:"inputs"`
+	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
+	OutputFormat               api1.OutputFormat          `json:"outputFormat"`
+	BucketCount                *int                       `json:"bucketCount,omitempty"`
+}
+
+func (o SummarizeMultivariateNode) MarshalJSON() ([]byte, error) {
+	if o.Inputs == nil {
+		o.Inputs = make([]MultivariateInputNode, 0)
+	}
+	type _tmpSummarizeMultivariateNode SummarizeMultivariateNode
+	return safejson.Marshal(_tmpSummarizeMultivariateNode(o))
+}
+
+func (o *SummarizeMultivariateNode) UnmarshalJSON(data []byte) error {
+	type _tmpSummarizeMultivariateNode SummarizeMultivariateNode
+	var rawSummarizeMultivariateNode _tmpSummarizeMultivariateNode
+	if err := safejson.Unmarshal(data, &rawSummarizeMultivariateNode); err != nil {
+		return err
+	}
+	if rawSummarizeMultivariateNode.Inputs == nil {
+		rawSummarizeMultivariateNode.Inputs = make([]MultivariateInputNode, 0)
+	}
+	*o = SummarizeMultivariateNode(rawSummarizeMultivariateNode)
+	return nil
+}
+
+func (o SummarizeMultivariateNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SummarizeMultivariateNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type SummarizeRangesNode struct {
 	Input     RangesNode `json:"input"`
 	MaxRanges *int       `json:"maxRanges,omitempty"`
@@ -2755,13 +2943,8 @@ func (o *SummarizeRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-/*
-Summarizes the output of a series node. The output can be a numeric, enum, log, or cartesian series.
-Summarization strategy should be specified.
-*/
 type SummarizeSeriesNode struct {
-	Input SeriesNode `json:"input"`
-	// The strategy to use when summarizing the series.
+	Input                 SeriesNode                 `json:"input"`
 	SummarizationStrategy api1.SummarizationStrategy `json:"summarizationStrategy"`
 	OutputFormat          api1.OutputFormat          `json:"outputFormat"`
 	NumericOutputFields   *[]api1.NumericOutputField `json:"numericOutputFields,omitempty"`
