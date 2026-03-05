@@ -824,6 +824,67 @@ func (o *GetSegmentSummariesInBoundsRequest) UnmarshalYAML(unmarshal func(interf
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type GetStreamsInBoundsRequest struct {
+	Bounds Bounds `json:"bounds"`
+}
+
+func (o GetStreamsInBoundsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetStreamsInBoundsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetStreamsInBoundsResponse struct {
+	Streams []VideoStream `json:"streams"`
+}
+
+func (o GetStreamsInBoundsResponse) MarshalJSON() ([]byte, error) {
+	if o.Streams == nil {
+		o.Streams = make([]VideoStream, 0)
+	}
+	type _tmpGetStreamsInBoundsResponse GetStreamsInBoundsResponse
+	return safejson.Marshal(_tmpGetStreamsInBoundsResponse(o))
+}
+
+func (o *GetStreamsInBoundsResponse) UnmarshalJSON(data []byte) error {
+	type _tmpGetStreamsInBoundsResponse GetStreamsInBoundsResponse
+	var rawGetStreamsInBoundsResponse _tmpGetStreamsInBoundsResponse
+	if err := safejson.Unmarshal(data, &rawGetStreamsInBoundsResponse); err != nil {
+		return err
+	}
+	if rawGetStreamsInBoundsResponse.Streams == nil {
+		rawGetStreamsInBoundsResponse.Streams = make([]VideoStream, 0)
+	}
+	*o = GetStreamsInBoundsResponse(rawGetStreamsInBoundsResponse)
+	return nil
+}
+
+func (o GetStreamsInBoundsResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetStreamsInBoundsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type GetVideosRequest struct {
 	VideoRids []rids.VideoRid `json:"videoRids"`
 }

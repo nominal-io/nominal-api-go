@@ -386,6 +386,11 @@ func (o *IngestDataflashResponse) UnmarshalYAML(unmarshal func(interface{}) erro
 type IngestMcapProtobufRequest struct {
 	Locator  ObjectLocator     `json:"locator"`
 	Channels McapProtoChannels `json:"channels"`
+	/*
+	   If true, skips invalid MCAP topics during ingestion instead of failing the entire ingest.
+	   If not provided, defaults to false.
+	*/
+	IgnoreInvalidTopics *bool `json:"ignoreInvalidTopics,omitempty"`
 }
 
 func (o IngestMcapProtobufRequest) MarshalYAML() (interface{}, error) {

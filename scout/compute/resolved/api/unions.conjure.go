@@ -6630,6 +6630,141 @@ func NewResolvedNodeFromMultivariate(v SummarizeMultivariateNode) ResolvedNode {
 	return ResolvedNode{typ: "multivariate", multivariate: &v}
 }
 
+type ResolvedNumericAggregation struct {
+	typ        string
+	percentile *ResolvedPercentile
+}
+
+type resolvedNumericAggregationDeserializer struct {
+	Type       string              `json:"type"`
+	Percentile *ResolvedPercentile `json:"percentile"`
+}
+
+func (u *resolvedNumericAggregationDeserializer) toStruct() ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: u.Type, percentile: u.Percentile}
+}
+
+func (u *ResolvedNumericAggregation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return nil, fmt.Errorf("field \"percentile\" is required")
+		}
+		return struct {
+			Type       string             `json:"type"`
+			Percentile ResolvedPercentile `json:"percentile"`
+		}{Type: "percentile", Percentile: *u.percentile}, nil
+	}
+}
+
+func (u ResolvedNumericAggregation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ResolvedNumericAggregation) UnmarshalJSON(data []byte) error {
+	var deser resolvedNumericAggregationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ResolvedNumericAggregation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ResolvedNumericAggregation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ResolvedNumericAggregation) AcceptFuncs(percentileFunc func(ResolvedPercentile) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ResolvedNumericAggregation type")
+		}
+		return unknownFunc(u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return percentileFunc(*u.percentile)
+	}
+}
+
+func (u *ResolvedNumericAggregation) PercentileNoopSuccess(_ ResolvedPercentile) error {
+	return nil
+}
+
+func (u *ResolvedNumericAggregation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ResolvedNumericAggregation) Accept(v ResolvedNumericAggregationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentile(*u.percentile)
+	}
+}
+
+type ResolvedNumericAggregationVisitor interface {
+	VisitPercentile(v ResolvedPercentile) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ResolvedNumericAggregation) AcceptWithContext(ctx context.Context, v ResolvedNumericAggregationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentileWithContext(ctx, *u.percentile)
+	}
+}
+
+type ResolvedNumericAggregationVisitorWithContext interface {
+	VisitPercentileWithContext(ctx context.Context, v ResolvedPercentile) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewResolvedNumericAggregationFromPercentile(v ResolvedPercentile) ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: "percentile", percentile: &v}
+}
+
 type RollingOperator struct {
 	typ               string
 	average           *api.Average
@@ -7003,24 +7138,22 @@ type SelectValueNode struct {
 	typ             string
 	firstPoint      *SeriesNode
 	firstValuePoint *SeriesNode
-	firstRange      *RangesNode
 	lastPoint       *SeriesNode
 	lastValuePoint  *SeriesNode
-	lastRange       *RangesNode
+	nthRange        *NthRangeNode
 }
 
 type selectValueNodeDeserializer struct {
-	Type            string      `json:"type"`
-	FirstPoint      *SeriesNode `json:"firstPoint"`
-	FirstValuePoint *SeriesNode `json:"firstValuePoint"`
-	FirstRange      *RangesNode `json:"firstRange"`
-	LastPoint       *SeriesNode `json:"lastPoint"`
-	LastValuePoint  *SeriesNode `json:"lastValuePoint"`
-	LastRange       *RangesNode `json:"lastRange"`
+	Type            string        `json:"type"`
+	FirstPoint      *SeriesNode   `json:"firstPoint"`
+	FirstValuePoint *SeriesNode   `json:"firstValuePoint"`
+	LastPoint       *SeriesNode   `json:"lastPoint"`
+	LastValuePoint  *SeriesNode   `json:"lastValuePoint"`
+	NthRange        *NthRangeNode `json:"nthRange"`
 }
 
 func (u *selectValueNodeDeserializer) toStruct() SelectValueNode {
-	return SelectValueNode{typ: u.Type, firstPoint: u.FirstPoint, firstValuePoint: u.FirstValuePoint, firstRange: u.FirstRange, lastPoint: u.LastPoint, lastValuePoint: u.LastValuePoint, lastRange: u.LastRange}
+	return SelectValueNode{typ: u.Type, firstPoint: u.FirstPoint, firstValuePoint: u.FirstValuePoint, lastPoint: u.LastPoint, lastValuePoint: u.LastValuePoint, nthRange: u.NthRange}
 }
 
 func (u *SelectValueNode) toSerializer() (interface{}, error) {
@@ -7043,14 +7176,6 @@ func (u *SelectValueNode) toSerializer() (interface{}, error) {
 			Type            string     `json:"type"`
 			FirstValuePoint SeriesNode `json:"firstValuePoint"`
 		}{Type: "firstValuePoint", FirstValuePoint: *u.firstValuePoint}, nil
-	case "firstRange":
-		if u.firstRange == nil {
-			return nil, fmt.Errorf("field \"firstRange\" is required")
-		}
-		return struct {
-			Type       string     `json:"type"`
-			FirstRange RangesNode `json:"firstRange"`
-		}{Type: "firstRange", FirstRange: *u.firstRange}, nil
 	case "lastPoint":
 		if u.lastPoint == nil {
 			return nil, fmt.Errorf("field \"lastPoint\" is required")
@@ -7067,14 +7192,14 @@ func (u *SelectValueNode) toSerializer() (interface{}, error) {
 			Type           string     `json:"type"`
 			LastValuePoint SeriesNode `json:"lastValuePoint"`
 		}{Type: "lastValuePoint", LastValuePoint: *u.lastValuePoint}, nil
-	case "lastRange":
-		if u.lastRange == nil {
-			return nil, fmt.Errorf("field \"lastRange\" is required")
+	case "nthRange":
+		if u.nthRange == nil {
+			return nil, fmt.Errorf("field \"nthRange\" is required")
 		}
 		return struct {
-			Type      string     `json:"type"`
-			LastRange RangesNode `json:"lastRange"`
-		}{Type: "lastRange", LastRange: *u.lastRange}, nil
+			Type     string       `json:"type"`
+			NthRange NthRangeNode `json:"nthRange"`
+		}{Type: "nthRange", NthRange: *u.nthRange}, nil
 	}
 }
 
@@ -7101,10 +7226,6 @@ func (u *SelectValueNode) UnmarshalJSON(data []byte) error {
 		if u.firstValuePoint == nil {
 			return fmt.Errorf("field \"firstValuePoint\" is required")
 		}
-	case "firstRange":
-		if u.firstRange == nil {
-			return fmt.Errorf("field \"firstRange\" is required")
-		}
 	case "lastPoint":
 		if u.lastPoint == nil {
 			return fmt.Errorf("field \"lastPoint\" is required")
@@ -7113,9 +7234,9 @@ func (u *SelectValueNode) UnmarshalJSON(data []byte) error {
 		if u.lastValuePoint == nil {
 			return fmt.Errorf("field \"lastValuePoint\" is required")
 		}
-	case "lastRange":
-		if u.lastRange == nil {
-			return fmt.Errorf("field \"lastRange\" is required")
+	case "nthRange":
+		if u.nthRange == nil {
+			return fmt.Errorf("field \"nthRange\" is required")
 		}
 	}
 	return nil
@@ -7137,7 +7258,7 @@ func (u *SelectValueNode) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SelectValueNode) AcceptFuncs(firstPointFunc func(SeriesNode) error, firstValuePointFunc func(SeriesNode) error, firstRangeFunc func(RangesNode) error, lastPointFunc func(SeriesNode) error, lastValuePointFunc func(SeriesNode) error, lastRangeFunc func(RangesNode) error, unknownFunc func(string) error) error {
+func (u *SelectValueNode) AcceptFuncs(firstPointFunc func(SeriesNode) error, firstValuePointFunc func(SeriesNode) error, lastPointFunc func(SeriesNode) error, lastValuePointFunc func(SeriesNode) error, nthRangeFunc func(NthRangeNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -7154,11 +7275,6 @@ func (u *SelectValueNode) AcceptFuncs(firstPointFunc func(SeriesNode) error, fir
 			return fmt.Errorf("field \"firstValuePoint\" is required")
 		}
 		return firstValuePointFunc(*u.firstValuePoint)
-	case "firstRange":
-		if u.firstRange == nil {
-			return fmt.Errorf("field \"firstRange\" is required")
-		}
-		return firstRangeFunc(*u.firstRange)
 	case "lastPoint":
 		if u.lastPoint == nil {
 			return fmt.Errorf("field \"lastPoint\" is required")
@@ -7169,11 +7285,11 @@ func (u *SelectValueNode) AcceptFuncs(firstPointFunc func(SeriesNode) error, fir
 			return fmt.Errorf("field \"lastValuePoint\" is required")
 		}
 		return lastValuePointFunc(*u.lastValuePoint)
-	case "lastRange":
-		if u.lastRange == nil {
-			return fmt.Errorf("field \"lastRange\" is required")
+	case "nthRange":
+		if u.nthRange == nil {
+			return fmt.Errorf("field \"nthRange\" is required")
 		}
-		return lastRangeFunc(*u.lastRange)
+		return nthRangeFunc(*u.nthRange)
 	}
 }
 
@@ -7185,10 +7301,6 @@ func (u *SelectValueNode) FirstValuePointNoopSuccess(_ SeriesNode) error {
 	return nil
 }
 
-func (u *SelectValueNode) FirstRangeNoopSuccess(_ RangesNode) error {
-	return nil
-}
-
 func (u *SelectValueNode) LastPointNoopSuccess(_ SeriesNode) error {
 	return nil
 }
@@ -7197,7 +7309,7 @@ func (u *SelectValueNode) LastValuePointNoopSuccess(_ SeriesNode) error {
 	return nil
 }
 
-func (u *SelectValueNode) LastRangeNoopSuccess(_ RangesNode) error {
+func (u *SelectValueNode) NthRangeNoopSuccess(_ NthRangeNode) error {
 	return nil
 }
 
@@ -7222,11 +7334,6 @@ func (u *SelectValueNode) Accept(v SelectValueNodeVisitor) error {
 			return fmt.Errorf("field \"firstValuePoint\" is required")
 		}
 		return v.VisitFirstValuePoint(*u.firstValuePoint)
-	case "firstRange":
-		if u.firstRange == nil {
-			return fmt.Errorf("field \"firstRange\" is required")
-		}
-		return v.VisitFirstRange(*u.firstRange)
 	case "lastPoint":
 		if u.lastPoint == nil {
 			return fmt.Errorf("field \"lastPoint\" is required")
@@ -7237,21 +7344,20 @@ func (u *SelectValueNode) Accept(v SelectValueNodeVisitor) error {
 			return fmt.Errorf("field \"lastValuePoint\" is required")
 		}
 		return v.VisitLastValuePoint(*u.lastValuePoint)
-	case "lastRange":
-		if u.lastRange == nil {
-			return fmt.Errorf("field \"lastRange\" is required")
+	case "nthRange":
+		if u.nthRange == nil {
+			return fmt.Errorf("field \"nthRange\" is required")
 		}
-		return v.VisitLastRange(*u.lastRange)
+		return v.VisitNthRange(*u.nthRange)
 	}
 }
 
 type SelectValueNodeVisitor interface {
 	VisitFirstPoint(v SeriesNode) error
 	VisitFirstValuePoint(v SeriesNode) error
-	VisitFirstRange(v RangesNode) error
 	VisitLastPoint(v SeriesNode) error
 	VisitLastValuePoint(v SeriesNode) error
-	VisitLastRange(v RangesNode) error
+	VisitNthRange(v NthRangeNode) error
 	VisitUnknown(typeName string) error
 }
 
@@ -7272,11 +7378,6 @@ func (u *SelectValueNode) AcceptWithContext(ctx context.Context, v SelectValueNo
 			return fmt.Errorf("field \"firstValuePoint\" is required")
 		}
 		return v.VisitFirstValuePointWithContext(ctx, *u.firstValuePoint)
-	case "firstRange":
-		if u.firstRange == nil {
-			return fmt.Errorf("field \"firstRange\" is required")
-		}
-		return v.VisitFirstRangeWithContext(ctx, *u.firstRange)
 	case "lastPoint":
 		if u.lastPoint == nil {
 			return fmt.Errorf("field \"lastPoint\" is required")
@@ -7287,21 +7388,20 @@ func (u *SelectValueNode) AcceptWithContext(ctx context.Context, v SelectValueNo
 			return fmt.Errorf("field \"lastValuePoint\" is required")
 		}
 		return v.VisitLastValuePointWithContext(ctx, *u.lastValuePoint)
-	case "lastRange":
-		if u.lastRange == nil {
-			return fmt.Errorf("field \"lastRange\" is required")
+	case "nthRange":
+		if u.nthRange == nil {
+			return fmt.Errorf("field \"nthRange\" is required")
 		}
-		return v.VisitLastRangeWithContext(ctx, *u.lastRange)
+		return v.VisitNthRangeWithContext(ctx, *u.nthRange)
 	}
 }
 
 type SelectValueNodeVisitorWithContext interface {
 	VisitFirstPointWithContext(ctx context.Context, v SeriesNode) error
 	VisitFirstValuePointWithContext(ctx context.Context, v SeriesNode) error
-	VisitFirstRangeWithContext(ctx context.Context, v RangesNode) error
 	VisitLastPointWithContext(ctx context.Context, v SeriesNode) error
 	VisitLastValuePointWithContext(ctx context.Context, v SeriesNode) error
-	VisitLastRangeWithContext(ctx context.Context, v RangesNode) error
+	VisitNthRangeWithContext(ctx context.Context, v NthRangeNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -7313,10 +7413,6 @@ func NewSelectValueNodeFromFirstValuePoint(v SeriesNode) SelectValueNode {
 	return SelectValueNode{typ: "firstValuePoint", firstValuePoint: &v}
 }
 
-func NewSelectValueNodeFromFirstRange(v RangesNode) SelectValueNode {
-	return SelectValueNode{typ: "firstRange", firstRange: &v}
-}
-
 func NewSelectValueNodeFromLastPoint(v SeriesNode) SelectValueNode {
 	return SelectValueNode{typ: "lastPoint", lastPoint: &v}
 }
@@ -7325,8 +7421,8 @@ func NewSelectValueNodeFromLastValuePoint(v SeriesNode) SelectValueNode {
 	return SelectValueNode{typ: "lastValuePoint", lastValuePoint: &v}
 }
 
-func NewSelectValueNodeFromLastRange(v RangesNode) SelectValueNode {
-	return SelectValueNode{typ: "lastRange", lastRange: &v}
+func NewSelectValueNodeFromNthRange(v NthRangeNode) SelectValueNode {
+	return SelectValueNode{typ: "nthRange", nthRange: &v}
 }
 
 type SeriesNode struct {
@@ -8122,6 +8218,180 @@ func NewStorageLocatorFromNominal(v NominalStorageLocator) StorageLocator {
 
 func NewStorageLocatorFromExternal(v api1.ExternalStorageLocator) StorageLocator {
 	return StorageLocator{typ: "external", external: &v}
+}
+
+type StructFieldPathToken struct {
+	typ   string
+	key   *StructFieldPathKey
+	index *StructFieldPathIndex
+}
+
+type structFieldPathTokenDeserializer struct {
+	Type  string                `json:"type"`
+	Key   *StructFieldPathKey   `json:"key"`
+	Index *StructFieldPathIndex `json:"index"`
+}
+
+func (u *structFieldPathTokenDeserializer) toStruct() StructFieldPathToken {
+	return StructFieldPathToken{typ: u.Type, key: u.Key, index: u.Index}
+}
+
+func (u *StructFieldPathToken) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "key":
+		if u.key == nil {
+			return nil, fmt.Errorf("field \"key\" is required")
+		}
+		return struct {
+			Type string             `json:"type"`
+			Key  StructFieldPathKey `json:"key"`
+		}{Type: "key", Key: *u.key}, nil
+	case "index":
+		if u.index == nil {
+			return nil, fmt.Errorf("field \"index\" is required")
+		}
+		return struct {
+			Type  string               `json:"type"`
+			Index StructFieldPathIndex `json:"index"`
+		}{Type: "index", Index: *u.index}, nil
+	}
+}
+
+func (u StructFieldPathToken) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *StructFieldPathToken) UnmarshalJSON(data []byte) error {
+	var deser structFieldPathTokenDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "key":
+		if u.key == nil {
+			return fmt.Errorf("field \"key\" is required")
+		}
+	case "index":
+		if u.index == nil {
+			return fmt.Errorf("field \"index\" is required")
+		}
+	}
+	return nil
+}
+
+func (u StructFieldPathToken) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *StructFieldPathToken) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *StructFieldPathToken) AcceptFuncs(keyFunc func(StructFieldPathKey) error, indexFunc func(StructFieldPathIndex) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in StructFieldPathToken type")
+		}
+		return unknownFunc(u.typ)
+	case "key":
+		if u.key == nil {
+			return fmt.Errorf("field \"key\" is required")
+		}
+		return keyFunc(*u.key)
+	case "index":
+		if u.index == nil {
+			return fmt.Errorf("field \"index\" is required")
+		}
+		return indexFunc(*u.index)
+	}
+}
+
+func (u *StructFieldPathToken) KeyNoopSuccess(_ StructFieldPathKey) error {
+	return nil
+}
+
+func (u *StructFieldPathToken) IndexNoopSuccess(_ StructFieldPathIndex) error {
+	return nil
+}
+
+func (u *StructFieldPathToken) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *StructFieldPathToken) Accept(v StructFieldPathTokenVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "key":
+		if u.key == nil {
+			return fmt.Errorf("field \"key\" is required")
+		}
+		return v.VisitKey(*u.key)
+	case "index":
+		if u.index == nil {
+			return fmt.Errorf("field \"index\" is required")
+		}
+		return v.VisitIndex(*u.index)
+	}
+}
+
+type StructFieldPathTokenVisitor interface {
+	VisitKey(v StructFieldPathKey) error
+	VisitIndex(v StructFieldPathIndex) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *StructFieldPathToken) AcceptWithContext(ctx context.Context, v StructFieldPathTokenVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "key":
+		if u.key == nil {
+			return fmt.Errorf("field \"key\" is required")
+		}
+		return v.VisitKeyWithContext(ctx, *u.key)
+	case "index":
+		if u.index == nil {
+			return fmt.Errorf("field \"index\" is required")
+		}
+		return v.VisitIndexWithContext(ctx, *u.index)
+	}
+}
+
+type StructFieldPathTokenVisitorWithContext interface {
+	VisitKeyWithContext(ctx context.Context, v StructFieldPathKey) error
+	VisitIndexWithContext(ctx context.Context, v StructFieldPathIndex) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewStructFieldPathTokenFromKey(v StructFieldPathKey) StructFieldPathToken {
+	return StructFieldPathToken{typ: "key", key: &v}
+}
+
+func NewStructFieldPathTokenFromIndex(v StructFieldPathIndex) StructFieldPathToken {
+	return StructFieldPathToken{typ: "index", index: &v}
 }
 
 type StructSeriesNode struct {

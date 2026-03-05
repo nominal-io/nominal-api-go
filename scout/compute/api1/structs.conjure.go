@@ -456,10 +456,12 @@ func (o *ComputeNodeFromReferenceRequest) UnmarshalYAML(unmarshal func(interface
 }
 
 type ComputeNodeRequest struct {
-	Node    ComputableNode `json:"node"`
-	Start   api.Timestamp  `json:"start"`
-	End     api.Timestamp  `json:"end"`
-	Context Context        `json:"context"`
+	Node ComputableNode `json:"node"`
+	// The start of the time range (inclusive).
+	Start api.Timestamp `json:"start"`
+	// The end of the time range (inclusive).
+	End     api.Timestamp `json:"end"`
+	Context Context       `json:"context"`
 	/*
 	   Optional RID identifying the resource that initiated this query (e.g. workbook/notebook RID, checklist RID).
 	   Used for observability only — trusted as-is, no permission checks are performed on this value.
@@ -1138,8 +1140,11 @@ func (o *EventsSearchRanges) UnmarshalYAML(unmarshal func(interface{}) error) er
 type ExtractEnumFromStructSeries struct {
 	Input StructSeries `json:"input"`
 	/*
-	   Path to the field to extract as an enum series. Nested fields are separated by periods and field names cannot contain periods.
-	   Will filter out invalid paths and paths to sub structures.
+	   Path segments that are joined to locate a nested enum field. Use dots to traverse
+	   objects (e.g. `a.b.c`) and 0-based brackets to index into arrays (e.g. `items[0].value`).
+	   A bare numeric name like `0` refers to an object key named "0"; use `[0]` to index
+	   into an array. Rows where the path is invalid or resolves to a nested object rather
+	   than a scalar are filtered out.
 	*/
 	FieldPath []api1.StringConstant `json:"fieldPath"`
 }
@@ -1184,8 +1189,11 @@ func (o *ExtractEnumFromStructSeries) UnmarshalYAML(unmarshal func(interface{}) 
 type ExtractNumericFromStructSeries struct {
 	Input StructSeries `json:"input"`
 	/*
-	   Path to the field to extract as a numeric series. Nested fields are separated by periods and field names cannot contain periods.
-	   Will filter out invalid paths and values that cannot be converted to the specified type.
+	   Path segments that are joined to locate a nested numeric field. Use dots to traverse
+	   objects (e.g. `a.b.c`) and 0-based brackets to index into arrays (e.g. `items[0].value`).
+	   A bare numeric name like `0` refers to an object key named "0"; use [0] to index
+	   into an array. Rows where the path is invalid or the value cannot be converted to the
+	   specified type are filtered out.
 	*/
 	FieldPath []api1.StringConstant `json:"fieldPath"`
 	// The type the numeric data will be cast to, defaults to FLOAT64
@@ -1232,8 +1240,11 @@ func (o *ExtractNumericFromStructSeries) UnmarshalYAML(unmarshal func(interface{
 type ExtractStructFromStructSeries struct {
 	Input StructSeries `json:"input"`
 	/*
-	   Path to the field to extract as a struct. Nested fields are separated by periods and field names cannot contain periods.
-	   Returns an empty struct if the path is invalid or does not resolve to a valid JSON struct.
+	   Path segments that are joined to locate a nested struct field. Use dots to traverse
+	   objects (e.g. `a.b.c`) and 0-based brackets to index into arrays (e.g. `items[0].value`).
+	   A bare numeric name like `0` refers to an object key named "0"; use [0] to index
+	   into an array. Returns an empty struct when the path does not resolve to a valid
+	   JSON object.
 	*/
 	FieldPath []api1.StringConstant `json:"fieldPath"`
 }
@@ -2052,6 +2063,29 @@ func (o *NotSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Select the Nth range (0-indexed) from a range series.
+type NthRange struct {
+	Input     RangeSeries          `json:"input"`
+	Index     api1.IntegerConstant `json:"index"`
+	SortOrder api1.RangeSortOrder  `json:"sortOrder"`
+}
+
+func (o NthRange) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NthRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Outputs the values of the numeric plot value that are approximately equal to the threshold value.
 type NumericApproximateFilterSeries struct {
 	Input     NumericSeries                     `json:"input"`
@@ -2475,10 +2509,12 @@ func (o *ParameterInput) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type ParameterizedComputeNodeRequest struct {
-	Node    ComputableNode `json:"node"`
-	Start   api.Timestamp  `json:"start"`
-	End     api.Timestamp  `json:"end"`
-	Context Context        `json:"context"`
+	Node ComputableNode `json:"node"`
+	// The start of the time range (inclusive).
+	Start api.Timestamp `json:"start"`
+	// The end of the time range (inclusive).
+	End     api.Timestamp `json:"end"`
+	Context Context       `json:"context"`
 	/*
 	   Optional RID identifying the resource that initiated this query (e.g. workbook/notebook RID, checklist RID).
 	   Used for observability only — trusted as-is, no permission checks are performed on this value.
@@ -3372,6 +3408,8 @@ type SummarizeSeries struct {
 	OutputFormat *api1.OutputFormat `json:"outputFormat,omitempty"`
 	// The fields to output from the summarization. Applies only to Arrow format numeric series.
 	NumericOutputFields *[]api1.NumericOutputField `json:"numericOutputFields,omitempty"`
+	// Additional numeric aggregations per decimation bucket (e.g. percentiles). Map key is the name of the column in the result.
+	NumericAggregations map[string]api1.NumericAggregation `json:"numericAggregations"`
 	/*
 	   Resolution of the output series specifying time interval between decimated points.
 	   Picoseconds for picosecond-granularity dataset, nanoseconds otherwise.
@@ -3387,6 +3425,27 @@ type SummarizeSeries struct {
 	Buckets *int `json:"buckets,omitempty"`
 	// The strategy to use when summarizing the series.
 	SummarizationStrategy *api1.SummarizationStrategy `json:"summarizationStrategy,omitempty"`
+}
+
+func (o SummarizeSeries) MarshalJSON() ([]byte, error) {
+	if o.NumericAggregations == nil {
+		o.NumericAggregations = make(map[string]api1.NumericAggregation)
+	}
+	type _tmpSummarizeSeries SummarizeSeries
+	return safejson.Marshal(_tmpSummarizeSeries(o))
+}
+
+func (o *SummarizeSeries) UnmarshalJSON(data []byte) error {
+	type _tmpSummarizeSeries SummarizeSeries
+	var rawSummarizeSeries _tmpSummarizeSeries
+	if err := safejson.Unmarshal(data, &rawSummarizeSeries); err != nil {
+		return err
+	}
+	if rawSummarizeSeries.NumericAggregations == nil {
+		rawSummarizeSeries.NumericAggregations = make(map[string]api1.NumericAggregation)
+	}
+	*o = SummarizeSeries(rawSummarizeSeries)
+	return nil
 }
 
 func (o SummarizeSeries) MarshalYAML() (interface{}, error) {

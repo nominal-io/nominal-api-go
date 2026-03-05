@@ -7423,6 +7423,7 @@ type SelectValue struct {
 	lastPoint       *Series
 	lastValuePoint  *Series
 	lastRange       *RangeSeries
+	nthRange        *NthRange
 }
 
 type selectValueDeserializer struct {
@@ -7433,10 +7434,11 @@ type selectValueDeserializer struct {
 	LastPoint       *Series      `json:"lastPoint"`
 	LastValuePoint  *Series      `json:"lastValuePoint"`
 	LastRange       *RangeSeries `json:"lastRange"`
+	NthRange        *NthRange    `json:"nthRange"`
 }
 
 func (u *selectValueDeserializer) toStruct() SelectValue {
-	return SelectValue{typ: u.Type, firstPoint: u.FirstPoint, firstValuePoint: u.FirstValuePoint, firstRange: u.FirstRange, lastPoint: u.LastPoint, lastValuePoint: u.LastValuePoint, lastRange: u.LastRange}
+	return SelectValue{typ: u.Type, firstPoint: u.FirstPoint, firstValuePoint: u.FirstValuePoint, firstRange: u.FirstRange, lastPoint: u.LastPoint, lastValuePoint: u.LastValuePoint, lastRange: u.LastRange, nthRange: u.NthRange}
 }
 
 func (u *SelectValue) toSerializer() (interface{}, error) {
@@ -7491,6 +7493,14 @@ func (u *SelectValue) toSerializer() (interface{}, error) {
 			Type      string      `json:"type"`
 			LastRange RangeSeries `json:"lastRange"`
 		}{Type: "lastRange", LastRange: *u.lastRange}, nil
+	case "nthRange":
+		if u.nthRange == nil {
+			return nil, fmt.Errorf("field \"nthRange\" is required")
+		}
+		return struct {
+			Type     string   `json:"type"`
+			NthRange NthRange `json:"nthRange"`
+		}{Type: "nthRange", NthRange: *u.nthRange}, nil
 	}
 }
 
@@ -7533,6 +7543,10 @@ func (u *SelectValue) UnmarshalJSON(data []byte) error {
 		if u.lastRange == nil {
 			return fmt.Errorf("field \"lastRange\" is required")
 		}
+	case "nthRange":
+		if u.nthRange == nil {
+			return fmt.Errorf("field \"nthRange\" is required")
+		}
 	}
 	return nil
 }
@@ -7553,7 +7567,7 @@ func (u *SelectValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SelectValue) AcceptFuncs(firstPointFunc func(Series) error, firstValuePointFunc func(Series) error, firstRangeFunc func(RangeSeries) error, lastPointFunc func(Series) error, lastValuePointFunc func(Series) error, lastRangeFunc func(RangeSeries) error, unknownFunc func(string) error) error {
+func (u *SelectValue) AcceptFuncs(firstPointFunc func(Series) error, firstValuePointFunc func(Series) error, firstRangeFunc func(RangeSeries) error, lastPointFunc func(Series) error, lastValuePointFunc func(Series) error, lastRangeFunc func(RangeSeries) error, nthRangeFunc func(NthRange) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -7590,6 +7604,11 @@ func (u *SelectValue) AcceptFuncs(firstPointFunc func(Series) error, firstValueP
 			return fmt.Errorf("field \"lastRange\" is required")
 		}
 		return lastRangeFunc(*u.lastRange)
+	case "nthRange":
+		if u.nthRange == nil {
+			return fmt.Errorf("field \"nthRange\" is required")
+		}
+		return nthRangeFunc(*u.nthRange)
 	}
 }
 
@@ -7614,6 +7633,10 @@ func (u *SelectValue) LastValuePointNoopSuccess(_ Series) error {
 }
 
 func (u *SelectValue) LastRangeNoopSuccess(_ RangeSeries) error {
+	return nil
+}
+
+func (u *SelectValue) NthRangeNoopSuccess(_ NthRange) error {
 	return nil
 }
 
@@ -7658,6 +7681,11 @@ func (u *SelectValue) Accept(v SelectValueVisitor) error {
 			return fmt.Errorf("field \"lastRange\" is required")
 		}
 		return v.VisitLastRange(*u.lastRange)
+	case "nthRange":
+		if u.nthRange == nil {
+			return fmt.Errorf("field \"nthRange\" is required")
+		}
+		return v.VisitNthRange(*u.nthRange)
 	}
 }
 
@@ -7668,6 +7696,7 @@ type SelectValueVisitor interface {
 	VisitLastPoint(v Series) error
 	VisitLastValuePoint(v Series) error
 	VisitLastRange(v RangeSeries) error
+	VisitNthRange(v NthRange) error
 	VisitUnknown(typeName string) error
 }
 
@@ -7708,6 +7737,11 @@ func (u *SelectValue) AcceptWithContext(ctx context.Context, v SelectValueVisito
 			return fmt.Errorf("field \"lastRange\" is required")
 		}
 		return v.VisitLastRangeWithContext(ctx, *u.lastRange)
+	case "nthRange":
+		if u.nthRange == nil {
+			return fmt.Errorf("field \"nthRange\" is required")
+		}
+		return v.VisitNthRangeWithContext(ctx, *u.nthRange)
 	}
 }
 
@@ -7718,6 +7752,7 @@ type SelectValueVisitorWithContext interface {
 	VisitLastPointWithContext(ctx context.Context, v Series) error
 	VisitLastValuePointWithContext(ctx context.Context, v Series) error
 	VisitLastRangeWithContext(ctx context.Context, v RangeSeries) error
+	VisitNthRangeWithContext(ctx context.Context, v NthRange) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -7743,6 +7778,10 @@ func NewSelectValueFromLastValuePoint(v Series) SelectValue {
 
 func NewSelectValueFromLastRange(v RangeSeries) SelectValue {
 	return SelectValue{typ: "lastRange", lastRange: &v}
+}
+
+func NewSelectValueFromNthRange(v NthRange) SelectValue {
+	return SelectValue{typ: "nthRange", nthRange: &v}
 }
 
 type Series struct {

@@ -2593,6 +2593,55 @@ type ResolvedNodeVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type ResolvedNumericAggregationWithT[T any] ResolvedNumericAggregation
+
+func (u *ResolvedNumericAggregationWithT[T]) Accept(ctx context.Context, v ResolvedNumericAggregationVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return result, fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentile(ctx, *u.percentile)
+	}
+}
+
+func (u *ResolvedNumericAggregationWithT[T]) AcceptFuncs(percentileFunc func(ResolvedPercentile) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return result, fmt.Errorf("field \"percentile\" is required")
+		}
+		return percentileFunc(*u.percentile)
+	}
+}
+
+func (u *ResolvedNumericAggregationWithT[T]) PercentileNoopSuccess(ResolvedPercentile) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ResolvedNumericAggregationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ResolvedNumericAggregationVisitorWithT[T any] interface {
+	VisitPercentile(ctx context.Context, v ResolvedPercentile) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type RollingOperatorWithT[T any] RollingOperator
 
 func (u *RollingOperatorWithT[T]) Accept(ctx context.Context, v RollingOperatorVisitorWithT[T]) (T, error) {
@@ -2758,11 +2807,6 @@ func (u *SelectValueNodeWithT[T]) Accept(ctx context.Context, v SelectValueNodeV
 			return result, fmt.Errorf("field \"firstValuePoint\" is required")
 		}
 		return v.VisitFirstValuePoint(ctx, *u.firstValuePoint)
-	case "firstRange":
-		if u.firstRange == nil {
-			return result, fmt.Errorf("field \"firstRange\" is required")
-		}
-		return v.VisitFirstRange(ctx, *u.firstRange)
 	case "lastPoint":
 		if u.lastPoint == nil {
 			return result, fmt.Errorf("field \"lastPoint\" is required")
@@ -2773,15 +2817,15 @@ func (u *SelectValueNodeWithT[T]) Accept(ctx context.Context, v SelectValueNodeV
 			return result, fmt.Errorf("field \"lastValuePoint\" is required")
 		}
 		return v.VisitLastValuePoint(ctx, *u.lastValuePoint)
-	case "lastRange":
-		if u.lastRange == nil {
-			return result, fmt.Errorf("field \"lastRange\" is required")
+	case "nthRange":
+		if u.nthRange == nil {
+			return result, fmt.Errorf("field \"nthRange\" is required")
 		}
-		return v.VisitLastRange(ctx, *u.lastRange)
+		return v.VisitNthRange(ctx, *u.nthRange)
 	}
 }
 
-func (u *SelectValueNodeWithT[T]) AcceptFuncs(firstPointFunc func(SeriesNode) (T, error), firstValuePointFunc func(SeriesNode) (T, error), firstRangeFunc func(RangesNode) (T, error), lastPointFunc func(SeriesNode) (T, error), lastValuePointFunc func(SeriesNode) (T, error), lastRangeFunc func(RangesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SelectValueNodeWithT[T]) AcceptFuncs(firstPointFunc func(SeriesNode) (T, error), firstValuePointFunc func(SeriesNode) (T, error), lastPointFunc func(SeriesNode) (T, error), lastValuePointFunc func(SeriesNode) (T, error), nthRangeFunc func(NthRangeNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2799,11 +2843,6 @@ func (u *SelectValueNodeWithT[T]) AcceptFuncs(firstPointFunc func(SeriesNode) (T
 			return result, fmt.Errorf("field \"firstValuePoint\" is required")
 		}
 		return firstValuePointFunc(*u.firstValuePoint)
-	case "firstRange":
-		if u.firstRange == nil {
-			return result, fmt.Errorf("field \"firstRange\" is required")
-		}
-		return firstRangeFunc(*u.firstRange)
 	case "lastPoint":
 		if u.lastPoint == nil {
 			return result, fmt.Errorf("field \"lastPoint\" is required")
@@ -2814,11 +2853,11 @@ func (u *SelectValueNodeWithT[T]) AcceptFuncs(firstPointFunc func(SeriesNode) (T
 			return result, fmt.Errorf("field \"lastValuePoint\" is required")
 		}
 		return lastValuePointFunc(*u.lastValuePoint)
-	case "lastRange":
-		if u.lastRange == nil {
-			return result, fmt.Errorf("field \"lastRange\" is required")
+	case "nthRange":
+		if u.nthRange == nil {
+			return result, fmt.Errorf("field \"nthRange\" is required")
 		}
-		return lastRangeFunc(*u.lastRange)
+		return nthRangeFunc(*u.nthRange)
 	}
 }
 
@@ -2828,11 +2867,6 @@ func (u *SelectValueNodeWithT[T]) FirstPointNoopSuccess(SeriesNode) (T, error) {
 }
 
 func (u *SelectValueNodeWithT[T]) FirstValuePointNoopSuccess(SeriesNode) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *SelectValueNodeWithT[T]) FirstRangeNoopSuccess(RangesNode) (T, error) {
 	var result T
 	return result, nil
 }
@@ -2847,7 +2881,7 @@ func (u *SelectValueNodeWithT[T]) LastValuePointNoopSuccess(SeriesNode) (T, erro
 	return result, nil
 }
 
-func (u *SelectValueNodeWithT[T]) LastRangeNoopSuccess(RangesNode) (T, error) {
+func (u *SelectValueNodeWithT[T]) NthRangeNoopSuccess(NthRangeNode) (T, error) {
 	var result T
 	return result, nil
 }
@@ -2860,10 +2894,9 @@ func (u *SelectValueNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type SelectValueNodeVisitorWithT[T any] interface {
 	VisitFirstPoint(ctx context.Context, v SeriesNode) (T, error)
 	VisitFirstValuePoint(ctx context.Context, v SeriesNode) (T, error)
-	VisitFirstRange(ctx context.Context, v RangesNode) (T, error)
 	VisitLastPoint(ctx context.Context, v SeriesNode) (T, error)
 	VisitLastValuePoint(ctx context.Context, v SeriesNode) (T, error)
-	VisitLastRange(ctx context.Context, v RangesNode) (T, error)
+	VisitNthRange(ctx context.Context, v NthRangeNode) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -3171,6 +3204,71 @@ func (u *StorageLocatorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type StorageLocatorVisitorWithT[T any] interface {
 	VisitNominal(ctx context.Context, v NominalStorageLocator) (T, error)
 	VisitExternal(ctx context.Context, v api1.ExternalStorageLocator) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type StructFieldPathTokenWithT[T any] StructFieldPathToken
+
+func (u *StructFieldPathTokenWithT[T]) Accept(ctx context.Context, v StructFieldPathTokenVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "key":
+		if u.key == nil {
+			return result, fmt.Errorf("field \"key\" is required")
+		}
+		return v.VisitKey(ctx, *u.key)
+	case "index":
+		if u.index == nil {
+			return result, fmt.Errorf("field \"index\" is required")
+		}
+		return v.VisitIndex(ctx, *u.index)
+	}
+}
+
+func (u *StructFieldPathTokenWithT[T]) AcceptFuncs(keyFunc func(StructFieldPathKey) (T, error), indexFunc func(StructFieldPathIndex) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "key":
+		if u.key == nil {
+			return result, fmt.Errorf("field \"key\" is required")
+		}
+		return keyFunc(*u.key)
+	case "index":
+		if u.index == nil {
+			return result, fmt.Errorf("field \"index\" is required")
+		}
+		return indexFunc(*u.index)
+	}
+}
+
+func (u *StructFieldPathTokenWithT[T]) KeyNoopSuccess(StructFieldPathKey) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *StructFieldPathTokenWithT[T]) IndexNoopSuccess(StructFieldPathIndex) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *StructFieldPathTokenWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type StructFieldPathTokenVisitorWithT[T any] interface {
+	VisitKey(ctx context.Context, v StructFieldPathKey) (T, error)
+	VisitIndex(ctx context.Context, v StructFieldPathIndex) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

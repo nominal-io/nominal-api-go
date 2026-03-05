@@ -1489,6 +1489,11 @@ type McapProtobufTimeseriesOpts struct {
 	Target        DatasetIngestTarget `json:"target"`
 	ChannelFilter McapChannels        `json:"channelFilter"`
 	TimestampType McapTimestampType   `json:"timestampType"`
+	/*
+	   If true, skips invalid MCAP topics during ingestion instead of failing the entire ingest.
+	   If not provided, defaults to false.
+	*/
+	IgnoreInvalidTopics *bool `json:"ignoreInvalidTopics,omitempty"`
 	// Specifies a tag set to apply to all data in the file.
 	AdditionalFileTags *map[api.TagName]api.TagValue `json:"additionalFileTags,omitempty"`
 }

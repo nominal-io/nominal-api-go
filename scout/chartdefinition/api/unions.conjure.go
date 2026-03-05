@@ -4886,6 +4886,141 @@ func NewLogPanelDefinitionFromV1(v LogPanelDefinitionV1) LogPanelDefinition {
 	return LogPanelDefinition{typ: "v1", v1: &v}
 }
 
+type MarkdownPanelDefinition struct {
+	typ string
+	v1  *MarkdownPanelDefinitionV1
+}
+
+type markdownPanelDefinitionDeserializer struct {
+	Type string                     `json:"type"`
+	V1   *MarkdownPanelDefinitionV1 `json:"v1"`
+}
+
+func (u *markdownPanelDefinitionDeserializer) toStruct() MarkdownPanelDefinition {
+	return MarkdownPanelDefinition{typ: u.Type, v1: u.V1}
+}
+
+func (u *MarkdownPanelDefinition) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string                    `json:"type"`
+			V1   MarkdownPanelDefinitionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u MarkdownPanelDefinition) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *MarkdownPanelDefinition) UnmarshalJSON(data []byte) error {
+	var deser markdownPanelDefinitionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u MarkdownPanelDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *MarkdownPanelDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *MarkdownPanelDefinition) AcceptFuncs(v1Func func(MarkdownPanelDefinitionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in MarkdownPanelDefinition type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *MarkdownPanelDefinition) V1NoopSuccess(_ MarkdownPanelDefinitionV1) error {
+	return nil
+}
+
+func (u *MarkdownPanelDefinition) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *MarkdownPanelDefinition) Accept(v MarkdownPanelDefinitionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type MarkdownPanelDefinitionVisitor interface {
+	VisitV1(v MarkdownPanelDefinitionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *MarkdownPanelDefinition) AcceptWithContext(ctx context.Context, v MarkdownPanelDefinitionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type MarkdownPanelDefinitionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v MarkdownPanelDefinitionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewMarkdownPanelDefinitionFromV1(v MarkdownPanelDefinitionV1) MarkdownPanelDefinition {
+	return MarkdownPanelDefinition{typ: "v1", v1: &v}
+}
+
 type NumericArrayVisualisation struct {
 	typ string
 	raw *NumericArrayRawVisualisation
@@ -9383,11 +9518,12 @@ type VizDefinition struct {
 	geo3d      *Geo3dDefinition
 	histogram  *HistogramChartDefinition
 	log        *LogPanelDefinition
+	markdown   *MarkdownPanelDefinition
 	plotly     *PlotlyPanelDefinition
+	procedure  *ProcedureVizDefinition
 	timeSeries *TimeSeriesChartDefinition
 	valueTable *ValueTableDefinition
 	video      *VideoVizDefinition
-	procedure  *ProcedureVizDefinition
 }
 
 type vizDefinitionDeserializer struct {
@@ -9399,15 +9535,16 @@ type vizDefinitionDeserializer struct {
 	Geo3d      *Geo3dDefinition           `json:"geo3d"`
 	Histogram  *HistogramChartDefinition  `json:"histogram"`
 	Log        *LogPanelDefinition        `json:"log"`
+	Markdown   *MarkdownPanelDefinition   `json:"markdown"`
 	Plotly     *PlotlyPanelDefinition     `json:"plotly"`
+	Procedure  *ProcedureVizDefinition    `json:"procedure"`
 	TimeSeries *TimeSeriesChartDefinition `json:"timeSeries"`
 	ValueTable *ValueTableDefinition      `json:"valueTable"`
 	Video      *VideoVizDefinition        `json:"video"`
-	Procedure  *ProcedureVizDefinition    `json:"procedure"`
 }
 
 func (u *vizDefinitionDeserializer) toStruct() VizDefinition {
-	return VizDefinition{typ: u.Type, cartesian: u.Cartesian, checklist: u.Checklist, frequency: u.Frequency, geo: u.Geo, geo3d: u.Geo3d, histogram: u.Histogram, log: u.Log, plotly: u.Plotly, timeSeries: u.TimeSeries, valueTable: u.ValueTable, video: u.Video, procedure: u.Procedure}
+	return VizDefinition{typ: u.Type, cartesian: u.Cartesian, checklist: u.Checklist, frequency: u.Frequency, geo: u.Geo, geo3d: u.Geo3d, histogram: u.Histogram, log: u.Log, markdown: u.Markdown, plotly: u.Plotly, procedure: u.Procedure, timeSeries: u.TimeSeries, valueTable: u.ValueTable, video: u.Video}
 }
 
 func (u *VizDefinition) toSerializer() (interface{}, error) {
@@ -9470,6 +9607,14 @@ func (u *VizDefinition) toSerializer() (interface{}, error) {
 			Type string             `json:"type"`
 			Log  LogPanelDefinition `json:"log"`
 		}{Type: "log", Log: *u.log}, nil
+	case "markdown":
+		if u.markdown == nil {
+			return nil, fmt.Errorf("field \"markdown\" is required")
+		}
+		return struct {
+			Type     string                  `json:"type"`
+			Markdown MarkdownPanelDefinition `json:"markdown"`
+		}{Type: "markdown", Markdown: *u.markdown}, nil
 	case "plotly":
 		if u.plotly == nil {
 			return nil, fmt.Errorf("field \"plotly\" is required")
@@ -9478,6 +9623,14 @@ func (u *VizDefinition) toSerializer() (interface{}, error) {
 			Type   string                `json:"type"`
 			Plotly PlotlyPanelDefinition `json:"plotly"`
 		}{Type: "plotly", Plotly: *u.plotly}, nil
+	case "procedure":
+		if u.procedure == nil {
+			return nil, fmt.Errorf("field \"procedure\" is required")
+		}
+		return struct {
+			Type      string                 `json:"type"`
+			Procedure ProcedureVizDefinition `json:"procedure"`
+		}{Type: "procedure", Procedure: *u.procedure}, nil
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return nil, fmt.Errorf("field \"timeSeries\" is required")
@@ -9502,14 +9655,6 @@ func (u *VizDefinition) toSerializer() (interface{}, error) {
 			Type  string             `json:"type"`
 			Video VideoVizDefinition `json:"video"`
 		}{Type: "video", Video: *u.video}, nil
-	case "procedure":
-		if u.procedure == nil {
-			return nil, fmt.Errorf("field \"procedure\" is required")
-		}
-		return struct {
-			Type      string                 `json:"type"`
-			Procedure ProcedureVizDefinition `json:"procedure"`
-		}{Type: "procedure", Procedure: *u.procedure}, nil
 	}
 }
 
@@ -9556,9 +9701,17 @@ func (u *VizDefinition) UnmarshalJSON(data []byte) error {
 		if u.log == nil {
 			return fmt.Errorf("field \"log\" is required")
 		}
+	case "markdown":
+		if u.markdown == nil {
+			return fmt.Errorf("field \"markdown\" is required")
+		}
 	case "plotly":
 		if u.plotly == nil {
 			return fmt.Errorf("field \"plotly\" is required")
+		}
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
 		}
 	case "timeSeries":
 		if u.timeSeries == nil {
@@ -9571,10 +9724,6 @@ func (u *VizDefinition) UnmarshalJSON(data []byte) error {
 	case "video":
 		if u.video == nil {
 			return fmt.Errorf("field \"video\" is required")
-		}
-	case "procedure":
-		if u.procedure == nil {
-			return fmt.Errorf("field \"procedure\" is required")
 		}
 	}
 	return nil
@@ -9596,7 +9745,7 @@ func (u *VizDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition) error, checklistFunc func(ChecklistChartDefinition) error, frequencyFunc func(FrequencyChartDefinition) error, geoFunc func(GeoVizDefinition) error, geo3dFunc func(Geo3dDefinition) error, histogramFunc func(HistogramChartDefinition) error, logFunc func(LogPanelDefinition) error, plotlyFunc func(PlotlyPanelDefinition) error, timeSeriesFunc func(TimeSeriesChartDefinition) error, valueTableFunc func(ValueTableDefinition) error, videoFunc func(VideoVizDefinition) error, procedureFunc func(ProcedureVizDefinition) error, unknownFunc func(string) error) error {
+func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition) error, checklistFunc func(ChecklistChartDefinition) error, frequencyFunc func(FrequencyChartDefinition) error, geoFunc func(GeoVizDefinition) error, geo3dFunc func(Geo3dDefinition) error, histogramFunc func(HistogramChartDefinition) error, logFunc func(LogPanelDefinition) error, markdownFunc func(MarkdownPanelDefinition) error, plotlyFunc func(PlotlyPanelDefinition) error, procedureFunc func(ProcedureVizDefinition) error, timeSeriesFunc func(TimeSeriesChartDefinition) error, valueTableFunc func(ValueTableDefinition) error, videoFunc func(VideoVizDefinition) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -9638,11 +9787,21 @@ func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition)
 			return fmt.Errorf("field \"log\" is required")
 		}
 		return logFunc(*u.log)
+	case "markdown":
+		if u.markdown == nil {
+			return fmt.Errorf("field \"markdown\" is required")
+		}
+		return markdownFunc(*u.markdown)
 	case "plotly":
 		if u.plotly == nil {
 			return fmt.Errorf("field \"plotly\" is required")
 		}
 		return plotlyFunc(*u.plotly)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return procedureFunc(*u.procedure)
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return fmt.Errorf("field \"timeSeries\" is required")
@@ -9658,11 +9817,6 @@ func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition)
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return videoFunc(*u.video)
-	case "procedure":
-		if u.procedure == nil {
-			return fmt.Errorf("field \"procedure\" is required")
-		}
-		return procedureFunc(*u.procedure)
 	}
 }
 
@@ -9694,7 +9848,15 @@ func (u *VizDefinition) LogNoopSuccess(_ LogPanelDefinition) error {
 	return nil
 }
 
+func (u *VizDefinition) MarkdownNoopSuccess(_ MarkdownPanelDefinition) error {
+	return nil
+}
+
 func (u *VizDefinition) PlotlyNoopSuccess(_ PlotlyPanelDefinition) error {
+	return nil
+}
+
+func (u *VizDefinition) ProcedureNoopSuccess(_ ProcedureVizDefinition) error {
 	return nil
 }
 
@@ -9707,10 +9869,6 @@ func (u *VizDefinition) ValueTableNoopSuccess(_ ValueTableDefinition) error {
 }
 
 func (u *VizDefinition) VideoNoopSuccess(_ VideoVizDefinition) error {
-	return nil
-}
-
-func (u *VizDefinition) ProcedureNoopSuccess(_ ProcedureVizDefinition) error {
 	return nil
 }
 
@@ -9760,11 +9918,21 @@ func (u *VizDefinition) Accept(v VizDefinitionVisitor) error {
 			return fmt.Errorf("field \"log\" is required")
 		}
 		return v.VisitLog(*u.log)
+	case "markdown":
+		if u.markdown == nil {
+			return fmt.Errorf("field \"markdown\" is required")
+		}
+		return v.VisitMarkdown(*u.markdown)
 	case "plotly":
 		if u.plotly == nil {
 			return fmt.Errorf("field \"plotly\" is required")
 		}
 		return v.VisitPlotly(*u.plotly)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return v.VisitProcedure(*u.procedure)
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return fmt.Errorf("field \"timeSeries\" is required")
@@ -9780,11 +9948,6 @@ func (u *VizDefinition) Accept(v VizDefinitionVisitor) error {
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideo(*u.video)
-	case "procedure":
-		if u.procedure == nil {
-			return fmt.Errorf("field \"procedure\" is required")
-		}
-		return v.VisitProcedure(*u.procedure)
 	}
 }
 
@@ -9796,11 +9959,12 @@ type VizDefinitionVisitor interface {
 	VisitGeo3d(v Geo3dDefinition) error
 	VisitHistogram(v HistogramChartDefinition) error
 	VisitLog(v LogPanelDefinition) error
+	VisitMarkdown(v MarkdownPanelDefinition) error
 	VisitPlotly(v PlotlyPanelDefinition) error
+	VisitProcedure(v ProcedureVizDefinition) error
 	VisitTimeSeries(v TimeSeriesChartDefinition) error
 	VisitValueTable(v ValueTableDefinition) error
 	VisitVideo(v VideoVizDefinition) error
-	VisitProcedure(v ProcedureVizDefinition) error
 	VisitUnknown(typeName string) error
 }
 
@@ -9846,11 +10010,21 @@ func (u *VizDefinition) AcceptWithContext(ctx context.Context, v VizDefinitionVi
 			return fmt.Errorf("field \"log\" is required")
 		}
 		return v.VisitLogWithContext(ctx, *u.log)
+	case "markdown":
+		if u.markdown == nil {
+			return fmt.Errorf("field \"markdown\" is required")
+		}
+		return v.VisitMarkdownWithContext(ctx, *u.markdown)
 	case "plotly":
 		if u.plotly == nil {
 			return fmt.Errorf("field \"plotly\" is required")
 		}
 		return v.VisitPlotlyWithContext(ctx, *u.plotly)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return v.VisitProcedureWithContext(ctx, *u.procedure)
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return fmt.Errorf("field \"timeSeries\" is required")
@@ -9866,11 +10040,6 @@ func (u *VizDefinition) AcceptWithContext(ctx context.Context, v VizDefinitionVi
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideoWithContext(ctx, *u.video)
-	case "procedure":
-		if u.procedure == nil {
-			return fmt.Errorf("field \"procedure\" is required")
-		}
-		return v.VisitProcedureWithContext(ctx, *u.procedure)
 	}
 }
 
@@ -9882,11 +10051,12 @@ type VizDefinitionVisitorWithContext interface {
 	VisitGeo3dWithContext(ctx context.Context, v Geo3dDefinition) error
 	VisitHistogramWithContext(ctx context.Context, v HistogramChartDefinition) error
 	VisitLogWithContext(ctx context.Context, v LogPanelDefinition) error
+	VisitMarkdownWithContext(ctx context.Context, v MarkdownPanelDefinition) error
 	VisitPlotlyWithContext(ctx context.Context, v PlotlyPanelDefinition) error
+	VisitProcedureWithContext(ctx context.Context, v ProcedureVizDefinition) error
 	VisitTimeSeriesWithContext(ctx context.Context, v TimeSeriesChartDefinition) error
 	VisitValueTableWithContext(ctx context.Context, v ValueTableDefinition) error
 	VisitVideoWithContext(ctx context.Context, v VideoVizDefinition) error
-	VisitProcedureWithContext(ctx context.Context, v ProcedureVizDefinition) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -9918,8 +10088,16 @@ func NewVizDefinitionFromLog(v LogPanelDefinition) VizDefinition {
 	return VizDefinition{typ: "log", log: &v}
 }
 
+func NewVizDefinitionFromMarkdown(v MarkdownPanelDefinition) VizDefinition {
+	return VizDefinition{typ: "markdown", markdown: &v}
+}
+
 func NewVizDefinitionFromPlotly(v PlotlyPanelDefinition) VizDefinition {
 	return VizDefinition{typ: "plotly", plotly: &v}
+}
+
+func NewVizDefinitionFromProcedure(v ProcedureVizDefinition) VizDefinition {
+	return VizDefinition{typ: "procedure", procedure: &v}
 }
 
 func NewVizDefinitionFromTimeSeries(v TimeSeriesChartDefinition) VizDefinition {
@@ -9932,8 +10110,4 @@ func NewVizDefinitionFromValueTable(v ValueTableDefinition) VizDefinition {
 
 func NewVizDefinitionFromVideo(v VideoVizDefinition) VizDefinition {
 	return VizDefinition{typ: "video", video: &v}
-}
-
-func NewVizDefinitionFromProcedure(v ProcedureVizDefinition) VizDefinition {
-	return VizDefinition{typ: "procedure", procedure: &v}
 }

@@ -2437,9 +2437,7 @@ func (e *IngestJobNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type invalidBucket struct {
-	Bucket string `json:"bucket"`
-}
+type invalidBucket struct{}
 
 func (o invalidBucket) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
@@ -2458,13 +2456,13 @@ func (o *invalidBucket) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // NewInvalidBucket returns new instance of InvalidBucket error.
-func NewInvalidBucket(bucketArg string) *InvalidBucket {
-	return &InvalidBucket{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidBucket: invalidBucket{Bucket: bucketArg}}
+func NewInvalidBucket() *InvalidBucket {
+	return &InvalidBucket{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidBucket: invalidBucket{}}
 }
 
 // WrapWithInvalidBucket returns new instance of InvalidBucket error wrapping an existing error.
-func WrapWithInvalidBucket(err error, bucketArg string) *InvalidBucket {
-	return &InvalidBucket{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidBucket: invalidBucket{Bucket: bucketArg}}
+func WrapWithInvalidBucket(err error) *InvalidBucket {
+	return &InvalidBucket{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidBucket: invalidBucket{}}
 }
 
 // InvalidBucket is an error type.
@@ -2527,7 +2525,7 @@ func (e *InvalidBucket) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *InvalidBucket) Parameters() map[string]interface{} {
-	return map[string]interface{}{"bucket": e.Bucket}
+	return map[string]interface{}{}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
@@ -2549,7 +2547,7 @@ func (e *InvalidBucket) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *InvalidBucket) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"bucket": e.Bucket}
+	return map[string]interface{}{}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -2831,7 +2829,7 @@ func (e *InvalidCustomTimestampFormat) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *InvalidCustomTimestampFormat) safeParams() map[string]interface{} {
-	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"timeFormat": e.TimeFormat, "reason": e.Reason, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -2848,7 +2846,7 @@ func (e *InvalidCustomTimestampFormat) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *InvalidCustomTimestampFormat) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"timeFormat": e.TimeFormat, "reason": e.Reason}
+	return map[string]interface{}{}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -3183,9 +3181,7 @@ func (e *InvalidOutputFileFormat) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type invalidS3Path struct {
-	Path string `json:"path"`
-}
+type invalidS3Path struct{}
 
 func (o invalidS3Path) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
@@ -3204,13 +3200,13 @@ func (o *invalidS3Path) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // NewInvalidS3Path returns new instance of InvalidS3Path error.
-func NewInvalidS3Path(pathArg string) *InvalidS3Path {
-	return &InvalidS3Path{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidS3Path: invalidS3Path{Path: pathArg}}
+func NewInvalidS3Path() *InvalidS3Path {
+	return &InvalidS3Path{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidS3Path: invalidS3Path{}}
 }
 
 // WrapWithInvalidS3Path returns new instance of InvalidS3Path error wrapping an existing error.
-func WrapWithInvalidS3Path(err error, pathArg string) *InvalidS3Path {
-	return &InvalidS3Path{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidS3Path: invalidS3Path{Path: pathArg}}
+func WrapWithInvalidS3Path(err error) *InvalidS3Path {
+	return &InvalidS3Path{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidS3Path: invalidS3Path{}}
 }
 
 // InvalidS3Path is an error type.
@@ -3273,7 +3269,7 @@ func (e *InvalidS3Path) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *InvalidS3Path) Parameters() map[string]interface{} {
-	return map[string]interface{}{"path": e.Path}
+	return map[string]interface{}{}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
@@ -3295,7 +3291,7 @@ func (e *InvalidS3Path) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *InvalidS3Path) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"path": e.Path}
+	return map[string]interface{}{}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and

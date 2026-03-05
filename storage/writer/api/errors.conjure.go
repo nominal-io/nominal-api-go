@@ -317,8 +317,7 @@ func (e *ConflictingDataTypes) UnmarshalJSON(data []byte) error {
 }
 
 type invalidChannelName struct {
-	Channel string `json:"channel"`
-	Reason  string `json:"reason"`
+	Reason string `json:"reason"`
 }
 
 func (o invalidChannelName) MarshalYAML() (interface{}, error) {
@@ -338,13 +337,13 @@ func (o *invalidChannelName) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 // NewInvalidChannelName returns new instance of InvalidChannelName error.
-func NewInvalidChannelName(channelArg string, reasonArg string) *InvalidChannelName {
-	return &InvalidChannelName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidChannelName: invalidChannelName{Channel: channelArg, Reason: reasonArg}}
+func NewInvalidChannelName(reasonArg string) *InvalidChannelName {
+	return &InvalidChannelName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidChannelName: invalidChannelName{Reason: reasonArg}}
 }
 
 // WrapWithInvalidChannelName returns new instance of InvalidChannelName error wrapping an existing error.
-func WrapWithInvalidChannelName(err error, channelArg string, reasonArg string) *InvalidChannelName {
-	return &InvalidChannelName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidChannelName: invalidChannelName{Channel: channelArg, Reason: reasonArg}}
+func WrapWithInvalidChannelName(err error, reasonArg string) *InvalidChannelName {
+	return &InvalidChannelName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidChannelName: invalidChannelName{Reason: reasonArg}}
 }
 
 // InvalidChannelName is an error type.
@@ -408,12 +407,12 @@ func (e *InvalidChannelName) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *InvalidChannelName) Parameters() map[string]interface{} {
-	return map[string]interface{}{"channel": e.Channel, "reason": e.Reason}
+	return map[string]interface{}{"reason": e.Reason}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *InvalidChannelName) safeParams() map[string]interface{} {
-	return map[string]interface{}{"channel": e.Channel, "reason": e.Reason, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"reason": e.Reason, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -617,9 +616,7 @@ func (e *InvalidDataSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type invalidStruct struct {
-	StructString string `json:"structString"`
-}
+type invalidStruct struct{}
 
 func (o invalidStruct) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
@@ -638,13 +635,13 @@ func (o *invalidStruct) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // NewInvalidStruct returns new instance of InvalidStruct error.
-func NewInvalidStruct(structStringArg string) *InvalidStruct {
-	return &InvalidStruct{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidStruct: invalidStruct{StructString: structStringArg}}
+func NewInvalidStruct() *InvalidStruct {
+	return &InvalidStruct{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidStruct: invalidStruct{}}
 }
 
 // WrapWithInvalidStruct returns new instance of InvalidStruct error wrapping an existing error.
-func WrapWithInvalidStruct(err error, structStringArg string) *InvalidStruct {
-	return &InvalidStruct{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidStruct: invalidStruct{StructString: structStringArg}}
+func WrapWithInvalidStruct(err error) *InvalidStruct {
+	return &InvalidStruct{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidStruct: invalidStruct{}}
 }
 
 // InvalidStruct is an error type.
@@ -708,7 +705,7 @@ func (e *InvalidStruct) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *InvalidStruct) Parameters() map[string]interface{} {
-	return map[string]interface{}{"structString": e.StructString}
+	return map[string]interface{}{}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
@@ -730,7 +727,7 @@ func (e *InvalidStruct) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *InvalidStruct) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"structString": e.StructString}
+	return map[string]interface{}{}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and

@@ -930,8 +930,29 @@ func (o *ExponentialCurve) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type ExtractEnumFromStructSeriesNode struct {
-	Input     StructSeriesNode `json:"input"`
-	FieldPath string           `json:"fieldPath"`
+	Input     StructSeriesNode       `json:"input"`
+	FieldPath []StructFieldPathToken `json:"fieldPath"`
+}
+
+func (o ExtractEnumFromStructSeriesNode) MarshalJSON() ([]byte, error) {
+	if o.FieldPath == nil {
+		o.FieldPath = make([]StructFieldPathToken, 0)
+	}
+	type _tmpExtractEnumFromStructSeriesNode ExtractEnumFromStructSeriesNode
+	return safejson.Marshal(_tmpExtractEnumFromStructSeriesNode(o))
+}
+
+func (o *ExtractEnumFromStructSeriesNode) UnmarshalJSON(data []byte) error {
+	type _tmpExtractEnumFromStructSeriesNode ExtractEnumFromStructSeriesNode
+	var rawExtractEnumFromStructSeriesNode _tmpExtractEnumFromStructSeriesNode
+	if err := safejson.Unmarshal(data, &rawExtractEnumFromStructSeriesNode); err != nil {
+		return err
+	}
+	if rawExtractEnumFromStructSeriesNode.FieldPath == nil {
+		rawExtractEnumFromStructSeriesNode.FieldPath = make([]StructFieldPathToken, 0)
+	}
+	*o = ExtractEnumFromStructSeriesNode(rawExtractEnumFromStructSeriesNode)
+	return nil
 }
 
 func (o ExtractEnumFromStructSeriesNode) MarshalYAML() (interface{}, error) {
@@ -951,9 +972,30 @@ func (o *ExtractEnumFromStructSeriesNode) UnmarshalYAML(unmarshal func(interface
 }
 
 type ExtractNumericFromStructSeriesNode struct {
-	Input     StructSeriesNode     `json:"input"`
-	FieldPath string               `json:"fieldPath"`
-	DataType  api1.NumericDataType `json:"dataType"`
+	Input     StructSeriesNode       `json:"input"`
+	DataType  api1.NumericDataType   `json:"dataType"`
+	FieldPath []StructFieldPathToken `json:"fieldPath"`
+}
+
+func (o ExtractNumericFromStructSeriesNode) MarshalJSON() ([]byte, error) {
+	if o.FieldPath == nil {
+		o.FieldPath = make([]StructFieldPathToken, 0)
+	}
+	type _tmpExtractNumericFromStructSeriesNode ExtractNumericFromStructSeriesNode
+	return safejson.Marshal(_tmpExtractNumericFromStructSeriesNode(o))
+}
+
+func (o *ExtractNumericFromStructSeriesNode) UnmarshalJSON(data []byte) error {
+	type _tmpExtractNumericFromStructSeriesNode ExtractNumericFromStructSeriesNode
+	var rawExtractNumericFromStructSeriesNode _tmpExtractNumericFromStructSeriesNode
+	if err := safejson.Unmarshal(data, &rawExtractNumericFromStructSeriesNode); err != nil {
+		return err
+	}
+	if rawExtractNumericFromStructSeriesNode.FieldPath == nil {
+		rawExtractNumericFromStructSeriesNode.FieldPath = make([]StructFieldPathToken, 0)
+	}
+	*o = ExtractNumericFromStructSeriesNode(rawExtractNumericFromStructSeriesNode)
+	return nil
 }
 
 func (o ExtractNumericFromStructSeriesNode) MarshalYAML() (interface{}, error) {
@@ -973,8 +1015,29 @@ func (o *ExtractNumericFromStructSeriesNode) UnmarshalYAML(unmarshal func(interf
 }
 
 type ExtractStructFromStructSeriesNode struct {
-	Input     StructSeriesNode `json:"input"`
-	FieldPath string           `json:"fieldPath"`
+	Input     StructSeriesNode       `json:"input"`
+	FieldPath []StructFieldPathToken `json:"fieldPath"`
+}
+
+func (o ExtractStructFromStructSeriesNode) MarshalJSON() ([]byte, error) {
+	if o.FieldPath == nil {
+		o.FieldPath = make([]StructFieldPathToken, 0)
+	}
+	type _tmpExtractStructFromStructSeriesNode ExtractStructFromStructSeriesNode
+	return safejson.Marshal(_tmpExtractStructFromStructSeriesNode(o))
+}
+
+func (o *ExtractStructFromStructSeriesNode) UnmarshalJSON(data []byte) error {
+	type _tmpExtractStructFromStructSeriesNode ExtractStructFromStructSeriesNode
+	var rawExtractStructFromStructSeriesNode _tmpExtractStructFromStructSeriesNode
+	if err := safejson.Unmarshal(data, &rawExtractStructFromStructSeriesNode); err != nil {
+		return err
+	}
+	if rawExtractStructFromStructSeriesNode.FieldPath == nil {
+		rawExtractStructFromStructSeriesNode.FieldPath = make([]StructFieldPathToken, 0)
+	}
+	*o = ExtractStructFromStructSeriesNode(rawExtractStructFromStructSeriesNode)
+	return nil
 }
 
 func (o ExtractStructFromStructSeriesNode) MarshalYAML() (interface{}, error) {
@@ -1786,6 +1849,28 @@ func (o NotSeriesNode) MarshalYAML() (interface{}, error) {
 }
 
 func (o *NotSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type NthRangeNode struct {
+	Input     RangesNode     `json:"input"`
+	Index     int            `json:"index"`
+	SortOrder RangeSortOrder `json:"sortOrder"`
+}
+
+func (o NthRangeNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NthRangeNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2790,6 +2875,46 @@ func (o *StaleRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type StructFieldPathIndex struct {
+	Value int `json:"value"`
+}
+
+func (o StructFieldPathIndex) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StructFieldPathIndex) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type StructFieldPathKey struct {
+	Value string `json:"value"`
+}
+
+func (o StructFieldPathKey) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StructFieldPathKey) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type SumSeriesNode struct {
 	Inputs                     []NumericSeriesNode        `json:"inputs"`
 	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
@@ -2944,10 +3069,32 @@ func (o *SummarizeRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) e
 }
 
 type SummarizeSeriesNode struct {
-	Input                 SeriesNode                 `json:"input"`
-	SummarizationStrategy api1.SummarizationStrategy `json:"summarizationStrategy"`
-	OutputFormat          api1.OutputFormat          `json:"outputFormat"`
-	NumericOutputFields   *[]api1.NumericOutputField `json:"numericOutputFields,omitempty"`
+	Input                 SeriesNode                            `json:"input"`
+	SummarizationStrategy api1.SummarizationStrategy            `json:"summarizationStrategy"`
+	OutputFormat          api1.OutputFormat                     `json:"outputFormat"`
+	NumericOutputFields   *[]api1.NumericOutputField            `json:"numericOutputFields,omitempty"`
+	NumericAggregations   map[string]ResolvedNumericAggregation `json:"numericAggregations"`
+}
+
+func (o SummarizeSeriesNode) MarshalJSON() ([]byte, error) {
+	if o.NumericAggregations == nil {
+		o.NumericAggregations = make(map[string]ResolvedNumericAggregation)
+	}
+	type _tmpSummarizeSeriesNode SummarizeSeriesNode
+	return safejson.Marshal(_tmpSummarizeSeriesNode(o))
+}
+
+func (o *SummarizeSeriesNode) UnmarshalJSON(data []byte) error {
+	type _tmpSummarizeSeriesNode SummarizeSeriesNode
+	var rawSummarizeSeriesNode _tmpSummarizeSeriesNode
+	if err := safejson.Unmarshal(data, &rawSummarizeSeriesNode); err != nil {
+		return err
+	}
+	if rawSummarizeSeriesNode.NumericAggregations == nil {
+		rawSummarizeSeriesNode.NumericAggregations = make(map[string]ResolvedNumericAggregation)
+	}
+	*o = SummarizeSeriesNode(rawSummarizeSeriesNode)
+	return nil
 }
 
 func (o SummarizeSeriesNode) MarshalYAML() (interface{}, error) {

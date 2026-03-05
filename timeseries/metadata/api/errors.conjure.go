@@ -187,6 +187,177 @@ func (e *DataSourcesNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type incompatibleSeriesMetadataUpdate struct {
+	ViolationCount int      `json:"violationCount"`
+	Violations     []string `json:"violations"`
+}
+
+func (o incompatibleSeriesMetadataUpdate) MarshalJSON() ([]byte, error) {
+	if o.Violations == nil {
+		o.Violations = make([]string, 0)
+	}
+	type _tmpincompatibleSeriesMetadataUpdate incompatibleSeriesMetadataUpdate
+	return safejson.Marshal(_tmpincompatibleSeriesMetadataUpdate(o))
+}
+
+func (o *incompatibleSeriesMetadataUpdate) UnmarshalJSON(data []byte) error {
+	type _tmpincompatibleSeriesMetadataUpdate incompatibleSeriesMetadataUpdate
+	var rawincompatibleSeriesMetadataUpdate _tmpincompatibleSeriesMetadataUpdate
+	if err := safejson.Unmarshal(data, &rawincompatibleSeriesMetadataUpdate); err != nil {
+		return err
+	}
+	if rawincompatibleSeriesMetadataUpdate.Violations == nil {
+		rawincompatibleSeriesMetadataUpdate.Violations = make([]string, 0)
+	}
+	*o = incompatibleSeriesMetadataUpdate(rawincompatibleSeriesMetadataUpdate)
+	return nil
+}
+
+func (o incompatibleSeriesMetadataUpdate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *incompatibleSeriesMetadataUpdate) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewIncompatibleSeriesMetadataUpdate returns new instance of IncompatibleSeriesMetadataUpdate error.
+func NewIncompatibleSeriesMetadataUpdate(violationCountArg int, violationsArg []string) *IncompatibleSeriesMetadataUpdate {
+	return &IncompatibleSeriesMetadataUpdate{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), incompatibleSeriesMetadataUpdate: incompatibleSeriesMetadataUpdate{ViolationCount: violationCountArg, Violations: violationsArg}}
+}
+
+// WrapWithIncompatibleSeriesMetadataUpdate returns new instance of IncompatibleSeriesMetadataUpdate error wrapping an existing error.
+func WrapWithIncompatibleSeriesMetadataUpdate(err error, violationCountArg int, violationsArg []string) *IncompatibleSeriesMetadataUpdate {
+	return &IncompatibleSeriesMetadataUpdate{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, incompatibleSeriesMetadataUpdate: incompatibleSeriesMetadataUpdate{ViolationCount: violationCountArg, Violations: violationsArg}}
+}
+
+// IncompatibleSeriesMetadataUpdate is an error type.
+type IncompatibleSeriesMetadataUpdate struct {
+	errorInstanceID uuid.UUID
+	incompatibleSeriesMetadataUpdate
+	cause error
+	stack werror.StackTrace
+}
+
+// IsIncompatibleSeriesMetadataUpdate returns true if err is an instance of IncompatibleSeriesMetadataUpdate.
+func IsIncompatibleSeriesMetadataUpdate(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*IncompatibleSeriesMetadataUpdate)
+	return ok
+}
+
+func (e *IncompatibleSeriesMetadataUpdate) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT SeriesMetadata:IncompatibleSeriesMetadataUpdate (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *IncompatibleSeriesMetadataUpdate) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *IncompatibleSeriesMetadataUpdate) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *IncompatibleSeriesMetadataUpdate) Message() string {
+	return "INVALID_ARGUMENT SeriesMetadata:IncompatibleSeriesMetadataUpdate"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *IncompatibleSeriesMetadataUpdate) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *IncompatibleSeriesMetadataUpdate) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *IncompatibleSeriesMetadataUpdate) Name() string {
+	return "SeriesMetadata:IncompatibleSeriesMetadataUpdate"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *IncompatibleSeriesMetadataUpdate) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *IncompatibleSeriesMetadataUpdate) Parameters() map[string]interface{} {
+	return map[string]interface{}{"violationCount": e.ViolationCount, "violations": e.Violations}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *IncompatibleSeriesMetadataUpdate) safeParams() map[string]interface{} {
+	return map[string]interface{}{"violationCount": e.ViolationCount, "violations": e.Violations, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *IncompatibleSeriesMetadataUpdate) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *IncompatibleSeriesMetadataUpdate) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *IncompatibleSeriesMetadataUpdate) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e IncompatibleSeriesMetadataUpdate) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.incompatibleSeriesMetadataUpdate)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "SeriesMetadata:IncompatibleSeriesMetadataUpdate", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *IncompatibleSeriesMetadataUpdate) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters incompatibleSeriesMetadataUpdate
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.incompatibleSeriesMetadataUpdate = parameters
+	return nil
+}
+
 type invalidDataSource struct {
 	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
 }
@@ -487,6 +658,7 @@ func (e *SeriesMetadataNotFound) UnmarshalJSON(data []byte) error {
 
 func init() {
 	conjureerrors.RegisterErrorType("SeriesMetadata:DataSourcesNotFound", reflect.TypeOf(DataSourcesNotFound{}))
+	conjureerrors.RegisterErrorType("SeriesMetadata:IncompatibleSeriesMetadataUpdate", reflect.TypeOf(IncompatibleSeriesMetadataUpdate{}))
 	conjureerrors.RegisterErrorType("SeriesMetadata:InvalidDataSource", reflect.TypeOf(InvalidDataSource{}))
 	conjureerrors.RegisterErrorType("SeriesMetadata:SeriesMetadataNotFound", reflect.TypeOf(SeriesMetadataNotFound{}))
 }

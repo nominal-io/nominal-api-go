@@ -1819,6 +1819,55 @@ type LogPanelDefinitionVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type MarkdownPanelDefinitionWithT[T any] MarkdownPanelDefinition
+
+func (u *MarkdownPanelDefinitionWithT[T]) Accept(ctx context.Context, v MarkdownPanelDefinitionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *MarkdownPanelDefinitionWithT[T]) AcceptFuncs(v1Func func(MarkdownPanelDefinitionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *MarkdownPanelDefinitionWithT[T]) V1NoopSuccess(MarkdownPanelDefinitionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *MarkdownPanelDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type MarkdownPanelDefinitionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v MarkdownPanelDefinitionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type NumericArrayVisualisationWithT[T any] NumericArrayVisualisation
 
 func (u *NumericArrayVisualisationWithT[T]) Accept(ctx context.Context, v NumericArrayVisualisationVisitorWithT[T]) (T, error) {
@@ -3538,11 +3587,21 @@ func (u *VizDefinitionWithT[T]) Accept(ctx context.Context, v VizDefinitionVisit
 			return result, fmt.Errorf("field \"log\" is required")
 		}
 		return v.VisitLog(ctx, *u.log)
+	case "markdown":
+		if u.markdown == nil {
+			return result, fmt.Errorf("field \"markdown\" is required")
+		}
+		return v.VisitMarkdown(ctx, *u.markdown)
 	case "plotly":
 		if u.plotly == nil {
 			return result, fmt.Errorf("field \"plotly\" is required")
 		}
 		return v.VisitPlotly(ctx, *u.plotly)
+	case "procedure":
+		if u.procedure == nil {
+			return result, fmt.Errorf("field \"procedure\" is required")
+		}
+		return v.VisitProcedure(ctx, *u.procedure)
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return result, fmt.Errorf("field \"timeSeries\" is required")
@@ -3558,15 +3617,10 @@ func (u *VizDefinitionWithT[T]) Accept(ctx context.Context, v VizDefinitionVisit
 			return result, fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideo(ctx, *u.video)
-	case "procedure":
-		if u.procedure == nil {
-			return result, fmt.Errorf("field \"procedure\" is required")
-		}
-		return v.VisitProcedure(ctx, *u.procedure)
 	}
 }
 
-func (u *VizDefinitionWithT[T]) AcceptFuncs(cartesianFunc func(CartesianChartDefinition) (T, error), checklistFunc func(ChecklistChartDefinition) (T, error), frequencyFunc func(FrequencyChartDefinition) (T, error), geoFunc func(GeoVizDefinition) (T, error), geo3dFunc func(Geo3dDefinition) (T, error), histogramFunc func(HistogramChartDefinition) (T, error), logFunc func(LogPanelDefinition) (T, error), plotlyFunc func(PlotlyPanelDefinition) (T, error), timeSeriesFunc func(TimeSeriesChartDefinition) (T, error), valueTableFunc func(ValueTableDefinition) (T, error), videoFunc func(VideoVizDefinition) (T, error), procedureFunc func(ProcedureVizDefinition) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *VizDefinitionWithT[T]) AcceptFuncs(cartesianFunc func(CartesianChartDefinition) (T, error), checklistFunc func(ChecklistChartDefinition) (T, error), frequencyFunc func(FrequencyChartDefinition) (T, error), geoFunc func(GeoVizDefinition) (T, error), geo3dFunc func(Geo3dDefinition) (T, error), histogramFunc func(HistogramChartDefinition) (T, error), logFunc func(LogPanelDefinition) (T, error), markdownFunc func(MarkdownPanelDefinition) (T, error), plotlyFunc func(PlotlyPanelDefinition) (T, error), procedureFunc func(ProcedureVizDefinition) (T, error), timeSeriesFunc func(TimeSeriesChartDefinition) (T, error), valueTableFunc func(ValueTableDefinition) (T, error), videoFunc func(VideoVizDefinition) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -3609,11 +3663,21 @@ func (u *VizDefinitionWithT[T]) AcceptFuncs(cartesianFunc func(CartesianChartDef
 			return result, fmt.Errorf("field \"log\" is required")
 		}
 		return logFunc(*u.log)
+	case "markdown":
+		if u.markdown == nil {
+			return result, fmt.Errorf("field \"markdown\" is required")
+		}
+		return markdownFunc(*u.markdown)
 	case "plotly":
 		if u.plotly == nil {
 			return result, fmt.Errorf("field \"plotly\" is required")
 		}
 		return plotlyFunc(*u.plotly)
+	case "procedure":
+		if u.procedure == nil {
+			return result, fmt.Errorf("field \"procedure\" is required")
+		}
+		return procedureFunc(*u.procedure)
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return result, fmt.Errorf("field \"timeSeries\" is required")
@@ -3629,11 +3693,6 @@ func (u *VizDefinitionWithT[T]) AcceptFuncs(cartesianFunc func(CartesianChartDef
 			return result, fmt.Errorf("field \"video\" is required")
 		}
 		return videoFunc(*u.video)
-	case "procedure":
-		if u.procedure == nil {
-			return result, fmt.Errorf("field \"procedure\" is required")
-		}
-		return procedureFunc(*u.procedure)
 	}
 }
 
@@ -3672,7 +3731,17 @@ func (u *VizDefinitionWithT[T]) LogNoopSuccess(LogPanelDefinition) (T, error) {
 	return result, nil
 }
 
+func (u *VizDefinitionWithT[T]) MarkdownNoopSuccess(MarkdownPanelDefinition) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *VizDefinitionWithT[T]) PlotlyNoopSuccess(PlotlyPanelDefinition) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *VizDefinitionWithT[T]) ProcedureNoopSuccess(ProcedureVizDefinition) (T, error) {
 	var result T
 	return result, nil
 }
@@ -3692,11 +3761,6 @@ func (u *VizDefinitionWithT[T]) VideoNoopSuccess(VideoVizDefinition) (T, error) 
 	return result, nil
 }
 
-func (u *VizDefinitionWithT[T]) ProcedureNoopSuccess(ProcedureVizDefinition) (T, error) {
-	var result T
-	return result, nil
-}
-
 func (u *VizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -3710,10 +3774,11 @@ type VizDefinitionVisitorWithT[T any] interface {
 	VisitGeo3d(ctx context.Context, v Geo3dDefinition) (T, error)
 	VisitHistogram(ctx context.Context, v HistogramChartDefinition) (T, error)
 	VisitLog(ctx context.Context, v LogPanelDefinition) (T, error)
+	VisitMarkdown(ctx context.Context, v MarkdownPanelDefinition) (T, error)
 	VisitPlotly(ctx context.Context, v PlotlyPanelDefinition) (T, error)
+	VisitProcedure(ctx context.Context, v ProcedureVizDefinition) (T, error)
 	VisitTimeSeries(ctx context.Context, v TimeSeriesChartDefinition) (T, error)
 	VisitValueTable(ctx context.Context, v ValueTableDefinition) (T, error)
 	VisitVideo(ctx context.Context, v VideoVizDefinition) (T, error)
-	VisitProcedure(ctx context.Context, v ProcedureVizDefinition) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

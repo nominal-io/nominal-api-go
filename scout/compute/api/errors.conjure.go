@@ -3183,37 +3183,7 @@ func (e *GroupByMissingTag) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type groupByTagsNotSubset struct {
-	Group1 []string `json:"group1"`
-	Group2 []string `json:"group2"`
-}
-
-func (o groupByTagsNotSubset) MarshalJSON() ([]byte, error) {
-	if o.Group1 == nil {
-		o.Group1 = make([]string, 0)
-	}
-	if o.Group2 == nil {
-		o.Group2 = make([]string, 0)
-	}
-	type _tmpgroupByTagsNotSubset groupByTagsNotSubset
-	return safejson.Marshal(_tmpgroupByTagsNotSubset(o))
-}
-
-func (o *groupByTagsNotSubset) UnmarshalJSON(data []byte) error {
-	type _tmpgroupByTagsNotSubset groupByTagsNotSubset
-	var rawgroupByTagsNotSubset _tmpgroupByTagsNotSubset
-	if err := safejson.Unmarshal(data, &rawgroupByTagsNotSubset); err != nil {
-		return err
-	}
-	if rawgroupByTagsNotSubset.Group1 == nil {
-		rawgroupByTagsNotSubset.Group1 = make([]string, 0)
-	}
-	if rawgroupByTagsNotSubset.Group2 == nil {
-		rawgroupByTagsNotSubset.Group2 = make([]string, 0)
-	}
-	*o = groupByTagsNotSubset(rawgroupByTagsNotSubset)
-	return nil
-}
+type groupByTagsNotSubset struct{}
 
 func (o groupByTagsNotSubset) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
@@ -3232,13 +3202,13 @@ func (o *groupByTagsNotSubset) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 // NewGroupByTagsNotSubset returns new instance of GroupByTagsNotSubset error.
-func NewGroupByTagsNotSubset(group1Arg []string, group2Arg []string) *GroupByTagsNotSubset {
-	return &GroupByTagsNotSubset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), groupByTagsNotSubset: groupByTagsNotSubset{Group1: group1Arg, Group2: group2Arg}}
+func NewGroupByTagsNotSubset() *GroupByTagsNotSubset {
+	return &GroupByTagsNotSubset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), groupByTagsNotSubset: groupByTagsNotSubset{}}
 }
 
 // WrapWithGroupByTagsNotSubset returns new instance of GroupByTagsNotSubset error wrapping an existing error.
-func WrapWithGroupByTagsNotSubset(err error, group1Arg []string, group2Arg []string) *GroupByTagsNotSubset {
-	return &GroupByTagsNotSubset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, groupByTagsNotSubset: groupByTagsNotSubset{Group1: group1Arg, Group2: group2Arg}}
+func WrapWithGroupByTagsNotSubset(err error) *GroupByTagsNotSubset {
+	return &GroupByTagsNotSubset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, groupByTagsNotSubset: groupByTagsNotSubset{}}
 }
 
 // GroupByTagsNotSubset is an error type.
@@ -3302,7 +3272,7 @@ func (e *GroupByTagsNotSubset) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *GroupByTagsNotSubset) Parameters() map[string]interface{} {
-	return map[string]interface{}{"group1": e.Group1, "group2": e.Group2}
+	return map[string]interface{}{}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
@@ -3324,7 +3294,7 @@ func (e *GroupByTagsNotSubset) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *GroupByTagsNotSubset) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"group1": e.Group1, "group2": e.Group2}
+	return map[string]interface{}{}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -4113,6 +4083,154 @@ func (e *InvalidLiteralRange) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.invalidLiteralRange = parameters
+	return nil
+}
+
+type invalidNumericAggregations struct{}
+
+func (o invalidNumericAggregations) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidNumericAggregations) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidNumericAggregations returns new instance of InvalidNumericAggregations error.
+func NewInvalidNumericAggregations() *InvalidNumericAggregations {
+	return &InvalidNumericAggregations{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidNumericAggregations: invalidNumericAggregations{}}
+}
+
+// WrapWithInvalidNumericAggregations returns new instance of InvalidNumericAggregations error wrapping an existing error.
+func WrapWithInvalidNumericAggregations(err error) *InvalidNumericAggregations {
+	return &InvalidNumericAggregations{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidNumericAggregations: invalidNumericAggregations{}}
+}
+
+// InvalidNumericAggregations is an error type.
+// Numeric aggregations can only be specified on numeric series requests.
+type InvalidNumericAggregations struct {
+	errorInstanceID uuid.UUID
+	invalidNumericAggregations
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidNumericAggregations returns true if err is an instance of InvalidNumericAggregations.
+func IsInvalidNumericAggregations(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidNumericAggregations)
+	return ok
+}
+
+func (e *InvalidNumericAggregations) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:InvalidNumericAggregations (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidNumericAggregations) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidNumericAggregations) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidNumericAggregations) Message() string {
+	return "INVALID_ARGUMENT Compute:InvalidNumericAggregations"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidNumericAggregations) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidNumericAggregations) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidNumericAggregations) Name() string {
+	return "Compute:InvalidNumericAggregations"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidNumericAggregations) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidNumericAggregations) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidNumericAggregations) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidNumericAggregations) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidNumericAggregations) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidNumericAggregations) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidNumericAggregations) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidNumericAggregations)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:InvalidNumericAggregations", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidNumericAggregations) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidNumericAggregations
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidNumericAggregations = parameters
 	return nil
 }
 
@@ -10645,6 +10763,7 @@ func init() {
 	conjureerrors.RegisterErrorType("Compute:InvalidExpression", reflect.TypeOf(InvalidExpression{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidFieldName", reflect.TypeOf(InvalidFieldName{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidLiteralRange", reflect.TypeOf(InvalidLiteralRange{}))
+	conjureerrors.RegisterErrorType("Compute:InvalidNumericAggregations", reflect.TypeOf(InvalidNumericAggregations{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidNumericOutputFields", reflect.TypeOf(InvalidNumericOutputFields{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidPlotType", reflect.TypeOf(InvalidPlotType{}))
 	conjureerrors.RegisterErrorType("Compute:InvalidRangeNodeStartAfterViewRange", reflect.TypeOf(InvalidRangeNodeStartAfterViewRange{}))

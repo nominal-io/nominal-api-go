@@ -1881,6 +1881,55 @@ type NegativeValueConfigurationVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type NumericAggregationWithT[T any] NumericAggregation
+
+func (u *NumericAggregationWithT[T]) Accept(ctx context.Context, v NumericAggregationVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return result, fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentile(ctx, *u.percentile)
+	}
+}
+
+func (u *NumericAggregationWithT[T]) AcceptFuncs(percentileFunc func(Percentile) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return result, fmt.Errorf("field \"percentile\" is required")
+		}
+		return percentileFunc(*u.percentile)
+	}
+}
+
+func (u *NumericAggregationWithT[T]) PercentileNoopSuccess(Percentile) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericAggregationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type NumericAggregationVisitorWithT[T any] interface {
+	VisitPercentile(ctx context.Context, v Percentile) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type NumericHistogramBucketStrategyWithT[T any] NumericHistogramBucketStrategy
 
 func (u *NumericHistogramBucketStrategyWithT[T]) Accept(ctx context.Context, v NumericHistogramBucketStrategyVisitorWithT[T]) (T, error) {
