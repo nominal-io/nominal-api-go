@@ -4844,6 +4844,141 @@ func NewNegativeValueConfigurationFromExcludeNegativeValues(v ExcludeNegativeVal
 	return NegativeValueConfiguration{typ: "excludeNegativeValues", excludeNegativeValues: &v}
 }
 
+type NumericAggregation struct {
+	typ        string
+	percentile *Percentile
+}
+
+type numericAggregationDeserializer struct {
+	Type       string      `json:"type"`
+	Percentile *Percentile `json:"percentile"`
+}
+
+func (u *numericAggregationDeserializer) toStruct() NumericAggregation {
+	return NumericAggregation{typ: u.Type, percentile: u.Percentile}
+}
+
+func (u *NumericAggregation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return nil, fmt.Errorf("field \"percentile\" is required")
+		}
+		return struct {
+			Type       string     `json:"type"`
+			Percentile Percentile `json:"percentile"`
+		}{Type: "percentile", Percentile: *u.percentile}, nil
+	}
+}
+
+func (u NumericAggregation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *NumericAggregation) UnmarshalJSON(data []byte) error {
+	var deser numericAggregationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+	}
+	return nil
+}
+
+func (u NumericAggregation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *NumericAggregation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *NumericAggregation) AcceptFuncs(percentileFunc func(Percentile) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in NumericAggregation type")
+		}
+		return unknownFunc(u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return percentileFunc(*u.percentile)
+	}
+}
+
+func (u *NumericAggregation) PercentileNoopSuccess(_ Percentile) error {
+	return nil
+}
+
+func (u *NumericAggregation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *NumericAggregation) Accept(v NumericAggregationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentile(*u.percentile)
+	}
+}
+
+type NumericAggregationVisitor interface {
+	VisitPercentile(v Percentile) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *NumericAggregation) AcceptWithContext(ctx context.Context, v NumericAggregationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentileWithContext(ctx, *u.percentile)
+	}
+}
+
+type NumericAggregationVisitorWithContext interface {
+	VisitPercentileWithContext(ctx context.Context, v Percentile) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewNumericAggregationFromPercentile(v Percentile) NumericAggregation {
+	return NumericAggregation{typ: "percentile", percentile: &v}
+}
+
 type NumericHistogramBucketStrategy struct {
 	typ                  string
 	bucketCount          *IntegerConstant

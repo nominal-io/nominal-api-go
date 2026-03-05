@@ -3,8 +3,9 @@
 package api
 
 import (
-	api3 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api4 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
 	"github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
 	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
@@ -504,10 +505,13 @@ func (o *ComparisonWorkbookContext) UnmarshalYAML(unmarshal func(interface{}) er
 }
 
 type ComputeNodeWithContext struct {
+	// Graph representation of the compute for a variable.
 	ComputeNode api11.ComputeNode         `json:"computeNode"`
 	Context     ComparisonWorkbookContext `json:"context"`
 	// Deprecated: migrated into visualization definitions.
 	SupplementalContext SupplementalComparisonWorkbookContext `json:"supplementalContext"`
+	// Code representation of the compute for a variable. Should be equivalent to the computeNode.
+	ComputeExpression *api3.ChannelVariableComputeExpression `json:"computeExpression,omitempty"`
 }
 
 func (o ComputeNodeWithContext) MarshalYAML() (interface{}, error) {
@@ -725,8 +729,8 @@ func (o *StandardDeviation) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 type TimestampedRange struct {
-	Start *api3.Timestamp `json:"start,omitempty"`
-	End   *api3.Timestamp `json:"end,omitempty"`
+	Start *api4.Timestamp `json:"start,omitempty"`
+	End   *api4.Timestamp `json:"end,omitempty"`
 }
 
 func (o TimestampedRange) MarshalYAML() (interface{}, error) {

@@ -12,6 +12,411 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+type ChannelVariableComputeExpression struct {
+	typ string
+	v1  *ChannelVariableComputeExpressionV1
+}
+
+type channelVariableComputeExpressionDeserializer struct {
+	Type string                              `json:"type"`
+	V1   *ChannelVariableComputeExpressionV1 `json:"v1"`
+}
+
+func (u *channelVariableComputeExpressionDeserializer) toStruct() ChannelVariableComputeExpression {
+	return ChannelVariableComputeExpression{typ: u.Type, v1: u.V1}
+}
+
+func (u *ChannelVariableComputeExpression) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string                             `json:"type"`
+			V1   ChannelVariableComputeExpressionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u ChannelVariableComputeExpression) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ChannelVariableComputeExpression) UnmarshalJSON(data []byte) error {
+	var deser channelVariableComputeExpressionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ChannelVariableComputeExpression) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ChannelVariableComputeExpression) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ChannelVariableComputeExpression) AcceptFuncs(v1Func func(ChannelVariableComputeExpressionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ChannelVariableComputeExpression type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ChannelVariableComputeExpression) V1NoopSuccess(_ ChannelVariableComputeExpressionV1) error {
+	return nil
+}
+
+func (u *ChannelVariableComputeExpression) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ChannelVariableComputeExpression) Accept(v ChannelVariableComputeExpressionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type ChannelVariableComputeExpressionVisitor interface {
+	VisitV1(v ChannelVariableComputeExpressionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ChannelVariableComputeExpression) AcceptWithContext(ctx context.Context, v ChannelVariableComputeExpressionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type ChannelVariableComputeExpressionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v ChannelVariableComputeExpressionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewChannelVariableComputeExpressionFromV1(v ChannelVariableComputeExpressionV1) ChannelVariableComputeExpression {
+	return ChannelVariableComputeExpression{typ: "v1", v1: &v}
+}
+
+type ChannelVariableComputeExpressionInput struct {
+	typ      string
+	variable *ChannelVariableName
+}
+
+type channelVariableComputeExpressionInputDeserializer struct {
+	Type     string               `json:"type"`
+	Variable *ChannelVariableName `json:"variable"`
+}
+
+func (u *channelVariableComputeExpressionInputDeserializer) toStruct() ChannelVariableComputeExpressionInput {
+	return ChannelVariableComputeExpressionInput{typ: u.Type, variable: u.Variable}
+}
+
+func (u *ChannelVariableComputeExpressionInput) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "variable":
+		if u.variable == nil {
+			return nil, fmt.Errorf("field \"variable\" is required")
+		}
+		return struct {
+			Type     string              `json:"type"`
+			Variable ChannelVariableName `json:"variable"`
+		}{Type: "variable", Variable: *u.variable}, nil
+	}
+}
+
+func (u ChannelVariableComputeExpressionInput) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ChannelVariableComputeExpressionInput) UnmarshalJSON(data []byte) error {
+	var deser channelVariableComputeExpressionInputDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "variable":
+		if u.variable == nil {
+			return fmt.Errorf("field \"variable\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ChannelVariableComputeExpressionInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ChannelVariableComputeExpressionInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ChannelVariableComputeExpressionInput) AcceptFuncs(variableFunc func(ChannelVariableName) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ChannelVariableComputeExpressionInput type")
+		}
+		return unknownFunc(u.typ)
+	case "variable":
+		if u.variable == nil {
+			return fmt.Errorf("field \"variable\" is required")
+		}
+		return variableFunc(*u.variable)
+	}
+}
+
+func (u *ChannelVariableComputeExpressionInput) VariableNoopSuccess(_ ChannelVariableName) error {
+	return nil
+}
+
+func (u *ChannelVariableComputeExpressionInput) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ChannelVariableComputeExpressionInput) Accept(v ChannelVariableComputeExpressionInputVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "variable":
+		if u.variable == nil {
+			return fmt.Errorf("field \"variable\" is required")
+		}
+		return v.VisitVariable(*u.variable)
+	}
+}
+
+type ChannelVariableComputeExpressionInputVisitor interface {
+	VisitVariable(v ChannelVariableName) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ChannelVariableComputeExpressionInput) AcceptWithContext(ctx context.Context, v ChannelVariableComputeExpressionInputVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "variable":
+		if u.variable == nil {
+			return fmt.Errorf("field \"variable\" is required")
+		}
+		return v.VisitVariableWithContext(ctx, *u.variable)
+	}
+}
+
+type ChannelVariableComputeExpressionInputVisitorWithContext interface {
+	VisitVariableWithContext(ctx context.Context, v ChannelVariableName) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewChannelVariableComputeExpressionInputFromVariable(v ChannelVariableName) ChannelVariableComputeExpressionInput {
+	return ChannelVariableComputeExpressionInput{typ: "variable", variable: &v}
+}
+
+type ChannelVariableComputeExpressionV1 struct {
+	typ    string
+	python *ChannelVariableComputeExpressionV1Python
+}
+
+type channelVariableComputeExpressionV1Deserializer struct {
+	Type   string                                    `json:"type"`
+	Python *ChannelVariableComputeExpressionV1Python `json:"python"`
+}
+
+func (u *channelVariableComputeExpressionV1Deserializer) toStruct() ChannelVariableComputeExpressionV1 {
+	return ChannelVariableComputeExpressionV1{typ: u.Type, python: u.Python}
+}
+
+func (u *ChannelVariableComputeExpressionV1) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "python":
+		if u.python == nil {
+			return nil, fmt.Errorf("field \"python\" is required")
+		}
+		return struct {
+			Type   string                                   `json:"type"`
+			Python ChannelVariableComputeExpressionV1Python `json:"python"`
+		}{Type: "python", Python: *u.python}, nil
+	}
+}
+
+func (u ChannelVariableComputeExpressionV1) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ChannelVariableComputeExpressionV1) UnmarshalJSON(data []byte) error {
+	var deser channelVariableComputeExpressionV1Deserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ChannelVariableComputeExpressionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ChannelVariableComputeExpressionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ChannelVariableComputeExpressionV1) AcceptFuncs(pythonFunc func(ChannelVariableComputeExpressionV1Python) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ChannelVariableComputeExpressionV1 type")
+		}
+		return unknownFunc(u.typ)
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+		return pythonFunc(*u.python)
+	}
+}
+
+func (u *ChannelVariableComputeExpressionV1) PythonNoopSuccess(_ ChannelVariableComputeExpressionV1Python) error {
+	return nil
+}
+
+func (u *ChannelVariableComputeExpressionV1) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ChannelVariableComputeExpressionV1) Accept(v ChannelVariableComputeExpressionV1Visitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+		return v.VisitPython(*u.python)
+	}
+}
+
+type ChannelVariableComputeExpressionV1Visitor interface {
+	VisitPython(v ChannelVariableComputeExpressionV1Python) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ChannelVariableComputeExpressionV1) AcceptWithContext(ctx context.Context, v ChannelVariableComputeExpressionV1VisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+		return v.VisitPythonWithContext(ctx, *u.python)
+	}
+}
+
+type ChannelVariableComputeExpressionV1VisitorWithContext interface {
+	VisitPythonWithContext(ctx context.Context, v ChannelVariableComputeExpressionV1Python) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewChannelVariableComputeExpressionV1FromPython(v ChannelVariableComputeExpressionV1Python) ChannelVariableComputeExpressionV1 {
+	return ChannelVariableComputeExpressionV1{typ: "python", python: &v}
+}
+
 type ComputeSpec struct {
 	typ string
 	v1  *ComputeSpecV1

@@ -834,6 +834,12 @@ type VideoServiceClient interface {
 	*/
 	GetStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error)
 	/*
+	   Returns all stream sessions for a video that overlap with the specified time bounds.
+	   A stream overlaps if there is any intersection between its [start, end] interval and the provided bounds.
+	   Enforces read permission on the video.
+	*/
+	GetStreamsInBounds(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetStreamsInBoundsRequest) (api.GetStreamsInBoundsResponse, error)
+	/*
 	   Marks the active stream session as ended for the video.
 	   Throws VIDEO_NOT_FOUND if no active stream exists.
 	   Enforces write permission on the video.
@@ -1259,6 +1265,24 @@ func (c *videoServiceClient) GetStream(ctx context.Context, authHeader bearertok
 	return returnVal, nil
 }
 
+func (c *videoServiceClient) GetStreamsInBounds(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetStreamsInBoundsRequest) (api.GetStreamsInBoundsResponse, error) {
+	var returnVal *api.GetStreamsInBoundsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetStreamsInBounds"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/streaming/streams-in-bounds", url.PathEscape(fmt.Sprint(videoRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GetStreamsInBoundsResponse), werror.WrapWithContextParams(ctx, err, "getStreamsInBounds failed")
+	}
+	if returnVal == nil {
+		return *new(api.GetStreamsInBoundsResponse), werror.ErrorWithContextParams(ctx, "getStreamsInBounds response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *videoServiceClient) EndStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.EndStreamResponse, error) {
 	var returnVal *api.EndStreamResponse
 	var requestParams []httpclient.RequestParam
@@ -1400,6 +1424,12 @@ type VideoServiceClientWithAuth interface {
 	*/
 	GetStream(ctx context.Context, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error)
 	/*
+	   Returns all stream sessions for a video that overlap with the specified time bounds.
+	   A stream overlaps if there is any intersection between its [start, end] interval and the provided bounds.
+	   Enforces read permission on the video.
+	*/
+	GetStreamsInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetStreamsInBoundsRequest) (api.GetStreamsInBoundsResponse, error)
+	/*
 	   Marks the active stream session as ended for the video.
 	   Throws VIDEO_NOT_FOUND if no active stream exists.
 	   Enforces write permission on the video.
@@ -1515,6 +1545,10 @@ func (c *videoServiceClientWithAuth) GenerateWhepStream(ctx context.Context, vid
 
 func (c *videoServiceClientWithAuth) GetStream(ctx context.Context, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error) {
 	return c.client.GetStream(ctx, c.authHeader, videoRidArg, streamIdArg)
+}
+
+func (c *videoServiceClientWithAuth) GetStreamsInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetStreamsInBoundsRequest) (api.GetStreamsInBoundsResponse, error) {
+	return c.client.GetStreamsInBounds(ctx, c.authHeader, videoRidArg, requestArg)
 }
 
 func (c *videoServiceClientWithAuth) EndStream(ctx context.Context, videoRidArg rids.VideoRid) (api.EndStreamResponse, error) {
@@ -1724,6 +1758,14 @@ func (c *videoServiceClientWithTokenProvider) GetStream(ctx context.Context, vid
 		return nil, err
 	}
 	return c.client.GetStream(ctx, bearertoken.Token(token), videoRidArg, streamIdArg)
+}
+
+func (c *videoServiceClientWithTokenProvider) GetStreamsInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetStreamsInBoundsRequest) (api.GetStreamsInBoundsResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.GetStreamsInBoundsResponse), err
+	}
+	return c.client.GetStreamsInBounds(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) EndStream(ctx context.Context, videoRidArg rids.VideoRid) (api.EndStreamResponse, error) {

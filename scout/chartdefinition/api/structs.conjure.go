@@ -1839,6 +1839,28 @@ func (o *LogPanelDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type MarkdownPanelDefinitionV1 struct {
+	Title *string `json:"title,omitempty"`
+	// The markdown content to display in the panel.
+	Content *string `json:"content,omitempty"`
+}
+
+func (o MarkdownPanelDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MarkdownPanelDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Format the number to a maximum number of decimal places, rounding numbers that have greater precision.
 type MaxDecimalPlaces struct {
 	Places int `json:"places"`

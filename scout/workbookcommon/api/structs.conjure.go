@@ -560,6 +560,11 @@ type WorkbookSettings struct {
 	TimeSettings *WorkbookTimeSettings `json:"timeSettings,omitempty"`
 	// Time offsets that can be applied to the workbook.
 	Offsets *WorkbookOffsets `json:"offsets,omitempty"`
+	/*
+	   Default staleness configuration for new time series panels in the workbook.
+	   When set, new time series panels will use this instead of the 1-second default.
+	*/
+	DefaultStalenessConfiguration *api4.StalenessConfiguration `json:"defaultStalenessConfiguration,omitempty"`
 }
 
 func (o WorkbookSettings) MarshalYAML() (interface{}, error) {

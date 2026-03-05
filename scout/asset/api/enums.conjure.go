@@ -13,14 +13,15 @@ type AssetSortField struct {
 type AssetSortField_Value string
 
 const (
-	AssetSortField_NAME       AssetSortField_Value = "NAME"
-	AssetSortField_CREATED_AT AssetSortField_Value = "CREATED_AT"
-	AssetSortField_UNKNOWN    AssetSortField_Value = "UNKNOWN"
+	AssetSortField_NAME                  AssetSortField_Value = "NAME"
+	AssetSortField_CREATED_AT            AssetSortField_Value = "CREATED_AT"
+	AssetSortField_MOST_RECENT_RUN_START AssetSortField_Value = "MOST_RECENT_RUN_START"
+	AssetSortField_UNKNOWN               AssetSortField_Value = "UNKNOWN"
 )
 
 // AssetSortField_Values returns all known variants of AssetSortField.
 func AssetSortField_Values() []AssetSortField_Value {
-	return []AssetSortField_Value{AssetSortField_NAME, AssetSortField_CREATED_AT}
+	return []AssetSortField_Value{AssetSortField_NAME, AssetSortField_CREATED_AT, AssetSortField_MOST_RECENT_RUN_START}
 }
 
 func New_AssetSortField(value AssetSortField_Value) AssetSortField {
@@ -30,7 +31,7 @@ func New_AssetSortField(value AssetSortField_Value) AssetSortField {
 // IsUnknown returns false for all known variants of AssetSortField and true otherwise.
 func (e AssetSortField) IsUnknown() bool {
 	switch e.val {
-	case AssetSortField_NAME, AssetSortField_CREATED_AT:
+	case AssetSortField_NAME, AssetSortField_CREATED_AT, AssetSortField_MOST_RECENT_RUN_START:
 		return false
 	}
 	return true
@@ -59,6 +60,8 @@ func (e *AssetSortField) UnmarshalText(data []byte) error {
 		*e = New_AssetSortField(AssetSortField_NAME)
 	case "CREATED_AT":
 		*e = New_AssetSortField(AssetSortField_CREATED_AT)
+	case "MOST_RECENT_RUN_START":
+		*e = New_AssetSortField(AssetSortField_MOST_RECENT_RUN_START)
 	}
 	return nil
 }

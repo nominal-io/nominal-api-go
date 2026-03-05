@@ -33,9 +33,62 @@ func (o *ChannelVariable) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type ChannelVariableComputeExpressionV1Python struct {
+	/*
+	   The python code string representing the compute for this variable.
+	   Can be up to 10000 characters long.
+	*/
+	Expression string `json:"expression"`
+	/*
+	   A map of inputs by the name they're referenced by in the expression.
+	   Inputs can be other channel variables.
+	*/
+	InputMap map[string]ChannelVariableComputeExpressionInput `json:"inputMap"`
+}
+
+func (o ChannelVariableComputeExpressionV1Python) MarshalJSON() ([]byte, error) {
+	if o.InputMap == nil {
+		o.InputMap = make(map[string]ChannelVariableComputeExpressionInput)
+	}
+	type _tmpChannelVariableComputeExpressionV1Python ChannelVariableComputeExpressionV1Python
+	return safejson.Marshal(_tmpChannelVariableComputeExpressionV1Python(o))
+}
+
+func (o *ChannelVariableComputeExpressionV1Python) UnmarshalJSON(data []byte) error {
+	type _tmpChannelVariableComputeExpressionV1Python ChannelVariableComputeExpressionV1Python
+	var rawChannelVariableComputeExpressionV1Python _tmpChannelVariableComputeExpressionV1Python
+	if err := safejson.Unmarshal(data, &rawChannelVariableComputeExpressionV1Python); err != nil {
+		return err
+	}
+	if rawChannelVariableComputeExpressionV1Python.InputMap == nil {
+		rawChannelVariableComputeExpressionV1Python.InputMap = make(map[string]ChannelVariableComputeExpressionInput)
+	}
+	*o = ChannelVariableComputeExpressionV1Python(rawChannelVariableComputeExpressionV1Python)
+	return nil
+}
+
+func (o ChannelVariableComputeExpressionV1Python) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ChannelVariableComputeExpressionV1Python) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ComputeNodeWithContext struct {
+	// Graph representation of the compute for a channel variable.
 	ComputeNode api1.ComputeNode `json:"computeNode"`
 	Context     WorkbookContext  `json:"context"`
+	// Code representation of the compute for a channel variable. Should be equivalent to the computeNode.
+	ComputeExpression *ChannelVariableComputeExpression `json:"computeExpression,omitempty"`
 }
 
 func (o ComputeNodeWithContext) MarshalYAML() (interface{}, error) {

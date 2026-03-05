@@ -2954,10 +2954,15 @@ func (u *SelectValueWithT[T]) Accept(ctx context.Context, v SelectValueVisitorWi
 			return result, fmt.Errorf("field \"lastRange\" is required")
 		}
 		return v.VisitLastRange(ctx, *u.lastRange)
+	case "nthRange":
+		if u.nthRange == nil {
+			return result, fmt.Errorf("field \"nthRange\" is required")
+		}
+		return v.VisitNthRange(ctx, *u.nthRange)
 	}
 }
 
-func (u *SelectValueWithT[T]) AcceptFuncs(firstPointFunc func(Series) (T, error), firstValuePointFunc func(Series) (T, error), firstRangeFunc func(RangeSeries) (T, error), lastPointFunc func(Series) (T, error), lastValuePointFunc func(Series) (T, error), lastRangeFunc func(RangeSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SelectValueWithT[T]) AcceptFuncs(firstPointFunc func(Series) (T, error), firstValuePointFunc func(Series) (T, error), firstRangeFunc func(RangeSeries) (T, error), lastPointFunc func(Series) (T, error), lastValuePointFunc func(Series) (T, error), lastRangeFunc func(RangeSeries) (T, error), nthRangeFunc func(NthRange) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2995,6 +3000,11 @@ func (u *SelectValueWithT[T]) AcceptFuncs(firstPointFunc func(Series) (T, error)
 			return result, fmt.Errorf("field \"lastRange\" is required")
 		}
 		return lastRangeFunc(*u.lastRange)
+	case "nthRange":
+		if u.nthRange == nil {
+			return result, fmt.Errorf("field \"nthRange\" is required")
+		}
+		return nthRangeFunc(*u.nthRange)
 	}
 }
 
@@ -3028,6 +3038,11 @@ func (u *SelectValueWithT[T]) LastRangeNoopSuccess(RangeSeries) (T, error) {
 	return result, nil
 }
 
+func (u *SelectValueWithT[T]) NthRangeNoopSuccess(NthRange) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SelectValueWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -3040,6 +3055,7 @@ type SelectValueVisitorWithT[T any] interface {
 	VisitLastPoint(ctx context.Context, v Series) (T, error)
 	VisitLastValuePoint(ctx context.Context, v Series) (T, error)
 	VisitLastRange(ctx context.Context, v RangeSeries) (T, error)
+	VisitNthRange(ctx context.Context, v NthRange) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

@@ -6,6 +6,63 @@ import (
 	"strings"
 )
 
+type RangeSortOrder struct {
+	val RangeSortOrder_Value
+}
+
+type RangeSortOrder_Value string
+
+const (
+	RangeSortOrder_ASC     RangeSortOrder_Value = "ASC"
+	RangeSortOrder_DESC    RangeSortOrder_Value = "DESC"
+	RangeSortOrder_UNKNOWN RangeSortOrder_Value = "UNKNOWN"
+)
+
+// RangeSortOrder_Values returns all known variants of RangeSortOrder.
+func RangeSortOrder_Values() []RangeSortOrder_Value {
+	return []RangeSortOrder_Value{RangeSortOrder_ASC, RangeSortOrder_DESC}
+}
+
+func New_RangeSortOrder(value RangeSortOrder_Value) RangeSortOrder {
+	return RangeSortOrder{val: value}
+}
+
+// IsUnknown returns false for all known variants of RangeSortOrder and true otherwise.
+func (e RangeSortOrder) IsUnknown() bool {
+	switch e.val {
+	case RangeSortOrder_ASC, RangeSortOrder_DESC:
+		return false
+	}
+	return true
+}
+
+func (e RangeSortOrder) Value() RangeSortOrder_Value {
+	if e.IsUnknown() {
+		return RangeSortOrder_UNKNOWN
+	}
+	return e.val
+}
+
+func (e RangeSortOrder) String() string {
+	return string(e.val)
+}
+
+func (e RangeSortOrder) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *RangeSortOrder) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_RangeSortOrder(RangeSortOrder_Value(v))
+	case "ASC":
+		*e = New_RangeSortOrder(RangeSortOrder_ASC)
+	case "DESC":
+		*e = New_RangeSortOrder(RangeSortOrder_DESC)
+	}
+	return nil
+}
+
 type TagFilterOperator struct {
 	val TagFilterOperator_Value
 }

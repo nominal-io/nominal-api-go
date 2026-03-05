@@ -12,6 +12,153 @@ import (
 	"github.com/nominal-io/nominal-api-go/scout/compute/api"
 )
 
+type ChannelVariableComputeExpressionWithT[T any] ChannelVariableComputeExpression
+
+func (u *ChannelVariableComputeExpressionWithT[T]) Accept(ctx context.Context, v ChannelVariableComputeExpressionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *ChannelVariableComputeExpressionWithT[T]) AcceptFuncs(v1Func func(ChannelVariableComputeExpressionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ChannelVariableComputeExpressionWithT[T]) V1NoopSuccess(ChannelVariableComputeExpressionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ChannelVariableComputeExpressionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ChannelVariableComputeExpressionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v ChannelVariableComputeExpressionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type ChannelVariableComputeExpressionInputWithT[T any] ChannelVariableComputeExpressionInput
+
+func (u *ChannelVariableComputeExpressionInputWithT[T]) Accept(ctx context.Context, v ChannelVariableComputeExpressionInputVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "variable":
+		if u.variable == nil {
+			return result, fmt.Errorf("field \"variable\" is required")
+		}
+		return v.VisitVariable(ctx, *u.variable)
+	}
+}
+
+func (u *ChannelVariableComputeExpressionInputWithT[T]) AcceptFuncs(variableFunc func(ChannelVariableName) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "variable":
+		if u.variable == nil {
+			return result, fmt.Errorf("field \"variable\" is required")
+		}
+		return variableFunc(*u.variable)
+	}
+}
+
+func (u *ChannelVariableComputeExpressionInputWithT[T]) VariableNoopSuccess(ChannelVariableName) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ChannelVariableComputeExpressionInputWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ChannelVariableComputeExpressionInputVisitorWithT[T any] interface {
+	VisitVariable(ctx context.Context, v ChannelVariableName) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type ChannelVariableComputeExpressionV1WithT[T any] ChannelVariableComputeExpressionV1
+
+func (u *ChannelVariableComputeExpressionV1WithT[T]) Accept(ctx context.Context, v ChannelVariableComputeExpressionV1VisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "python":
+		if u.python == nil {
+			return result, fmt.Errorf("field \"python\" is required")
+		}
+		return v.VisitPython(ctx, *u.python)
+	}
+}
+
+func (u *ChannelVariableComputeExpressionV1WithT[T]) AcceptFuncs(pythonFunc func(ChannelVariableComputeExpressionV1Python) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "python":
+		if u.python == nil {
+			return result, fmt.Errorf("field \"python\" is required")
+		}
+		return pythonFunc(*u.python)
+	}
+}
+
+func (u *ChannelVariableComputeExpressionV1WithT[T]) PythonNoopSuccess(ChannelVariableComputeExpressionV1Python) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ChannelVariableComputeExpressionV1WithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ChannelVariableComputeExpressionV1VisitorWithT[T any] interface {
+	VisitPython(ctx context.Context, v ChannelVariableComputeExpressionV1Python) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type ComputeSpecWithT[T any] ComputeSpec
 
 func (u *ComputeSpecWithT[T]) Accept(ctx context.Context, v ComputeSpecVisitorWithT[T]) (T, error) {
