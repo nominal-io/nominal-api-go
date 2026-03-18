@@ -2,14 +2,18 @@
 
 package api
 
-type ErrorCode int
+type ErrorCode int // safelogging:@Safe
 
 // Should be of the format Namespace:ErrorType
-type ErrorType string
-type FunctionParameterName string
+type ErrorType string // safelogging:@Safe
+
+type FunctionParameterName string // safelogging:@Unsafe
 
 // Functions are deprecated and will be removed in a future version.
-type FunctionReference string
-type LocalVariableName string
-type SeriesName string
-type VariableName string
+type FunctionReference string // safelogging:@Unsafe
+
+type LocalVariableName string // safelogging:@Unsafe
+
+type SeriesName string // safelogging:@Unsafe
+
+type VariableName string // safelogging:@Unsafe

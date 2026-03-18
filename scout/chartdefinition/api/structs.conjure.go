@@ -4,6 +4,7 @@ package api
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
+	api6 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/scout/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/comparisonrun/api"
@@ -78,8 +79,9 @@ func (o *AxisRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type AxisThresholdVisualization struct {
-	AxisId AxisId `json:"axisId"`
+	AxisId AxisId `json:"axisId" safelogging:"@Unsafe"`
 	// Determines it's current visibility in the time series chart.
 	Visibility bool               `json:"visibility"`
 	Thresholds AxisThresholdGroup `json:"thresholds"`
@@ -149,9 +151,9 @@ func (o *BitFlagMapCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) 
 // The settings for a raw bit flag map visualisation.
 type BitFlagMapRawVisualisation struct {
 	// The color when any bit is high
-	HighColor *api.HexColor `json:"highColor,omitempty"`
+	HighColor *api.HexColor `json:"highColor,omitempty" safelogging:"@Safe"`
 	// The color when all bits are low
-	LowColor *api.HexColor `json:"lowColor,omitempty"`
+	LowColor *api.HexColor `json:"lowColor,omitempty" safelogging:"@Safe"`
 	BitFlags []BitFlag     `json:"bitFlags"`
 }
 
@@ -185,6 +187,72 @@ func (o BitFlagMapRawVisualisation) MarshalYAML() (interface{}, error) {
 }
 
 func (o *BitFlagMapRawVisualisation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Default bucket display configuration, which renders a shaded min/max region per bucket with a stair-step
+line from first point through mean to last point.
+*/
+type BucketDisplayConfigDefault struct{}
+
+func (o BucketDisplayConfigDefault) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BucketDisplayConfigDefault) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BucketDisplayConfigSingleStat struct {
+	Stat BucketDisplayStat `json:"stat"`
+}
+
+func (o BucketDisplayConfigSingleStat) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BucketDisplayConfigSingleStat) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BucketDisplayStatPercentile struct {
+	/*
+	   Percentile value as a string (e.g. "0.95") to avoid floating-point precision issues.
+	   Must be between 0 and 1.
+	*/
+	Value string `json:"value"`
+}
+
+func (o BucketDisplayStatPercentile) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BucketDisplayStatPercentile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -256,15 +324,16 @@ func (o *CartesianChartDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CartesianPlot struct {
-	XVariableName      api2.ChannelVariableName `json:"xVariableName"`
-	YVariableName      api2.ChannelVariableName `json:"yVariableName"`
+	XVariableName      api2.ChannelVariableName `json:"xVariableName" safelogging:"@Unsafe"`
+	YVariableName      api2.ChannelVariableName `json:"yVariableName" safelogging:"@Unsafe"`
 	SecondaryVariables *[]SecondaryVariable     `json:"secondaryVariables,omitempty"`
 	Enabled            *bool                    `json:"enabled,omitempty"`
-	XAxisId            AxisId                   `json:"xAxisId"`
-	YAxisId            AxisId                   `json:"yAxisId"`
+	XAxisId            AxisId                   `json:"xAxisId" safelogging:"@Unsafe"`
+	YAxisId            AxisId                   `json:"yAxisId" safelogging:"@Unsafe"`
 	// Default color for points
-	Color api.HexColor `json:"color"`
+	Color api.HexColor `json:"color" safelogging:"@Safe"`
 	// Configuration for dynamic coloring. Overrides color if specified.
 	ColorBy *ColorBy `json:"colorBy,omitempty"`
 }
@@ -327,8 +396,9 @@ func (o *ChecklistChartDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type DefaultFill struct {
-	Color api.HexColor `json:"color"`
+	Color api.HexColor `json:"color" safelogging:"@Safe"`
 }
 
 func (o DefaultFill) MarshalYAML() (interface{}, error) {
@@ -549,8 +619,9 @@ func (o *EnumRawVisualisation) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type EnumValueChannel struct {
-	VariableName  api2.ChannelVariableName `json:"variableName"`
+	VariableName  api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
 	Visualisation EnumValueVisualisation   `json:"visualisation"`
 }
 
@@ -804,11 +875,12 @@ func (o *FrequencyChartDefinitionV2) UnmarshalYAML(unmarshal func(interface{}) e
 }
 
 // A frequency plot that displays a real value against the frequency domain.
+// safelogging:@Unsafe
 type FrequencyPlot struct {
-	VariableName api2.ChannelVariableName `json:"variableName"`
+	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
 	Enabled      *bool                    `json:"enabled,omitempty"`
-	YAxisId      AxisId                   `json:"yAxisId"`
-	Color        api.HexColor             `json:"color"`
+	YAxisId      AxisId                   `json:"yAxisId" safelogging:"@Unsafe"`
+	Color        api.HexColor             `json:"color" safelogging:"@Safe"`
 	LineStyle    LineStyle                `json:"lineStyle"`
 }
 
@@ -832,12 +904,13 @@ func (o *FrequencyPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
 A plot that performs an analysis on an multiple signals and returns
 data mapped to the frequency domain.
 */
+// safelogging:@Unsafe
 type FrequencyPlotMultivariate struct {
 	Title         *string                    `json:"title,omitempty"`
-	VariableNames []api2.ChannelVariableName `json:"variableNames"`
-	AxesIds       []AxisId                   `json:"axesIds"`
+	VariableNames []api2.ChannelVariableName `json:"variableNames" safelogging:"@Unsafe"`
+	AxesIds       []AxisId                   `json:"axesIds" safelogging:"@Unsafe"`
 	Enabled       *bool                      `json:"enabled,omitempty"`
-	Color         api.HexColor               `json:"color"`
+	Color         api.HexColor               `json:"color" safelogging:"@Safe"`
 	LineStyle     LineStyle                  `json:"lineStyle"`
 }
 
@@ -1018,7 +1091,7 @@ func (o *FrequencyPlotTypePsd) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 type Geo3dCustomModel struct {
-	AttachmentRid rids.AttachmentRid `json:"attachmentRid"`
+	AttachmentRid rids.AttachmentRid `json:"attachmentRid" safelogging:"@Safe"`
 	FileExtension string             `json:"fileExtension"`
 }
 
@@ -1144,10 +1217,11 @@ func (o *Geo3dOrientationEulerAngles) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Geo3dOrientationPrincipalAxes struct {
-	HeadingVariableName *api2.ChannelVariableName `json:"headingVariableName,omitempty"`
-	PitchVariableName   *api2.ChannelVariableName `json:"pitchVariableName,omitempty"`
-	RollVariableName    *api2.ChannelVariableName `json:"rollVariableName,omitempty"`
+	HeadingVariableName *api2.ChannelVariableName `json:"headingVariableName,omitempty" safelogging:"@Unsafe"`
+	PitchVariableName   *api2.ChannelVariableName `json:"pitchVariableName,omitempty" safelogging:"@Unsafe"`
+	RollVariableName    *api2.ChannelVariableName `json:"rollVariableName,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o Geo3dOrientationPrincipalAxes) MarshalYAML() (interface{}, error) {
@@ -1166,10 +1240,11 @@ func (o *Geo3dOrientationPrincipalAxes) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Geo3dPositionEcef struct {
-	EcefXVariableName api2.ChannelVariableName `json:"ecefXVariableName"`
-	EcefYVariableName api2.ChannelVariableName `json:"ecefYVariableName"`
-	EcefZVariableName api2.ChannelVariableName `json:"ecefZVariableName"`
+	EcefXVariableName api2.ChannelVariableName `json:"ecefXVariableName" safelogging:"@Unsafe"`
+	EcefYVariableName api2.ChannelVariableName `json:"ecefYVariableName" safelogging:"@Unsafe"`
+	EcefZVariableName api2.ChannelVariableName `json:"ecefZVariableName" safelogging:"@Unsafe"`
 }
 
 func (o Geo3dPositionEcef) MarshalYAML() (interface{}, error) {
@@ -1188,10 +1263,11 @@ func (o *Geo3dPositionEcef) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Geo3dPositionWgs84 struct {
-	LatitudeVariableName  api2.ChannelVariableName  `json:"latitudeVariableName"`
-	LongitudeVariableName api2.ChannelVariableName  `json:"longitudeVariableName"`
-	HeightVariableName    *api2.ChannelVariableName `json:"heightVariableName,omitempty"`
+	LatitudeVariableName  api2.ChannelVariableName  `json:"latitudeVariableName" safelogging:"@Unsafe"`
+	LongitudeVariableName api2.ChannelVariableName  `json:"longitudeVariableName" safelogging:"@Unsafe"`
+	HeightVariableName    *api2.ChannelVariableName `json:"heightVariableName,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o Geo3dPositionWgs84) MarshalYAML() (interface{}, error) {
@@ -1219,7 +1295,7 @@ type Geo3dSensor struct {
 	// The orientation of the sensor.
 	Orientation *Geo3dSensorOrientationConfig `json:"orientation,omitempty"`
 	// The color of the sensor.
-	Color *api.HexColor `json:"color,omitempty"`
+	Color *api.HexColor `json:"color,omitempty" safelogging:"@Safe"`
 	// The shape of the sensor's view volume.
 	ViewShape *Geo3dSensorShape `json:"viewShape,omitempty"`
 }
@@ -1376,7 +1452,7 @@ func (o *GeoPlot3d) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type GeoPlot3dVisualizationOptions struct {
-	Color     api.HexColor   `json:"color"`
+	Color     api.HexColor   `json:"color" safelogging:"@Safe"`
 	LineStyle GeoLine3dStyle `json:"lineStyle"`
 	Model     *Geo3dModel    `json:"model,omitempty"`
 }
@@ -1397,9 +1473,10 @@ func (o *GeoPlot3dVisualizationOptions) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GeoPlotFromLatLong struct {
-	LatitudeVariableName  api2.ChannelVariableName    `json:"latitudeVariableName"`
-	LongitudeVariableName api2.ChannelVariableName    `json:"longitudeVariableName"`
+	LatitudeVariableName  api2.ChannelVariableName    `json:"latitudeVariableName" safelogging:"@Unsafe"`
+	LongitudeVariableName api2.ChannelVariableName    `json:"longitudeVariableName" safelogging:"@Unsafe"`
 	SecondaryVariables    *[]SecondaryVariable        `json:"secondaryVariables,omitempty"`
 	Enabled               *bool                       `json:"enabled,omitempty"`
 	Label                 *string                     `json:"label,omitempty"`
@@ -1422,9 +1499,10 @@ func (o *GeoPlotFromLatLong) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GeoPlotSecondaryVisibilityConfig struct {
 	Visible      bool                      `json:"visible"`
-	VariableName *api2.ChannelVariableName `json:"variableName,omitempty"`
+	VariableName *api2.ChannelVariableName `json:"variableName,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o GeoPlotSecondaryVisibilityConfig) MarshalYAML() (interface{}, error) {
@@ -1444,7 +1522,7 @@ func (o *GeoPlotSecondaryVisibilityConfig) UnmarshalYAML(unmarshal func(interfac
 }
 
 type GeoPlotVisualizationOptions struct {
-	Color     api.HexColor `json:"color"`
+	Color     api.HexColor `json:"color" safelogging:"@Safe"`
 	LineStyle GeoLineStyle `json:"lineStyle"`
 	// If visible, overwrites any existing visualization options on the geo plot.
 	SecondaryColorVisualization *GeoPlotSecondaryVisibilityConfig `json:"secondaryColorVisualization,omitempty"`
@@ -1629,10 +1707,11 @@ func (o *HistogramDisplaySettings) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type HistogramPlot struct {
-	VariableName api2.ChannelVariableName `json:"variableName"`
+	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
 	Enabled      *bool                    `json:"enabled,omitempty"`
-	Color        api.HexColor             `json:"color"`
+	Color        api.HexColor             `json:"color" safelogging:"@Safe"`
 }
 
 func (o HistogramPlot) MarshalYAML() (interface{}, error) {
@@ -1678,7 +1757,7 @@ func (o *Layout) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type LineThreshold struct {
 	Value     float64            `json:"value"`
 	Label     *string            `json:"label,omitempty"`
-	Color     api.HexColor       `json:"color"`
+	Color     api.HexColor       `json:"color" safelogging:"@Safe"`
 	LineStyle ThresholdLineStyle `json:"lineStyle"`
 }
 
@@ -1747,9 +1826,10 @@ func (o *LineThresholdGroup) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 // A field to save additional column names on log panels with support for multiple variables
+// safelogging:@Unsafe
 type LogChannel struct {
-	LogChannelVariableName api2.ChannelVariableName `json:"logChannelVariableName"`
-	VisibleLogColumnNames  []LogColumnName          `json:"visibleLogColumnNames"`
+	LogChannelVariableName api2.ChannelVariableName `json:"logChannelVariableName" safelogging:"@Unsafe"`
+	VisibleLogColumnNames  []LogColumnName          `json:"visibleLogColumnNames" safelogging:"@Unsafe"`
 	TagFilters             LogTagFilter             `json:"tagFilters"`
 }
 
@@ -1796,9 +1876,10 @@ func (o *LogChannel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type LogPanelDefinitionV1 struct {
 	Title         *string                    `json:"title,omitempty"`
-	LogChannels   []api2.ChannelVariableName `json:"logChannels"`
+	LogChannels   []api2.ChannelVariableName `json:"logChannels" safelogging:"@Unsafe"`
 	LogChannelsV2 *[]LogChannel              `json:"logChannelsV2,omitempty"`
 }
 
@@ -1894,6 +1975,24 @@ func (o NeverConnectDisconnectedValues) MarshalYAML() (interface{}, error) {
 }
 
 func (o *NeverConnectDisconnectedValues) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type NoConfigDisplayStat struct{}
+
+func (o NoConfigDisplayStat) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NoConfigDisplayStat) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2114,8 +2213,9 @@ func (o *NumericRawVisualisationV2) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type NumericValueChannel struct {
-	VariableName  api2.ChannelVariableName  `json:"variableName"`
+	VariableName  api2.ChannelVariableName  `json:"variableName" safelogging:"@Unsafe"`
 	Visualisation NumericValueVisualisation `json:"visualisation"`
 }
 
@@ -2300,7 +2400,7 @@ func (o *PlotlyPanelDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) erro
 
 type ProcedureVizDefinitionV1 struct {
 	Title        *string                     `json:"title,omitempty"`
-	ExecutionRid *rids.ProcedureExecutionRid `json:"executionRid,omitempty"`
+	ExecutionRid *rids.ProcedureExecutionRid `json:"executionRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o ProcedureVizDefinitionV1) MarshalYAML() (interface{}, error) {
@@ -2368,10 +2468,10 @@ func (o *RangeCellConfig) UnmarshalYAML(unmarshal func(interface{}) error) error
 
 // The settings for a raw range visualisation.
 type RangeRawVisualisation struct {
-	RangeColor *api.HexColor `json:"rangeColor,omitempty"`
+	RangeColor *api.HexColor `json:"rangeColor,omitempty" safelogging:"@Safe"`
 	// The string to display when the condition defined by the variable's function spec is met.
 	RangeLabel   *string       `json:"rangeLabel,omitempty"`
-	NoRangeColor *api.HexColor `json:"noRangeColor,omitempty"`
+	NoRangeColor *api.HexColor `json:"noRangeColor,omitempty" safelogging:"@Safe"`
 	// The string to display when the condition defined by the variable's function spec is not met.
 	NoRangeLabel *string `json:"noRangeLabel,omitempty"`
 }
@@ -2392,8 +2492,9 @@ func (o *RangeRawVisualisation) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RangeValueChannel struct {
-	VariableName  api2.ChannelVariableName `json:"variableName"`
+	VariableName  api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
 	Visualisation RangeValueVisualisation  `json:"visualisation"`
 }
 
@@ -2471,8 +2572,9 @@ func (o *Scatter3dTraceComputeConfig) UnmarshalYAML(unmarshal func(interface{}) 
 }
 
 // A secondary variable to associate with a trace
+// safelogging:@Unsafe
 type SecondaryVariable struct {
-	VariableName api2.ChannelVariableName `json:"variableName"`
+	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
 	Label        *string                  `json:"label,omitempty"`
 	// Default true
 	Enabled             *bool                     `json:"enabled,omitempty"`
@@ -2624,7 +2726,7 @@ type Threshold struct {
 	// The minimum value a number must be to trigger the threshold color. If used in a staleness cell, this value is in milliseconds.
 	Value float64 `json:"value"`
 	// The color to apply to the cell when the threshold is active.
-	Color api.HexColor `json:"color"`
+	Color api.HexColor `json:"color" safelogging:"@Safe"`
 	// A name for this threshold to display while editing.
 	Label *string `json:"label,omitempty"`
 	/*
@@ -2715,10 +2817,20 @@ type TimeSeriesChartDefinitionV1 struct {
 	   independently between rows with a unique color if possible when created.
 	*/
 	PlotColoringConfiguration *PlotColoringConfiguration `json:"plotColoringConfiguration,omitempty"`
+	/*
+	   Optional anchor point for fixed bucket alignment. When set,
+	   buckets align to this time instead of the viewport start.
+	*/
+	AnchorPoint *api6.Timestamp `json:"anchorPoint,omitempty"`
 	// Custom bucket size to use when loading data.
 	BucketStrategy *PanelBucketStrategy `json:"bucketStrategy,omitempty"`
 	// Config for showing floating legends in the chart. If undefined, defaults to hiding.
 	FloatingLegendsConfig *FloatingLegendConfig `json:"floatingLegendsConfig,omitempty"`
+	/*
+	   Controls how decimated bucket data is displayed (e.g. show mean, min, max, count, sum,
+	   or a specific percentile). If undefined, defaults to BucketDisplayConfigDefault.
+	*/
+	BucketDisplayConfig *BucketDisplayConfig `json:"bucketDisplayConfig,omitempty"`
 }
 
 func (o TimeSeriesChartDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -2805,7 +2917,7 @@ func (o *TimeSeriesEnumPlot) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 type TimeSeriesNumericPlot struct {
-	Color     api.HexColor `json:"color"`
+	Color     api.HexColor `json:"color" safelogging:"@Safe"`
 	LineStyle LineStyle    `json:"lineStyle"`
 }
 
@@ -2825,11 +2937,12 @@ func (o *TimeSeriesNumericPlot) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TimeSeriesPlot struct {
-	VariableName api2.ChannelVariableName `json:"variableName"`
+	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
 	Enabled      *bool                    `json:"enabled,omitempty"`
-	YAxisId      AxisId                   `json:"yAxisId"`
-	Color        api.HexColor             `json:"color"`
+	YAxisId      AxisId                   `json:"yAxisId" safelogging:"@Unsafe"`
+	Color        api.HexColor             `json:"color" safelogging:"@Safe"`
 	LineStyle    LineStyle                `json:"lineStyle"`
 }
 
@@ -2849,10 +2962,11 @@ func (o *TimeSeriesPlot) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TimeSeriesPlotV2 struct {
-	VariableName api2.ChannelVariableName `json:"variableName"`
+	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
 	Enabled      *bool                    `json:"enabled,omitempty"`
-	YAxisId      AxisId                   `json:"yAxisId"`
+	YAxisId      AxisId                   `json:"yAxisId" safelogging:"@Unsafe"`
 	Type         TimeSeriesPlotConfig     `json:"type"`
 }
 
@@ -2872,8 +2986,9 @@ func (o *TimeSeriesPlotV2) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type TimeSeriesRangePlot struct {
-	Color api.HexColor `json:"color"`
+	Color api.HexColor `json:"color" safelogging:"@Safe"`
 }
 
 func (o TimeSeriesRangePlot) MarshalYAML() (interface{}, error) {
@@ -3330,10 +3445,11 @@ func (o *ValueTableStalenessConfig) UnmarshalYAML(unmarshal func(interface{}) er
 }
 
 // Enhanced video panel data source to be compatible with multiple assets
+// safelogging:@Unsafe
 type VideoPanelDataSource struct {
-	RunRid   *api5.RunRid      `json:"runRid,omitempty"`
-	AssetRid api4.AssetRid     `json:"assetRid"`
-	RefName  DataSourceRefName `json:"refName"`
+	RunRid   *api5.RunRid      `json:"runRid,omitempty" safelogging:"@Safe"`
+	AssetRid api4.AssetRid     `json:"assetRid" safelogging:"@Safe"`
+	RefName  DataSourceRefName `json:"refName" safelogging:"@Unsafe"`
 }
 
 func (o VideoPanelDataSource) MarshalYAML() (interface{}, error) {
@@ -3352,13 +3468,14 @@ func (o *VideoPanelDataSource) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type VideoVizDefinitionV1 struct {
 	// Deprecated: Please use the workbook's eventRefs field instead.
 	Events              *[]Event                  `json:"events,omitempty"`
 	ComparisonRunGroups []api1.ComparisonRunGroup `json:"comparisonRunGroups"`
 	Title               *string                   `json:"title,omitempty"`
 	// Deprecated: Datasource field will be preferred over refName field to support multiple assets.
-	RefName    *DataSourceRefName    `json:"refName,omitempty"`
+	RefName    *DataSourceRefName    `json:"refName,omitempty" safelogging:"@Unsafe"`
 	Datasource *VideoPanelDataSource `json:"datasource,omitempty"`
 }
 
@@ -3400,9 +3517,10 @@ func (o *VideoVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 // Stores a video as a channel locator rather than the deprecated video datasource rid.
+// safelogging:@Unsafe
 type VideoVizDefinitionV2 struct {
 	Title   *string            `json:"title,omitempty"`
-	Channel api.ChannelLocator `json:"channel"`
+	Channel api.ChannelLocator `json:"channel" safelogging:"@Unsafe"`
 }
 
 func (o VideoVizDefinitionV2) MarshalYAML() (interface{}, error) {

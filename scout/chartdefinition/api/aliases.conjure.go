@@ -8,9 +8,11 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type AxisId string
-type DataSourceRefName string
-type LogColumnName string
+type AxisId string // safelogging:@Unsafe
+
+type DataSourceRefName string // safelogging:@Unsafe
+
+type LogColumnName string // safelogging:@Unsafe
 
 /*
 Tag field to filter log series data by. Although the tag values is an array,

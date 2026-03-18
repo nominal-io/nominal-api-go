@@ -32,11 +32,251 @@ func (o *CreatedAtQuery) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
+type FindSimilarLabelMatchesRequest struct {
+	// If omitted, all resource types are included.
+	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
+	// If omitted, results will come from all workspaces the user belongs to.
+	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
+	Labels     []api1.Label         `json:"labels" safelogging:"@Unsafe"`
+}
+
+func (o FindSimilarLabelMatchesRequest) MarshalJSON() ([]byte, error) {
+	if o.Labels == nil {
+		o.Labels = make([]api1.Label, 0)
+	}
+	type _tmpFindSimilarLabelMatchesRequest FindSimilarLabelMatchesRequest
+	return safejson.Marshal(_tmpFindSimilarLabelMatchesRequest(o))
+}
+
+func (o *FindSimilarLabelMatchesRequest) UnmarshalJSON(data []byte) error {
+	type _tmpFindSimilarLabelMatchesRequest FindSimilarLabelMatchesRequest
+	var rawFindSimilarLabelMatchesRequest _tmpFindSimilarLabelMatchesRequest
+	if err := safejson.Unmarshal(data, &rawFindSimilarLabelMatchesRequest); err != nil {
+		return err
+	}
+	if rawFindSimilarLabelMatchesRequest.Labels == nil {
+		rawFindSimilarLabelMatchesRequest.Labels = make([]api1.Label, 0)
+	}
+	*o = FindSimilarLabelMatchesRequest(rawFindSimilarLabelMatchesRequest)
+	return nil
+}
+
+func (o FindSimilarLabelMatchesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FindSimilarLabelMatchesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type FindSimilarLabelMatchesResponse struct {
+	Matches map[api1.Label][]MatchCount `json:"matches"`
+}
+
+func (o FindSimilarLabelMatchesResponse) MarshalJSON() ([]byte, error) {
+	if o.Matches == nil {
+		o.Matches = make(map[api1.Label][]MatchCount)
+	}
+	type _tmpFindSimilarLabelMatchesResponse FindSimilarLabelMatchesResponse
+	return safejson.Marshal(_tmpFindSimilarLabelMatchesResponse(o))
+}
+
+func (o *FindSimilarLabelMatchesResponse) UnmarshalJSON(data []byte) error {
+	type _tmpFindSimilarLabelMatchesResponse FindSimilarLabelMatchesResponse
+	var rawFindSimilarLabelMatchesResponse _tmpFindSimilarLabelMatchesResponse
+	if err := safejson.Unmarshal(data, &rawFindSimilarLabelMatchesResponse); err != nil {
+		return err
+	}
+	if rawFindSimilarLabelMatchesResponse.Matches == nil {
+		rawFindSimilarLabelMatchesResponse.Matches = make(map[api1.Label][]MatchCount)
+	}
+	*o = FindSimilarLabelMatchesResponse(rawFindSimilarLabelMatchesResponse)
+	return nil
+}
+
+func (o FindSimilarLabelMatchesResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FindSimilarLabelMatchesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type FindSimilarPropertyKeyMatchesRequest struct {
+	// If omitted, all resource types are included.
+	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
+	// If omitted, results will come from all workspaces the user belongs to.
+	Workspaces   *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
+	PropertyKeys []api1.PropertyName  `json:"propertyKeys" safelogging:"@Unsafe"`
+}
+
+func (o FindSimilarPropertyKeyMatchesRequest) MarshalJSON() ([]byte, error) {
+	if o.PropertyKeys == nil {
+		o.PropertyKeys = make([]api1.PropertyName, 0)
+	}
+	type _tmpFindSimilarPropertyKeyMatchesRequest FindSimilarPropertyKeyMatchesRequest
+	return safejson.Marshal(_tmpFindSimilarPropertyKeyMatchesRequest(o))
+}
+
+func (o *FindSimilarPropertyKeyMatchesRequest) UnmarshalJSON(data []byte) error {
+	type _tmpFindSimilarPropertyKeyMatchesRequest FindSimilarPropertyKeyMatchesRequest
+	var rawFindSimilarPropertyKeyMatchesRequest _tmpFindSimilarPropertyKeyMatchesRequest
+	if err := safejson.Unmarshal(data, &rawFindSimilarPropertyKeyMatchesRequest); err != nil {
+		return err
+	}
+	if rawFindSimilarPropertyKeyMatchesRequest.PropertyKeys == nil {
+		rawFindSimilarPropertyKeyMatchesRequest.PropertyKeys = make([]api1.PropertyName, 0)
+	}
+	*o = FindSimilarPropertyKeyMatchesRequest(rawFindSimilarPropertyKeyMatchesRequest)
+	return nil
+}
+
+func (o FindSimilarPropertyKeyMatchesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FindSimilarPropertyKeyMatchesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type FindSimilarPropertyKeyMatchesResponse struct {
+	KeyMatches map[api1.PropertyName][]MatchCount `json:"keyMatches"`
+}
+
+func (o FindSimilarPropertyKeyMatchesResponse) MarshalJSON() ([]byte, error) {
+	if o.KeyMatches == nil {
+		o.KeyMatches = make(map[api1.PropertyName][]MatchCount)
+	}
+	type _tmpFindSimilarPropertyKeyMatchesResponse FindSimilarPropertyKeyMatchesResponse
+	return safejson.Marshal(_tmpFindSimilarPropertyKeyMatchesResponse(o))
+}
+
+func (o *FindSimilarPropertyKeyMatchesResponse) UnmarshalJSON(data []byte) error {
+	type _tmpFindSimilarPropertyKeyMatchesResponse FindSimilarPropertyKeyMatchesResponse
+	var rawFindSimilarPropertyKeyMatchesResponse _tmpFindSimilarPropertyKeyMatchesResponse
+	if err := safejson.Unmarshal(data, &rawFindSimilarPropertyKeyMatchesResponse); err != nil {
+		return err
+	}
+	if rawFindSimilarPropertyKeyMatchesResponse.KeyMatches == nil {
+		rawFindSimilarPropertyKeyMatchesResponse.KeyMatches = make(map[api1.PropertyName][]MatchCount)
+	}
+	*o = FindSimilarPropertyKeyMatchesResponse(rawFindSimilarPropertyKeyMatchesResponse)
+	return nil
+}
+
+func (o FindSimilarPropertyKeyMatchesResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FindSimilarPropertyKeyMatchesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetMetadataUsageCountRequest struct {
+	Query MetadataUsageQuery `json:"query"`
+	// If omitted, all resource types are included.
+	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
+	// If omitted, results will come from all workspaces the user belongs to.
+	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
+}
+
+func (o GetMetadataUsageCountRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetMetadataUsageCountRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetMetadataUsageCountResponse struct {
+	Count int `json:"count"`
+}
+
+func (o GetMetadataUsageCountResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetMetadataUsageCountResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type LabelWithCount struct {
+	Label         api1.Label `json:"label" safelogging:"@Unsafe"`
+	DocumentCount int        `json:"documentCount"`
+}
+
+func (o LabelWithCount) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LabelWithCount) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ListPropertiesAndLabelsRequest struct {
 	// If omitted, all resource types are included.
 	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
 	// If omitted, results will come from all workspaces the user belongs to.
-	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty"`
+	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
 }
 
 func (o ListPropertiesAndLabelsRequest) MarshalYAML() (interface{}, error) {
@@ -55,9 +295,10 @@ func (o *ListPropertiesAndLabelsRequest) UnmarshalYAML(unmarshal func(interface{
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ListPropertiesAndLabelsResponse struct {
 	Properties map[api1.PropertyName][]api1.PropertyValue `json:"properties"`
-	Labels     []api1.Label                               `json:"labels"`
+	Labels     []api1.Label                               `json:"labels" safelogging:"@Unsafe"`
 }
 
 func (o ListPropertiesAndLabelsResponse) MarshalJSON() ([]byte, error) {
@@ -96,6 +337,465 @@ func (o ListPropertiesAndLabelsResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ListPropertiesAndLabelsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type MatchCount struct {
+	Value         string `json:"value"`
+	DocumentCount int    `json:"documentCount"`
+}
+
+func (o MatchCount) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MatchCount) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Merge one or more values of a property key into a single target value.
+// safelogging:@Unsafe
+type MergePropertyValuesForKey struct {
+	Key    api1.PropertyName    `json:"key" safelogging:"@Unsafe"`
+	Source []api1.PropertyValue `json:"source" safelogging:"@Unsafe"`
+	Target api1.PropertyValue   `json:"target" safelogging:"@Unsafe"`
+}
+
+func (o MergePropertyValuesForKey) MarshalJSON() ([]byte, error) {
+	if o.Source == nil {
+		o.Source = make([]api1.PropertyValue, 0)
+	}
+	type _tmpMergePropertyValuesForKey MergePropertyValuesForKey
+	return safejson.Marshal(_tmpMergePropertyValuesForKey(o))
+}
+
+func (o *MergePropertyValuesForKey) UnmarshalJSON(data []byte) error {
+	type _tmpMergePropertyValuesForKey MergePropertyValuesForKey
+	var rawMergePropertyValuesForKey _tmpMergePropertyValuesForKey
+	if err := safejson.Unmarshal(data, &rawMergePropertyValuesForKey); err != nil {
+		return err
+	}
+	if rawMergePropertyValuesForKey.Source == nil {
+		rawMergePropertyValuesForKey.Source = make([]api1.PropertyValue, 0)
+	}
+	*o = MergePropertyValuesForKey(rawMergePropertyValuesForKey)
+	return nil
+}
+
+func (o MergePropertyValuesForKey) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MergePropertyValuesForKey) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Documents that already have the target property key are included in the rename.
+The priority list determines which value wins via ordered precedence.
+Must contain exactly the source keys + target key.
+*/
+// safelogging:@Unsafe
+type OverwriteOnConflict struct {
+	Priority []api1.PropertyName `json:"priority" safelogging:"@Unsafe"`
+}
+
+func (o OverwriteOnConflict) MarshalJSON() ([]byte, error) {
+	if o.Priority == nil {
+		o.Priority = make([]api1.PropertyName, 0)
+	}
+	type _tmpOverwriteOnConflict OverwriteOnConflict
+	return safejson.Marshal(_tmpOverwriteOnConflict(o))
+}
+
+func (o *OverwriteOnConflict) UnmarshalJSON(data []byte) error {
+	type _tmpOverwriteOnConflict OverwriteOnConflict
+	var rawOverwriteOnConflict _tmpOverwriteOnConflict
+	if err := safejson.Unmarshal(data, &rawOverwriteOnConflict); err != nil {
+		return err
+	}
+	if rawOverwriteOnConflict.Priority == nil {
+		rawOverwriteOnConflict.Priority = make([]api1.PropertyName, 0)
+	}
+	*o = OverwriteOnConflict(rawOverwriteOnConflict)
+	return nil
+}
+
+func (o OverwriteOnConflict) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OverwriteOnConflict) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type PropertyKeyWithCount struct {
+	PropertyKey   api1.PropertyName `json:"propertyKey" safelogging:"@Unsafe"`
+	DocumentCount int               `json:"documentCount"`
+	ValueCount    int               `json:"valueCount"`
+}
+
+func (o PropertyKeyWithCount) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PropertyKeyWithCount) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type PropertyValueWithCount struct {
+	PropertyValue api1.PropertyValue `json:"propertyValue" safelogging:"@Unsafe"`
+	DocumentCount int                `json:"documentCount"`
+}
+
+func (o PropertyValueWithCount) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PropertyValueWithCount) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Rename or merge one or more source labels into a single target label.
+// safelogging:@Unsafe
+type RenameLabel struct {
+	Source []api1.Label `json:"source" safelogging:"@Unsafe"`
+	Target api1.Label   `json:"target" safelogging:"@Unsafe"`
+}
+
+func (o RenameLabel) MarshalJSON() ([]byte, error) {
+	if o.Source == nil {
+		o.Source = make([]api1.Label, 0)
+	}
+	type _tmpRenameLabel RenameLabel
+	return safejson.Marshal(_tmpRenameLabel(o))
+}
+
+func (o *RenameLabel) UnmarshalJSON(data []byte) error {
+	type _tmpRenameLabel RenameLabel
+	var rawRenameLabel _tmpRenameLabel
+	if err := safejson.Unmarshal(data, &rawRenameLabel); err != nil {
+		return err
+	}
+	if rawRenameLabel.Source == nil {
+		rawRenameLabel.Source = make([]api1.Label, 0)
+	}
+	*o = RenameLabel(rawRenameLabel)
+	return nil
+}
+
+func (o RenameLabel) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RenameLabel) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Rename one or more source property keys to a single target key.
+Existing values are preserved under the new key.
+The rename should be skipped in the service for resources w/ conflicting keys.
+*/
+// safelogging:@Unsafe
+type RenamePropertyKey struct {
+	Source     []api1.PropertyName `json:"source" safelogging:"@Unsafe"`
+	Target     api1.PropertyName   `json:"target" safelogging:"@Unsafe"`
+	OnConflict ConflictBehavior    `json:"onConflict"`
+}
+
+func (o RenamePropertyKey) MarshalJSON() ([]byte, error) {
+	if o.Source == nil {
+		o.Source = make([]api1.PropertyName, 0)
+	}
+	type _tmpRenamePropertyKey RenamePropertyKey
+	return safejson.Marshal(_tmpRenamePropertyKey(o))
+}
+
+func (o *RenamePropertyKey) UnmarshalJSON(data []byte) error {
+	type _tmpRenamePropertyKey RenamePropertyKey
+	var rawRenamePropertyKey _tmpRenamePropertyKey
+	if err := safejson.Unmarshal(data, &rawRenamePropertyKey); err != nil {
+		return err
+	}
+	if rawRenamePropertyKey.Source == nil {
+		rawRenamePropertyKey.Source = make([]api1.PropertyName, 0)
+	}
+	*o = RenamePropertyKey(rawRenamePropertyKey)
+	return nil
+}
+
+func (o RenamePropertyKey) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RenamePropertyKey) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type SearchLabelsResponse struct {
+	Labels        []LabelWithCount `json:"labels"`
+	NextPageToken *api1.Token      `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+}
+
+func (o SearchLabelsResponse) MarshalJSON() ([]byte, error) {
+	if o.Labels == nil {
+		o.Labels = make([]LabelWithCount, 0)
+	}
+	type _tmpSearchLabelsResponse SearchLabelsResponse
+	return safejson.Marshal(_tmpSearchLabelsResponse(o))
+}
+
+func (o *SearchLabelsResponse) UnmarshalJSON(data []byte) error {
+	type _tmpSearchLabelsResponse SearchLabelsResponse
+	var rawSearchLabelsResponse _tmpSearchLabelsResponse
+	if err := safejson.Unmarshal(data, &rawSearchLabelsResponse); err != nil {
+		return err
+	}
+	if rawSearchLabelsResponse.Labels == nil {
+		rawSearchLabelsResponse.Labels = make([]LabelWithCount, 0)
+	}
+	*o = SearchLabelsResponse(rawSearchLabelsResponse)
+	return nil
+}
+
+func (o SearchLabelsResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SearchLabelsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type SearchMetadataRequest struct {
+	// If omitted, all resource types are included.
+	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
+	// If omitted, results will come from all workspaces the user belongs to.
+	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
+	// Case-insensitive substring filter.
+	SearchText *string `json:"searchText,omitempty"`
+	// Maximum number of items per page. Defaults to 1000 if not specified.
+	PageSize *int `json:"pageSize,omitempty"`
+	// Token for fetching the next page of results.
+	PageToken *api1.Token       `json:"pageToken,omitempty" safelogging:"@Unsafe"`
+	SortBy    MetadataSortField `json:"sortBy"`
+	// If true, sort in descending order. Defaults to false.
+	Descending *bool `json:"descending,omitempty"`
+}
+
+func (o SearchMetadataRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SearchMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type SearchPropertyKeysResponse struct {
+	PropertyKeys  []PropertyKeyWithCount `json:"propertyKeys"`
+	NextPageToken *api1.Token            `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+}
+
+func (o SearchPropertyKeysResponse) MarshalJSON() ([]byte, error) {
+	if o.PropertyKeys == nil {
+		o.PropertyKeys = make([]PropertyKeyWithCount, 0)
+	}
+	type _tmpSearchPropertyKeysResponse SearchPropertyKeysResponse
+	return safejson.Marshal(_tmpSearchPropertyKeysResponse(o))
+}
+
+func (o *SearchPropertyKeysResponse) UnmarshalJSON(data []byte) error {
+	type _tmpSearchPropertyKeysResponse SearchPropertyKeysResponse
+	var rawSearchPropertyKeysResponse _tmpSearchPropertyKeysResponse
+	if err := safejson.Unmarshal(data, &rawSearchPropertyKeysResponse); err != nil {
+		return err
+	}
+	if rawSearchPropertyKeysResponse.PropertyKeys == nil {
+		rawSearchPropertyKeysResponse.PropertyKeys = make([]PropertyKeyWithCount, 0)
+	}
+	*o = SearchPropertyKeysResponse(rawSearchPropertyKeysResponse)
+	return nil
+}
+
+func (o SearchPropertyKeysResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SearchPropertyKeysResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type SearchPropertyValuesRequest struct {
+	Search      SearchMetadataRequest `json:"search" safelogging:"@Unsafe"`
+	PropertyKey api1.PropertyName     `json:"propertyKey" safelogging:"@Unsafe"`
+}
+
+func (o SearchPropertyValuesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SearchPropertyValuesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type SearchPropertyValuesResponse struct {
+	PropertyValues []PropertyValueWithCount `json:"propertyValues"`
+	NextPageToken  *api1.Token              `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+}
+
+func (o SearchPropertyValuesResponse) MarshalJSON() ([]byte, error) {
+	if o.PropertyValues == nil {
+		o.PropertyValues = make([]PropertyValueWithCount, 0)
+	}
+	type _tmpSearchPropertyValuesResponse SearchPropertyValuesResponse
+	return safejson.Marshal(_tmpSearchPropertyValuesResponse(o))
+}
+
+func (o *SearchPropertyValuesResponse) UnmarshalJSON(data []byte) error {
+	type _tmpSearchPropertyValuesResponse SearchPropertyValuesResponse
+	var rawSearchPropertyValuesResponse _tmpSearchPropertyValuesResponse
+	if err := safejson.Unmarshal(data, &rawSearchPropertyValuesResponse); err != nil {
+		return err
+	}
+	if rawSearchPropertyValuesResponse.PropertyValues == nil {
+		rawSearchPropertyValuesResponse.PropertyValues = make([]PropertyValueWithCount, 0)
+	}
+	*o = SearchPropertyValuesResponse(rawSearchPropertyValuesResponse)
+	return nil
+}
+
+func (o SearchPropertyValuesResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SearchPropertyValuesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Documents are skipped when:
+- The target property key already exists on the document, or
+- Multiple source property keys exist on the document (ambiguous merge).
+Conflicting document RIDs are returned in the response.
+*/
+type SkipOnConflict struct{}
+
+func (o SkipOnConflict) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SkipOnConflict) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

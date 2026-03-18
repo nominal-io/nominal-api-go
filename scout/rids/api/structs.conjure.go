@@ -11,7 +11,7 @@ import (
 
 type ClosedWithFurtherActionAlertState struct {
 	Comment  string  `json:"comment"`
-	ClosedBy UserRid `json:"closedBy"`
+	ClosedBy UserRid `json:"closedBy" safelogging:"@Safe"`
 }
 
 func (o ClosedWithFurtherActionAlertState) MarshalYAML() (interface{}, error) {
@@ -32,7 +32,7 @@ func (o *ClosedWithFurtherActionAlertState) UnmarshalYAML(unmarshal func(interfa
 
 type ClosedWithIgnoreAlertState struct {
 	Comment  string  `json:"comment"`
-	ClosedBy UserRid `json:"closedBy"`
+	ClosedBy UserRid `json:"closedBy" safelogging:"@Safe"`
 }
 
 func (o ClosedWithIgnoreAlertState) MarshalYAML() (interface{}, error) {
@@ -72,9 +72,10 @@ func (o *EventTimeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type LabelsFilter struct {
 	Operator api1.SetOperator `json:"operator"`
-	Labels   []api1.Label     `json:"labels"`
+	Labels   []api1.Label     `json:"labels" safelogging:"@Unsafe"`
 }
 
 func (o LabelsFilter) MarshalJSON() ([]byte, error) {
@@ -132,9 +133,10 @@ func (o *PendingReviewAlertState) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type PropertiesFilter struct {
-	Name   api1.PropertyName    `json:"name"`
-	Values []api1.PropertyValue `json:"values"`
+	Name   api1.PropertyName    `json:"name" safelogging:"@Unsafe"`
+	Values []api1.PropertyValue `json:"values" safelogging:"@Unsafe"`
 }
 
 func (o PropertiesFilter) MarshalJSON() ([]byte, error) {
@@ -217,9 +219,10 @@ func (o *UserDuration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type VersionedVizId struct {
-	Rid     VizId   `json:"rid"`
-	Version Version `json:"version"`
+	Rid     VizId   `json:"rid" safelogging:"@Safe"`
+	Version Version `json:"version" safelogging:"@Safe"`
 }
 
 func (o VersionedVizId) MarshalYAML() (interface{}, error) {

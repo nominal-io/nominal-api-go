@@ -166,8 +166,9 @@ func (e *InvalidChannelSpecification) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidFileShiftScaleRequest struct {
-	VideoFileRid rids.VideoFileRid `json:"videoFileRid"`
+	VideoFileRid rids.VideoFileRid `json:"videoFileRid" safelogging:"@Safe"`
 }
 
 func (o invalidFileShiftScaleRequest) MarshalYAML() (interface{}, error) {
@@ -316,8 +317,9 @@ func (e *InvalidFileShiftScaleRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidShiftScaleRequest struct {
-	VideoRid rids.VideoRid `json:"videoRid"`
+	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
 }
 
 func (o invalidShiftScaleRequest) MarshalYAML() (interface{}, error) {
@@ -1070,9 +1072,10 @@ func (e *MissingTimestampBoundPair) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type noSegmentsInBounds struct {
-	VideoRid        rids.VideoRid `json:"videoRid"`
-	RequestedBounds Bounds        `json:"requestedBounds"`
+	VideoRid        rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
+	RequestedBounds Bounds        `json:"requestedBounds" safelogging:"@Safe"`
 }
 
 func (o noSegmentsInBounds) MarshalYAML() (interface{}, error) {
@@ -1221,8 +1224,9 @@ func (e *NoSegmentsInBounds) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type notAuthorized struct {
-	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids"`
+	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids" safelogging:"@Safe"`
 }
 
 func (o notAuthorized) MarshalJSON() ([]byte, error) {
@@ -1392,10 +1396,11 @@ func (e *NotAuthorized) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type segmentConflict struct {
-	VideoRid       rids.VideoRid `json:"videoRid"`
-	Segment1Bounds Bounds        `json:"segment1Bounds"`
-	Segment2Bounds Bounds        `json:"segment2Bounds"`
+	VideoRid       rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
+	Segment1Bounds Bounds        `json:"segment1Bounds" safelogging:"@Safe"`
+	Segment2Bounds Bounds        `json:"segment2Bounds" safelogging:"@Safe"`
 }
 
 func (o segmentConflict) MarshalYAML() (interface{}, error) {
@@ -1546,8 +1551,8 @@ func (e *SegmentConflict) UnmarshalJSON(data []byte) error {
 
 type segmentConflictV2 struct {
 	SeriesUuid     uuid.UUID `json:"seriesUuid"`
-	Segment1Bounds Bounds    `json:"segment1Bounds"`
-	Segment2Bounds Bounds    `json:"segment2Bounds"`
+	Segment1Bounds Bounds    `json:"segment1Bounds" safelogging:"@Safe"`
+	Segment2Bounds Bounds    `json:"segment2Bounds" safelogging:"@Safe"`
 }
 
 func (o segmentConflictV2) MarshalYAML() (interface{}, error) {
@@ -1696,8 +1701,9 @@ func (e *SegmentConflictV2) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type segmentNotFound struct {
-	VideoRid rids.VideoRid `json:"videoRid"`
+	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
 }
 
 func (o segmentNotFound) MarshalYAML() (interface{}, error) {
@@ -1846,8 +1852,9 @@ func (e *SegmentNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type videoFileIngestNotComplete struct {
-	VideoRid rids.VideoFileRid `json:"videoRid"`
+	VideoRid rids.VideoFileRid `json:"videoRid" safelogging:"@Safe"`
 }
 
 func (o videoFileIngestNotComplete) MarshalYAML() (interface{}, error) {
@@ -1996,8 +2003,9 @@ func (e *VideoFileIngestNotComplete) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type videoFileNotFound struct {
-	VideoFileRid rids.VideoFileRid `json:"videoFileRid"`
+	VideoFileRid rids.VideoFileRid `json:"videoFileRid" safelogging:"@Safe"`
 }
 
 func (o videoFileNotFound) MarshalYAML() (interface{}, error) {
@@ -2146,8 +2154,9 @@ func (e *VideoFileNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type videoIngestNotComplete struct {
-	VideoRid rids.VideoRid `json:"videoRid"`
+	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
 }
 
 func (o videoIngestNotComplete) MarshalYAML() (interface{}, error) {
@@ -2296,8 +2305,9 @@ func (e *VideoIngestNotComplete) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type videoNotFound struct {
-	VideoRid rids.VideoRid `json:"videoRid"`
+	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
 }
 
 func (o videoNotFound) MarshalYAML() (interface{}, error) {

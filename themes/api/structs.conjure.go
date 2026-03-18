@@ -12,7 +12,7 @@ import (
 
 type ChartTheme struct {
 	// Unique resource identifier for the theme.
-	Rid ChartThemeRid `json:"rid"`
+	Rid ChartThemeRid `json:"rid" safelogging:"@Safe"`
 	// The name of the theme as defined by the user.
 	Name string `json:"name"`
 	// The rid of the user who first created the theme.
@@ -51,7 +51,7 @@ type ChartThemeContentV1 struct {
 	// Font size of the title.
 	TitleFontSize int `json:"titleFontSize"`
 	// Font color of the title.
-	TitleFontColor HexColor `json:"titleFontColor"`
+	TitleFontColor HexColor `json:"titleFontColor" safelogging:"@Safe"`
 	// Whether to show a caption in the export.
 	CaptionEnabled bool `json:"captionEnabled"`
 	// How to align the text of the caption.
@@ -59,7 +59,7 @@ type ChartThemeContentV1 struct {
 	// Font size of the caption.
 	CaptionFontSize int `json:"captionFontSize"`
 	// Font color of the caption.
-	CaptionFontColor HexColor `json:"captionFontColor"`
+	CaptionFontColor HexColor `json:"captionFontColor" safelogging:"@Safe"`
 	/*
 	   Whether to include a default background with the export.
 	   (`false` indicates that the background should be transparent)
@@ -72,7 +72,7 @@ type ChartThemeContentV1 struct {
 	// Font size of the legend.
 	LegendFontSize int `json:"legendFontSize"`
 	// Font color of the legend.
-	LegendFontColor HexColor `json:"legendFontColor"`
+	LegendFontColor HexColor `json:"legendFontColor" safelogging:"@Safe"`
 	// Where on the chart the legend should be placed.
 	LegendPlacement LegendPlacement `json:"legendPlacement"`
 	// Whether rows will be separated.
@@ -134,7 +134,7 @@ type CreateChartThemeRequest struct {
 	   The workspace in which to create the theme. If not provided, the theme will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateChartThemeRequest) MarshalYAML() (interface{}, error) {
@@ -158,7 +158,7 @@ type TimeSeriesChartThemeV1 struct {
 	// The font size of the x-axis ticks.
 	XAxisTickFontSize int `json:"xAxisTickFontSize"`
 	// The font color of the x-axis ticks.
-	XAxisTickFontColor HexColor `json:"xAxisTickFontColor"`
+	XAxisTickFontColor HexColor `json:"xAxisTickFontColor" safelogging:"@Safe"`
 	// The font size of the y-axis labels.
 	YAxisTitleFontSize int `json:"yAxisTitleFontSize"`
 	// The font size of the y-axis ticks.

@@ -8,7 +8,7 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type CommentRid rid.ResourceIdentifier
+type CommentRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a CommentRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -56,7 +56,7 @@ func (a *CommentRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type ReactionRid rid.ResourceIdentifier
+type ReactionRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ReactionRid) String() string {
 	return rid.ResourceIdentifier(a).String()

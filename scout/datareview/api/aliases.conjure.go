@@ -8,7 +8,7 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type ManualCheckEvaluationRid rid.ResourceIdentifier
+type ManualCheckEvaluationRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ManualCheckEvaluationRid) String() string {
 	return rid.ResourceIdentifier(a).String()

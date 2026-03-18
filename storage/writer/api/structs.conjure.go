@@ -11,9 +11,10 @@ import (
 )
 
 // Batch of data to stream for a single channel with their associated timestamps.
+// safelogging:@Unsafe
 type ColumnBatch struct {
 	// Channel within nominal to stream data to.
-	Channel api.Channel `json:"channel"`
+	Channel api.Channel `json:"channel" safelogging:"@Unsafe"`
 	// Mapping of key-value pairs to provide as tags to all points within the batch
 	Tags map[api.TagName]api.TagValue `json:"tags"`
 	/*
@@ -72,7 +73,7 @@ func (o *ColumnBatch) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type DoubleArrayPoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     []float64     `json:"value"`
 }
 
@@ -114,7 +115,7 @@ func (o *DoubleArrayPoint) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type DoublePoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     float64       `json:"value"`
 }
 
@@ -135,7 +136,7 @@ func (o *DoublePoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type IntPoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     int           `json:"value"`
 }
 
@@ -156,7 +157,7 @@ func (o *IntPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type LogPoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     LogValue      `json:"value"`
 }
 
@@ -218,8 +219,9 @@ func (o *LogValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RecordsBatch struct {
-	Channel api.Channel                  `json:"channel"`
+	Channel api.Channel                  `json:"channel" safelogging:"@Unsafe"`
 	Tags    map[api.TagName]api.TagValue `json:"tags"`
 	Points  Points                       `json:"points"`
 }
@@ -261,8 +263,9 @@ func (o *RecordsBatch) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RecordsBatchExternal struct {
-	Channel api.Channel                  `json:"channel"`
+	Channel api.Channel                  `json:"channel" safelogging:"@Unsafe"`
 	Tags    map[api.TagName]api.TagValue `json:"tags"`
 	Points  PointsExternal               `json:"points"`
 }
@@ -305,7 +308,7 @@ func (o *RecordsBatchExternal) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 type StringArrayPoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     []string      `json:"value"`
 }
 
@@ -347,7 +350,7 @@ func (o *StringArrayPoint) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type StringPoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     string        `json:"value"`
 }
 
@@ -368,7 +371,7 @@ func (o *StringPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type StructPoint struct {
-	Timestamp  api.Timestamp `json:"timestamp"`
+	Timestamp  api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	JsonString string        `json:"jsonString"`
 }
 
@@ -388,11 +391,12 @@ func (o *StructPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TelegrafMetric struct {
 	// The values are expected to be either numeric or string values
 	Fields map[Field]interface{} `json:"fields"`
 	// The measurement name. Measurement name and field are concatenated when creating the Nominal channel name.
-	Name      MeasurementName              `json:"name"`
+	Name      MeasurementName              `json:"name" safelogging:"@Unsafe"`
 	Tags      map[api.TagName]api.TagValue `json:"tags"`
 	Timestamp interface{}                  `json:"timestamp"`
 }
@@ -441,7 +445,7 @@ func (o *TelegrafMetric) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type Uint64Point struct {
-	Timestamp api.Timestamp     `json:"timestamp"`
+	Timestamp api.Timestamp     `json:"timestamp" safelogging:"@Safe"`
 	Value     safelong.SafeLong `json:"value"`
 }
 
@@ -463,7 +467,7 @@ func (o *Uint64Point) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type WriteBatchesRequest struct {
 	Batches       []RecordsBatch                     `json:"batches"`
-	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid"`
+	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid" safelogging:"@Safe"`
 	/*
 	   Is always true - setting this to false will do nothing.
 
@@ -511,7 +515,7 @@ func (o *WriteBatchesRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 type WriteBatchesRequestExternal struct {
 	Batches       []RecordsBatchExternal             `json:"batches"`
-	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid"`
+	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid" safelogging:"@Safe"`
 	/*
 	   Is always true - setting this to false will do nothing.
 
@@ -561,7 +565,7 @@ type WriteColumnBatchesRequest struct {
 	// Batches of columnar data to stream to Nominal. Each channel's data are provided as a column batch.
 	Batches []ColumnBatch `json:"batches"`
 	// RID of the datasource (e.g., for a Connection) or dataset to stream data into.
-	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid"`
+	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid" safelogging:"@Safe"`
 }
 
 func (o WriteColumnBatchesRequest) MarshalJSON() ([]byte, error) {
@@ -601,13 +605,14 @@ func (o *WriteColumnBatchesRequest) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type WriteLogsRequest struct {
 	Logs []LogPoint `json:"logs"`
 	/*
 	   If provided, the channel to which to write logs.
 	   If not provided, defaults to "logs"
 	*/
-	Channel *api.Channel `json:"channel,omitempty"`
+	Channel *api.Channel `json:"channel,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o WriteLogsRequest) MarshalJSON() ([]byte, error) {
@@ -647,13 +652,14 @@ func (o *WriteLogsRequest) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type WriteStructsRequest struct {
 	Structs []StructPoint `json:"structs"`
 	/*
 	   If provided, the channel to which to write structs.
 	   If not provided, defaults to "structs"
 	*/
-	Channel *api.Channel `json:"channel,omitempty"`
+	Channel *api.Channel `json:"channel,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o WriteStructsRequest) MarshalJSON() ([]byte, error) {

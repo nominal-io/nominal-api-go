@@ -20,9 +20,10 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type assetNotPresentInRun struct {
-	RunRid   RunRid       `json:"runRid"`
-	AssetRid api.AssetRid `json:"assetRid"`
+	RunRid   RunRid       `json:"runRid" safelogging:"@Safe"`
+	AssetRid api.AssetRid `json:"assetRid" safelogging:"@Safe"`
 }
 
 func (o assetNotPresentInRun) MarshalYAML() (interface{}, error) {
@@ -317,8 +318,9 @@ func (e *BothAssetAndDataSourcesSpecified) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidConnectionRid struct {
-	ConnectionRid ConnectionRid `json:"connectionRid"`
+	ConnectionRid ConnectionRid `json:"connectionRid" safelogging:"@Safe"`
 }
 
 func (o invalidConnectionRid) MarshalYAML() (interface{}, error) {
@@ -617,8 +619,9 @@ func (e *InvalidDataSourceRefNameType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidDatasetRid struct {
-	DatasetRid rids.DatasetRid `json:"datasetRid"`
+	DatasetRid rids.DatasetRid `json:"datasetRid" safelogging:"@Safe"`
 }
 
 func (o invalidDatasetRid) MarshalYAML() (interface{}, error) {
@@ -766,8 +769,9 @@ func (e *InvalidDatasetRid) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidLogSetRid struct {
-	LogSetRid LogSetRid `json:"logSetRid"`
+	LogSetRid LogSetRid `json:"logSetRid" safelogging:"@Safe"`
 }
 
 func (o invalidLogSetRid) MarshalYAML() (interface{}, error) {
@@ -915,8 +919,9 @@ func (e *InvalidLogSetRid) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidVideoRid struct {
-	VideoRid rids.VideoRid `json:"videoRid"`
+	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
 }
 
 func (o invalidVideoRid) MarshalYAML() (interface{}, error) {
@@ -1064,8 +1069,9 @@ func (e *InvalidVideoRid) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type refNamesAlreadyUsed struct {
-	RefNames []api1.DataSourceRefName `json:"refNames"`
+	RefNames []api1.DataSourceRefName `json:"refNames" safelogging:"@Unsafe"`
 }
 
 func (o refNamesAlreadyUsed) MarshalJSON() ([]byte, error) {
@@ -1180,7 +1186,7 @@ func (e *RefNamesAlreadyUsed) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *RefNamesAlreadyUsed) safeParams() map[string]interface{} {
-	return map[string]interface{}{"refNames": e.RefNames, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -1197,7 +1203,7 @@ func (e *RefNamesAlreadyUsed) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *RefNamesAlreadyUsed) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"refNames": e.RefNames}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -1384,8 +1390,9 @@ func (e *RunBoundsInverted) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type runNotFound struct {
-	RunRid RunRid `json:"runRid"`
+	RunRid RunRid `json:"runRid" safelogging:"@Safe"`
 }
 
 func (o runNotFound) MarshalYAML() (interface{}, error) {
@@ -1683,8 +1690,9 @@ func (e *RunNotFoundById) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type runPropertiesHaveNullValues struct {
-	PropertyNames []api2.PropertyName `json:"propertyNames"`
+	PropertyNames []api2.PropertyName `json:"propertyNames" safelogging:"@Unsafe"`
 }
 
 func (o runPropertiesHaveNullValues) MarshalJSON() ([]byte, error) {
@@ -1799,7 +1807,7 @@ func (e *RunPropertiesHaveNullValues) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *RunPropertiesHaveNullValues) safeParams() map[string]interface{} {
-	return map[string]interface{}{"propertyNames": e.PropertyNames, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -1816,7 +1824,7 @@ func (e *RunPropertiesHaveNullValues) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *RunPropertiesHaveNullValues) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"propertyNames": e.PropertyNames}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -1853,8 +1861,9 @@ func (e *RunPropertiesHaveNullValues) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type unspecifiedAssetForMultiAssetRun struct {
-	RunRid RunRid `json:"runRid"`
+	RunRid RunRid `json:"runRid" safelogging:"@Safe"`
 }
 
 func (o unspecifiedAssetForMultiAssetRun) MarshalYAML() (interface{}, error) {

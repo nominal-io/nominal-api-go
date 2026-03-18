@@ -70,4 +70,4 @@ func (a *ComparisonVizDefinitionMap) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type VariableName string
+type VariableName string // safelogging:@Unsafe

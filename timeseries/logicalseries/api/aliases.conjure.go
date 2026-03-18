@@ -2,15 +2,26 @@
 
 package api
 
-type AttributeName string
-type BucketName string
-type ColumnName string
-type DatabaseName string
-type DatasetName string
-type FieldName string
-type LocationName string
-type MeasureName string
-type MeasurementName string
-type ProjectName string
-type SchemaName string
-type TableName string
+type AttributeName string // safelogging:@Unsafe
+
+type BucketName string // safelogging:@Unsafe
+
+type ColumnName string // safelogging:@Unsafe
+
+type DatabaseName string // safelogging:@Unsafe
+
+type DatasetName string // safelogging:@Unsafe
+
+type FieldName string // safelogging:@Unsafe
+
+type LocationName string // safelogging:@Unsafe
+
+type MeasureName string // safelogging:@Unsafe
+
+type MeasurementName string // safelogging:@Unsafe
+
+type ProjectName string // safelogging:@Unsafe
+
+type SchemaName string // safelogging:@Unsafe
+
+type TableName string // safelogging:@Unsafe

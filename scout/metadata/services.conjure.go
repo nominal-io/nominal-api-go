@@ -19,6 +19,38 @@ type ResourceMetadataServiceClient interface {
 	   such as runs and videos.
 	*/
 	ListPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, requestArg ListPropertiesAndLabelsRequest) (ListPropertiesAndLabelsResponse, error)
+	/*
+	   Returns the count of resources that use a given label or property. The query can
+	   match by label, property name (key only), or a full property key+value pair.
+	   Counts are scoped to the caller's accessible workspaces unless specific workspaces
+	   are provided.
+	*/
+	GetMetadataUsageCount(ctx context.Context, authHeader bearertoken.Token, requestArg GetMetadataUsageCountRequest) (GetMetadataUsageCountResponse, error)
+	/*
+	   Given a set of labels, finds similar labels across the specified workspaces and resource types.
+	   Includes document count. Useful for detecting unintentional duplicate labels.
+	*/
+	FindSimilarLabelMatches(ctx context.Context, authHeader bearertoken.Token, requestArg FindSimilarLabelMatchesRequest) (FindSimilarLabelMatchesResponse, error)
+	/*
+	   Given a set of property keys, finds similar property keys across the specified workspaces and resource types.
+	   Includes document count. Useful for detecting unintentional duplicate property keys.
+	*/
+	FindSimilarPropertyKeyMatches(ctx context.Context, authHeader bearertoken.Token, requestArg FindSimilarPropertyKeyMatchesRequest) (FindSimilarPropertyKeyMatchesResponse, error)
+	/*
+	   Returns a paginated list of labels with document usage counts, filterable by
+	   resource type, workspace, and search text.
+	*/
+	SearchLabels(ctx context.Context, authHeader bearertoken.Token, requestArg SearchMetadataRequest) (SearchLabelsResponse, error)
+	/*
+	   Returns a paginated list of property keys with document usage counts, filterable
+	   by resource type, workspace, and search text.
+	*/
+	SearchPropertyKeys(ctx context.Context, authHeader bearertoken.Token, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error)
+	/*
+	   Returns a paginated list of property values for a given property key with document
+	   usage counts, filterable by resource type, workspace, and search text.
+	*/
+	SearchPropertyValues(ctx context.Context, authHeader bearertoken.Token, requestArg SearchPropertyValuesRequest) (SearchPropertyValuesResponse, error)
 }
 
 type resourceMetadataServiceClient struct {
@@ -47,6 +79,114 @@ func (c *resourceMetadataServiceClient) ListPropertiesAndLabels(ctx context.Cont
 	return *returnVal, nil
 }
 
+func (c *resourceMetadataServiceClient) GetMetadataUsageCount(ctx context.Context, authHeader bearertoken.Token, requestArg GetMetadataUsageCountRequest) (GetMetadataUsageCountResponse, error) {
+	var returnVal *GetMetadataUsageCountResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetMetadataUsageCount"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/metadata/usage-count"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GetMetadataUsageCountResponse), werror.WrapWithContextParams(ctx, err, "getMetadataUsageCount failed")
+	}
+	if returnVal == nil {
+		return *new(GetMetadataUsageCountResponse), werror.ErrorWithContextParams(ctx, "getMetadataUsageCount response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *resourceMetadataServiceClient) FindSimilarLabelMatches(ctx context.Context, authHeader bearertoken.Token, requestArg FindSimilarLabelMatchesRequest) (FindSimilarLabelMatchesResponse, error) {
+	var returnVal *FindSimilarLabelMatchesResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("FindSimilarLabelMatches"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/metadata/label/find-similar"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(FindSimilarLabelMatchesResponse), werror.WrapWithContextParams(ctx, err, "findSimilarLabelMatches failed")
+	}
+	if returnVal == nil {
+		return *new(FindSimilarLabelMatchesResponse), werror.ErrorWithContextParams(ctx, "findSimilarLabelMatches response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *resourceMetadataServiceClient) FindSimilarPropertyKeyMatches(ctx context.Context, authHeader bearertoken.Token, requestArg FindSimilarPropertyKeyMatchesRequest) (FindSimilarPropertyKeyMatchesResponse, error) {
+	var returnVal *FindSimilarPropertyKeyMatchesResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("FindSimilarPropertyKeyMatches"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/metadata/property/find-similar"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(FindSimilarPropertyKeyMatchesResponse), werror.WrapWithContextParams(ctx, err, "findSimilarPropertyKeyMatches failed")
+	}
+	if returnVal == nil {
+		return *new(FindSimilarPropertyKeyMatchesResponse), werror.ErrorWithContextParams(ctx, "findSimilarPropertyKeyMatches response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *resourceMetadataServiceClient) SearchLabels(ctx context.Context, authHeader bearertoken.Token, requestArg SearchMetadataRequest) (SearchLabelsResponse, error) {
+	var returnVal *SearchLabelsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchLabels"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/metadata/search-labels"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchLabelsResponse), werror.WrapWithContextParams(ctx, err, "searchLabels failed")
+	}
+	if returnVal == nil {
+		return *new(SearchLabelsResponse), werror.ErrorWithContextParams(ctx, "searchLabels response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *resourceMetadataServiceClient) SearchPropertyKeys(ctx context.Context, authHeader bearertoken.Token, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error) {
+	var returnVal *SearchPropertyKeysResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchPropertyKeys"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/metadata/search-property-keys"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchPropertyKeysResponse), werror.WrapWithContextParams(ctx, err, "searchPropertyKeys failed")
+	}
+	if returnVal == nil {
+		return *new(SearchPropertyKeysResponse), werror.ErrorWithContextParams(ctx, "searchPropertyKeys response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *resourceMetadataServiceClient) SearchPropertyValues(ctx context.Context, authHeader bearertoken.Token, requestArg SearchPropertyValuesRequest) (SearchPropertyValuesResponse, error) {
+	var returnVal *SearchPropertyValuesResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchPropertyValues"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/metadata/search-property-values"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchPropertyValuesResponse), werror.WrapWithContextParams(ctx, err, "searchPropertyValues failed")
+	}
+	if returnVal == nil {
+		return *new(SearchPropertyValuesResponse), werror.ErrorWithContextParams(ctx, "searchPropertyValues response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 // The Resource Metadata Service provides common metadata about resources.
 type ResourceMetadataServiceClientWithAuth interface {
 	/*
@@ -54,6 +194,38 @@ type ResourceMetadataServiceClientWithAuth interface {
 	   such as runs and videos.
 	*/
 	ListPropertiesAndLabels(ctx context.Context, requestArg ListPropertiesAndLabelsRequest) (ListPropertiesAndLabelsResponse, error)
+	/*
+	   Returns the count of resources that use a given label or property. The query can
+	   match by label, property name (key only), or a full property key+value pair.
+	   Counts are scoped to the caller's accessible workspaces unless specific workspaces
+	   are provided.
+	*/
+	GetMetadataUsageCount(ctx context.Context, requestArg GetMetadataUsageCountRequest) (GetMetadataUsageCountResponse, error)
+	/*
+	   Given a set of labels, finds similar labels across the specified workspaces and resource types.
+	   Includes document count. Useful for detecting unintentional duplicate labels.
+	*/
+	FindSimilarLabelMatches(ctx context.Context, requestArg FindSimilarLabelMatchesRequest) (FindSimilarLabelMatchesResponse, error)
+	/*
+	   Given a set of property keys, finds similar property keys across the specified workspaces and resource types.
+	   Includes document count. Useful for detecting unintentional duplicate property keys.
+	*/
+	FindSimilarPropertyKeyMatches(ctx context.Context, requestArg FindSimilarPropertyKeyMatchesRequest) (FindSimilarPropertyKeyMatchesResponse, error)
+	/*
+	   Returns a paginated list of labels with document usage counts, filterable by
+	   resource type, workspace, and search text.
+	*/
+	SearchLabels(ctx context.Context, requestArg SearchMetadataRequest) (SearchLabelsResponse, error)
+	/*
+	   Returns a paginated list of property keys with document usage counts, filterable
+	   by resource type, workspace, and search text.
+	*/
+	SearchPropertyKeys(ctx context.Context, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error)
+	/*
+	   Returns a paginated list of property values for a given property key with document
+	   usage counts, filterable by resource type, workspace, and search text.
+	*/
+	SearchPropertyValues(ctx context.Context, requestArg SearchPropertyValuesRequest) (SearchPropertyValuesResponse, error)
 }
 
 func NewResourceMetadataServiceClientWithAuth(client ResourceMetadataServiceClient, authHeader bearertoken.Token) ResourceMetadataServiceClientWithAuth {
@@ -67,6 +239,30 @@ type resourceMetadataServiceClientWithAuth struct {
 
 func (c *resourceMetadataServiceClientWithAuth) ListPropertiesAndLabels(ctx context.Context, requestArg ListPropertiesAndLabelsRequest) (ListPropertiesAndLabelsResponse, error) {
 	return c.client.ListPropertiesAndLabels(ctx, c.authHeader, requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithAuth) GetMetadataUsageCount(ctx context.Context, requestArg GetMetadataUsageCountRequest) (GetMetadataUsageCountResponse, error) {
+	return c.client.GetMetadataUsageCount(ctx, c.authHeader, requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithAuth) FindSimilarLabelMatches(ctx context.Context, requestArg FindSimilarLabelMatchesRequest) (FindSimilarLabelMatchesResponse, error) {
+	return c.client.FindSimilarLabelMatches(ctx, c.authHeader, requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithAuth) FindSimilarPropertyKeyMatches(ctx context.Context, requestArg FindSimilarPropertyKeyMatchesRequest) (FindSimilarPropertyKeyMatchesResponse, error) {
+	return c.client.FindSimilarPropertyKeyMatches(ctx, c.authHeader, requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithAuth) SearchLabels(ctx context.Context, requestArg SearchMetadataRequest) (SearchLabelsResponse, error) {
+	return c.client.SearchLabels(ctx, c.authHeader, requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithAuth) SearchPropertyKeys(ctx context.Context, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error) {
+	return c.client.SearchPropertyKeys(ctx, c.authHeader, requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithAuth) SearchPropertyValues(ctx context.Context, requestArg SearchPropertyValuesRequest) (SearchPropertyValuesResponse, error) {
+	return c.client.SearchPropertyValues(ctx, c.authHeader, requestArg)
 }
 
 func NewResourceMetadataServiceClientWithTokenProvider(client ResourceMetadataServiceClient, tokenProvider httpclient.TokenProvider) ResourceMetadataServiceClientWithAuth {
@@ -84,4 +280,52 @@ func (c *resourceMetadataServiceClientWithTokenProvider) ListPropertiesAndLabels
 		return *new(ListPropertiesAndLabelsResponse), err
 	}
 	return c.client.ListPropertiesAndLabels(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithTokenProvider) GetMetadataUsageCount(ctx context.Context, requestArg GetMetadataUsageCountRequest) (GetMetadataUsageCountResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(GetMetadataUsageCountResponse), err
+	}
+	return c.client.GetMetadataUsageCount(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithTokenProvider) FindSimilarLabelMatches(ctx context.Context, requestArg FindSimilarLabelMatchesRequest) (FindSimilarLabelMatchesResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(FindSimilarLabelMatchesResponse), err
+	}
+	return c.client.FindSimilarLabelMatches(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithTokenProvider) FindSimilarPropertyKeyMatches(ctx context.Context, requestArg FindSimilarPropertyKeyMatchesRequest) (FindSimilarPropertyKeyMatchesResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(FindSimilarPropertyKeyMatchesResponse), err
+	}
+	return c.client.FindSimilarPropertyKeyMatches(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithTokenProvider) SearchLabels(ctx context.Context, requestArg SearchMetadataRequest) (SearchLabelsResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(SearchLabelsResponse), err
+	}
+	return c.client.SearchLabels(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithTokenProvider) SearchPropertyKeys(ctx context.Context, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(SearchPropertyKeysResponse), err
+	}
+	return c.client.SearchPropertyKeys(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *resourceMetadataServiceClientWithTokenProvider) SearchPropertyValues(ctx context.Context, requestArg SearchPropertyValuesRequest) (SearchPropertyValuesResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(SearchPropertyValuesResponse), err
+	}
+	return c.client.SearchPropertyValues(ctx, bearertoken.Token(token), requestArg)
 }

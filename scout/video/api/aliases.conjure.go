@@ -2,4 +2,4 @@
 
 package api
 
-type ErrorType string
+type ErrorType string // safelogging:@Safe

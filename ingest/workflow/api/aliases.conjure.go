@@ -2,5 +2,6 @@
 
 package api
 
-type McapTopicName string
-type PresignedUrl string
+type McapTopicName string // safelogging:@Unsafe
+
+type PresignedUrl string // safelogging:@DoNotLog

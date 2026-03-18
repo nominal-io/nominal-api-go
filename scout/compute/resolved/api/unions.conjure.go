@@ -3500,6 +3500,7 @@ func NewNumericHistogramBucketStrategyFromBucketWidthAndOffset(v NumericHistogra
 
 type NumericSeriesNode struct {
 	typ                               string
+	constant                          *ConstantNumericSeriesNode
 	arithmetic                        *ArithmeticSeriesNode
 	bitOperation                      *BitOperationSeriesNode
 	countDuplicate                    *EnumCountDuplicateSeriesNode
@@ -3541,6 +3542,7 @@ type NumericSeriesNode struct {
 
 type numericSeriesNodeDeserializer struct {
 	Type                              string                                       `json:"type"`
+	Constant                          *ConstantNumericSeriesNode                   `json:"constant"`
 	Arithmetic                        *ArithmeticSeriesNode                        `json:"arithmetic"`
 	BitOperation                      *BitOperationSeriesNode                      `json:"bitOperation"`
 	CountDuplicate                    *EnumCountDuplicateSeriesNode                `json:"countDuplicate"`
@@ -3581,13 +3583,21 @@ type numericSeriesNodeDeserializer struct {
 }
 
 func (u *numericSeriesNodeDeserializer) toStruct() NumericSeriesNode {
-	return NumericSeriesNode{typ: u.Type, arithmetic: u.Arithmetic, bitOperation: u.BitOperation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, max: u.Max, mean: u.Mean, min: u.Min, offset: u.Offset, product: u.Product, raw: u.Raw, resample: u.Resample, rollingOperation: u.RollingOperation, aggregate: u.Aggregate, signalFilter: u.SignalFilter, sum: u.Sum, scale: u.Scale, timeDifference: u.TimeDifference, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic, union: u.Union, unitConversion: u.UnitConversion, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, thresholdFilter: u.ThresholdFilter, arraySelect: u.ArraySelect, absoluteTimestamp: u.AbsoluteTimestamp, newestPoints: u.NewestPoints, rangesNumericAggregationToNumeric: u.RangesNumericAggregationToNumeric, filterByExpression: u.FilterByExpression, enumToNumeric: u.EnumToNumeric, refprop: u.Refprop, extractFromStruct: u.ExtractFromStruct, zScore: u.ZScore}
+	return NumericSeriesNode{typ: u.Type, constant: u.Constant, arithmetic: u.Arithmetic, bitOperation: u.BitOperation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, max: u.Max, mean: u.Mean, min: u.Min, offset: u.Offset, product: u.Product, raw: u.Raw, resample: u.Resample, rollingOperation: u.RollingOperation, aggregate: u.Aggregate, signalFilter: u.SignalFilter, sum: u.Sum, scale: u.Scale, timeDifference: u.TimeDifference, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic, union: u.Union, unitConversion: u.UnitConversion, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, thresholdFilter: u.ThresholdFilter, arraySelect: u.ArraySelect, absoluteTimestamp: u.AbsoluteTimestamp, newestPoints: u.NewestPoints, rangesNumericAggregationToNumeric: u.RangesNumericAggregationToNumeric, filterByExpression: u.FilterByExpression, enumToNumeric: u.EnumToNumeric, refprop: u.Refprop, extractFromStruct: u.ExtractFromStruct, zScore: u.ZScore}
 }
 
 func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "constant":
+		if u.constant == nil {
+			return nil, fmt.Errorf("field \"constant\" is required")
+		}
+		return struct {
+			Type     string                    `json:"type"`
+			Constant ConstantNumericSeriesNode `json:"constant"`
+		}{Type: "constant", Constant: *u.constant}, nil
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return nil, fmt.Errorf("field \"arithmetic\" is required")
@@ -3902,6 +3912,10 @@ func (u *NumericSeriesNode) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
+	case "constant":
+		if u.constant == nil {
+			return fmt.Errorf("field \"constant\" is required")
+		}
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return fmt.Errorf("field \"arithmetic\" is required")
@@ -4070,13 +4084,18 @@ func (u *NumericSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *NumericSeriesNode) AcceptFuncs(arithmeticFunc func(ArithmeticSeriesNode) error, bitOperationFunc func(BitOperationSeriesNode) error, countDuplicateFunc func(EnumCountDuplicateSeriesNode) error, cumulativeSumFunc func(CumulativeSumSeriesNode) error, derivativeFunc func(DerivativeSeriesNode) error, integralFunc func(IntegralSeriesNode) error, maxFunc func(MaxSeriesNode) error, meanFunc func(MeanSeriesNode) error, minFunc func(MinSeriesNode) error, offsetFunc func(OffsetSeriesNode) error, productFunc func(ProductSeriesNode) error, rawFunc func(RawNumericSeriesNode) error, resampleFunc func(NumericResampleSeriesNode) error, rollingOperationFunc func(RollingOperationSeriesNode) error, aggregateFunc func(AggregateNumericSeriesNode) error, signalFilterFunc func(SignalFilterSeriesNode) error, sumFunc func(SumSeriesNode) error, scaleFunc func(ScaleSeriesNode) error, timeDifferenceFunc func(TimeDifferenceSeriesNode) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeriesNode) error, timeShiftFunc func(NumericTimeShiftSeriesNode) error, unaryArithmeticFunc func(UnaryArithmeticSeriesNode) error, binaryArithmeticFunc func(BinaryArithmeticSeriesNode) error, unionFunc func(NumericUnionSeriesNode) error, unitConversionFunc func(UnitConversionSeriesNode) error, valueDifferenceFunc func(ValueDifferenceSeriesNode) error, filterTransformationFunc func(NumericFilterTransformationSeriesNode) error, thresholdFilterFunc func(NumericThresholdFilterSeriesNode) error, arraySelectFunc func(SelectIndexFromNumericArraySeriesNode) error, absoluteTimestampFunc func(AbsoluteTimestampSeriesNode) error, newestPointsFunc func(SelectNewestPointsSeriesNode) error, rangesNumericAggregationToNumericFunc func(RangesNumericAggregationToNumericSeriesNode) error, filterByExpressionFunc func(FilterByExpressionSeriesNode) error, enumToNumericFunc func(EnumToNumericSeriesNode) error, refpropFunc func(RefpropSeriesNode) error, extractFromStructFunc func(ExtractNumericFromStructSeriesNode) error, zScoreFunc func(ZscoreSeriesNode) error, unknownFunc func(string) error) error {
+func (u *NumericSeriesNode) AcceptFuncs(constantFunc func(ConstantNumericSeriesNode) error, arithmeticFunc func(ArithmeticSeriesNode) error, bitOperationFunc func(BitOperationSeriesNode) error, countDuplicateFunc func(EnumCountDuplicateSeriesNode) error, cumulativeSumFunc func(CumulativeSumSeriesNode) error, derivativeFunc func(DerivativeSeriesNode) error, integralFunc func(IntegralSeriesNode) error, maxFunc func(MaxSeriesNode) error, meanFunc func(MeanSeriesNode) error, minFunc func(MinSeriesNode) error, offsetFunc func(OffsetSeriesNode) error, productFunc func(ProductSeriesNode) error, rawFunc func(RawNumericSeriesNode) error, resampleFunc func(NumericResampleSeriesNode) error, rollingOperationFunc func(RollingOperationSeriesNode) error, aggregateFunc func(AggregateNumericSeriesNode) error, signalFilterFunc func(SignalFilterSeriesNode) error, sumFunc func(SumSeriesNode) error, scaleFunc func(ScaleSeriesNode) error, timeDifferenceFunc func(TimeDifferenceSeriesNode) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeriesNode) error, timeShiftFunc func(NumericTimeShiftSeriesNode) error, unaryArithmeticFunc func(UnaryArithmeticSeriesNode) error, binaryArithmeticFunc func(BinaryArithmeticSeriesNode) error, unionFunc func(NumericUnionSeriesNode) error, unitConversionFunc func(UnitConversionSeriesNode) error, valueDifferenceFunc func(ValueDifferenceSeriesNode) error, filterTransformationFunc func(NumericFilterTransformationSeriesNode) error, thresholdFilterFunc func(NumericThresholdFilterSeriesNode) error, arraySelectFunc func(SelectIndexFromNumericArraySeriesNode) error, absoluteTimestampFunc func(AbsoluteTimestampSeriesNode) error, newestPointsFunc func(SelectNewestPointsSeriesNode) error, rangesNumericAggregationToNumericFunc func(RangesNumericAggregationToNumericSeriesNode) error, filterByExpressionFunc func(FilterByExpressionSeriesNode) error, enumToNumericFunc func(EnumToNumericSeriesNode) error, refpropFunc func(RefpropSeriesNode) error, extractFromStructFunc func(ExtractNumericFromStructSeriesNode) error, zScoreFunc func(ZscoreSeriesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in NumericSeriesNode type")
 		}
 		return unknownFunc(u.typ)
+	case "constant":
+		if u.constant == nil {
+			return fmt.Errorf("field \"constant\" is required")
+		}
+		return constantFunc(*u.constant)
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return fmt.Errorf("field \"arithmetic\" is required")
@@ -4265,6 +4284,10 @@ func (u *NumericSeriesNode) AcceptFuncs(arithmeticFunc func(ArithmeticSeriesNode
 	}
 }
 
+func (u *NumericSeriesNode) ConstantNoopSuccess(_ ConstantNumericSeriesNode) error {
+	return nil
+}
+
 func (u *NumericSeriesNode) ArithmeticNoopSuccess(_ ArithmeticSeriesNode) error {
 	return nil
 }
@@ -4424,6 +4447,11 @@ func (u *NumericSeriesNode) Accept(v NumericSeriesNodeVisitor) error {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
+	case "constant":
+		if u.constant == nil {
+			return fmt.Errorf("field \"constant\" is required")
+		}
+		return v.VisitConstant(*u.constant)
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return fmt.Errorf("field \"arithmetic\" is required")
@@ -4613,6 +4641,7 @@ func (u *NumericSeriesNode) Accept(v NumericSeriesNodeVisitor) error {
 }
 
 type NumericSeriesNodeVisitor interface {
+	VisitConstant(v ConstantNumericSeriesNode) error
 	VisitArithmetic(v ArithmeticSeriesNode) error
 	VisitBitOperation(v BitOperationSeriesNode) error
 	VisitCountDuplicate(v EnumCountDuplicateSeriesNode) error
@@ -4660,6 +4689,11 @@ func (u *NumericSeriesNode) AcceptWithContext(ctx context.Context, v NumericSeri
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "constant":
+		if u.constant == nil {
+			return fmt.Errorf("field \"constant\" is required")
+		}
+		return v.VisitConstantWithContext(ctx, *u.constant)
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return fmt.Errorf("field \"arithmetic\" is required")
@@ -4849,6 +4883,7 @@ func (u *NumericSeriesNode) AcceptWithContext(ctx context.Context, v NumericSeri
 }
 
 type NumericSeriesNodeVisitorWithContext interface {
+	VisitConstantWithContext(ctx context.Context, v ConstantNumericSeriesNode) error
 	VisitArithmeticWithContext(ctx context.Context, v ArithmeticSeriesNode) error
 	VisitBitOperationWithContext(ctx context.Context, v BitOperationSeriesNode) error
 	VisitCountDuplicateWithContext(ctx context.Context, v EnumCountDuplicateSeriesNode) error
@@ -4887,6 +4922,10 @@ type NumericSeriesNodeVisitorWithContext interface {
 	VisitExtractFromStructWithContext(ctx context.Context, v ExtractNumericFromStructSeriesNode) error
 	VisitZScoreWithContext(ctx context.Context, v ZscoreSeriesNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewNumericSeriesNodeFromConstant(v ConstantNumericSeriesNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "constant", constant: &v}
 }
 
 func NewNumericSeriesNodeFromArithmetic(v ArithmeticSeriesNode) NumericSeriesNode {

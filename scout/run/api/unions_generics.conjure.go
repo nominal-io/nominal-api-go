@@ -192,6 +192,11 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(ctx, *u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return result, fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return v.VisitPropertyKey(ctx, *u.propertyKey)
 	case "properties":
 		if u.properties == nil {
 			return result, fmt.Errorf("field \"properties\" is required")
@@ -255,7 +260,7 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 	}
 }
 
-func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) (T, error), startTimeFunc func(TimeframeFilter) (T, error), endTimeInclusiveFunc func(UtcTimestamp) (T, error), endTimeFunc func(TimeframeFilter) (T, error), timeRangeFunc func(TimeRangeFilter) (T, error), createdAtFunc func(TimeframeFilter) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), assetFunc func(api.AssetRid) (T, error), assetsFunc func(AssetsFilter) (T, error), isSingleAssetFunc func(bool) (T, error), labelFunc func(api1.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api1.Property) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), dataSourceSeriesTagFunc func(DataSourceSeriesTag) (T, error), dataSourceRefNameFunc func(api2.DataSourceRefName) (T, error), dataSourceFunc func(DataSource) (T, error), runNumberFunc func(safelong.SafeLong) (T, error), runPrefixFunc func(string) (T, error), checkAlertStatesFilterFunc func(CheckAlertStatesFilter) (T, error), archivedFunc func(bool) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) (T, error), startTimeFunc func(TimeframeFilter) (T, error), endTimeInclusiveFunc func(UtcTimestamp) (T, error), endTimeFunc func(TimeframeFilter) (T, error), timeRangeFunc func(TimeRangeFilter) (T, error), createdAtFunc func(TimeframeFilter) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), assetFunc func(api.AssetRid) (T, error), assetsFunc func(AssetsFilter) (T, error), isSingleAssetFunc func(bool) (T, error), labelFunc func(api1.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api1.Property) (T, error), propertyKeyFunc func(api1.PropertyName) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), dataSourceSeriesTagFunc func(DataSourceSeriesTag) (T, error), dataSourceRefNameFunc func(api2.DataSourceRefName) (T, error), dataSourceFunc func(DataSource) (T, error), runNumberFunc func(safelong.SafeLong) (T, error), runPrefixFunc func(string) (T, error), checkAlertStatesFilterFunc func(CheckAlertStatesFilter) (T, error), archivedFunc func(bool) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -333,6 +338,11 @@ func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimesta
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return result, fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return propertyKeyFunc(*u.propertyKey)
 	case "properties":
 		if u.properties == nil {
 			return result, fmt.Errorf("field \"properties\" is required")
@@ -466,6 +476,11 @@ func (u *SearchQueryWithT[T]) PropertyNoopSuccess(api1.Property) (T, error) {
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) PropertyKeyNoopSuccess(api1.PropertyName) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) PropertiesNoopSuccess(api.PropertiesFilter) (T, error) {
 	var result T
 	return result, nil
@@ -546,6 +561,7 @@ type SearchQueryVisitorWithT[T any] interface {
 	VisitLabel(ctx context.Context, v api1.Label) (T, error)
 	VisitLabels(ctx context.Context, v api.LabelsFilter) (T, error)
 	VisitProperty(ctx context.Context, v api1.Property) (T, error)
+	VisitPropertyKey(ctx context.Context, v api1.PropertyName) (T, error)
 	VisitProperties(ctx context.Context, v api.PropertiesFilter) (T, error)
 	VisitDataSourceSeriesTag(ctx context.Context, v DataSourceSeriesTag) (T, error)
 	VisitDataSourceRefName(ctx context.Context, v api2.DataSourceRefName) (T, error)

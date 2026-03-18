@@ -82,9 +82,10 @@ func (o *AssetMetricColumns) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type AssetSearchState struct {
 	Sort    *api.AssetSortOptions `json:"sort,omitempty"`
-	GroupBy *[]ColumnId           `json:"groupBy,omitempty"`
+	GroupBy *[]ColumnId           `json:"groupBy,omitempty" safelogging:"@Unsafe"`
 	Query   api.SearchAssetsQuery `json:"query"`
 }
 
@@ -166,9 +167,10 @@ func (o *ChecklistSearchState) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ColumnPinningState struct {
-	Left  []ColumnId `json:"left"`
-	Right []ColumnId `json:"right"`
+	Left  []ColumnId `json:"left" safelogging:"@Unsafe"`
+	Right []ColumnId `json:"right" safelogging:"@Unsafe"`
 }
 
 func (o ColumnPinningState) MarshalJSON() ([]byte, error) {
@@ -220,7 +222,7 @@ type CreateSavedViewRequest struct {
 	Color        *api2.Color        `json:"color,omitempty"`
 	SearchState  SearchState        `json:"searchState"`
 	DisplayState DisplayState       `json:"displayState"`
-	WorkspaceRid *rids.WorkspaceRid `json:"workspaceRid,omitempty"`
+	WorkspaceRid *rids.WorkspaceRid `json:"workspaceRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateSavedViewRequest) MarshalYAML() (interface{}, error) {
@@ -362,9 +364,10 @@ func (o *MostRecentRun) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RunSearchState struct {
 	Sort    *api3.SortOptions `json:"sort,omitempty"`
-	GroupBy *[]ColumnId       `json:"groupBy,omitempty"`
+	GroupBy *[]ColumnId       `json:"groupBy,omitempty" safelogging:"@Unsafe"`
 	Query   api3.SearchQuery  `json:"query"`
 }
 
@@ -407,14 +410,14 @@ func (o *SavedView) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type SavedViewMetadata struct {
-	Rid          api4.SavedViewRid `json:"rid"`
+	Rid          api4.SavedViewRid `json:"rid" safelogging:"@Safe"`
 	ResourceType ResourceType      `json:"resourceType"`
 	Title        string            `json:"title"`
 	Symbol       *api2.Symbol      `json:"symbol,omitempty"`
 	Color        *api2.Color       `json:"color,omitempty"`
 	IsArchived   bool              `json:"isArchived"`
 	CreatedAt    datetime.DateTime `json:"createdAt"`
-	CreatedBy    api4.UserRid      `json:"createdBy"`
+	CreatedBy    api4.UserRid      `json:"createdBy" safelogging:"@Safe"`
 	UpdatedAt    datetime.DateTime `json:"updatedAt"`
 }
 
@@ -497,11 +500,12 @@ func (o *SearchSavedViewsQueryList) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchSavedViewsRequest struct {
 	Sort SavedViewSortOptions `json:"sort"`
 	// Defaults to 100. Will throw if larger than 1_000.
 	PageSize      *int                  `json:"pageSize,omitempty"`
-	NextPageToken *api5.Token           `json:"nextPageToken,omitempty"`
+	NextPageToken *api5.Token           `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Query         SearchSavedViewsQuery `json:"query"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search.
 	ArchivedStatuses *[]api5.ArchivedStatus `json:"archivedStatuses,omitempty"`
@@ -523,9 +527,10 @@ func (o *SearchSavedViewsRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchSavedViewsResponse struct {
 	SavedViews    []SavedViewMetadata `json:"savedViews"`
-	NextPageToken *api5.Token         `json:"nextPageToken,omitempty"`
+	NextPageToken *api5.Token         `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchSavedViewsResponse) MarshalJSON() ([]byte, error) {
@@ -565,10 +570,11 @@ func (o *SearchSavedViewsResponse) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TableState struct {
 	ColumnVisibility *map[ColumnId]bool  `json:"columnVisibility,omitempty"`
 	ColumnSizing     *map[ColumnId]int   `json:"columnSizing,omitempty"`
-	ColumnOrder      *[]ColumnId         `json:"columnOrder,omitempty"`
+	ColumnOrder      *[]ColumnId         `json:"columnOrder,omitempty" safelogging:"@Unsafe"`
 	ColumnPinning    *ColumnPinningState `json:"columnPinning,omitempty"`
 	MetricColumns    *MetricColumns      `json:"metricColumns,omitempty"`
 }

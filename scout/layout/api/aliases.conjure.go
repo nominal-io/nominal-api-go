@@ -3,4 +3,4 @@
 package api
 
 // Should expect a uuid. Nested panels should have unique IDs.
-type PanelId string
+type PanelId string // safelogging:@Safe

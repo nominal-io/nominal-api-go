@@ -9,9 +9,10 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type ChannelVariable struct {
 	DisplayName  *string             `json:"displayName,omitempty"`
-	VariableName ChannelVariableName `json:"variableName"`
+	VariableName ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
 	ComputeSpec  ComputeSpec         `json:"computeSpec"`
 	// optional for backcompatibility. If empty, fall back to computeSpec.
 	ComputeSpecV2 *ComputeNodeWithContext `json:"computeSpecV2,omitempty"`
@@ -26,6 +27,27 @@ func (o ChannelVariable) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ChannelVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ChannelVariableComputeExpressionInput struct {
+	Value    ChannelVariableComputeExpressionInputValue    `json:"value"`
+	DataType ChannelVariableComputeExpressionInputDataType `json:"dataType"`
+}
+
+func (o ChannelVariableComputeExpressionInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ChannelVariableComputeExpressionInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

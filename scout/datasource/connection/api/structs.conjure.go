@@ -35,7 +35,7 @@ type ApiConnectionDetails struct {
 	// The URI to connect to hit the endpoints specified in the spec.
 	ApiUri string `json:"apiUri"`
 	// Secret Rid of token secret stored in Secrets Service.
-	TokenSecretRid SecretRid `json:"tokenSecretRid"`
+	TokenSecretRid SecretRid `json:"tokenSecretRid" safelogging:"@Safe"`
 }
 
 func (o ApiConnectionDetails) MarshalYAML() (interface{}, error) {
@@ -79,17 +79,18 @@ func (o *BigQueryChannelNameComponent) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type BigQueryConnectionDetails struct {
 	// The region of the BigQuery Project (e.g. "us-east1")
-	Region LocationName `json:"region"`
+	Region LocationName `json:"region" safelogging:"@Unsafe"`
 	// The name of the BigQuery Project
-	Project ProjectName `json:"project"`
+	Project ProjectName `json:"project" safelogging:"@Unsafe"`
 	// The name of the dataset within the project
-	Dataset DatasetName `json:"dataset"`
+	Dataset DatasetName `json:"dataset" safelogging:"@Unsafe"`
 	// The name of the table within the dataset
-	Table TableName `json:"table"`
+	Table TableName `json:"table" safelogging:"@Unsafe"`
 	// Secret Rid of service account key stored in Secrets Service.
-	ServiceAccountKeySecretRid SecretRid `json:"serviceAccountKeySecretRid"`
+	ServiceAccountKeySecretRid SecretRid `json:"serviceAccountKeySecretRid" safelogging:"@Safe"`
 }
 
 func (o BigQueryConnectionDetails) MarshalYAML() (interface{}, error) {
@@ -108,11 +109,12 @@ func (o *BigQueryConnectionDetails) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type BigQueryScrapingConfig struct {
 	// The name of the column that holds the timestamp.
-	TimeColumn ColumnName `json:"timeColumn"`
+	TimeColumn ColumnName `json:"timeColumn" safelogging:"@Unsafe"`
 	// The name of the columns that should be interpreted as tag columns
-	TagColumns []ColumnName `json:"tagColumns"`
+	TagColumns []ColumnName `json:"tagColumns" safelogging:"@Unsafe"`
 	/*
 	   channelNameComponents will be combined, together with separator, to form
 	   a fully qualified channel name. By default, we don't add anything
@@ -163,9 +165,10 @@ func (o *BigQueryScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ChannelAllowListConnectionsScrapingConfig struct {
 	// Only channels in this set will be scraped. Must not be empty.
-	ChannelAllowList []api.Channel `json:"channelAllowList"`
+	ChannelAllowList []api.Channel `json:"channelAllowList" safelogging:"@Unsafe"`
 }
 
 func (o ChannelAllowListConnectionsScrapingConfig) MarshalJSON() ([]byte, error) {
@@ -205,9 +208,10 @@ func (o *ChannelAllowListConnectionsScrapingConfig) UnmarshalYAML(unmarshal func
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ChannelBlockListConnectionsScrapingConfig struct {
 	// Only channels not in this set will be scraped. Must not be empty.
-	ChannelBlockList []api.Channel `json:"channelBlockList"`
+	ChannelBlockList []api.Channel `json:"channelBlockList" safelogging:"@Unsafe"`
 }
 
 func (o ChannelBlockListConnectionsScrapingConfig) MarshalJSON() ([]byte, error) {
@@ -247,8 +251,9 @@ func (o *ChannelBlockListConnectionsScrapingConfig) UnmarshalYAML(unmarshal func
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Connection struct {
-	Rid ConnectionRid `json:"rid"`
+	Rid ConnectionRid `json:"rid" safelogging:"@Safe"`
 	// The display name of the connection. For example: "Nominal production TimescaleDB"
 	DisplayName       string            `json:"displayName"`
 	Description       *string           `json:"description,omitempty"`
@@ -257,7 +262,7 @@ type Connection struct {
 	   Additional tag names that should be supplied to construct a fully qualified series. These are suggested,
 	   rather than strictly required.
 	*/
-	RequiredTagNames []api.TagName     `json:"requiredTagNames"`
+	RequiredTagNames []api.TagName     `json:"requiredTagNames" safelogging:"@Unsafe"`
 	Metadata         map[string]string `json:"metadata"`
 	Scraping         *ScrapingConfig   `json:"scraping,omitempty"`
 	// The connection will be scraped iff this flag is set and scrapingConfig is present.
@@ -359,6 +364,7 @@ func (o *ConnectionStatus) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateConnection struct {
 	Name              string            `json:"name"`
 	Description       *string           `json:"description,omitempty"`
@@ -366,7 +372,7 @@ type CreateConnection struct {
 	// Metadata information about the connection which is not relevant to the DB connection itself.
 	Metadata map[string]string `json:"metadata"`
 	// Additional tag name that are required to construct a fully qualified series.
-	RequiredTagNames []api.TagName `json:"requiredTagNames"`
+	RequiredTagNames []api.TagName `json:"requiredTagNames" safelogging:"@Unsafe"`
 	/*
 	   In most cases, this does not to be set by the user. Throws if populated for Nominal connections, which
 	   have their tags automatically indexed in the underlying database. Tags for external connections are
@@ -380,12 +386,12 @@ type CreateConnection struct {
 	   The workspace in which to create the connection. If not provided, the connection will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 	/*
 	   The markings to apply to the created connection.
 	   If not provided, the connection will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api1.MarkingRid `json:"markingRids"`
+	MarkingRids []api1.MarkingRid `json:"markingRids" safelogging:"@Safe"`
 }
 
 func (o CreateConnection) MarshalJSON() ([]byte, error) {
@@ -503,14 +509,15 @@ func (o *Influx1ConnectionDetails) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Influx2ConnectionDetails struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`
 	// A map of header name to value
 	Headers map[string]HeaderValue `json:"headers"`
-	Org     influx.OrgId           `json:"org"`
+	Org     influx.OrgId           `json:"org" safelogging:"@Unsafe"`
 	// Secret Rid of token secret stored in Secrets Service.
-	TokenSecretRid SecretRid `json:"tokenSecretRid"`
+	TokenSecretRid SecretRid `json:"tokenSecretRid" safelogging:"@Safe"`
 }
 
 func (o Influx2ConnectionDetails) MarshalJSON() ([]byte, error) {
@@ -659,9 +666,10 @@ func (o *LimitsConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ListConnectionsResponse struct {
 	Connections   []Connection `json:"connections"`
-	NextPageToken *api.Token   `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token   `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o ListConnectionsResponse) MarshalJSON() ([]byte, error) {
@@ -701,8 +709,9 @@ func (o *ListConnectionsResponse) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type NominalConnectionDetails struct {
-	NominalDataSourceRid rids.NominalDataSourceRid `json:"nominalDataSourceRid"`
+	NominalDataSourceRid rids.NominalDataSourceRid `json:"nominalDataSourceRid" safelogging:"@Safe"`
 }
 
 func (o NominalConnectionDetails) MarshalYAML() (interface{}, error) {
@@ -770,7 +779,7 @@ func (o *NominalScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) error)
 type PasswordCredentials struct {
 	Username string `json:"username"`
 	// Secret Rid of password secret stored in Secrets Service.
-	PasswordSecretRid SecretRid `json:"passwordSecretRid"`
+	PasswordSecretRid SecretRid `json:"passwordSecretRid" safelogging:"@Safe"`
 }
 
 func (o PasswordCredentials) MarshalYAML() (interface{}, error) {
@@ -792,9 +801,9 @@ func (o *PasswordCredentials) UnmarshalYAML(unmarshal func(interface{}) error) e
 /*
 This config is used to scrape data from a Timescale database that has a pivoted schema.
 time | name           | value | device
-
-	1   | temperature    | 1     | a
+ 1   | temperature    | 1     | a
 */
+// safelogging:@Unsafe
 type PivotedTimescaleScrapingConfig struct {
 	/*
 	   In order for data to be picked up by the scraper, it must match all
@@ -803,16 +812,16 @@ type PivotedTimescaleScrapingConfig struct {
 	*/
 	Filter []TimescaleScrapingFilter `json:"filter"`
 	// The name of the column that holds the timestamp.
-	TimeColumn ColumnName `json:"timeColumn"`
+	TimeColumn ColumnName `json:"timeColumn" safelogging:"@Unsafe"`
 	// The name of the column that holds the series name.
-	NameColumn ColumnName `json:"nameColumn"`
+	NameColumn ColumnName `json:"nameColumn" safelogging:"@Unsafe"`
 	// The name of the column that holds the series values.
-	ValueColumn ColumnName `json:"valueColumn"`
+	ValueColumn ColumnName `json:"valueColumn" safelogging:"@Unsafe"`
 	/*
 	   The names of the columns that comprise a dimension. They should have a database index for efficient filtering. We do not discover
 	   dimensions based on hypertable schema because they are not necessarily configured properly.
 	*/
-	DimensionColumns []ColumnName `json:"dimensionColumns"`
+	DimensionColumns []ColumnName `json:"dimensionColumns" safelogging:"@Unsafe"`
 	/*
 	   channelNameComponents will be combined, together with separator, to form
 	   a fully qualified channel name.
@@ -898,7 +907,7 @@ type TimescaleConnectionDetails struct {
 	// This is also the reference to the secret containing the password
 	Username string `json:"username"`
 	// Secret Rid of password secret stored in Secrets Service.
-	PasswordSecretRid SecretRid `json:"passwordSecretRid"`
+	PasswordSecretRid SecretRid `json:"passwordSecretRid" safelogging:"@Safe"`
 }
 
 func (o TimescaleConnectionDetails) MarshalYAML() (interface{}, error) {
@@ -1009,12 +1018,13 @@ func (o *TimestreamScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 // Fields that are empty will be treated as a no-op update.
+// safelogging:@Unsafe
 type UpdateConnectionRequest struct {
 	Name              *string            `json:"name,omitempty"`
 	Description       *string            `json:"description,omitempty"`
 	Metadata          *map[string]string `json:"metadata,omitempty"`
 	ConnectionDetails *ConnectionDetails `json:"connectionDetails,omitempty"`
-	RequiredTagNames  *[]api.TagName     `json:"requiredTagNames,omitempty"`
+	RequiredTagNames  *[]api.TagName     `json:"requiredTagNames,omitempty" safelogging:"@Unsafe"`
 	/*
 	   In most cases, this does not to be set by the user. Throws if populated for Nominal connections, which
 	   have their tags automatically indexed in the underlying database. Tags for external connections are
@@ -1043,9 +1053,10 @@ func (o *UpdateConnectionRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 // Deprecated and not used for anything anymore, see record VisualCrossingAvailableSeries instead.
+// safelogging:@Unsafe
 type VisualCrossingAvailableSeries struct {
-	Channel     api.Channel        `json:"channel"`
-	Unit        *api.Unit          `json:"unit,omitempty"`
+	Channel     api.Channel        `json:"channel" safelogging:"@Unsafe"`
+	Unit        *api.Unit          `json:"unit,omitempty" safelogging:"@Unsafe"`
 	Description *string            `json:"description,omitempty"`
 	Type        VisualCrossingType `json:"type"`
 }
@@ -1066,9 +1077,10 @@ func (o *VisualCrossingAvailableSeries) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type VisualCrossingConnectionDetails struct {
 	// Secret Rid of API key stored in Secrets Service.
-	ApiKeySecretRid SecretRid `json:"apiKeySecretRid"`
+	ApiKeySecretRid SecretRid `json:"apiKeySecretRid" safelogging:"@Safe"`
 }
 
 func (o VisualCrossingConnectionDetails) MarshalYAML() (interface{}, error) {

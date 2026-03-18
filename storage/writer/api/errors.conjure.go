@@ -466,8 +466,9 @@ func (e *InvalidChannelName) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidDataSource struct {
-	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid"`
+	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid" safelogging:"@Safe"`
 }
 
 func (o invalidDataSource) MarshalYAML() (interface{}, error) {
@@ -913,8 +914,9 @@ func (e *InvalidTelegrafTimestamp) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidTimestamp struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 }
 
 func (o invalidTimestamp) MarshalYAML() (interface{}, error) {
@@ -1361,8 +1363,9 @@ func (e *PointsTooLarge) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type streamingDisabledOnDataset struct {
-	DatasetRid rids.DatasetRid `json:"datasetRid"`
+	DatasetRid rids.DatasetRid `json:"datasetRid" safelogging:"@Safe"`
 }
 
 func (o streamingDisabledOnDataset) MarshalYAML() (interface{}, error) {

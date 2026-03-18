@@ -16,6 +16,347 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Unsafe
+type cannotCreateNullOrBlankLabels struct {
+	Labels []api.Label `json:"labels" safelogging:"@Unsafe"`
+}
+
+func (o cannotCreateNullOrBlankLabels) MarshalJSON() ([]byte, error) {
+	if o.Labels == nil {
+		o.Labels = make([]api.Label, 0)
+	}
+	type _tmpcannotCreateNullOrBlankLabels cannotCreateNullOrBlankLabels
+	return safejson.Marshal(_tmpcannotCreateNullOrBlankLabels(o))
+}
+
+func (o *cannotCreateNullOrBlankLabels) UnmarshalJSON(data []byte) error {
+	type _tmpcannotCreateNullOrBlankLabels cannotCreateNullOrBlankLabels
+	var rawcannotCreateNullOrBlankLabels _tmpcannotCreateNullOrBlankLabels
+	if err := safejson.Unmarshal(data, &rawcannotCreateNullOrBlankLabels); err != nil {
+		return err
+	}
+	if rawcannotCreateNullOrBlankLabels.Labels == nil {
+		rawcannotCreateNullOrBlankLabels.Labels = make([]api.Label, 0)
+	}
+	*o = cannotCreateNullOrBlankLabels(rawcannotCreateNullOrBlankLabels)
+	return nil
+}
+
+func (o cannotCreateNullOrBlankLabels) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *cannotCreateNullOrBlankLabels) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewCannotCreateNullOrBlankLabels returns new instance of CannotCreateNullOrBlankLabels error.
+func NewCannotCreateNullOrBlankLabels(labelsArg []api.Label) *CannotCreateNullOrBlankLabels {
+	return &CannotCreateNullOrBlankLabels{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cannotCreateNullOrBlankLabels: cannotCreateNullOrBlankLabels{Labels: labelsArg}}
+}
+
+// WrapWithCannotCreateNullOrBlankLabels returns new instance of CannotCreateNullOrBlankLabels error wrapping an existing error.
+func WrapWithCannotCreateNullOrBlankLabels(err error, labelsArg []api.Label) *CannotCreateNullOrBlankLabels {
+	return &CannotCreateNullOrBlankLabels{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, cannotCreateNullOrBlankLabels: cannotCreateNullOrBlankLabels{Labels: labelsArg}}
+}
+
+// CannotCreateNullOrBlankLabels is an error type.
+type CannotCreateNullOrBlankLabels struct {
+	errorInstanceID uuid.UUID
+	cannotCreateNullOrBlankLabels
+	cause error
+	stack werror.StackTrace
+}
+
+// IsCannotCreateNullOrBlankLabels returns true if err is an instance of CannotCreateNullOrBlankLabels.
+func IsCannotCreateNullOrBlankLabels(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*CannotCreateNullOrBlankLabels)
+	return ok
+}
+
+func (e *CannotCreateNullOrBlankLabels) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:CannotCreateNullOrBlankLabels (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *CannotCreateNullOrBlankLabels) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *CannotCreateNullOrBlankLabels) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *CannotCreateNullOrBlankLabels) Message() string {
+	return "INVALID_ARGUMENT Scout:CannotCreateNullOrBlankLabels"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *CannotCreateNullOrBlankLabels) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *CannotCreateNullOrBlankLabels) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *CannotCreateNullOrBlankLabels) Name() string {
+	return "Scout:CannotCreateNullOrBlankLabels"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *CannotCreateNullOrBlankLabels) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *CannotCreateNullOrBlankLabels) Parameters() map[string]interface{} {
+	return map[string]interface{}{"labels": e.Labels}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *CannotCreateNullOrBlankLabels) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotCreateNullOrBlankLabels) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *CannotCreateNullOrBlankLabels) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"labels": e.Labels}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotCreateNullOrBlankLabels) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e CannotCreateNullOrBlankLabels) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.cannotCreateNullOrBlankLabels)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:CannotCreateNullOrBlankLabels", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *CannotCreateNullOrBlankLabels) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters cannotCreateNullOrBlankLabels
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.cannotCreateNullOrBlankLabels = parameters
+	return nil
+}
+
+type cannotCreateNullOrBlankProperties struct {
+	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
+}
+
+func (o cannotCreateNullOrBlankProperties) MarshalJSON() ([]byte, error) {
+	if o.Properties == nil {
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	type _tmpcannotCreateNullOrBlankProperties cannotCreateNullOrBlankProperties
+	return safejson.Marshal(_tmpcannotCreateNullOrBlankProperties(o))
+}
+
+func (o *cannotCreateNullOrBlankProperties) UnmarshalJSON(data []byte) error {
+	type _tmpcannotCreateNullOrBlankProperties cannotCreateNullOrBlankProperties
+	var rawcannotCreateNullOrBlankProperties _tmpcannotCreateNullOrBlankProperties
+	if err := safejson.Unmarshal(data, &rawcannotCreateNullOrBlankProperties); err != nil {
+		return err
+	}
+	if rawcannotCreateNullOrBlankProperties.Properties == nil {
+		rawcannotCreateNullOrBlankProperties.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	*o = cannotCreateNullOrBlankProperties(rawcannotCreateNullOrBlankProperties)
+	return nil
+}
+
+func (o cannotCreateNullOrBlankProperties) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *cannotCreateNullOrBlankProperties) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewCannotCreateNullOrBlankProperties returns new instance of CannotCreateNullOrBlankProperties error.
+func NewCannotCreateNullOrBlankProperties(propertiesArg map[api.PropertyName]api.PropertyValue) *CannotCreateNullOrBlankProperties {
+	return &CannotCreateNullOrBlankProperties{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cannotCreateNullOrBlankProperties: cannotCreateNullOrBlankProperties{Properties: propertiesArg}}
+}
+
+// WrapWithCannotCreateNullOrBlankProperties returns new instance of CannotCreateNullOrBlankProperties error wrapping an existing error.
+func WrapWithCannotCreateNullOrBlankProperties(err error, propertiesArg map[api.PropertyName]api.PropertyValue) *CannotCreateNullOrBlankProperties {
+	return &CannotCreateNullOrBlankProperties{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, cannotCreateNullOrBlankProperties: cannotCreateNullOrBlankProperties{Properties: propertiesArg}}
+}
+
+// CannotCreateNullOrBlankProperties is an error type.
+type CannotCreateNullOrBlankProperties struct {
+	errorInstanceID uuid.UUID
+	cannotCreateNullOrBlankProperties
+	cause error
+	stack werror.StackTrace
+}
+
+// IsCannotCreateNullOrBlankProperties returns true if err is an instance of CannotCreateNullOrBlankProperties.
+func IsCannotCreateNullOrBlankProperties(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*CannotCreateNullOrBlankProperties)
+	return ok
+}
+
+func (e *CannotCreateNullOrBlankProperties) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:CannotCreateNullOrBlankProperties (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *CannotCreateNullOrBlankProperties) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *CannotCreateNullOrBlankProperties) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *CannotCreateNullOrBlankProperties) Message() string {
+	return "INVALID_ARGUMENT Scout:CannotCreateNullOrBlankProperties"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *CannotCreateNullOrBlankProperties) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *CannotCreateNullOrBlankProperties) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *CannotCreateNullOrBlankProperties) Name() string {
+	return "Scout:CannotCreateNullOrBlankProperties"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *CannotCreateNullOrBlankProperties) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *CannotCreateNullOrBlankProperties) Parameters() map[string]interface{} {
+	return map[string]interface{}{"properties": e.Properties}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *CannotCreateNullOrBlankProperties) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotCreateNullOrBlankProperties) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *CannotCreateNullOrBlankProperties) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"properties": e.Properties}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotCreateNullOrBlankProperties) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e CannotCreateNullOrBlankProperties) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.cannotCreateNullOrBlankProperties)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:CannotCreateNullOrBlankProperties", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *CannotCreateNullOrBlankProperties) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters cannotCreateNullOrBlankProperties
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.cannotCreateNullOrBlankProperties = parameters
+	return nil
+}
+
 type cannotDeserializeSearchToken struct {
 	Token string `json:"token"`
 }
@@ -111,7 +452,7 @@ func (e *CannotDeserializeSearchToken) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *CannotDeserializeSearchToken) safeParams() map[string]interface{} {
-	return map[string]interface{}{"token": e.Token, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -128,7 +469,7 @@ func (e *CannotDeserializeSearchToken) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *CannotDeserializeSearchToken) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"token": e.Token}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -165,8 +506,180 @@ func (e *CannotDeserializeSearchToken) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
+type collidingPropertyKeysAfterStrip struct {
+	CollidingKeys []api.PropertyName `json:"collidingKeys" safelogging:"@Unsafe"`
+}
+
+func (o collidingPropertyKeysAfterStrip) MarshalJSON() ([]byte, error) {
+	if o.CollidingKeys == nil {
+		o.CollidingKeys = make([]api.PropertyName, 0)
+	}
+	type _tmpcollidingPropertyKeysAfterStrip collidingPropertyKeysAfterStrip
+	return safejson.Marshal(_tmpcollidingPropertyKeysAfterStrip(o))
+}
+
+func (o *collidingPropertyKeysAfterStrip) UnmarshalJSON(data []byte) error {
+	type _tmpcollidingPropertyKeysAfterStrip collidingPropertyKeysAfterStrip
+	var rawcollidingPropertyKeysAfterStrip _tmpcollidingPropertyKeysAfterStrip
+	if err := safejson.Unmarshal(data, &rawcollidingPropertyKeysAfterStrip); err != nil {
+		return err
+	}
+	if rawcollidingPropertyKeysAfterStrip.CollidingKeys == nil {
+		rawcollidingPropertyKeysAfterStrip.CollidingKeys = make([]api.PropertyName, 0)
+	}
+	*o = collidingPropertyKeysAfterStrip(rawcollidingPropertyKeysAfterStrip)
+	return nil
+}
+
+func (o collidingPropertyKeysAfterStrip) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *collidingPropertyKeysAfterStrip) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewCollidingPropertyKeysAfterStrip returns new instance of CollidingPropertyKeysAfterStrip error.
+func NewCollidingPropertyKeysAfterStrip(collidingKeysArg []api.PropertyName) *CollidingPropertyKeysAfterStrip {
+	return &CollidingPropertyKeysAfterStrip{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), collidingPropertyKeysAfterStrip: collidingPropertyKeysAfterStrip{CollidingKeys: collidingKeysArg}}
+}
+
+// WrapWithCollidingPropertyKeysAfterStrip returns new instance of CollidingPropertyKeysAfterStrip error wrapping an existing error.
+func WrapWithCollidingPropertyKeysAfterStrip(err error, collidingKeysArg []api.PropertyName) *CollidingPropertyKeysAfterStrip {
+	return &CollidingPropertyKeysAfterStrip{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, collidingPropertyKeysAfterStrip: collidingPropertyKeysAfterStrip{CollidingKeys: collidingKeysArg}}
+}
+
+// CollidingPropertyKeysAfterStrip is an error type.
+type CollidingPropertyKeysAfterStrip struct {
+	errorInstanceID uuid.UUID
+	collidingPropertyKeysAfterStrip
+	cause error
+	stack werror.StackTrace
+}
+
+// IsCollidingPropertyKeysAfterStrip returns true if err is an instance of CollidingPropertyKeysAfterStrip.
+func IsCollidingPropertyKeysAfterStrip(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*CollidingPropertyKeysAfterStrip)
+	return ok
+}
+
+func (e *CollidingPropertyKeysAfterStrip) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:CollidingPropertyKeysAfterStrip (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *CollidingPropertyKeysAfterStrip) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *CollidingPropertyKeysAfterStrip) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *CollidingPropertyKeysAfterStrip) Message() string {
+	return "INVALID_ARGUMENT Scout:CollidingPropertyKeysAfterStrip"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *CollidingPropertyKeysAfterStrip) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *CollidingPropertyKeysAfterStrip) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *CollidingPropertyKeysAfterStrip) Name() string {
+	return "Scout:CollidingPropertyKeysAfterStrip"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *CollidingPropertyKeysAfterStrip) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *CollidingPropertyKeysAfterStrip) Parameters() map[string]interface{} {
+	return map[string]interface{}{"collidingKeys": e.CollidingKeys}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *CollidingPropertyKeysAfterStrip) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CollidingPropertyKeysAfterStrip) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *CollidingPropertyKeysAfterStrip) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"collidingKeys": e.CollidingKeys}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CollidingPropertyKeysAfterStrip) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e CollidingPropertyKeysAfterStrip) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.collidingPropertyKeysAfterStrip)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:CollidingPropertyKeysAfterStrip", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *CollidingPropertyKeysAfterStrip) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters collidingPropertyKeysAfterStrip
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.collidingPropertyKeysAfterStrip = parameters
+	return nil
+}
+
+// safelogging:@Safe
 type invalidRange struct {
-	Range api.Range `json:"range"`
+	Range api.Range `json:"range" safelogging:"@Safe"`
 }
 
 func (o invalidRange) MarshalYAML() (interface{}, error) {
@@ -465,7 +978,10 @@ func (e *RequestedPageSizeTooLarge) UnmarshalJSON(data []byte) error {
 }
 
 func init() {
+	conjureerrors.RegisterErrorType("Scout:CannotCreateNullOrBlankLabels", reflect.TypeOf(CannotCreateNullOrBlankLabels{}))
+	conjureerrors.RegisterErrorType("Scout:CannotCreateNullOrBlankProperties", reflect.TypeOf(CannotCreateNullOrBlankProperties{}))
 	conjureerrors.RegisterErrorType("Scout:CannotDeserializeSearchToken", reflect.TypeOf(CannotDeserializeSearchToken{}))
+	conjureerrors.RegisterErrorType("Scout:CollidingPropertyKeysAfterStrip", reflect.TypeOf(CollidingPropertyKeysAfterStrip{}))
 	conjureerrors.RegisterErrorType("Scout:InvalidRange", reflect.TypeOf(InvalidRange{}))
 	conjureerrors.RegisterErrorType("Scout:RequestedPageSizeTooLarge", reflect.TypeOf(RequestedPageSizeTooLarge{}))
 }

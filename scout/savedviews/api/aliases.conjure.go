@@ -2,4 +2,4 @@
 
 package api
 
-type ColumnId string
+type ColumnId string // safelogging:@Unsafe

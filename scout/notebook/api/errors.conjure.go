@@ -17,8 +17,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type archiveNotebookFailed struct {
-	NotebookRid api.NotebookRid `json:"notebookRid"`
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
 }
 
 func (o archiveNotebookFailed) MarshalYAML() (interface{}, error) {
@@ -166,8 +167,9 @@ func (e *ArchiveNotebookFailed) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type assetsNotFound struct {
-	AssetRids []api.AssetRid `json:"assetRids"`
+	AssetRids []api.AssetRid `json:"assetRids" safelogging:"@Safe"`
 }
 
 func (o assetsNotFound) MarshalJSON() ([]byte, error) {
@@ -336,8 +338,9 @@ func (e *AssetsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type cannotReadNotebookRefNames struct {
-	NotebookRid api.NotebookRid `json:"notebookRid"`
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
 }
 
 func (o cannotReadNotebookRefNames) MarshalYAML() (interface{}, error) {
@@ -485,8 +488,9 @@ func (e *CannotReadNotebookRefNames) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type notebookLocked struct {
-	NotebookRid api.NotebookRid `json:"notebookRid"`
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
 }
 
 func (o notebookLocked) MarshalYAML() (interface{}, error) {
@@ -634,8 +638,9 @@ func (e *NotebookLocked) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type notebookNotFound struct {
-	NotebookRid api.NotebookRid `json:"notebookRid"`
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
 }
 
 func (o notebookNotFound) MarshalYAML() (interface{}, error) {
@@ -783,8 +788,9 @@ func (e *NotebookNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type notebooksNotFound struct {
-	NotebookRids []api.NotebookRid `json:"notebookRids"`
+	NotebookRids []api.NotebookRid `json:"notebookRids" safelogging:"@Safe"`
 }
 
 func (o notebooksNotFound) MarshalJSON() ([]byte, error) {
@@ -953,8 +959,9 @@ func (e *NotebooksNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type runNotFound struct {
-	RunRid api1.RunRid `json:"runRid"`
+	RunRid api1.RunRid `json:"runRid" safelogging:"@Safe"`
 }
 
 func (o runNotFound) MarshalYAML() (interface{}, error) {
@@ -1102,8 +1109,9 @@ func (e *RunNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type runsNotFound struct {
-	RunRids []api1.RunRid `json:"runRids"`
+	RunRids []api1.RunRid `json:"runRids" safelogging:"@Safe"`
 }
 
 func (o runsNotFound) MarshalJSON() ([]byte, error) {
@@ -1272,10 +1280,11 @@ func (e *RunsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type saveNotebookConflict struct {
-	NotebookRid            api.NotebookRid `json:"notebookRid"`
-	OtherSnapshotRid       api.SnapshotRid `json:"otherSnapshotRid"`
-	OtherSnapshotAuthorRid api.UserRid     `json:"otherSnapshotAuthorRid"`
+	NotebookRid            api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
+	OtherSnapshotRid       api.SnapshotRid `json:"otherSnapshotRid" safelogging:"@Safe"`
+	OtherSnapshotAuthorRid api.UserRid     `json:"otherSnapshotAuthorRid" safelogging:"@Safe"`
 }
 
 func (o saveNotebookConflict) MarshalYAML() (interface{}, error) {
@@ -1423,8 +1432,9 @@ func (e *SaveNotebookConflict) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type saveNotebookFailed struct {
-	NotebookRid api.NotebookRid `json:"notebookRid"`
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
 }
 
 func (o saveNotebookFailed) MarshalYAML() (interface{}, error) {
@@ -1871,8 +1881,9 @@ func (e *SearchNotebooksLimitExceeded) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type snapshotNotFound struct {
-	SnapshotRid api.SnapshotRid `json:"snapshotRid"`
+	SnapshotRid api.SnapshotRid `json:"snapshotRid" safelogging:"@Safe"`
 }
 
 func (o snapshotNotFound) MarshalYAML() (interface{}, error) {
@@ -2020,8 +2031,9 @@ func (e *SnapshotNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type updateNotebookTagsFailed struct {
-	NotebookRid api.NotebookRid `json:"notebookRid"`
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
 }
 
 func (o updateNotebookTagsFailed) MarshalYAML() (interface{}, error) {

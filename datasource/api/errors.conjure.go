@@ -16,8 +16,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type cannotGetTagsForNonSeriesDataSource struct {
-	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
 }
 
 func (o cannotGetTagsForNonSeriesDataSource) MarshalYAML() (interface{}, error) {
@@ -165,8 +166,9 @@ func (e *CannotGetTagsForNonSeriesDataSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type dataSourceNotFound struct {
-	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
 }
 
 func (o dataSourceNotFound) MarshalYAML() (interface{}, error) {
@@ -314,8 +316,9 @@ func (e *DataSourceNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type dataSourcesNotFound struct {
-	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids"`
+	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids" safelogging:"@Safe"`
 }
 
 func (o dataSourcesNotFound) MarshalJSON() ([]byte, error) {
@@ -485,7 +488,7 @@ func (e *DataSourcesNotFound) UnmarshalJSON(data []byte) error {
 }
 
 type failedToGetTagsForDataSource struct {
-	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
 	Message       string             `json:"message"`
 }
 
@@ -635,8 +638,9 @@ func (e *FailedToGetTagsForDataSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type missingTagFilters struct {
-	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
 }
 
 func (o missingTagFilters) MarshalYAML() (interface{}, error) {
@@ -784,8 +788,9 @@ func (e *MissingTagFilters) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type noPrefixTreeForDataSources struct {
-	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids"`
+	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids" safelogging:"@Safe"`
 }
 
 func (o noPrefixTreeForDataSources) MarshalJSON() ([]byte, error) {

@@ -16,8 +16,9 @@ import (
 )
 
 // An asset data scope input value.
+// safelogging:@Safe
 type AssetDataScopeInputValue struct {
-	AssetRid api.AssetRid `json:"assetRid"`
+	AssetRid api.AssetRid `json:"assetRid" safelogging:"@Safe"`
 }
 
 func (o AssetDataScopeInputValue) MarshalYAML() (interface{}, error) {
@@ -79,8 +80,9 @@ func (o *AssetSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type CheckAlertReference struct {
-	CheckAlertRid api.CheckAlertRid `json:"checkAlertRid"`
+	CheckAlertRid api.CheckAlertRid `json:"checkAlertRid" safelogging:"@Safe"`
 }
 
 func (o CheckAlertReference) MarshalYAML() (interface{}, error) {
@@ -101,7 +103,7 @@ func (o *CheckAlertReference) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 // An offset that is defined relative to the first target event found by query.
 type EventAlignment struct {
-	TargetRunRid api2.RunRid       `json:"targetRunRid"`
+	TargetRunRid api2.RunRid       `json:"targetRunRid" safelogging:"@Safe"`
 	AlignTo      EventAlignTo      `json:"alignTo"`
 	EventQuery   event.SearchQuery `json:"eventQuery"`
 }
@@ -126,7 +128,7 @@ type EventReference struct {
 	// Deprecated: Please use the rid field instead.
 	EventUuid *uuid.UUID `json:"eventUuid,omitempty"`
 	// The event's unique identifier.
-	Rid rids.EventRid `json:"rid"`
+	Rid rids.EventRid `json:"rid" safelogging:"@Safe"`
 }
 
 func (o EventReference) MarshalYAML() (interface{}, error) {
@@ -148,7 +150,7 @@ func (o *EventReference) UnmarshalYAML(unmarshal func(interface{}) error) error 
 // An offset that is defined relative to a target run.
 type RunAlignment struct {
 	AlignTo      RunAlignTo  `json:"alignTo"`
-	TargetRunRid api2.RunRid `json:"targetRunRid"`
+	TargetRunRid api2.RunRid `json:"targetRunRid" safelogging:"@Safe"`
 }
 
 func (o RunAlignment) MarshalYAML() (interface{}, error) {
@@ -168,8 +170,9 @@ func (o *RunAlignment) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // A run data scope input value.
+// safelogging:@Safe
 type RunDataScopeInputValue struct {
-	RunRid api2.RunRid `json:"runRid"`
+	RunRid api2.RunRid `json:"runRid" safelogging:"@Safe"`
 }
 
 func (o RunDataScopeInputValue) MarshalYAML() (interface{}, error) {
@@ -367,8 +370,9 @@ func (o *WorkbookContent) UnmarshalYAML(unmarshal func(interface{}) error) error
 A data scope input that binds a variable name to an asset or run RID.
 The variable name is the map key.
 */
+// safelogging:@Unsafe
 type WorkbookDataScopeInput struct {
-	Name  WorkbookDataScopeInputName `json:"name"`
+	Name  WorkbookDataScopeInputName `json:"name" safelogging:"@Unsafe"`
 	Value DataScopeInputValue        `json:"value"`
 }
 

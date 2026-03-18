@@ -97,9 +97,10 @@ func (o *CartesianBounds) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CumulativeSumSeriesNode struct {
 	Input          NumericSeriesNode `json:"input"`
-	StartTimestamp api.VariableName  `json:"startTimestamp"`
+	StartTimestamp api.VariableName  `json:"startTimestamp" safelogging:"@Unsafe"`
 }
 
 func (o CumulativeSumSeriesNode) MarshalYAML() (interface{}, error) {

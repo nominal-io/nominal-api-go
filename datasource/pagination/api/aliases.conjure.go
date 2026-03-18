@@ -6,4 +6,4 @@ package api
 A token that can be used to retrieve the next page of results. This token is intentionally a string to
 allow paging based on a variety of different criteria.
 */
-type PageToken string
+type PageToken string // safelogging:@Unsafe

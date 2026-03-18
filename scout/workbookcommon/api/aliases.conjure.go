@@ -40,5 +40,6 @@ func (a *TimeRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Unique identifier. Needs to be string for back-compatibility but this will usually be a uuid.
-type WorkbookDataScopeInputId string
-type WorkbookDataScopeInputName string
+type WorkbookDataScopeInputId string // safelogging:@Unsafe
+
+type WorkbookDataScopeInputName string // safelogging:@Unsafe

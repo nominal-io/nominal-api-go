@@ -15,7 +15,7 @@ import (
 )
 
 type ApiKey struct {
-	Rid        ApiKeyRid              `json:"rid"`
+	Rid        ApiKeyRid              `json:"rid" safelogging:"@Safe"`
 	ApiKeyName string                 `json:"apiKeyName"`
 	CreatedBy  rid.ResourceIdentifier `json:"createdBy"`
 	CreatedAt  datetime.DateTime      `json:"createdAt"`
@@ -157,7 +157,7 @@ userinfo endpoint. An org rid should be provided if the user is a member of mult
 type GetAccessTokenRequest struct {
 	IdToken     string      `json:"idToken"`
 	AccessToken *string     `json:"accessToken,omitempty"`
-	OrgRid      *api.OrgRid `json:"orgRid,omitempty"`
+	OrgRid      *api.OrgRid `json:"orgRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o GetAccessTokenRequest) MarshalYAML() (interface{}, error) {
@@ -301,6 +301,7 @@ func (o *IsEmailAllowedResponse) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ListApiKeyRequest struct {
 	// If true, include deleted API keys in the response. Defaults to false.
 	IncludeDeleted *bool `json:"includeDeleted,omitempty"`
@@ -308,7 +309,7 @@ type ListApiKeyRequest struct {
 	IncludeExpired *bool `json:"includeExpired,omitempty"`
 	// The maximum number of API keys to return. Defaults to 100.
 	PageSize      *int        `json:"pageSize,omitempty"`
-	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o ListApiKeyRequest) MarshalYAML() (interface{}, error) {
@@ -327,9 +328,10 @@ func (o *ListApiKeyRequest) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ListApiKeyResponse struct {
 	ApiKeys       []ApiKey    `json:"apiKeys"`
-	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o ListApiKeyResponse) MarshalJSON() ([]byte, error) {
@@ -521,7 +523,7 @@ multiple orgs.
 */
 type RefreshAccessTokenRequest struct {
 	AccessToken string      `json:"accessToken"`
-	OrgRid      *api.OrgRid `json:"orgRid,omitempty"`
+	OrgRid      *api.OrgRid `json:"orgRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o RefreshAccessTokenRequest) MarshalYAML() (interface{}, error) {
@@ -565,7 +567,7 @@ func (o *RefreshAccessTokenResponse) UnmarshalYAML(unmarshal func(interface{}) e
 
 type RegisterInWorkspaceRequest struct {
 	ResourceRids []rid.ResourceIdentifier `json:"resourceRids"`
-	WorkspaceRid rids.WorkspaceRid        `json:"workspaceRid"`
+	WorkspaceRid rids.WorkspaceRid        `json:"workspaceRid" safelogging:"@Safe"`
 }
 
 func (o RegisterInWorkspaceRequest) MarshalJSON() ([]byte, error) {

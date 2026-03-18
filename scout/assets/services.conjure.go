@@ -36,6 +36,11 @@ type AssetServiceClient interface {
 	Archive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, includeLinkedWorkbooksArg *bool) error
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, includeLinkedWorkbooksArg *bool) error
 	SearchAssets(ctx context.Context, authHeader bearertoken.Token, searchAssetsRequestArg api.SearchAssetsRequest) (api.SearchAssetsResponse, error)
+	/*
+	   Batch edits metadata across multiple assets. Supports rename/merge for labels and properties.
+	   If more than 1000 assets are targeted, this endpoint will throw a 400.
+	*/
+	BatchEditAssetMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchEditAssetMetadataRequest) (api.BatchEditAssetMetadataResponse, error)
 	SearchTypes(ctx context.Context, authHeader bearertoken.Token, searchTypesRequestArg api.SearchTypesRequest) (api.SearchTypesResponse, error)
 	// Update the attachments associated with an asset.
 	UpdateAssetAttachments(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, requestArg api.UpdateAttachmentsRequest) error
@@ -201,6 +206,24 @@ func (c *assetServiceClient) SearchAssets(ctx context.Context, authHeader bearer
 	}
 	if returnVal == nil {
 		return *new(api.SearchAssetsResponse), werror.ErrorWithContextParams(ctx, "searchAssets response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *assetServiceClient) BatchEditAssetMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchEditAssetMetadataRequest) (api.BatchEditAssetMetadataResponse, error) {
+	var returnVal *api.BatchEditAssetMetadataResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchEditAssetMetadata"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/asset/metadata/batch-edit"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchEditAssetMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchEditAssetMetadata failed")
+	}
+	if returnVal == nil {
+		return *new(api.BatchEditAssetMetadataResponse), werror.ErrorWithContextParams(ctx, "batchEditAssetMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -377,6 +400,11 @@ type AssetServiceClientWithAuth interface {
 	Archive(ctx context.Context, ridArg api1.AssetRid, includeLinkedWorkbooksArg *bool) error
 	Unarchive(ctx context.Context, ridArg api1.AssetRid, includeLinkedWorkbooksArg *bool) error
 	SearchAssets(ctx context.Context, searchAssetsRequestArg api.SearchAssetsRequest) (api.SearchAssetsResponse, error)
+	/*
+	   Batch edits metadata across multiple assets. Supports rename/merge for labels and properties.
+	   If more than 1000 assets are targeted, this endpoint will throw a 400.
+	*/
+	BatchEditAssetMetadata(ctx context.Context, requestArg api.BatchEditAssetMetadataRequest) (api.BatchEditAssetMetadataResponse, error)
 	SearchTypes(ctx context.Context, searchTypesRequestArg api.SearchTypesRequest) (api.SearchTypesResponse, error)
 	// Update the attachments associated with an asset.
 	UpdateAssetAttachments(ctx context.Context, ridArg api1.AssetRid, requestArg api.UpdateAttachmentsRequest) error
@@ -436,6 +464,10 @@ func (c *assetServiceClientWithAuth) Unarchive(ctx context.Context, ridArg api1.
 
 func (c *assetServiceClientWithAuth) SearchAssets(ctx context.Context, searchAssetsRequestArg api.SearchAssetsRequest) (api.SearchAssetsResponse, error) {
 	return c.client.SearchAssets(ctx, c.authHeader, searchAssetsRequestArg)
+}
+
+func (c *assetServiceClientWithAuth) BatchEditAssetMetadata(ctx context.Context, requestArg api.BatchEditAssetMetadataRequest) (api.BatchEditAssetMetadataResponse, error) {
+	return c.client.BatchEditAssetMetadata(ctx, c.authHeader, requestArg)
 }
 
 func (c *assetServiceClientWithAuth) SearchTypes(ctx context.Context, searchTypesRequestArg api.SearchTypesRequest) (api.SearchTypesResponse, error) {
@@ -549,6 +581,14 @@ func (c *assetServiceClientWithTokenProvider) SearchAssets(ctx context.Context, 
 		return *new(api.SearchAssetsResponse), err
 	}
 	return c.client.SearchAssets(ctx, bearertoken.Token(token), searchAssetsRequestArg)
+}
+
+func (c *assetServiceClientWithTokenProvider) BatchEditAssetMetadata(ctx context.Context, requestArg api.BatchEditAssetMetadataRequest) (api.BatchEditAssetMetadataResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.BatchEditAssetMetadataResponse), err
+	}
+	return c.client.BatchEditAssetMetadata(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *assetServiceClientWithTokenProvider) SearchTypes(ctx context.Context, searchTypesRequestArg api.SearchTypesRequest) (api.SearchTypesResponse, error) {

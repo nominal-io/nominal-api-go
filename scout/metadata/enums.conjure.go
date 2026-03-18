@@ -6,6 +6,66 @@ import (
 	"strings"
 )
 
+type MetadataSortField struct {
+	val MetadataSortField_Value
+}
+
+type MetadataSortField_Value string
+
+const (
+	MetadataSortField_ALPHABETICAL         MetadataSortField_Value = "ALPHABETICAL"
+	MetadataSortField_USAGE_COUNT          MetadataSortField_Value = "USAGE_COUNT"
+	MetadataSortField_PROPERTY_VALUE_COUNT MetadataSortField_Value = "PROPERTY_VALUE_COUNT"
+	MetadataSortField_UNKNOWN              MetadataSortField_Value = "UNKNOWN"
+)
+
+// MetadataSortField_Values returns all known variants of MetadataSortField.
+func MetadataSortField_Values() []MetadataSortField_Value {
+	return []MetadataSortField_Value{MetadataSortField_ALPHABETICAL, MetadataSortField_USAGE_COUNT, MetadataSortField_PROPERTY_VALUE_COUNT}
+}
+
+func New_MetadataSortField(value MetadataSortField_Value) MetadataSortField {
+	return MetadataSortField{val: value}
+}
+
+// IsUnknown returns false for all known variants of MetadataSortField and true otherwise.
+func (e MetadataSortField) IsUnknown() bool {
+	switch e.val {
+	case MetadataSortField_ALPHABETICAL, MetadataSortField_USAGE_COUNT, MetadataSortField_PROPERTY_VALUE_COUNT:
+		return false
+	}
+	return true
+}
+
+func (e MetadataSortField) Value() MetadataSortField_Value {
+	if e.IsUnknown() {
+		return MetadataSortField_UNKNOWN
+	}
+	return e.val
+}
+
+func (e MetadataSortField) String() string {
+	return string(e.val)
+}
+
+func (e MetadataSortField) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *MetadataSortField) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_MetadataSortField(MetadataSortField_Value(v))
+	case "ALPHABETICAL":
+		*e = New_MetadataSortField(MetadataSortField_ALPHABETICAL)
+	case "USAGE_COUNT":
+		*e = New_MetadataSortField(MetadataSortField_USAGE_COUNT)
+	case "PROPERTY_VALUE_COUNT":
+		*e = New_MetadataSortField(MetadataSortField_PROPERTY_VALUE_COUNT)
+	}
+	return nil
+}
+
 type ResourceType struct {
 	val ResourceType_Value
 }

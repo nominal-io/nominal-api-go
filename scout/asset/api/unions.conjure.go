@@ -20,6 +20,7 @@ type SearchAssetsQuery struct {
 	label          *api.Label
 	labels         *api1.LabelsFilter
 	property       *api.Property
+	propertyKey    *api.PropertyName
 	properties     *api1.PropertiesFilter
 	typeRid        *api1.TypeRid
 	assetTypes     *AssetTypesFilter
@@ -27,6 +28,7 @@ type SearchAssetsQuery struct {
 	archived       *bool
 	and            *[]SearchAssetsQuery
 	or             *[]SearchAssetsQuery
+	not            *SearchAssetsQuery
 	workspace      *rids.WorkspaceRid
 }
 
@@ -37,6 +39,7 @@ type searchAssetsQueryDeserializer struct {
 	Label          *api.Label             `json:"label"`
 	Labels         *api1.LabelsFilter     `json:"labels"`
 	Property       *api.Property          `json:"property"`
+	PropertyKey    *api.PropertyName      `json:"propertyKey"`
 	Properties     *api1.PropertiesFilter `json:"properties"`
 	TypeRid        *api1.TypeRid          `json:"typeRid"`
 	AssetTypes     *AssetTypesFilter      `json:"assetTypes"`
@@ -44,11 +47,12 @@ type searchAssetsQueryDeserializer struct {
 	Archived       *bool                  `json:"archived"`
 	And            *[]SearchAssetsQuery   `json:"and"`
 	Or             *[]SearchAssetsQuery   `json:"or"`
+	Not            *SearchAssetsQuery     `json:"not"`
 	Workspace      *rids.WorkspaceRid     `json:"workspace"`
 }
 
 func (u *searchAssetsQueryDeserializer) toStruct() SearchAssetsQuery {
-	return SearchAssetsQuery{typ: u.Type, searchText: u.SearchText, exactSubstring: u.ExactSubstring, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, typeRid: u.TypeRid, assetTypes: u.AssetTypes, isStaged: u.IsStaged, archived: u.Archived, and: u.And, or: u.Or, workspace: u.Workspace}
+	return SearchAssetsQuery{typ: u.Type, searchText: u.SearchText, exactSubstring: u.ExactSubstring, label: u.Label, labels: u.Labels, property: u.Property, propertyKey: u.PropertyKey, properties: u.Properties, typeRid: u.TypeRid, assetTypes: u.AssetTypes, isStaged: u.IsStaged, archived: u.Archived, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace}
 }
 
 func (u *SearchAssetsQuery) toSerializer() (interface{}, error) {
@@ -95,6 +99,14 @@ func (u *SearchAssetsQuery) toSerializer() (interface{}, error) {
 			Type     string       `json:"type"`
 			Property api.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return nil, fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return struct {
+			Type        string           `json:"type"`
+			PropertyKey api.PropertyName `json:"propertyKey"`
+		}{Type: "propertyKey", PropertyKey: *u.propertyKey}, nil
 	case "properties":
 		if u.properties == nil {
 			return nil, fmt.Errorf("field \"properties\" is required")
@@ -151,6 +163,14 @@ func (u *SearchAssetsQuery) toSerializer() (interface{}, error) {
 			Type string              `json:"type"`
 			Or   []SearchAssetsQuery `json:"or"`
 		}{Type: "or", Or: *u.or}, nil
+	case "not":
+		if u.not == nil {
+			return nil, fmt.Errorf("field \"not\" is required")
+		}
+		return struct {
+			Type string            `json:"type"`
+			Not  SearchAssetsQuery `json:"not"`
+		}{Type: "not", Not: *u.not}, nil
 	case "workspace":
 		if u.workspace == nil {
 			return nil, fmt.Errorf("field \"workspace\" is required")
@@ -197,6 +217,10 @@ func (u *SearchAssetsQuery) UnmarshalJSON(data []byte) error {
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
 	case "properties":
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
@@ -225,6 +249,10 @@ func (u *SearchAssetsQuery) UnmarshalJSON(data []byte) error {
 		if u.or == nil {
 			return fmt.Errorf("field \"or\" is required")
 		}
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -249,7 +277,7 @@ func (u *SearchAssetsQuery) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exactSubstringFunc func(string) error, labelFunc func(api.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api.Property) error, propertiesFunc func(api1.PropertiesFilter) error, typeRidFunc func(api1.TypeRid) error, assetTypesFunc func(AssetTypesFilter) error, isStagedFunc func(bool) error, archivedFunc func(bool) error, andFunc func([]SearchAssetsQuery) error, orFunc func([]SearchAssetsQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exactSubstringFunc func(string) error, labelFunc func(api.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api.Property) error, propertyKeyFunc func(api.PropertyName) error, propertiesFunc func(api1.PropertiesFilter) error, typeRidFunc func(api1.TypeRid) error, assetTypesFunc func(AssetTypesFilter) error, isStagedFunc func(bool) error, archivedFunc func(bool) error, andFunc func([]SearchAssetsQuery) error, orFunc func([]SearchAssetsQuery) error, notFunc func(SearchAssetsQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -281,6 +309,11 @@ func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exact
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return propertyKeyFunc(*u.propertyKey)
 	case "properties":
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
@@ -316,6 +349,11 @@ func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exact
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return orFunc(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -344,6 +382,10 @@ func (u *SearchAssetsQuery) PropertyNoopSuccess(_ api.Property) error {
 	return nil
 }
 
+func (u *SearchAssetsQuery) PropertyKeyNoopSuccess(_ api.PropertyName) error {
+	return nil
+}
+
 func (u *SearchAssetsQuery) PropertiesNoopSuccess(_ api1.PropertiesFilter) error {
 	return nil
 }
@@ -369,6 +411,10 @@ func (u *SearchAssetsQuery) AndNoopSuccess(_ []SearchAssetsQuery) error {
 }
 
 func (u *SearchAssetsQuery) OrNoopSuccess(_ []SearchAssetsQuery) error {
+	return nil
+}
+
+func (u *SearchAssetsQuery) NotNoopSuccess(_ SearchAssetsQuery) error {
 	return nil
 }
 
@@ -412,6 +458,11 @@ func (u *SearchAssetsQuery) Accept(v SearchAssetsQueryVisitor) error {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return v.VisitPropertyKey(*u.propertyKey)
 	case "properties":
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
@@ -447,6 +498,11 @@ func (u *SearchAssetsQuery) Accept(v SearchAssetsQueryVisitor) error {
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOr(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(*u.not)
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -461,6 +517,7 @@ type SearchAssetsQueryVisitor interface {
 	VisitLabel(v api.Label) error
 	VisitLabels(v api1.LabelsFilter) error
 	VisitProperty(v api.Property) error
+	VisitPropertyKey(v api.PropertyName) error
 	VisitProperties(v api1.PropertiesFilter) error
 	VisitTypeRid(v api1.TypeRid) error
 	VisitAssetTypes(v AssetTypesFilter) error
@@ -468,6 +525,7 @@ type SearchAssetsQueryVisitor interface {
 	VisitArchived(v bool) error
 	VisitAnd(v []SearchAssetsQuery) error
 	VisitOr(v []SearchAssetsQuery) error
+	VisitNot(v SearchAssetsQuery) error
 	VisitWorkspace(v rids.WorkspaceRid) error
 	VisitUnknown(typeName string) error
 }
@@ -504,6 +562,11 @@ func (u *SearchAssetsQuery) AcceptWithContext(ctx context.Context, v SearchAsset
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return v.VisitPropertyKeyWithContext(ctx, *u.propertyKey)
 	case "properties":
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
@@ -539,6 +602,11 @@ func (u *SearchAssetsQuery) AcceptWithContext(ctx context.Context, v SearchAsset
 			return fmt.Errorf("field \"or\" is required")
 		}
 		return v.VisitOrWithContext(ctx, *u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNotWithContext(ctx, *u.not)
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -553,6 +621,7 @@ type SearchAssetsQueryVisitorWithContext interface {
 	VisitLabelWithContext(ctx context.Context, v api.Label) error
 	VisitLabelsWithContext(ctx context.Context, v api1.LabelsFilter) error
 	VisitPropertyWithContext(ctx context.Context, v api.Property) error
+	VisitPropertyKeyWithContext(ctx context.Context, v api.PropertyName) error
 	VisitPropertiesWithContext(ctx context.Context, v api1.PropertiesFilter) error
 	VisitTypeRidWithContext(ctx context.Context, v api1.TypeRid) error
 	VisitAssetTypesWithContext(ctx context.Context, v AssetTypesFilter) error
@@ -560,6 +629,7 @@ type SearchAssetsQueryVisitorWithContext interface {
 	VisitArchivedWithContext(ctx context.Context, v bool) error
 	VisitAndWithContext(ctx context.Context, v []SearchAssetsQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchAssetsQuery) error
+	VisitNotWithContext(ctx context.Context, v SearchAssetsQuery) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
@@ -582,6 +652,10 @@ func NewSearchAssetsQueryFromLabels(v api1.LabelsFilter) SearchAssetsQuery {
 
 func NewSearchAssetsQueryFromProperty(v api.Property) SearchAssetsQuery {
 	return SearchAssetsQuery{typ: "property", property: &v}
+}
+
+func NewSearchAssetsQueryFromPropertyKey(v api.PropertyName) SearchAssetsQuery {
+	return SearchAssetsQuery{typ: "propertyKey", propertyKey: &v}
 }
 
 func NewSearchAssetsQueryFromProperties(v api1.PropertiesFilter) SearchAssetsQuery {
@@ -610,6 +684,10 @@ func NewSearchAssetsQueryFromAnd(v []SearchAssetsQuery) SearchAssetsQuery {
 
 func NewSearchAssetsQueryFromOr(v []SearchAssetsQuery) SearchAssetsQuery {
 	return SearchAssetsQuery{typ: "or", or: &v}
+}
+
+func NewSearchAssetsQueryFromNot(v SearchAssetsQuery) SearchAssetsQuery {
+	return SearchAssetsQuery{typ: "not", not: &v}
 }
 
 func NewSearchAssetsQueryFromWorkspace(v rids.WorkspaceRid) SearchAssetsQuery {

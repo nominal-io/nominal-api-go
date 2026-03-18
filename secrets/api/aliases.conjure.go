@@ -8,7 +8,7 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type SecretRid rid.ResourceIdentifier
+type SecretRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a SecretRid) String() string {
 	return rid.ResourceIdentifier(a).String()

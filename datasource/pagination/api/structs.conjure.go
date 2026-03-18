@@ -7,8 +7,9 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type PageRequest struct {
-	PageToken *PageToken `json:"pageToken,omitempty"`
+	PageToken *PageToken `json:"pageToken,omitempty" safelogging:"@Unsafe"`
 	PageSize  int        `json:"pageSize"`
 }
 
@@ -28,8 +29,9 @@ func (o *PageRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type PageResponse struct {
-	NextPageToken *PageToken `json:"nextPageToken,omitempty"`
+	NextPageToken *PageToken `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o PageResponse) MarshalYAML() (interface{}, error) {

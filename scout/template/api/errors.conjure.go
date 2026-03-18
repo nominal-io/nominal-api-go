@@ -16,8 +16,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type cannotReadTemplateRefNames struct {
-	TemplateRid api.TemplateRid `json:"templateRid"`
+	TemplateRid api.TemplateRid `json:"templateRid" safelogging:"@Safe"`
 }
 
 func (o cannotReadTemplateRefNames) MarshalYAML() (interface{}, error) {
@@ -165,8 +166,9 @@ func (e *CannotReadTemplateRefNames) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type chartsNotFound struct {
-	ChartRids []api.VizId `json:"chartRids"`
+	ChartRids []api.VizId `json:"chartRids" safelogging:"@Safe"`
 }
 
 func (o chartsNotFound) MarshalJSON() ([]byte, error) {
@@ -335,8 +337,9 @@ func (e *ChartsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type commitToArchivedTemplate struct {
-	TemplateRid api.TemplateRid `json:"templateRid"`
+	TemplateRid api.TemplateRid `json:"templateRid" safelogging:"@Safe"`
 }
 
 func (o commitToArchivedTemplate) MarshalYAML() (interface{}, error) {
@@ -634,8 +637,9 @@ func (e *SearchTemplatesLimitExceeded) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type templatesNotFound struct {
-	TemplateRids []api.TemplateRid `json:"templateRids"`
+	TemplateRids []api.TemplateRid `json:"templateRids" safelogging:"@Safe"`
 }
 
 func (o templatesNotFound) MarshalJSON() ([]byte, error) {

@@ -12,8 +12,9 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
+// safelogging:@Unsafe
 type ApiLocatorTemplate struct {
-	Channel api.Channel  `json:"channel"`
+	Channel api.Channel  `json:"channel" safelogging:"@Unsafe"`
 	Type    api1.ApiType `json:"type"`
 }
 
@@ -156,8 +157,9 @@ func (o *BatchCreateVideoSeriesResponse) UnmarshalYAML(unmarshal func(interface{
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type BatchGetSeriesMetadataRequest struct {
-	Datasources []rids.DataSourceRid `json:"datasources"`
+	Datasources []rids.DataSourceRid `json:"datasources" safelogging:"@Safe"`
 }
 
 func (o BatchGetSeriesMetadataRequest) MarshalJSON() ([]byte, error) {
@@ -238,9 +240,10 @@ func (o *BatchGetSeriesMetadataResponse) UnmarshalYAML(unmarshal func(interface{
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type BigQueryLocatorTemplate struct {
-	ValueColumn api1.ColumnName   `json:"valueColumn"`
-	TimeColumn  api1.ColumnName   `json:"timeColumn"`
+	ValueColumn api1.ColumnName   `json:"valueColumn" safelogging:"@Unsafe"`
+	TimeColumn  api1.ColumnName   `json:"timeColumn" safelogging:"@Unsafe"`
 	Type        api1.BigQueryType `json:"type"`
 }
 
@@ -260,15 +263,16 @@ func (o *BigQueryLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateSeriesMetadataRequest struct {
 	/*
 	   This name should be unique amongst SeriesMetadata within the data source. All series created from this
 	   metadata will share this name.
 	*/
-	Channel       api.Channel        `json:"channel"`
-	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
+	Channel       api.Channel        `json:"channel" safelogging:"@Unsafe"`
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
 	Locator       LocatorTemplate    `json:"locator"`
-	Unit          *api.Unit          `json:"unit,omitempty"`
+	Unit          *api.Unit          `json:"unit,omitempty" safelogging:"@Unsafe"`
 	Description   *string            `json:"description,omitempty"`
 	/*
 	   Tags specified here will take precedence over tags specified in the RunDatasource, in the case that both specify the same TagName.
@@ -319,11 +323,12 @@ func (o *CreateSeriesMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) 
 Creates series and metadata for a video channel if it doesn't exist.
 Returns the SeriesMetadataRid of the created or existing series metadata.
 */
+// safelogging:@Unsafe
 type CreateVideoSeriesRequest struct {
-	DatasetRid rids.DatasetRid              `json:"datasetRid"`
-	Channel    api.Channel                  `json:"channel"`
+	DatasetRid rids.DatasetRid              `json:"datasetRid" safelogging:"@Safe"`
+	Channel    api.Channel                  `json:"channel" safelogging:"@Unsafe"`
 	Tags       map[api.TagName]api.TagValue `json:"tags"`
-	TimeBounds TimeBounds                   `json:"timeBounds"`
+	TimeBounds TimeBounds                   `json:"timeBounds" safelogging:"@Safe"`
 }
 
 func (o CreateVideoSeriesRequest) MarshalJSON() ([]byte, error) {
@@ -364,7 +369,7 @@ func (o *CreateVideoSeriesRequest) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 type CreateVideoSeriesResponse struct {
-	SeriesMetadataRid api.SeriesMetadataRid `json:"seriesMetadataRid"`
+	SeriesMetadataRid api.SeriesMetadataRid `json:"seriesMetadataRid" safelogging:"@Safe"`
 	SeriesUuid        uuid.UUID             `json:"seriesUuid"`
 }
 
@@ -384,10 +389,11 @@ func (o *CreateVideoSeriesResponse) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Influx1LocatorTemplate struct {
-	Database    api1.DatabaseName    `json:"database"`
-	Measurement api1.MeasurementName `json:"measurement"`
-	Field       api1.FieldName       `json:"field"`
+	Database    api1.DatabaseName    `json:"database" safelogging:"@Unsafe"`
+	Measurement api1.MeasurementName `json:"measurement" safelogging:"@Unsafe"`
+	Field       api1.FieldName       `json:"field" safelogging:"@Unsafe"`
 	Type        api1.InfluxType      `json:"type"`
 }
 
@@ -407,12 +413,13 @@ func (o *Influx1LocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Influx2LocatorTemplate struct {
-	Bucket      api1.BucketName      `json:"bucket"`
-	Measurement api1.MeasurementName `json:"measurement"`
+	Bucket      api1.BucketName      `json:"bucket" safelogging:"@Unsafe"`
+	Measurement api1.MeasurementName `json:"measurement" safelogging:"@Unsafe"`
 	// If omitted, defaults to `_value`. Can be used to extract tag values.
 	ValueColumn *string         `json:"valueColumn,omitempty"`
-	Field       api1.FieldName  `json:"field"`
+	Field       api1.FieldName  `json:"field" safelogging:"@Unsafe"`
 	Type        api1.InfluxType `json:"type"`
 }
 
@@ -432,8 +439,9 @@ func (o *Influx2LocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type NominalLocatorTemplate struct {
-	Channel api.Channel          `json:"channel"`
+	Channel api.Channel          `json:"channel" safelogging:"@Unsafe"`
 	Type    api2.NominalDataType `json:"type"`
 }
 
@@ -453,12 +461,13 @@ func (o *NominalLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SeriesMetadata struct {
-	Rid           api.SeriesMetadataRid `json:"rid"`
-	Channel       api.Channel           `json:"channel"`
-	DataSourceRid rids.DataSourceRid    `json:"dataSourceRid"`
+	Rid           api.SeriesMetadataRid `json:"rid" safelogging:"@Safe"`
+	Channel       api.Channel           `json:"channel" safelogging:"@Unsafe"`
+	DataSourceRid rids.DataSourceRid    `json:"dataSourceRid" safelogging:"@Safe"`
 	Locator       LocatorTemplate       `json:"locator"`
-	Unit          *api.Unit             `json:"unit,omitempty"`
+	Unit          *api.Unit             `json:"unit,omitempty" safelogging:"@Unsafe"`
 	Description   *string               `json:"description,omitempty"`
 	/*
 	   Tags specified here will take precedence over tags specified in the RunDatasource, in the case that both specify the same TagName.
@@ -507,9 +516,10 @@ func (o *SeriesMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 // Time bounds for the video file. Used to update the series time bounds
+// safelogging:@Safe
 type TimeBounds struct {
-	Start api.Timestamp `json:"start"`
-	End   api.Timestamp `json:"end"`
+	Start api.Timestamp `json:"start" safelogging:"@Safe"`
+	End   api.Timestamp `json:"end" safelogging:"@Safe"`
 }
 
 func (o TimeBounds) MarshalYAML() (interface{}, error) {
@@ -528,11 +538,12 @@ func (o *TimeBounds) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TimescaleDbLocatorTemplate struct {
-	Table      api1.TableName     `json:"table"`
-	Schema     api1.SchemaName    `json:"schema"`
-	Column     api1.ColumnName    `json:"column"`
-	TimeColumn api1.ColumnName    `json:"timeColumn"`
+	Table      api1.TableName     `json:"table" safelogging:"@Unsafe"`
+	Schema     api1.SchemaName    `json:"schema" safelogging:"@Unsafe"`
+	Column     api1.ColumnName    `json:"column" safelogging:"@Unsafe"`
+	TimeColumn api1.ColumnName    `json:"timeColumn" safelogging:"@Unsafe"`
 	Type       api1.TimescaleType `json:"type"`
 }
 
@@ -552,10 +563,11 @@ func (o *TimescaleDbLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TimestreamLocatorTemplate struct {
-	Table     api1.TableName      `json:"table"`
-	Measure   api1.MeasureName    `json:"measure"`
-	Attribute *api1.AttributeName `json:"attribute,omitempty"`
+	Table     api1.TableName      `json:"table" safelogging:"@Unsafe"`
+	Measure   api1.MeasureName    `json:"measure" safelogging:"@Unsafe"`
+	Attribute *api1.AttributeName `json:"attribute,omitempty" safelogging:"@Unsafe"`
 	Type      api1.TimestreamType `json:"type"`
 }
 
@@ -576,9 +588,10 @@ func (o *TimestreamLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) er
 }
 
 // If fields are present, will override existing values.
+// safelogging:@Unsafe
 type UpdateSeriesMetadataRequest struct {
 	// Deprecated: Deprecated. Use unitUpdate instead.
-	Unit        *api.Unit        `json:"unit,omitempty"`
+	Unit        *api.Unit        `json:"unit,omitempty" safelogging:"@Unsafe"`
 	UnitUpdate  *api1.UnitUpdate `json:"unitUpdate,omitempty"`
 	Description *string          `json:"description,omitempty"`
 }
@@ -599,8 +612,9 @@ func (o *UpdateSeriesMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type VideoLocatorTemplate struct {
-	Channel api.Channel `json:"channel"`
+	Channel api.Channel `json:"channel" safelogging:"@Unsafe"`
 }
 
 func (o VideoLocatorTemplate) MarshalYAML() (interface{}, error) {
@@ -619,8 +633,9 @@ func (o *VideoLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type VisualCrossingLocatorTemplate struct {
-	Field api1.FieldName `json:"field"`
+	Field api1.FieldName `json:"field" safelogging:"@Unsafe"`
 	// Defaults to HISTORY.
 	Endpoint *api1.VisualCrossingEndpointUri `json:"endpoint,omitempty"`
 	Type     api1.VisualCrossingType         `json:"type"`

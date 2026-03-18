@@ -9,7 +9,7 @@ import (
 )
 
 // In nanoseconds.
-type Resolution safelong.SafeLong
+type Resolution safelong.SafeLong // safelogging:@Safe
 
 func (a Resolution) MarshalJSON() ([]byte, error) {
 	return safejson.Marshal(safelong.SafeLong(a))

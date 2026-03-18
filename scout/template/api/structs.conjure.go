@@ -25,7 +25,7 @@ type CommitTemplateRequest struct {
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommit *api3.CommitId `json:"latestCommit,omitempty"`
+	LatestCommit *api3.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
 }
 
 func (o CommitTemplateRequest) MarshalYAML() (interface{}, error) {
@@ -44,10 +44,11 @@ func (o *CommitTemplateRequest) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateTemplateRequest struct {
 	Title       string                                   `json:"title"`
 	Description string                                   `json:"description"`
-	Labels      []api4.Label                             `json:"labels"`
+	Labels      []api4.Label                             `json:"labels" safelogging:"@Unsafe"`
 	Properties  map[api4.PropertyName]api4.PropertyValue `json:"properties"`
 	// Default is true
 	IsPublished *bool `json:"isPublished,omitempty"`
@@ -60,7 +61,7 @@ type CreateTemplateRequest struct {
 	   The workspace in which to create the template. If not provided, the template will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateTemplateRequest) MarshalJSON() ([]byte, error) {
@@ -106,9 +107,10 @@ func (o *CreateTemplateRequest) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetAllLabelsAndPropertiesResponse struct {
 	Properties map[api4.PropertyName][]api4.PropertyValue `json:"properties"`
-	Labels     []api4.Label                               `json:"labels"`
+	Labels     []api4.Label                               `json:"labels" safelogging:"@Unsafe"`
 }
 
 func (o GetAllLabelsAndPropertiesResponse) MarshalJSON() ([]byte, error) {
@@ -154,15 +156,16 @@ func (o *GetAllLabelsAndPropertiesResponse) UnmarshalYAML(unmarshal func(interfa
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type MergeToMainRequest struct {
 	// If "main", the request will throw.
-	BranchName api3.BranchName `json:"branchName"`
+	BranchName api3.BranchName `json:"branchName" safelogging:"@Unsafe"`
 	Message    string          `json:"message"`
 	/*
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommitOnMain *api3.CommitId `json:"latestCommitOnMain,omitempty"`
+	LatestCommitOnMain *api3.CommitId `json:"latestCommitOnMain,omitempty" safelogging:"@Safe"`
 }
 
 func (o MergeToMainRequest) MarshalYAML() (interface{}, error) {
@@ -190,7 +193,7 @@ type SaveTemplateRequest struct {
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommit *api3.CommitId `json:"latestCommit,omitempty"`
+	LatestCommit *api3.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
 }
 
 func (o SaveTemplateRequest) MarshalYAML() (interface{}, error) {
@@ -209,11 +212,12 @@ func (o *SaveTemplateRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchTemplatesRequest struct {
 	Query SearchTemplatesQuery `json:"query"`
 	// EDITED_AT descending by default
 	SortBy        *SortBy     `json:"sortBy,omitempty"`
-	NextPageToken *api4.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api4.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 100. Will throw if larger than 1_000.
 	PageSize *int `json:"pageSize,omitempty"`
 }
@@ -234,9 +238,10 @@ func (o *SearchTemplatesRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchTemplatesResponse struct {
 	Results       []TemplateSummary `json:"results"`
-	NextPageToken *api4.Token       `json:"nextPageToken,omitempty"`
+	NextPageToken *api4.Token       `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchTemplatesResponse) MarshalJSON() ([]byte, error) {
@@ -297,9 +302,10 @@ func (o *SortBy) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Template struct {
-	Rid      api.TemplateRid  `json:"rid"`
-	Metadata TemplateMetadata `json:"metadata"`
+	Rid      api.TemplateRid  `json:"rid" safelogging:"@Safe"`
+	Metadata TemplateMetadata `json:"metadata" safelogging:"@Unsafe"`
 	Commit   api3.Commit      `json:"commit"`
 	// Deprecated: charts are no longer versioned resources. They are stored in workbook content.
 	Charts  []api.VersionedVizId `json:"charts"`
@@ -344,14 +350,15 @@ func (o *Template) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TemplateMetadata struct {
 	Title       string                                   `json:"title"`
 	Description string                                   `json:"description"`
-	Labels      []api4.Label                             `json:"labels"`
+	Labels      []api4.Label                             `json:"labels" safelogging:"@Unsafe"`
 	Properties  map[api4.PropertyName]api4.PropertyValue `json:"properties"`
 	IsArchived  bool                                     `json:"isArchived"`
 	IsPublished bool                                     `json:"isPublished"`
-	CreatedBy   api.UserRid                              `json:"createdBy"`
+	CreatedBy   api.UserRid                              `json:"createdBy" safelogging:"@Safe"`
 	CreatedAt   datetime.DateTime                        `json:"createdAt"`
 	UpdatedAt   datetime.DateTime                        `json:"updatedAt"`
 	// The time of the last permanent commit to the main branch.
@@ -401,9 +408,10 @@ func (o *TemplateMetadata) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TemplateSummary struct {
-	Rid      api.TemplateRid  `json:"rid"`
-	Metadata TemplateMetadata `json:"metadata"`
+	Rid      api.TemplateRid  `json:"rid" safelogging:"@Safe"`
+	Metadata TemplateMetadata `json:"metadata" safelogging:"@Unsafe"`
 }
 
 func (o TemplateSummary) MarshalYAML() (interface{}, error) {
@@ -422,10 +430,11 @@ func (o *TemplateSummary) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateMetadataRequest struct {
 	Title       *string                                   `json:"title,omitempty"`
 	Description *string                                   `json:"description,omitempty"`
-	Labels      *[]api4.Label                             `json:"labels,omitempty"`
+	Labels      *[]api4.Label                             `json:"labels,omitempty" safelogging:"@Unsafe"`
 	Properties  *map[api4.PropertyName]api4.PropertyValue `json:"properties,omitempty"`
 	IsArchived  *bool                                     `json:"isArchived,omitempty"`
 	IsPublished *bool                                     `json:"isPublished,omitempty"`
@@ -453,7 +462,7 @@ type UpdateRefNameRequest struct {
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommit *api3.CommitId `json:"latestCommit,omitempty"`
+	LatestCommit *api3.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
 }
 
 func (o UpdateRefNameRequest) MarshalJSON() ([]byte, error) {

@@ -7,8 +7,10 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type ChannelVariableName string
-type ComputeSpecV1 string
+type ChannelVariableName string // safelogging:@Unsafe
+
+type ComputeSpecV1 string // safelogging:@Unsafe
+
 type WorkbookChannelVariableMap map[ChannelVariableName]ChannelVariable
 
 func (a WorkbookChannelVariableMap) MarshalJSON() ([]byte, error) {

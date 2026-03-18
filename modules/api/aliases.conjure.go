@@ -9,7 +9,7 @@ import (
 )
 
 // Unique resource identifier for a Module Application.
-type ModuleApplicationRid rid.ResourceIdentifier
+type ModuleApplicationRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ModuleApplicationRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -58,7 +58,7 @@ func (a *ModuleApplicationRid) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 // Unique resource identifier for a Module.
-type ModuleRid rid.ResourceIdentifier
+type ModuleRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ModuleRid) String() string {
 	return rid.ResourceIdentifier(a).String()

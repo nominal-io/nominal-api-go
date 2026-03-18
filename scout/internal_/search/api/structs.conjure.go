@@ -140,7 +140,7 @@ func (o *StringField) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type TimestampField struct {
 	Name      string        `json:"name"`
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Operator  Operator      `json:"operator"`
 }
 

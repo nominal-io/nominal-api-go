@@ -275,3 +275,60 @@ func (e *IngestType) UnmarshalText(data []byte) error {
 	}
 	return nil
 }
+
+type StreamingSessionStatus struct {
+	val StreamingSessionStatus_Value
+}
+
+type StreamingSessionStatus_Value string
+
+const (
+	StreamingSessionStatus_IN_PROGRESS StreamingSessionStatus_Value = "IN_PROGRESS"
+	StreamingSessionStatus_COMPLETED   StreamingSessionStatus_Value = "COMPLETED"
+	StreamingSessionStatus_UNKNOWN     StreamingSessionStatus_Value = "UNKNOWN"
+)
+
+// StreamingSessionStatus_Values returns all known variants of StreamingSessionStatus.
+func StreamingSessionStatus_Values() []StreamingSessionStatus_Value {
+	return []StreamingSessionStatus_Value{StreamingSessionStatus_IN_PROGRESS, StreamingSessionStatus_COMPLETED}
+}
+
+func New_StreamingSessionStatus(value StreamingSessionStatus_Value) StreamingSessionStatus {
+	return StreamingSessionStatus{val: value}
+}
+
+// IsUnknown returns false for all known variants of StreamingSessionStatus and true otherwise.
+func (e StreamingSessionStatus) IsUnknown() bool {
+	switch e.val {
+	case StreamingSessionStatus_IN_PROGRESS, StreamingSessionStatus_COMPLETED:
+		return false
+	}
+	return true
+}
+
+func (e StreamingSessionStatus) Value() StreamingSessionStatus_Value {
+	if e.IsUnknown() {
+		return StreamingSessionStatus_UNKNOWN
+	}
+	return e.val
+}
+
+func (e StreamingSessionStatus) String() string {
+	return string(e.val)
+}
+
+func (e StreamingSessionStatus) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *StreamingSessionStatus) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_StreamingSessionStatus(StreamingSessionStatus_Value(v))
+	case "IN_PROGRESS":
+		*e = New_StreamingSessionStatus(StreamingSessionStatus_IN_PROGRESS)
+	case "COMPLETED":
+		*e = New_StreamingSessionStatus(StreamingSessionStatus_COMPLETED)
+	}
+	return nil
+}

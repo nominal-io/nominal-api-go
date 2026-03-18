@@ -2,4 +2,4 @@
 
 package api
 
-type Channel string
+type Channel string // safelogging:@Unsafe

@@ -10,9 +10,10 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type CreateNominalDataSourceRequest struct {
 	// A human readable identifier. Must be unique within an organization.
-	Id          NominalDataSourceId `json:"id"`
+	Id          NominalDataSourceId `json:"id" safelogging:"@Unsafe"`
 	Description *string             `json:"description,omitempty"`
 	/*
 	   Specifies the timestamp granularity of the datasource (i.e., picosecond or nanosecond scale).
@@ -24,7 +25,7 @@ type CreateNominalDataSourceRequest struct {
 	   The workspace in which to create the datasource. If not provided, the datasource will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateNominalDataSourceRequest) MarshalYAML() (interface{}, error) {
@@ -44,9 +45,10 @@ func (o *CreateNominalDataSourceRequest) UnmarshalYAML(unmarshal func(interface{
 }
 
 // A logical grouping of series.
+// safelogging:@Unsafe
 type NominalDataSource struct {
-	Rid         rids.NominalDataSourceRid `json:"rid"`
-	Id          NominalDataSourceId       `json:"id"`
+	Rid         rids.NominalDataSourceRid `json:"rid" safelogging:"@Safe"`
+	Id          NominalDataSourceId       `json:"id" safelogging:"@Unsafe"`
 	Description *string                   `json:"description,omitempty"`
 	/*
 	   Returns the approximate timestamp at which data was written to the data source.

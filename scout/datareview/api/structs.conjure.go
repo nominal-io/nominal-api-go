@@ -39,14 +39,14 @@ func (o *ArchiveDataReview) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 type AutomaticCheckEvaluation struct {
-	Rid      rids.AutomaticCheckEvaluationRid `json:"rid"`
-	CheckRid api.CheckRid                     `json:"checkRid"`
+	Rid      rids.AutomaticCheckEvaluationRid `json:"rid" safelogging:"@Safe"`
+	CheckRid api.CheckRid                     `json:"checkRid" safelogging:"@Safe"`
 	/*
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
 	   The check implementation index will correspond to the implementation index of the check condition.
 	*/
 	CheckImplementationIndex *int                          `json:"checkImplementationIndex,omitempty"`
-	DataReviewRid            api.DataReviewRid             `json:"dataReviewRid"`
+	DataReviewRid            api.DataReviewRid             `json:"dataReviewRid" safelogging:"@Safe"`
 	State                    AutomaticCheckEvaluationState `json:"state"`
 }
 
@@ -170,7 +170,7 @@ func (o *AutomaticCheckEvaluationReviewActionLog) UnmarshalYAML(unmarshal func(i
 }
 
 type AutomaticCheckEvaluationReviewActionLogEntry struct {
-	PerformedBy api.UserRid                          `json:"performedBy"`
+	PerformedBy api.UserRid                          `json:"performedBy" safelogging:"@Safe"`
 	Action      AutomaticCheckEvaluationReviewAction `json:"action"`
 	Timestamp   datetime.DateTime                    `json:"timestamp"`
 }
@@ -191,8 +191,9 @@ func (o *AutomaticCheckEvaluationReviewActionLogEntry) UnmarshalYAML(unmarshal f
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type AutomaticCheckExecutionFailedToRun struct {
-	JobRid api1.JobRid `json:"jobRid"`
+	JobRid api1.JobRid `json:"jobRid" safelogging:"@Safe"`
 }
 
 func (o AutomaticCheckExecutionFailedToRun) MarshalYAML() (interface{}, error) {
@@ -212,7 +213,7 @@ func (o *AutomaticCheckExecutionFailedToRun) UnmarshalYAML(unmarshal func(interf
 }
 
 type AutomaticCheckExecutionFinished struct {
-	JobRid api1.JobRid `json:"jobRid"`
+	JobRid api1.JobRid `json:"jobRid" safelogging:"@Safe"`
 	Status Status      `json:"status"`
 }
 
@@ -232,8 +233,9 @@ func (o *AutomaticCheckExecutionFinished) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type AutomaticCheckExecutionStarted struct {
-	JobRid api1.JobRid `json:"jobRid"`
+	JobRid api1.JobRid `json:"jobRid" safelogging:"@Safe"`
 }
 
 func (o AutomaticCheckExecutionStarted) MarshalYAML() (interface{}, error) {
@@ -254,7 +256,7 @@ func (o *AutomaticCheckExecutionStarted) UnmarshalYAML(unmarshal func(interface{
 
 type BatchAutomaticCheckEvaluationActionRequest struct {
 	CheckEvaluationAction AutomaticCheckEvaluationReviewAction `json:"checkEvaluationAction"`
-	CheckEvaluationRids   []rids.AutomaticCheckEvaluationRid   `json:"checkEvaluationRids"`
+	CheckEvaluationRids   []rids.AutomaticCheckEvaluationRid   `json:"checkEvaluationRids" safelogging:"@Safe"`
 }
 
 func (o BatchAutomaticCheckEvaluationActionRequest) MarshalJSON() ([]byte, error) {
@@ -337,7 +339,7 @@ func (o *BatchAutomaticCheckEvaluationActionResponse) UnmarshalYAML(unmarshal fu
 
 type BatchCheckAlertActionRequest struct {
 	CheckAlertAction CheckAlertAction    `json:"checkAlertAction"`
-	CheckAlertRids   []api.CheckAlertRid `json:"checkAlertRids"`
+	CheckAlertRids   []api.CheckAlertRid `json:"checkAlertRids" safelogging:"@Safe"`
 }
 
 func (o BatchCheckAlertActionRequest) MarshalJSON() ([]byte, error) {
@@ -468,8 +470,9 @@ func (o *BatchInitiateDataReviewRequest) UnmarshalYAML(unmarshal func(interface{
 }
 
 // Responses are returned in the same order as the requests.
+// safelogging:@Safe
 type BatchInitiateDataReviewResponse struct {
-	Rids []api.DataReviewRid `json:"rids"`
+	Rids []api.DataReviewRid `json:"rids" safelogging:"@Safe"`
 }
 
 func (o BatchInitiateDataReviewResponse) MarshalJSON() ([]byte, error) {
@@ -511,7 +514,7 @@ func (o *BatchInitiateDataReviewResponse) UnmarshalYAML(unmarshal func(interface
 
 type BatchManualCheckEvaluationActionRequest struct {
 	CheckAlertAction    ManualCheckAlertAction     `json:"checkAlertAction"`
-	CheckEvaluationRids []ManualCheckEvaluationRid `json:"checkEvaluationRids"`
+	CheckEvaluationRids []ManualCheckEvaluationRid `json:"checkEvaluationRids" safelogging:"@Safe"`
 }
 
 func (o BatchManualCheckEvaluationActionRequest) MarshalJSON() ([]byte, error) {
@@ -552,23 +555,23 @@ func (o *BatchManualCheckEvaluationActionRequest) UnmarshalYAML(unmarshal func(i
 }
 
 type CheckAlert struct {
-	Rid                           api.CheckAlertRid                `json:"rid"`
-	CheckRid                      api.CheckRid                     `json:"checkRid"`
+	Rid                           api.CheckAlertRid                `json:"rid" safelogging:"@Safe"`
+	CheckRid                      api.CheckRid                     `json:"checkRid" safelogging:"@Safe"`
 	ImplementationIndex           *int                             `json:"implementationIndex,omitempty"`
-	DataReviewRid                 api.DataReviewRid                `json:"dataReviewRid"`
-	CheckEvaluationRid            rids.AutomaticCheckEvaluationRid `json:"checkEvaluationRid"`
+	DataReviewRid                 api.DataReviewRid                `json:"dataReviewRid" safelogging:"@Safe"`
+	CheckEvaluationRid            rids.AutomaticCheckEvaluationRid `json:"checkEvaluationRid" safelogging:"@Safe"`
 	Name                          string                           `json:"name"`
 	AutogeneratedCheckTitle       *string                          `json:"autogeneratedCheckTitle,omitempty"`
 	AutogeneratedCheckDescription *string                          `json:"autogeneratedCheckDescription,omitempty"`
-	AssigneeRids                  []api.UserRid                    `json:"assigneeRids"`
-	Start                         api3.Timestamp                   `json:"start"`
+	AssigneeRids                  []api.UserRid                    `json:"assigneeRids" safelogging:"@Safe"`
+	Start                         api3.Timestamp                   `json:"start" safelogging:"@Safe"`
 	End                           *api3.Timestamp                  `json:"end,omitempty"`
 	State                         api.CheckAlertState              `json:"state"`
 	Priority                      api4.Priority                    `json:"priority"`
 	// Deprecated: charts are no longer versioned resources.
 	Chart    *api.VersionedVizId `json:"chart,omitempty"`
 	Notes    *string             `json:"notes,omitempty"`
-	Notebook *api.NotebookRid    `json:"notebook,omitempty"`
+	Notebook *api.NotebookRid    `json:"notebook,omitempty" safelogging:"@Safe"`
 }
 
 func (o CheckAlert) MarshalJSON() ([]byte, error) {
@@ -650,7 +653,7 @@ func (o *CheckAlertActionLog) UnmarshalYAML(unmarshal func(interface{}) error) e
 }
 
 type CheckAlertActionLogEntry struct {
-	PerformedBy api.UserRid       `json:"performedBy"`
+	PerformedBy api.UserRid       `json:"performedBy" safelogging:"@Safe"`
 	Action      CheckAlertAction  `json:"action"`
 	Timestamp   datetime.DateTime `json:"timestamp"`
 }
@@ -681,20 +684,20 @@ type CheckAlertsHistogramRequest struct {
 	// The variable that divides the data into distinct groups for comparison within the histogram.
 	SubGroupVariable *HistogramSubGroupVariable `json:"subGroupVariable,omitempty"`
 	// Filters to start times after this time, inclusive.
-	StartTimeAfter api3.Timestamp `json:"startTimeAfter"`
+	StartTimeAfter api3.Timestamp `json:"startTimeAfter" safelogging:"@Safe"`
 	// Filters to start times before this time, exclusive.
-	StartTimeBefore     api3.Timestamp             `json:"startTimeBefore"`
+	StartTimeBefore     api3.Timestamp             `json:"startTimeBefore" safelogging:"@Safe"`
 	Status              *[]CheckAlertStatus        `json:"status,omitempty"`
-	CheckRids           *[]api.CheckRid            `json:"checkRids,omitempty"`
-	DataReviewRids      *[]api.DataReviewRid       `json:"dataReviewRids,omitempty"`
-	AssigneeRids        *[]api.UserRid             `json:"assigneeRids,omitempty"`
+	CheckRids           *[]api.CheckRid            `json:"checkRids,omitempty" safelogging:"@Safe"`
+	DataReviewRids      *[]api.DataReviewRid       `json:"dataReviewRids,omitempty" safelogging:"@Safe"`
+	AssigneeRids        *[]api.UserRid             `json:"assigneeRids,omitempty" safelogging:"@Safe"`
 	Priorities          *[]api4.Priority           `json:"priorities,omitempty"`
-	RunRids             []api5.RunRid              `json:"runRids"`
-	AssetRids           []api.AssetRid             `json:"assetRids"`
+	RunRids             []api5.RunRid              `json:"runRids" safelogging:"@Safe"`
+	AssetRids           []api.AssetRid             `json:"assetRids" safelogging:"@Safe"`
 	PinnedChecklistRefs *[]api1.PinnedChecklistRef `json:"pinnedChecklistRefs,omitempty"`
 	// Deprecated: charts are no longer versioned resources.
 	ChartRids    *[]api.VersionedVizId `json:"chartRids,omitempty"`
-	NotebookRids *[]api.NotebookRid    `json:"notebookRids,omitempty"`
+	NotebookRids *[]api.NotebookRid    `json:"notebookRids,omitempty" safelogging:"@Safe"`
 	/*
 	   To be deprecated. Use archivedStatuses instead. If not present, will not show archived data reviews
 	   in search results.
@@ -894,8 +897,8 @@ func (o *CheckAlertsUnstackedHistogram) UnmarshalYAML(unmarshal func(interface{}
 }
 
 type ChecklistEvaluation struct {
-	Checklist     api1.PinnedChecklistRef `json:"checklist"`
-	DataReviewRid api.DataReviewRid       `json:"dataReviewRid"`
+	Checklist     api1.PinnedChecklistRef `json:"checklist" safelogging:"@Safe"`
+	DataReviewRid api.DataReviewRid       `json:"dataReviewRid" safelogging:"@Safe"`
 	Checks        []CheckEvaluation       `json:"checks"`
 }
 
@@ -1081,7 +1084,7 @@ func (o *CloseWithIgnoreAlert) UnmarshalYAML(unmarshal func(interface{}) error) 
 
 type ClosedWithFurtherActionState struct {
 	Comment  string      `json:"comment"`
-	ClosedBy api.UserRid `json:"closedBy"`
+	ClosedBy api.UserRid `json:"closedBy" safelogging:"@Safe"`
 }
 
 func (o ClosedWithFurtherActionState) MarshalYAML() (interface{}, error) {
@@ -1104,12 +1107,13 @@ func (o *ClosedWithFurtherActionState) UnmarshalYAML(unmarshal func(interface{})
 If commit not is provided, the latest commit on main will be used.
 Asset RID is required only for multi-asset runs.
 */
+// safelogging:@Safe
 type CreateDataReviewRequest struct {
-	RunRid api5.RunRid `json:"runRid"`
+	RunRid api5.RunRid `json:"runRid" safelogging:"@Safe"`
 	// Selects asset to execute data review on. Required for multi-asset runs.
-	AssetRid     *api.AssetRid    `json:"assetRid,omitempty"`
-	ChecklistRid api.ChecklistRid `json:"checklistRid"`
-	Commit       *api6.CommitId   `json:"commit,omitempty"`
+	AssetRid     *api.AssetRid    `json:"assetRid,omitempty" safelogging:"@Safe"`
+	ChecklistRid api.ChecklistRid `json:"checklistRid" safelogging:"@Safe"`
+	Commit       *api6.CommitId   `json:"commit,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateDataReviewRequest) MarshalYAML() (interface{}, error) {
@@ -1129,14 +1133,14 @@ func (o *CreateDataReviewRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 type DataReview struct {
-	Rid       api.DataReviewRid `json:"rid"`
-	RunRid    api5.RunRid       `json:"runRid"`
-	AssetRid  api.AssetRid      `json:"assetRid"`
+	Rid       api.DataReviewRid `json:"rid" safelogging:"@Safe"`
+	RunRid    api5.RunRid       `json:"runRid" safelogging:"@Safe"`
+	AssetRid  api.AssetRid      `json:"assetRid" safelogging:"@Safe"`
 	CreatedAt datetime.DateTime `json:"createdAt"`
-	CreatedBy api.UserRid       `json:"createdBy"`
+	CreatedBy api.UserRid       `json:"createdBy" safelogging:"@Safe"`
 	// Deprecated: This field is deprecated and will be removed in a future version.
 	Checklist        *ChecklistEvaluation       `json:"checklist,omitempty"`
-	ChecklistRef     api1.PinnedChecklistRef    `json:"checklistRef"`
+	ChecklistRef     api1.PinnedChecklistRef    `json:"checklistRef" safelogging:"@Safe"`
 	CheckEvaluations []AutomaticCheckEvaluation `json:"checkEvaluations"`
 	Archived         bool                       `json:"archived"`
 }
@@ -1178,9 +1182,10 @@ func (o *DataReview) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type DataReviewPage struct {
 	DataReviews   []DataReview `json:"dataReviews"`
-	NextPageToken *api3.Token  `json:"nextPageToken,omitempty"`
+	NextPageToken *api3.Token  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o DataReviewPage) MarshalJSON() ([]byte, error) {
@@ -1239,8 +1244,9 @@ func (o *DuplicateAndLinkNotebook) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type ExecutingState struct {
-	JobRid api1.JobRid `json:"jobRid"`
+	JobRid api1.JobRid `json:"jobRid" safelogging:"@Safe"`
 }
 
 func (o ExecutingState) MarshalYAML() (interface{}, error) {
@@ -1259,8 +1265,9 @@ func (o *ExecutingState) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type ExecutionRetriggered struct {
-	JobRid api1.JobRid `json:"jobRid"`
+	JobRid api1.JobRid `json:"jobRid" safelogging:"@Safe"`
 }
 
 func (o ExecutionRetriggered) MarshalYAML() (interface{}, error) {
@@ -1280,10 +1287,10 @@ func (o *ExecutionRetriggered) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 type FailedToExecuteState struct {
-	JobRid       api1.JobRid          `json:"jobRid"`
+	JobRid       api1.JobRid          `json:"jobRid" safelogging:"@Safe"`
 	ReviewState  *api.CheckAlertState `json:"reviewState,omitempty"`
 	ReviewNotes  *string              `json:"reviewNotes,omitempty"`
-	AssigneeRids []api.UserRid        `json:"assigneeRids"`
+	AssigneeRids []api.UserRid        `json:"assigneeRids" safelogging:"@Safe"`
 }
 
 func (o FailedToExecuteState) MarshalJSON() ([]byte, error) {
@@ -1328,9 +1335,10 @@ If both sets are empty, an empty page is returned.
 If one set is empty, that field is not considered for filtering (like a wildcard).
 If commitId is omitted from a ChecklistRef, it will match all commits.
 */
+// safelogging:@Unsafe
 type FindDataReviewsRequest struct {
-	RunRids   []api5.RunRid  `json:"runRids"`
-	AssetRids []api.AssetRid `json:"assetRids"`
+	RunRids   []api5.RunRid  `json:"runRids" safelogging:"@Safe"`
+	AssetRids []api.AssetRid `json:"assetRids" safelogging:"@Safe"`
 	/*
 	   If true, results are filtered to data reviews w/ both run and asset in the requested runs/assets.
 	   Defaults to false, where assets are converted to runs and all data reviews under the linked runs
@@ -1340,7 +1348,7 @@ type FindDataReviewsRequest struct {
 	*/
 	FilterByBothRunsAndAssets *bool               `json:"filterByBothRunsAndAssets,omitempty"`
 	ChecklistRefs             []api1.ChecklistRef `json:"checklistRefs"`
-	NextPageToken             *api3.Token         `json:"nextPageToken,omitempty"`
+	NextPageToken             *api3.Token         `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 1000. Will throw if larger than 1000.
 	PageSize *int `json:"pageSize,omitempty"`
 	/*
@@ -1404,13 +1412,14 @@ func (o *FindDataReviewsRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type GeneratedAlertsState struct {
 	/*
 	   Deprecated: This field is deprecated and will be removed in a future version.
 	   Use eventRids instead.
 	*/
-	Rids      *[]api.CheckAlertRid `json:"rids,omitempty"`
-	EventRids []rids.EventRid      `json:"eventRids"`
+	Rids      *[]api.CheckAlertRid `json:"rids,omitempty" safelogging:"@Safe"`
+	EventRids []rids.EventRid      `json:"eventRids" safelogging:"@Safe"`
 }
 
 func (o GeneratedAlertsState) MarshalJSON() ([]byte, error) {
@@ -1508,8 +1517,8 @@ func (o *GetDataReviewCheckMetricsResponse) UnmarshalYAML(unmarshal func(interfa
 }
 
 type HistogramBucket struct {
-	StartInclusive api3.Timestamp `json:"startInclusive"`
-	EndExclusive   api3.Timestamp `json:"endExclusive"`
+	StartInclusive api3.Timestamp `json:"startInclusive" safelogging:"@Safe"`
+	EndExclusive   api3.Timestamp `json:"endExclusive" safelogging:"@Safe"`
 	Count          int            `json:"count"`
 }
 
@@ -1548,8 +1557,8 @@ func (o *HistogramEndTimeVariable) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 type HistogramPriorityBucket struct {
-	StartInclusive api3.Timestamp        `json:"startInclusive"`
-	EndExclusive   api3.Timestamp        `json:"endExclusive"`
+	StartInclusive api3.Timestamp        `json:"startInclusive" safelogging:"@Safe"`
+	EndExclusive   api3.Timestamp        `json:"endExclusive" safelogging:"@Safe"`
 	Counts         map[api4.Priority]int `json:"counts"`
 }
 
@@ -1627,8 +1636,8 @@ func (o *HistogramStartTimeVariable) UnmarshalYAML(unmarshal func(interface{}) e
 }
 
 type HistogramStatusBucket struct {
-	StartInclusive api3.Timestamp           `json:"startInclusive"`
-	EndExclusive   api3.Timestamp           `json:"endExclusive"`
+	StartInclusive api3.Timestamp           `json:"startInclusive" safelogging:"@Safe"`
+	EndExclusive   api3.Timestamp           `json:"endExclusive" safelogging:"@Safe"`
 	Counts         map[CheckAlertStatus]int `json:"counts"`
 }
 
@@ -1688,7 +1697,7 @@ func (o *HistogramStatusVariable) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 type LinkNotebook struct {
-	Rid api.NotebookRid `json:"rid"`
+	Rid api.NotebookRid `json:"rid" safelogging:"@Safe"`
 	/*
 	   Defines the strategy for reconciling the alert with any linked alerts via the associated notebook. If not
 	   provided, the alert will be linked naively and throw if it leaves a linked notebook in an invalid state.
@@ -1713,15 +1722,15 @@ func (o *LinkNotebook) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type ManualCheckEvaluation struct {
-	Rid           ManualCheckEvaluationRid   `json:"rid"`
-	CheckRid      api.CheckRid               `json:"checkRid"`
-	DataReviewRid api.DataReviewRid          `json:"dataReviewRid"`
+	Rid           ManualCheckEvaluationRid   `json:"rid" safelogging:"@Safe"`
+	CheckRid      api.CheckRid               `json:"checkRid" safelogging:"@Safe"`
+	DataReviewRid api.DataReviewRid          `json:"dataReviewRid" safelogging:"@Safe"`
 	State         ManualCheckEvaluationState `json:"state"`
-	AssigneeRids  []api.UserRid              `json:"assigneeRids"`
+	AssigneeRids  []api.UserRid              `json:"assigneeRids" safelogging:"@Safe"`
 	// Deprecated: charts are no longer versioned resources.
 	Chart    *api.VersionedVizId `json:"chart,omitempty"`
 	Notes    *string             `json:"notes,omitempty"`
-	Notebook *api.NotebookRid    `json:"notebook,omitempty"`
+	Notebook *api.NotebookRid    `json:"notebook,omitempty" safelogging:"@Safe"`
 }
 
 func (o ManualCheckEvaluation) MarshalJSON() ([]byte, error) {
@@ -1803,7 +1812,7 @@ func (o *ManualCheckEvaluationActionLog) UnmarshalYAML(unmarshal func(interface{
 }
 
 type ManualCheckEvaluationActionLogEntry struct {
-	PerformedBy api.UserRid            `json:"performedBy"`
+	PerformedBy api.UserRid            `json:"performedBy" safelogging:"@Safe"`
 	Action      ManualCheckAlertAction `json:"action"`
 	Timestamp   datetime.DateTime      `json:"timestamp"`
 }
@@ -1846,7 +1855,7 @@ func (o *Pass) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type PassState struct {
 	Comment  string      `json:"comment"`
-	ClosedBy api.UserRid `json:"closedBy"`
+	ClosedBy api.UserRid `json:"closedBy" safelogging:"@Safe"`
 }
 
 func (o PassState) MarshalYAML() (interface{}, error) {
@@ -1883,8 +1892,9 @@ func (o *PassingExecutionState) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type PendingExecutionState struct {
-	JobRid api1.JobRid `json:"jobRid"`
+	JobRid api1.JobRid `json:"jobRid" safelogging:"@Safe"`
 }
 
 func (o PendingExecutionState) MarshalYAML() (interface{}, error) {
@@ -1921,8 +1931,9 @@ func (o *PendingReviewState) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type Reassign struct {
-	AssigneeRids []api.UserRid `json:"assigneeRids"`
+	AssigneeRids []api.UserRid `json:"assigneeRids" safelogging:"@Safe"`
 }
 
 func (o Reassign) MarshalJSON() ([]byte, error) {
@@ -2072,8 +2083,9 @@ func (o *ReopenAndLinkToNotebook) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type RerunFailedAutomaticChecksRequest struct {
-	DataReviewRid api.DataReviewRid `json:"dataReviewRid"`
+	DataReviewRid api.DataReviewRid `json:"dataReviewRid" safelogging:"@Safe"`
 }
 
 func (o RerunFailedAutomaticChecksRequest) MarshalYAML() (interface{}, error) {
@@ -2092,8 +2104,9 @@ func (o *RerunFailedAutomaticChecksRequest) UnmarshalYAML(unmarshal func(interfa
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchCheckAlertsRequest struct {
-	NextPageToken *api3.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api3.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 100. Will throw if larger than 1_000.
 	PageSize *int `json:"pageSize,omitempty"`
 	// If not present, will sort by start time in descending order.
@@ -2105,16 +2118,16 @@ type SearchCheckAlertsRequest struct {
 	// Filters to start times before this time, exclusive.
 	Before              *api3.Timestamp            `json:"before,omitempty"`
 	Status              *[]CheckAlertStatus        `json:"status,omitempty"`
-	CheckRids           *[]api.CheckRid            `json:"checkRids,omitempty"`
-	DataReviewRids      *[]api.DataReviewRid       `json:"dataReviewRids,omitempty"`
-	AssigneeRids        *[]api.UserRid             `json:"assigneeRids,omitempty"`
+	CheckRids           *[]api.CheckRid            `json:"checkRids,omitempty" safelogging:"@Safe"`
+	DataReviewRids      *[]api.DataReviewRid       `json:"dataReviewRids,omitempty" safelogging:"@Safe"`
+	AssigneeRids        *[]api.UserRid             `json:"assigneeRids,omitempty" safelogging:"@Safe"`
 	Priorities          *[]api4.Priority           `json:"priorities,omitempty"`
-	RunRids             []api5.RunRid              `json:"runRids"`
-	AssetRids           []api.AssetRid             `json:"assetRids"`
+	RunRids             []api5.RunRid              `json:"runRids" safelogging:"@Safe"`
+	AssetRids           []api.AssetRid             `json:"assetRids" safelogging:"@Safe"`
 	PinnedChecklistRefs *[]api1.PinnedChecklistRef `json:"pinnedChecklistRefs,omitempty"`
 	// Deprecated: charts are no longer versioned resources.
 	ChartRids    *[]api.VersionedVizId `json:"chartRids,omitempty"`
-	NotebookRids *[]api.NotebookRid    `json:"notebookRids,omitempty"`
+	NotebookRids *[]api.NotebookRid    `json:"notebookRids,omitempty" safelogging:"@Safe"`
 	/*
 	   To be deprecated. Use archivedStatuses instead. If true, includes archived check alerts in the search
 	   results. If not present or false, will not show archived data reviews in search results
@@ -2170,8 +2183,9 @@ func (o *SearchCheckAlertsRequest) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchCheckAlertsResponse struct {
-	NextPageToken *api3.Token  `json:"nextPageToken,omitempty"`
+	NextPageToken *api3.Token  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	CheckAlerts   []CheckAlert `json:"checkAlerts"`
 }
 

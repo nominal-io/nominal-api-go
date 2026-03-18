@@ -283,6 +283,7 @@ type SearchQuery struct {
 	label                  *api1.Label
 	labels                 *api.LabelsFilter
 	property               *api1.Property
+	propertyKey            *api1.PropertyName
 	properties             *api.PropertiesFilter
 	dataSourceSeriesTag    *DataSourceSeriesTag
 	dataSourceRefName      *api2.DataSourceRefName
@@ -313,6 +314,7 @@ type searchQueryDeserializer struct {
 	Label                  *api1.Label             `json:"label"`
 	Labels                 *api.LabelsFilter       `json:"labels"`
 	Property               *api1.Property          `json:"property"`
+	PropertyKey            *api1.PropertyName      `json:"propertyKey"`
 	Properties             *api.PropertiesFilter   `json:"properties"`
 	DataSourceSeriesTag    *DataSourceSeriesTag    `json:"dataSourceSeriesTag"`
 	DataSourceRefName      *api2.DataSourceRefName `json:"dataSourceRefName"`
@@ -328,7 +330,7 @@ type searchQueryDeserializer struct {
 }
 
 func (u *searchQueryDeserializer) toStruct() SearchQuery {
-	return SearchQuery{typ: u.Type, startTimeInclusive: u.StartTimeInclusive, startTime: u.StartTime, endTimeInclusive: u.EndTimeInclusive, endTime: u.EndTime, timeRange: u.TimeRange, createdAt: u.CreatedAt, exactMatch: u.ExactMatch, searchText: u.SearchText, asset: u.Asset, assets: u.Assets, isSingleAsset: u.IsSingleAsset, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, dataSourceSeriesTag: u.DataSourceSeriesTag, dataSourceRefName: u.DataSourceRefName, dataSource: u.DataSource, runNumber: u.RunNumber, runPrefix: u.RunPrefix, checkAlertStatesFilter: u.CheckAlertStatesFilter, archived: u.Archived, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace}
+	return SearchQuery{typ: u.Type, startTimeInclusive: u.StartTimeInclusive, startTime: u.StartTime, endTimeInclusive: u.EndTimeInclusive, endTime: u.EndTime, timeRange: u.TimeRange, createdAt: u.CreatedAt, exactMatch: u.ExactMatch, searchText: u.SearchText, asset: u.Asset, assets: u.Assets, isSingleAsset: u.IsSingleAsset, label: u.Label, labels: u.Labels, property: u.Property, propertyKey: u.PropertyKey, properties: u.Properties, dataSourceSeriesTag: u.DataSourceSeriesTag, dataSourceRefName: u.DataSourceRefName, dataSource: u.DataSource, runNumber: u.RunNumber, runPrefix: u.RunPrefix, checkAlertStatesFilter: u.CheckAlertStatesFilter, archived: u.Archived, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace}
 }
 
 func (u *SearchQuery) toSerializer() (interface{}, error) {
@@ -447,6 +449,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type     string        `json:"type"`
 			Property api1.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return nil, fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return struct {
+			Type        string            `json:"type"`
+			PropertyKey api1.PropertyName `json:"propertyKey"`
+		}{Type: "propertyKey", PropertyKey: *u.propertyKey}, nil
 	case "properties":
 		if u.properties == nil {
 			return nil, fmt.Errorf("field \"properties\" is required")
@@ -617,6 +627,10 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
 	case "properties":
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
@@ -685,7 +699,7 @@ func (u *SearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) error, startTimeFunc func(TimeframeFilter) error, endTimeInclusiveFunc func(UtcTimestamp) error, endTimeFunc func(TimeframeFilter) error, timeRangeFunc func(TimeRangeFilter) error, createdAtFunc func(TimeframeFilter) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, assetFunc func(api.AssetRid) error, assetsFunc func(AssetsFilter) error, isSingleAssetFunc func(bool) error, labelFunc func(api1.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api1.Property) error, propertiesFunc func(api.PropertiesFilter) error, dataSourceSeriesTagFunc func(DataSourceSeriesTag) error, dataSourceRefNameFunc func(api2.DataSourceRefName) error, dataSourceFunc func(DataSource) error, runNumberFunc func(safelong.SafeLong) error, runPrefixFunc func(string) error, checkAlertStatesFilterFunc func(CheckAlertStatesFilter) error, archivedFunc func(bool) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) error, startTimeFunc func(TimeframeFilter) error, endTimeInclusiveFunc func(UtcTimestamp) error, endTimeFunc func(TimeframeFilter) error, timeRangeFunc func(TimeRangeFilter) error, createdAtFunc func(TimeframeFilter) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, assetFunc func(api.AssetRid) error, assetsFunc func(AssetsFilter) error, isSingleAssetFunc func(bool) error, labelFunc func(api1.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api1.Property) error, propertyKeyFunc func(api1.PropertyName) error, propertiesFunc func(api.PropertiesFilter) error, dataSourceSeriesTagFunc func(DataSourceSeriesTag) error, dataSourceRefNameFunc func(api2.DataSourceRefName) error, dataSourceFunc func(DataSource) error, runNumberFunc func(safelong.SafeLong) error, runPrefixFunc func(string) error, checkAlertStatesFilterFunc func(CheckAlertStatesFilter) error, archivedFunc func(bool) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -762,6 +776,11 @@ func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) erro
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return propertyKeyFunc(*u.propertyKey)
 	case "properties":
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
@@ -878,6 +897,10 @@ func (u *SearchQuery) LabelsNoopSuccess(_ api.LabelsFilter) error {
 }
 
 func (u *SearchQuery) PropertyNoopSuccess(_ api1.Property) error {
+	return nil
+}
+
+func (u *SearchQuery) PropertyKeyNoopSuccess(_ api1.PropertyName) error {
 	return nil
 }
 
@@ -1010,6 +1033,11 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return v.VisitPropertyKey(*u.propertyKey)
 	case "properties":
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
@@ -1088,6 +1116,7 @@ type SearchQueryVisitor interface {
 	VisitLabel(v api1.Label) error
 	VisitLabels(v api.LabelsFilter) error
 	VisitProperty(v api1.Property) error
+	VisitPropertyKey(v api1.PropertyName) error
 	VisitProperties(v api.PropertiesFilter) error
 	VisitDataSourceSeriesTag(v DataSourceSeriesTag) error
 	VisitDataSourceRefName(v api2.DataSourceRefName) error
@@ -1180,6 +1209,11 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return v.VisitPropertyKeyWithContext(ctx, *u.propertyKey)
 	case "properties":
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
@@ -1258,6 +1292,7 @@ type SearchQueryVisitorWithContext interface {
 	VisitLabelWithContext(ctx context.Context, v api1.Label) error
 	VisitLabelsWithContext(ctx context.Context, v api.LabelsFilter) error
 	VisitPropertyWithContext(ctx context.Context, v api1.Property) error
+	VisitPropertyKeyWithContext(ctx context.Context, v api1.PropertyName) error
 	VisitPropertiesWithContext(ctx context.Context, v api.PropertiesFilter) error
 	VisitDataSourceSeriesTagWithContext(ctx context.Context, v DataSourceSeriesTag) error
 	VisitDataSourceRefNameWithContext(ctx context.Context, v api2.DataSourceRefName) error
@@ -1327,6 +1362,10 @@ func NewSearchQueryFromLabels(v api.LabelsFilter) SearchQuery {
 
 func NewSearchQueryFromProperty(v api1.Property) SearchQuery {
 	return SearchQuery{typ: "property", property: &v}
+}
+
+func NewSearchQueryFromPropertyKey(v api1.PropertyName) SearchQuery {
+	return SearchQuery{typ: "propertyKey", propertyKey: &v}
 }
 
 func NewSearchQueryFromProperties(v api.PropertiesFilter) SearchQuery {

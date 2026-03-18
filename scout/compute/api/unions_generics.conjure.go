@@ -988,6 +988,55 @@ type ComputeUnitResultVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type ConstantNumericSeriesWithT[T any] ConstantNumericSeries
+
+func (u *ConstantNumericSeriesWithT[T]) Accept(ctx context.Context, v ConstantNumericSeriesVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "double":
+		if u.double == nil {
+			return result, fmt.Errorf("field \"double\" is required")
+		}
+		return v.VisitDouble(ctx, *u.double)
+	}
+}
+
+func (u *ConstantNumericSeriesWithT[T]) AcceptFuncs(doubleFunc func(DoubleConstant) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "double":
+		if u.double == nil {
+			return result, fmt.Errorf("field \"double\" is required")
+		}
+		return doubleFunc(*u.double)
+	}
+}
+
+func (u *ConstantNumericSeriesWithT[T]) DoubleNoopSuccess(DoubleConstant) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ConstantNumericSeriesWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ConstantNumericSeriesVisitorWithT[T any] interface {
+	VisitDouble(ctx context.Context, v DoubleConstant) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type CurveFitDetailsWithT[T any] CurveFitDetails
 
 func (u *CurveFitDetailsWithT[T]) Accept(ctx context.Context, v CurveFitDetailsVisitorWithT[T]) (T, error) {

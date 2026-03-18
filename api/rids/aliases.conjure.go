@@ -9,7 +9,7 @@ import (
 )
 
 // Unique resource identifier for an ongoing thread of conversation with the Nominal LLM Agent.
-type AiConversationRid rid.ResourceIdentifier
+type AiConversationRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a AiConversationRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -58,7 +58,7 @@ func (a *AiConversationRid) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 // Unique resource identifier for an Attachment
-type AttachmentRid rid.ResourceIdentifier
+type AttachmentRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a AttachmentRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -110,7 +110,7 @@ func (a *AttachmentRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 Unique resource identifier for an AutomaticCheckEvaluation.
 This is used to identify the evaluation of a check that was automatically triggered.
 */
-type AutomaticCheckEvaluationRid rid.ResourceIdentifier
+type AutomaticCheckEvaluationRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a AutomaticCheckEvaluationRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -159,7 +159,7 @@ func (a *AutomaticCheckEvaluationRid) UnmarshalYAML(unmarshal func(interface{}) 
 }
 
 // Unique resource identifier for a Chunk
-type ChunkRid rid.ResourceIdentifier
+type ChunkRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ChunkRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -208,7 +208,7 @@ func (a *ChunkRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Unique resource identifier for a Connect App.
-type ConnectAppRid rid.ResourceIdentifier
+type ConnectAppRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ConnectAppRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -257,7 +257,7 @@ func (a *ConnectAppRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Unique resource identifier for a Data Connector.
-type DataConnectorRid rid.ResourceIdentifier
+type DataConnectorRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a DataConnectorRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -310,7 +310,7 @@ Unique resource identifier for a DataSource.
 Typically, this is used to refer to the datasource for which a channel is associated,
 almost always in reference to either a dataset or a connection.
 */
-type DataSourceRid rid.ResourceIdentifier
+type DataSourceRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a DataSourceRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -359,7 +359,7 @@ func (a *DataSourceRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Unique resource identifier for a Dataset
-type DatasetRid rid.ResourceIdentifier
+type DatasetRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a DatasetRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -408,7 +408,7 @@ func (a *DatasetRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Unique resource identifier for an Event.
-type EventRid rid.ResourceIdentifier
+type EventRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a EventRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -460,7 +460,7 @@ func (a *EventRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 Unique resource identifier for a Mesh Link.
 A link connects a local resource to a remote resource for syncing between mesh environments.
 */
-type LinkRid rid.ResourceIdentifier
+type LinkRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a LinkRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -512,7 +512,7 @@ func (a *LinkRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 Unique resource identifier for a local resource in a Mesh link.
 This is any resource type that's supported for mesh links and represents the local environment's resource.
 */
-type LocalResourceRid rid.ResourceIdentifier
+type LocalResourceRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a LocalResourceRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -565,7 +565,7 @@ Unique resource identifier for a NominalDataSource or Dataset.
 Though named similarly to a DataSourceRid, a NominalDataSourceRid specifically refers To
 a NominalDataSource, which is a nominal hosted database for streaming writes.
 */
-type NominalDataSourceOrDatasetRid rid.ResourceIdentifier
+type NominalDataSourceOrDatasetRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a NominalDataSourceOrDatasetRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -618,7 +618,7 @@ Unique resource identifier for a NominalDataSource.
 Though named similarly to a DataSourceRid, a NominalDataSourceRid specifically refers To
 a NominalDataSource, which is a nominal hosted database for streaming writes.
 */
-type NominalDataSourceRid rid.ResourceIdentifier
+type NominalDataSourceRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a NominalDataSourceRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -667,7 +667,7 @@ func (a *NominalDataSourceRid) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 // Unique resource identifier for a Procedure Execution.
-type ProcedureExecutionRid rid.ResourceIdentifier
+type ProcedureExecutionRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ProcedureExecutionRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -716,7 +716,7 @@ func (a *ProcedureExecutionRid) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 // Unique resource identifier for a Procedure.
-type ProcedureRid rid.ResourceIdentifier
+type ProcedureRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ProcedureRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -768,7 +768,7 @@ func (a *ProcedureRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 Unique resource identifier for a Remote Connection.
 This represents a remote Nominal environment for mesh links.
 */
-type RemoteConnectionRid rid.ResourceIdentifier
+type RemoteConnectionRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a RemoteConnectionRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -820,7 +820,7 @@ func (a *RemoteConnectionRid) UnmarshalYAML(unmarshal func(interface{}) error) e
 Unique resource identifier for a remote resource in a Mesh link.
 This is any resource type that's supported for mesh links and represents the remote environment's resource.
 */
-type RemoteResourceRid rid.ResourceIdentifier
+type RemoteResourceRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a RemoteResourceRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -869,7 +869,7 @@ func (a *RemoteResourceRid) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 // Unique resource identifier for a Video Segment
-type SegmentRid rid.ResourceIdentifier
+type SegmentRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a SegmentRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -918,7 +918,7 @@ func (a *SegmentRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Unique resource identifier for a Streaming Connection.
-type StreamingConnectionRid rid.ResourceIdentifier
+type StreamingConnectionRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a StreamingConnectionRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -967,7 +967,7 @@ func (a *StreamingConnectionRid) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 // Unique resource identifier for a Video file
-type VideoFileRid rid.ResourceIdentifier
+type VideoFileRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a VideoFileRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -1016,7 +1016,7 @@ func (a *VideoFileRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Unique resource identifier for a Video
-type VideoRid rid.ResourceIdentifier
+type VideoRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a VideoRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -1065,7 +1065,7 @@ func (a *VideoRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Unique resource identifier for a Workspace.
-type WorkspaceRid rid.ResourceIdentifier
+type WorkspaceRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a WorkspaceRid) String() string {
 	return rid.ResourceIdentifier(a).String()

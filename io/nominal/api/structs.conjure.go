@@ -63,7 +63,7 @@ func (o *Empty) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type ErrorResult struct {
-	ErrorType ErrorType `json:"errorType"`
+	ErrorType ErrorType `json:"errorType" safelogging:"@Safe"`
 	Message   string    `json:"message"`
 }
 
@@ -101,9 +101,10 @@ func (o *InProgressResult) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Property struct {
-	Name  PropertyName  `json:"name"`
-	Value PropertyValue `json:"value"`
+	Name  PropertyName  `json:"name" safelogging:"@Unsafe"`
+	Value PropertyValue `json:"value" safelogging:"@Unsafe"`
 }
 
 func (o Property) MarshalYAML() (interface{}, error) {
@@ -122,9 +123,10 @@ func (o *Property) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type Range struct {
-	Start Timestamp `json:"start"`
-	End   Timestamp `json:"end"`
+	Start Timestamp `json:"start" safelogging:"@Safe"`
+	End   Timestamp `json:"end" safelogging:"@Safe"`
 }
 
 func (o Range) MarshalYAML() (interface{}, error) {
@@ -143,8 +145,9 @@ func (o *Range) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RefNameAndType struct {
-	Name DataSourceRefName `json:"name"`
+	Name DataSourceRefName `json:"name" safelogging:"@Unsafe"`
 	Type DataSourceType    `json:"type"`
 }
 
@@ -231,6 +234,27 @@ func (o *SuccessResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type ThemeAwareImage struct {
+	Light string `json:"light"`
+	Dark  string `json:"dark"`
+}
+
+func (o ThemeAwareImage) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ThemeAwareImage) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 /*
 Picosecond precision timestamp type, represented by an epoch time in seconds, a nanosecond offset, and
 optional picosecond offset.
@@ -238,10 +262,11 @@ The nanosecond offset is from the start of the epoch second, so must be less tha
 The optional picosecond offset is only used for picosecond-precision data sources and is from the start of
 the nanosecond, so must be less than 1000.
 */
+// safelogging:@Safe
 type Timestamp struct {
-	Seconds safelong.SafeLong `json:"seconds"`
-	Nanos   safelong.SafeLong `json:"nanos"`
-	Picos   *int              `json:"picos,omitempty"`
+	Seconds safelong.SafeLong `json:"seconds" safelogging:"@Safe"`
+	Nanos   safelong.SafeLong `json:"nanos" safelogging:"@Safe"`
+	Picos   *int              `json:"picos,omitempty" safelogging:"@Safe"`
 }
 
 func (o Timestamp) MarshalYAML() (interface{}, error) {

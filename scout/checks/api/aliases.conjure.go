@@ -8,7 +8,7 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type JobRid rid.ResourceIdentifier
+type JobRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a JobRid) String() string {
 	return rid.ResourceIdentifier(a).String()

@@ -14,13 +14,14 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type AlertMessageFields struct {
 	AssetTitle       string              `json:"assetTitle"`
 	CheckTitle       string              `json:"checkTitle"`
 	CheckDescription string              `json:"checkDescription"`
 	ChecklistTitle   string              `json:"checklistTitle"`
-	AssetRid         api.AssetRid        `json:"assetRid"`
-	CheckLineageRid  api.CheckLineageRid `json:"checkLineageRid"`
+	AssetRid         api.AssetRid        `json:"assetRid" safelogging:"@Safe"`
+	CheckLineageRid  api.CheckLineageRid `json:"checkLineageRid" safelogging:"@Safe"`
 	// Appended to the end of the message as a button (if supported) or as a text hyperlink.
 	WorkbookUrl *string `json:"workbookUrl,omitempty"`
 	// Appended to the end of the message as a button (if supported) or as a text hyperlink.
@@ -29,7 +30,7 @@ type AlertMessageFields struct {
 	EventType event.EventType `json:"eventType"`
 	Priority  api1.Priority   `json:"priority"`
 	// Currently exposed as 'tags' on the frontend to match Opsgenie naming. Used by some integrations to filter/route messages.
-	Labels []api2.Label `json:"labels"`
+	Labels []api2.Label `json:"labels" safelogging:"@Unsafe"`
 	// Determines execution status of the alert, between success, failure, and execution error.
 	AlertType AlertType `json:"alertType"`
 }
@@ -79,7 +80,7 @@ type CreateIntegrationRequest struct {
 	   The workspace in which to create the integration. If not provided, the integration will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateIntegrationRequest) MarshalYAML() (interface{}, error) {
@@ -147,7 +148,7 @@ type CreateSecureWebhookIntegrationRequest struct {
 	   The workspace in which to create the integration. If not provided, the integration will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace   *rids.WorkspaceRid       `json:"workspace,omitempty"`
+	Workspace   *rids.WorkspaceRid       `json:"workspace,omitempty" safelogging:"@Safe"`
 	Integration SecureWebhookIntegration `json:"integration"`
 }
 
@@ -260,7 +261,7 @@ func (o *GenerateSlackWebhookResponse) UnmarshalYAML(unmarshal func(interface{})
 
 // Configuration details used to connect to an external service.
 type Integration struct {
-	Rid                IntegrationRid         `json:"rid"`
+	Rid                IntegrationRid         `json:"rid" safelogging:"@Safe"`
 	Name               string                 `json:"name"`
 	Description        *string                `json:"description,omitempty"`
 	IntegrationDetails IntegrationDetails     `json:"integrationDetails"`
@@ -286,7 +287,7 @@ func (o *Integration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type InternalSendMessageRequest struct {
-	IntegrationRid IntegrationRid `json:"integrationRid"`
+	IntegrationRid IntegrationRid `json:"integrationRid" safelogging:"@Safe"`
 	Message        MessageFields  `json:"message"`
 }
 
@@ -308,11 +309,11 @@ func (o *InternalSendMessageRequest) UnmarshalYAML(unmarshal func(interface{}) e
 
 // Configuration details to send notifications to a linked integration.
 type NotificationConfiguration struct {
-	IntegrationRid IntegrationRid `json:"integrationRid"`
+	IntegrationRid IntegrationRid `json:"integrationRid" safelogging:"@Safe"`
 	// Specifies the type of notifications to filter. If not provided, all notifications are sent.
 	NotificationFilters *[]NotificationFilter `json:"notificationFilters,omitempty"`
 	// If provided, appends a link to the workbook specified by the RID to the notification.
-	AppendedWorkbookRid *api.NotebookRid `json:"appendedWorkbookRid,omitempty"`
+	AppendedWorkbookRid *api.NotebookRid `json:"appendedWorkbookRid,omitempty" safelogging:"@Safe"`
 	// 20 tags max, 50 characters max each. Tags are used to filter messages in Opsgenie. For other integrations, tags are ignored.
 	Tags []string `json:"tags"`
 }
@@ -392,15 +393,16 @@ func (o *PagerDutyIntegration) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ResolutionFailureMessageFields struct {
 	ChecklistTitle   string           `json:"checklistTitle"`
 	AssetTitle       string           `json:"assetTitle"`
-	ChecklistRid     api.ChecklistRid `json:"checklistRid"`
-	AssetRid         api.AssetRid     `json:"assetRid"`
+	ChecklistRid     api.ChecklistRid `json:"checklistRid" safelogging:"@Safe"`
+	AssetRid         api.AssetRid     `json:"assetRid" safelogging:"@Safe"`
 	UnresolvedChecks int              `json:"unresolvedChecks"`
 	TotalChecks      int              `json:"totalChecks"`
 	// Currently exposed as 'tags' on the frontend to match Opsgenie naming. Used by some integrations to filter/route messages.
-	Labels []api2.Label `json:"labels"`
+	Labels []api2.Label `json:"labels" safelogging:"@Unsafe"`
 }
 
 func (o ResolutionFailureMessageFields) MarshalJSON() ([]byte, error) {
@@ -534,7 +536,7 @@ type SendMessageRequest struct {
 	Tags []string `json:"tags"`
 	// Alias to use for the Opsgenie alert deduplication. 512 characters max.
 	OpsGenieAlias  *string        `json:"opsGenieAlias,omitempty"`
-	IntegrationRid IntegrationRid `json:"integrationRid"`
+	IntegrationRid IntegrationRid `json:"integrationRid" safelogging:"@Safe"`
 	Priority       *api1.Priority `json:"priority,omitempty"`
 }
 

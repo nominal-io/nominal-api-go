@@ -5,13 +5,15 @@ package api
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
 
 type BatchGetChannelPrefixTreeRequest struct {
-	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids"`
+	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids" safelogging:"@Safe"`
 	/*
 	   When dataScopeFilters are specified, the set of data sources must match the set of data sources in
 	   DataScopeFilters#tags
@@ -180,9 +182,92 @@ func (o *BatchGetDataScopeBoundsResponse) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BatchGetSeriesCountRequest struct {
+	Requests []GetSeriesCountRequest `json:"requests"`
+}
+
+func (o BatchGetSeriesCountRequest) MarshalJSON() ([]byte, error) {
+	if o.Requests == nil {
+		o.Requests = make([]GetSeriesCountRequest, 0)
+	}
+	type _tmpBatchGetSeriesCountRequest BatchGetSeriesCountRequest
+	return safejson.Marshal(_tmpBatchGetSeriesCountRequest(o))
+}
+
+func (o *BatchGetSeriesCountRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchGetSeriesCountRequest BatchGetSeriesCountRequest
+	var rawBatchGetSeriesCountRequest _tmpBatchGetSeriesCountRequest
+	if err := safejson.Unmarshal(data, &rawBatchGetSeriesCountRequest); err != nil {
+		return err
+	}
+	if rawBatchGetSeriesCountRequest.Requests == nil {
+		rawBatchGetSeriesCountRequest.Requests = make([]GetSeriesCountRequest, 0)
+	}
+	*o = BatchGetSeriesCountRequest(rawBatchGetSeriesCountRequest)
+	return nil
+}
+
+func (o BatchGetSeriesCountRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchGetSeriesCountRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BatchGetSeriesCountResponse struct {
+	Responses []GetSeriesCountResponse `json:"responses"`
+}
+
+func (o BatchGetSeriesCountResponse) MarshalJSON() ([]byte, error) {
+	if o.Responses == nil {
+		o.Responses = make([]GetSeriesCountResponse, 0)
+	}
+	type _tmpBatchGetSeriesCountResponse BatchGetSeriesCountResponse
+	return safejson.Marshal(_tmpBatchGetSeriesCountResponse(o))
+}
+
+func (o *BatchGetSeriesCountResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchGetSeriesCountResponse BatchGetSeriesCountResponse
+	var rawBatchGetSeriesCountResponse _tmpBatchGetSeriesCountResponse
+	if err := safejson.Unmarshal(data, &rawBatchGetSeriesCountResponse); err != nil {
+		return err
+	}
+	if rawBatchGetSeriesCountResponse.Responses == nil {
+		rawBatchGetSeriesCountResponse.Responses = make([]GetSeriesCountResponse, 0)
+	}
+	*o = BatchGetSeriesCountResponse(rawBatchGetSeriesCountResponse)
+	return nil
+}
+
+func (o BatchGetSeriesCountResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchGetSeriesCountResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
 type ChannelMetadata struct {
-	Name        api.Channel                         `json:"name"`
-	DataSource  rids.DataSourceRid                  `json:"dataSource"`
+	Name        api.Channel                         `json:"name" safelogging:"@Unsafe"`
+	DataSource  rids.DataSourceRid                  `json:"dataSource" safelogging:"@Safe"`
 	Unit        *api1.Unit                          `json:"unit,omitempty"`
 	Description *string                             `json:"description,omitempty"`
 	DataType    *api.SeriesDataType                 `json:"dataType,omitempty"`
@@ -290,9 +375,10 @@ func (o *ChannelPrefixTreeNode) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ChannelWithAvailableTags struct {
-	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
-	Channel       api.Channel        `json:"channel"`
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
+	Channel       api.Channel        `json:"channel" safelogging:"@Unsafe"`
 	/*
 	   A set of tag keys and their values given the initial set of filters. The initial tag filters
 	   will be included in the map with their corresponding values.
@@ -337,9 +423,10 @@ func (o *ChannelWithAvailableTags) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ChannelWithTagFilters struct {
-	DataSourceRid rids.DataSourceRid           `json:"dataSourceRid"`
-	Channel       api.Channel                  `json:"channel"`
+	DataSourceRid rids.DataSourceRid           `json:"dataSourceRid" safelogging:"@Safe"`
+	Channel       api.Channel                  `json:"channel" safelogging:"@Unsafe"`
 	TagFilters    map[api.TagName]api.TagValue `json:"tagFilters"`
 }
 
@@ -432,7 +519,7 @@ func (o *DataScopeFilters) UnmarshalYAML(unmarshal func(interface{}) error) erro
 type DataSourcePrefixNode struct {
 	// Should be combined with the ancestor parts and the delimiter to form the full prefix.
 	Part       string             `json:"part"`
-	DataSource rids.DataSourceRid `json:"dataSource"`
+	DataSource rids.DataSourceRid `json:"dataSource" safelogging:"@Safe"`
 }
 
 func (o DataSourcePrefixNode) MarshalYAML() (interface{}, error) {
@@ -451,9 +538,10 @@ func (o *DataSourcePrefixNode) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetAvailableTagKeysRequest struct {
-	Filters       TagSearchFilters `json:"filters"`
-	NextPageToken *api.TagName     `json:"nextPageToken,omitempty"`
+	Filters       TagSearchFilters `json:"filters" safelogging:"@Unsafe"`
+	NextPageToken *api.TagName     `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	PageSize      *int             `json:"pageSize,omitempty"`
 }
 
@@ -473,9 +561,10 @@ func (o *GetAvailableTagKeysRequest) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetAvailableTagKeysResponse struct {
-	Results       []api.TagName `json:"results"`
-	NextPageToken *api.TagName  `json:"nextPageToken,omitempty"`
+	Results       []api.TagName `json:"results" safelogging:"@Unsafe"`
+	NextPageToken *api.TagName  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o GetAvailableTagKeysResponse) MarshalJSON() ([]byte, error) {
@@ -515,10 +604,11 @@ func (o *GetAvailableTagKeysResponse) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetAvailableTagValuesRequest struct {
-	Filters       TagSearchFilters `json:"filters"`
-	TagName       api.TagName      `json:"tagName"`
-	NextPageToken *api.TagValue    `json:"nextPageToken,omitempty"`
+	Filters       TagSearchFilters `json:"filters" safelogging:"@Unsafe"`
+	TagName       api.TagName      `json:"tagName" safelogging:"@Unsafe"`
+	NextPageToken *api.TagValue    `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 1000. Will throw if larger than 10000.
 	PageSize *int `json:"pageSize,omitempty"`
 }
@@ -539,9 +629,10 @@ func (o *GetAvailableTagValuesRequest) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetAvailableTagValuesResponse struct {
-	Results       []api.TagValue `json:"results"`
-	NextPageToken *api.TagValue  `json:"nextPageToken,omitempty"`
+	Results       []api.TagValue `json:"results" safelogging:"@Unsafe"`
+	NextPageToken *api.TagValue  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o GetAvailableTagValuesResponse) MarshalJSON() ([]byte, error) {
@@ -581,8 +672,9 @@ func (o *GetAvailableTagValuesResponse) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetAvailableTagsForChannelRequest struct {
-	ChannelWithTagFilters ChannelWithTagFilters `json:"channelWithTagFilters"`
+	ChannelWithTagFilters ChannelWithTagFilters `json:"channelWithTagFilters" safelogging:"@Unsafe"`
 	StartTime             api1.UtcTimestamp     `json:"startTime"`
 	EndTime               api1.UtcTimestamp     `json:"endTime"`
 }
@@ -603,8 +695,9 @@ func (o *GetAvailableTagsForChannelRequest) UnmarshalYAML(unmarshal func(interfa
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetAvailableTagsForChannelResponse struct {
-	AvailableTags ChannelWithAvailableTags `json:"availableTags"`
+	AvailableTags ChannelWithAvailableTags `json:"availableTags" safelogging:"@Unsafe"`
 }
 
 func (o GetAvailableTagsForChannelResponse) MarshalYAML() (interface{}, error) {
@@ -624,7 +717,7 @@ func (o *GetAvailableTagsForChannelResponse) UnmarshalYAML(unmarshal func(interf
 }
 
 type GetDataScopeBoundsRequest struct {
-	DataSourceRid rids.DataSourceRid           `json:"dataSourceRid"`
+	DataSourceRid rids.DataSourceRid           `json:"dataSourceRid" safelogging:"@Safe"`
 	Tags          map[api.TagName]api.TagValue `json:"tags"`
 }
 
@@ -689,9 +782,158 @@ func (o *GetDataScopeBoundsResponse) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
+type GetMatchingChannelsWithTagsRequest struct {
+	DatasetRid rids.DatasetRid `json:"datasetRid" safelogging:"@Safe"`
+	Channel    api.Channel     `json:"channel" safelogging:"@Unsafe"`
+	// Tag key/value filters to apply with exact-match semantics per key. Empty map means no tag filtering.
+	Tags map[api.TagName]api.TagValue `json:"tags"`
+	// Optional page size for paginated responses. If omitted with pageToken, defaults to 1000.
+	PageSize *int `json:"pageSize,omitempty"`
+	/*
+	   Optional opaque token for fetching the next page. Use the `nextPageToken` returned from the prior
+	   response.
+	*/
+	PageToken *string `json:"pageToken,omitempty"`
+}
+
+func (o GetMatchingChannelsWithTagsRequest) MarshalJSON() ([]byte, error) {
+	if o.Tags == nil {
+		o.Tags = make(map[api.TagName]api.TagValue)
+	}
+	type _tmpGetMatchingChannelsWithTagsRequest GetMatchingChannelsWithTagsRequest
+	return safejson.Marshal(_tmpGetMatchingChannelsWithTagsRequest(o))
+}
+
+func (o *GetMatchingChannelsWithTagsRequest) UnmarshalJSON(data []byte) error {
+	type _tmpGetMatchingChannelsWithTagsRequest GetMatchingChannelsWithTagsRequest
+	var rawGetMatchingChannelsWithTagsRequest _tmpGetMatchingChannelsWithTagsRequest
+	if err := safejson.Unmarshal(data, &rawGetMatchingChannelsWithTagsRequest); err != nil {
+		return err
+	}
+	if rawGetMatchingChannelsWithTagsRequest.Tags == nil {
+		rawGetMatchingChannelsWithTagsRequest.Tags = make(map[api.TagName]api.TagValue)
+	}
+	*o = GetMatchingChannelsWithTagsRequest(rawGetMatchingChannelsWithTagsRequest)
+	return nil
+}
+
+func (o GetMatchingChannelsWithTagsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetMatchingChannelsWithTagsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetMatchingChannelsWithTagsResponse struct {
+	ChannelsWithTags []MatchingChannelWithTags `json:"channelsWithTags"`
+	NextPageToken    *string                   `json:"nextPageToken,omitempty"`
+}
+
+func (o GetMatchingChannelsWithTagsResponse) MarshalJSON() ([]byte, error) {
+	if o.ChannelsWithTags == nil {
+		o.ChannelsWithTags = make([]MatchingChannelWithTags, 0)
+	}
+	type _tmpGetMatchingChannelsWithTagsResponse GetMatchingChannelsWithTagsResponse
+	return safejson.Marshal(_tmpGetMatchingChannelsWithTagsResponse(o))
+}
+
+func (o *GetMatchingChannelsWithTagsResponse) UnmarshalJSON(data []byte) error {
+	type _tmpGetMatchingChannelsWithTagsResponse GetMatchingChannelsWithTagsResponse
+	var rawGetMatchingChannelsWithTagsResponse _tmpGetMatchingChannelsWithTagsResponse
+	if err := safejson.Unmarshal(data, &rawGetMatchingChannelsWithTagsResponse); err != nil {
+		return err
+	}
+	if rawGetMatchingChannelsWithTagsResponse.ChannelsWithTags == nil {
+		rawGetMatchingChannelsWithTagsResponse.ChannelsWithTags = make([]MatchingChannelWithTags, 0)
+	}
+	*o = GetMatchingChannelsWithTagsResponse(rawGetMatchingChannelsWithTagsResponse)
+	return nil
+}
+
+func (o GetMatchingChannelsWithTagsResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetMatchingChannelsWithTagsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type GetSeriesCountRequest struct {
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
+	Channel       api.Channel        `json:"channel" safelogging:"@Unsafe"`
+	Range         api.Range          `json:"range" safelogging:"@Safe"`
+	/*
+	   Tag filters to apply when counting series. Supports IN/NOT_IN operators and AND composition,
+	   matching the tag filter semantics used in compute queries.
+	*/
+	TagFilters *api2.TagFilters `json:"tagFilters,omitempty"`
+	// Variable context for resolving variables in tag filters. Same context format used in compute APIs.
+	Context *api11.Context `json:"context,omitempty"`
+}
+
+func (o GetSeriesCountRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetSeriesCountRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetSeriesCountResponse struct {
+	/*
+	   The number of distinct series. Empty if the datasource type does not support series counting
+	   (e.g. external datasources).
+	*/
+	SeriesCount *int `json:"seriesCount,omitempty"`
+}
+
+func (o GetSeriesCountResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetSeriesCountResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
 type GetTagValuesForDataSourceRequest struct {
 	// If empty, returns all available tag keys.
-	TagKeys *[]api.TagName `json:"tagKeys,omitempty"`
+	TagKeys *[]api.TagName `json:"tagKeys,omitempty" safelogging:"@Unsafe"`
 	/*
 	   For Nominal data sources, a time range can be provided to filter tag values to those present within the
 	   months spanned by the range. If left empty, this defaults to the last month. For external data sources,
@@ -719,7 +961,7 @@ func (o *GetTagValuesForDataSourceRequest) UnmarshalYAML(unmarshal func(interfac
 }
 
 type IndexChannelPrefixTreeRequest struct {
-	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
 	Delimiter     string             `json:"delimiter"`
 }
 
@@ -739,18 +981,63 @@ func (o *IndexChannelPrefixTreeRequest) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Represents a channel identity by channel name and full tag map.
+// safelogging:@Unsafe
+type MatchingChannelWithTags struct {
+	Channel api.Channel                  `json:"channel" safelogging:"@Unsafe"`
+	Tags    map[api.TagName]api.TagValue `json:"tags"`
+}
+
+func (o MatchingChannelWithTags) MarshalJSON() ([]byte, error) {
+	if o.Tags == nil {
+		o.Tags = make(map[api.TagName]api.TagValue)
+	}
+	type _tmpMatchingChannelWithTags MatchingChannelWithTags
+	return safejson.Marshal(_tmpMatchingChannelWithTags(o))
+}
+
+func (o *MatchingChannelWithTags) UnmarshalJSON(data []byte) error {
+	type _tmpMatchingChannelWithTags MatchingChannelWithTags
+	var rawMatchingChannelWithTags _tmpMatchingChannelWithTags
+	if err := safejson.Unmarshal(data, &rawMatchingChannelWithTags); err != nil {
+		return err
+	}
+	if rawMatchingChannelWithTags.Tags == nil {
+		rawMatchingChannelWithTags.Tags = make(map[api.TagName]api.TagValue)
+	}
+	*o = MatchingChannelWithTags(rawMatchingChannelWithTags)
+	return nil
+}
+
+func (o MatchingChannelWithTags) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MatchingChannelWithTags) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
 type SearchChannelsRequest struct {
 	FuzzySearchText string `json:"fuzzySearchText"`
 	// Deprecated: Use `searchHierarchical` instead. Will be ignored.
 	Prefix *string `json:"prefix,omitempty"`
 	// Will return only channels that contain all strings specified as exact matches (case insensitive).
 	ExactMatch  []string             `json:"exactMatch"`
-	DataSources []rids.DataSourceRid `json:"dataSources"`
+	DataSources []rids.DataSourceRid `json:"dataSources" safelogging:"@Safe"`
 	// Filter to only channels with these data types. An empty set means no filtering (all data types included).
 	DataTypes []api.SeriesDataType `json:"dataTypes"`
 	// Deprecated: Will be ignored.
 	PreviouslySelectedChannels *map[rids.DataSourceRid][]api.Channel `json:"previouslySelectedChannels,omitempty"`
-	NextPageToken              *api.Token                            `json:"nextPageToken,omitempty"`
+	NextPageToken              *api.Token                            `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 1000. Will throw if larger than 1000.
 	PageSize *int `json:"pageSize,omitempty"`
 }
@@ -804,9 +1091,10 @@ func (o *SearchChannelsRequest) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchChannelsResponse struct {
 	Results       []ChannelMetadata `json:"results"`
-	NextPageToken *api.Token        `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token        `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchChannelsResponse) MarshalJSON() ([]byte, error) {
@@ -854,7 +1142,7 @@ type SearchFilteredChannelsRequest struct {
 	   within the channel name. Only supports one subsequence to match at this time.
 	*/
 	Subsequences *[]string            `json:"subsequences,omitempty"`
-	DataSources  []rids.DataSourceRid `json:"dataSources"`
+	DataSources  []rids.DataSourceRid `json:"dataSources" safelogging:"@Safe"`
 	// Defaults to 200. Will throw if larger than 200.
 	ResultSize *int `json:"resultSize,omitempty"`
 	/*
@@ -966,7 +1254,7 @@ func (o *SearchFilteredChannelsResponse) UnmarshalYAML(unmarshal func(interface{
 type SearchHierarchicalChannelsRequest struct {
 	// The parent (represented as a list of parts) to search under. If empty, will return all top-level channels.
 	Parent      []string             `json:"parent"`
-	DataSources []rids.DataSourceRid `json:"dataSources"`
+	DataSources []rids.DataSourceRid `json:"dataSources" safelogging:"@Safe"`
 	/*
 	   When dataScopeFilters are specified, the set of data sources must match the set of data sources in
 	   DataScopeFilters#tags
@@ -1062,9 +1350,10 @@ func (o *SearchHierarchicalChannelsResponse) UnmarshalYAML(unmarshal func(interf
 Filters to use when searching for available tag names and values in paged endpoints.
 All filters are optional.
 */
+// safelogging:@Unsafe
 type TagSearchFilters struct {
 	// Optional, defaults to all channels in datasource.
-	Channel *api.Channel `json:"channel,omitempty"`
+	Channel *api.Channel `json:"channel,omitempty" safelogging:"@Unsafe"`
 	// Optional, defaults to no tag filter.
 	TagFilters map[api.TagName]api.TagValue `json:"tagFilters"`
 	// Optional, defaults to no range filter.

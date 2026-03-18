@@ -15,8 +15,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type secretNotFound struct {
-	SecretRid SecretRid `json:"secretRid"`
+	SecretRid SecretRid `json:"secretRid" safelogging:"@Safe"`
 }
 
 func (o secretNotFound) MarshalYAML() (interface{}, error) {
@@ -164,8 +165,9 @@ func (e *SecretNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type secretsNotFound struct {
-	SecretRids []SecretRid `json:"secretRids"`
+	SecretRids []SecretRid `json:"secretRids" safelogging:"@Safe"`
 }
 
 func (o secretsNotFound) MarshalJSON() ([]byte, error) {

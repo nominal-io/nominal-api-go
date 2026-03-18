@@ -1439,6 +1439,7 @@ type SearchQuery struct {
 	typ                 string
 	archived            *bool
 	searchText          *string
+	exactMatch          *string
 	after               *api3.Timestamp
 	before              *api3.Timestamp
 	advancedTimeFilter  *EventTimeFilter
@@ -1481,6 +1482,7 @@ type searchQueryDeserializer struct {
 	Type                string                      `json:"type"`
 	Archived            *bool                       `json:"archived"`
 	SearchText          *string                     `json:"searchText"`
+	ExactMatch          *string                     `json:"exactMatch"`
 	After               *api3.Timestamp             `json:"after"`
 	Before              *api3.Timestamp             `json:"before"`
 	AdvancedTimeFilter  *EventTimeFilter            `json:"advancedTimeFilter"`
@@ -1520,7 +1522,7 @@ type searchQueryDeserializer struct {
 }
 
 func (u *searchQueryDeserializer) toStruct() SearchQuery {
-	return SearchQuery{typ: u.Type, archived: u.Archived, searchText: u.SearchText, after: u.After, before: u.Before, advancedTimeFilter: u.AdvancedTimeFilter, asset: u.Asset, assets: u.Assets, template: u.Template, workbook: u.Workbook, dataReview: u.DataReview, dataReviews: u.DataReviews, originType: u.OriginType, originTypes: u.OriginTypes, dataReviewCheck: u.DataReviewCheck, dataReviewChecks: u.DataReviewChecks, dispositionStatus: u.DispositionStatus, dispositionStatuses: u.DispositionStatuses, priority: u.Priority, priorities: u.Priorities, assignee: u.Assignee, assignees: u.Assignees, eventType: u.EventType, eventTypes: u.EventTypes, createdBy: u.CreatedBy, createdByAnyOf: u.CreatedByAnyOf, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, procedure: u.Procedure, procedureExecution: u.ProcedureExecution, stepId: u.StepId, streamingChecklist: u.StreamingChecklist, streamingCheck: u.StreamingCheck}
+	return SearchQuery{typ: u.Type, archived: u.Archived, searchText: u.SearchText, exactMatch: u.ExactMatch, after: u.After, before: u.Before, advancedTimeFilter: u.AdvancedTimeFilter, asset: u.Asset, assets: u.Assets, template: u.Template, workbook: u.Workbook, dataReview: u.DataReview, dataReviews: u.DataReviews, originType: u.OriginType, originTypes: u.OriginTypes, dataReviewCheck: u.DataReviewCheck, dataReviewChecks: u.DataReviewChecks, dispositionStatus: u.DispositionStatus, dispositionStatuses: u.DispositionStatuses, priority: u.Priority, priorities: u.Priorities, assignee: u.Assignee, assignees: u.Assignees, eventType: u.EventType, eventTypes: u.EventTypes, createdBy: u.CreatedBy, createdByAnyOf: u.CreatedByAnyOf, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, procedure: u.Procedure, procedureExecution: u.ProcedureExecution, stepId: u.StepId, streamingChecklist: u.StreamingChecklist, streamingCheck: u.StreamingCheck}
 }
 
 func (u *SearchQuery) toSerializer() (interface{}, error) {
@@ -1543,6 +1545,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type       string `json:"type"`
 			SearchText string `json:"searchText"`
 		}{Type: "searchText", SearchText: *u.searchText}, nil
+	case "exactMatch":
+		if u.exactMatch == nil {
+			return nil, fmt.Errorf("field \"exactMatch\" is required")
+		}
+		return struct {
+			Type       string `json:"type"`
+			ExactMatch string `json:"exactMatch"`
+		}{Type: "exactMatch", ExactMatch: *u.exactMatch}, nil
 	case "after":
 		if u.after == nil {
 			return nil, fmt.Errorf("field \"after\" is required")
@@ -1857,6 +1867,10 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.searchText == nil {
 			return fmt.Errorf("field \"searchText\" is required")
 		}
+	case "exactMatch":
+		if u.exactMatch == nil {
+			return fmt.Errorf("field \"exactMatch\" is required")
+		}
 	case "after":
 		if u.after == nil {
 			return fmt.Errorf("field \"after\" is required")
@@ -2021,7 +2035,7 @@ func (u *SearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchQuery) AcceptFuncs(archivedFunc func(bool) error, searchTextFunc func(string) error, afterFunc func(api3.Timestamp) error, beforeFunc func(api3.Timestamp) error, advancedTimeFilterFunc func(EventTimeFilter) error, assetFunc func(api1.AssetRid) error, assetsFunc func(AssetsFilter) error, templateFunc func(api1.TemplateRid) error, workbookFunc func(api1.NotebookRid) error, dataReviewFunc func(api1.DataReviewRid) error, dataReviewsFunc func(DataReviewsFilter) error, originTypeFunc func(SearchEventOriginType) error, originTypesFunc func(OriginTypesFilter) error, dataReviewCheckFunc func(api1.CheckRid) error, dataReviewChecksFunc func(DataReviewChecksFilter) error, dispositionStatusFunc func(EventDispositionStatus) error, dispositionStatusesFunc func([]EventDispositionStatus) error, priorityFunc func(api2.Priority) error, prioritiesFunc func([]api2.Priority) error, assigneeFunc func(api1.UserRid) error, assigneesFunc func(AssigneesFilter) error, eventTypeFunc func(EventType) error, eventTypesFunc func([]EventType) error, createdByFunc func(api1.UserRid) error, createdByAnyOfFunc func([]api1.UserRid) error, labelFunc func(api3.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api3.Property) error, propertiesFunc func(api1.PropertiesFilter) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, procedureFunc func(rids.ProcedureRid) error, procedureExecutionFunc func(rids.ProcedureExecutionRid) error, stepIdFunc func(string) error, streamingChecklistFunc func(api1.ChecklistRid) error, streamingCheckFunc func(api1.CheckRid) error, unknownFunc func(string) error) error {
+func (u *SearchQuery) AcceptFuncs(archivedFunc func(bool) error, searchTextFunc func(string) error, exactMatchFunc func(string) error, afterFunc func(api3.Timestamp) error, beforeFunc func(api3.Timestamp) error, advancedTimeFilterFunc func(EventTimeFilter) error, assetFunc func(api1.AssetRid) error, assetsFunc func(AssetsFilter) error, templateFunc func(api1.TemplateRid) error, workbookFunc func(api1.NotebookRid) error, dataReviewFunc func(api1.DataReviewRid) error, dataReviewsFunc func(DataReviewsFilter) error, originTypeFunc func(SearchEventOriginType) error, originTypesFunc func(OriginTypesFilter) error, dataReviewCheckFunc func(api1.CheckRid) error, dataReviewChecksFunc func(DataReviewChecksFilter) error, dispositionStatusFunc func(EventDispositionStatus) error, dispositionStatusesFunc func([]EventDispositionStatus) error, priorityFunc func(api2.Priority) error, prioritiesFunc func([]api2.Priority) error, assigneeFunc func(api1.UserRid) error, assigneesFunc func(AssigneesFilter) error, eventTypeFunc func(EventType) error, eventTypesFunc func([]EventType) error, createdByFunc func(api1.UserRid) error, createdByAnyOfFunc func([]api1.UserRid) error, labelFunc func(api3.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api3.Property) error, propertiesFunc func(api1.PropertiesFilter) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, procedureFunc func(rids.ProcedureRid) error, procedureExecutionFunc func(rids.ProcedureExecutionRid) error, stepIdFunc func(string) error, streamingChecklistFunc func(api1.ChecklistRid) error, streamingCheckFunc func(api1.CheckRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2038,6 +2052,11 @@ func (u *SearchQuery) AcceptFuncs(archivedFunc func(bool) error, searchTextFunc 
 			return fmt.Errorf("field \"searchText\" is required")
 		}
 		return searchTextFunc(*u.searchText)
+	case "exactMatch":
+		if u.exactMatch == nil {
+			return fmt.Errorf("field \"exactMatch\" is required")
+		}
+		return exactMatchFunc(*u.exactMatch)
 	case "after":
 		if u.after == nil {
 			return fmt.Errorf("field \"after\" is required")
@@ -2229,6 +2248,10 @@ func (u *SearchQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
+func (u *SearchQuery) ExactMatchNoopSuccess(_ string) error {
+	return nil
+}
+
 func (u *SearchQuery) AfterNoopSuccess(_ api3.Timestamp) error {
 	return nil
 }
@@ -2394,6 +2417,11 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"searchText\" is required")
 		}
 		return v.VisitSearchText(*u.searchText)
+	case "exactMatch":
+		if u.exactMatch == nil {
+			return fmt.Errorf("field \"exactMatch\" is required")
+		}
+		return v.VisitExactMatch(*u.exactMatch)
 	case "after":
 		if u.after == nil {
 			return fmt.Errorf("field \"after\" is required")
@@ -2580,6 +2608,7 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 type SearchQueryVisitor interface {
 	VisitArchived(v bool) error
 	VisitSearchText(v string) error
+	VisitExactMatch(v string) error
 	VisitAfter(v api3.Timestamp) error
 	VisitBefore(v api3.Timestamp) error
 	VisitAdvancedTimeFilter(v EventTimeFilter) error
@@ -2636,6 +2665,11 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"searchText\" is required")
 		}
 		return v.VisitSearchTextWithContext(ctx, *u.searchText)
+	case "exactMatch":
+		if u.exactMatch == nil {
+			return fmt.Errorf("field \"exactMatch\" is required")
+		}
+		return v.VisitExactMatchWithContext(ctx, *u.exactMatch)
 	case "after":
 		if u.after == nil {
 			return fmt.Errorf("field \"after\" is required")
@@ -2822,6 +2856,7 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 type SearchQueryVisitorWithContext interface {
 	VisitArchivedWithContext(ctx context.Context, v bool) error
 	VisitSearchTextWithContext(ctx context.Context, v string) error
+	VisitExactMatchWithContext(ctx context.Context, v string) error
 	VisitAfterWithContext(ctx context.Context, v api3.Timestamp) error
 	VisitBeforeWithContext(ctx context.Context, v api3.Timestamp) error
 	VisitAdvancedTimeFilterWithContext(ctx context.Context, v EventTimeFilter) error
@@ -2867,6 +2902,10 @@ func NewSearchQueryFromArchived(v bool) SearchQuery {
 
 func NewSearchQueryFromSearchText(v string) SearchQuery {
 	return SearchQuery{typ: "searchText", searchText: &v}
+}
+
+func NewSearchQueryFromExactMatch(v string) SearchQuery {
+	return SearchQuery{typ: "exactMatch", exactMatch: &v}
 }
 
 func NewSearchQueryFromAfter(v api3.Timestamp) SearchQuery {

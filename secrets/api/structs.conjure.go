@@ -11,18 +11,19 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type CreateSecretRequest struct {
 	Name           string                                 `json:"name"`
 	Description    string                                 `json:"description"`
 	DecryptedValue string                                 `json:"decryptedValue"`
 	Properties     map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels         []api.Label                            `json:"labels"`
+	Labels         []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	/*
 	   The workspace in which to create the secret. If not provided, the secret will be created in
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateSecretRequest) MarshalJSON() ([]byte, error) {
@@ -68,14 +69,15 @@ func (o *CreateSecretRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type DecryptedSecret struct {
-	Rid            SecretRid                              `json:"rid"`
+	Rid            SecretRid                              `json:"rid" safelogging:"@Safe"`
 	Name           string                                 `json:"name"`
 	Description    string                                 `json:"description"`
 	DecryptedValue string                                 `json:"decryptedValue"`
 	CreatedBy      rid.ResourceIdentifier                 `json:"createdBy"`
 	Properties     map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels         []api.Label                            `json:"labels"`
+	Labels         []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	CreatedAt      datetime.DateTime                      `json:"createdAt"`
 	IsArchived     bool                                   `json:"isArchived"`
 }
@@ -123,8 +125,9 @@ func (o *DecryptedSecret) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type GetSecretsRequest struct {
-	SecretRids []SecretRid `json:"secretRids"`
+	SecretRids []SecretRid `json:"secretRids" safelogging:"@Safe"`
 }
 
 func (o GetSecretsRequest) MarshalJSON() ([]byte, error) {
@@ -205,12 +208,13 @@ func (o *GetSecretsResponse) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchSecretsRequest struct {
 	Query SearchSecretsQuery `json:"query"`
 	// Defaults to 100. Will throw if larger than 1000.
 	PageSize *int        `json:"pageSize,omitempty"`
 	Sort     SortOptions `json:"sort"`
-	Token    *api.Token  `json:"token,omitempty"`
+	Token    *api.Token  `json:"token,omitempty" safelogging:"@Unsafe"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived secrets in search.
 	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
@@ -231,9 +235,10 @@ func (o *SearchSecretsRequest) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchSecretsResponse struct {
 	Results       []Secret   `json:"results"`
-	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchSecretsResponse) MarshalJSON() ([]byte, error) {
@@ -273,13 +278,14 @@ func (o *SearchSecretsResponse) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Secret struct {
-	Rid         SecretRid                              `json:"rid"`
+	Rid         SecretRid                              `json:"rid" safelogging:"@Safe"`
 	Name        string                                 `json:"name"`
 	Description string                                 `json:"description"`
 	CreatedBy   rid.ResourceIdentifier                 `json:"createdBy"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels      []api.Label                            `json:"labels"`
+	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	CreatedAt   datetime.DateTime                      `json:"createdAt"`
 	IsArchived  bool                                   `json:"isArchived"`
 }
@@ -348,11 +354,12 @@ func (o *SortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateSecretRequest struct {
 	Name           *string                                 `json:"name,omitempty"`
 	Description    *string                                 `json:"description,omitempty"`
 	Properties     *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
-	Labels         *[]api.Label                            `json:"labels,omitempty"`
+	Labels         *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
 	DecryptedValue *string                                 `json:"decryptedValue,omitempty"`
 }
 

@@ -6,6 +6,7 @@ import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/api"
+	"github.com/nominal-io/nominal-api-go/scout/metadata"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/datetime"
@@ -61,8 +62,9 @@ func (o *AddDataScopesToAssetRequest) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Asset struct {
-	Rid         api.AssetRid                             `json:"rid"`
+	Rid         api.AssetRid                             `json:"rid" safelogging:"@Safe"`
 	Title       string                                   `json:"title"`
 	Description *string                                  `json:"description,omitempty"`
 	Properties  map[api1.PropertyName]api1.PropertyValue `json:"properties"`
@@ -70,7 +72,7 @@ type Asset struct {
 	   Labels associated with the asset. These labels do not have a time dimension.
 	   To associate labels with a range of time, create a time range on the asset with labels.
 	*/
-	Labels []api1.Label `json:"labels"`
+	Labels []api1.Label `json:"labels" safelogging:"@Unsafe"`
 	/*
 	   Links associated with the asset. These links do not have a time dimension.
 	   To associate links with a range of time, create a time range on the asset with links.
@@ -81,8 +83,8 @@ type Asset struct {
 	CreatedBy   *rid.ResourceIdentifier `json:"createdBy,omitempty"`
 	CreatedAt   datetime.DateTime       `json:"createdAt"`
 	UpdatedAt   datetime.DateTime       `json:"updatedAt"`
-	Attachments []rids.AttachmentRid    `json:"attachments"`
-	Type        *api.TypeRid            `json:"type,omitempty"`
+	Attachments []rids.AttachmentRid    `json:"attachments" safelogging:"@Safe"`
+	Type        *api.TypeRid            `json:"type,omitempty" safelogging:"@Safe"`
 	// Auto created assets are considered staged by default.
 	IsStaged   bool `json:"isStaged"`
 	IsArchived bool `json:"isArchived"`
@@ -202,8 +204,9 @@ func (o *AssetTypeDataScopeConfig) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 // returns runs that match any of the provided assetTypes.
+// safelogging:@Safe
 type AssetTypesFilter struct {
-	AssetTypes []api.TypeRid `json:"assetTypes"`
+	AssetTypes []api.TypeRid `json:"assetTypes" safelogging:"@Safe"`
 }
 
 func (o AssetTypesFilter) MarshalJSON() ([]byte, error) {
@@ -243,8 +246,89 @@ func (o *AssetTypesFilter) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BatchEditAssetMetadataRequest struct {
+	/*
+	   Additional search query to filter which assets are targeted by the edit.
+	   Source labels/properties from the metadata change are automatically included as filters.
+	*/
+	AssetSearchQuery *SearchAssetsQuery      `json:"assetSearchQuery,omitempty"`
+	Operation        metadata.MetadataChange `json:"operation"`
+}
+
+func (o BatchEditAssetMetadataRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchEditAssetMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Safe
+type BatchEditAssetMetadataResponse struct {
+	// RIDs for assets that were modified by the batch edit.
+	ModifiedAssetRids []api.AssetRid `json:"modifiedAssetRids" safelogging:"@Safe"`
+	/*
+	   RIDs for assets that matched the source filter but already had the target property key
+	   and were skipped (SkipOnConflict behavior). Empty for operations without conflict semantics
+	   or when using OverwriteOnConflict.
+	*/
+	ConflictingAssetRids []api.AssetRid `json:"conflictingAssetRids" safelogging:"@Safe"`
+}
+
+func (o BatchEditAssetMetadataResponse) MarshalJSON() ([]byte, error) {
+	if o.ModifiedAssetRids == nil {
+		o.ModifiedAssetRids = make([]api.AssetRid, 0)
+	}
+	if o.ConflictingAssetRids == nil {
+		o.ConflictingAssetRids = make([]api.AssetRid, 0)
+	}
+	type _tmpBatchEditAssetMetadataResponse BatchEditAssetMetadataResponse
+	return safejson.Marshal(_tmpBatchEditAssetMetadataResponse(o))
+}
+
+func (o *BatchEditAssetMetadataResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchEditAssetMetadataResponse BatchEditAssetMetadataResponse
+	var rawBatchEditAssetMetadataResponse _tmpBatchEditAssetMetadataResponse
+	if err := safejson.Unmarshal(data, &rawBatchEditAssetMetadataResponse); err != nil {
+		return err
+	}
+	if rawBatchEditAssetMetadataResponse.ModifiedAssetRids == nil {
+		rawBatchEditAssetMetadataResponse.ModifiedAssetRids = make([]api.AssetRid, 0)
+	}
+	if rawBatchEditAssetMetadataResponse.ConflictingAssetRids == nil {
+		rawBatchEditAssetMetadataResponse.ConflictingAssetRids = make([]api.AssetRid, 0)
+	}
+	*o = BatchEditAssetMetadataResponse(rawBatchEditAssetMetadataResponse)
+	return nil
+}
+
+func (o BatchEditAssetMetadataResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchEditAssetMetadataResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
 type ChannelMetadata struct {
-	Name        Channel              `json:"name"`
+	Name        Channel              `json:"name" safelogging:"@Unsafe"`
 	DataSource  api2.DataSource      `json:"dataSource"`
 	Unit        *api2.Unit           `json:"unit,omitempty"`
 	Description *string              `json:"description,omitempty"`
@@ -267,9 +351,10 @@ func (o *ChannelMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateAssetDataScope struct {
 	// The name of the data scope. The name is guaranteed to be be unique within the context of an asset.
-	DataScopeName api3.DataSourceRefName `json:"dataScopeName"`
+	DataScopeName api3.DataSourceRefName `json:"dataScopeName" safelogging:"@Unsafe"`
 	DataSource    api2.DataSource        `json:"dataSource"`
 	Offset        *api2.Duration         `json:"offset,omitempty"`
 	/*
@@ -316,23 +401,24 @@ func (o *CreateAssetDataScope) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateAssetRequest struct {
 	Title       string                                   `json:"title"`
 	Description *string                                  `json:"description,omitempty"`
 	Properties  map[api1.PropertyName]api1.PropertyValue `json:"properties"`
-	Labels      []api1.Label                             `json:"labels"`
+	Labels      []api1.Label                             `json:"labels" safelogging:"@Unsafe"`
 	Links       []api2.Link                              `json:"links"`
 	// The data scopes associated with the asset.
 	DataScopes  []CreateAssetDataScope `json:"dataScopes"`
-	Attachments []rids.AttachmentRid   `json:"attachments"`
-	Type        *api.TypeRid           `json:"type,omitempty"`
+	Attachments []rids.AttachmentRid   `json:"attachments" safelogging:"@Safe"`
+	Type        *api.TypeRid           `json:"type,omitempty" safelogging:"@Safe"`
 	/*
 	   The workspace in which to create the asset. If not provided, the asset will be created in
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
 	   All data scopes, attachments, and the optional asset type must be in the same workspace.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateAssetRequest) MarshalJSON() ([]byte, error) {
@@ -406,7 +492,7 @@ type CreateTypeRequest struct {
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 	/*
 	   The configuration outlines what a data scope should provide when added to an asset of this type. It is
 	   referenced at data scope creation time, but does not actively modify existing data scopes.
@@ -451,9 +537,10 @@ func (o *CreateTypeRequest) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type DataScope struct {
 	// The name of the data scope. The name is guaranteed to be be unique within the context of an asset.
-	DataScopeName api3.DataSourceRefName `json:"dataScopeName"`
+	DataScopeName api3.DataSourceRefName `json:"dataScopeName" safelogging:"@Unsafe"`
 	DataSource    api2.DataSource        `json:"dataSource"`
 	Offset        *api2.Duration         `json:"offset,omitempty"`
 	TimestampType api2.WeakTimestampType `json:"timestampType"`
@@ -541,11 +628,12 @@ func (o *RemoveType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchAssetChannelsRequest struct {
 	SearchText string `json:"searchText"`
 	// If not empty, will filter to channels from the selected data scope names.
-	DataScopeNameFilter *[]api3.DataSourceRefName `json:"dataScopeNameFilter,omitempty"`
-	NextPageToken       *api1.Token               `json:"nextPageToken,omitempty"`
+	DataScopeNameFilter *[]api3.DataSourceRefName `json:"dataScopeNameFilter,omitempty" safelogging:"@Unsafe"`
+	NextPageToken       *api1.Token               `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 1000. Will throw if larger than 10000. Default pageSize is 100.
 	PageSize *int `json:"pageSize,omitempty"`
 }
@@ -566,9 +654,10 @@ func (o *SearchAssetChannelsRequest) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchAssetChannelsResponse struct {
 	Results       []ChannelMetadata `json:"results"`
-	NextPageToken *api1.Token       `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token       `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchAssetChannelsResponse) MarshalJSON() ([]byte, error) {
@@ -608,11 +697,12 @@ func (o *SearchAssetChannelsResponse) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchAssetsRequest struct {
 	Sort AssetSortOptions `json:"sort"`
 	// Page sizes greater than 10_000 will be rejected. Default pageSize is 100.
 	PageSize      *int              `json:"pageSize,omitempty"`
-	NextPageToken *api1.Token       `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token       `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Query         SearchAssetsQuery `json:"query"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search.
 	ArchivedStatuses *[]api1.ArchivedStatus `json:"archivedStatuses,omitempty"`
@@ -634,9 +724,10 @@ func (o *SearchAssetsRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchAssetsResponse struct {
 	Results       []Asset     `json:"results"`
-	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchAssetsResponse) MarshalJSON() ([]byte, error) {
@@ -676,11 +767,12 @@ func (o *SearchAssetsResponse) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchTypesRequest struct {
 	Sort TypeSortOptions `json:"sort"`
 	// Page sizes greater than 10_000 will be rejected. Default pageSize is 100.
 	PageSize      *int             `json:"pageSize,omitempty"`
-	NextPageToken *api1.Token      `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token      `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Query         SearchTypesQuery `json:"query"`
 	/*
 	   Deprecated: Use the isArchived search query option instead. If no filter is applied and this field is empty, the
@@ -705,9 +797,10 @@ func (o *SearchTypesRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchTypesResponse struct {
 	Results       []Type      `json:"results"`
-	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchTypesResponse) MarshalJSON() ([]byte, error) {
@@ -747,8 +840,9 @@ func (o *SearchTypesResponse) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SortProperty struct {
-	Name api1.PropertyName `json:"name"`
+	Name api1.PropertyName `json:"name" safelogging:"@Unsafe"`
 }
 
 func (o SortProperty) MarshalYAML() (interface{}, error) {
@@ -768,7 +862,7 @@ func (o *SortProperty) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type Type struct {
-	Rid             api.TypeRid                          `json:"rid"`
+	Rid             api.TypeRid                          `json:"rid" safelogging:"@Safe"`
 	Name            string                               `json:"name"`
 	Description     *string                              `json:"description,omitempty"`
 	PropertyConfigs map[api1.PropertyName]PropertyConfig `json:"propertyConfigs"`
@@ -887,11 +981,12 @@ func (o *UpdateAssetRefNamesRequest) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateAssetRequest struct {
 	Title       *string                                   `json:"title,omitempty"`
 	Description *string                                   `json:"description,omitempty"`
 	Properties  *map[api1.PropertyName]api1.PropertyValue `json:"properties,omitempty"`
-	Labels      *[]api1.Label                             `json:"labels,omitempty"`
+	Labels      *[]api1.Label                             `json:"labels,omitempty" safelogging:"@Unsafe"`
 	Links       *[]api2.Link                              `json:"links,omitempty"`
 	// The data scopes for the asset. This will replace all existing data scopes with the scopes specified.
 	DataScopes *[]CreateAssetDataScope  `json:"dataScopes,omitempty"`
@@ -915,9 +1010,10 @@ func (o *UpdateAssetRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type UpdateAttachmentsRequest struct {
-	AttachmentsToAdd    []rids.AttachmentRid `json:"attachmentsToAdd"`
-	AttachmentsToRemove []rids.AttachmentRid `json:"attachmentsToRemove"`
+	AttachmentsToAdd    []rids.AttachmentRid `json:"attachmentsToAdd" safelogging:"@Safe"`
+	AttachmentsToRemove []rids.AttachmentRid `json:"attachmentsToRemove" safelogging:"@Safe"`
 }
 
 func (o UpdateAttachmentsRequest) MarshalJSON() ([]byte, error) {

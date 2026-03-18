@@ -260,6 +260,11 @@ type NotebookServiceClient interface {
 	*/
 	GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api1.GetAllLabelsAndPropertiesResponse, error)
 	Search(ctx context.Context, authHeader bearertoken.Token, requestArg api1.SearchNotebooksRequest) (api1.SearchNotebooksResponse, error)
+	/*
+	   Batch edits metadata across multiple workbooks. Supports rename/merge for labels and properties.
+	   If more than 1000 workbooks are targeted, this endpoint will throw a 400.
+	*/
+	BatchEditNotebookMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api1.BatchEditNotebookMetadataRequest) (api1.BatchEditNotebookMetadataResponse, error)
 	// Makes a workbook uneditable.
 	Lock(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error
 	// Unlocks a workbook for editing.
@@ -475,6 +480,24 @@ func (c *notebookServiceClient) Search(ctx context.Context, authHeader bearertok
 	return *returnVal, nil
 }
 
+func (c *notebookServiceClient) BatchEditNotebookMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api1.BatchEditNotebookMetadataRequest) (api1.BatchEditNotebookMetadataResponse, error) {
+	var returnVal *api1.BatchEditNotebookMetadataResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchEditNotebookMetadata"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/metadata/batch-edit"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.BatchEditNotebookMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchEditNotebookMetadata failed")
+	}
+	if returnVal == nil {
+		return *new(api1.BatchEditNotebookMetadataResponse), werror.ErrorWithContextParams(ctx, "batchEditNotebookMetadata response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *notebookServiceClient) Lock(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Lock"))
@@ -577,6 +600,11 @@ type NotebookServiceClientWithAuth interface {
 	*/
 	GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api1.GetAllLabelsAndPropertiesResponse, error)
 	Search(ctx context.Context, requestArg api1.SearchNotebooksRequest) (api1.SearchNotebooksResponse, error)
+	/*
+	   Batch edits metadata across multiple workbooks. Supports rename/merge for labels and properties.
+	   If more than 1000 workbooks are targeted, this endpoint will throw a 400.
+	*/
+	BatchEditNotebookMetadata(ctx context.Context, requestArg api1.BatchEditNotebookMetadataRequest) (api1.BatchEditNotebookMetadataResponse, error)
 	// Makes a workbook uneditable.
 	Lock(ctx context.Context, ridArg api2.NotebookRid) error
 	// Unlocks a workbook for editing.
@@ -644,6 +672,10 @@ func (c *notebookServiceClientWithAuth) GetAllLabelsAndProperties(ctx context.Co
 
 func (c *notebookServiceClientWithAuth) Search(ctx context.Context, requestArg api1.SearchNotebooksRequest) (api1.SearchNotebooksResponse, error) {
 	return c.client.Search(ctx, c.authHeader, requestArg)
+}
+
+func (c *notebookServiceClientWithAuth) BatchEditNotebookMetadata(ctx context.Context, requestArg api1.BatchEditNotebookMetadataRequest) (api1.BatchEditNotebookMetadataResponse, error) {
+	return c.client.BatchEditNotebookMetadata(ctx, c.authHeader, requestArg)
 }
 
 func (c *notebookServiceClientWithAuth) Lock(ctx context.Context, ridArg api2.NotebookRid) error {
@@ -759,6 +791,14 @@ func (c *notebookServiceClientWithTokenProvider) Search(ctx context.Context, req
 	return c.client.Search(ctx, bearertoken.Token(token), requestArg)
 }
 
+func (c *notebookServiceClientWithTokenProvider) BatchEditNotebookMetadata(ctx context.Context, requestArg api1.BatchEditNotebookMetadataRequest) (api1.BatchEditNotebookMetadataResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api1.BatchEditNotebookMetadataResponse), err
+	}
+	return c.client.BatchEditNotebookMetadata(ctx, bearertoken.Token(token), requestArg)
+}
+
 func (c *notebookServiceClientWithTokenProvider) Lock(ctx context.Context, ridArg api2.NotebookRid) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
@@ -825,6 +865,11 @@ type RunServiceClient interface {
 	   Throws if start is equal to or after end.
 	*/
 	UpdateRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, detailsArg api4.UpdateRunRequest) (api11.Run, error)
+	/*
+	   Batch edits metadata across multiple runs. Supports rename/merge for labels and properties.
+	   If more than 1000 runs are targeted, this endpoint will throw a 400.
+	*/
+	BatchEditRunMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api4.BatchEditRunMetadataRequest) (api4.BatchEditRunMetadataResponse, error)
 	/*
 	   Adds datasources to the run in question.
 
@@ -927,6 +972,24 @@ func (c *runServiceClient) UpdateRun(ctx context.Context, authHeader bearertoken
 	}
 	if returnVal == nil {
 		return *new(api11.Run), werror.ErrorWithContextParams(ctx, "updateRun response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *runServiceClient) BatchEditRunMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api4.BatchEditRunMetadataRequest) (api4.BatchEditRunMetadataResponse, error) {
+	var returnVal *api4.BatchEditRunMetadataResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchEditRunMetadata"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/run/metadata/batch-edit"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api4.BatchEditRunMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchEditRunMetadata failed")
+	}
+	if returnVal == nil {
+		return *new(api4.BatchEditRunMetadataResponse), werror.ErrorWithContextParams(ctx, "batchEditRunMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -1290,6 +1353,11 @@ type RunServiceClientWithAuth interface {
 	*/
 	UpdateRun(ctx context.Context, ridArg api4.RunRid, detailsArg api4.UpdateRunRequest) (api11.Run, error)
 	/*
+	   Batch edits metadata across multiple runs. Supports rename/merge for labels and properties.
+	   If more than 1000 runs are targeted, this endpoint will throw a 400.
+	*/
+	BatchEditRunMetadata(ctx context.Context, requestArg api4.BatchEditRunMetadataRequest) (api4.BatchEditRunMetadataResponse, error)
+	/*
 	   Adds datasources to the run in question.
 
 	   Throws if any of the ref names conflict with existing data sources or each other.
@@ -1366,6 +1434,10 @@ func (c *runServiceClientWithAuth) CreateRun(ctx context.Context, detailsArg api
 
 func (c *runServiceClientWithAuth) UpdateRun(ctx context.Context, ridArg api4.RunRid, detailsArg api4.UpdateRunRequest) (api11.Run, error) {
 	return c.client.UpdateRun(ctx, c.authHeader, ridArg, detailsArg)
+}
+
+func (c *runServiceClientWithAuth) BatchEditRunMetadata(ctx context.Context, requestArg api4.BatchEditRunMetadataRequest) (api4.BatchEditRunMetadataResponse, error) {
+	return c.client.BatchEditRunMetadata(ctx, c.authHeader, requestArg)
 }
 
 func (c *runServiceClientWithAuth) AddDataSourcesToRun(ctx context.Context, runRidArg api4.RunRid, requestArg map[api3.DataSourceRefName]api4.CreateRunDataSource) (api11.Run, error) {
@@ -1467,6 +1539,14 @@ func (c *runServiceClientWithTokenProvider) UpdateRun(ctx context.Context, ridAr
 		return *new(api11.Run), err
 	}
 	return c.client.UpdateRun(ctx, bearertoken.Token(token), ridArg, detailsArg)
+}
+
+func (c *runServiceClientWithTokenProvider) BatchEditRunMetadata(ctx context.Context, requestArg api4.BatchEditRunMetadataRequest) (api4.BatchEditRunMetadataResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api4.BatchEditRunMetadataResponse), err
+	}
+	return c.client.BatchEditRunMetadata(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *runServiceClientWithTokenProvider) AddDataSourcesToRun(ctx context.Context, runRidArg api4.RunRid, requestArg map[api3.DataSourceRefName]api4.CreateRunDataSource) (api11.Run, error) {

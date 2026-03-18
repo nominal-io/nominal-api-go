@@ -13,15 +13,16 @@ type Platform struct {
 type Platform_Value string
 
 const (
-	Platform_WINDOWS Platform_Value = "WINDOWS"
-	Platform_UBUNTU  Platform_Value = "UBUNTU"
-	Platform_MACOS   Platform_Value = "MACOS"
-	Platform_UNKNOWN Platform_Value = "UNKNOWN"
+	Platform_WINDOWS   Platform_Value = "WINDOWS"
+	Platform_UBUNTU    Platform_Value = "UBUNTU"
+	Platform_MACOS     Platform_Value = "MACOS"
+	Platform_MACOS_PKG Platform_Value = "MACOS_PKG"
+	Platform_UNKNOWN   Platform_Value = "UNKNOWN"
 )
 
 // Platform_Values returns all known variants of Platform.
 func Platform_Values() []Platform_Value {
-	return []Platform_Value{Platform_WINDOWS, Platform_UBUNTU, Platform_MACOS}
+	return []Platform_Value{Platform_WINDOWS, Platform_UBUNTU, Platform_MACOS, Platform_MACOS_PKG}
 }
 
 func New_Platform(value Platform_Value) Platform {
@@ -31,7 +32,7 @@ func New_Platform(value Platform_Value) Platform {
 // IsUnknown returns false for all known variants of Platform and true otherwise.
 func (e Platform) IsUnknown() bool {
 	switch e.val {
-	case Platform_WINDOWS, Platform_UBUNTU, Platform_MACOS:
+	case Platform_WINDOWS, Platform_UBUNTU, Platform_MACOS, Platform_MACOS_PKG:
 		return false
 	}
 	return true
@@ -62,6 +63,8 @@ func (e *Platform) UnmarshalText(data []byte) error {
 		*e = New_Platform(Platform_UBUNTU)
 	case "MACOS":
 		*e = New_Platform(Platform_MACOS)
+	case "MACOS_PKG":
+		*e = New_Platform(Platform_MACOS_PKG)
 	}
 	return nil
 }

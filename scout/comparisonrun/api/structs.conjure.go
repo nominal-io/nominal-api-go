@@ -14,7 +14,7 @@ import (
 )
 
 type ComparisonRun struct {
-	RunRid         api.RunRid `json:"runRid"`
+	RunRid         api.RunRid `json:"runRid" safelogging:"@Safe"`
 	Enabled        bool       `json:"enabled"`
 	OffsetOverride *Offset    `json:"offsetOverride,omitempty"`
 }
@@ -41,7 +41,7 @@ type ComparisonRunGroup struct {
 	Offset       Offset          `json:"offset"`
 	OffsetAnchor OffsetAnchor    `json:"offsetAnchor"`
 	Runs         []ComparisonRun `json:"runs"`
-	Color        *api1.HexColor  `json:"color,omitempty"`
+	Color        *api1.HexColor  `json:"color,omitempty" safelogging:"@Safe"`
 }
 
 func (o ComparisonRunGroup) MarshalJSON() ([]byte, error) {
@@ -120,8 +120,9 @@ func (o *OffsetRunAnchor) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type OffsetSeriesAnchor struct {
-	SeriesVariable api3.ChannelVariableName `json:"seriesVariable"`
+	SeriesVariable api3.ChannelVariableName `json:"seriesVariable" safelogging:"@Unsafe"`
 }
 
 func (o OffsetSeriesAnchor) MarshalYAML() (interface{}, error) {

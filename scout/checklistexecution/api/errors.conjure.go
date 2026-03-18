@@ -313,8 +313,9 @@ func (e *ChecklistAlreadyRunning) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type connectionNotAvailableForStreaming struct {
-	Connection api.ConnectionRid `json:"connection"`
+	Connection api.ConnectionRid `json:"connection" safelogging:"@Safe"`
 }
 
 func (o connectionNotAvailableForStreaming) MarshalYAML() (interface{}, error) {
@@ -462,8 +463,9 @@ func (e *ConnectionNotAvailableForStreaming) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type streamingChecklistNotFound struct {
-	ChecklistRid api1.ChecklistRid `json:"checklistRid"`
+	ChecklistRid api1.ChecklistRid `json:"checklistRid" safelogging:"@Safe"`
 }
 
 func (o streamingChecklistNotFound) MarshalYAML() (interface{}, error) {
@@ -611,9 +613,10 @@ func (e *StreamingChecklistNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type streamingChecklistNotFoundForAsset struct {
-	ChecklistRid api1.ChecklistRid `json:"checklistRid"`
-	AssetRid     api1.AssetRid     `json:"assetRid"`
+	ChecklistRid api1.ChecklistRid `json:"checklistRid" safelogging:"@Safe"`
+	AssetRid     api1.AssetRid     `json:"assetRid" safelogging:"@Safe"`
 }
 
 func (o streamingChecklistNotFoundForAsset) MarshalYAML() (interface{}, error) {

@@ -9,7 +9,7 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
-type Milliseconds safelong.SafeLong
+type Milliseconds safelong.SafeLong // safelogging:@Safe
 
 func (a Milliseconds) MarshalJSON() ([]byte, error) {
 	return safejson.Marshal(safelong.SafeLong(a))
@@ -40,7 +40,7 @@ func (a *Milliseconds) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type SubscriptionId uuid.UUID
+type SubscriptionId uuid.UUID // safelogging:@Safe
 
 func (a SubscriptionId) String() string {
 	return uuid.UUID(a).String()

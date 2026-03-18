@@ -2,4 +2,4 @@
 
 package api
 
-type NominalDataSourceId string
+type NominalDataSourceId string // safelogging:@Unsafe

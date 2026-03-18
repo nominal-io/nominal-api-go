@@ -8,9 +8,11 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type BucketName string
-type ColumnName string
-type ConnectionRid rid.ResourceIdentifier
+type BucketName string // safelogging:@Unsafe
+
+type ColumnName string // safelogging:@Unsafe
+
+type ConnectionRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ConnectionRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -58,13 +60,19 @@ func (a *ConnectionRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type DatasetName string
-type LocationName string
-type MeasurementName string
-type ProjectName string
-type SchemaName string
-type SecretName string
-type SecretRid rid.ResourceIdentifier
+type DatasetName string // safelogging:@Unsafe
+
+type LocationName string // safelogging:@Unsafe
+
+type MeasurementName string // safelogging:@Unsafe
+
+type ProjectName string // safelogging:@Unsafe
+
+type SchemaName string // safelogging:@Unsafe
+
+type SecretName string // safelogging:@Unsafe
+
+type SecretRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a SecretRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -112,4 +120,4 @@ func (a *SecretRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type TableName string
+type TableName string // safelogging:@Unsafe

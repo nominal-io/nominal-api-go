@@ -16,8 +16,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type connectionNotFound struct {
-	ConnectionRid ConnectionRid `json:"connectionRid"`
+	ConnectionRid ConnectionRid `json:"connectionRid" safelogging:"@Safe"`
 }
 
 func (o connectionNotFound) MarshalYAML() (interface{}, error) {
@@ -165,8 +166,9 @@ func (e *ConnectionNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type datasourceRidNotFound struct {
-	Message rids.NominalDataSourceRid `json:"message"`
+	Message rids.NominalDataSourceRid `json:"message" safelogging:"@Safe"`
 }
 
 func (o datasourceRidNotFound) MarshalYAML() (interface{}, error) {
@@ -315,7 +317,7 @@ func (e *DatasourceRidNotFound) UnmarshalJSON(data []byte) error {
 }
 
 type failedToAddTagsToConnection struct {
-	ConnectionRid ConnectionRid `json:"connectionRid"`
+	ConnectionRid ConnectionRid `json:"connectionRid" safelogging:"@Safe"`
 	Message       string        `json:"message"`
 }
 
@@ -1059,8 +1061,9 @@ func (e *PopulateSeriesTimeRangeTooLarge) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type secretsNotFound struct {
-	Message []SecretRid `json:"message"`
+	Message []SecretRid `json:"message" safelogging:"@Safe"`
 }
 
 func (o secretsNotFound) MarshalJSON() ([]byte, error) {

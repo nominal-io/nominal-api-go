@@ -13,9 +13,10 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type ChannelVariable struct {
 	DisplayName  *string                     `json:"displayName,omitempty"`
-	VariableName VariableName                `json:"variableName"`
+	VariableName VariableName                `json:"variableName" safelogging:"@Unsafe"`
 	Value        ComputeNodeWithContext      `json:"value"`
 	DataScope    ComparisonWorkbookDataScope `json:"dataScope"`
 }
@@ -112,11 +113,12 @@ func (o *ComparisonScatterPlotDefinitionV1) UnmarshalYAML(unmarshal func(interfa
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ComparisonScatterPlotVariable struct {
 	// the axisId when the variable is used as the x variable.
-	XAxisId api.AxisId `json:"xAxisId"`
+	XAxisId api.AxisId `json:"xAxisId" safelogging:"@Unsafe"`
 	// the axisId when the variable is used as the y variable.
-	YAxisId         api.AxisId      `json:"yAxisId"`
+	YAxisId         api.AxisId      `json:"yAxisId" safelogging:"@Unsafe"`
 	Locator         VariableLocator `json:"locator"`
 	AggregationType AggregationType `json:"aggregationType"`
 }
@@ -201,9 +203,10 @@ func (o *ComparisonTableColumnVisualizationOptions) UnmarshalYAML(unmarshal func
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ComparisonTableDefinitionV1 struct {
 	Title                *string                             `json:"title,omitempty"`
-	RangeAggregations    []VariableName                      `json:"rangeAggregations"`
+	RangeAggregations    []VariableName                      `json:"rangeAggregations" safelogging:"@Unsafe"`
 	VisualizationOptions ComparisonTableVisualizationOptions `json:"visualizationOptions"`
 	Columns              []ComparisonTableColumn             `json:"columns"`
 }
@@ -392,9 +395,10 @@ func (o *ComparisonTimeSeriesPlotDefinitionV1) UnmarshalYAML(unmarshal func(inte
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ComparisonTimeSeriesPlotVariable struct {
 	// the axisId when the variable is used as the y variable.
-	YAxisId api.AxisId      `json:"yAxisId"`
+	YAxisId api.AxisId      `json:"yAxisId" safelogging:"@Unsafe"`
 	Locator VariableLocator `json:"locator"`
 }
 

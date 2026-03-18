@@ -624,6 +624,11 @@ func (u *UnresolvedCheckConditionWithT[T]) Accept(ctx context.Context, v Unresol
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
+	case "booleanSeriesV1":
+		if u.booleanSeriesV1 == nil {
+			return result, fmt.Errorf("field \"booleanSeriesV1\" is required")
+		}
+		return v.VisitBooleanSeriesV1(ctx, *u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return result, fmt.Errorf("field \"numRangesV2\" is required")
@@ -642,7 +647,7 @@ func (u *UnresolvedCheckConditionWithT[T]) Accept(ctx context.Context, v Unresol
 	}
 }
 
-func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(numRangesV2Func func(UnresolvedNumRangesConditionV2) (T, error), numRangesV3Func func(UnresolvedNumRangesConditionV3) (T, error), parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(booleanSeriesV1Func func(UnresolvedBooleanSeriesConditionV1) (T, error), numRangesV2Func func(UnresolvedNumRangesConditionV2) (T, error), numRangesV3Func func(UnresolvedNumRangesConditionV3) (T, error), parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -650,6 +655,11 @@ func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(numRangesV2Func func(Unre
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
+	case "booleanSeriesV1":
+		if u.booleanSeriesV1 == nil {
+			return result, fmt.Errorf("field \"booleanSeriesV1\" is required")
+		}
+		return booleanSeriesV1Func(*u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return result, fmt.Errorf("field \"numRangesV2\" is required")
@@ -666,6 +676,11 @@ func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(numRangesV2Func func(Unre
 		}
 		return parameterizedNumRangesV1Func(*u.parameterizedNumRangesV1)
 	}
+}
+
+func (u *UnresolvedCheckConditionWithT[T]) BooleanSeriesV1NoopSuccess(UnresolvedBooleanSeriesConditionV1) (T, error) {
+	var result T
+	return result, nil
 }
 
 func (u *UnresolvedCheckConditionWithT[T]) NumRangesV2NoopSuccess(UnresolvedNumRangesConditionV2) (T, error) {
@@ -689,6 +704,7 @@ func (u *UnresolvedCheckConditionWithT[T]) ErrorOnUnknown(typeName string) (T, e
 }
 
 type UnresolvedCheckConditionVisitorWithT[T any] interface {
+	VisitBooleanSeriesV1(ctx context.Context, v UnresolvedBooleanSeriesConditionV1) (T, error)
 	VisitNumRangesV2(ctx context.Context, v UnresolvedNumRangesConditionV2) (T, error)
 	VisitNumRangesV3(ctx context.Context, v UnresolvedNumRangesConditionV3) (T, error)
 	VisitParameterizedNumRangesV1(ctx context.Context, v UnresolvedParameterizedNumRangesConditionV1) (T, error)

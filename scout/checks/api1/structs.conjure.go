@@ -119,7 +119,7 @@ func (o *Completed) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type JobReport struct {
 	JobStatus   JobStatus         `json:"jobStatus"`
-	JobRid      api.JobRid        `json:"jobRid"`
+	JobRid      api.JobRid        `json:"jobRid" safelogging:"@Safe"`
 	SubmittedAt datetime.DateTime `json:"submittedAt"`
 }
 

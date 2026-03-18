@@ -77,6 +77,7 @@ func (o *AggregateEnumSeriesNode) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type AggregateNumericSeriesNode struct {
 	Input               NumericSeriesNode               `json:"input"`
 	AggregationFunction api1.NumericAggregationFunction `json:"aggregationFunction"`
@@ -84,7 +85,7 @@ type AggregateNumericSeriesNode struct {
 	   Present optional containing empty set means explicitly group by NO tags.
 	   Empty optional means inherit tag groupings from input.
 	*/
-	GroupByTags                *[]api.TagName              `json:"groupByTags,omitempty"`
+	GroupByTags                *[]api.TagName              `json:"groupByTags,omitempty" safelogging:"@Unsafe"`
 	InterpolationConfiguration *InterpolationConfiguration `json:"interpolationConfiguration,omitempty"`
 }
 
@@ -349,11 +350,12 @@ func (o *CartesianBounds) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ClickHouseSeriesResolutionDetails struct {
-	Channel       api.Channel   `json:"channel"`
+	Channel       api.Channel   `json:"channel" safelogging:"@Unsafe"`
 	Tags          *TagFilters   `json:"tags,omitempty"`
-	TagsToGroupBy []api.TagName `json:"tagsToGroupBy"`
-	OrgRid        api2.OrgRid   `json:"orgRid"`
+	TagsToGroupBy []api.TagName `json:"tagsToGroupBy" safelogging:"@Unsafe"`
+	OrgRid        api2.OrgRid   `json:"orgRid" safelogging:"@Safe"`
 }
 
 func (o ClickHouseSeriesResolutionDetails) MarshalJSON() ([]byte, error) {
@@ -413,6 +415,26 @@ func (o *ConstantDefaultValueResampleInterpolationConfiguration) UnmarshalYAML(u
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type ConstantNumericSeriesNode struct {
+	Value float64 `json:"value"`
+}
+
+func (o ConstantNumericSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ConstantNumericSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type CpsdNode struct {
 	X                   NumericSeriesNode         `json:"x"`
 	Y                   NumericSeriesNode         `json:"y"`
@@ -441,7 +463,7 @@ func (o *CpsdNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type CumulativeSumSeriesNode struct {
 	Input          NumericSeriesNode `json:"input"`
-	StartTimestamp api.Timestamp     `json:"startTimestamp"`
+	StartTimestamp api.Timestamp     `json:"startTimestamp" safelogging:"@Safe"`
 }
 
 func (o CumulativeSumSeriesNode) MarshalYAML() (interface{}, error) {
@@ -463,7 +485,7 @@ func (o *CumulativeSumSeriesNode) UnmarshalYAML(unmarshal func(interface{}) erro
 type CurveFitNode struct {
 	CurveFitPlotType CurveFitPlotTypeNode `json:"curveFitPlotType"`
 	CurveFitDetails  CurveFitDetails      `json:"curveFitDetails"`
-	CurveFitOptions  CurveFitOptions      `json:"curveFitOptions"`
+	CurveFitOptions  CurveFitOptions      `json:"curveFitOptions" safelogging:"@Safe"`
 }
 
 func (o CurveFitNode) MarshalYAML() (interface{}, error) {
@@ -482,9 +504,10 @@ func (o *CurveFitNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type CurveFitOptions struct {
-	StartTime api.Timestamp `json:"startTime"`
-	EndTime   api.Timestamp `json:"endTime"`
+	StartTime api.Timestamp `json:"startTime" safelogging:"@Safe"`
+	EndTime   api.Timestamp `json:"endTime" safelogging:"@Safe"`
 }
 
 func (o CurveFitOptions) MarshalYAML() (interface{}, error) {
@@ -1100,8 +1123,9 @@ func (o *FftNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type FilterByExpressionSeriesNode struct {
-	Base                       api1.LocalVariableName                       `json:"base"`
+	Base                       api1.LocalVariableName                       `json:"base" safelogging:"@Unsafe"`
 	Inputs                     map[api1.LocalVariableName]NumericSeriesNode `json:"inputs"`
 	Expression                 string                                       `json:"expression"`
 	InterpolationConfiguration InterpolationConfiguration                   `json:"interpolationConfiguration"`
@@ -1248,7 +1272,7 @@ func (o *HighPassConfiguration) UnmarshalYAML(unmarshal func(interface{}) error)
 
 type IntegralSeriesNode struct {
 	Input          NumericSeriesNode `json:"input"`
-	StartTimestamp api.Timestamp     `json:"startTimestamp"`
+	StartTimestamp api.Timestamp     `json:"startTimestamp" safelogging:"@Safe"`
 	TimeUnit       *api.TimeUnit     `json:"timeUnit,omitempty"`
 }
 
@@ -1770,10 +1794,11 @@ func (o *MultivariateNumericInputNode) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type NominalStorageLocator struct {
-	DataSourceRid              rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid"`
+	DataSourceRid              rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid" safelogging:"@Safe"`
 	Type                       api4.NominalDataType               `json:"type"`
-	Details                    ClickHouseSeriesResolutionDetails  `json:"details"`
+	Details                    ClickHouseSeriesResolutionDetails  `json:"details" safelogging:"@Unsafe"`
 	IsInMemoryStreamingEnabled bool                               `json:"isInMemoryStreamingEnabled"`
 	DatasetBackingType         catalog.DatasetBackingType         `json:"datasetBackingType"`
 }
@@ -2412,8 +2437,9 @@ func (o *RangesNumericAggregationToNumericSeriesNode) UnmarshalYAML(unmarshal fu
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RawEnumSeriesNode struct {
-	Series ResolvedSeries `json:"series"`
+	Series ResolvedSeries `json:"series" safelogging:"@Unsafe"`
 }
 
 func (o RawEnumSeriesNode) MarshalYAML() (interface{}, error) {
@@ -2432,8 +2458,9 @@ func (o *RawEnumSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RawLogSeriesNode struct {
-	Series ResolvedSeries `json:"series"`
+	Series ResolvedSeries `json:"series" safelogging:"@Unsafe"`
 }
 
 func (o RawLogSeriesNode) MarshalYAML() (interface{}, error) {
@@ -2452,8 +2479,9 @@ func (o *RawLogSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RawNumericSeriesNode struct {
-	Series ResolvedSeries `json:"series"`
+	Series ResolvedSeries `json:"series" safelogging:"@Unsafe"`
 }
 
 func (o RawNumericSeriesNode) MarshalYAML() (interface{}, error) {
@@ -2472,8 +2500,9 @@ func (o *RawNumericSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RawUntypedSeriesNode struct {
-	Series ResolvedSeries `json:"series"`
+	Series ResolvedSeries `json:"series" safelogging:"@Unsafe"`
 }
 
 func (o RawUntypedSeriesNode) MarshalYAML() (interface{}, error) {
@@ -2560,9 +2589,10 @@ func (o *ResolvedPercentile) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ResolvedSeries struct {
 	StorageLocator StorageLocator `json:"storageLocator"`
-	Unit           *api.Unit      `json:"unit,omitempty"`
+	Unit           *api.Unit      `json:"unit,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o ResolvedSeries) MarshalYAML() (interface{}, error) {
@@ -2603,10 +2633,11 @@ func (o *RollingOperationSeriesNode) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ScaleSeriesNode struct {
 	Input      NumericSeriesNode `json:"input"`
 	Scalar     float64           `json:"scalar"`
-	ScalarUnit *api5.UnitSymbol  `json:"scalarUnit,omitempty"`
+	ScalarUnit *api5.UnitSymbol  `json:"scalarUnit,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o ScaleSeriesNode) MarshalYAML() (interface{}, error) {
@@ -3113,9 +3144,10 @@ func (o *SummarizeSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TagFilter struct {
-	Key      api.TagName       `json:"key"`
-	Values   []api.TagValue    `json:"values"`
+	Key      api.TagName       `json:"key" safelogging:"@Unsafe"`
+	Values   []api.TagValue    `json:"values" safelogging:"@Unsafe"`
 	Operator TagFilterOperator `json:"operator"`
 }
 
@@ -3303,10 +3335,11 @@ func (o *UnionRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UnitConversionSeriesNode struct {
 	Input      NumericSeriesNode `json:"input"`
-	InputUnit  api5.UnitSymbol   `json:"inputUnit"`
-	OutputUnit api5.UnitSymbol   `json:"outputUnit"`
+	InputUnit  api5.UnitSymbol   `json:"inputUnit" safelogging:"@Unsafe"`
+	OutputUnit api5.UnitSymbol   `json:"outputUnit" safelogging:"@Unsafe"`
 }
 
 func (o UnitConversionSeriesNode) MarshalYAML() (interface{}, error) {
@@ -3409,9 +3442,10 @@ func (o *Window) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ZscoreSeriesNode struct {
 	Input                      NumericSeriesNode          `json:"input"`
-	GroupByTags                *[]api.TagName             `json:"groupByTags,omitempty"`
+	GroupByTags                *[]api.TagName             `json:"groupByTags,omitempty" safelogging:"@Unsafe"`
 	InterpolationConfiguration InterpolationConfiguration `json:"interpolationConfiguration"`
 }
 

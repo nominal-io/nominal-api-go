@@ -50,6 +50,12 @@ type ComputeServiceClient interface {
 	   noUnitAvailable, and if the computation was not successful, corresponding errors are returned.
 	*/
 	ComputeWithUnits(ctx context.Context, authHeader bearertoken.Token, requestArg ComputeWithUnitsRequest) (api.ComputeWithUnitsResponse, error)
+	/*
+	   Best-effort cancellation of active compute requests. Each ID should be the request ID that
+	   the client originally passed when starting the request. A single request may correspond to
+	   one or more underlying operations, all of which will be cancelled.
+	*/
+	BatchKillRequests(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchKillRequestsRequest) error
 }
 
 type computeServiceClient struct {
@@ -168,6 +174,19 @@ func (c *computeServiceClient) ComputeWithUnits(ctx context.Context, authHeader 
 	return *returnVal, nil
 }
 
+func (c *computeServiceClient) BatchKillRequests(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchKillRequestsRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchKillRequests"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/compute/v2/compute/batch/kill"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "batchKillRequests failed")
+	}
+	return nil
+}
+
 // The Compute Service provides the ability to compute the output of compute graphs.
 type ComputeServiceClientWithAuth interface {
 	// Computes the output of the compute graph specified by a ComputeNodeRequest.
@@ -205,6 +224,12 @@ type ComputeServiceClientWithAuth interface {
 	   noUnitAvailable, and if the computation was not successful, corresponding errors are returned.
 	*/
 	ComputeWithUnits(ctx context.Context, requestArg ComputeWithUnitsRequest) (api.ComputeWithUnitsResponse, error)
+	/*
+	   Best-effort cancellation of active compute requests. Each ID should be the request ID that
+	   the client originally passed when starting the request. A single request may correspond to
+	   one or more underlying operations, all of which will be cancelled.
+	*/
+	BatchKillRequests(ctx context.Context, requestArg api.BatchKillRequestsRequest) error
 }
 
 func NewComputeServiceClientWithAuth(client ComputeServiceClient, authHeader bearertoken.Token) ComputeServiceClientWithAuth {
@@ -238,6 +263,10 @@ func (c *computeServiceClientWithAuth) BatchComputeUnits(ctx context.Context, re
 
 func (c *computeServiceClientWithAuth) ComputeWithUnits(ctx context.Context, requestArg ComputeWithUnitsRequest) (api.ComputeWithUnitsResponse, error) {
 	return c.client.ComputeWithUnits(ctx, c.authHeader, requestArg)
+}
+
+func (c *computeServiceClientWithAuth) BatchKillRequests(ctx context.Context, requestArg api.BatchKillRequestsRequest) error {
+	return c.client.BatchKillRequests(ctx, c.authHeader, requestArg)
 }
 
 func NewComputeServiceClientWithTokenProvider(client ComputeServiceClient, tokenProvider httpclient.TokenProvider) ComputeServiceClientWithAuth {
@@ -295,4 +324,12 @@ func (c *computeServiceClientWithTokenProvider) ComputeWithUnits(ctx context.Con
 		return *new(api.ComputeWithUnitsResponse), err
 	}
 	return c.client.ComputeWithUnits(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *computeServiceClientWithTokenProvider) BatchKillRequests(ctx context.Context, requestArg api.BatchKillRequestsRequest) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.BatchKillRequests(ctx, bearertoken.Token(token), requestArg)
 }

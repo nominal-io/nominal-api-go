@@ -147,21 +147,21 @@ func NewChannelVariableComputeExpressionFromV1(v ChannelVariableComputeExpressio
 	return ChannelVariableComputeExpression{typ: "v1", v1: &v}
 }
 
-type ChannelVariableComputeExpressionInput struct {
+type ChannelVariableComputeExpressionInputValue struct {
 	typ      string
 	variable *ChannelVariableName
 }
 
-type channelVariableComputeExpressionInputDeserializer struct {
+type channelVariableComputeExpressionInputValueDeserializer struct {
 	Type     string               `json:"type"`
 	Variable *ChannelVariableName `json:"variable"`
 }
 
-func (u *channelVariableComputeExpressionInputDeserializer) toStruct() ChannelVariableComputeExpressionInput {
-	return ChannelVariableComputeExpressionInput{typ: u.Type, variable: u.Variable}
+func (u *channelVariableComputeExpressionInputValueDeserializer) toStruct() ChannelVariableComputeExpressionInputValue {
+	return ChannelVariableComputeExpressionInputValue{typ: u.Type, variable: u.Variable}
 }
 
-func (u *ChannelVariableComputeExpressionInput) toSerializer() (interface{}, error) {
+func (u *ChannelVariableComputeExpressionInputValue) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
@@ -176,7 +176,7 @@ func (u *ChannelVariableComputeExpressionInput) toSerializer() (interface{}, err
 	}
 }
 
-func (u ChannelVariableComputeExpressionInput) MarshalJSON() ([]byte, error) {
+func (u ChannelVariableComputeExpressionInputValue) MarshalJSON() ([]byte, error) {
 	ser, err := u.toSerializer()
 	if err != nil {
 		return nil, err
@@ -184,8 +184,8 @@ func (u ChannelVariableComputeExpressionInput) MarshalJSON() ([]byte, error) {
 	return safejson.Marshal(ser)
 }
 
-func (u *ChannelVariableComputeExpressionInput) UnmarshalJSON(data []byte) error {
-	var deser channelVariableComputeExpressionInputDeserializer
+func (u *ChannelVariableComputeExpressionInputValue) UnmarshalJSON(data []byte) error {
+	var deser channelVariableComputeExpressionInputValueDeserializer
 	if err := safejson.Unmarshal(data, &deser); err != nil {
 		return err
 	}
@@ -199,7 +199,7 @@ func (u *ChannelVariableComputeExpressionInput) UnmarshalJSON(data []byte) error
 	return nil
 }
 
-func (u ChannelVariableComputeExpressionInput) MarshalYAML() (interface{}, error) {
+func (u ChannelVariableComputeExpressionInputValue) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(u)
 	if err != nil {
 		return nil, err
@@ -207,7 +207,7 @@ func (u ChannelVariableComputeExpressionInput) MarshalYAML() (interface{}, error
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (u *ChannelVariableComputeExpressionInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (u *ChannelVariableComputeExpressionInputValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -215,11 +215,11 @@ func (u *ChannelVariableComputeExpressionInput) UnmarshalYAML(unmarshal func(int
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ChannelVariableComputeExpressionInput) AcceptFuncs(variableFunc func(ChannelVariableName) error, unknownFunc func(string) error) error {
+func (u *ChannelVariableComputeExpressionInputValue) AcceptFuncs(variableFunc func(ChannelVariableName) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in ChannelVariableComputeExpressionInput type")
+			return fmt.Errorf("invalid value in ChannelVariableComputeExpressionInputValue type")
 		}
 		return unknownFunc(u.typ)
 	case "variable":
@@ -230,15 +230,15 @@ func (u *ChannelVariableComputeExpressionInput) AcceptFuncs(variableFunc func(Ch
 	}
 }
 
-func (u *ChannelVariableComputeExpressionInput) VariableNoopSuccess(_ ChannelVariableName) error {
+func (u *ChannelVariableComputeExpressionInputValue) VariableNoopSuccess(_ ChannelVariableName) error {
 	return nil
 }
 
-func (u *ChannelVariableComputeExpressionInput) ErrorOnUnknown(typeName string) error {
+func (u *ChannelVariableComputeExpressionInputValue) ErrorOnUnknown(typeName string) error {
 	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
-func (u *ChannelVariableComputeExpressionInput) Accept(v ChannelVariableComputeExpressionInputVisitor) error {
+func (u *ChannelVariableComputeExpressionInputValue) Accept(v ChannelVariableComputeExpressionInputValueVisitor) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -253,12 +253,12 @@ func (u *ChannelVariableComputeExpressionInput) Accept(v ChannelVariableComputeE
 	}
 }
 
-type ChannelVariableComputeExpressionInputVisitor interface {
+type ChannelVariableComputeExpressionInputValueVisitor interface {
 	VisitVariable(v ChannelVariableName) error
 	VisitUnknown(typeName string) error
 }
 
-func (u *ChannelVariableComputeExpressionInput) AcceptWithContext(ctx context.Context, v ChannelVariableComputeExpressionInputVisitorWithContext) error {
+func (u *ChannelVariableComputeExpressionInputValue) AcceptWithContext(ctx context.Context, v ChannelVariableComputeExpressionInputValueVisitorWithContext) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -273,13 +273,13 @@ func (u *ChannelVariableComputeExpressionInput) AcceptWithContext(ctx context.Co
 	}
 }
 
-type ChannelVariableComputeExpressionInputVisitorWithContext interface {
+type ChannelVariableComputeExpressionInputValueVisitorWithContext interface {
 	VisitVariableWithContext(ctx context.Context, v ChannelVariableName) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewChannelVariableComputeExpressionInputFromVariable(v ChannelVariableName) ChannelVariableComputeExpressionInput {
-	return ChannelVariableComputeExpressionInput{typ: "variable", variable: &v}
+func NewChannelVariableComputeExpressionInputValueFromVariable(v ChannelVariableName) ChannelVariableComputeExpressionInputValue {
+	return ChannelVariableComputeExpressionInputValue{typ: "variable", variable: &v}
 }
 
 type ChannelVariableComputeExpressionV1 struct {

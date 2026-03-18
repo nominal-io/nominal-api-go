@@ -812,6 +812,12 @@ type VideoServiceClient interface {
 	// Returns metadata for the segment within a video series containing the requested absolute timestamp.
 	GetSegmentByTimestampV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error)
 	/*
+	   Returns metadata for the segment containing the requested absolute timestamp. If no segment contains
+	   the timestamp, returns the closest segment starting after the timestamp. Returns empty if no segment
+	   is found at or after the timestamp.
+	*/
+	GetSegmentAtOrAfterTimestamp(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentAtOrAfterTimestampRequest) (*api.Segment, error)
+	/*
 	   Returns the min and max absolute timestamps from non-archived video files associated with a given video that
 	   overlap with an optional set of bounds. The files on the edges of the bounds will be truncated to segments
 	   that are inside or overlap with the bounds.
@@ -1202,6 +1208,21 @@ func (c *videoServiceClient) GetSegmentByTimestampV2(ctx context.Context, authHe
 	return returnVal, nil
 }
 
+func (c *videoServiceClient) GetSegmentAtOrAfterTimestamp(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentAtOrAfterTimestampRequest) (*api.Segment, error) {
+	var returnVal *api.Segment
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentAtOrAfterTimestamp"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v1/videos/%s/get-segment-at-or-after-timestamp", url.PathEscape(fmt.Sprint(videoRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentAtOrAfterTimestamp failed")
+	}
+	return returnVal, nil
+}
+
 func (c *videoServiceClient) GetFileSummaries(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error) {
 	var returnVal *api.GetFileSummariesResponse
 	var requestParams []httpclient.RequestParam
@@ -1402,6 +1423,12 @@ type VideoServiceClientWithAuth interface {
 	// Returns metadata for the segment within a video series containing the requested absolute timestamp.
 	GetSegmentByTimestampV2(ctx context.Context, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error)
 	/*
+	   Returns metadata for the segment containing the requested absolute timestamp. If no segment contains
+	   the timestamp, returns the closest segment starting after the timestamp. Returns empty if no segment
+	   is found at or after the timestamp.
+	*/
+	GetSegmentAtOrAfterTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentAtOrAfterTimestampRequest) (*api.Segment, error)
+	/*
 	   Returns the min and max absolute timestamps from non-archived video files associated with a given video that
 	   overlap with an optional set of bounds. The files on the edges of the bounds will be truncated to segments
 	   that are inside or overlap with the bounds.
@@ -1529,6 +1556,10 @@ func (c *videoServiceClientWithAuth) GetSegmentMetadataV2(ctx context.Context, r
 
 func (c *videoServiceClientWithAuth) GetSegmentByTimestampV2(ctx context.Context, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error) {
 	return c.client.GetSegmentByTimestampV2(ctx, c.authHeader, requestArg)
+}
+
+func (c *videoServiceClientWithAuth) GetSegmentAtOrAfterTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentAtOrAfterTimestampRequest) (*api.Segment, error) {
+	return c.client.GetSegmentAtOrAfterTimestamp(ctx, c.authHeader, videoRidArg, requestArg)
 }
 
 func (c *videoServiceClientWithAuth) GetFileSummaries(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error) {
@@ -1726,6 +1757,14 @@ func (c *videoServiceClientWithTokenProvider) GetSegmentByTimestampV2(ctx contex
 		return nil, err
 	}
 	return c.client.GetSegmentByTimestampV2(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *videoServiceClientWithTokenProvider) GetSegmentAtOrAfterTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentAtOrAfterTimestampRequest) (*api.Segment, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c.client.GetSegmentAtOrAfterTimestamp(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetFileSummaries(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error) {

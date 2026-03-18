@@ -8,8 +8,9 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type BranchName string
-type BranchRid rid.ResourceIdentifier
+type BranchName string // safelogging:@Unsafe
+
+type BranchRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a BranchRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -58,9 +59,11 @@ func (a *BranchRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // 40 hex character unique identifier.
-type CommitId string
-type TagName string
-type TagRid rid.ResourceIdentifier
+type CommitId string // safelogging:@Safe
+
+type TagName string // safelogging:@Unsafe
+
+type TagRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a TagRid) String() string {
 	return rid.ResourceIdentifier(a).String()

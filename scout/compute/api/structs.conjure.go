@@ -469,6 +469,47 @@ func (o *BatchComputeWithUnitsResponse) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BatchKillRequestsRequest struct {
+	RequestIds []uuid.UUID `json:"requestIds"`
+}
+
+func (o BatchKillRequestsRequest) MarshalJSON() ([]byte, error) {
+	if o.RequestIds == nil {
+		o.RequestIds = make([]uuid.UUID, 0)
+	}
+	type _tmpBatchKillRequestsRequest BatchKillRequestsRequest
+	return safejson.Marshal(_tmpBatchKillRequestsRequest(o))
+}
+
+func (o *BatchKillRequestsRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchKillRequestsRequest BatchKillRequestsRequest
+	var rawBatchKillRequestsRequest _tmpBatchKillRequestsRequest
+	if err := safejson.Unmarshal(data, &rawBatchKillRequestsRequest); err != nil {
+		return err
+	}
+	if rawBatchKillRequestsRequest.RequestIds == nil {
+		rawBatchKillRequestsRequest.RequestIds = make([]uuid.UUID, 0)
+	}
+	*o = BatchKillRequestsRequest(rawBatchKillRequestsRequest)
+	return nil
+}
+
+func (o BatchKillRequestsRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchKillRequestsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type BitAndFunction struct {
 	Operand safelong.SafeLong `json:"operand"`
 }
@@ -975,8 +1016,8 @@ type Cartesian3dBucket struct {
 	MaxYPoint    Point3d           `json:"maxYPoint"`
 	MinZPoint    Point3d           `json:"minZPoint"`
 	MaxZPoint    Point3d           `json:"maxZPoint"`
-	MinTimestamp api.Timestamp     `json:"minTimestamp"`
-	MaxTimestamp api.Timestamp     `json:"maxTimestamp"`
+	MinTimestamp api.Timestamp     `json:"minTimestamp" safelogging:"@Safe"`
+	MaxTimestamp api.Timestamp     `json:"maxTimestamp" safelogging:"@Safe"`
 	Count        safelong.SafeLong `json:"count"`
 }
 
@@ -1047,8 +1088,8 @@ type CartesianBucket struct {
 	MaxX         float64           `json:"maxX"`
 	MinY         float64           `json:"minY"`
 	MaxY         float64           `json:"maxY"`
-	MinTimestamp api.Timestamp     `json:"minTimestamp"`
-	MaxTimestamp api.Timestamp     `json:"maxTimestamp"`
+	MinTimestamp api.Timestamp     `json:"minTimestamp" safelogging:"@Safe"`
+	MaxTimestamp api.Timestamp     `json:"maxTimestamp" safelogging:"@Safe"`
 	Count        safelong.SafeLong `json:"count"`
 }
 
@@ -1145,7 +1186,7 @@ func (o *CartesianUnitResult) UnmarshalYAML(unmarshal func(interface{}) error) e
 }
 
 type CompactEnumPoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     int           `json:"value"`
 }
 
@@ -1274,7 +1315,7 @@ func (o *CurveFitResult) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type DataSourceAndChannel struct {
-	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
 	Channel       string             `json:"channel"`
 }
 
@@ -1623,7 +1664,7 @@ func (o *EnumPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type EnumPoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     string        `json:"value"`
 }
 
@@ -1643,9 +1684,10 @@ func (o *EnumPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type ErrorResult struct {
-	ErrorType ErrorType `json:"errorType"`
-	Code      ErrorCode `json:"code"`
+	ErrorType ErrorType `json:"errorType" safelogging:"@Safe"`
+	Code      ErrorCode `json:"code" safelogging:"@Safe"`
 }
 
 func (o ErrorResult) MarshalYAML() (interface{}, error) {
@@ -2121,9 +2163,10 @@ func (o *HistogramChannelCount) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 // Attempted an incompatible operation of units.
+// safelogging:@Unsafe
 type IncompatibleUnitOperation struct {
 	Operation UnitOperation     `json:"operation"`
-	Units     []api1.UnitSymbol `json:"units"`
+	Units     []api1.UnitSymbol `json:"units" safelogging:"@Unsafe"`
 }
 
 func (o IncompatibleUnitOperation) MarshalJSON() ([]byte, error) {
@@ -2273,7 +2316,7 @@ func (o *LogExactMatchCaseInsensitiveFilter) UnmarshalYAML(unmarshal func(interf
 }
 
 type LogPoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     LogValue      `json:"value"`
 }
 
@@ -2459,7 +2502,7 @@ func (o *Minimum) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type MultivariateBucket struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	// Values for each input series in the bucket.
 	Values []Value `json:"values"`
 }
@@ -2774,7 +2817,7 @@ func (o *NumericPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type NumericPoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     float64       `json:"value"`
 }
 
@@ -2981,7 +3024,7 @@ type Point3d struct {
 	X         float64       `json:"x"`
 	Y         float64       `json:"y"`
 	Z         float64       `json:"z"`
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 }
 
 func (o Point3d) MarshalYAML() (interface{}, error) {
@@ -3252,8 +3295,9 @@ func (o *RangesSummary) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Reference struct {
-	Name VariableName `json:"name"`
+	Name VariableName `json:"name" safelogging:"@Unsafe"`
 }
 
 func (o Reference) MarshalYAML() (interface{}, error) {
@@ -3426,7 +3470,7 @@ func (o *SetNegativeValuesToZero) UnmarshalYAML(unmarshal func(interface{}) erro
 
 // Return type representing a single point value.
 type SinglePoint struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Value     Value         `json:"value"`
 	/*
 	   Returns true if the result required downcasting to a type with less precision,
@@ -3662,7 +3706,7 @@ func (o *TimeSeriesFitOptions) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 type TimestampAndId struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Id        *uuid.UUID    `json:"id,omitempty"`
 }
 
@@ -3685,7 +3729,7 @@ func (o *TimestampAndId) UnmarshalYAML(unmarshal func(interface{}) error) error 
 // At least one input is missing a unit.
 type UnitsMissing struct {
 	// Deprecated: Use channels instead.
-	SeriesRids []api.LogicalSeriesRid `json:"seriesRids"`
+	SeriesRids []api.LogicalSeriesRid `json:"seriesRids" safelogging:"@Safe"`
 	Channels   []DataSourceAndChannel `json:"channels"`
 }
 
