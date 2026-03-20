@@ -16,9 +16,10 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Unsafe
 type branchNotFound struct {
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
-	BranchName  BranchName             `json:"branchName"`
+	BranchName  BranchName             `json:"branchName" safelogging:"@Unsafe"`
 }
 
 func (o branchNotFound) MarshalYAML() (interface{}, error) {
@@ -112,7 +113,7 @@ func (e *BranchNotFound) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *BranchNotFound) safeParams() map[string]interface{} {
-	return map[string]interface{}{"resourceRid": e.ResourceRid, "branchName": e.BranchName, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"resourceRid": e.ResourceRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -129,7 +130,7 @@ func (e *BranchNotFound) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *BranchNotFound) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"branchName": e.BranchName}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -166,11 +167,12 @@ func (e *BranchNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type commitConflict struct {
 	ResourceRid          rid.ResourceIdentifier `json:"resourceRid"`
-	BranchName           BranchName             `json:"branchName"`
-	TrueLatestCommit     CommitId               `json:"trueLatestCommit"`
-	ProvidedLatestCommit CommitId               `json:"providedLatestCommit"`
+	TrueLatestCommit     CommitId               `json:"trueLatestCommit" safelogging:"@Safe"`
+	ProvidedLatestCommit CommitId               `json:"providedLatestCommit" safelogging:"@Safe"`
+	BranchName           BranchName             `json:"branchName" safelogging:"@Unsafe"`
 }
 
 func (o commitConflict) MarshalYAML() (interface{}, error) {
@@ -190,13 +192,13 @@ func (o *commitConflict) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 // NewCommitConflict returns new instance of CommitConflict error.
-func NewCommitConflict(resourceRidArg rid.ResourceIdentifier, branchNameArg BranchName, trueLatestCommitArg CommitId, providedLatestCommitArg CommitId) *CommitConflict {
-	return &CommitConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), commitConflict: commitConflict{ResourceRid: resourceRidArg, BranchName: branchNameArg, TrueLatestCommit: trueLatestCommitArg, ProvidedLatestCommit: providedLatestCommitArg}}
+func NewCommitConflict(resourceRidArg rid.ResourceIdentifier, trueLatestCommitArg CommitId, providedLatestCommitArg CommitId, branchNameArg BranchName) *CommitConflict {
+	return &CommitConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), commitConflict: commitConflict{ResourceRid: resourceRidArg, TrueLatestCommit: trueLatestCommitArg, ProvidedLatestCommit: providedLatestCommitArg, BranchName: branchNameArg}}
 }
 
 // WrapWithCommitConflict returns new instance of CommitConflict error wrapping an existing error.
-func WrapWithCommitConflict(err error, resourceRidArg rid.ResourceIdentifier, branchNameArg BranchName, trueLatestCommitArg CommitId, providedLatestCommitArg CommitId) *CommitConflict {
-	return &CommitConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, commitConflict: commitConflict{ResourceRid: resourceRidArg, BranchName: branchNameArg, TrueLatestCommit: trueLatestCommitArg, ProvidedLatestCommit: providedLatestCommitArg}}
+func WrapWithCommitConflict(err error, resourceRidArg rid.ResourceIdentifier, trueLatestCommitArg CommitId, providedLatestCommitArg CommitId, branchNameArg BranchName) *CommitConflict {
+	return &CommitConflict{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, commitConflict: commitConflict{ResourceRid: resourceRidArg, TrueLatestCommit: trueLatestCommitArg, ProvidedLatestCommit: providedLatestCommitArg, BranchName: branchNameArg}}
 }
 
 // CommitConflict is an error type.
@@ -259,12 +261,12 @@ func (e *CommitConflict) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *CommitConflict) Parameters() map[string]interface{} {
-	return map[string]interface{}{"resourceRid": e.ResourceRid, "branchName": e.BranchName, "trueLatestCommit": e.TrueLatestCommit, "providedLatestCommit": e.ProvidedLatestCommit}
+	return map[string]interface{}{"resourceRid": e.ResourceRid, "trueLatestCommit": e.TrueLatestCommit, "providedLatestCommit": e.ProvidedLatestCommit, "branchName": e.BranchName}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *CommitConflict) safeParams() map[string]interface{} {
-	return map[string]interface{}{"resourceRid": e.ResourceRid, "branchName": e.BranchName, "trueLatestCommit": e.TrueLatestCommit, "providedLatestCommit": e.ProvidedLatestCommit, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"resourceRid": e.ResourceRid, "trueLatestCommit": e.TrueLatestCommit, "providedLatestCommit": e.ProvidedLatestCommit, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -281,7 +283,7 @@ func (e *CommitConflict) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *CommitConflict) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"branchName": e.BranchName}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -320,7 +322,7 @@ func (e *CommitConflict) UnmarshalJSON(data []byte) error {
 
 type commitIdExists struct {
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
-	CommitId    CommitId               `json:"commitId"`
+	CommitId    CommitId               `json:"commitId" safelogging:"@Safe"`
 }
 
 func (o commitIdExists) MarshalYAML() (interface{}, error) {
@@ -470,7 +472,7 @@ func (e *CommitIdExists) UnmarshalJSON(data []byte) error {
 
 type commitNotFound struct {
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
-	Commit      CommitId               `json:"commit"`
+	Commit      CommitId               `json:"commit" safelogging:"@Safe"`
 }
 
 func (o commitNotFound) MarshalYAML() (interface{}, error) {
@@ -714,7 +716,7 @@ func (e *CommitPointerNameConflict) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *CommitPointerNameConflict) safeParams() map[string]interface{} {
-	return map[string]interface{}{"resourceRid": e.ResourceRid, "name": e.Name, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"resourceRid": e.ResourceRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -731,7 +733,7 @@ func (e *CommitPointerNameConflict) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *CommitPointerNameConflict) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"name": e.Name}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -1704,9 +1706,10 @@ func (e *ResourcesNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type tagNotFound struct {
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
-	TagName     TagName                `json:"tagName"`
+	TagName     TagName                `json:"tagName" safelogging:"@Unsafe"`
 }
 
 func (o tagNotFound) MarshalYAML() (interface{}, error) {
@@ -1800,7 +1803,7 @@ func (e *TagNotFound) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *TagNotFound) safeParams() map[string]interface{} {
-	return map[string]interface{}{"resourceRid": e.ResourceRid, "tagName": e.TagName, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"resourceRid": e.ResourceRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -1817,7 +1820,7 @@ func (e *TagNotFound) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *TagNotFound) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"tagName": e.TagName}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and

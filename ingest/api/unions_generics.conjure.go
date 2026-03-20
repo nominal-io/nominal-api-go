@@ -1360,6 +1360,87 @@ type SearchContainerizedExtractorsQueryVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type StreamingSessionSourceWithT[T any] StreamingSessionSource
+
+func (u *StreamingSessionSourceWithT[T]) Accept(ctx context.Context, v StreamingSessionSourceVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "mesh":
+		if u.mesh == nil {
+			return result, fmt.Errorf("field \"mesh\" is required")
+		}
+		return v.VisitMesh(ctx, *u.mesh)
+	case "dataConnector":
+		if u.dataConnector == nil {
+			return result, fmt.Errorf("field \"dataConnector\" is required")
+		}
+		return v.VisitDataConnector(ctx, *u.dataConnector)
+	case "custom":
+		if u.custom == nil {
+			return result, fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustom(ctx, *u.custom)
+	}
+}
+
+func (u *StreamingSessionSourceWithT[T]) AcceptFuncs(meshFunc func(MeshStreamingSessionSource) (T, error), dataConnectorFunc func(DataConnectorStreamingSessionSource) (T, error), customFunc func(CustomStreamingSessionSource) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "mesh":
+		if u.mesh == nil {
+			return result, fmt.Errorf("field \"mesh\" is required")
+		}
+		return meshFunc(*u.mesh)
+	case "dataConnector":
+		if u.dataConnector == nil {
+			return result, fmt.Errorf("field \"dataConnector\" is required")
+		}
+		return dataConnectorFunc(*u.dataConnector)
+	case "custom":
+		if u.custom == nil {
+			return result, fmt.Errorf("field \"custom\" is required")
+		}
+		return customFunc(*u.custom)
+	}
+}
+
+func (u *StreamingSessionSourceWithT[T]) MeshNoopSuccess(MeshStreamingSessionSource) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *StreamingSessionSourceWithT[T]) DataConnectorNoopSuccess(DataConnectorStreamingSessionSource) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *StreamingSessionSourceWithT[T]) CustomNoopSuccess(CustomStreamingSessionSource) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *StreamingSessionSourceWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type StreamingSessionSourceVisitorWithT[T any] interface {
+	VisitMesh(ctx context.Context, v MeshStreamingSessionSource) (T, error)
+	VisitDataConnector(ctx context.Context, v DataConnectorStreamingSessionSource) (T, error)
+	VisitCustom(ctx context.Context, v CustomStreamingSessionSource) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type TimeOffsetSpecWithT[T any] TimeOffsetSpec
 
 func (u *TimeOffsetSpecWithT[T]) Accept(ctx context.Context, v TimeOffsetSpecVisitorWithT[T]) (T, error) {

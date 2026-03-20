@@ -8,14 +8,18 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type Channel string
-type ColumnName string
-type DataSourceRefName string
+type Channel string // safelogging:@Unsafe
+
+type ColumnName string // safelogging:@Unsafe
+
+type DataSourceRefName string // safelogging:@Unsafe
 
 // Should be of the format Namespace:ErrorType
-type ErrorType string
-type Label string
-type LogicalSeriesRid rid.ResourceIdentifier
+type ErrorType string // safelogging:@Safe
+
+type Label string // safelogging:@Unsafe
+
+type LogicalSeriesRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a LogicalSeriesRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -63,12 +67,17 @@ func (a *LogicalSeriesRid) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type McapChannelId int
-type McapChannelTopic string
-type PropertyName string
-type PropertyValue string
-type S3Path string
-type SeriesArchetypeRid SeriesMetadataRid
+type McapChannelId int // safelogging:@Safe
+
+type McapChannelTopic string // safelogging:@Unsafe
+
+type PropertyName string // safelogging:@Unsafe
+
+type PropertyValue string // safelogging:@Unsafe
+
+type S3Path string // safelogging:@Unsafe
+
+type SeriesArchetypeRid SeriesMetadataRid // safelogging:@Safe
 
 func (a SeriesArchetypeRid) String() string {
 	return SeriesMetadataRid(a).String()
@@ -116,7 +125,7 @@ func (a *SeriesArchetypeRid) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type SeriesMetadataRid rid.ResourceIdentifier
+type SeriesMetadataRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a SeriesMetadataRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -164,13 +173,15 @@ func (a *SeriesMetadataRid) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type TagName string
-type TagValue string
+type TagName string // safelogging:@Unsafe
+
+type TagValue string // safelogging:@Unsafe
 
 /*
 Tokens are used with paginated requests to get the next "page" of results
 from an API, and typically are used as both part of the request and response
 schema of an endpoint to allow users to stream pages of results.
 */
-type Token string
-type Unit string
+type Token string // safelogging:@Unsafe
+
+type Unit string // safelogging:@Unsafe

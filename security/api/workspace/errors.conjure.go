@@ -16,8 +16,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type forbiddenCrossWorkspaceOperation struct {
-	Workspaces []rids.WorkspaceRid `json:"workspaces"`
+	Workspaces []rids.WorkspaceRid `json:"workspaces" safelogging:"@Safe"`
 }
 
 func (o forbiddenCrossWorkspaceOperation) MarshalJSON() ([]byte, error) {
@@ -187,8 +188,9 @@ func (e *ForbiddenCrossWorkspaceOperation) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type workspaceNotFound struct {
-	WorkspaceRid rids.WorkspaceRid `json:"workspaceRid"`
+	WorkspaceRid rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
 }
 
 func (o workspaceNotFound) MarshalYAML() (interface{}, error) {

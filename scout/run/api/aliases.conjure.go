@@ -8,7 +8,7 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type ConnectionRid rid.ResourceIdentifier
+type ConnectionRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ConnectionRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -56,7 +56,7 @@ func (a *ConnectionRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type LogSetRid rid.ResourceIdentifier
+type LogSetRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a LogSetRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -104,7 +104,7 @@ func (a *LogSetRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type RunRid rid.ResourceIdentifier
+type RunRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a RunRid) String() string {
 	return rid.ResourceIdentifier(a).String()

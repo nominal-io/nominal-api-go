@@ -14,9 +14,10 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
+// safelogging:@Safe
 type Bounds struct {
-	Start api.Timestamp `json:"start"`
-	End   api.Timestamp `json:"end"`
+	Start api.Timestamp `json:"start" safelogging:"@Safe"`
+	End   api.Timestamp `json:"end" safelogging:"@Safe"`
 }
 
 func (o Bounds) MarshalYAML() (interface{}, error) {
@@ -41,7 +42,7 @@ type CreateSegment struct {
 	FrameRate           float64           `json:"frameRate"`
 	DurationSeconds     float64           `json:"durationSeconds"`
 	Timestamps          SegmentTimestamps `json:"timestamps"`
-	SegmentEndTimestamp api.Timestamp     `json:"segmentEndTimestamp"`
+	SegmentEndTimestamp api.Timestamp     `json:"segmentEndTimestamp" safelogging:"@Safe"`
 }
 
 func (o CreateSegment) MarshalYAML() (interface{}, error) {
@@ -150,7 +151,7 @@ func (o *CreateSegmentsResponse) UnmarshalYAML(unmarshal func(interface{}) error
 
 // Request to create video segments for channel-based ingestion. Internal use only.
 type CreateSegmentsV2Request struct {
-	DatasetRid    rids.DatasetRid `json:"datasetRid"`
+	DatasetRid    rids.DatasetRid `json:"datasetRid" safelogging:"@Safe"`
 	DatasetFileId uuid.UUID       `json:"datasetFileId"`
 	Requests      []CreateSegment `json:"requests"`
 	SeriesUuid    uuid.UUID       `json:"seriesUuid"`
@@ -245,7 +246,7 @@ type CreateVideoFileRequest struct {
 	Title          string                  `json:"title"`
 	Description    *string                 `json:"description,omitempty"`
 	OriginMetadata VideoFileOriginMetadata `json:"originMetadata"`
-	VideoRid       rids.VideoRid           `json:"videoRid"`
+	VideoRid       rids.VideoRid           `json:"videoRid" safelogging:"@Safe"`
 	// The size of the pre-processed raw video file in bytes.
 	RawFileSize safelong.SafeLong `json:"rawFileSize"`
 }
@@ -266,10 +267,11 @@ func (o *CreateVideoFileRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateVideoRequest struct {
 	Title       string                                 `json:"title"`
 	Description *string                                `json:"description,omitempty"`
-	Labels      []api.Label                            `json:"labels"`
+	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
 	// Deprecated: deprecated in favor of per-file VideoFileOriginMetadata. Will be removed after April 15th.
 	OriginMetadata *VideoOriginMetadata `json:"originMetadata,omitempty"`
@@ -278,12 +280,12 @@ type CreateVideoRequest struct {
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 	/*
 	   The markings to apply to the created video.
 	   If not provided, the video will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api1.MarkingRid `json:"markingRids"`
+	MarkingRids []api1.MarkingRid `json:"markingRids" safelogging:"@Safe"`
 }
 
 func (o CreateVideoRequest) MarshalJSON() ([]byte, error) {
@@ -338,7 +340,7 @@ func (o *CreateVideoRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 // Response payload for ending an active stream session.
 type EndStreamResponse struct {
 	StreamId string        `json:"streamId"`
-	EndedAt  api.Timestamp `json:"endedAt"`
+	EndedAt  api.Timestamp `json:"endedAt" safelogging:"@Safe"`
 }
 
 func (o EndStreamResponse) MarshalYAML() (interface{}, error) {
@@ -357,10 +359,11 @@ func (o *EndStreamResponse) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type EnrichedVideoIngestStatus struct {
 	Status           VideoIngestStatus                           `json:"status"`
 	FileIngestStatus map[rids.VideoFileRid]VideoFileIngestStatus `json:"fileIngestStatus"`
-	NextPageToken    *api.Token                                  `json:"nextPageToken,omitempty"`
+	NextPageToken    *api.Token                                  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o EnrichedVideoIngestStatus) MarshalJSON() ([]byte, error) {
@@ -441,9 +444,10 @@ func (o *ErrorIngestStatus) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type FileSummary struct {
-	FileRid rids.VideoFileRid `json:"fileRid"`
-	Bounds  Bounds            `json:"bounds"`
+	FileRid rids.VideoFileRid `json:"fileRid" safelogging:"@Safe"`
+	Bounds  Bounds            `json:"bounds" safelogging:"@Safe"`
 }
 
 func (o FileSummary) MarshalYAML() (interface{}, error) {
@@ -550,9 +554,10 @@ func (o *GenerateWhipStreamResponse) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetEnrichedVideoIngestStatusRequest struct {
-	VideoRid rids.VideoRid `json:"videoRid"`
-	Token    *api.Token    `json:"token,omitempty"`
+	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
+	Token    *api.Token    `json:"token,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o GetEnrichedVideoIngestStatusRequest) MarshalYAML() (interface{}, error) {
@@ -658,7 +663,7 @@ Uses channel + tags to resolve to video series metadata within the specified vid
 */
 type GetPlaylistInBoundsForChannelRequest struct {
 	ChannelSeries VideoChannelSeries `json:"channelSeries"`
-	Bounds        Bounds             `json:"bounds"`
+	Bounds        Bounds             `json:"bounds" safelogging:"@Safe"`
 }
 
 func (o GetPlaylistInBoundsForChannelRequest) MarshalYAML() (interface{}, error) {
@@ -697,8 +702,30 @@ func (o *GetPlaylistInBoundsRequest) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Request to get a segment containing the given timestamp, or the closest segment starting after it.
+// safelogging:@Safe
+type GetSegmentAtOrAfterTimestampRequest struct {
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
+}
+
+func (o GetSegmentAtOrAfterTimestampRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetSegmentAtOrAfterTimestampRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type GetSegmentByTimestampRequest struct {
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	/*
 	   The start of the view range used to dynamically calculate media timestamps. The first segment with an
 	   overlap with the time bounds will have its minimum media timestamp set to 0, with every subsequent
@@ -728,7 +755,7 @@ func (o *GetSegmentByTimestampRequest) UnmarshalYAML(unmarshal func(interface{})
 // Request to get a segment by timestamp for a video series.
 type GetSegmentByTimestampV2Request struct {
 	ChannelSeries VideoChannelSeries `json:"channelSeries"`
-	Timestamp     api.Timestamp      `json:"timestamp"`
+	Timestamp     api.Timestamp      `json:"timestamp" safelogging:"@Safe"`
 	/*
 	   The start of the view range used to dynamically calculate media timestamps. The first segment with an
 	   overlap with the time bounds will have its minimum media timestamp set to 0, with every subsequent
@@ -785,7 +812,7 @@ Uses channel + tags to resolve to video series metadata within the specified bou
 */
 type GetSegmentSummariesInBoundsForChannelRequest struct {
 	ChannelSeries VideoChannelSeries `json:"channelSeries"`
-	Bounds        Bounds             `json:"bounds"`
+	Bounds        Bounds             `json:"bounds" safelogging:"@Safe"`
 }
 
 func (o GetSegmentSummariesInBoundsForChannelRequest) MarshalYAML() (interface{}, error) {
@@ -824,8 +851,9 @@ func (o *GetSegmentSummariesInBoundsRequest) UnmarshalYAML(unmarshal func(interf
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type GetStreamsInBoundsRequest struct {
-	Bounds Bounds `json:"bounds"`
+	Bounds Bounds `json:"bounds" safelogging:"@Safe"`
 }
 
 func (o GetStreamsInBoundsRequest) MarshalYAML() (interface{}, error) {
@@ -885,8 +913,9 @@ func (o *GetStreamsInBoundsResponse) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type GetVideosRequest struct {
-	VideoRids []rids.VideoRid `json:"videoRids"`
+	VideoRids []rids.VideoRid `json:"videoRids" safelogging:"@Safe"`
 }
 
 func (o GetVideosRequest) MarshalJSON() ([]byte, error) {
@@ -1012,7 +1041,7 @@ func (o *IceServer) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type IngestError struct {
-	ErrorType ErrorType `json:"errorType"`
+	ErrorType ErrorType `json:"errorType" safelogging:"@Safe"`
 	Message   string    `json:"message"`
 }
 
@@ -1032,9 +1061,10 @@ func (o *IngestError) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ListFilesInVideoRequest struct {
-	VideoRid rids.VideoRid `json:"videoRid"`
-	Token    *api.Token    `json:"token,omitempty"`
+	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
+	Token    *api.Token    `json:"token,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o ListFilesInVideoRequest) MarshalYAML() (interface{}, error) {
@@ -1053,9 +1083,10 @@ func (o *ListFilesInVideoRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ListFilesInVideoResponse struct {
 	Files         []VideoFile `json:"files"`
-	NextPageToken *api.Token  `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o ListFilesInVideoResponse) MarshalJSON() ([]byte, error) {
@@ -1122,7 +1153,7 @@ implicitly through the segment timestamps.
 */
 type NoTimestampManifest struct {
 	// Specifies the original starting timestamp of the video.
-	StartingTimestamp api.Timestamp `json:"startingTimestamp"`
+	StartingTimestamp api.Timestamp `json:"startingTimestamp" safelogging:"@Safe"`
 	// A field that specifies that the frame rate of the video does not match the frame rate of the camera | i.e. a slowed down or sped up video. Can specify either the camera frame rate or the absolute end time.
 	ScaleParameter *ScaleParameter `json:"scaleParameter,omitempty"`
 }
@@ -1143,11 +1174,12 @@ func (o *NoTimestampManifest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchVideosRequest struct {
 	Query SearchVideosQuery `json:"query"`
 	// Defaults to 100. Will throw if larger than 1_000.
 	PageSize    *int        `json:"pageSize,omitempty"`
-	Token       *api.Token  `json:"token,omitempty"`
+	Token       *api.Token  `json:"token,omitempty" safelogging:"@Unsafe"`
 	SortOptions SortOptions `json:"sortOptions"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived videos in search.
 	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
@@ -1169,9 +1201,10 @@ func (o *SearchVideosRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchVideosResponse struct {
 	Results       []Video    `json:"results"`
-	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchVideosResponse) MarshalJSON() ([]byte, error) {
@@ -1212,8 +1245,8 @@ func (o *SearchVideosResponse) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 type Segment struct {
-	Rid        rids.SegmentRid `json:"rid"`
-	VideoRid   rids.VideoRid   `json:"videoRid"`
+	Rid        rids.SegmentRid `json:"rid" safelogging:"@Safe"`
+	VideoRid   rids.VideoRid   `json:"videoRid" safelogging:"@Safe"`
 	DataHandle api.Handle      `json:"dataHandle"`
 	// The average frame rate (FPS) of the segment calculated as total frames / duration in seconds.
 	FrameRate float64 `json:"frameRate"`
@@ -1247,8 +1280,8 @@ Bounding timestamps for the frames within a segment. For non-frame-mapped videos
 timestamps will be empty.
 */
 type SegmentSummary struct {
-	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp"`
-	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp"`
+	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp" safelogging:"@Safe"`
+	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp" safelogging:"@Safe"`
 	MinMediaTimestamp    float64       `json:"minMediaTimestamp"`
 	MaxMediaTimestamp    float64       `json:"maxMediaTimestamp"`
 }
@@ -1273,8 +1306,8 @@ func (o *SegmentSummary) UnmarshalYAML(unmarshal func(interface{}) error) error 
 type SegmentSummaryV2 struct {
 	// The dataset file ID that this segment belongs to.
 	DatasetFileId        *uuid.UUID    `json:"datasetFileId,omitempty"`
-	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp"`
-	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp"`
+	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp" safelogging:"@Safe"`
+	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp" safelogging:"@Safe"`
 	MinMediaTimestamp    float64       `json:"minMediaTimestamp"`
 	MaxMediaTimestamp    float64       `json:"maxMediaTimestamp"`
 }
@@ -1297,7 +1330,7 @@ func (o *SegmentSummaryV2) UnmarshalYAML(unmarshal func(interface{}) error) erro
 
 // Segment for V2 channel-based video API (without videoRid).
 type SegmentV2 struct {
-	Rid rids.SegmentRid `json:"rid"`
+	Rid rids.SegmentRid `json:"rid" safelogging:"@Safe"`
 	// The dataset file ID that this segment belongs to.
 	DatasetFileId *uuid.UUID `json:"datasetFileId,omitempty"`
 	DataHandle    api.Handle `json:"dataHandle"`
@@ -1420,7 +1453,7 @@ func (o *TimestampMappings) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 type UpdateIngestStatusRequest struct {
-	Video        rids.VideoRid         `json:"video"`
+	Video        rids.VideoRid         `json:"video" safelogging:"@Safe"`
 	IngestStatus VideoFileIngestStatus `json:"ingestStatus"`
 }
 
@@ -1466,10 +1499,11 @@ func (o *UpdateVideoFileRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateVideoMetadataRequest struct {
 	Title             *string                                 `json:"title,omitempty"`
 	Description       *string                                 `json:"description,omitempty"`
-	Labels            *[]api.Label                            `json:"labels,omitempty"`
+	Labels            *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
 	Properties        *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
 	StartingTimestamp *api.Timestamp                          `json:"startingTimestamp,omitempty"`
 	/*
@@ -1495,11 +1529,12 @@ func (o *UpdateVideoMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Video struct {
-	Rid         rids.VideoRid                          `json:"rid"`
+	Rid         rids.VideoRid                          `json:"rid" safelogging:"@Safe"`
 	Title       string                                 `json:"title"`
 	Description *string                                `json:"description,omitempty"`
-	Labels      []api.Label                            `json:"labels"`
+	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
 	CreatedBy   rid.ResourceIdentifier                 `json:"createdBy"`
 	CreatedAt   datetime.DateTime                      `json:"createdAt"`
@@ -1553,14 +1588,14 @@ func (o *Video) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type VideoAllSegmentsMetadata struct {
-	Rid         rids.VideoRid `json:"rid"`
+	Rid         rids.VideoRid `json:"rid" safelogging:"@Safe"`
 	NumFrames   int           `json:"numFrames"`
 	NumSegments int           `json:"numSegments"`
 	// deprecated, in favor of per-file VideoFileSegmentsMetadata scaleFactor. Will be removed after April 15th.
 	ScaleFactor          *float64      `json:"scaleFactor,omitempty"`
-	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp"`
+	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp" safelogging:"@Safe"`
 	// the timestamp corresponding to absolute starting timestamp plus absolute duration of the video.
-	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp"`
+	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp" safelogging:"@Safe"`
 	MediaDurationSeconds float64       `json:"mediaDurationSeconds"`
 	// The average media frame rate (FPS) of the video calculated as total frames / duration in seconds.
 	MediaFrameRate float64 `json:"mediaFrameRate"`
@@ -1639,8 +1674,8 @@ func (o *VideoAssetChannel) UnmarshalYAML(unmarshal func(interface{}) error) err
 type VideoChannelSegmentsMetadata struct {
 	NumFrames            int           `json:"numFrames"`
 	NumSegments          int           `json:"numSegments"`
-	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp"`
-	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp"`
+	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp" safelogging:"@Safe"`
+	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp" safelogging:"@Safe"`
 	MediaDurationSeconds float64       `json:"mediaDurationSeconds"`
 	// The average media frame rate (FPS) calculated as total frames / duration in seconds.
 	MediaFrameRate float64 `json:"mediaFrameRate"`
@@ -1708,8 +1743,8 @@ func (o *VideoDataSourceChannel) UnmarshalYAML(unmarshal func(interface{}) error
 
 // Representation of a single user-provided video file.
 type VideoFile struct {
-	Rid             rids.VideoFileRid          `json:"rid"`
-	VideoRid        rids.VideoRid              `json:"videoRid"`
+	Rid             rids.VideoFileRid          `json:"rid" safelogging:"@Safe"`
+	VideoRid        rids.VideoRid              `json:"videoRid" safelogging:"@Safe"`
 	Title           string                     `json:"title"`
 	Description     *string                    `json:"description,omitempty"`
 	CreatedBy       rid.ResourceIdentifier     `json:"createdBy"`
@@ -1761,12 +1796,12 @@ func (o *VideoFileOriginMetadata) UnmarshalYAML(unmarshal func(interface{}) erro
 
 // High-level metadata about the segments comprising a video file post-segmentation.
 type VideoFileSegmentsMetadata struct {
-	Rid                  rids.VideoFileRid `json:"rid"`
+	Rid                  rids.VideoFileRid `json:"rid" safelogging:"@Safe"`
 	NumFrames            int               `json:"numFrames"`
 	NumSegments          int               `json:"numSegments"`
 	ScaleFactor          float64           `json:"scaleFactor"`
-	MinAbsoluteTimestamp api.Timestamp     `json:"minAbsoluteTimestamp"`
-	MaxAbsoluteTimestamp api.Timestamp     `json:"maxAbsoluteTimestamp"`
+	MinAbsoluteTimestamp api.Timestamp     `json:"minAbsoluteTimestamp" safelogging:"@Safe"`
+	MaxAbsoluteTimestamp api.Timestamp     `json:"maxAbsoluteTimestamp" safelogging:"@Safe"`
 	MediaDurationSeconds float64           `json:"mediaDurationSeconds"`
 	MediaFrameRate       float64           `json:"mediaFrameRate"`
 }
@@ -1834,7 +1869,7 @@ func (o *VideoOriginMetadata) UnmarshalYAML(unmarshal func(interface{}) error) e
 // Metadata for a single video stream session.
 type VideoStream struct {
 	StreamId     string             `json:"streamId"`
-	VideoRid     rids.VideoRid      `json:"videoRid"`
+	VideoRid     rids.VideoRid      `json:"videoRid" safelogging:"@Safe"`
 	StreamStatus string             `json:"streamStatus"`
 	Start        *datetime.DateTime `json:"start,omitempty"`
 	End          *datetime.DateTime `json:"end,omitempty"`

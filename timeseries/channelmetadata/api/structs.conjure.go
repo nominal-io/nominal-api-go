@@ -174,9 +174,10 @@ func (o *BatchUpdateChannelMetadataResponse) UnmarshalYAML(unmarshal func(interf
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ChannelIdentifier struct {
-	ChannelName   api.Channel        `json:"channelName"`
-	DataSourceRid rids.DataSourceRid `json:"dataSourceRid"`
+	ChannelName   api.Channel        `json:"channelName" safelogging:"@Unsafe"`
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
 }
 
 func (o ChannelIdentifier) MarshalYAML() (interface{}, error) {
@@ -195,10 +196,11 @@ func (o *ChannelIdentifier) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ChannelMetadata struct {
-	ChannelIdentifier ChannelIdentifier   `json:"channelIdentifier"`
+	ChannelIdentifier ChannelIdentifier   `json:"channelIdentifier" safelogging:"@Unsafe"`
 	Description       *string             `json:"description,omitempty"`
-	Unit              *api.Unit           `json:"unit,omitempty"`
+	Unit              *api.Unit           `json:"unit,omitempty" safelogging:"@Unsafe"`
 	DataType          *api.SeriesDataType `json:"dataType,omitempty"`
 }
 
@@ -218,8 +220,9 @@ func (o *ChannelMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetChannelMetadataRequest struct {
-	ChannelIdentifier ChannelIdentifier `json:"channelIdentifier"`
+	ChannelIdentifier ChannelIdentifier `json:"channelIdentifier" safelogging:"@Unsafe"`
 }
 
 func (o GetChannelMetadataRequest) MarshalYAML() (interface{}, error) {
@@ -238,8 +241,9 @@ func (o *GetChannelMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateChannelMetadataRequest struct {
-	ChannelIdentifier ChannelIdentifier `json:"channelIdentifier"`
+	ChannelIdentifier ChannelIdentifier `json:"channelIdentifier" safelogging:"@Unsafe"`
 	Description       *string           `json:"description,omitempty"`
 	UnitUpdate        *api1.UnitUpdate  `json:"unitUpdate,omitempty"`
 }

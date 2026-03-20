@@ -9,7 +9,7 @@ import (
 )
 
 // Unique resource identifier for an Organization.
-type OrgRid rid.ResourceIdentifier
+type OrgRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a OrgRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -57,7 +57,7 @@ func (a *OrgRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type UserRid rid.ResourceIdentifier
+type UserRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a UserRid) String() string {
 	return rid.ResourceIdentifier(a).String()

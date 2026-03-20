@@ -9,6 +9,55 @@ import (
 	"fmt"
 )
 
+type CanvasObjectWithT[T any] CanvasObject
+
+func (u *CanvasObjectWithT[T]) Accept(ctx context.Context, v CanvasObjectVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "panel":
+		if u.panel == nil {
+			return result, fmt.Errorf("field \"panel\" is required")
+		}
+		return v.VisitPanel(ctx, *u.panel)
+	}
+}
+
+func (u *CanvasObjectWithT[T]) AcceptFuncs(panelFunc func(CanvasPanel) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "panel":
+		if u.panel == nil {
+			return result, fmt.Errorf("field \"panel\" is required")
+		}
+		return panelFunc(*u.panel)
+	}
+}
+
+func (u *CanvasObjectWithT[T]) PanelNoopSuccess(CanvasPanel) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CanvasObjectWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type CanvasObjectVisitorWithT[T any] interface {
+	VisitPanel(ctx context.Context, v CanvasPanel) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type ChartPanelWithT[T any] ChartPanel
 
 func (u *ChartPanelWithT[T]) Accept(ctx context.Context, v ChartPanelVisitorWithT[T]) (T, error) {
@@ -142,10 +191,15 @@ func (u *PanelWithT[T]) Accept(ctx context.Context, v PanelVisitorWithT[T]) (T, 
 			return result, fmt.Errorf("field \"tabbed\" is required")
 		}
 		return v.VisitTabbed(ctx, *u.tabbed)
+	case "canvas":
+		if u.canvas == nil {
+			return result, fmt.Errorf("field \"canvas\" is required")
+		}
+		return v.VisitCanvas(ctx, *u.canvas)
 	}
 }
 
-func (u *PanelWithT[T]) AcceptFuncs(vizFunc func(VizPanel) (T, error), chartFunc func(ChartPanel) (T, error), emptyFunc func(EmptyPanel) (T, error), splitFunc func(SplitPanel) (T, error), tabbedFunc func(TabbedPanel) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *PanelWithT[T]) AcceptFuncs(vizFunc func(VizPanel) (T, error), chartFunc func(ChartPanel) (T, error), emptyFunc func(EmptyPanel) (T, error), splitFunc func(SplitPanel) (T, error), tabbedFunc func(TabbedPanel) (T, error), canvasFunc func(CanvasLayout) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -178,6 +232,11 @@ func (u *PanelWithT[T]) AcceptFuncs(vizFunc func(VizPanel) (T, error), chartFunc
 			return result, fmt.Errorf("field \"tabbed\" is required")
 		}
 		return tabbedFunc(*u.tabbed)
+	case "canvas":
+		if u.canvas == nil {
+			return result, fmt.Errorf("field \"canvas\" is required")
+		}
+		return canvasFunc(*u.canvas)
 	}
 }
 
@@ -206,6 +265,11 @@ func (u *PanelWithT[T]) TabbedNoopSuccess(TabbedPanel) (T, error) {
 	return result, nil
 }
 
+func (u *PanelWithT[T]) CanvasNoopSuccess(CanvasLayout) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *PanelWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -217,6 +281,7 @@ type PanelVisitorWithT[T any] interface {
 	VisitEmpty(ctx context.Context, v EmptyPanel) (T, error)
 	VisitSplit(ctx context.Context, v SplitPanel) (T, error)
 	VisitTabbed(ctx context.Context, v TabbedPanel) (T, error)
+	VisitCanvas(ctx context.Context, v CanvasLayout) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

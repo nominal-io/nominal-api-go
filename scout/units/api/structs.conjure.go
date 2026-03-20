@@ -48,20 +48,21 @@ func (o *GetUnitsResponse) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Unit struct {
-	Name   *UnitName  `json:"name,omitempty"`
-	Symbol UnitSymbol `json:"symbol"`
+	Name   *UnitName  `json:"name,omitempty" safelogging:"@Unsafe"`
+	Symbol UnitSymbol `json:"symbol" safelogging:"@Unsafe"`
 	/*
 	   Empty if no property is available. If two units measure different properties, it is not possible to
 	   convert between them.
 	*/
-	Property *UnitProperty `json:"property,omitempty"`
+	Property *UnitProperty `json:"property,omitempty" safelogging:"@Unsafe"`
 	/*
 	   The physical dimensions in terms of the base units of the system. It is only possible to convert units if
 	   they have the same dimension. Empty if the unit is a base unit.
 	*/
 	Dimension *UnitDimension `json:"dimension,omitempty"`
-	System    UnitSystem     `json:"system"`
+	System    UnitSystem     `json:"system" safelogging:"@Safe"`
 }
 
 func (o Unit) MarshalYAML() (interface{}, error) {

@@ -11,15 +11,15 @@ import (
 )
 
 type Chunk struct {
-	Rid              rids.ChunkRid        `json:"rid"`
+	Rid              rids.ChunkRid        `json:"rid" safelogging:"@Safe"`
 	Type             ChunkType            `json:"type"`
-	LogicalSeriesRid api.LogicalSeriesRid `json:"logicalSeriesRid"`
-	StartTimestamp   api.Timestamp        `json:"startTimestamp"`
-	EndTimestamp     api.Timestamp        `json:"endTimestamp"`
+	LogicalSeriesRid api.LogicalSeriesRid `json:"logicalSeriesRid" safelogging:"@Safe"`
+	StartTimestamp   api.Timestamp        `json:"startTimestamp" safelogging:"@Safe"`
+	EndTimestamp     api.Timestamp        `json:"endTimestamp" safelogging:"@Safe"`
 	// The number of distinct timestamps contained within the chunk.
 	Count       safelong.SafeLong `json:"count"`
 	SizeInBytes safelong.SafeLong `json:"sizeInBytes"`
-	Resolution  Resolution        `json:"resolution"`
+	Resolution  Resolution        `json:"resolution" safelogging:"@Safe"`
 	Handle      Handle            `json:"handle"`
 }
 
@@ -41,12 +41,12 @@ func (o *Chunk) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type CreateChunk struct {
 	Type             ChunkType            `json:"type"`
-	LogicalSeriesRid api.LogicalSeriesRid `json:"logicalSeriesRid"`
-	StartTimestamp   api.Timestamp        `json:"startTimestamp"`
-	EndTimestamp     api.Timestamp        `json:"endTimestamp"`
+	LogicalSeriesRid api.LogicalSeriesRid `json:"logicalSeriesRid" safelogging:"@Safe"`
+	StartTimestamp   api.Timestamp        `json:"startTimestamp" safelogging:"@Safe"`
+	EndTimestamp     api.Timestamp        `json:"endTimestamp" safelogging:"@Safe"`
 	Count            safelong.SafeLong    `json:"count"`
 	SizeInBytes      safelong.SafeLong    `json:"sizeInBytes"`
-	Resolution       Resolution           `json:"resolution"`
+	Resolution       Resolution           `json:"resolution" safelogging:"@Safe"`
 	Handle           Handle               `json:"handle"`
 }
 
@@ -108,8 +108,9 @@ func (o *CreateChunksParameters) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 // Responses are returned in the same order as the requests.
+// safelogging:@Safe
 type CreateChunksResponse struct {
-	ChunkRids []rids.ChunkRid `json:"chunkRids"`
+	ChunkRids []rids.ChunkRid `json:"chunkRids" safelogging:"@Safe"`
 }
 
 func (o CreateChunksResponse) MarshalJSON() ([]byte, error) {
@@ -149,9 +150,10 @@ func (o *CreateChunksResponse) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type DeleteChunksParameters struct {
-	StartTimestamp api.Timestamp `json:"startTimestamp"`
-	EndTimestamp   api.Timestamp `json:"endTimestamp"`
+	StartTimestamp api.Timestamp `json:"startTimestamp" safelogging:"@Safe"`
+	EndTimestamp   api.Timestamp `json:"endTimestamp" safelogging:"@Safe"`
 }
 
 func (o DeleteChunksParameters) MarshalYAML() (interface{}, error) {
@@ -170,8 +172,9 @@ func (o *DeleteChunksParameters) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type DeleteChunksResponse struct {
-	DeletedChunkRids []rids.ChunkRid `json:"deletedChunkRids"`
+	DeletedChunkRids []rids.ChunkRid `json:"deletedChunkRids" safelogging:"@Safe"`
 }
 
 func (o DeleteChunksResponse) MarshalJSON() ([]byte, error) {
@@ -212,8 +215,8 @@ func (o *DeleteChunksResponse) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 type GetChunksParameters struct {
-	StartTimestamp  api.Timestamp     `json:"startTimestamp"`
-	EndTimestamp    api.Timestamp     `json:"endTimestamp"`
+	StartTimestamp  api.Timestamp     `json:"startTimestamp" safelogging:"@Safe"`
+	EndTimestamp    api.Timestamp     `json:"endTimestamp" safelogging:"@Safe"`
 	ResolutionNanos safelong.SafeLong `json:"resolutionNanos"`
 }
 
@@ -274,8 +277,9 @@ func (o *GetChunksResponse) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type S3Handle struct {
-	S3Path api.S3Path `json:"s3Path"`
+	S3Path api.S3Path `json:"s3Path" safelogging:"@Unsafe"`
 }
 
 func (o S3Handle) MarshalYAML() (interface{}, error) {

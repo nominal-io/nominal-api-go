@@ -111,6 +111,200 @@ type BitFlagMapVisualisationVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type BucketDisplayConfigWithT[T any] BucketDisplayConfig
+
+func (u *BucketDisplayConfigWithT[T]) Accept(ctx context.Context, v BucketDisplayConfigVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "default":
+		if u.default_ == nil {
+			return result, fmt.Errorf("field \"default\" is required")
+		}
+		return v.VisitDefault(ctx, *u.default_)
+	case "singleStat":
+		if u.singleStat == nil {
+			return result, fmt.Errorf("field \"singleStat\" is required")
+		}
+		return v.VisitSingleStat(ctx, *u.singleStat)
+	}
+}
+
+func (u *BucketDisplayConfigWithT[T]) AcceptFuncs(default_Func func(BucketDisplayConfigDefault) (T, error), singleStatFunc func(BucketDisplayConfigSingleStat) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "default":
+		if u.default_ == nil {
+			return result, fmt.Errorf("field \"default\" is required")
+		}
+		return default_Func(*u.default_)
+	case "singleStat":
+		if u.singleStat == nil {
+			return result, fmt.Errorf("field \"singleStat\" is required")
+		}
+		return singleStatFunc(*u.singleStat)
+	}
+}
+
+func (u *BucketDisplayConfigWithT[T]) DefaultNoopSuccess(BucketDisplayConfigDefault) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BucketDisplayConfigWithT[T]) SingleStatNoopSuccess(BucketDisplayConfigSingleStat) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BucketDisplayConfigWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type BucketDisplayConfigVisitorWithT[T any] interface {
+	VisitDefault(ctx context.Context, v BucketDisplayConfigDefault) (T, error)
+	VisitSingleStat(ctx context.Context, v BucketDisplayConfigSingleStat) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type BucketDisplayStatWithT[T any] BucketDisplayStat
+
+func (u *BucketDisplayStatWithT[T]) Accept(ctx context.Context, v BucketDisplayStatVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "mean":
+		if u.mean == nil {
+			return result, fmt.Errorf("field \"mean\" is required")
+		}
+		return v.VisitMean(ctx, *u.mean)
+	case "min":
+		if u.min == nil {
+			return result, fmt.Errorf("field \"min\" is required")
+		}
+		return v.VisitMin(ctx, *u.min)
+	case "max":
+		if u.max == nil {
+			return result, fmt.Errorf("field \"max\" is required")
+		}
+		return v.VisitMax(ctx, *u.max)
+	case "count":
+		if u.count == nil {
+			return result, fmt.Errorf("field \"count\" is required")
+		}
+		return v.VisitCount(ctx, *u.count)
+	case "sum":
+		if u.sum == nil {
+			return result, fmt.Errorf("field \"sum\" is required")
+		}
+		return v.VisitSum(ctx, *u.sum)
+	case "percentile":
+		if u.percentile == nil {
+			return result, fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentile(ctx, *u.percentile)
+	}
+}
+
+func (u *BucketDisplayStatWithT[T]) AcceptFuncs(meanFunc func(NoConfigDisplayStat) (T, error), minFunc func(NoConfigDisplayStat) (T, error), maxFunc func(NoConfigDisplayStat) (T, error), countFunc func(NoConfigDisplayStat) (T, error), sumFunc func(NoConfigDisplayStat) (T, error), percentileFunc func(BucketDisplayStatPercentile) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "mean":
+		if u.mean == nil {
+			return result, fmt.Errorf("field \"mean\" is required")
+		}
+		return meanFunc(*u.mean)
+	case "min":
+		if u.min == nil {
+			return result, fmt.Errorf("field \"min\" is required")
+		}
+		return minFunc(*u.min)
+	case "max":
+		if u.max == nil {
+			return result, fmt.Errorf("field \"max\" is required")
+		}
+		return maxFunc(*u.max)
+	case "count":
+		if u.count == nil {
+			return result, fmt.Errorf("field \"count\" is required")
+		}
+		return countFunc(*u.count)
+	case "sum":
+		if u.sum == nil {
+			return result, fmt.Errorf("field \"sum\" is required")
+		}
+		return sumFunc(*u.sum)
+	case "percentile":
+		if u.percentile == nil {
+			return result, fmt.Errorf("field \"percentile\" is required")
+		}
+		return percentileFunc(*u.percentile)
+	}
+}
+
+func (u *BucketDisplayStatWithT[T]) MeanNoopSuccess(NoConfigDisplayStat) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BucketDisplayStatWithT[T]) MinNoopSuccess(NoConfigDisplayStat) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BucketDisplayStatWithT[T]) MaxNoopSuccess(NoConfigDisplayStat) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BucketDisplayStatWithT[T]) CountNoopSuccess(NoConfigDisplayStat) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BucketDisplayStatWithT[T]) SumNoopSuccess(NoConfigDisplayStat) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BucketDisplayStatWithT[T]) PercentileNoopSuccess(BucketDisplayStatPercentile) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BucketDisplayStatWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type BucketDisplayStatVisitorWithT[T any] interface {
+	VisitMean(ctx context.Context, v NoConfigDisplayStat) (T, error)
+	VisitMin(ctx context.Context, v NoConfigDisplayStat) (T, error)
+	VisitMax(ctx context.Context, v NoConfigDisplayStat) (T, error)
+	VisitCount(ctx context.Context, v NoConfigDisplayStat) (T, error)
+	VisitSum(ctx context.Context, v NoConfigDisplayStat) (T, error)
+	VisitPercentile(ctx context.Context, v BucketDisplayStatPercentile) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type CartesianChartDefinitionWithT[T any] CartesianChartDefinition
 
 func (u *CartesianChartDefinitionWithT[T]) Accept(ctx context.Context, v CartesianChartDefinitionVisitorWithT[T]) (T, error) {

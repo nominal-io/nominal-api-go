@@ -658,7 +658,7 @@ func (e *ContainerizedExtractorsNotFound) UnmarshalJSON(data []byte) error {
 }
 
 type datasetFileNotFound struct {
-	DatasetRid rids.DatasetRid `json:"datasetRid"`
+	DatasetRid rids.DatasetRid `json:"datasetRid" safelogging:"@Safe"`
 	FileId     uuid.UUID       `json:"fileId"`
 }
 
@@ -808,8 +808,9 @@ func (e *DatasetFileNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type datasetNotFound struct {
-	DatasetRid rids.DatasetRid `json:"datasetRid"`
+	DatasetRid rids.DatasetRid `json:"datasetRid" safelogging:"@Safe"`
 }
 
 func (o datasetNotFound) MarshalYAML() (interface{}, error) {
@@ -1936,7 +1937,7 @@ func (e *IncompatibleInputs) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *IncompatibleInputs) safeParams() map[string]interface{} {
-	return map[string]interface{}{"message": e.Message, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -1953,7 +1954,7 @@ func (e *IncompatibleInputs) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *IncompatibleInputs) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"message": e.Message}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -2139,7 +2140,7 @@ func (e *IncorrectSizeBytes) UnmarshalJSON(data []byte) error {
 
 type ingestJobNotCompatibleForRerun struct {
 	Message      string       `json:"message"`
-	IngestJobRid IngestJobRid `json:"ingestJobRid"`
+	IngestJobRid IngestJobRid `json:"ingestJobRid" safelogging:"@Safe"`
 }
 
 func (o ingestJobNotCompatibleForRerun) MarshalYAML() (interface{}, error) {
@@ -2288,8 +2289,9 @@ func (e *IngestJobNotCompatibleForRerun) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type ingestJobNotFound struct {
-	IngestJobRid IngestJobRid `json:"ingestJobRid"`
+	IngestJobRid IngestJobRid `json:"ingestJobRid" safelogging:"@Safe"`
 }
 
 func (o ingestJobNotFound) MarshalYAML() (interface{}, error) {
@@ -3477,8 +3479,9 @@ func (e *InvalidUrl) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type missingMetadataForReingest struct {
-	DatasetRids []rids.DatasetRid `json:"datasetRids"`
+	DatasetRids []rids.DatasetRid `json:"datasetRids" safelogging:"@Safe"`
 }
 
 func (o missingMetadataForReingest) MarshalJSON() ([]byte, error) {
@@ -4391,8 +4394,9 @@ func (e *RunBoundsInverted) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type s3PathNotFound struct {
-	S3Path api.S3Path `json:"s3Path"`
+	S3Path api.S3Path `json:"s3Path" safelogging:"@Unsafe"`
 }
 
 func (o s3PathNotFound) MarshalYAML() (interface{}, error) {
@@ -4537,6 +4541,157 @@ func (e *S3PathNotFound) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.s3PathNotFound = parameters
+	return nil
+}
+
+// safelogging:@Safe
+type streamingSessionNotFound struct {
+	SessionRid StreamingSessionRid `json:"sessionRid" safelogging:"@Safe"`
+}
+
+func (o streamingSessionNotFound) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *streamingSessionNotFound) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewStreamingSessionNotFound returns new instance of StreamingSessionNotFound error.
+func NewStreamingSessionNotFound(sessionRidArg StreamingSessionRid) *StreamingSessionNotFound {
+	return &StreamingSessionNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), streamingSessionNotFound: streamingSessionNotFound{SessionRid: sessionRidArg}}
+}
+
+// WrapWithStreamingSessionNotFound returns new instance of StreamingSessionNotFound error wrapping an existing error.
+func WrapWithStreamingSessionNotFound(err error, sessionRidArg StreamingSessionRid) *StreamingSessionNotFound {
+	return &StreamingSessionNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, streamingSessionNotFound: streamingSessionNotFound{SessionRid: sessionRidArg}}
+}
+
+// StreamingSessionNotFound is an error type.
+// The streaming session could not be found.
+type StreamingSessionNotFound struct {
+	errorInstanceID uuid.UUID
+	streamingSessionNotFound
+	cause error
+	stack werror.StackTrace
+}
+
+// IsStreamingSessionNotFound returns true if err is an instance of StreamingSessionNotFound.
+func IsStreamingSessionNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*StreamingSessionNotFound)
+	return ok
+}
+
+func (e *StreamingSessionNotFound) Error() string {
+	return fmt.Sprintf("NOT_FOUND IngestService:StreamingSessionNotFound (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *StreamingSessionNotFound) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *StreamingSessionNotFound) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *StreamingSessionNotFound) Message() string {
+	return "NOT_FOUND IngestService:StreamingSessionNotFound"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *StreamingSessionNotFound) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *StreamingSessionNotFound) Code() errors.ErrorCode {
+	return errors.NotFound
+}
+
+// Name returns an error name identifying error type.
+func (e *StreamingSessionNotFound) Name() string {
+	return "IngestService:StreamingSessionNotFound"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *StreamingSessionNotFound) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *StreamingSessionNotFound) Parameters() map[string]interface{} {
+	return map[string]interface{}{"sessionRid": e.SessionRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *StreamingSessionNotFound) safeParams() map[string]interface{} {
+	return map[string]interface{}{"sessionRid": e.SessionRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *StreamingSessionNotFound) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *StreamingSessionNotFound) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *StreamingSessionNotFound) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e StreamingSessionNotFound) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.streamingSessionNotFound)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "IngestService:StreamingSessionNotFound", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *StreamingSessionNotFound) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters streamingSessionNotFound
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.streamingSessionNotFound = parameters
 	return nil
 }
 
@@ -4689,7 +4844,7 @@ func (e *UnsupportedIngestSource) UnmarshalJSON(data []byte) error {
 
 type unsupportedRequestTypeForReIngest struct {
 	RequestType  string       `json:"requestType"`
-	IngestJobRid IngestJobRid `json:"ingestJobRid"`
+	IngestJobRid IngestJobRid `json:"ingestJobRid" safelogging:"@Safe"`
 }
 
 func (o unsupportedRequestTypeForReIngest) MarshalYAML() (interface{}, error) {
@@ -4868,6 +5023,7 @@ func init() {
 	conjureerrors.RegisterErrorType("IngestService:ReingestTooManyFiles", reflect.TypeOf(ReingestTooManyFiles{}))
 	conjureerrors.RegisterErrorType("IngestService:RunBoundsInverted", reflect.TypeOf(RunBoundsInverted{}))
 	conjureerrors.RegisterErrorType("IngestService:S3PathNotFound", reflect.TypeOf(S3PathNotFound{}))
+	conjureerrors.RegisterErrorType("IngestService:StreamingSessionNotFound", reflect.TypeOf(StreamingSessionNotFound{}))
 	conjureerrors.RegisterErrorType("IngestService:UnsupportedIngestSource", reflect.TypeOf(UnsupportedIngestSource{}))
 	conjureerrors.RegisterErrorType("IngestService:UnsupportedRequestTypeForReIngest", reflect.TypeOf(UnsupportedRequestTypeForReIngest{}))
 }

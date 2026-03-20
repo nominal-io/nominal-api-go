@@ -2,4 +2,4 @@
 
 package influx
 
-type OrgId string
+type OrgId string // safelogging:@Unsafe

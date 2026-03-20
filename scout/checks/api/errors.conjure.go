@@ -16,8 +16,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type assetsNotFound struct {
-	AssetRid []api.AssetRid `json:"assetRid"`
+	AssetRid []api.AssetRid `json:"assetRid" safelogging:"@Safe"`
 }
 
 func (o assetsNotFound) MarshalJSON() ([]byte, error) {
@@ -186,8 +187,9 @@ func (e *AssetsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type checkNotFound struct {
-	CheckRid api.CheckRid `json:"checkRid"`
+	CheckRid api.CheckRid `json:"checkRid" safelogging:"@Safe"`
 }
 
 func (o checkNotFound) MarshalYAML() (interface{}, error) {
@@ -335,8 +337,9 @@ func (e *CheckNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type checklistNotFound struct {
-	ChecklistRid api.ChecklistRid `json:"checklistRid"`
+	ChecklistRid api.ChecklistRid `json:"checklistRid" safelogging:"@Safe"`
 }
 
 func (o checklistNotFound) MarshalYAML() (interface{}, error) {
@@ -484,8 +487,9 @@ func (e *ChecklistNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type checklistsCircularDependency struct {
-	Rid api.ChecklistRid `json:"rid"`
+	Rid api.ChecklistRid `json:"rid" safelogging:"@Safe"`
 }
 
 func (o checklistsCircularDependency) MarshalYAML() (interface{}, error) {
@@ -780,8 +784,9 @@ func (e *ChecklistsExceededMaxDepth) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type checklistsNotFound struct {
-	ChecklistRids []api.ChecklistRid `json:"checklistRids"`
+	ChecklistRids []api.ChecklistRid `json:"checklistRids" safelogging:"@Safe"`
 }
 
 func (o checklistsNotFound) MarshalJSON() ([]byte, error) {
@@ -950,8 +955,9 @@ func (e *ChecklistsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type checksNotFound struct {
-	CheckRids []api.CheckRid `json:"checkRids"`
+	CheckRids []api.CheckRid `json:"checkRids" safelogging:"@Safe"`
 }
 
 func (o checksNotFound) MarshalJSON() ([]byte, error) {
@@ -1120,8 +1126,9 @@ func (e *ChecksNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type commitToArchivedChecklist struct {
-	ChecklistRid api.ChecklistRid `json:"checklistRid"`
+	ChecklistRid api.ChecklistRid `json:"checklistRid" safelogging:"@Safe"`
 }
 
 func (o commitToArchivedChecklist) MarshalYAML() (interface{}, error) {
@@ -1269,8 +1276,9 @@ func (e *CommitToArchivedChecklist) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type jobNotFound struct {
-	JobRid JobRid `json:"jobRid"`
+	JobRid JobRid `json:"jobRid" safelogging:"@Safe"`
 }
 
 func (o jobNotFound) MarshalYAML() (interface{}, error) {

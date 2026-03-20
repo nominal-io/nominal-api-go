@@ -99,17 +99,18 @@ func (o *GetRunsByAssetResponse) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Run struct {
-	Rid         api2.RunRid                              `json:"rid"`
+	Rid         api2.RunRid                              `json:"rid" safelogging:"@Safe"`
 	RunNumber   safelong.SafeLong                        `json:"runNumber"`
 	RunPrefix   *string                                  `json:"runPrefix,omitempty"`
 	Title       string                                   `json:"title"`
 	Description string                                   `json:"description"`
-	AuthorRid   *api3.UserRid                            `json:"authorRid,omitempty"`
+	AuthorRid   *api3.UserRid                            `json:"authorRid,omitempty" safelogging:"@Safe"`
 	StartTime   api2.UtcTimestamp                        `json:"startTime"`
 	EndTime     *api2.UtcTimestamp                       `json:"endTime,omitempty"`
 	Properties  map[api4.PropertyName]api4.PropertyValue `json:"properties"`
-	Labels      []api4.Label                             `json:"labels"`
+	Labels      []api4.Label                             `json:"labels" safelogging:"@Unsafe"`
 	Links       []api2.Link                              `json:"links"`
 	CreatedAt   datetime.DateTime                        `json:"createdAt"`
 	UpdatedAt   datetime.DateTime                        `json:"updatedAt"`
@@ -119,10 +120,10 @@ type Run struct {
 	AssetDataScopes []api1.DataScope `json:"assetDataScopes"`
 	// Map from refnames to run data sources. Will be empty for multi-asset runs.
 	DataSources map[api.DataSourceRefName]api2.RunDataSource `json:"dataSources"`
-	Attachments []rids.AttachmentRid                         `json:"attachments"`
+	Attachments []rids.AttachmentRid                         `json:"attachments" safelogging:"@Safe"`
 	// Deprecated: Use assets
-	Asset      *api3.AssetRid  `json:"asset,omitempty"`
-	Assets     []api3.AssetRid `json:"assets"`
+	Asset      *api3.AssetRid  `json:"asset,omitempty" safelogging:"@Safe"`
+	Assets     []api3.AssetRid `json:"assets" safelogging:"@Safe"`
 	IsArchived bool            `json:"isArchived"`
 }
 
@@ -205,8 +206,9 @@ func (o *Run) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RunWithDataReviewMetrics struct {
-	Run               Run                    `json:"run"`
+	Run               Run                    `json:"run" safelogging:"@Unsafe"`
 	DataReviewMetrics api2.DataReviewMetrics `json:"dataReviewMetrics"`
 }
 
@@ -226,8 +228,9 @@ func (o *RunWithDataReviewMetrics) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RunWithDataReviewSummary struct {
-	Run               Run                       `json:"run"`
+	Run               Run                       `json:"run" safelogging:"@Unsafe"`
 	DataReviewSummary api2.RunDataReviewSummary `json:"dataReviewSummary"`
 }
 
@@ -247,9 +250,10 @@ func (o *RunWithDataReviewSummary) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchRunsResponse struct {
 	Results       []Run       `json:"results"`
-	NextPageToken *api4.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api4.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchRunsResponse) MarshalJSON() ([]byte, error) {
@@ -289,9 +293,10 @@ func (o *SearchRunsResponse) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchRunsWithDataReviewMetricsResponse struct {
 	Results       []RunWithDataReviewMetrics `json:"results"`
-	NextPageToken *api4.Token                `json:"nextPageToken,omitempty"`
+	NextPageToken *api4.Token                `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchRunsWithDataReviewMetricsResponse) MarshalJSON() ([]byte, error) {
@@ -331,9 +336,10 @@ func (o *SearchRunsWithDataReviewMetricsResponse) UnmarshalYAML(unmarshal func(i
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchRunsWithDataReviewSummaryResponse struct {
 	Results       []RunWithDataReviewSummary `json:"results"`
-	NextPageToken *api4.Token                `json:"nextPageToken,omitempty"`
+	NextPageToken *api4.Token                `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchRunsWithDataReviewSummaryResponse) MarshalJSON() ([]byte, error) {

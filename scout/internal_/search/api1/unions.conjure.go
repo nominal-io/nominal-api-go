@@ -27,6 +27,7 @@ type SearchQuery struct {
 	searchText            *string
 	label                 *api1.Label
 	property              *api1.Property
+	propertyKey           *api1.PropertyName
 	and                   *[]SearchQuery
 	or                    *[]SearchQuery
 	not                   *SearchQuery
@@ -49,6 +50,7 @@ type searchQueryDeserializer struct {
 	SearchText            *string                          `json:"searchText"`
 	Label                 *api1.Label                      `json:"label"`
 	Property              *api1.Property                   `json:"property"`
+	PropertyKey           *api1.PropertyName               `json:"propertyKey"`
 	And                   *[]SearchQuery                   `json:"and"`
 	Or                    *[]SearchQuery                   `json:"or"`
 	Not                   *SearchQuery                     `json:"not"`
@@ -59,7 +61,7 @@ type searchQueryDeserializer struct {
 }
 
 func (u *searchQueryDeserializer) toStruct() SearchQuery {
-	return SearchQuery{typ: u.Type, dateTimeField: u.DateTimeField, stringField: u.StringField, timestampField: u.TimestampField, longField: u.LongField, booleanField: u.BooleanField, exactMatch: u.ExactMatch, stringArrayExactMatch: u.StringArrayExactMatch, stringArrayLength: u.StringArrayLength, searchText: u.SearchText, label: u.Label, property: u.Property, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, createdAt: u.CreatedAt, archivedStatus: u.ArchivedStatus, isPublished: u.IsPublished}
+	return SearchQuery{typ: u.Type, dateTimeField: u.DateTimeField, stringField: u.StringField, timestampField: u.TimestampField, longField: u.LongField, booleanField: u.BooleanField, exactMatch: u.ExactMatch, stringArrayExactMatch: u.StringArrayExactMatch, stringArrayLength: u.StringArrayLength, searchText: u.SearchText, label: u.Label, property: u.Property, propertyKey: u.PropertyKey, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, createdAt: u.CreatedAt, archivedStatus: u.ArchivedStatus, isPublished: u.IsPublished}
 }
 
 func (u *SearchQuery) toSerializer() (interface{}, error) {
@@ -154,6 +156,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type     string        `json:"type"`
 			Property api1.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return nil, fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return struct {
+			Type        string            `json:"type"`
+			PropertyKey api1.PropertyName `json:"propertyKey"`
+		}{Type: "propertyKey", PropertyKey: *u.propertyKey}, nil
 	case "and":
 		if u.and == nil {
 			return nil, fmt.Errorf("field \"and\" is required")
@@ -272,6 +282,10 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -320,7 +334,7 @@ func (u *SearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchQuery) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) error, stringFieldFunc func(api.StringField) error, timestampFieldFunc func(api.TimestampField) error, longFieldFunc func(api.LongField) error, booleanFieldFunc func(api.BooleanField) error, exactMatchFunc func(string) error, stringArrayExactMatchFunc func(api.StringArrayField) error, stringArrayLengthFunc func(metadata.StringArrayLengthQuery) error, searchTextFunc func(string) error, labelFunc func(api1.Label) error, propertyFunc func(api1.Property) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, createdAtFunc func(metadata.CreatedAtQuery) error, archivedStatusFunc func(api1.ArchivedStatus) error, isPublishedFunc func(bool) error, unknownFunc func(string) error) error {
+func (u *SearchQuery) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) error, stringFieldFunc func(api.StringField) error, timestampFieldFunc func(api.TimestampField) error, longFieldFunc func(api.LongField) error, booleanFieldFunc func(api.BooleanField) error, exactMatchFunc func(string) error, stringArrayExactMatchFunc func(api.StringArrayField) error, stringArrayLengthFunc func(metadata.StringArrayLengthQuery) error, searchTextFunc func(string) error, labelFunc func(api1.Label) error, propertyFunc func(api1.Property) error, propertyKeyFunc func(api1.PropertyName) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, createdAtFunc func(metadata.CreatedAtQuery) error, archivedStatusFunc func(api1.ArchivedStatus) error, isPublishedFunc func(bool) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -382,6 +396,11 @@ func (u *SearchQuery) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) erro
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return propertyKeyFunc(*u.propertyKey)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -461,6 +480,10 @@ func (u *SearchQuery) LabelNoopSuccess(_ api1.Label) error {
 }
 
 func (u *SearchQuery) PropertyNoopSuccess(_ api1.Property) error {
+	return nil
+}
+
+func (u *SearchQuery) PropertyKeyNoopSuccess(_ api1.PropertyName) error {
 	return nil
 }
 
@@ -558,6 +581,11 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return v.VisitPropertyKey(*u.propertyKey)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -608,6 +636,7 @@ type SearchQueryVisitor interface {
 	VisitSearchText(v string) error
 	VisitLabel(v api1.Label) error
 	VisitProperty(v api1.Property) error
+	VisitPropertyKey(v api1.PropertyName) error
 	VisitAnd(v []SearchQuery) error
 	VisitOr(v []SearchQuery) error
 	VisitNot(v SearchQuery) error
@@ -680,6 +709,11 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return v.VisitPropertyKeyWithContext(ctx, *u.propertyKey)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -730,6 +764,7 @@ type SearchQueryVisitorWithContext interface {
 	VisitSearchTextWithContext(ctx context.Context, v string) error
 	VisitLabelWithContext(ctx context.Context, v api1.Label) error
 	VisitPropertyWithContext(ctx context.Context, v api1.Property) error
+	VisitPropertyKeyWithContext(ctx context.Context, v api1.PropertyName) error
 	VisitAndWithContext(ctx context.Context, v []SearchQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchQuery) error
 	VisitNotWithContext(ctx context.Context, v SearchQuery) error
@@ -782,6 +817,10 @@ func NewSearchQueryFromLabel(v api1.Label) SearchQuery {
 
 func NewSearchQueryFromProperty(v api1.Property) SearchQuery {
 	return SearchQuery{typ: "property", property: &v}
+}
+
+func NewSearchQueryFromPropertyKey(v api1.PropertyName) SearchQuery {
+	return SearchQuery{typ: "propertyKey", propertyKey: &v}
 }
 
 func NewSearchQueryFromAnd(v []SearchQuery) SearchQuery {

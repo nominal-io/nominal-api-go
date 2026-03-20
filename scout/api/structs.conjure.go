@@ -9,12 +9,13 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type ChannelLocator struct {
-	DataSourceRef DataSourceRefName            `json:"dataSourceRef"`
-	Channel       api.Channel                  `json:"channel"`
+	DataSourceRef DataSourceRefName            `json:"dataSourceRef" safelogging:"@Unsafe"`
+	Channel       api.Channel                  `json:"channel" safelogging:"@Unsafe"`
 	Tags          map[api.TagName]api.TagValue `json:"tags"`
-	Asset         *api1.AssetRefName           `json:"asset,omitempty"`
-	Run           *api1.RunRefName             `json:"run,omitempty"`
+	Asset         *api1.AssetRefName           `json:"asset,omitempty" safelogging:"@Unsafe"`
+	Run           *api1.RunRefName             `json:"run,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o ChannelLocator) MarshalJSON() ([]byte, error) {
@@ -54,8 +55,9 @@ func (o *ChannelLocator) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type ClosedWithFurtherActionDispositionState struct {
-	ClosedBy api1.UserRid `json:"closedBy"`
+	ClosedBy api1.UserRid `json:"closedBy" safelogging:"@Safe"`
 }
 
 func (o ClosedWithFurtherActionDispositionState) MarshalYAML() (interface{}, error) {
@@ -74,8 +76,9 @@ func (o *ClosedWithFurtherActionDispositionState) UnmarshalYAML(unmarshal func(i
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type ClosedWithIgnoreDispositionState struct {
-	ClosedBy api1.UserRid `json:"closedBy"`
+	ClosedBy api1.UserRid `json:"closedBy" safelogging:"@Safe"`
 }
 
 func (o ClosedWithIgnoreDispositionState) MarshalYAML() (interface{}, error) {
@@ -94,8 +97,9 @@ func (o *ClosedWithIgnoreDispositionState) UnmarshalYAML(unmarshal func(interfac
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type PendingReviewDispositionState struct {
-	OpenedBy api1.UserRid `json:"openedBy"`
+	OpenedBy api1.UserRid `json:"openedBy" safelogging:"@Safe"`
 }
 
 func (o PendingReviewDispositionState) MarshalYAML() (interface{}, error) {

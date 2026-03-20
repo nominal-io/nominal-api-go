@@ -598,6 +598,11 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 			return result, fmt.Errorf("field \"searchText\" is required")
 		}
 		return v.VisitSearchText(ctx, *u.searchText)
+	case "exactMatch":
+		if u.exactMatch == nil {
+			return result, fmt.Errorf("field \"exactMatch\" is required")
+		}
+		return v.VisitExactMatch(ctx, *u.exactMatch)
 	case "after":
 		if u.after == nil {
 			return result, fmt.Errorf("field \"after\" is required")
@@ -781,7 +786,7 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 	}
 }
 
-func (u *SearchQueryWithT[T]) AcceptFuncs(archivedFunc func(bool) (T, error), searchTextFunc func(string) (T, error), afterFunc func(api3.Timestamp) (T, error), beforeFunc func(api3.Timestamp) (T, error), advancedTimeFilterFunc func(EventTimeFilter) (T, error), assetFunc func(api1.AssetRid) (T, error), assetsFunc func(AssetsFilter) (T, error), templateFunc func(api1.TemplateRid) (T, error), workbookFunc func(api1.NotebookRid) (T, error), dataReviewFunc func(api1.DataReviewRid) (T, error), dataReviewsFunc func(DataReviewsFilter) (T, error), originTypeFunc func(SearchEventOriginType) (T, error), originTypesFunc func(OriginTypesFilter) (T, error), dataReviewCheckFunc func(api1.CheckRid) (T, error), dataReviewChecksFunc func(DataReviewChecksFilter) (T, error), dispositionStatusFunc func(EventDispositionStatus) (T, error), dispositionStatusesFunc func([]EventDispositionStatus) (T, error), priorityFunc func(api2.Priority) (T, error), prioritiesFunc func([]api2.Priority) (T, error), assigneeFunc func(api1.UserRid) (T, error), assigneesFunc func(AssigneesFilter) (T, error), eventTypeFunc func(EventType) (T, error), eventTypesFunc func([]EventType) (T, error), createdByFunc func(api1.UserRid) (T, error), createdByAnyOfFunc func([]api1.UserRid) (T, error), labelFunc func(api3.Label) (T, error), labelsFunc func(api1.LabelsFilter) (T, error), propertyFunc func(api3.Property) (T, error), propertiesFunc func(api1.PropertiesFilter) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), procedureFunc func(rids.ProcedureRid) (T, error), procedureExecutionFunc func(rids.ProcedureExecutionRid) (T, error), stepIdFunc func(string) (T, error), streamingChecklistFunc func(api1.ChecklistRid) (T, error), streamingCheckFunc func(api1.CheckRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchQueryWithT[T]) AcceptFuncs(archivedFunc func(bool) (T, error), searchTextFunc func(string) (T, error), exactMatchFunc func(string) (T, error), afterFunc func(api3.Timestamp) (T, error), beforeFunc func(api3.Timestamp) (T, error), advancedTimeFilterFunc func(EventTimeFilter) (T, error), assetFunc func(api1.AssetRid) (T, error), assetsFunc func(AssetsFilter) (T, error), templateFunc func(api1.TemplateRid) (T, error), workbookFunc func(api1.NotebookRid) (T, error), dataReviewFunc func(api1.DataReviewRid) (T, error), dataReviewsFunc func(DataReviewsFilter) (T, error), originTypeFunc func(SearchEventOriginType) (T, error), originTypesFunc func(OriginTypesFilter) (T, error), dataReviewCheckFunc func(api1.CheckRid) (T, error), dataReviewChecksFunc func(DataReviewChecksFilter) (T, error), dispositionStatusFunc func(EventDispositionStatus) (T, error), dispositionStatusesFunc func([]EventDispositionStatus) (T, error), priorityFunc func(api2.Priority) (T, error), prioritiesFunc func([]api2.Priority) (T, error), assigneeFunc func(api1.UserRid) (T, error), assigneesFunc func(AssigneesFilter) (T, error), eventTypeFunc func(EventType) (T, error), eventTypesFunc func([]EventType) (T, error), createdByFunc func(api1.UserRid) (T, error), createdByAnyOfFunc func([]api1.UserRid) (T, error), labelFunc func(api3.Label) (T, error), labelsFunc func(api1.LabelsFilter) (T, error), propertyFunc func(api3.Property) (T, error), propertiesFunc func(api1.PropertiesFilter) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), procedureFunc func(rids.ProcedureRid) (T, error), procedureExecutionFunc func(rids.ProcedureExecutionRid) (T, error), stepIdFunc func(string) (T, error), streamingChecklistFunc func(api1.ChecklistRid) (T, error), streamingCheckFunc func(api1.CheckRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -799,6 +804,11 @@ func (u *SearchQueryWithT[T]) AcceptFuncs(archivedFunc func(bool) (T, error), se
 			return result, fmt.Errorf("field \"searchText\" is required")
 		}
 		return searchTextFunc(*u.searchText)
+	case "exactMatch":
+		if u.exactMatch == nil {
+			return result, fmt.Errorf("field \"exactMatch\" is required")
+		}
+		return exactMatchFunc(*u.exactMatch)
 	case "after":
 		if u.after == nil {
 			return result, fmt.Errorf("field \"after\" is required")
@@ -992,6 +1002,11 @@ func (u *SearchQueryWithT[T]) SearchTextNoopSuccess(string) (T, error) {
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) ExactMatchNoopSuccess(string) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) AfterNoopSuccess(api3.Timestamp) (T, error) {
 	var result T
 	return result, nil
@@ -1180,6 +1195,7 @@ func (u *SearchQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type SearchQueryVisitorWithT[T any] interface {
 	VisitArchived(ctx context.Context, v bool) (T, error)
 	VisitSearchText(ctx context.Context, v string) (T, error)
+	VisitExactMatch(ctx context.Context, v string) (T, error)
 	VisitAfter(ctx context.Context, v api3.Timestamp) (T, error)
 	VisitBefore(ctx context.Context, v api3.Timestamp) (T, error)
 	VisitAdvancedTimeFilter(ctx context.Context, v EventTimeFilter) (T, error)

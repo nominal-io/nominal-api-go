@@ -2,6 +2,8 @@
 
 package module
 
-type ModuleVersion string
-type ParameterName string
-type VariableName string
+type ModuleVersion string // safelogging:@Safe
+
+type ParameterName string // safelogging:@Unsafe
+
+type VariableName string // safelogging:@Unsafe

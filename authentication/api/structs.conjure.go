@@ -336,11 +336,12 @@ func (o *OrgSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchUsersRequest struct {
 	Query SearchUsersQuery `json:"query"`
 	// UPDATED_AT descending by default
 	SortBy        *SortBy     `json:"sortBy,omitempty"`
-	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 100. Will throw if larger than 1_000.
 	PageSize *int `json:"pageSize,omitempty"`
 }
@@ -361,9 +362,10 @@ func (o *SearchUsersRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchUsersResponseV2 struct {
 	Results       []UserV2    `json:"results"`
-	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchUsersResponseV2) MarshalJSON() ([]byte, error) {
@@ -474,8 +476,8 @@ func (o *UserSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type UserV2 struct {
-	Rid         UserRid `json:"rid"`
-	OrgRid      OrgRid  `json:"orgRid"`
+	Rid         UserRid `json:"rid" safelogging:"@Safe"`
+	OrgRid      OrgRid  `json:"orgRid" safelogging:"@Safe"`
 	Email       string  `json:"email"`
 	DisplayName string  `json:"displayName"`
 	// Avatar URL or a default avatar if the user does not have one.

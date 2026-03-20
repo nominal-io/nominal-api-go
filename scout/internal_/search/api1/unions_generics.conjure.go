@@ -79,6 +79,11 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(ctx, *u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return result, fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return v.VisitPropertyKey(ctx, *u.propertyKey)
 	case "and":
 		if u.and == nil {
 			return result, fmt.Errorf("field \"and\" is required")
@@ -117,7 +122,7 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 	}
 }
 
-func (u *SearchQueryWithT[T]) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) (T, error), stringFieldFunc func(api.StringField) (T, error), timestampFieldFunc func(api.TimestampField) (T, error), longFieldFunc func(api.LongField) (T, error), booleanFieldFunc func(api.BooleanField) (T, error), exactMatchFunc func(string) (T, error), stringArrayExactMatchFunc func(api.StringArrayField) (T, error), stringArrayLengthFunc func(metadata.StringArrayLengthQuery) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api1.Label) (T, error), propertyFunc func(api1.Property) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), createdAtFunc func(metadata.CreatedAtQuery) (T, error), archivedStatusFunc func(api1.ArchivedStatus) (T, error), isPublishedFunc func(bool) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchQueryWithT[T]) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) (T, error), stringFieldFunc func(api.StringField) (T, error), timestampFieldFunc func(api.TimestampField) (T, error), longFieldFunc func(api.LongField) (T, error), booleanFieldFunc func(api.BooleanField) (T, error), exactMatchFunc func(string) (T, error), stringArrayExactMatchFunc func(api.StringArrayField) (T, error), stringArrayLengthFunc func(metadata.StringArrayLengthQuery) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api1.Label) (T, error), propertyFunc func(api1.Property) (T, error), propertyKeyFunc func(api1.PropertyName) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), createdAtFunc func(metadata.CreatedAtQuery) (T, error), archivedStatusFunc func(api1.ArchivedStatus) (T, error), isPublishedFunc func(bool) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -180,6 +185,11 @@ func (u *SearchQueryWithT[T]) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeFie
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "propertyKey":
+		if u.propertyKey == nil {
+			return result, fmt.Errorf("field \"propertyKey\" is required")
+		}
+		return propertyKeyFunc(*u.propertyKey)
 	case "and":
 		if u.and == nil {
 			return result, fmt.Errorf("field \"and\" is required")
@@ -273,6 +283,11 @@ func (u *SearchQueryWithT[T]) PropertyNoopSuccess(api1.Property) (T, error) {
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) PropertyKeyNoopSuccess(api1.PropertyName) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) AndNoopSuccess([]SearchQuery) (T, error) {
 	var result T
 	return result, nil
@@ -325,6 +340,7 @@ type SearchQueryVisitorWithT[T any] interface {
 	VisitSearchText(ctx context.Context, v string) (T, error)
 	VisitLabel(ctx context.Context, v api1.Label) (T, error)
 	VisitProperty(ctx context.Context, v api1.Property) (T, error)
+	VisitPropertyKey(ctx context.Context, v api1.PropertyName) (T, error)
 	VisitAnd(ctx context.Context, v []SearchQuery) (T, error)
 	VisitOr(ctx context.Context, v []SearchQuery) (T, error)
 	VisitNot(ctx context.Context, v SearchQuery) (T, error)

@@ -17,8 +17,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type dataSourcesNotFound struct {
-	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids"`
+	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids" safelogging:"@Safe"`
 }
 
 func (o dataSourcesNotFound) MarshalJSON() ([]byte, error) {
@@ -336,8 +337,9 @@ func (e *FailedToCreateSeries) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidDataSources struct {
-	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids"`
+	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids" safelogging:"@Safe"`
 }
 
 func (o invalidDataSources) MarshalJSON() ([]byte, error) {
@@ -506,8 +508,9 @@ func (e *InvalidDataSources) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type logicalSeriesNotFound struct {
-	Rids []api.LogicalSeriesRid `json:"rids"`
+	Rids []api.LogicalSeriesRid `json:"rids" safelogging:"@Safe"`
 }
 
 func (o logicalSeriesNotFound) MarshalJSON() ([]byte, error) {

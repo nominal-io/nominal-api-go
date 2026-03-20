@@ -93,8 +93,8 @@ func (o *BatchGetUnresolvedModuleDefinitionsResponse) UnmarshalYAML(unmarshal fu
 
 type ModuleComputeDefinition struct {
 	ModuleApiName string               `json:"moduleApiName"`
-	ModuleRid     api.ModuleRid        `json:"moduleRid"`
-	Version       module.ModuleVersion `json:"version"`
+	ModuleRid     api.ModuleRid        `json:"moduleRid" safelogging:"@Safe"`
+	Version       module.ModuleVersion `json:"version" safelogging:"@Safe"`
 	Functions     []module.Function    `json:"functions"`
 }
 

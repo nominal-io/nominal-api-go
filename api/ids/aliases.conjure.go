@@ -6,4 +6,4 @@ package ids
 Unique identifier for an Workspace. These are unique within an organization.
 The workspace ID must be lower case alphanumeric characters, optionally separated by hyphens.
 */
-type WorkspaceId string
+type WorkspaceId string // safelogging:@Unsafe

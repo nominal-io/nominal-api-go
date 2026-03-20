@@ -18,8 +18,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type assetNotFound struct {
-	AssetRid api.AssetRid `json:"assetRid"`
+	AssetRid api.AssetRid `json:"assetRid" safelogging:"@Safe"`
 }
 
 func (o assetNotFound) MarshalYAML() (interface{}, error) {
@@ -167,8 +168,9 @@ func (e *AssetNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type assetsNotFound struct {
-	AssetRids []api.AssetRid `json:"assetRids"`
+	AssetRids []api.AssetRid `json:"assetRids" safelogging:"@Safe"`
 }
 
 func (o assetsNotFound) MarshalJSON() ([]byte, error) {
@@ -337,8 +339,9 @@ func (e *AssetsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type duplicateDataScopeNames struct {
-	Names []api1.DataSourceRefName `json:"names"`
+	Names []api1.DataSourceRefName `json:"names" safelogging:"@Unsafe"`
 }
 
 func (o duplicateDataScopeNames) MarshalJSON() ([]byte, error) {
@@ -657,8 +660,9 @@ func (e *TypeAlreadyExists) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type typeCheckFailed struct {
-	MissingProperties []api2.PropertyName `json:"missingProperties"`
+	MissingProperties []api2.PropertyName `json:"missingProperties" safelogging:"@Unsafe"`
 }
 
 func (o typeCheckFailed) MarshalJSON() ([]byte, error) {
@@ -774,7 +778,7 @@ func (e *TypeCheckFailed) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *TypeCheckFailed) safeParams() map[string]interface{} {
-	return map[string]interface{}{"missingProperties": e.MissingProperties, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -791,7 +795,7 @@ func (e *TypeCheckFailed) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *TypeCheckFailed) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"missingProperties": e.MissingProperties}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -828,8 +832,9 @@ func (e *TypeCheckFailed) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type typeNotFound struct {
-	Rid api.TypeRid `json:"rid"`
+	Rid api.TypeRid `json:"rid" safelogging:"@Safe"`
 }
 
 func (o typeNotFound) MarshalYAML() (interface{}, error) {
@@ -977,8 +982,9 @@ func (e *TypeNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type typeReferencedByAssets struct {
-	Rid api.TypeRid `json:"rid"`
+	Rid api.TypeRid `json:"rid" safelogging:"@Safe"`
 }
 
 func (o typeReferencedByAssets) MarshalYAML() (interface{}, error) {

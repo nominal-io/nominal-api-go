@@ -612,8 +612,9 @@ func (e *ResourceTypeAndSearchStateMismatch) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type savedViewNotFoundError struct {
-	SavedViewRid api.SavedViewRid `json:"savedViewRid"`
+	SavedViewRid api.SavedViewRid `json:"savedViewRid" safelogging:"@Safe"`
 }
 
 func (o savedViewNotFoundError) MarshalYAML() (interface{}, error) {
@@ -761,8 +762,9 @@ func (e *SavedViewNotFoundError) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type savedViewsNotFoundError struct {
-	SavedViewRids []api.SavedViewRid `json:"savedViewRids"`
+	SavedViewRids []api.SavedViewRid `json:"savedViewRids" safelogging:"@Safe"`
 }
 
 func (o savedViewsNotFoundError) MarshalJSON() ([]byte, error) {

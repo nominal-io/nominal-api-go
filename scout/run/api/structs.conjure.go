@@ -7,6 +7,7 @@ import (
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/internal_/search/api"
+	"github.com/nominal-io/nominal-api-go/scout/metadata"
 	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safelong"
@@ -14,9 +15,10 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
+// safelogging:@Unsafe
 type AllRunsPropertiesAndLabelsResponse struct {
 	Properties map[api.PropertyName][]api.PropertyValue `json:"properties"`
-	Labels     []api.Label                              `json:"labels"`
+	Labels     []api.Label                              `json:"labels" safelogging:"@Unsafe"`
 }
 
 func (o AllRunsPropertiesAndLabelsResponse) MarshalJSON() ([]byte, error) {
@@ -63,7 +65,7 @@ func (o *AllRunsPropertiesAndLabelsResponse) UnmarshalYAML(unmarshal func(interf
 }
 
 type ArchiveRunsRequest struct {
-	Rids []RunRid `json:"rids"`
+	Rids []RunRid `json:"rids" safelogging:"@Safe"`
 	/*
 	   If true, all auto-archived workbooks that are linked to run will be unarchived as well.
 	   Defaults to false.
@@ -109,8 +111,9 @@ func (o *ArchiveRunsRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 // returns runs that match any of the provided assets.
+// safelogging:@Safe
 type AssetsFilter struct {
-	Assets []api1.AssetRid `json:"assets"`
+	Assets []api1.AssetRid `json:"assets" safelogging:"@Safe"`
 }
 
 func (o AssetsFilter) MarshalJSON() ([]byte, error) {
@@ -150,8 +153,89 @@ func (o *AssetsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BatchEditRunMetadataRequest struct {
+	/*
+	   Additional search query to filter which runs are targeted by the edit.
+	   Source labels/properties from the metadata change are automatically included as filters.
+	*/
+	RunSearchQuery *SearchQuery            `json:"runSearchQuery,omitempty"`
+	Operation      metadata.MetadataChange `json:"operation"`
+}
+
+func (o BatchEditRunMetadataRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchEditRunMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Safe
+type BatchEditRunMetadataResponse struct {
+	// RIDs for runs that were modified by the batch edit.
+	ModifiedRunRids []RunRid `json:"modifiedRunRids" safelogging:"@Safe"`
+	/*
+	   RIDs for runs that matched the source filter but already had the target property key
+	   and were skipped (SkipOnConflict behavior). Empty for operations without conflict semantics
+	   or when using OverwriteOnConflict.
+	*/
+	ConflictingRunRids []RunRid `json:"conflictingRunRids" safelogging:"@Safe"`
+}
+
+func (o BatchEditRunMetadataResponse) MarshalJSON() ([]byte, error) {
+	if o.ModifiedRunRids == nil {
+		o.ModifiedRunRids = make([]RunRid, 0)
+	}
+	if o.ConflictingRunRids == nil {
+		o.ConflictingRunRids = make([]RunRid, 0)
+	}
+	type _tmpBatchEditRunMetadataResponse BatchEditRunMetadataResponse
+	return safejson.Marshal(_tmpBatchEditRunMetadataResponse(o))
+}
+
+func (o *BatchEditRunMetadataResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchEditRunMetadataResponse BatchEditRunMetadataResponse
+	var rawBatchEditRunMetadataResponse _tmpBatchEditRunMetadataResponse
+	if err := safejson.Unmarshal(data, &rawBatchEditRunMetadataResponse); err != nil {
+		return err
+	}
+	if rawBatchEditRunMetadataResponse.ModifiedRunRids == nil {
+		rawBatchEditRunMetadataResponse.ModifiedRunRids = make([]RunRid, 0)
+	}
+	if rawBatchEditRunMetadataResponse.ConflictingRunRids == nil {
+		rawBatchEditRunMetadataResponse.ConflictingRunRids = make([]RunRid, 0)
+	}
+	*o = BatchEditRunMetadataResponse(rawBatchEditRunMetadataResponse)
+	return nil
+}
+
+func (o BatchEditRunMetadataResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchEditRunMetadataResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
 type ChannelMetadata struct {
-	Name        api.Channel         `json:"name"`
+	Name        api.Channel         `json:"name" safelogging:"@Unsafe"`
 	DataSource  DataSource          `json:"dataSource"`
 	Unit        *Unit               `json:"unit,omitempty"`
 	Description *string             `json:"description,omitempty"`
@@ -196,13 +280,14 @@ func (o *CheckAlertStatesFilter) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateOrUpdateRunRequest struct {
 	/*
 	   If a run with the same rid already exists, it will be updated.
 	   Otherwise, a new run will be created.
 	*/
-	RunRid           *RunRid          `json:"runRid,omitempty"`
-	CreateRunRequest CreateRunRequest `json:"createRunRequest"`
+	RunRid           *RunRid          `json:"runRid,omitempty" safelogging:"@Safe"`
+	CreateRunRequest CreateRunRequest `json:"createRunRequest" safelogging:"@Unsafe"`
 }
 
 func (o CreateOrUpdateRunRequest) MarshalYAML() (interface{}, error) {
@@ -234,7 +319,7 @@ type CreateRunDataSource struct {
 	   One of dataSource and dataSourceRid must be present.
 	   dataSourceRid takes precedence.
 	*/
-	DataSourceRid *rids.DataSourceRid `json:"dataSourceRid,omitempty"`
+	DataSourceRid *rids.DataSourceRid `json:"dataSourceRid,omitempty" safelogging:"@Safe"`
 	Offset        *Duration           `json:"offset,omitempty"`
 	// Used to resolve logical series for this data source.
 	SeriesTags map[api.TagName]api.TagValue `json:"seriesTags"`
@@ -277,27 +362,28 @@ func (o *CreateRunDataSource) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateRunRequest struct {
 	Title       string                                         `json:"title"`
 	Description string                                         `json:"description"`
 	StartTime   UtcTimestamp                                   `json:"startTime"`
 	EndTime     *UtcTimestamp                                  `json:"endTime,omitempty"`
 	Properties  map[api.PropertyName]api.PropertyValue         `json:"properties"`
-	Labels      []api.Label                                    `json:"labels"`
+	Labels      []api.Label                                    `json:"labels" safelogging:"@Unsafe"`
 	Links       []Link                                         `json:"links"`
 	RunPrefix   *string                                        `json:"runPrefix,omitempty"`
 	DataSources map[api3.DataSourceRefName]CreateRunDataSource `json:"dataSources"`
-	Attachments []rids.AttachmentRid                           `json:"attachments"`
+	Attachments []rids.AttachmentRid                           `json:"attachments" safelogging:"@Safe"`
 	// Deprecated: Use assets
-	Asset  *api1.AssetRid  `json:"asset,omitempty"`
-	Assets []api1.AssetRid `json:"assets"`
+	Asset  *api1.AssetRid  `json:"asset,omitempty" safelogging:"@Safe"`
+	Assets []api1.AssetRid `json:"assets" safelogging:"@Safe"`
 	/*
 	   The workspace in which to create the run. If not provided, the run will be created in
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
 	   All data sources, attachments, and assets must be in the same workspace.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateRunRequest) MarshalJSON() ([]byte, error) {
@@ -459,9 +545,10 @@ func (o *DataReviewMetrics) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type DataSourceSeriesTag struct {
-	Name  api.TagName  `json:"name"`
-	Value api.TagValue `json:"value"`
+	Name  api.TagName  `json:"name" safelogging:"@Unsafe"`
+	Value api.TagValue `json:"value" safelogging:"@Unsafe"`
 }
 
 func (o DataSourceSeriesTag) MarshalYAML() (interface{}, error) {
@@ -511,7 +598,7 @@ type GetRunByIdRequest struct {
 	   if the default workspace for the organization is configured and the user
 	   has access to it.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o GetRunByIdRequest) MarshalYAML() (interface{}, error) {
@@ -531,7 +618,7 @@ func (o *GetRunByIdRequest) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 type GetRunsByAssetRequest struct {
-	Asset         api1.AssetRid `json:"asset"`
+	Asset         api1.AssetRid `json:"asset" safelogging:"@Safe"`
 	NextPageToken *uuid.UUID    `json:"nextPageToken,omitempty"`
 }
 
@@ -597,8 +684,9 @@ Scoped to the org-level, intended to help the frontend
 prevent users from submitting invalid ref names, ex.
 using a `dataset` ref name for a `connection` data source
 */
+// safelogging:@Unsafe
 type RefNameAndType struct {
-	Name api3.DataSourceRefName `json:"name"`
+	Name api3.DataSourceRefName `json:"name" safelogging:"@Unsafe"`
 	Type DataSourceType         `json:"type"`
 }
 
@@ -643,6 +731,7 @@ func (o *RunDataReviewSummary) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 // For read requests, we want to require all fields
+// safelogging:@Unsafe
 type RunDataSource struct {
 	DataSource DataSource `json:"dataSource"`
 	/*
@@ -651,7 +740,7 @@ type RunDataSource struct {
 	*/
 	Offset Duration `json:"offset"`
 	// Included for convenience, duplicated from the key of the map
-	RefName       api3.DataSourceRefName `json:"refName"`
+	RefName       api3.DataSourceRefName `json:"refName" safelogging:"@Unsafe"`
 	TimestampType WeakTimestampType      `json:"timestampType"`
 	// Used to resolve logical series for this data source.
 	SeriesTags map[api.TagName]api.TagValue `json:"seriesTags"`
@@ -694,12 +783,13 @@ func (o *RunDataSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchRunChannelsRequest struct {
 	SearchText string `json:"searchText"`
 	// If not empty, will filter to channels from the selected DataSourceRefNames.
-	RefNameFilter              *[]api3.DataSourceRefName                `json:"refNameFilter,omitempty"`
+	RefNameFilter              *[]api3.DataSourceRefName                `json:"refNameFilter,omitempty" safelogging:"@Unsafe"`
 	PreviouslySelectedChannels map[api3.DataSourceRefName][]api.Channel `json:"previouslySelectedChannels"`
-	NextPageToken              *api.Token                               `json:"nextPageToken,omitempty"`
+	NextPageToken              *api.Token                               `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 1000. Will throw if larger than 1000.
 	PageSize *int `json:"pageSize,omitempty"`
 }
@@ -741,9 +831,10 @@ func (o *SearchRunChannelsRequest) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchRunChannelsResponse struct {
 	Results       []ChannelMetadata `json:"results"`
-	NextPageToken *api.Token        `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token        `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchRunChannelsResponse) MarshalJSON() ([]byte, error) {
@@ -783,11 +874,12 @@ func (o *SearchRunChannelsResponse) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchRunsRequest struct {
 	Sort SortOptions `json:"sort"`
 	// Will reject page sizes greater than 1000.
 	PageSize      int         `json:"pageSize"`
-	NextPageToken *api.Token  `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Query         SearchQuery `json:"query"`
 	/*
 	   Default search status is NOT_ARCHIVED if none are provided. Allows for including archived runs in search.
@@ -837,8 +929,9 @@ func (o *SortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SortProperty struct {
-	Name api.PropertyName `json:"name"`
+	Name api.PropertyName `json:"name" safelogging:"@Unsafe"`
 }
 
 func (o SortProperty) MarshalYAML() (interface{}, error) {
@@ -880,7 +973,7 @@ func (o *TimeRangeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 type UnarchiveRunsRequest struct {
-	Rids []RunRid `json:"rids"`
+	Rids []RunRid `json:"rids" safelogging:"@Safe"`
 	/*
 	   If true, all auto-archived workbooks that are linked to run will be unarchived as well.
 	   Defaults to false.
@@ -947,9 +1040,10 @@ func (o *Unit) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type UpdateAttachmentsRequest struct {
-	AttachmentsToAdd    []rids.AttachmentRid `json:"attachmentsToAdd"`
-	AttachmentsToRemove []rids.AttachmentRid `json:"attachmentsToRemove"`
+	AttachmentsToAdd    []rids.AttachmentRid `json:"attachmentsToAdd" safelogging:"@Safe"`
+	AttachmentsToRemove []rids.AttachmentRid `json:"attachmentsToRemove" safelogging:"@Safe"`
 }
 
 func (o UpdateAttachmentsRequest) MarshalJSON() ([]byte, error) {
@@ -995,6 +1089,7 @@ func (o *UpdateAttachmentsRequest) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateRunRequest struct {
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -1003,15 +1098,15 @@ type UpdateRunRequest struct {
 	// If strictOverwrite is false, will only update the endTime if it is after the existing endTime.
 	EndTime    *UtcTimestamp                           `json:"endTime,omitempty"`
 	Properties *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
-	Labels     *[]api.Label                            `json:"labels,omitempty"`
+	Labels     *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
 	Links      *[]Link                                 `json:"links,omitempty"`
 	// Pass in an empty string to remove the run prefix.
 	RunPrefix   *string                                         `json:"runPrefix,omitempty"`
 	DataSources *map[api3.DataSourceRefName]CreateRunDataSource `json:"dataSources,omitempty"`
-	Attachments *[]rids.AttachmentRid                           `json:"attachments,omitempty"`
+	Attachments *[]rids.AttachmentRid                           `json:"attachments,omitempty" safelogging:"@Safe"`
 	// Deprecated: Use assets
-	Asset  *api1.AssetRid  `json:"asset,omitempty"`
-	Assets []api1.AssetRid `json:"assets"`
+	Asset  *api1.AssetRid  `json:"asset,omitempty" safelogging:"@Safe"`
+	Assets []api1.AssetRid `json:"assets" safelogging:"@Safe"`
 	/*
 	   If true, will blindly overwrite the existing fields with the new values in the request.
 	   If false, will only update the fields if application constraints are maintained.

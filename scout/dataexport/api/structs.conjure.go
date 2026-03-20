@@ -77,8 +77,8 @@ func (o *Csv) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type ExportDataRequest struct {
 	Format      ExportFormat       `json:"format"`
 	Compression *CompressionFormat `json:"compression,omitempty"`
-	StartTime   api1.Timestamp     `json:"startTime"`
-	EndTime     api1.Timestamp     `json:"endTime"`
+	StartTime   api1.Timestamp     `json:"startTime" safelogging:"@Safe"`
+	EndTime     api1.Timestamp     `json:"endTime" safelogging:"@Safe"`
 	Resolution  ResolutionOption   `json:"resolution"`
 	Channels    ExportChannels     `json:"channels"`
 	Context     api11.Context      `json:"context"`
@@ -245,7 +245,7 @@ func (o *PresignedUrl) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Returns in relative time to the supplied timestamp.
 type RelativeTimestampFormat struct {
-	RelativeTo api1.Timestamp `json:"relativeTo"`
+	RelativeTo api1.Timestamp `json:"relativeTo" safelogging:"@Safe"`
 	TimeUnit   api1.TimeUnit  `json:"timeUnit"`
 }
 

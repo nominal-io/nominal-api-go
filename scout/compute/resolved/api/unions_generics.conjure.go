@@ -1350,6 +1350,11 @@ func (u *NumericSeriesNodeWithT[T]) Accept(ctx context.Context, v NumericSeriesN
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
+	case "constant":
+		if u.constant == nil {
+			return result, fmt.Errorf("field \"constant\" is required")
+		}
+		return v.VisitConstant(ctx, *u.constant)
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return result, fmt.Errorf("field \"arithmetic\" is required")
@@ -1538,7 +1543,7 @@ func (u *NumericSeriesNodeWithT[T]) Accept(ctx context.Context, v NumericSeriesN
 	}
 }
 
-func (u *NumericSeriesNodeWithT[T]) AcceptFuncs(arithmeticFunc func(ArithmeticSeriesNode) (T, error), bitOperationFunc func(BitOperationSeriesNode) (T, error), countDuplicateFunc func(EnumCountDuplicateSeriesNode) (T, error), cumulativeSumFunc func(CumulativeSumSeriesNode) (T, error), derivativeFunc func(DerivativeSeriesNode) (T, error), integralFunc func(IntegralSeriesNode) (T, error), maxFunc func(MaxSeriesNode) (T, error), meanFunc func(MeanSeriesNode) (T, error), minFunc func(MinSeriesNode) (T, error), offsetFunc func(OffsetSeriesNode) (T, error), productFunc func(ProductSeriesNode) (T, error), rawFunc func(RawNumericSeriesNode) (T, error), resampleFunc func(NumericResampleSeriesNode) (T, error), rollingOperationFunc func(RollingOperationSeriesNode) (T, error), aggregateFunc func(AggregateNumericSeriesNode) (T, error), signalFilterFunc func(SignalFilterSeriesNode) (T, error), sumFunc func(SumSeriesNode) (T, error), scaleFunc func(ScaleSeriesNode) (T, error), timeDifferenceFunc func(TimeDifferenceSeriesNode) (T, error), timeRangeFilterFunc func(NumericTimeRangeFilterSeriesNode) (T, error), timeShiftFunc func(NumericTimeShiftSeriesNode) (T, error), unaryArithmeticFunc func(UnaryArithmeticSeriesNode) (T, error), binaryArithmeticFunc func(BinaryArithmeticSeriesNode) (T, error), unionFunc func(NumericUnionSeriesNode) (T, error), unitConversionFunc func(UnitConversionSeriesNode) (T, error), valueDifferenceFunc func(ValueDifferenceSeriesNode) (T, error), filterTransformationFunc func(NumericFilterTransformationSeriesNode) (T, error), thresholdFilterFunc func(NumericThresholdFilterSeriesNode) (T, error), arraySelectFunc func(SelectIndexFromNumericArraySeriesNode) (T, error), absoluteTimestampFunc func(AbsoluteTimestampSeriesNode) (T, error), newestPointsFunc func(SelectNewestPointsSeriesNode) (T, error), rangesNumericAggregationToNumericFunc func(RangesNumericAggregationToNumericSeriesNode) (T, error), filterByExpressionFunc func(FilterByExpressionSeriesNode) (T, error), enumToNumericFunc func(EnumToNumericSeriesNode) (T, error), refpropFunc func(RefpropSeriesNode) (T, error), extractFromStructFunc func(ExtractNumericFromStructSeriesNode) (T, error), zScoreFunc func(ZscoreSeriesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *NumericSeriesNodeWithT[T]) AcceptFuncs(constantFunc func(ConstantNumericSeriesNode) (T, error), arithmeticFunc func(ArithmeticSeriesNode) (T, error), bitOperationFunc func(BitOperationSeriesNode) (T, error), countDuplicateFunc func(EnumCountDuplicateSeriesNode) (T, error), cumulativeSumFunc func(CumulativeSumSeriesNode) (T, error), derivativeFunc func(DerivativeSeriesNode) (T, error), integralFunc func(IntegralSeriesNode) (T, error), maxFunc func(MaxSeriesNode) (T, error), meanFunc func(MeanSeriesNode) (T, error), minFunc func(MinSeriesNode) (T, error), offsetFunc func(OffsetSeriesNode) (T, error), productFunc func(ProductSeriesNode) (T, error), rawFunc func(RawNumericSeriesNode) (T, error), resampleFunc func(NumericResampleSeriesNode) (T, error), rollingOperationFunc func(RollingOperationSeriesNode) (T, error), aggregateFunc func(AggregateNumericSeriesNode) (T, error), signalFilterFunc func(SignalFilterSeriesNode) (T, error), sumFunc func(SumSeriesNode) (T, error), scaleFunc func(ScaleSeriesNode) (T, error), timeDifferenceFunc func(TimeDifferenceSeriesNode) (T, error), timeRangeFilterFunc func(NumericTimeRangeFilterSeriesNode) (T, error), timeShiftFunc func(NumericTimeShiftSeriesNode) (T, error), unaryArithmeticFunc func(UnaryArithmeticSeriesNode) (T, error), binaryArithmeticFunc func(BinaryArithmeticSeriesNode) (T, error), unionFunc func(NumericUnionSeriesNode) (T, error), unitConversionFunc func(UnitConversionSeriesNode) (T, error), valueDifferenceFunc func(ValueDifferenceSeriesNode) (T, error), filterTransformationFunc func(NumericFilterTransformationSeriesNode) (T, error), thresholdFilterFunc func(NumericThresholdFilterSeriesNode) (T, error), arraySelectFunc func(SelectIndexFromNumericArraySeriesNode) (T, error), absoluteTimestampFunc func(AbsoluteTimestampSeriesNode) (T, error), newestPointsFunc func(SelectNewestPointsSeriesNode) (T, error), rangesNumericAggregationToNumericFunc func(RangesNumericAggregationToNumericSeriesNode) (T, error), filterByExpressionFunc func(FilterByExpressionSeriesNode) (T, error), enumToNumericFunc func(EnumToNumericSeriesNode) (T, error), refpropFunc func(RefpropSeriesNode) (T, error), extractFromStructFunc func(ExtractNumericFromStructSeriesNode) (T, error), zScoreFunc func(ZscoreSeriesNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1546,6 +1551,11 @@ func (u *NumericSeriesNodeWithT[T]) AcceptFuncs(arithmeticFunc func(ArithmeticSe
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
+	case "constant":
+		if u.constant == nil {
+			return result, fmt.Errorf("field \"constant\" is required")
+		}
+		return constantFunc(*u.constant)
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return result, fmt.Errorf("field \"arithmetic\" is required")
@@ -1732,6 +1742,11 @@ func (u *NumericSeriesNodeWithT[T]) AcceptFuncs(arithmeticFunc func(ArithmeticSe
 		}
 		return zScoreFunc(*u.zScore)
 	}
+}
+
+func (u *NumericSeriesNodeWithT[T]) ConstantNoopSuccess(ConstantNumericSeriesNode) (T, error) {
+	var result T
+	return result, nil
 }
 
 func (u *NumericSeriesNodeWithT[T]) ArithmeticNoopSuccess(ArithmeticSeriesNode) (T, error) {
@@ -1925,6 +1940,7 @@ func (u *NumericSeriesNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type NumericSeriesNodeVisitorWithT[T any] interface {
+	VisitConstant(ctx context.Context, v ConstantNumericSeriesNode) (T, error)
 	VisitArithmetic(ctx context.Context, v ArithmeticSeriesNode) (T, error)
 	VisitBitOperation(ctx context.Context, v BitOperationSeriesNode) (T, error)
 	VisitCountDuplicate(ctx context.Context, v EnumCountDuplicateSeriesNode) (T, error)

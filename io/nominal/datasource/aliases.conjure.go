@@ -8,7 +8,7 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
-type DatasetFileId uuid.UUID
+type DatasetFileId uuid.UUID // safelogging:@Safe
 
 func (a DatasetFileId) String() string {
 	return uuid.UUID(a).String()
@@ -56,7 +56,7 @@ func (a *DatasetFileId) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type VideoFileId uuid.UUID
+type VideoFileId uuid.UUID // safelogging:@Safe
 
 func (a VideoFileId) String() string {
 	return uuid.UUID(a).String()

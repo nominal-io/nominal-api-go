@@ -283,6 +283,510 @@ func NewBitFlagMapVisualisationFromRaw(v BitFlagMapRawVisualisation) BitFlagMapV
 	return BitFlagMapVisualisation{typ: "raw", raw: &v}
 }
 
+type BucketDisplayConfig struct {
+	typ        string
+	default_   *BucketDisplayConfigDefault
+	singleStat *BucketDisplayConfigSingleStat
+}
+
+type bucketDisplayConfigDeserializer struct {
+	Type       string                         `json:"type"`
+	Default    *BucketDisplayConfigDefault    `json:"default"`
+	SingleStat *BucketDisplayConfigSingleStat `json:"singleStat"`
+}
+
+func (u *bucketDisplayConfigDeserializer) toStruct() BucketDisplayConfig {
+	return BucketDisplayConfig{typ: u.Type, default_: u.Default, singleStat: u.SingleStat}
+}
+
+func (u *BucketDisplayConfig) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "default":
+		if u.default_ == nil {
+			return nil, fmt.Errorf("field \"default\" is required")
+		}
+		return struct {
+			Type    string                     `json:"type"`
+			Default BucketDisplayConfigDefault `json:"default"`
+		}{Type: "default", Default: *u.default_}, nil
+	case "singleStat":
+		if u.singleStat == nil {
+			return nil, fmt.Errorf("field \"singleStat\" is required")
+		}
+		return struct {
+			Type       string                        `json:"type"`
+			SingleStat BucketDisplayConfigSingleStat `json:"singleStat"`
+		}{Type: "singleStat", SingleStat: *u.singleStat}, nil
+	}
+}
+
+func (u BucketDisplayConfig) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *BucketDisplayConfig) UnmarshalJSON(data []byte) error {
+	var deser bucketDisplayConfigDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "default":
+		if u.default_ == nil {
+			return fmt.Errorf("field \"default\" is required")
+		}
+	case "singleStat":
+		if u.singleStat == nil {
+			return fmt.Errorf("field \"singleStat\" is required")
+		}
+	}
+	return nil
+}
+
+func (u BucketDisplayConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *BucketDisplayConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *BucketDisplayConfig) AcceptFuncs(default_Func func(BucketDisplayConfigDefault) error, singleStatFunc func(BucketDisplayConfigSingleStat) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in BucketDisplayConfig type")
+		}
+		return unknownFunc(u.typ)
+	case "default":
+		if u.default_ == nil {
+			return fmt.Errorf("field \"default\" is required")
+		}
+		return default_Func(*u.default_)
+	case "singleStat":
+		if u.singleStat == nil {
+			return fmt.Errorf("field \"singleStat\" is required")
+		}
+		return singleStatFunc(*u.singleStat)
+	}
+}
+
+func (u *BucketDisplayConfig) DefaultNoopSuccess(_ BucketDisplayConfigDefault) error {
+	return nil
+}
+
+func (u *BucketDisplayConfig) SingleStatNoopSuccess(_ BucketDisplayConfigSingleStat) error {
+	return nil
+}
+
+func (u *BucketDisplayConfig) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *BucketDisplayConfig) Accept(v BucketDisplayConfigVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "default":
+		if u.default_ == nil {
+			return fmt.Errorf("field \"default\" is required")
+		}
+		return v.VisitDefault(*u.default_)
+	case "singleStat":
+		if u.singleStat == nil {
+			return fmt.Errorf("field \"singleStat\" is required")
+		}
+		return v.VisitSingleStat(*u.singleStat)
+	}
+}
+
+type BucketDisplayConfigVisitor interface {
+	VisitDefault(v BucketDisplayConfigDefault) error
+	VisitSingleStat(v BucketDisplayConfigSingleStat) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *BucketDisplayConfig) AcceptWithContext(ctx context.Context, v BucketDisplayConfigVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "default":
+		if u.default_ == nil {
+			return fmt.Errorf("field \"default\" is required")
+		}
+		return v.VisitDefaultWithContext(ctx, *u.default_)
+	case "singleStat":
+		if u.singleStat == nil {
+			return fmt.Errorf("field \"singleStat\" is required")
+		}
+		return v.VisitSingleStatWithContext(ctx, *u.singleStat)
+	}
+}
+
+type BucketDisplayConfigVisitorWithContext interface {
+	VisitDefaultWithContext(ctx context.Context, v BucketDisplayConfigDefault) error
+	VisitSingleStatWithContext(ctx context.Context, v BucketDisplayConfigSingleStat) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewBucketDisplayConfigFromDefault(v BucketDisplayConfigDefault) BucketDisplayConfig {
+	return BucketDisplayConfig{typ: "default", default_: &v}
+}
+
+func NewBucketDisplayConfigFromSingleStat(v BucketDisplayConfigSingleStat) BucketDisplayConfig {
+	return BucketDisplayConfig{typ: "singleStat", singleStat: &v}
+}
+
+type BucketDisplayStat struct {
+	typ        string
+	mean       *NoConfigDisplayStat
+	min        *NoConfigDisplayStat
+	max        *NoConfigDisplayStat
+	count      *NoConfigDisplayStat
+	sum        *NoConfigDisplayStat
+	percentile *BucketDisplayStatPercentile
+}
+
+type bucketDisplayStatDeserializer struct {
+	Type       string                       `json:"type"`
+	Mean       *NoConfigDisplayStat         `json:"mean"`
+	Min        *NoConfigDisplayStat         `json:"min"`
+	Max        *NoConfigDisplayStat         `json:"max"`
+	Count      *NoConfigDisplayStat         `json:"count"`
+	Sum        *NoConfigDisplayStat         `json:"sum"`
+	Percentile *BucketDisplayStatPercentile `json:"percentile"`
+}
+
+func (u *bucketDisplayStatDeserializer) toStruct() BucketDisplayStat {
+	return BucketDisplayStat{typ: u.Type, mean: u.Mean, min: u.Min, max: u.Max, count: u.Count, sum: u.Sum, percentile: u.Percentile}
+}
+
+func (u *BucketDisplayStat) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "mean":
+		if u.mean == nil {
+			return nil, fmt.Errorf("field \"mean\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Mean NoConfigDisplayStat `json:"mean"`
+		}{Type: "mean", Mean: *u.mean}, nil
+	case "min":
+		if u.min == nil {
+			return nil, fmt.Errorf("field \"min\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Min  NoConfigDisplayStat `json:"min"`
+		}{Type: "min", Min: *u.min}, nil
+	case "max":
+		if u.max == nil {
+			return nil, fmt.Errorf("field \"max\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Max  NoConfigDisplayStat `json:"max"`
+		}{Type: "max", Max: *u.max}, nil
+	case "count":
+		if u.count == nil {
+			return nil, fmt.Errorf("field \"count\" is required")
+		}
+		return struct {
+			Type  string              `json:"type"`
+			Count NoConfigDisplayStat `json:"count"`
+		}{Type: "count", Count: *u.count}, nil
+	case "sum":
+		if u.sum == nil {
+			return nil, fmt.Errorf("field \"sum\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Sum  NoConfigDisplayStat `json:"sum"`
+		}{Type: "sum", Sum: *u.sum}, nil
+	case "percentile":
+		if u.percentile == nil {
+			return nil, fmt.Errorf("field \"percentile\" is required")
+		}
+		return struct {
+			Type       string                      `json:"type"`
+			Percentile BucketDisplayStatPercentile `json:"percentile"`
+		}{Type: "percentile", Percentile: *u.percentile}, nil
+	}
+}
+
+func (u BucketDisplayStat) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *BucketDisplayStat) UnmarshalJSON(data []byte) error {
+	var deser bucketDisplayStatDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "mean":
+		if u.mean == nil {
+			return fmt.Errorf("field \"mean\" is required")
+		}
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+	case "sum":
+		if u.sum == nil {
+			return fmt.Errorf("field \"sum\" is required")
+		}
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+	}
+	return nil
+}
+
+func (u BucketDisplayStat) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *BucketDisplayStat) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *BucketDisplayStat) AcceptFuncs(meanFunc func(NoConfigDisplayStat) error, minFunc func(NoConfigDisplayStat) error, maxFunc func(NoConfigDisplayStat) error, countFunc func(NoConfigDisplayStat) error, sumFunc func(NoConfigDisplayStat) error, percentileFunc func(BucketDisplayStatPercentile) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in BucketDisplayStat type")
+		}
+		return unknownFunc(u.typ)
+	case "mean":
+		if u.mean == nil {
+			return fmt.Errorf("field \"mean\" is required")
+		}
+		return meanFunc(*u.mean)
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+		return minFunc(*u.min)
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+		return maxFunc(*u.max)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return countFunc(*u.count)
+	case "sum":
+		if u.sum == nil {
+			return fmt.Errorf("field \"sum\" is required")
+		}
+		return sumFunc(*u.sum)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return percentileFunc(*u.percentile)
+	}
+}
+
+func (u *BucketDisplayStat) MeanNoopSuccess(_ NoConfigDisplayStat) error {
+	return nil
+}
+
+func (u *BucketDisplayStat) MinNoopSuccess(_ NoConfigDisplayStat) error {
+	return nil
+}
+
+func (u *BucketDisplayStat) MaxNoopSuccess(_ NoConfigDisplayStat) error {
+	return nil
+}
+
+func (u *BucketDisplayStat) CountNoopSuccess(_ NoConfigDisplayStat) error {
+	return nil
+}
+
+func (u *BucketDisplayStat) SumNoopSuccess(_ NoConfigDisplayStat) error {
+	return nil
+}
+
+func (u *BucketDisplayStat) PercentileNoopSuccess(_ BucketDisplayStatPercentile) error {
+	return nil
+}
+
+func (u *BucketDisplayStat) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *BucketDisplayStat) Accept(v BucketDisplayStatVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "mean":
+		if u.mean == nil {
+			return fmt.Errorf("field \"mean\" is required")
+		}
+		return v.VisitMean(*u.mean)
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+		return v.VisitMin(*u.min)
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+		return v.VisitMax(*u.max)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return v.VisitCount(*u.count)
+	case "sum":
+		if u.sum == nil {
+			return fmt.Errorf("field \"sum\" is required")
+		}
+		return v.VisitSum(*u.sum)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentile(*u.percentile)
+	}
+}
+
+type BucketDisplayStatVisitor interface {
+	VisitMean(v NoConfigDisplayStat) error
+	VisitMin(v NoConfigDisplayStat) error
+	VisitMax(v NoConfigDisplayStat) error
+	VisitCount(v NoConfigDisplayStat) error
+	VisitSum(v NoConfigDisplayStat) error
+	VisitPercentile(v BucketDisplayStatPercentile) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *BucketDisplayStat) AcceptWithContext(ctx context.Context, v BucketDisplayStatVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "mean":
+		if u.mean == nil {
+			return fmt.Errorf("field \"mean\" is required")
+		}
+		return v.VisitMeanWithContext(ctx, *u.mean)
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+		return v.VisitMinWithContext(ctx, *u.min)
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+		return v.VisitMaxWithContext(ctx, *u.max)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return v.VisitCountWithContext(ctx, *u.count)
+	case "sum":
+		if u.sum == nil {
+			return fmt.Errorf("field \"sum\" is required")
+		}
+		return v.VisitSumWithContext(ctx, *u.sum)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentileWithContext(ctx, *u.percentile)
+	}
+}
+
+type BucketDisplayStatVisitorWithContext interface {
+	VisitMeanWithContext(ctx context.Context, v NoConfigDisplayStat) error
+	VisitMinWithContext(ctx context.Context, v NoConfigDisplayStat) error
+	VisitMaxWithContext(ctx context.Context, v NoConfigDisplayStat) error
+	VisitCountWithContext(ctx context.Context, v NoConfigDisplayStat) error
+	VisitSumWithContext(ctx context.Context, v NoConfigDisplayStat) error
+	VisitPercentileWithContext(ctx context.Context, v BucketDisplayStatPercentile) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewBucketDisplayStatFromMean(v NoConfigDisplayStat) BucketDisplayStat {
+	return BucketDisplayStat{typ: "mean", mean: &v}
+}
+
+func NewBucketDisplayStatFromMin(v NoConfigDisplayStat) BucketDisplayStat {
+	return BucketDisplayStat{typ: "min", min: &v}
+}
+
+func NewBucketDisplayStatFromMax(v NoConfigDisplayStat) BucketDisplayStat {
+	return BucketDisplayStat{typ: "max", max: &v}
+}
+
+func NewBucketDisplayStatFromCount(v NoConfigDisplayStat) BucketDisplayStat {
+	return BucketDisplayStat{typ: "count", count: &v}
+}
+
+func NewBucketDisplayStatFromSum(v NoConfigDisplayStat) BucketDisplayStat {
+	return BucketDisplayStat{typ: "sum", sum: &v}
+}
+
+func NewBucketDisplayStatFromPercentile(v BucketDisplayStatPercentile) BucketDisplayStat {
+	return BucketDisplayStat{typ: "percentile", percentile: &v}
+}
+
 type CartesianChartDefinition struct {
 	typ string
 	v1  *CartesianChartDefinitionV1

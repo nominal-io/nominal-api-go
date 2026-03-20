@@ -1336,8 +1336,9 @@ func (e *ModuleNameConflict) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type moduleRidsNotFound struct {
-	ModuleRids []api.ModuleRid `json:"moduleRids"`
+	ModuleRids []api.ModuleRid `json:"moduleRids" safelogging:"@Safe"`
 }
 
 func (o moduleRidsNotFound) MarshalJSON() ([]byte, error) {

@@ -12,7 +12,7 @@ import (
 
 type Comment struct {
 	// Unique resource identifier for the comment
-	Rid CommentRid `json:"rid"`
+	Rid CommentRid `json:"rid" safelogging:"@Safe"`
 	// The parent of the comment. It can be a resource or another comment.
 	Parent CommentParent `json:"parent"`
 	// The user who authored the comment
@@ -32,7 +32,7 @@ type Comment struct {
 	// The reactions on the comment
 	Reactions []Reaction `json:"reactions"`
 	// The comment's attachments
-	Attachments []rids.AttachmentRid `json:"attachments"`
+	Attachments []rids.AttachmentRid `json:"attachments" safelogging:"@Safe"`
 }
 
 func (o Comment) MarshalJSON() ([]byte, error) {
@@ -78,9 +78,10 @@ func (o *Comment) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type CommentParentComment struct {
 	// The resource identifier for the comment that the comment is replying to
-	CommentRid CommentRid `json:"commentRid"`
+	CommentRid CommentRid `json:"commentRid" safelogging:"@Safe"`
 }
 
 func (o CommentParentComment) MarshalYAML() (interface{}, error) {
@@ -220,7 +221,7 @@ type CreateCommentRequest struct {
 	// The content of the comment. Markdown supported.
 	Content string `json:"content"`
 	// Attachments to the comment.
-	Attachments []rids.AttachmentRid `json:"attachments"`
+	Attachments []rids.AttachmentRid `json:"attachments" safelogging:"@Safe"`
 }
 
 func (o CreateCommentRequest) MarshalJSON() ([]byte, error) {
@@ -264,7 +265,7 @@ type EditCommentRequest struct {
 	// The content of the comment. Markdown supported.
 	Content string `json:"content"`
 	// Attachments to the comment.
-	Attachments []rids.AttachmentRid `json:"attachments"`
+	Attachments []rids.AttachmentRid `json:"attachments" safelogging:"@Safe"`
 }
 
 func (o EditCommentRequest) MarshalJSON() ([]byte, error) {
@@ -306,7 +307,7 @@ func (o *EditCommentRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 
 type Reaction struct {
 	// Unique resource identifier for the reaction
-	Rid ReactionRid `json:"rid"`
+	Rid ReactionRid `json:"rid" safelogging:"@Safe"`
 	// The user who authored the reaction
 	UserRid rid.ResourceIdentifier `json:"userRid"`
 	// The time the reaction was created

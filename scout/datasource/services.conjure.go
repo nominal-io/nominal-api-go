@@ -65,6 +65,17 @@ type DataSourceServiceClient interface {
 	   given an initial set of filters.
 	*/
 	GetAvailableTagValues(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error)
+	/*
+	   Returns the number of distinct series matching each request's datasource, channel, range,
+	   and tag filters. Each response corresponds positionally to the input request.
+	   Returns empty seriesCount for non-Nominal datasources.
+	*/
+	BatchGetSeriesCount(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetSeriesCountRequest) (api.BatchGetSeriesCountResponse, error)
+	/*
+	   Returns (channel, full-tag-map) entries for a specific channel in a dataset.
+	   If tags are provided, each entry must match all provided key/value pairs; extra tags may still be present.
+	*/
+	GetMatchingChannelsWithTags(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error)
 }
 
 type dataSourceServiceClient struct {
@@ -255,6 +266,42 @@ func (c *dataSourceServiceClient) GetAvailableTagValues(ctx context.Context, aut
 	return *returnVal, nil
 }
 
+func (c *dataSourceServiceClient) BatchGetSeriesCount(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetSeriesCountRequest) (api.BatchGetSeriesCountResponse, error) {
+	var returnVal *api.BatchGetSeriesCountResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetSeriesCount"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/batch-get-series-count"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchGetSeriesCountResponse), werror.WrapWithContextParams(ctx, err, "batchGetSeriesCount failed")
+	}
+	if returnVal == nil {
+		return *new(api.BatchGetSeriesCountResponse), werror.ErrorWithContextParams(ctx, "batchGetSeriesCount response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *dataSourceServiceClient) GetMatchingChannelsWithTags(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error) {
+	var returnVal *api.GetMatchingChannelsWithTagsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetMatchingChannelsWithTags"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/get-matching-channels-with-tags"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GetMatchingChannelsWithTagsResponse), werror.WrapWithContextParams(ctx, err, "getMatchingChannelsWithTags failed")
+	}
+	if returnVal == nil {
+		return *new(api.GetMatchingChannelsWithTagsResponse), werror.ErrorWithContextParams(ctx, "getMatchingChannelsWithTags response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 /*
 Data sources are data input to runs, including databases, CSV, video, and streaming data. They contain channels that represent the series data.
 The DataSource Service is responsible for indexing and searching channels across data sources.
@@ -304,6 +351,17 @@ type DataSourceServiceClientWithAuth interface {
 	   given an initial set of filters.
 	*/
 	GetAvailableTagValues(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error)
+	/*
+	   Returns the number of distinct series matching each request's datasource, channel, range,
+	   and tag filters. Each response corresponds positionally to the input request.
+	   Returns empty seriesCount for non-Nominal datasources.
+	*/
+	BatchGetSeriesCount(ctx context.Context, requestArg api.BatchGetSeriesCountRequest) (api.BatchGetSeriesCountResponse, error)
+	/*
+	   Returns (channel, full-tag-map) entries for a specific channel in a dataset.
+	   If tags are provided, each entry must match all provided key/value pairs; extra tags may still be present.
+	*/
+	GetMatchingChannelsWithTags(ctx context.Context, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error)
 }
 
 func NewDataSourceServiceClientWithAuth(client DataSourceServiceClient, authHeader bearertoken.Token) DataSourceServiceClientWithAuth {
@@ -353,6 +411,14 @@ func (c *dataSourceServiceClientWithAuth) GetAvailableTagKeys(ctx context.Contex
 
 func (c *dataSourceServiceClientWithAuth) GetAvailableTagValues(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error) {
 	return c.client.GetAvailableTagValues(ctx, c.authHeader, dataSourceRidArg, requestArg)
+}
+
+func (c *dataSourceServiceClientWithAuth) BatchGetSeriesCount(ctx context.Context, requestArg api.BatchGetSeriesCountRequest) (api.BatchGetSeriesCountResponse, error) {
+	return c.client.BatchGetSeriesCount(ctx, c.authHeader, requestArg)
+}
+
+func (c *dataSourceServiceClientWithAuth) GetMatchingChannelsWithTags(ctx context.Context, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error) {
+	return c.client.GetMatchingChannelsWithTags(ctx, c.authHeader, requestArg)
 }
 
 func NewDataSourceServiceClientWithTokenProvider(client DataSourceServiceClient, tokenProvider httpclient.TokenProvider) DataSourceServiceClientWithAuth {
@@ -442,4 +508,20 @@ func (c *dataSourceServiceClientWithTokenProvider) GetAvailableTagValues(ctx con
 		return *new(api.GetAvailableTagValuesResponse), err
 	}
 	return c.client.GetAvailableTagValues(ctx, bearertoken.Token(token), dataSourceRidArg, requestArg)
+}
+
+func (c *dataSourceServiceClientWithTokenProvider) BatchGetSeriesCount(ctx context.Context, requestArg api.BatchGetSeriesCountRequest) (api.BatchGetSeriesCountResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.BatchGetSeriesCountResponse), err
+	}
+	return c.client.BatchGetSeriesCount(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *dataSourceServiceClientWithTokenProvider) GetMatchingChannelsWithTags(ctx context.Context, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.GetMatchingChannelsWithTagsResponse), err
+	}
+	return c.client.GetMatchingChannelsWithTags(ctx, bearertoken.Token(token), requestArg)
 }

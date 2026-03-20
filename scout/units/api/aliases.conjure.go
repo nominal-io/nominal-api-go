@@ -3,11 +3,12 @@
 package api
 
 // The long form name of a unit.
-type UnitName string
+type UnitName string // safelogging:@Unsafe
 
 // The physical quality that the unit measures (Electric Current, Time, Angle, etc.)
-type UnitProperty string
-type UnitSymbol string
+type UnitProperty string // safelogging:@Unsafe
+
+type UnitSymbol string // safelogging:@Unsafe
 
 // The units system that the unit is defined in.
-type UnitSystem string
+type UnitSystem string // safelogging:@Safe

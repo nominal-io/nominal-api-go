@@ -23,7 +23,7 @@ type AddFileToDataset struct {
 	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
 	IngestTagMetadata *IngestTagMetadata `json:"ingestTagMetadata,omitempty"`
 	OriginFileHandles *[]S3Handle        `json:"originFileHandles,omitempty"`
-	IngestJobRid      *api.IngestJobRid  `json:"ingestJobRid,omitempty"`
+	IngestJobRid      *api.IngestJobRid  `json:"ingestJobRid,omitempty" safelogging:"@Safe"`
 	// File-type-specific metadata. For video files, contains timestamp manifest.
 	Metadata *DatasetFileMetadata `json:"metadata,omitempty"`
 }
@@ -44,9 +44,10 @@ func (o *AddFileToDataset) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type AllPropertiesAndLabelsResponse struct {
 	Properties map[api1.PropertyName][]api1.PropertyValue `json:"properties"`
-	Labels     []api1.Label                               `json:"labels"`
+	Labels     []api1.Label                               `json:"labels" safelogging:"@Unsafe"`
 }
 
 func (o AllPropertiesAndLabelsResponse) MarshalJSON() ([]byte, error) {
@@ -92,9 +93,52 @@ func (o *AllPropertiesAndLabelsResponse) UnmarshalYAML(unmarshal func(interface{
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Request to batch get dataset files for a single dataset.
+type BatchGetDatasetFilesRequest struct {
+	DatasetRid rid.ResourceIdentifier     `json:"datasetRid"`
+	FileIds    []datasource.DatasetFileId `json:"fileIds" safelogging:"@Safe"`
+}
+
+func (o BatchGetDatasetFilesRequest) MarshalJSON() ([]byte, error) {
+	if o.FileIds == nil {
+		o.FileIds = make([]datasource.DatasetFileId, 0)
+	}
+	type _tmpBatchGetDatasetFilesRequest BatchGetDatasetFilesRequest
+	return safejson.Marshal(_tmpBatchGetDatasetFilesRequest(o))
+}
+
+func (o *BatchGetDatasetFilesRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchGetDatasetFilesRequest BatchGetDatasetFilesRequest
+	var rawBatchGetDatasetFilesRequest _tmpBatchGetDatasetFilesRequest
+	if err := safejson.Unmarshal(data, &rawBatchGetDatasetFilesRequest); err != nil {
+		return err
+	}
+	if rawBatchGetDatasetFilesRequest.FileIds == nil {
+		rawBatchGetDatasetFilesRequest.FileIds = make([]datasource.DatasetFileId, 0)
+	}
+	*o = BatchGetDatasetFilesRequest(rawBatchGetDatasetFilesRequest)
+	return nil
+}
+
+func (o BatchGetDatasetFilesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchGetDatasetFilesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Bounds struct {
-	Start api1.Timestamp           `json:"start"`
-	End   api1.Timestamp           `json:"end"`
+	Start api1.Timestamp           `json:"start" safelogging:"@Safe"`
+	End   api1.Timestamp           `json:"end" safelogging:"@Safe"`
 	Type  datasource.TimestampType `json:"type"`
 }
 
@@ -203,6 +247,7 @@ func (o *ChannelDetails) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateDataset struct {
 	Name string `json:"name"`
 	// Deprecated: Handles should only be specified when adding files to datasets
@@ -210,7 +255,7 @@ type CreateDataset struct {
 	// Deprecated: Deprecated in favor of properties
 	Metadata       map[string]string                        `json:"metadata"`
 	OriginMetadata DatasetOriginMetadata                    `json:"originMetadata"`
-	Labels         []api1.Label                             `json:"labels"`
+	Labels         []api1.Label                             `json:"labels" safelogging:"@Unsafe"`
 	Properties     map[api1.PropertyName]api1.PropertyValue `json:"properties"`
 	Description    *string                                  `json:"description,omitempty"`
 	// Granularity of dataset timestamps. Defaults to nanoseconds.
@@ -225,12 +270,12 @@ type CreateDataset struct {
 	   The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 	/*
 	   The markings to apply to the created dataset.
 	   If not provided, the dataset will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api2.MarkingRid `json:"markingRids"`
+	MarkingRids []api2.MarkingRid `json:"markingRids" safelogging:"@Safe"`
 	// The backing dataset type. Defaults to LEGACY type.
 	DatasetType *DatasetBackingType `json:"datasetType,omitempty"`
 }
@@ -294,10 +339,11 @@ func (o *CreateDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 Request to create a dataset with a specific UUID. Used for migrations
 where the UUID must be controlled by the caller.
 */
+// safelogging:@Unsafe
 type CreateDatasetWithUuidRequest struct {
 	// The UUID to assign to the new dataset.
 	Uuid          uuid.UUID     `json:"uuid"`
-	CreateDataset CreateDataset `json:"createDataset"`
+	CreateDataset CreateDataset `json:"createDataset" safelogging:"@Unsafe"`
 }
 
 func (o CreateDatasetWithUuidRequest) MarshalYAML() (interface{}, error) {
@@ -341,6 +387,7 @@ func (o *CustomTimestamp) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Dataset struct {
 	Rid  rid.ResourceIdentifier `json:"rid"`
 	Name string                 `json:"name"`
@@ -350,7 +397,7 @@ type Dataset struct {
 	OriginMetadata DatasetOriginMetadata                    `json:"originMetadata"`
 	Bounds         *Bounds                                  `json:"bounds,omitempty"`
 	Properties     map[api1.PropertyName]api1.PropertyValue `json:"properties"`
-	Labels         []api1.Label                             `json:"labels"`
+	Labels         []api1.Label                             `json:"labels" safelogging:"@Unsafe"`
 	TimestampType  WeakTimestampType                        `json:"timestampType"`
 	AllowStreaming bool                                     `json:"allowStreaming"`
 	Granularity    api1.Granularity                         `json:"granularity"`
@@ -402,8 +449,8 @@ func (o *Dataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type DatasetFile struct {
-	Id         datasource.DatasetFileId `json:"id"`
-	DatasetRid rids.DatasetRid          `json:"datasetRid"`
+	Id         datasource.DatasetFileId `json:"id" safelogging:"@Safe"`
+	DatasetRid rids.DatasetRid          `json:"datasetRid" safelogging:"@Safe"`
 	Name       string                   `json:"name"`
 	Handle     Handle                   `json:"handle"`
 	Bounds     *Bounds                  `json:"bounds,omitempty"`
@@ -418,7 +465,7 @@ type DatasetFile struct {
 	TimestampMetadata *TimestampMetadata  `json:"timestampMetadata,omitempty"`
 	IngestTagMetadata *IngestTagMetadata  `json:"ingestTagMetadata,omitempty"`
 	OriginFilePaths   *[]string           `json:"originFilePaths,omitempty"`
-	IngestJobRid      *api.IngestJobRid   `json:"ingestJobRid,omitempty"`
+	IngestJobRid      *api.IngestJobRid   `json:"ingestJobRid,omitempty" safelogging:"@Safe"`
 	// Timestamp that the file is deleted at, only present if the file has been deleted.
 	DeletedAt *datetime.DateTime `json:"deletedAt,omitempty"`
 	// File-type-specific metadata. For video files, contains timestamp manifest and segment metadata.
@@ -486,9 +533,10 @@ func (o *DatasetFileUri) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type DatasetFilesPage struct {
 	Files    []DatasetFile `json:"files"`
-	NextPage *api1.Token   `json:"nextPage,omitempty"`
+	NextPage *api1.Token   `json:"nextPage,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o DatasetFilesPage) MarshalJSON() ([]byte, error) {
@@ -560,6 +608,7 @@ func (o *DatasetOriginMetadata) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type EnrichedDataset struct {
 	Rid         rid.ResourceIdentifier `json:"rid"`
 	Uuid        uuid.UUID              `json:"uuid"`
@@ -579,7 +628,7 @@ type EnrichedDataset struct {
 	Source           *string                                  `json:"source,omitempty"`
 	Bounds           *Bounds                                  `json:"bounds,omitempty"`
 	TimestampType    WeakTimestampType                        `json:"timestampType"`
-	Labels           []api1.Label                             `json:"labels"`
+	Labels           []api1.Label                             `json:"labels" safelogging:"@Unsafe"`
 	Properties       map[api1.PropertyName]api1.PropertyValue `json:"properties"`
 	Granularity      api1.Granularity                         `json:"granularity"`
 	AllowStreaming   bool                                     `json:"allowStreaming"`
@@ -936,7 +985,7 @@ type MarkFileIngestSuccessful struct {
 	   It's produced externally and passed here to handle retries and failures, and must be nanosecond precision.
 	   Two files cannot have the same ingested at timestamp.
 	*/
-	IngestedAt api1.Timestamp `json:"ingestedAt"`
+	IngestedAt api1.Timestamp `json:"ingestedAt" safelogging:"@Safe"`
 }
 
 func (o MarkFileIngestSuccessful) MarshalYAML() (interface{}, error) {
@@ -1043,12 +1092,13 @@ func (o *S3Handle) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchDatasetFilesRequest struct {
-	DatasetRid rids.DatasetRid         `json:"datasetRid"`
+	DatasetRid rids.DatasetRid         `json:"datasetRid" safelogging:"@Safe"`
 	Query      SearchDatasetFilesQuery `json:"query"`
 	// Defaults to 100. Will throw if larger than 1000.
 	PageSize    *int                   `json:"pageSize,omitempty"`
-	Token       *api1.Token            `json:"token,omitempty"`
+	Token       *api1.Token            `json:"token,omitempty" safelogging:"@Unsafe"`
 	SortOptions DatasetFileSortOptions `json:"sortOptions"`
 }
 
@@ -1068,9 +1118,10 @@ func (o *SearchDatasetFilesRequest) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchDatasetFilesResponse struct {
 	Results       []DatasetFile `json:"results"`
-	NextPageToken *api1.Token   `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token   `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchDatasetFilesResponse) MarshalJSON() ([]byte, error) {
@@ -1110,11 +1161,12 @@ func (o *SearchDatasetFilesResponse) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchDatasetsRequest struct {
 	Query SearchDatasetsQuery `json:"query"`
 	// Defaults to 100. Will throw if larger than 1000.
 	PageSize    *int        `json:"pageSize,omitempty"`
-	Token       *api1.Token `json:"token,omitempty"`
+	Token       *api1.Token `json:"token,omitempty" safelogging:"@Unsafe"`
 	SortOptions SortOptions `json:"sortOptions"`
 }
 
@@ -1134,9 +1186,10 @@ func (o *SearchDatasetsRequest) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchDatasetsResponse struct {
 	Results       []EnrichedDataset `json:"results"`
-	NextPageToken *api1.Token       `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token       `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchDatasetsResponse) MarshalJSON() ([]byte, error) {
@@ -1302,10 +1355,11 @@ func (o *UpdateBoundsRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateDatasetMetadata struct {
 	Name        *string                                   `json:"name,omitempty"`
 	Description *string                                   `json:"description,omitempty"`
-	Labels      *[]api1.Label                             `json:"labels,omitempty"`
+	Labels      *[]api1.Label                             `json:"labels,omitempty" safelogging:"@Unsafe"`
 	Properties  *map[api1.PropertyName]api1.PropertyValue `json:"properties,omitempty"`
 }
 
@@ -1360,6 +1414,26 @@ func (o UpdateIngestStatusV2) MarshalYAML() (interface{}, error) {
 }
 
 func (o *UpdateIngestStatusV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UpdateRetentionPolicyRequest struct {
+	RetentionPolicy *RetentionPolicy `json:"retentionPolicy,omitempty"`
+}
+
+func (o UpdateRetentionPolicyRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UpdateRetentionPolicyRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

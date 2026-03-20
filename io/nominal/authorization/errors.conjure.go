@@ -1371,7 +1371,7 @@ func (e *NotAuthorizedAdmin) UnmarshalJSON(data []byte) error {
 
 type registerResourceConflict struct {
 	Resource           rid.ResourceIdentifier `json:"resource"`
-	RequestedWorkspace rids.WorkspaceRid      `json:"requestedWorkspace"`
+	RequestedWorkspace rids.WorkspaceRid      `json:"requestedWorkspace" safelogging:"@Safe"`
 }
 
 func (o registerResourceConflict) MarshalYAML() (interface{}, error) {
@@ -1520,8 +1520,9 @@ func (e *RegisterResourceConflict) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type workspaceNotFound struct {
-	Workspace rids.WorkspaceRid `json:"workspace"`
+	Workspace rids.WorkspaceRid `json:"workspace" safelogging:"@Safe"`
 }
 
 func (o workspaceNotFound) MarshalYAML() (interface{}, error) {

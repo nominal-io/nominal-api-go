@@ -8,7 +8,7 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type ChartThemeRid rid.ResourceIdentifier
+type ChartThemeRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ChartThemeRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -56,4 +56,4 @@ func (a *ChartThemeRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type HexColor string
+type HexColor string // safelogging:@Safe

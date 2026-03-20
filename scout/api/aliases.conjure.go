@@ -2,5 +2,6 @@
 
 package api
 
-type DataSourceRefName string
-type HexColor string
+type DataSourceRefName string // safelogging:@Unsafe
+
+type HexColor string // safelogging:@Safe

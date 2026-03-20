@@ -9,8 +9,9 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type DeleteDataRequest struct {
-	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid"`
+	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid" safelogging:"@Safe"`
 	/*
 	   If specified, will only delete data within the given time range.
 	   If not specified, will delete data across all time.
@@ -25,7 +26,7 @@ type DeleteDataRequest struct {
 	   If specified, will only delete data that has an exact channel name match with the given names.
 	   If not specified, will delete data across all channels.
 	*/
-	ChannelNames *[]api.Channel `json:"channelNames,omitempty"`
+	ChannelNames *[]api.Channel `json:"channelNames,omitempty" safelogging:"@Unsafe"`
 	/*
 	   If true and tags and channelNames are empty, will also delete associated channel metadata.
 	   Otherwise, will only delete raw data. This is to guarantee that you are not orphaning data unintentionally

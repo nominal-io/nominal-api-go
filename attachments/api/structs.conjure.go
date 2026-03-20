@@ -11,15 +11,16 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type Attachment struct {
-	Rid         rids.AttachmentRid                     `json:"rid"`
+	Rid         rids.AttachmentRid                     `json:"rid" safelogging:"@Safe"`
 	Title       string                                 `json:"title"`
-	S3Path      api.S3Path                             `json:"s3Path"`
+	S3Path      api.S3Path                             `json:"s3Path" safelogging:"@Unsafe"`
 	FileType    string                                 `json:"fileType"`
 	Description string                                 `json:"description"`
 	CreatedBy   rid.ResourceIdentifier                 `json:"createdBy"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels      []api.Label                            `json:"labels"`
+	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	CreatedAt   datetime.DateTime                      `json:"createdAt"`
 	IsArchived  bool                                   `json:"isArchived"`
 }
@@ -91,18 +92,19 @@ func (o *AttachmentUri) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateAttachmentRequest struct {
-	S3Path      api.S3Path                             `json:"s3Path"`
+	S3Path      api.S3Path                             `json:"s3Path" safelogging:"@Unsafe"`
 	Title       string                                 `json:"title"`
 	Description string                                 `json:"description"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels      []api.Label                            `json:"labels"`
+	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	/*
 	   The workspace in which to create the attachment. If not provided, the attachment will be created in
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateAttachmentRequest) MarshalJSON() ([]byte, error) {
@@ -148,8 +150,9 @@ func (o *CreateAttachmentRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type GetAttachmentsRequest struct {
-	AttachmentRids []rids.AttachmentRid `json:"attachmentRids"`
+	AttachmentRids []rids.AttachmentRid `json:"attachmentRids" safelogging:"@Safe"`
 }
 
 func (o GetAttachmentsRequest) MarshalJSON() ([]byte, error) {
@@ -230,11 +233,12 @@ func (o *GetAttachmentsResponse) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateAttachmentRequest struct {
 	Title       *string                                 `json:"title,omitempty"`
 	Description *string                                 `json:"description,omitempty"`
 	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
-	Labels      *[]api.Label                            `json:"labels,omitempty"`
+	Labels      *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o UpdateAttachmentRequest) MarshalYAML() (interface{}, error) {

@@ -2,4 +2,4 @@
 
 package api
 
-type SeriesMetadataName string
+type SeriesMetadataName string // safelogging:@Unsafe

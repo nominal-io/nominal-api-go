@@ -19,8 +19,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type assetsNotFound struct {
-	AssetRids []api.AssetRid `json:"assetRids"`
+	AssetRids []api.AssetRid `json:"assetRids" safelogging:"@Safe"`
 }
 
 func (o assetsNotFound) MarshalJSON() ([]byte, error) {
@@ -189,8 +190,9 @@ func (e *AssetsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type automaticCheckEvaluationNotFound struct {
-	AutomaticCheckEvaluationRid rids.AutomaticCheckEvaluationRid `json:"automaticCheckEvaluationRid"`
+	AutomaticCheckEvaluationRid rids.AutomaticCheckEvaluationRid `json:"automaticCheckEvaluationRid" safelogging:"@Safe"`
 }
 
 func (o automaticCheckEvaluationNotFound) MarshalYAML() (interface{}, error) {
@@ -338,8 +340,9 @@ func (e *AutomaticCheckEvaluationNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type automaticCheckEvaluationsNotFound struct {
-	AutomaticCheckEvaluationRids []rids.AutomaticCheckEvaluationRid `json:"automaticCheckEvaluationRids"`
+	AutomaticCheckEvaluationRids []rids.AutomaticCheckEvaluationRid `json:"automaticCheckEvaluationRids" safelogging:"@Safe"`
 }
 
 func (o automaticCheckEvaluationsNotFound) MarshalJSON() ([]byte, error) {
@@ -509,7 +512,7 @@ func (e *AutomaticCheckEvaluationsNotFound) UnmarshalJSON(data []byte) error {
 }
 
 type cannotPerformCheckAlertAction struct {
-	CheckAlertRids []api.CheckAlertRid `json:"checkAlertRids"`
+	CheckAlertRids []api.CheckAlertRid `json:"checkAlertRids" safelogging:"@Safe"`
 	Reason         *string             `json:"reason,omitempty"`
 }
 
@@ -679,8 +682,9 @@ func (e *CannotPerformCheckAlertAction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type checkAlertNotFound struct {
-	CheckAlertRid api.CheckAlertRid `json:"checkAlertRid"`
+	CheckAlertRid api.CheckAlertRid `json:"checkAlertRid" safelogging:"@Safe"`
 }
 
 func (o checkAlertNotFound) MarshalYAML() (interface{}, error) {
@@ -828,8 +832,9 @@ func (e *CheckAlertNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type checkAlertsNotFound struct {
-	CheckAlertRids []api.CheckAlertRid `json:"checkAlertRids"`
+	CheckAlertRids []api.CheckAlertRid `json:"checkAlertRids" safelogging:"@Safe"`
 }
 
 func (o checkAlertsNotFound) MarshalJSON() ([]byte, error) {
@@ -998,8 +1003,9 @@ func (e *CheckAlertsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type checklistsNotFound struct {
-	ChecklistRids []api.ChecklistRid `json:"checklistRids"`
+	ChecklistRids []api.ChecklistRid `json:"checklistRids" safelogging:"@Safe"`
 }
 
 func (o checklistsNotFound) MarshalJSON() ([]byte, error) {
@@ -1168,8 +1174,9 @@ func (e *ChecklistsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type dataReviewNotFound struct {
-	DataReviewRid api.DataReviewRid `json:"dataReviewRid"`
+	DataReviewRid api.DataReviewRid `json:"dataReviewRid" safelogging:"@Safe"`
 }
 
 func (o dataReviewNotFound) MarshalYAML() (interface{}, error) {
@@ -1317,8 +1324,9 @@ func (e *DataReviewNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type dataReviewsNotFound struct {
-	DataReviewRids []api.DataReviewRid `json:"dataReviewRids"`
+	DataReviewRids []api.DataReviewRid `json:"dataReviewRids" safelogging:"@Safe"`
 }
 
 func (o dataReviewsNotFound) MarshalJSON() ([]byte, error) {
@@ -1487,8 +1495,9 @@ func (e *DataReviewsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type failedToPerformAutomaticCheckEvaluationReviewAction struct {
-	CheckAlertRids []rids.AutomaticCheckEvaluationRid `json:"checkAlertRids"`
+	CheckAlertRids []rids.AutomaticCheckEvaluationRid `json:"checkAlertRids" safelogging:"@Safe"`
 }
 
 func (o failedToPerformAutomaticCheckEvaluationReviewAction) MarshalJSON() ([]byte, error) {
@@ -1658,7 +1667,7 @@ func (e *FailedToPerformAutomaticCheckEvaluationReviewAction) UnmarshalJSON(data
 }
 
 type failedToPerformCheckAlertAction struct {
-	CheckAlertRids []api.CheckAlertRid `json:"checkAlertRids"`
+	CheckAlertRids []api.CheckAlertRid `json:"checkAlertRids" safelogging:"@Safe"`
 	Reason         *string             `json:"reason,omitempty"`
 }
 
@@ -1828,9 +1837,10 @@ func (e *FailedToPerformCheckAlertAction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type failedToResolveSeriesForCheck struct {
-	RunRid         api1.RunRid       `json:"runRid"`
-	Channel        api2.Channel      `json:"channel"`
+	RunRid         api1.RunRid       `json:"runRid" safelogging:"@Safe"`
+	Channel        api2.Channel      `json:"channel" safelogging:"@Unsafe"`
 	Reason         string            `json:"reason"`
 	AdditionalArgs map[string]string `json:"additionalArgs"`
 }
@@ -2001,8 +2011,9 @@ func (e *FailedToResolveSeriesForCheck) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type invalidPageToken struct {
-	NextPageToken api2.Token `json:"nextPageToken"`
+	NextPageToken api2.Token `json:"nextPageToken" safelogging:"@Unsafe"`
 }
 
 func (o invalidPageToken) MarshalYAML() (interface{}, error) {
@@ -2096,7 +2107,7 @@ func (e *InvalidPageToken) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *InvalidPageToken) safeParams() map[string]interface{} {
-	return map[string]interface{}{"nextPageToken": e.NextPageToken, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -2113,7 +2124,7 @@ func (e *InvalidPageToken) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *InvalidPageToken) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"nextPageToken": e.NextPageToken}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -2150,8 +2161,9 @@ func (e *InvalidPageToken) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type linkedDataReviewsNotFound struct {
-	CheckAlertRids []api.CheckAlertRid `json:"checkAlertRids"`
+	CheckAlertRids []api.CheckAlertRid `json:"checkAlertRids" safelogging:"@Safe"`
 }
 
 func (o linkedDataReviewsNotFound) MarshalJSON() ([]byte, error) {
@@ -2320,8 +2332,9 @@ func (e *LinkedDataReviewsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type linkedNotebooksNotFound struct {
-	CheckAlertRids []api.CheckAlertRid `json:"checkAlertRids"`
+	CheckAlertRids []api.CheckAlertRid `json:"checkAlertRids" safelogging:"@Safe"`
 }
 
 func (o linkedNotebooksNotFound) MarshalJSON() ([]byte, error) {
@@ -2490,8 +2503,9 @@ func (e *LinkedNotebooksNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type manualCheckEvaluationNotFound struct {
-	ManualCheckEvaluationRid ManualCheckEvaluationRid `json:"manualCheckEvaluationRid"`
+	ManualCheckEvaluationRid ManualCheckEvaluationRid `json:"manualCheckEvaluationRid" safelogging:"@Safe"`
 }
 
 func (o manualCheckEvaluationNotFound) MarshalYAML() (interface{}, error) {
@@ -2639,8 +2653,9 @@ func (e *ManualCheckEvaluationNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type manualCheckEvaluationsNotFound struct {
-	ManualCheckEvaluationRids []ManualCheckEvaluationRid `json:"manualCheckEvaluationRids"`
+	ManualCheckEvaluationRids []ManualCheckEvaluationRid `json:"manualCheckEvaluationRids" safelogging:"@Safe"`
 }
 
 func (o manualCheckEvaluationsNotFound) MarshalJSON() ([]byte, error) {
@@ -2810,9 +2825,9 @@ func (e *ManualCheckEvaluationsNotFound) UnmarshalJSON(data []byte) error {
 }
 
 type noPointsInRange struct {
-	LogicalSeriesRid api2.LogicalSeriesRid `json:"logicalSeriesRid"`
-	Start            api2.Timestamp        `json:"start"`
-	End              api2.Timestamp        `json:"end"`
+	LogicalSeriesRid api2.LogicalSeriesRid `json:"logicalSeriesRid" safelogging:"@Safe"`
+	Start            api2.Timestamp        `json:"start" safelogging:"@Safe"`
+	End              api2.Timestamp        `json:"end" safelogging:"@Safe"`
 	Offset           *api1.Duration        `json:"offset,omitempty"`
 }
 
@@ -2961,8 +2976,9 @@ func (e *NoPointsInRange) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type notebooksNotFound struct {
-	NotebookRids []api.NotebookRid `json:"notebookRids"`
+	NotebookRids []api.NotebookRid `json:"notebookRids" safelogging:"@Safe"`
 }
 
 func (o notebooksNotFound) MarshalJSON() ([]byte, error) {
@@ -3278,8 +3294,9 @@ func (e *ReviewCommentIsEmpty) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type runsNotFound struct {
-	RunRids []api1.RunRid `json:"runRids"`
+	RunRids []api1.RunRid `json:"runRids" safelogging:"@Safe"`
 }
 
 func (o runsNotFound) MarshalJSON() ([]byte, error) {

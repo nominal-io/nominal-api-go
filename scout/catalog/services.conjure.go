@@ -29,6 +29,11 @@ type CatalogServiceClient interface {
 	GetDataset(ctx context.Context, authHeader bearertoken.Token, datasetUuidArg uuid.UUID) (Dataset, error)
 	GetDatasets(ctx context.Context, authHeader bearertoken.Token, getDatasetsRequestArg GetDatasetsRequest) ([]Dataset, error)
 	GetDatasetFile(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId) (DatasetFile, error)
+	/*
+	   Returns dataset files for the given file IDs within a single dataset. Only returns files that
+	   exist and belong to the specified dataset. Useful for checking ingestion status of many files at once.
+	*/
+	BatchGetDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetDatasetFilesRequest) (map[datasource.DatasetFileId]DatasetFile, error)
 	GetDatasetFilesForJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error)
 	SearchDatasets(ctx context.Context, authHeader bearertoken.Token, requestArg SearchDatasetsRequest) (SearchDatasetsResponse, error)
 	UpdateDatasetIngestStatusV2(ctx context.Context, authHeader bearertoken.Token, detailsArg UpdateIngestStatusV2) (api.IngestStatusV2, error)
@@ -60,7 +65,6 @@ type CatalogServiceClient interface {
 	*/
 	UpdateDatasetFileMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg DatasetFileMetadata) (DatasetFile, error)
 	UpdateDatasetMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg UpdateDatasetMetadata) (EnrichedDataset, error)
-	UpdateBounds(ctx context.Context, authHeader bearertoken.Token, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (EnrichedDataset, error)
 	/*
 	   Update the bounds for a dataset without updating bounds of files within the dataset. If the
 	   current bounds of the dataset are not set, then the bounds of the request will be used. Otherwise,
@@ -74,6 +78,11 @@ type CatalogServiceClient interface {
 	ArchiveDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier) error
 	// Undoes the archiving of a dataset.
 	UnarchiveDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier) error
+	/*
+	   Updates the retention policy for a dataset. If the retention policy is set, data that is older than the
+	   retention policy will be deleted.
+	*/
+	UpdateRetentionPolicy(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg UpdateRetentionPolicyRequest) (EnrichedDataset, error)
 	GetAllPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (AllPropertiesAndLabelsResponse, error)
 	// Returns the log dataset RID for the specified workspace if configured and accessible to the caller.
 	GetLogDatasetForWorkspace(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid) (*rids.DatasetRid, error)
@@ -172,6 +181,24 @@ func (c *catalogServiceClient) GetDatasetFile(ctx context.Context, authHeader be
 		return *new(DatasetFile), werror.ErrorWithContextParams(ctx, "getDatasetFile response cannot be nil")
 	}
 	return *returnVal, nil
+}
+
+func (c *catalogServiceClient) BatchGetDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetDatasetFilesRequest) (map[datasource.DatasetFileId]DatasetFile, error) {
+	var returnVal map[datasource.DatasetFileId]DatasetFile
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetDatasetFiles"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/dataset-files/batchGet"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "batchGetDatasetFiles failed")
+	}
+	if returnVal == nil {
+		return nil, werror.ErrorWithContextParams(ctx, "batchGetDatasetFiles response cannot be nil")
+	}
+	return returnVal, nil
 }
 
 func (c *catalogServiceClient) GetDatasetFilesForJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error) {
@@ -498,24 +525,6 @@ func (c *catalogServiceClient) UpdateDatasetMetadata(ctx context.Context, authHe
 	return *returnVal, nil
 }
 
-func (c *catalogServiceClient) UpdateBounds(ctx context.Context, authHeader bearertoken.Token, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (EnrichedDataset, error) {
-	var returnVal *EnrichedDataset
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateBounds"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/bounds", url.PathEscape(fmt.Sprint(ridArg))))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Put(ctx, requestParams...); err != nil {
-		return *new(EnrichedDataset), werror.WrapWithContextParams(ctx, err, "updateBounds failed")
-	}
-	if returnVal == nil {
-		return *new(EnrichedDataset), werror.ErrorWithContextParams(ctx, "updateBounds response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
 func (c *catalogServiceClient) UpdateGlobalDatasetBounds(ctx context.Context, authHeader bearertoken.Token, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (Dataset, error) {
 	var returnVal *Dataset
 	var requestParams []httpclient.RequestParam
@@ -556,6 +565,24 @@ func (c *catalogServiceClient) UnarchiveDataset(ctx context.Context, authHeader 
 		return werror.WrapWithContextParams(ctx, err, "unarchiveDataset failed")
 	}
 	return nil
+}
+
+func (c *catalogServiceClient) UpdateRetentionPolicy(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg UpdateRetentionPolicyRequest) (EnrichedDataset, error) {
+	var returnVal *EnrichedDataset
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateRetentionPolicy"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/catalog/v1/datasets/%s/retention-policy", url.PathEscape(fmt.Sprint(datasetRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return *new(EnrichedDataset), werror.WrapWithContextParams(ctx, err, "updateRetentionPolicy failed")
+	}
+	if returnVal == nil {
+		return *new(EnrichedDataset), werror.ErrorWithContextParams(ctx, "updateRetentionPolicy response cannot be nil")
+	}
+	return *returnVal, nil
 }
 
 func (c *catalogServiceClient) GetAllPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (AllPropertiesAndLabelsResponse, error) {
@@ -605,6 +632,11 @@ type CatalogServiceClientWithAuth interface {
 	GetDataset(ctx context.Context, datasetUuidArg uuid.UUID) (Dataset, error)
 	GetDatasets(ctx context.Context, getDatasetsRequestArg GetDatasetsRequest) ([]Dataset, error)
 	GetDatasetFile(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId) (DatasetFile, error)
+	/*
+	   Returns dataset files for the given file IDs within a single dataset. Only returns files that
+	   exist and belong to the specified dataset. Useful for checking ingestion status of many files at once.
+	*/
+	BatchGetDatasetFiles(ctx context.Context, requestArg BatchGetDatasetFilesRequest) (map[datasource.DatasetFileId]DatasetFile, error)
 	GetDatasetFilesForJob(ctx context.Context, ingestJobRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error)
 	SearchDatasets(ctx context.Context, requestArg SearchDatasetsRequest) (SearchDatasetsResponse, error)
 	UpdateDatasetIngestStatusV2(ctx context.Context, detailsArg UpdateIngestStatusV2) (api.IngestStatusV2, error)
@@ -636,7 +668,6 @@ type CatalogServiceClientWithAuth interface {
 	*/
 	UpdateDatasetFileMetadata(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg DatasetFileMetadata) (DatasetFile, error)
 	UpdateDatasetMetadata(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg UpdateDatasetMetadata) (EnrichedDataset, error)
-	UpdateBounds(ctx context.Context, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (EnrichedDataset, error)
 	/*
 	   Update the bounds for a dataset without updating bounds of files within the dataset. If the
 	   current bounds of the dataset are not set, then the bounds of the request will be used. Otherwise,
@@ -650,6 +681,11 @@ type CatalogServiceClientWithAuth interface {
 	ArchiveDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier) error
 	// Undoes the archiving of a dataset.
 	UnarchiveDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier) error
+	/*
+	   Updates the retention policy for a dataset. If the retention policy is set, data that is older than the
+	   retention policy will be deleted.
+	*/
+	UpdateRetentionPolicy(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg UpdateRetentionPolicyRequest) (EnrichedDataset, error)
 	GetAllPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (AllPropertiesAndLabelsResponse, error)
 	// Returns the log dataset RID for the specified workspace if configured and accessible to the caller.
 	GetLogDatasetForWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (*rids.DatasetRid, error)
@@ -682,6 +718,10 @@ func (c *catalogServiceClientWithAuth) GetDatasets(ctx context.Context, getDatas
 
 func (c *catalogServiceClientWithAuth) GetDatasetFile(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId) (DatasetFile, error) {
 	return c.client.GetDatasetFile(ctx, c.authHeader, datasetRidArg, fileIdArg)
+}
+
+func (c *catalogServiceClientWithAuth) BatchGetDatasetFiles(ctx context.Context, requestArg BatchGetDatasetFilesRequest) (map[datasource.DatasetFileId]DatasetFile, error) {
+	return c.client.BatchGetDatasetFiles(ctx, c.authHeader, requestArg)
 }
 
 func (c *catalogServiceClientWithAuth) GetDatasetFilesForJob(ctx context.Context, ingestJobRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error) {
@@ -756,10 +796,6 @@ func (c *catalogServiceClientWithAuth) UpdateDatasetMetadata(ctx context.Context
 	return c.client.UpdateDatasetMetadata(ctx, c.authHeader, datasetRidArg, requestArg)
 }
 
-func (c *catalogServiceClientWithAuth) UpdateBounds(ctx context.Context, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (EnrichedDataset, error) {
-	return c.client.UpdateBounds(ctx, c.authHeader, ridArg, requestArg)
-}
-
 func (c *catalogServiceClientWithAuth) UpdateGlobalDatasetBounds(ctx context.Context, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (Dataset, error) {
 	return c.client.UpdateGlobalDatasetBounds(ctx, c.authHeader, ridArg, requestArg)
 }
@@ -770,6 +806,10 @@ func (c *catalogServiceClientWithAuth) ArchiveDataset(ctx context.Context, datas
 
 func (c *catalogServiceClientWithAuth) UnarchiveDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier) error {
 	return c.client.UnarchiveDataset(ctx, c.authHeader, datasetRidArg)
+}
+
+func (c *catalogServiceClientWithAuth) UpdateRetentionPolicy(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg UpdateRetentionPolicyRequest) (EnrichedDataset, error) {
+	return c.client.UpdateRetentionPolicy(ctx, c.authHeader, datasetRidArg, requestArg)
 }
 
 func (c *catalogServiceClientWithAuth) GetAllPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (AllPropertiesAndLabelsResponse, error) {
@@ -827,6 +867,14 @@ func (c *catalogServiceClientWithTokenProvider) GetDatasetFile(ctx context.Conte
 		return *new(DatasetFile), err
 	}
 	return c.client.GetDatasetFile(ctx, bearertoken.Token(token), datasetRidArg, fileIdArg)
+}
+
+func (c *catalogServiceClientWithTokenProvider) BatchGetDatasetFiles(ctx context.Context, requestArg BatchGetDatasetFilesRequest) (map[datasource.DatasetFileId]DatasetFile, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c.client.BatchGetDatasetFiles(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetDatasetFilesForJob(ctx context.Context, ingestJobRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error) {
@@ -973,14 +1021,6 @@ func (c *catalogServiceClientWithTokenProvider) UpdateDatasetMetadata(ctx contex
 	return c.client.UpdateDatasetMetadata(ctx, bearertoken.Token(token), datasetRidArg, requestArg)
 }
 
-func (c *catalogServiceClientWithTokenProvider) UpdateBounds(ctx context.Context, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (EnrichedDataset, error) {
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return *new(EnrichedDataset), err
-	}
-	return c.client.UpdateBounds(ctx, bearertoken.Token(token), ridArg, requestArg)
-}
-
 func (c *catalogServiceClientWithTokenProvider) UpdateGlobalDatasetBounds(ctx context.Context, ridArg rid.ResourceIdentifier, requestArg UpdateBoundsRequest) (Dataset, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
@@ -1003,6 +1043,14 @@ func (c *catalogServiceClientWithTokenProvider) UnarchiveDataset(ctx context.Con
 		return err
 	}
 	return c.client.UnarchiveDataset(ctx, bearertoken.Token(token), datasetRidArg)
+}
+
+func (c *catalogServiceClientWithTokenProvider) UpdateRetentionPolicy(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg UpdateRetentionPolicyRequest) (EnrichedDataset, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(EnrichedDataset), err
+	}
+	return c.client.UpdateRetentionPolicy(ctx, bearertoken.Token(token), datasetRidArg, requestArg)
 }
 
 func (c *catalogServiceClientWithTokenProvider) GetAllPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (AllPropertiesAndLabelsResponse, error) {

@@ -2,5 +2,6 @@
 
 package api
 
-type Field string
-type MeasurementName string
+type Field string // safelogging:@Unsafe
+
+type MeasurementName string // safelogging:@Unsafe

@@ -2465,6 +2465,142 @@ func NewComputeUnitResultFromMultivariate(v MultivariateUnitResult) ComputeUnitR
 	return ComputeUnitResult{typ: "multivariate", multivariate: &v}
 }
 
+// A synthetic series that produces a constant value across the entire time range.
+type ConstantNumericSeries struct {
+	typ    string
+	double *DoubleConstant
+}
+
+type constantNumericSeriesDeserializer struct {
+	Type   string          `json:"type"`
+	Double *DoubleConstant `json:"double"`
+}
+
+func (u *constantNumericSeriesDeserializer) toStruct() ConstantNumericSeries {
+	return ConstantNumericSeries{typ: u.Type, double: u.Double}
+}
+
+func (u *ConstantNumericSeries) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "double":
+		if u.double == nil {
+			return nil, fmt.Errorf("field \"double\" is required")
+		}
+		return struct {
+			Type   string         `json:"type"`
+			Double DoubleConstant `json:"double"`
+		}{Type: "double", Double: *u.double}, nil
+	}
+}
+
+func (u ConstantNumericSeries) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ConstantNumericSeries) UnmarshalJSON(data []byte) error {
+	var deser constantNumericSeriesDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "double":
+		if u.double == nil {
+			return fmt.Errorf("field \"double\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ConstantNumericSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ConstantNumericSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ConstantNumericSeries) AcceptFuncs(doubleFunc func(DoubleConstant) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ConstantNumericSeries type")
+		}
+		return unknownFunc(u.typ)
+	case "double":
+		if u.double == nil {
+			return fmt.Errorf("field \"double\" is required")
+		}
+		return doubleFunc(*u.double)
+	}
+}
+
+func (u *ConstantNumericSeries) DoubleNoopSuccess(_ DoubleConstant) error {
+	return nil
+}
+
+func (u *ConstantNumericSeries) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ConstantNumericSeries) Accept(v ConstantNumericSeriesVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "double":
+		if u.double == nil {
+			return fmt.Errorf("field \"double\" is required")
+		}
+		return v.VisitDouble(*u.double)
+	}
+}
+
+type ConstantNumericSeriesVisitor interface {
+	VisitDouble(v DoubleConstant) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ConstantNumericSeries) AcceptWithContext(ctx context.Context, v ConstantNumericSeriesVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "double":
+		if u.double == nil {
+			return fmt.Errorf("field \"double\" is required")
+		}
+		return v.VisitDoubleWithContext(ctx, *u.double)
+	}
+}
+
+type ConstantNumericSeriesVisitorWithContext interface {
+	VisitDoubleWithContext(ctx context.Context, v DoubleConstant) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewConstantNumericSeriesFromDouble(v DoubleConstant) ConstantNumericSeries {
+	return ConstantNumericSeries{typ: "double", double: &v}
+}
+
 type CurveFitDetails struct {
 	typ         string
 	exponential *ExponentialCurve

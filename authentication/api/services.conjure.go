@@ -50,19 +50,29 @@ type AuthenticationServiceV2Client interface {
 	/*
 	   Gets coachmark dismissals for the authenticated user.
 	   Optionally filter by specific coachmark IDs.
+
+	   Deprecated: Deprecated in favor of CoachmarksService.
 	*/
 	GetMyCoachmarkDismissals(ctx context.Context, authHeader bearertoken.Token, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error)
 	/*
 	   Dismisses a coachmark for the authenticated user.
 	   Records the dismissal timestamp and app version.
+
+	   Deprecated: Deprecated in favor of CoachmarksService.
 	*/
 	DismissMyCoachmark(ctx context.Context, authHeader bearertoken.Token, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error)
-	// Checks if a specific coachmark has been dismissed by the authenticated user.
+	/*
+	   Checks if a specific coachmark has been dismissed by the authenticated user.
+
+	   Deprecated: Deprecated in favor of CoachmarksService.
+	*/
 	IsMyCoachmarkDismissed(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) (bool, error)
 	/*
 	   Resets a coachmark dismissal for the authenticated user.
 	   This allows the coachmark to be shown again.
 	   Primarily intended for testing and debugging.
+
+	   Deprecated: Deprecated in favor of CoachmarksService.
 	*/
 	ResetMyCoachmarkDismissal(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) error
 }
@@ -369,19 +379,29 @@ type AuthenticationServiceV2ClientWithAuth interface {
 	/*
 	   Gets coachmark dismissals for the authenticated user.
 	   Optionally filter by specific coachmark IDs.
+
+	   Deprecated: Deprecated in favor of CoachmarksService.
 	*/
 	GetMyCoachmarkDismissals(ctx context.Context, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error)
 	/*
 	   Dismisses a coachmark for the authenticated user.
 	   Records the dismissal timestamp and app version.
+
+	   Deprecated: Deprecated in favor of CoachmarksService.
 	*/
 	DismissMyCoachmark(ctx context.Context, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error)
-	// Checks if a specific coachmark has been dismissed by the authenticated user.
+	/*
+	   Checks if a specific coachmark has been dismissed by the authenticated user.
+
+	   Deprecated: Deprecated in favor of CoachmarksService.
+	*/
 	IsMyCoachmarkDismissed(ctx context.Context, coachmarkIdArg string) (bool, error)
 	/*
 	   Resets a coachmark dismissal for the authenticated user.
 	   This allows the coachmark to be shown again.
 	   Primarily intended for testing and debugging.
+
+	   Deprecated: Deprecated in favor of CoachmarksService.
 	*/
 	ResetMyCoachmarkDismissal(ctx context.Context, coachmarkIdArg string) error
 }

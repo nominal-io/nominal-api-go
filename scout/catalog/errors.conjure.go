@@ -767,7 +767,7 @@ func (e *ConflictOnSeriesCreation) UnmarshalJSON(data []byte) error {
 
 type datasetExistsInOtherWorkspace struct {
 	DatasetRid   rid.ResourceIdentifier `json:"datasetRid"`
-	WorkspaceRid rids.WorkspaceRid      `json:"workspaceRid"`
+	WorkspaceRid rids.WorkspaceRid      `json:"workspaceRid" safelogging:"@Safe"`
 }
 
 func (o datasetExistsInOtherWorkspace) MarshalYAML() (interface{}, error) {
@@ -918,7 +918,7 @@ func (e *DatasetExistsInOtherWorkspace) UnmarshalJSON(data []byte) error {
 
 type datasetFileNotFound struct {
 	DatasetRid rid.ResourceIdentifier   `json:"datasetRid"`
-	FileId     datasource.DatasetFileId `json:"fileId"`
+	FileId     datasource.DatasetFileId `json:"fileId" safelogging:"@Safe"`
 }
 
 func (o datasetFileNotFound) MarshalYAML() (interface{}, error) {
@@ -1988,7 +1988,7 @@ func (e *RunNotFound) UnmarshalJSON(data []byte) error {
 
 type videoFileNotFound struct {
 	VideoFileRid rid.ResourceIdentifier `json:"videoFileRid"`
-	FileId       datasource.VideoFileId `json:"fileId"`
+	FileId       datasource.VideoFileId `json:"fileId" safelogging:"@Safe"`
 }
 
 func (o videoFileNotFound) MarshalYAML() (interface{}, error) {

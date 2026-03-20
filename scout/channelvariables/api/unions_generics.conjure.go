@@ -61,9 +61,9 @@ type ChannelVariableComputeExpressionVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
-type ChannelVariableComputeExpressionInputWithT[T any] ChannelVariableComputeExpressionInput
+type ChannelVariableComputeExpressionInputValueWithT[T any] ChannelVariableComputeExpressionInputValue
 
-func (u *ChannelVariableComputeExpressionInputWithT[T]) Accept(ctx context.Context, v ChannelVariableComputeExpressionInputVisitorWithT[T]) (T, error) {
+func (u *ChannelVariableComputeExpressionInputValueWithT[T]) Accept(ctx context.Context, v ChannelVariableComputeExpressionInputValueVisitorWithT[T]) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -79,7 +79,7 @@ func (u *ChannelVariableComputeExpressionInputWithT[T]) Accept(ctx context.Conte
 	}
 }
 
-func (u *ChannelVariableComputeExpressionInputWithT[T]) AcceptFuncs(variableFunc func(ChannelVariableName) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ChannelVariableComputeExpressionInputValueWithT[T]) AcceptFuncs(variableFunc func(ChannelVariableName) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -95,17 +95,17 @@ func (u *ChannelVariableComputeExpressionInputWithT[T]) AcceptFuncs(variableFunc
 	}
 }
 
-func (u *ChannelVariableComputeExpressionInputWithT[T]) VariableNoopSuccess(ChannelVariableName) (T, error) {
+func (u *ChannelVariableComputeExpressionInputValueWithT[T]) VariableNoopSuccess(ChannelVariableName) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *ChannelVariableComputeExpressionInputWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+func (u *ChannelVariableComputeExpressionInputValueWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
-type ChannelVariableComputeExpressionInputVisitorWithT[T any] interface {
+type ChannelVariableComputeExpressionInputValueVisitorWithT[T any] interface {
 	VisitVariable(ctx context.Context, v ChannelVariableName) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

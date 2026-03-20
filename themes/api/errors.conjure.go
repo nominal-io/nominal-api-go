@@ -162,8 +162,9 @@ func (e *ChartThemeNameConflict) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type chartThemeNotFound struct {
-	ChartThemeRid ChartThemeRid `json:"chartThemeRid"`
+	ChartThemeRid ChartThemeRid `json:"chartThemeRid" safelogging:"@Safe"`
 }
 
 func (o chartThemeNotFound) MarshalYAML() (interface{}, error) {

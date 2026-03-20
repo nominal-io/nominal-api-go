@@ -166,8 +166,9 @@ func (e *EventNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type eventsNotFound struct {
-	EventRids []rids.EventRid `json:"eventRids"`
+	EventRids []rids.EventRid `json:"eventRids" safelogging:"@Safe"`
 }
 
 func (o eventsNotFound) MarshalJSON() ([]byte, error) {

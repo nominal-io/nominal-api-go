@@ -136,7 +136,7 @@ func (o *ArchiveEvent) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type AssetsFilter struct {
 	Operator api.SetOperator `json:"operator"`
-	Assets   []api1.AssetRid `json:"assets"`
+	Assets   []api1.AssetRid `json:"assets" safelogging:"@Safe"`
 }
 
 func (o AssetsFilter) MarshalJSON() ([]byte, error) {
@@ -178,7 +178,7 @@ func (o *AssetsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type AssigneesFilter struct {
 	Operator  api.SetOperator `json:"operator"`
-	Assignees []api1.UserRid  `json:"assignees"`
+	Assignees []api1.UserRid  `json:"assignees" safelogging:"@Safe"`
 }
 
 func (o AssigneesFilter) MarshalJSON() ([]byte, error) {
@@ -301,7 +301,7 @@ func (o *BatchAggregateEventsResponse) UnmarshalYAML(unmarshal func(interface{})
 }
 
 type BatchFilterEventsRequest struct {
-	EventRids   []rids.EventRid `json:"eventRids"`
+	EventRids   []rids.EventRid `json:"eventRids" safelogging:"@Safe"`
 	FilterQuery SearchQuery     `json:"filterQuery"`
 }
 
@@ -507,9 +507,9 @@ func (o *BatchUpdateEventResponse) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 type CheckOriginMetadata struct {
-	CheckEvaluationRid  rids.AutomaticCheckEvaluationRid `json:"checkEvaluationRid"`
-	CheckRid            api1.CheckRid                    `json:"checkRid"`
-	CheckLineageRid     api1.CheckLineageRid             `json:"checkLineageRid"`
+	CheckEvaluationRid  rids.AutomaticCheckEvaluationRid `json:"checkEvaluationRid" safelogging:"@Safe"`
+	CheckRid            api1.CheckRid                    `json:"checkRid" safelogging:"@Safe"`
+	CheckLineageRid     api1.CheckLineageRid             `json:"checkLineageRid" safelogging:"@Safe"`
 	ImplementationIndex *int                             `json:"implementationIndex,omitempty"`
 }
 
@@ -529,18 +529,19 @@ func (o *CheckOriginMetadata) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateEvent struct {
 	// Must contain at least one asset rid.
-	AssetRids []api1.AssetRid `json:"assetRids"`
+	AssetRids []api1.AssetRid `json:"assetRids" safelogging:"@Safe"`
 	// If empty, will default to set<EventOrigin.api>.
 	Origins   []EventOrigin `json:"origins"`
-	Timestamp api.Timestamp `json:"timestamp"`
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	Duration  api2.Duration `json:"duration"`
 	Name      string        `json:"name"`
 	// If not provided, will default to an empty string.
 	Description *string                                `json:"description,omitempty"`
 	Type        EventType                              `json:"type"`
-	Labels      []api.Label                            `json:"labels"`
+	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
 	Disposition *EventDisposition                      `json:"disposition,omitempty"`
 }
@@ -600,8 +601,9 @@ func (o *CreateEvent) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type DataReviewChecksFilter struct {
-	DataReviewChecks []api1.CheckRid `json:"dataReviewChecks"`
+	DataReviewChecks []api1.CheckRid `json:"dataReviewChecks" safelogging:"@Safe"`
 }
 
 func (o DataReviewChecksFilter) MarshalJSON() ([]byte, error) {
@@ -642,7 +644,7 @@ func (o *DataReviewChecksFilter) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 type DataReviewEventOrigin struct {
-	DataReviewRid api1.DataReviewRid `json:"dataReviewRid"`
+	DataReviewRid api1.DataReviewRid `json:"dataReviewRid" safelogging:"@Safe"`
 	// Metadata about the check that created this event.
 	CheckMetadata CheckOriginMetadata `json:"checkMetadata"`
 }
@@ -663,8 +665,9 @@ func (o *DataReviewEventOrigin) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type DataReviewsFilter struct {
-	DataReviews []api1.DataReviewRid `json:"dataReviews"`
+	DataReviews []api1.DataReviewRid `json:"dataReviews" safelogging:"@Safe"`
 }
 
 func (o DataReviewsFilter) MarshalJSON() ([]byte, error) {
@@ -704,27 +707,28 @@ func (o *DataReviewsFilter) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Event struct {
 	// Deprecated: This field is deprecated. Use the rid field instead.
 	Uuid uuid.UUID     `json:"uuid"`
-	Rid  rids.EventRid `json:"rid"`
+	Rid  rids.EventRid `json:"rid" safelogging:"@Safe"`
 	// A set of asset rids associated with the event.
-	AssetRids []api1.AssetRid `json:"assetRids"`
+	AssetRids []api1.AssetRid `json:"assetRids" safelogging:"@Safe"`
 	// A set of origins associated with the event.
 	Origins     []EventOrigin                          `json:"origins"`
-	Timestamp   api.Timestamp                          `json:"timestamp"`
+	Timestamp   api.Timestamp                          `json:"timestamp" safelogging:"@Safe"`
 	Duration    api2.Duration                          `json:"duration"`
 	Name        string                                 `json:"name"`
 	Description string                                 `json:"description"`
 	Type        EventType                              `json:"type"`
-	Labels      []api.Label                            `json:"labels"`
+	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
 	IsArchived  bool                                   `json:"isArchived"`
 	/*
 	   The user who created the event.
 	   This field may be missing for legacy events.
 	*/
-	CreatedBy   *api1.UserRid     `json:"createdBy,omitempty"`
+	CreatedBy   *api1.UserRid     `json:"createdBy,omitempty" safelogging:"@Safe"`
 	Disposition *EventDisposition `json:"disposition,omitempty"`
 }
 
@@ -790,7 +794,7 @@ This is used to track the disposition status of an event.
 type EventDisposition struct {
 	Priority  api3.Priority         `json:"priority"`
 	State     api3.DispositionState `json:"state"`
-	Assignees []api1.UserRid        `json:"assignees"`
+	Assignees []api1.UserRid        `json:"assignees" safelogging:"@Safe"`
 }
 
 func (o EventDisposition) MarshalJSON() ([]byte, error) {
@@ -831,7 +835,7 @@ func (o *EventDisposition) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type EventTimeFilter struct {
-	Timestamp          api.Timestamp            `json:"timestamp"`
+	Timestamp          api.Timestamp            `json:"timestamp" safelogging:"@Safe"`
 	TimestampCondition EventTimeFilterCondition `json:"timestampCondition"`
 }
 
@@ -852,8 +856,8 @@ func (o *EventTimeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 type EventsHistogramBucket struct {
-	StartInclusive api.Timestamp `json:"startInclusive"`
-	EndExclusive   api.Timestamp `json:"endExclusive"`
+	StartInclusive api.Timestamp `json:"startInclusive" safelogging:"@Safe"`
+	EndExclusive   api.Timestamp `json:"endExclusive" safelogging:"@Safe"`
 	Count          int           `json:"count"`
 }
 
@@ -874,8 +878,8 @@ func (o *EventsHistogramBucket) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 type EventsHistogramRequest struct {
-	StartInclusive api.Timestamp `json:"startInclusive"`
-	EndExclusive   api.Timestamp `json:"endExclusive"`
+	StartInclusive api.Timestamp `json:"startInclusive" safelogging:"@Safe"`
+	EndExclusive   api.Timestamp `json:"endExclusive" safelogging:"@Safe"`
 	// The query to filter the events to be included in the histogram.
 	FilterQuery *HistogramFilterQuery `json:"filterQuery,omitempty"`
 	/*
@@ -993,9 +997,10 @@ func (o *GetEvents) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type ListPropertiesAndLabelsRequest struct {
 	// If omitted, results will come from all workspaces the user belongs to.
-	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty"`
+	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
 }
 
 func (o ListPropertiesAndLabelsRequest) MarshalYAML() (interface{}, error) {
@@ -1057,8 +1062,8 @@ func (o *OriginTypesFilter) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 type ProcedureEventOrigin struct {
-	ProcedureExecutionRid rids.ProcedureExecutionRid `json:"procedureExecutionRid"`
-	ProcedureRid          rids.ProcedureRid          `json:"procedureRid"`
+	ProcedureExecutionRid rids.ProcedureExecutionRid `json:"procedureExecutionRid" safelogging:"@Safe"`
+	ProcedureRid          rids.ProcedureRid          `json:"procedureRid" safelogging:"@Safe"`
 	StepId                string                     `json:"stepId"`
 }
 
@@ -1078,11 +1083,12 @@ func (o *ProcedureEventOrigin) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchEventsRequest struct {
 	Sort SortOptions `json:"sort"`
 	// Will reject page sizes greater than 10k.
 	PageSize      int         `json:"pageSize"`
-	NextPageToken *api.Token  `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Query         SearchQuery `json:"query"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived events in search.
 	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
@@ -1104,9 +1110,10 @@ func (o *SearchEventsRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchEventsResponse struct {
 	Results       []Event    `json:"results"`
-	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchEventsResponse) MarshalJSON() ([]byte, error) {
@@ -1168,8 +1175,8 @@ func (o *SortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type StreamingCheckOriginMetadata struct {
-	CheckRid            api1.CheckRid        `json:"checkRid"`
-	CheckLineageRid     api1.CheckLineageRid `json:"checkLineageRid"`
+	CheckRid            api1.CheckRid        `json:"checkRid" safelogging:"@Safe"`
+	CheckLineageRid     api1.CheckLineageRid `json:"checkLineageRid" safelogging:"@Safe"`
 	ImplementationIndex *int                 `json:"implementationIndex,omitempty"`
 }
 
@@ -1190,7 +1197,7 @@ func (o *StreamingCheckOriginMetadata) UnmarshalYAML(unmarshal func(interface{})
 }
 
 type StreamingChecklistEventOrigin struct {
-	ChecklistRid api1.ChecklistRid `json:"checklistRid"`
+	ChecklistRid api1.ChecklistRid `json:"checklistRid" safelogging:"@Safe"`
 	// Metadata about the check that created this event.
 	CheckMetadata StreamingCheckOriginMetadata `json:"checkMetadata"`
 }
@@ -1211,8 +1218,9 @@ func (o *StreamingChecklistEventOrigin) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type TemplateEventOrigin struct {
-	Rid api1.TemplateRid `json:"rid"`
+	Rid api1.TemplateRid `json:"rid" safelogging:"@Safe"`
 }
 
 func (o TemplateEventOrigin) MarshalYAML() (interface{}, error) {
@@ -1255,7 +1263,7 @@ func (o *TimeSeriesChannelAssociation) UnmarshalYAML(unmarshal func(interface{})
 }
 
 type UpdateDispositionRequest struct {
-	Rid rids.EventRid `json:"rid"`
+	Rid rids.EventRid `json:"rid" safelogging:"@Safe"`
 	/*
 	   The new disposition for the event.
 	   If empty, will remove the disposition from the event.
@@ -1279,6 +1287,7 @@ func (o *UpdateDispositionRequest) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateEvent struct {
 	// Deprecated: This field is deprecated. Use the rid field instead.
 	Uuid uuid.UUID `json:"uuid"`
@@ -1286,18 +1295,18 @@ type UpdateEvent struct {
 	   The unique identifier for the event.
 	   This field is required if the uuid field is not provided.
 	*/
-	Rid *rids.EventRid `json:"rid,omitempty"`
+	Rid *rids.EventRid `json:"rid,omitempty" safelogging:"@Safe"`
 	/*
 	   If provided, will replace the existing asset rids.
 	   If provided, must contain at least one asset rid.
 	*/
-	AssetRids   *[]api1.AssetRid                        `json:"assetRids,omitempty"`
+	AssetRids   *[]api1.AssetRid                        `json:"assetRids,omitempty" safelogging:"@Safe"`
 	Timestamp   *api.Timestamp                          `json:"timestamp,omitempty"`
 	Duration    *api2.Duration                          `json:"duration,omitempty"`
 	Name        *string                                 `json:"name,omitempty"`
 	Description *string                                 `json:"description,omitempty"`
 	Type        *EventType                              `json:"type,omitempty"`
-	Labels      *[]api.Label                            `json:"labels,omitempty"`
+	Labels      *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
 	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
 }
 
@@ -1317,19 +1326,20 @@ func (o *UpdateEvent) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateEventRequest struct {
-	Rid rids.EventRid `json:"rid"`
+	Rid rids.EventRid `json:"rid" safelogging:"@Safe"`
 	/*
 	   If provided, will replace the existing asset rids.
 	   If provided, must contain at least one asset rid.
 	*/
-	AssetRids   *[]api1.AssetRid                        `json:"assetRids,omitempty"`
+	AssetRids   *[]api1.AssetRid                        `json:"assetRids,omitempty" safelogging:"@Safe"`
 	Timestamp   *api.Timestamp                          `json:"timestamp,omitempty"`
 	Duration    *api2.Duration                          `json:"duration,omitempty"`
 	Name        *string                                 `json:"name,omitempty"`
 	Description *string                                 `json:"description,omitempty"`
 	Type        *EventType                              `json:"type,omitempty"`
-	Labels      *[]api.Label                            `json:"labels,omitempty"`
+	Labels      *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
 	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
 }
 
@@ -1350,7 +1360,7 @@ func (o *UpdateEventRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 type WorkbookEventOrigin struct {
-	Rid api1.NotebookRid `json:"rid"`
+	Rid api1.NotebookRid `json:"rid" safelogging:"@Safe"`
 	// Data visualizations to associate this event with
 	Data *[]WorkbookDataAssociation `json:"data,omitempty"`
 }

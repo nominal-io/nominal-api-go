@@ -131,7 +131,7 @@ func (e *ChannelsNotFound) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *ChannelsNotFound) safeParams() map[string]interface{} {
-	return map[string]interface{}{"channels": e.Channels, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -148,7 +148,7 @@ func (e *ChannelsNotFound) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *ChannelsNotFound) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"channels": e.Channels}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and

@@ -2042,21 +2042,21 @@ type UnaryArithmeticOperation struct {
 type UnaryArithmeticOperation_Value string
 
 const (
-	// Calculates the trigonometric cosine
+	// Calculates the trigonometric cosine (input in radians)
 	UnaryArithmeticOperation_COS UnaryArithmeticOperation_Value = "COS"
-	// Calculates the trigonometric sine
+	// Calculates the trigonometric sine (input in radians)
 	UnaryArithmeticOperation_SIN UnaryArithmeticOperation_Value = "SIN"
-	// Calculates the trigonometric tangent
+	// Calculates the trigonometric tangent (input in radians)
 	UnaryArithmeticOperation_TAN UnaryArithmeticOperation_Value = "TAN"
 	// Calculates the absolute value
 	UnaryArithmeticOperation_ABS UnaryArithmeticOperation_Value = "ABS"
-	// Calculates the arcsin in radians
+	// Calculates the arcsine, returning radians
 	UnaryArithmeticOperation_ASIN UnaryArithmeticOperation_Value = "ASIN"
-	// Calculates the arccos in radians
+	// Calculates the arccosine, returning radians
 	UnaryArithmeticOperation_ACOS UnaryArithmeticOperation_Value = "ACOS"
 	// Calculates the base 10 logarithm
 	UnaryArithmeticOperation_LOG UnaryArithmeticOperation_Value = "LOG"
-	// Calculates the natural logarithm
+	// Calculates the natural logarithm (base e)
 	UnaryArithmeticOperation_LN UnaryArithmeticOperation_Value = "LN"
 	// Calculates the square root
 	UnaryArithmeticOperation_SQRT    UnaryArithmeticOperation_Value = "SQRT"

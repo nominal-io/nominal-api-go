@@ -17,8 +17,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type attachmentNotFound struct {
-	AttachmentRid rids.AttachmentRid `json:"attachmentRid"`
+	AttachmentRid rids.AttachmentRid `json:"attachmentRid" safelogging:"@Safe"`
 }
 
 func (o attachmentNotFound) MarshalYAML() (interface{}, error) {
@@ -166,8 +167,9 @@ func (e *AttachmentNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type attachmentsNotFound struct {
-	AttachmentRids []rids.AttachmentRid `json:"attachmentRids"`
+	AttachmentRids []rids.AttachmentRid `json:"attachmentRids" safelogging:"@Safe"`
 }
 
 func (o attachmentsNotFound) MarshalJSON() ([]byte, error) {
@@ -336,8 +338,9 @@ func (e *AttachmentsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type invalidS3Path struct {
-	S3Path api.S3Path `json:"s3Path"`
+	S3Path api.S3Path `json:"s3Path" safelogging:"@Unsafe"`
 }
 
 func (o invalidS3Path) MarshalYAML() (interface{}, error) {
@@ -431,7 +434,7 @@ func (e *InvalidS3Path) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *InvalidS3Path) safeParams() map[string]interface{} {
-	return map[string]interface{}{"s3Path": e.S3Path, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -448,7 +451,7 @@ func (e *InvalidS3Path) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *InvalidS3Path) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"s3Path": e.S3Path}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -485,8 +488,9 @@ func (e *InvalidS3Path) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type s3FileNotFound struct {
-	S3Path api.S3Path `json:"s3Path"`
+	S3Path api.S3Path `json:"s3Path" safelogging:"@Unsafe"`
 }
 
 func (o s3FileNotFound) MarshalYAML() (interface{}, error) {
@@ -580,7 +584,7 @@ func (e *S3FileNotFound) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *S3FileNotFound) safeParams() map[string]interface{} {
-	return map[string]interface{}{"s3Path": e.S3Path, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -597,7 +601,7 @@ func (e *S3FileNotFound) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *S3FileNotFound) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"s3Path": e.S3Path}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and

@@ -3577,6 +3577,219 @@ func NewSearchContainerizedExtractorsQueryFromWorkspace(v rids.WorkspaceRid) Sea
 	return SearchContainerizedExtractorsQuery{typ: "workspace", workspace: &v}
 }
 
+type StreamingSessionSource struct {
+	typ           string
+	mesh          *MeshStreamingSessionSource
+	dataConnector *DataConnectorStreamingSessionSource
+	custom        *CustomStreamingSessionSource
+}
+
+type streamingSessionSourceDeserializer struct {
+	Type          string                               `json:"type"`
+	Mesh          *MeshStreamingSessionSource          `json:"mesh"`
+	DataConnector *DataConnectorStreamingSessionSource `json:"dataConnector"`
+	Custom        *CustomStreamingSessionSource        `json:"custom"`
+}
+
+func (u *streamingSessionSourceDeserializer) toStruct() StreamingSessionSource {
+	return StreamingSessionSource{typ: u.Type, mesh: u.Mesh, dataConnector: u.DataConnector, custom: u.Custom}
+}
+
+func (u *StreamingSessionSource) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "mesh":
+		if u.mesh == nil {
+			return nil, fmt.Errorf("field \"mesh\" is required")
+		}
+		return struct {
+			Type string                     `json:"type"`
+			Mesh MeshStreamingSessionSource `json:"mesh"`
+		}{Type: "mesh", Mesh: *u.mesh}, nil
+	case "dataConnector":
+		if u.dataConnector == nil {
+			return nil, fmt.Errorf("field \"dataConnector\" is required")
+		}
+		return struct {
+			Type          string                              `json:"type"`
+			DataConnector DataConnectorStreamingSessionSource `json:"dataConnector"`
+		}{Type: "dataConnector", DataConnector: *u.dataConnector}, nil
+	case "custom":
+		if u.custom == nil {
+			return nil, fmt.Errorf("field \"custom\" is required")
+		}
+		return struct {
+			Type   string                       `json:"type"`
+			Custom CustomStreamingSessionSource `json:"custom"`
+		}{Type: "custom", Custom: *u.custom}, nil
+	}
+}
+
+func (u StreamingSessionSource) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *StreamingSessionSource) UnmarshalJSON(data []byte) error {
+	var deser streamingSessionSourceDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "mesh":
+		if u.mesh == nil {
+			return fmt.Errorf("field \"mesh\" is required")
+		}
+	case "dataConnector":
+		if u.dataConnector == nil {
+			return fmt.Errorf("field \"dataConnector\" is required")
+		}
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+	}
+	return nil
+}
+
+func (u StreamingSessionSource) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *StreamingSessionSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *StreamingSessionSource) AcceptFuncs(meshFunc func(MeshStreamingSessionSource) error, dataConnectorFunc func(DataConnectorStreamingSessionSource) error, customFunc func(CustomStreamingSessionSource) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in StreamingSessionSource type")
+		}
+		return unknownFunc(u.typ)
+	case "mesh":
+		if u.mesh == nil {
+			return fmt.Errorf("field \"mesh\" is required")
+		}
+		return meshFunc(*u.mesh)
+	case "dataConnector":
+		if u.dataConnector == nil {
+			return fmt.Errorf("field \"dataConnector\" is required")
+		}
+		return dataConnectorFunc(*u.dataConnector)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return customFunc(*u.custom)
+	}
+}
+
+func (u *StreamingSessionSource) MeshNoopSuccess(_ MeshStreamingSessionSource) error {
+	return nil
+}
+
+func (u *StreamingSessionSource) DataConnectorNoopSuccess(_ DataConnectorStreamingSessionSource) error {
+	return nil
+}
+
+func (u *StreamingSessionSource) CustomNoopSuccess(_ CustomStreamingSessionSource) error {
+	return nil
+}
+
+func (u *StreamingSessionSource) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *StreamingSessionSource) Accept(v StreamingSessionSourceVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "mesh":
+		if u.mesh == nil {
+			return fmt.Errorf("field \"mesh\" is required")
+		}
+		return v.VisitMesh(*u.mesh)
+	case "dataConnector":
+		if u.dataConnector == nil {
+			return fmt.Errorf("field \"dataConnector\" is required")
+		}
+		return v.VisitDataConnector(*u.dataConnector)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustom(*u.custom)
+	}
+}
+
+type StreamingSessionSourceVisitor interface {
+	VisitMesh(v MeshStreamingSessionSource) error
+	VisitDataConnector(v DataConnectorStreamingSessionSource) error
+	VisitCustom(v CustomStreamingSessionSource) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *StreamingSessionSource) AcceptWithContext(ctx context.Context, v StreamingSessionSourceVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "mesh":
+		if u.mesh == nil {
+			return fmt.Errorf("field \"mesh\" is required")
+		}
+		return v.VisitMeshWithContext(ctx, *u.mesh)
+	case "dataConnector":
+		if u.dataConnector == nil {
+			return fmt.Errorf("field \"dataConnector\" is required")
+		}
+		return v.VisitDataConnectorWithContext(ctx, *u.dataConnector)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustomWithContext(ctx, *u.custom)
+	}
+}
+
+type StreamingSessionSourceVisitorWithContext interface {
+	VisitMeshWithContext(ctx context.Context, v MeshStreamingSessionSource) error
+	VisitDataConnectorWithContext(ctx context.Context, v DataConnectorStreamingSessionSource) error
+	VisitCustomWithContext(ctx context.Context, v CustomStreamingSessionSource) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewStreamingSessionSourceFromMesh(v MeshStreamingSessionSource) StreamingSessionSource {
+	return StreamingSessionSource{typ: "mesh", mesh: &v}
+}
+
+func NewStreamingSessionSourceFromDataConnector(v DataConnectorStreamingSessionSource) StreamingSessionSource {
+	return StreamingSessionSource{typ: "dataConnector", dataConnector: &v}
+}
+
+func NewStreamingSessionSourceFromCustom(v CustomStreamingSessionSource) StreamingSessionSource {
+	return StreamingSessionSource{typ: "custom", custom: &v}
+}
+
 type TimeOffsetSpec struct {
 	typ   string
 	nanos *api1.Duration

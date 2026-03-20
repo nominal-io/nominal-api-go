@@ -141,8 +141,9 @@ func (o *BatchChecklistLiveStatusResponse) UnmarshalYAML(unmarshal func(interfac
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type BatchGetStreamingChecklistRequest struct {
-	ChecklistRids []api2.ChecklistRid `json:"checklistRids"`
+	ChecklistRids []api2.ChecklistRid `json:"checklistRids" safelogging:"@Safe"`
 }
 
 func (o BatchGetStreamingChecklistRequest) MarshalJSON() ([]byte, error) {
@@ -305,8 +306,9 @@ func (o *BatchValidateChecklistResolutionResponse) UnmarshalYAML(unmarshal func(
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ChannelLocatorWithStatus struct {
-	ChannelLocator   api3.ChannelLocator     `json:"channelLocator"`
+	ChannelLocator   api3.ChannelLocator     `json:"channelLocator" safelogging:"@Unsafe"`
 	ResolutionStatus ChannelResolutionStatus `json:"resolutionStatus"`
 }
 
@@ -328,7 +330,7 @@ func (o *ChannelLocatorWithStatus) UnmarshalYAML(unmarshal func(interface{}) err
 
 type CheckLiveStatusResponse struct {
 	Status   CheckStatus   `json:"status"`
-	CheckRid api2.CheckRid `json:"checkRid"`
+	CheckRid api2.CheckRid `json:"checkRid" safelogging:"@Safe"`
 	/*
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
 	   The check implementation index will correspond to the implementation index of the check condition.
@@ -352,9 +354,10 @@ func (o *CheckLiveStatusResponse) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type ChecklistLiveStatusRequest struct {
-	ChecklistRid api2.ChecklistRid `json:"checklistRid"`
-	AssetRid     api2.AssetRid     `json:"assetRid"`
+	ChecklistRid api2.ChecklistRid `json:"checklistRid" safelogging:"@Safe"`
+	AssetRid     api2.AssetRid     `json:"assetRid" safelogging:"@Safe"`
 }
 
 func (o ChecklistLiveStatusRequest) MarshalYAML() (interface{}, error) {
@@ -374,8 +377,8 @@ func (o *ChecklistLiveStatusRequest) UnmarshalYAML(unmarshal func(interface{}) e
 }
 
 type ChecklistLiveStatusResponse struct {
-	ChecklistRid api2.ChecklistRid   `json:"checklistRid"`
-	AssetRid     api2.AssetRid       `json:"assetRid"`
+	ChecklistRid api2.ChecklistRid   `json:"checklistRid" safelogging:"@Safe"`
+	AssetRid     api2.AssetRid       `json:"assetRid" safelogging:"@Safe"`
 	Status       ChecklistLiveStatus `json:"status"`
 }
 
@@ -415,8 +418,8 @@ func (o *Computing) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type ExecuteChecklistForAssetsRequest struct {
-	Checklist api2.ChecklistRid `json:"checklist"`
-	Assets    []api2.AssetRid   `json:"assets"`
+	Checklist api2.ChecklistRid `json:"checklist" safelogging:"@Safe"`
+	Assets    []api2.AssetRid   `json:"assets" safelogging:"@Safe"`
 	// Checklist violations will be sent to the specified integrations. If empty, no notifications will be sent.
 	NotificationConfigurations []api.NotificationConfiguration `json:"notificationConfigurations"`
 	// Delays the evaluation of the streaming checklist. This is useful for when data is delayed.
@@ -536,7 +539,7 @@ func (o *Invalid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type ListStreamingChecklistForAssetRequest struct {
-	AssetRid api2.AssetRid `json:"assetRid"`
+	AssetRid api2.AssetRid `json:"assetRid" safelogging:"@Safe"`
 	// Page sizes greater than 10_000 will be rejected. Default pageSize is 100.
 	PageSize  *int       `json:"pageSize,omitempty"`
 	PageToken *uuid.UUID `json:"pageToken,omitempty"`
@@ -559,7 +562,7 @@ func (o *ListStreamingChecklistForAssetRequest) UnmarshalYAML(unmarshal func(int
 }
 
 type ListStreamingChecklistForAssetResponse struct {
-	Checklists    []api2.ChecklistRid `json:"checklists"`
+	Checklists    []api2.ChecklistRid `json:"checklists" safelogging:"@Safe"`
 	NextPageToken *uuid.UUID          `json:"nextPageToken,omitempty"`
 }
 
@@ -603,7 +606,7 @@ func (o *ListStreamingChecklistForAssetResponse) UnmarshalYAML(unmarshal func(in
 type ListStreamingChecklistRequest struct {
 	// Page sizes greater than 10_000 will be rejected. Default pageSize is 100.
 	PageSize   *int                `json:"pageSize,omitempty"`
-	Workspaces []rids.WorkspaceRid `json:"workspaces"`
+	Workspaces []rids.WorkspaceRid `json:"workspaces" safelogging:"@Safe"`
 	PageToken  *uuid.UUID          `json:"pageToken,omitempty"`
 }
 
@@ -645,7 +648,7 @@ func (o *ListStreamingChecklistRequest) UnmarshalYAML(unmarshal func(interface{}
 }
 
 type ListStreamingChecklistResponse struct {
-	Checklists    []api2.ChecklistRid `json:"checklists"`
+	Checklists    []api2.ChecklistRid `json:"checklists" safelogging:"@Safe"`
 	NextPageToken *uuid.UUID          `json:"nextPageToken,omitempty"`
 }
 
@@ -747,7 +750,7 @@ Provides the resolution status for the required channels for a check and the set
 Uniqueness between checkRid and checkParameterIndex pairs is guaranteed.
 */
 type ResolvedCheckStatus struct {
-	CheckRid api2.CheckRid `json:"checkRid"`
+	CheckRid api2.CheckRid `json:"checkRid" safelogging:"@Safe"`
 	/*
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
 	   The check implementation index will correspond to the implementation index of the check condition.
@@ -818,9 +821,10 @@ func (o *Skipped) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type StopStreamingChecklistForAssetsRequest struct {
-	Checklist api2.ChecklistRid `json:"checklist"`
-	Assets    []api2.AssetRid   `json:"assets"`
+	Checklist api2.ChecklistRid `json:"checklist" safelogging:"@Safe"`
+	Assets    []api2.AssetRid   `json:"assets" safelogging:"@Safe"`
 }
 
 func (o StopStreamingChecklistForAssetsRequest) MarshalJSON() ([]byte, error) {
@@ -879,7 +883,7 @@ func (o *StreamingChecklistFailed) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 type StreamingChecklistInfo struct {
-	ChecklistRid        api2.ChecklistRid                          `json:"checklistRid"`
+	ChecklistRid        api2.ChecklistRid                          `json:"checklistRid" safelogging:"@Safe"`
 	AssetConfigurations map[api2.AssetRid]AssetStreamConfiguration `json:"assetConfigurations"`
 }
 
@@ -940,7 +944,7 @@ func (o *StreamingChecklistInitializing) UnmarshalYAML(unmarshal func(interface{
 
 type StreamingChecklistRunning struct {
 	// The commitId of the checklist that is currently executing.
-	CommitId     api5.CommitId             `json:"commitId"`
+	CommitId     api5.CommitId             `json:"commitId" safelogging:"@Safe"`
 	CheckResults []CheckLiveStatusResponse `json:"checkResults"`
 }
 
@@ -985,10 +989,11 @@ func (o *StreamingChecklistRunning) UnmarshalYAML(unmarshal func(interface{}) er
 Validates that the channels referenced by the checklist can be resolved against the data sources.
 If commit is not provided, the latest commit on main will be used.
 */
+// safelogging:@Safe
 type ValidateChecklistResolutionRequest struct {
-	ChecklistRid api2.ChecklistRid `json:"checklistRid"`
-	CommitId     *api5.CommitId    `json:"commitId,omitempty"`
-	AssetRid     api2.AssetRid     `json:"assetRid"`
+	ChecklistRid api2.ChecklistRid `json:"checklistRid" safelogging:"@Safe"`
+	CommitId     *api5.CommitId    `json:"commitId,omitempty" safelogging:"@Safe"`
+	AssetRid     api2.AssetRid     `json:"assetRid" safelogging:"@Safe"`
 }
 
 func (o ValidateChecklistResolutionRequest) MarshalYAML() (interface{}, error) {
@@ -1008,8 +1013,8 @@ func (o *ValidateChecklistResolutionRequest) UnmarshalYAML(unmarshal func(interf
 }
 
 type ValidateChecklistResolutionResponse struct {
-	ChecklistRid     api2.ChecklistRid     `json:"checklistRid"`
-	AssetRid         api2.AssetRid         `json:"assetRid"`
+	ChecklistRid     api2.ChecklistRid     `json:"checklistRid" safelogging:"@Safe"`
+	AssetRid         api2.AssetRid         `json:"assetRid" safelogging:"@Safe"`
 	ResolutionStatus []ResolvedCheckStatus `json:"resolutionStatus"`
 }
 

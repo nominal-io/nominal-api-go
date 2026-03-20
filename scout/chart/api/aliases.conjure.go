@@ -2,4 +2,4 @@
 
 package api
 
-type JsonString string
+type JsonString string // safelogging:@Unsafe

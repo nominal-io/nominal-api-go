@@ -7,6 +7,7 @@ import (
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api5 "github.com/nominal-io/nominal-api-go/scout/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/layout/api"
+	"github.com/nominal-io/nominal-api-go/scout/metadata"
 	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	api4 "github.com/nominal-io/nominal-api-go/scout/workbookcommon/api"
@@ -18,7 +19,7 @@ import (
 // for an exact match, use the exactAssetRids filter
 type AssetsFilter struct {
 	Operator api.SetOperator `json:"operator"`
-	Assets   []api1.AssetRid `json:"assets"`
+	Assets   []api1.AssetRid `json:"assets" safelogging:"@Safe"`
 }
 
 func (o AssetsFilter) MarshalJSON() ([]byte, error) {
@@ -58,9 +59,89 @@ func (o *AssetsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BatchEditNotebookMetadataRequest struct {
+	/*
+	   Additional search query to filter which workbooks are targeted by the edit.
+	   Source labels/properties from the operation are automatically included as filters.
+	*/
+	NotebookSearchQuery *SearchNotebooksQuery   `json:"notebookSearchQuery,omitempty"`
+	Operation           metadata.MetadataChange `json:"operation"`
+}
+
+func (o BatchEditNotebookMetadataRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchEditNotebookMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Safe
+type BatchEditNotebookMetadataResponse struct {
+	// RIDs for workbooks that were modified by the batch edit.
+	ModifiedNotebookRids []api1.NotebookRid `json:"modifiedNotebookRids" safelogging:"@Safe"`
+	/*
+	   RIDs for workbooks that matched the source filter but already had the target property key
+	   and were skipped (SkipOnConflict behavior). Empty for operations without conflict semantics
+	   or when using OverwriteOnConflict.
+	*/
+	ConflictingNotebookRids []api1.NotebookRid `json:"conflictingNotebookRids" safelogging:"@Safe"`
+}
+
+func (o BatchEditNotebookMetadataResponse) MarshalJSON() ([]byte, error) {
+	if o.ModifiedNotebookRids == nil {
+		o.ModifiedNotebookRids = make([]api1.NotebookRid, 0)
+	}
+	if o.ConflictingNotebookRids == nil {
+		o.ConflictingNotebookRids = make([]api1.NotebookRid, 0)
+	}
+	type _tmpBatchEditNotebookMetadataResponse BatchEditNotebookMetadataResponse
+	return safejson.Marshal(_tmpBatchEditNotebookMetadataResponse(o))
+}
+
+func (o *BatchEditNotebookMetadataResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchEditNotebookMetadataResponse BatchEditNotebookMetadataResponse
+	var rawBatchEditNotebookMetadataResponse _tmpBatchEditNotebookMetadataResponse
+	if err := safejson.Unmarshal(data, &rawBatchEditNotebookMetadataResponse); err != nil {
+		return err
+	}
+	if rawBatchEditNotebookMetadataResponse.ModifiedNotebookRids == nil {
+		rawBatchEditNotebookMetadataResponse.ModifiedNotebookRids = make([]api1.NotebookRid, 0)
+	}
+	if rawBatchEditNotebookMetadataResponse.ConflictingNotebookRids == nil {
+		rawBatchEditNotebookMetadataResponse.ConflictingNotebookRids = make([]api1.NotebookRid, 0)
+	}
+	*o = BatchEditNotebookMetadataResponse(rawBatchEditNotebookMetadataResponse)
+	return nil
+}
+
+func (o BatchEditNotebookMetadataResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchEditNotebookMetadataResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ChartWithOverlays struct {
-	Rid      api1.VizId   `json:"rid"`
-	Version  api1.Version `json:"version"`
+	Rid      api1.VizId   `json:"rid" safelogging:"@Safe"`
+	Version  api1.Version `json:"version" safelogging:"@Safe"`
 	Overlays interface{}  `json:"overlays"`
 }
 
@@ -90,7 +171,7 @@ type CreateNotebookRequest struct {
 	// Deprecated: charts are now stored in contentV2
 	Charts *[]ChartWithOverlays `json:"charts,omitempty"`
 	// deprecated. Use dataScope instead
-	RunRid *api2.RunRid `json:"runRid,omitempty"`
+	RunRid *api2.RunRid `json:"runRid,omitempty" safelogging:"@Safe"`
 	// Optional for back-compatibility.
 	DataScope *NotebookDataScope  `json:"dataScope,omitempty"`
 	Layout    api3.WorkbookLayout `json:"layout"`
@@ -112,7 +193,9 @@ type CreateNotebookRequest struct {
 	   The workspace in which to create the workbook. If not provided, the workbook will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
+	// Theme-aware preview image for the workbook. Falls back to a default illustration if not provided.
+	PreviewImage *api.ThemeAwareImage `json:"previewImage,omitempty"`
 }
 
 func (o CreateNotebookRequest) MarshalJSON() ([]byte, error) {
@@ -152,9 +235,10 @@ func (o *CreateNotebookRequest) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetAllLabelsAndPropertiesResponse struct {
 	Properties map[api.PropertyName][]api.PropertyValue `json:"properties"`
-	Labels     []api.Label                              `json:"labels"`
+	Labels     []api.Label                              `json:"labels" safelogging:"@Unsafe"`
 }
 
 func (o GetAllLabelsAndPropertiesResponse) MarshalJSON() ([]byte, error) {
@@ -200,12 +284,13 @@ func (o *GetAllLabelsAndPropertiesResponse) UnmarshalYAML(unmarshal func(interfa
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetSnapshotHistoryRequest struct {
 	// The RID of the workbook to get snapshots for.
-	Rid api1.NotebookRid `json:"rid"`
+	Rid api1.NotebookRid `json:"rid" safelogging:"@Safe"`
 	// Defaults to 100. Will throw if larger than 1000.
 	PageSize      *int       `json:"pageSize,omitempty"`
-	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o GetSnapshotHistoryRequest) MarshalYAML() (interface{}, error) {
@@ -224,9 +309,10 @@ func (o *GetSnapshotHistoryRequest) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetSnapshotHistoryResponse struct {
 	Snapshots     []SnapshotSummary `json:"snapshots"`
-	NextPageToken *api.Token        `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token        `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o GetSnapshotHistoryResponse) MarshalJSON() ([]byte, error) {
@@ -269,7 +355,7 @@ func (o *GetSnapshotHistoryResponse) UnmarshalYAML(unmarshal func(interface{}) e
 type Lock struct {
 	IsLocked     bool               `json:"isLocked"`
 	UpdatedAt    *datetime.DateTime `json:"updatedAt,omitempty"`
-	UpdatedByRid *api1.UserRid      `json:"updatedByRid,omitempty"`
+	UpdatedByRid *api1.UserRid      `json:"updatedByRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o Lock) MarshalYAML() (interface{}, error) {
@@ -288,12 +374,13 @@ func (o *Lock) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Notebook struct {
-	Rid               api1.NotebookRid  `json:"rid"`
-	SnapshotRid       api1.SnapshotRid  `json:"snapshotRid"`
-	SnapshotAuthorRid api1.UserRid      `json:"snapshotAuthorRid"`
+	Rid               api1.NotebookRid  `json:"rid" safelogging:"@Safe"`
+	SnapshotRid       api1.SnapshotRid  `json:"snapshotRid" safelogging:"@Safe"`
+	SnapshotAuthorRid api1.UserRid      `json:"snapshotAuthorRid" safelogging:"@Safe"`
 	SnapshotCreatedAt datetime.DateTime `json:"snapshotCreatedAt"`
-	Metadata          NotebookMetadata  `json:"metadata"`
+	Metadata          NotebookMetadata  `json:"metadata" safelogging:"@Unsafe"`
 	StateAsJson       string            `json:"stateAsJson"`
 	// Deprecated: charts are now stored in contentV2
 	Charts *[]ChartWithOverlays `json:"charts,omitempty"`
@@ -346,9 +433,10 @@ func (o *Notebook) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type NotebookMetadata struct {
 	// deprecated. Use dataScope instead
-	RunRid       *api2.RunRid      `json:"runRid,omitempty"`
+	RunRid       *api2.RunRid      `json:"runRid,omitempty" safelogging:"@Safe"`
 	DataScope    NotebookDataScope `json:"dataScope"`
 	NotebookType NotebookType      `json:"notebookType"`
 	Title        string            `json:"title"`
@@ -356,12 +444,13 @@ type NotebookMetadata struct {
 	IsDraft      bool              `json:"isDraft"`
 	IsArchived   bool              `json:"isArchived"`
 	Lock         Lock              `json:"lock"`
-	CreatedByRid api1.UserRid      `json:"createdByRid"`
+	CreatedByRid api1.UserRid      `json:"createdByRid" safelogging:"@Safe"`
 	CreatedAt    datetime.DateTime `json:"createdAt"`
 	// The timestamp when the workbook was last updated
-	UpdatedAt  *datetime.DateTime                     `json:"updatedAt,omitempty"`
-	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels     []api.Label                            `json:"labels"`
+	UpdatedAt    *datetime.DateTime                     `json:"updatedAt,omitempty"`
+	Properties   map[api.PropertyName]api.PropertyValue `json:"properties"`
+	Labels       []api.Label                            `json:"labels" safelogging:"@Unsafe"`
+	PreviewImage *api.ThemeAwareImage                   `json:"previewImage,omitempty"`
 }
 
 func (o NotebookMetadata) MarshalJSON() ([]byte, error) {
@@ -407,9 +496,10 @@ func (o *NotebookMetadata) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type NotebookMetadataWithRid struct {
-	Rid      api1.NotebookRid `json:"rid"`
-	Metadata NotebookMetadata `json:"metadata"`
+	Rid      api1.NotebookRid `json:"rid" safelogging:"@Safe"`
+	Metadata NotebookMetadata `json:"metadata" safelogging:"@Unsafe"`
 }
 
 func (o NotebookMetadataWithRid) MarshalYAML() (interface{}, error) {
@@ -472,7 +562,7 @@ func (o *NotebookTypesFilter) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 type RunsFilter struct {
 	Operator api.SetOperator `json:"operator"`
-	Runs     []api2.RunRid   `json:"runs"`
+	Runs     []api2.RunRid   `json:"runs" safelogging:"@Safe"`
 }
 
 func (o RunsFilter) MarshalJSON() ([]byte, error) {
@@ -512,6 +602,7 @@ func (o *RunsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchNotebooksRequest struct {
 	Query SearchNotebooksQuery `json:"query"`
 	// Soon to be deprecated. Compose a draftState filter within SearchNotebooksQuery instead
@@ -520,7 +611,7 @@ type SearchNotebooksRequest struct {
 	ShowArchived *bool `json:"showArchived,omitempty"`
 	// UPDATED_AT descending by default
 	SortBy        *SortBy    `json:"sortBy,omitempty"`
-	NextPageToken *api.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 100. Will throw if larger than 1000.
 	PageSize *int `json:"pageSize,omitempty"`
 }
@@ -541,9 +632,10 @@ func (o *SearchNotebooksRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchNotebooksResponse struct {
 	Results       []NotebookMetadataWithRid `json:"results"`
-	NextPageToken *api.Token                `json:"nextPageToken,omitempty"`
+	NextPageToken *api.Token                `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchNotebooksResponse) MarshalJSON() ([]byte, error) {
@@ -584,9 +676,9 @@ func (o *SearchNotebooksResponse) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 type SnapshotSummary struct {
-	Rid         api1.SnapshotRid  `json:"rid"`
-	NotebookRid api1.NotebookRid  `json:"notebookRid"`
-	AuthorRid   api1.UserRid      `json:"authorRid"`
+	Rid         api1.SnapshotRid  `json:"rid" safelogging:"@Safe"`
+	NotebookRid api1.NotebookRid  `json:"notebookRid" safelogging:"@Safe"`
+	AuthorRid   api1.UserRid      `json:"authorRid" safelogging:"@Safe"`
 	CreatedAt   datetime.DateTime `json:"createdAt"`
 }
 
@@ -627,14 +719,17 @@ func (o *SortBy) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateNotebookMetadataRequest struct {
 	Title *string `json:"title,omitempty"`
 	// Optional for backcompatibility.
 	DataScope   *NotebookDataScope                      `json:"dataScope,omitempty"`
 	Description *string                                 `json:"description,omitempty"`
 	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
-	Labels      *[]api.Label                            `json:"labels,omitempty"`
+	Labels      *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
 	IsDraft     *bool                                   `json:"isDraft,omitempty"`
+	// Theme-aware preview image for the workbook. When provided, replaces the existing preview image.
+	PreviewImage *api.ThemeAwareImage `json:"previewImage,omitempty"`
 }
 
 func (o UpdateNotebookMetadataRequest) MarshalYAML() (interface{}, error) {
@@ -666,7 +761,7 @@ type UpdateNotebookRequest struct {
 	   If provided, will only update the notebook if the latest snapshot matches the provided snapshot rid,
 	   and throws SaveNotebookConflict otherwise.
 	*/
-	LatestSnapshotRid *api1.SnapshotRid `json:"latestSnapshotRid,omitempty"`
+	LatestSnapshotRid *api1.SnapshotRid `json:"latestSnapshotRid,omitempty" safelogging:"@Safe"`
 	// Replace existing pinned events on the workbook.
 	EventRefs []api4.EventReference `json:"eventRefs"`
 	/*

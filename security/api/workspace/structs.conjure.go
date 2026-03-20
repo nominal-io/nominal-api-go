@@ -10,13 +10,14 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Safe
 type ProcedureSettingsV1 struct {
 	/*
 	   A list of procedures that are elevated to the workspace-level.
 	   They will be available for execution in a top-level context, rather
 	   than just from the procedure details page.
 	*/
-	WorkspaceProcedures []rids.ProcedureRid `json:"workspaceProcedures"`
+	WorkspaceProcedures []rids.ProcedureRid `json:"workspaceProcedures" safelogging:"@Safe"`
 }
 
 func (o ProcedureSettingsV1) MarshalJSON() ([]byte, error) {
@@ -97,11 +98,12 @@ func (o *UpdateWorkspaceRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Workspace struct {
 	// A unique identifier for the workspace within the organization. The workspace ID must be lower case alphanumeric characters, optionally separated by hyphens.
-	Id          ids.WorkspaceId   `json:"id"`
-	Rid         rids.WorkspaceRid `json:"rid"`
-	Org         api.OrgRid        `json:"org"`
+	Id          ids.WorkspaceId   `json:"id" safelogging:"@Unsafe"`
+	Rid         rids.WorkspaceRid `json:"rid" safelogging:"@Safe"`
+	Org         api.OrgRid        `json:"org" safelogging:"@Safe"`
 	DisplayName *string           `json:"displayName,omitempty"`
 	Symbol      *WorkspaceSymbol  `json:"symbol,omitempty"`
 	Settings    WorkspaceSettings `json:"settings"`

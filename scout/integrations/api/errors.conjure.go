@@ -15,8 +15,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type integrationNotFound struct {
-	IntegrationRid IntegrationRid `json:"integrationRid"`
+	IntegrationRid IntegrationRid `json:"integrationRid" safelogging:"@Safe"`
 }
 
 func (o integrationNotFound) MarshalYAML() (interface{}, error) {
@@ -313,8 +314,9 @@ func (e *IntegrationTokenNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type integrationsNotFound struct {
-	IntegrationRids []IntegrationRid `json:"integrationRids"`
+	IntegrationRids []IntegrationRid `json:"integrationRids" safelogging:"@Safe"`
 }
 
 func (o integrationsNotFound) MarshalJSON() ([]byte, error) {

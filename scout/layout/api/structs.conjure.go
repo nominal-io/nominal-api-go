@@ -6,11 +6,100 @@ import (
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
+	"github.com/palantir/pkg/uuid"
 )
 
+// A layout of objects freely placed on a canvas.
+type CanvasLayout struct {
+	Id      uuid.UUID                  `json:"id"`
+	Objects map[uuid.UUID]CanvasObject `json:"objects"`
+}
+
+func (o CanvasLayout) MarshalJSON() ([]byte, error) {
+	if o.Objects == nil {
+		o.Objects = make(map[uuid.UUID]CanvasObject)
+	}
+	type _tmpCanvasLayout CanvasLayout
+	return safejson.Marshal(_tmpCanvasLayout(o))
+}
+
+func (o *CanvasLayout) UnmarshalJSON(data []byte) error {
+	type _tmpCanvasLayout CanvasLayout
+	var rawCanvasLayout _tmpCanvasLayout
+	if err := safejson.Unmarshal(data, &rawCanvasLayout); err != nil {
+		return err
+	}
+	if rawCanvasLayout.Objects == nil {
+		rawCanvasLayout.Objects = make(map[uuid.UUID]CanvasObject)
+	}
+	*o = CanvasLayout(rawCanvasLayout)
+	return nil
+}
+
+func (o CanvasLayout) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CanvasLayout) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A standard workbook panel placed on a canvas.
+type CanvasPanel struct {
+	Rect       CanvasRect `json:"rect"`
+	HideLegend *bool      `json:"hideLegend,omitempty"`
+}
+
+func (o CanvasPanel) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CanvasPanel) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type CanvasRect struct {
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
+}
+
+func (o CanvasRect) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CanvasRect) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ChartPanelV1 struct {
-	Id         PanelId            `json:"id"`
-	ChartRid   api.VersionedVizId `json:"chartRid"`
+	Id         PanelId            `json:"id" safelogging:"@Safe"`
+	ChartRid   api.VersionedVizId `json:"chartRid" safelogging:"@Safe"`
 	HideLegend bool               `json:"hideLegend"`
 }
 
@@ -30,8 +119,9 @@ func (o *ChartPanelV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type EmptyPanelV1 struct {
-	Id PanelId `json:"id"`
+	Id PanelId `json:"id" safelogging:"@Safe"`
 }
 
 func (o EmptyPanelV1) MarshalYAML() (interface{}, error) {
@@ -72,7 +162,7 @@ func (o *SingleTabV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type SplitPanelV1 struct {
-	Id          PanelId               `json:"id"`
+	Id          PanelId               `json:"id" safelogging:"@Safe"`
 	Orientation SplitPanelOrientation `json:"orientation"`
 	SideOne     Panel                 `json:"sideOne"`
 	SideTwo     Panel                 `json:"sideTwo"`
@@ -95,7 +185,7 @@ func (o *SplitPanelV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type TabbedPanelV1 struct {
-	Id   PanelId     `json:"id"`
+	Id   PanelId     `json:"id" safelogging:"@Safe"`
 	Tabs []SingleTab `json:"tabs"`
 }
 
@@ -136,9 +226,10 @@ func (o *TabbedPanelV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Deprecated - use ChartPanel instead
 type VizPanelV1 struct {
-	Id         PanelId   `json:"id"`
-	VizId      api.VizId `json:"vizId"`
+	Id         PanelId   `json:"id" safelogging:"@Safe"`
+	VizId      api.VizId `json:"vizId" safelogging:"@Safe"`
 	HideLegend bool      `json:"hideLegend"`
 }
 
@@ -159,6 +250,7 @@ func (o *VizPanelV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type WorkbookLayoutV1 struct {
+	// Only TabbedPanel supported.
 	RootPanel Panel `json:"rootPanel"`
 }
 

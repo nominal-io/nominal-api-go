@@ -10,6 +10,141 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+type CanvasObject struct {
+	typ   string
+	panel *CanvasPanel
+}
+
+type canvasObjectDeserializer struct {
+	Type  string       `json:"type"`
+	Panel *CanvasPanel `json:"panel"`
+}
+
+func (u *canvasObjectDeserializer) toStruct() CanvasObject {
+	return CanvasObject{typ: u.Type, panel: u.Panel}
+}
+
+func (u *CanvasObject) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "panel":
+		if u.panel == nil {
+			return nil, fmt.Errorf("field \"panel\" is required")
+		}
+		return struct {
+			Type  string      `json:"type"`
+			Panel CanvasPanel `json:"panel"`
+		}{Type: "panel", Panel: *u.panel}, nil
+	}
+}
+
+func (u CanvasObject) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *CanvasObject) UnmarshalJSON(data []byte) error {
+	var deser canvasObjectDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "panel":
+		if u.panel == nil {
+			return fmt.Errorf("field \"panel\" is required")
+		}
+	}
+	return nil
+}
+
+func (u CanvasObject) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *CanvasObject) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *CanvasObject) AcceptFuncs(panelFunc func(CanvasPanel) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in CanvasObject type")
+		}
+		return unknownFunc(u.typ)
+	case "panel":
+		if u.panel == nil {
+			return fmt.Errorf("field \"panel\" is required")
+		}
+		return panelFunc(*u.panel)
+	}
+}
+
+func (u *CanvasObject) PanelNoopSuccess(_ CanvasPanel) error {
+	return nil
+}
+
+func (u *CanvasObject) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *CanvasObject) Accept(v CanvasObjectVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "panel":
+		if u.panel == nil {
+			return fmt.Errorf("field \"panel\" is required")
+		}
+		return v.VisitPanel(*u.panel)
+	}
+}
+
+type CanvasObjectVisitor interface {
+	VisitPanel(v CanvasPanel) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *CanvasObject) AcceptWithContext(ctx context.Context, v CanvasObjectVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "panel":
+		if u.panel == nil {
+			return fmt.Errorf("field \"panel\" is required")
+		}
+		return v.VisitPanelWithContext(ctx, *u.panel)
+	}
+}
+
+type CanvasObjectVisitorWithContext interface {
+	VisitPanelWithContext(ctx context.Context, v CanvasPanel) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewCanvasObjectFromPanel(v CanvasPanel) CanvasObject {
+	return CanvasObject{typ: "panel", panel: &v}
+}
+
 type ChartPanel struct {
 	typ string
 	v1  *ChartPanelV1
@@ -287,19 +422,21 @@ type Panel struct {
 	empty  *EmptyPanel
 	split  *SplitPanel
 	tabbed *TabbedPanel
+	canvas *CanvasLayout
 }
 
 type panelDeserializer struct {
-	Type   string       `json:"type"`
-	Viz    *VizPanel    `json:"viz"`
-	Chart  *ChartPanel  `json:"chart"`
-	Empty  *EmptyPanel  `json:"empty"`
-	Split  *SplitPanel  `json:"split"`
-	Tabbed *TabbedPanel `json:"tabbed"`
+	Type   string        `json:"type"`
+	Viz    *VizPanel     `json:"viz"`
+	Chart  *ChartPanel   `json:"chart"`
+	Empty  *EmptyPanel   `json:"empty"`
+	Split  *SplitPanel   `json:"split"`
+	Tabbed *TabbedPanel  `json:"tabbed"`
+	Canvas *CanvasLayout `json:"canvas"`
 }
 
 func (u *panelDeserializer) toStruct() Panel {
-	return Panel{typ: u.Type, viz: u.Viz, chart: u.Chart, empty: u.Empty, split: u.Split, tabbed: u.Tabbed}
+	return Panel{typ: u.Type, viz: u.Viz, chart: u.Chart, empty: u.Empty, split: u.Split, tabbed: u.Tabbed, canvas: u.Canvas}
 }
 
 func (u *Panel) toSerializer() (interface{}, error) {
@@ -346,6 +483,14 @@ func (u *Panel) toSerializer() (interface{}, error) {
 			Type   string      `json:"type"`
 			Tabbed TabbedPanel `json:"tabbed"`
 		}{Type: "tabbed", Tabbed: *u.tabbed}, nil
+	case "canvas":
+		if u.canvas == nil {
+			return nil, fmt.Errorf("field \"canvas\" is required")
+		}
+		return struct {
+			Type   string       `json:"type"`
+			Canvas CanvasLayout `json:"canvas"`
+		}{Type: "canvas", Canvas: *u.canvas}, nil
 	}
 }
 
@@ -384,6 +529,10 @@ func (u *Panel) UnmarshalJSON(data []byte) error {
 		if u.tabbed == nil {
 			return fmt.Errorf("field \"tabbed\" is required")
 		}
+	case "canvas":
+		if u.canvas == nil {
+			return fmt.Errorf("field \"canvas\" is required")
+		}
 	}
 	return nil
 }
@@ -404,7 +553,7 @@ func (u *Panel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPanel) error, emptyFunc func(EmptyPanel) error, splitFunc func(SplitPanel) error, tabbedFunc func(TabbedPanel) error, unknownFunc func(string) error) error {
+func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPanel) error, emptyFunc func(EmptyPanel) error, splitFunc func(SplitPanel) error, tabbedFunc func(TabbedPanel) error, canvasFunc func(CanvasLayout) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -436,6 +585,11 @@ func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPa
 			return fmt.Errorf("field \"tabbed\" is required")
 		}
 		return tabbedFunc(*u.tabbed)
+	case "canvas":
+		if u.canvas == nil {
+			return fmt.Errorf("field \"canvas\" is required")
+		}
+		return canvasFunc(*u.canvas)
 	}
 }
 
@@ -456,6 +610,10 @@ func (u *Panel) SplitNoopSuccess(_ SplitPanel) error {
 }
 
 func (u *Panel) TabbedNoopSuccess(_ TabbedPanel) error {
+	return nil
+}
+
+func (u *Panel) CanvasNoopSuccess(_ CanvasLayout) error {
 	return nil
 }
 
@@ -495,6 +653,11 @@ func (u *Panel) Accept(v PanelVisitor) error {
 			return fmt.Errorf("field \"tabbed\" is required")
 		}
 		return v.VisitTabbed(*u.tabbed)
+	case "canvas":
+		if u.canvas == nil {
+			return fmt.Errorf("field \"canvas\" is required")
+		}
+		return v.VisitCanvas(*u.canvas)
 	}
 }
 
@@ -504,6 +667,7 @@ type PanelVisitor interface {
 	VisitEmpty(v EmptyPanel) error
 	VisitSplit(v SplitPanel) error
 	VisitTabbed(v TabbedPanel) error
+	VisitCanvas(v CanvasLayout) error
 	VisitUnknown(typeName string) error
 }
 
@@ -539,6 +703,11 @@ func (u *Panel) AcceptWithContext(ctx context.Context, v PanelVisitorWithContext
 			return fmt.Errorf("field \"tabbed\" is required")
 		}
 		return v.VisitTabbedWithContext(ctx, *u.tabbed)
+	case "canvas":
+		if u.canvas == nil {
+			return fmt.Errorf("field \"canvas\" is required")
+		}
+		return v.VisitCanvasWithContext(ctx, *u.canvas)
 	}
 }
 
@@ -548,6 +717,7 @@ type PanelVisitorWithContext interface {
 	VisitEmptyWithContext(ctx context.Context, v EmptyPanel) error
 	VisitSplitWithContext(ctx context.Context, v SplitPanel) error
 	VisitTabbedWithContext(ctx context.Context, v TabbedPanel) error
+	VisitCanvasWithContext(ctx context.Context, v CanvasLayout) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -569,6 +739,10 @@ func NewPanelFromSplit(v SplitPanel) Panel {
 
 func NewPanelFromTabbed(v TabbedPanel) Panel {
 	return Panel{typ: "tabbed", tabbed: &v}
+}
+
+func NewPanelFromCanvas(v CanvasLayout) Panel {
+	return Panel{typ: "canvas", canvas: &v}
 }
 
 type SingleTab struct {

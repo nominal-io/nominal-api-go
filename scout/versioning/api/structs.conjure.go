@@ -11,12 +11,13 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type Branch struct {
-	Rid         BranchRid              `json:"rid"`
-	Name        BranchName             `json:"name"`
+	Rid         BranchRid              `json:"rid" safelogging:"@Safe"`
+	Name        BranchName             `json:"name" safelogging:"@Unsafe"`
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
-	Commit      CommitId               `json:"commit"`
-	CreatedBy   api.UserRid            `json:"createdBy"`
+	Commit      CommitId               `json:"commit" safelogging:"@Safe"`
+	CreatedBy   api.UserRid            `json:"createdBy" safelogging:"@Safe"`
 	CreatedAt   datetime.DateTime      `json:"createdAt"`
 	UpdatedAt   datetime.DateTime      `json:"updatedAt"`
 }
@@ -37,8 +38,9 @@ func (o *Branch) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type BranchAndCommit struct {
-	Branch Branch `json:"branch"`
+	Branch Branch `json:"branch" safelogging:"@Unsafe"`
 	Commit Commit `json:"commit"`
 }
 
@@ -59,17 +61,17 @@ func (o *BranchAndCommit) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 type Commit struct {
-	Id                CommitId               `json:"id"`
+	Id                CommitId               `json:"id" safelogging:"@Safe"`
 	ResourceRid       rid.ResourceIdentifier `json:"resourceRid"`
-	ParentCommit      *CommitId              `json:"parentCommit,omitempty"`
-	MergeParentCommit *CommitId              `json:"mergeParentCommit,omitempty"`
+	ParentCommit      *CommitId              `json:"parentCommit,omitempty" safelogging:"@Safe"`
+	MergeParentCommit *CommitId              `json:"mergeParentCommit,omitempty" safelogging:"@Safe"`
 	Message           string                 `json:"message"`
 	/*
 	   A working state commit is created via the `saveWorkingState` endpoint
 	   and is non-permanent. In the future, it may be compacted and not exist.
 	*/
 	IsWorkingState bool              `json:"isWorkingState"`
-	CommittedBy    api.UserRid       `json:"committedBy"`
+	CommittedBy    api.UserRid       `json:"committedBy" safelogging:"@Safe"`
 	CommittedAt    datetime.DateTime `json:"committedAt"`
 }
 
@@ -89,9 +91,10 @@ func (o *Commit) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CommitHistory struct {
 	History       []Commit    `json:"history"`
-	NextPageToken *api1.Token `json:"nextPageToken,omitempty"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o CommitHistory) MarshalJSON() ([]byte, error) {
@@ -132,15 +135,15 @@ func (o *CommitHistory) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type CommitRequest struct {
-	NewCommit CommitId `json:"newCommit"`
+	NewCommit CommitId `json:"newCommit" safelogging:"@Safe"`
 	/*
 	   If present, this existing commit will be the merge parent
 	   of the new commit. It will be made permanent if not already,
 	   to prevent the merge parent from being compacted.
 	*/
-	MergeParentCommit *CommitId `json:"mergeParentCommit,omitempty"`
+	MergeParentCommit *CommitId `json:"mergeParentCommit,omitempty" safelogging:"@Safe"`
 	Message           string    `json:"message"`
-	LatestCommit      *CommitId `json:"latestCommit,omitempty"`
+	LatestCommit      *CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
 }
 
 func (o CommitRequest) MarshalYAML() (interface{}, error) {
@@ -179,9 +182,10 @@ func (o *CompactCommitsRequest) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateBranchRequest struct {
-	ExistingCommit CommitId   `json:"existingCommit"`
-	BranchName     BranchName `json:"branchName"`
+	ExistingCommit CommitId   `json:"existingCommit" safelogging:"@Safe"`
+	BranchName     BranchName `json:"branchName" safelogging:"@Unsafe"`
 }
 
 func (o CreateBranchRequest) MarshalYAML() (interface{}, error) {
@@ -200,9 +204,10 @@ func (o *CreateBranchRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateTagRequest struct {
-	ExistingCommit CommitId `json:"existingCommit"`
-	TagName        TagName  `json:"tagName"`
+	ExistingCommit CommitId `json:"existingCommit" safelogging:"@Safe"`
+	TagName        TagName  `json:"tagName" safelogging:"@Unsafe"`
 }
 
 func (o CreateTagRequest) MarshalYAML() (interface{}, error) {
@@ -221,9 +226,10 @@ func (o *CreateTagRequest) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type GetLeastCommonAncestorRequest struct {
-	Commit1 CommitId `json:"commit1"`
-	Commit2 CommitId `json:"commit2"`
+	Commit1 CommitId `json:"commit1" safelogging:"@Safe"`
+	Commit2 CommitId `json:"commit2" safelogging:"@Safe"`
 }
 
 func (o GetLeastCommonAncestorRequest) MarshalYAML() (interface{}, error) {
@@ -243,7 +249,7 @@ func (o *GetLeastCommonAncestorRequest) UnmarshalYAML(unmarshal func(interface{}
 }
 
 type InitResourceVersioningRequest struct {
-	NewCommit CommitId `json:"newCommit"`
+	NewCommit CommitId `json:"newCommit" safelogging:"@Safe"`
 	Message   string   `json:"message"`
 }
 
@@ -263,9 +269,10 @@ func (o *InitResourceVersioningRequest) UnmarshalYAML(unmarshal func(interface{}
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ResourceAndBranchName struct {
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
-	BranchName  BranchName             `json:"branchName"`
+	BranchName  BranchName             `json:"branchName" safelogging:"@Unsafe"`
 }
 
 func (o ResourceAndBranchName) MarshalYAML() (interface{}, error) {
@@ -286,7 +293,7 @@ func (o *ResourceAndBranchName) UnmarshalYAML(unmarshal func(interface{}) error)
 
 type ResourceAndCommitId struct {
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
-	CommitId    CommitId               `json:"commitId"`
+	CommitId    CommitId               `json:"commitId" safelogging:"@Safe"`
 }
 
 func (o ResourceAndCommitId) MarshalYAML() (interface{}, error) {
@@ -305,9 +312,10 @@ func (o *ResourceAndCommitId) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type SaveWorkingStateRequest struct {
-	NewCommit    CommitId  `json:"newCommit"`
-	LatestCommit *CommitId `json:"latestCommit,omitempty"`
+	NewCommit    CommitId  `json:"newCommit" safelogging:"@Safe"`
+	LatestCommit *CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
 }
 
 func (o SaveWorkingStateRequest) MarshalYAML() (interface{}, error) {
@@ -326,12 +334,13 @@ func (o *SaveWorkingStateRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Tag struct {
-	Rid         TagRid                 `json:"rid"`
-	Name        TagName                `json:"name"`
+	Rid         TagRid                 `json:"rid" safelogging:"@Safe"`
+	Name        TagName                `json:"name" safelogging:"@Unsafe"`
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
-	Commit      CommitId               `json:"commit"`
-	CreatedBy   api.UserRid            `json:"createdBy"`
+	Commit      CommitId               `json:"commit" safelogging:"@Safe"`
+	CreatedBy   api.UserRid            `json:"createdBy" safelogging:"@Safe"`
 	CreatedAt   datetime.DateTime      `json:"createdAt"`
 }
 

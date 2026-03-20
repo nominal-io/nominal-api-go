@@ -10,6 +10,7 @@ import (
 	api3 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	"github.com/nominal-io/nominal-api-go/scout/compute/api/deprecated"
 	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
+	"github.com/nominal-io/nominal-api-go/scout/metadata"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api4 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	api5 "github.com/nominal-io/nominal-api-go/scout/versioning/api"
@@ -19,8 +20,9 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
+// safelogging:@Safe
 type ArchiveChecklistsRequest struct {
-	Rids []api.ChecklistRid `json:"rids"`
+	Rids []api.ChecklistRid `json:"rids" safelogging:"@Safe"`
 }
 
 func (o ArchiveChecklistsRequest) MarshalJSON() ([]byte, error) {
@@ -60,8 +62,89 @@ func (o *ArchiveChecklistsRequest) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BatchEditChecklistMetadataRequest struct {
+	/*
+	   Additional search query to filter which checklists are targeted by the edit.
+	   Source labels/properties from the operation are automatically included as filters.
+	*/
+	ChecklistSearchQuery *ChecklistSearchQuery   `json:"checklistSearchQuery,omitempty"`
+	Operation            metadata.MetadataChange `json:"operation"`
+}
+
+func (o BatchEditChecklistMetadataRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchEditChecklistMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Safe
+type BatchEditChecklistMetadataResponse struct {
+	// RIDs for checklists that were modified by the batch edit.
+	ModifiedChecklistRids []api.ChecklistRid `json:"modifiedChecklistRids" safelogging:"@Safe"`
+	/*
+	   RIDs for checklists that matched the source filter but already had the target property key
+	   and were skipped (SkipOnConflict behavior). Empty for operations without conflict semantics
+	   or when using OverwriteOnConflict.
+	*/
+	ConflictingChecklistRids []api.ChecklistRid `json:"conflictingChecklistRids" safelogging:"@Safe"`
+}
+
+func (o BatchEditChecklistMetadataResponse) MarshalJSON() ([]byte, error) {
+	if o.ModifiedChecklistRids == nil {
+		o.ModifiedChecklistRids = make([]api.ChecklistRid, 0)
+	}
+	if o.ConflictingChecklistRids == nil {
+		o.ConflictingChecklistRids = make([]api.ChecklistRid, 0)
+	}
+	type _tmpBatchEditChecklistMetadataResponse BatchEditChecklistMetadataResponse
+	return safejson.Marshal(_tmpBatchEditChecklistMetadataResponse(o))
+}
+
+func (o *BatchEditChecklistMetadataResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchEditChecklistMetadataResponse BatchEditChecklistMetadataResponse
+	var rawBatchEditChecklistMetadataResponse _tmpBatchEditChecklistMetadataResponse
+	if err := safejson.Unmarshal(data, &rawBatchEditChecklistMetadataResponse); err != nil {
+		return err
+	}
+	if rawBatchEditChecklistMetadataResponse.ModifiedChecklistRids == nil {
+		rawBatchEditChecklistMetadataResponse.ModifiedChecklistRids = make([]api.ChecklistRid, 0)
+	}
+	if rawBatchEditChecklistMetadataResponse.ConflictingChecklistRids == nil {
+		rawBatchEditChecklistMetadataResponse.ConflictingChecklistRids = make([]api.ChecklistRid, 0)
+	}
+	*o = BatchEditChecklistMetadataResponse(rawBatchEditChecklistMetadataResponse)
+	return nil
+}
+
+func (o BatchEditChecklistMetadataResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchEditChecklistMetadataResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Safe
 type BatchGetChecklistMetadataRequest struct {
-	Rids []api.ChecklistRid `json:"rids"`
+	Rids []api.ChecklistRid `json:"rids" safelogging:"@Safe"`
 }
 
 func (o BatchGetChecklistMetadataRequest) MarshalJSON() ([]byte, error) {
@@ -142,8 +225,9 @@ func (o *BatchGetChecklistMetadataResponse) UnmarshalYAML(unmarshal func(interfa
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type BatchGetJobReportsRequest struct {
-	JobRids []JobRid `json:"jobRids"`
+	JobRids []JobRid `json:"jobRids" safelogging:"@Safe"`
 }
 
 func (o BatchGetJobReportsRequest) MarshalJSON() ([]byte, error) {
@@ -183,16 +267,17 @@ func (o *BatchGetJobReportsRequest) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Check struct {
-	Rid                      api.CheckRid        `json:"rid"`
-	CheckLineageRid          api.CheckLineageRid `json:"checkLineageRid"`
+	Rid                      api.CheckRid        `json:"rid" safelogging:"@Safe"`
+	CheckLineageRid          api.CheckLineageRid `json:"checkLineageRid" safelogging:"@Safe"`
 	Title                    string              `json:"title"`
 	Description              string              `json:"description"`
 	AutoGeneratedTitle       *string             `json:"autoGeneratedTitle,omitempty"`
 	AutoGeneratedDescription *string             `json:"autoGeneratedDescription,omitempty"`
 	Priority                 api1.Priority       `json:"priority"`
 	GeneratedEventType       event.EventType     `json:"generatedEventType"`
-	GeneratedEventLabels     *[]api2.Label       `json:"generatedEventLabels,omitempty"`
+	GeneratedEventLabels     *[]api2.Label       `json:"generatedEventLabels,omitempty" safelogging:"@Unsafe"`
 	// Deprecated: charts are no longer versioned resources.
 	Chart *api.VersionedVizId `json:"chart,omitempty"`
 	// If omitted, this check represents a manual check.
@@ -259,19 +344,19 @@ func (o *CheckContext) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type CheckJobSpec struct {
-	DataReviewRid api.DataReviewRid `json:"dataReviewRid"`
-	CheckRid      api.CheckRid      `json:"checkRid"`
-	RunRid        *api4.RunRid      `json:"runRid,omitempty"`
-	AssetRid      *api.AssetRid     `json:"assetRid,omitempty"`
+	DataReviewRid api.DataReviewRid `json:"dataReviewRid" safelogging:"@Safe"`
+	CheckRid      api.CheckRid      `json:"checkRid" safelogging:"@Safe"`
+	RunRid        *api4.RunRid      `json:"runRid,omitempty" safelogging:"@Safe"`
+	AssetRid      *api.AssetRid     `json:"assetRid,omitempty" safelogging:"@Safe"`
 	/*
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
 	   The check implementation index will correspond to the implementation index of the check condition.
 	*/
 	CheckImplementationIndex *int                             `json:"checkImplementationIndex,omitempty"`
-	CheckEvaluationRid       rids.AutomaticCheckEvaluationRid `json:"checkEvaluationRid"`
+	CheckEvaluationRid       rids.AutomaticCheckEvaluationRid `json:"checkEvaluationRid" safelogging:"@Safe"`
 	CheckCondition           CheckCondition                   `json:"checkCondition"`
-	Start                    api2.Timestamp                   `json:"start"`
-	End                      api2.Timestamp                   `json:"end"`
+	Start                    api2.Timestamp                   `json:"start" safelogging:"@Safe"`
+	End                      api2.Timestamp                   `json:"end" safelogging:"@Safe"`
 	Context                  api11.Context                    `json:"context"`
 }
 
@@ -291,14 +376,15 @@ func (o *CheckJobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ChecklistMetadata struct {
-	AuthorRid   api.UserRid                              `json:"authorRid"`
-	AssigneeRid api.UserRid                              `json:"assigneeRid"`
+	AuthorRid   api.UserRid                              `json:"authorRid" safelogging:"@Safe"`
+	AssigneeRid api.UserRid                              `json:"assigneeRid" safelogging:"@Safe"`
 	Title       string                                   `json:"title"`
 	Description string                                   `json:"description"`
 	CreatedAt   datetime.DateTime                        `json:"createdAt"`
 	Properties  map[api2.PropertyName]api2.PropertyValue `json:"properties"`
-	Labels      []api2.Label                             `json:"labels"`
+	Labels      []api2.Label                             `json:"labels" safelogging:"@Unsafe"`
 	LastUsed    *datetime.DateTime                       `json:"lastUsed,omitempty"`
 	IsArchived  bool                                     `json:"isArchived"`
 	IsPublished bool                                     `json:"isPublished"`
@@ -351,9 +437,10 @@ func (o *ChecklistMetadata) UnmarshalYAML(unmarshal func(interface{}) error) err
 A reference to a checklist that may be pinned to a specific commit.
 If commit is empty, this refers to "the latest commit on main".
 */
+// safelogging:@Safe
 type ChecklistRef struct {
-	Rid    api.ChecklistRid `json:"rid"`
-	Commit *api5.CommitId   `json:"commit,omitempty"`
+	Rid    api.ChecklistRid `json:"rid" safelogging:"@Safe"`
+	Commit *api5.CommitId   `json:"commit,omitempty" safelogging:"@Safe"`
 }
 
 func (o ChecklistRef) MarshalYAML() (interface{}, error) {
@@ -372,8 +459,9 @@ func (o *ChecklistRef) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ChecklistVariable struct {
-	Name        api3.VariableName `json:"name"`
+	Name        api3.VariableName `json:"name" safelogging:"@Unsafe"`
 	DisplayName *string           `json:"displayName,omitempty"`
 	Value       VariableLocator   `json:"value"`
 }
@@ -406,7 +494,7 @@ type CommitChecklistRequest struct {
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommit *api5.CommitId `json:"latestCommit,omitempty"`
+	LatestCommit *api5.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
 }
 
 func (o CommitChecklistRequest) MarshalJSON() ([]byte, error) {
@@ -473,6 +561,7 @@ func (o *ComputeNodeWithContext) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateCheckRequest struct {
 	/*
 	   Identifies the lineage of checks this check belongs to. If not specified, a new lineage will be created.
@@ -490,7 +579,7 @@ type CreateCheckRequest struct {
 	   Defaults to ERROR.
 	*/
 	GeneratedEventType   *event.EventType `json:"generatedEventType,omitempty"`
-	GeneratedEventLabels *[]api2.Label    `json:"generatedEventLabels,omitempty"`
+	GeneratedEventLabels *[]api2.Label    `json:"generatedEventLabels,omitempty" safelogging:"@Unsafe"`
 	// This field should not be omitted.
 	Condition *UnresolvedCheckCondition `json:"condition,omitempty"`
 }
@@ -511,14 +600,15 @@ func (o *CreateCheckRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateChecklistRequest struct {
 	CommitMessage string                                   `json:"commitMessage"`
-	AssigneeRid   api.UserRid                              `json:"assigneeRid"`
+	AssigneeRid   api.UserRid                              `json:"assigneeRid" safelogging:"@Safe"`
 	Title         string                                   `json:"title"`
 	Description   string                                   `json:"description"`
 	Checks        []CreateChecklistEntryRequest            `json:"checks"`
 	Properties    map[api2.PropertyName]api2.PropertyValue `json:"properties"`
-	Labels        []api2.Label                             `json:"labels"`
+	Labels        []api2.Label                             `json:"labels" safelogging:"@Unsafe"`
 	/*
 	   Variables that can be used in checks. Variables are resolved in order of declaration.
 	   If variable `a` depends on variable `b`, then `b` must be defined before `a` in the list.
@@ -530,7 +620,7 @@ type CreateChecklistRequest struct {
 	   The workspace in which to create the checklist. If not provided, the checklist will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateChecklistRequest) MarshalJSON() ([]byte, error) {
@@ -612,8 +702,8 @@ func (o *Failed) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // This function type is unsupported.
 type Function struct {
-	Rid                      api.FunctionRid        `json:"rid"`
-	FunctionLineageRid       api.FunctionLineageRid `json:"functionLineageRid"`
+	Rid                      api.FunctionRid        `json:"rid" safelogging:"@Safe"`
+	FunctionLineageRid       api.FunctionLineageRid `json:"functionLineageRid" safelogging:"@Safe"`
 	Title                    string                 `json:"title"`
 	Description              string                 `json:"description"`
 	AutoGeneratedTitle       *string                `json:"autoGeneratedTitle,omitempty"`
@@ -637,9 +727,10 @@ func (o *Function) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetAllLabelsAndPropertiesResponse struct {
 	Properties map[api2.PropertyName][]api2.PropertyValue `json:"properties"`
-	Labels     []api2.Label                               `json:"labels"`
+	Labels     []api2.Label                               `json:"labels" safelogging:"@Unsafe"`
 }
 
 func (o GetAllLabelsAndPropertiesResponse) MarshalJSON() ([]byte, error) {
@@ -703,15 +794,16 @@ func (o *InProgress) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type MergeToMainRequest struct {
 	// If "main", the request will throw.
-	BranchName api5.BranchName `json:"branchName"`
+	BranchName api5.BranchName `json:"branchName" safelogging:"@Unsafe"`
 	Message    string          `json:"message"`
 	/*
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommitOnMain *api5.CommitId `json:"latestCommitOnMain,omitempty"`
+	LatestCommitOnMain *api5.CommitId `json:"latestCommitOnMain,omitempty" safelogging:"@Safe"`
 }
 
 func (o MergeToMainRequest) MarshalYAML() (interface{}, error) {
@@ -914,9 +1006,10 @@ func (o *ParameterizedNumRangesConditionV1) UnmarshalYAML(unmarshal func(interfa
 }
 
 // A reference to a checklist that is pinned to a specific commit.
+// safelogging:@Safe
 type PinnedChecklistRef struct {
-	Rid    api.ChecklistRid `json:"rid"`
-	Commit api5.CommitId    `json:"commit"`
+	Rid    api.ChecklistRid `json:"rid" safelogging:"@Safe"`
+	Commit api5.CommitId    `json:"commit" safelogging:"@Safe"`
 }
 
 func (o PinnedChecklistRef) MarshalYAML() (interface{}, error) {
@@ -946,7 +1039,7 @@ type SaveChecklistRequest struct {
 	   If present, will validate that the latest commit matches this id,
 	   and otherwise throw CommitConflict.
 	*/
-	LatestCommit *api5.CommitId `json:"latestCommit,omitempty"`
+	LatestCommit *api5.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
 }
 
 func (o SaveChecklistRequest) MarshalJSON() ([]byte, error) {
@@ -992,11 +1085,12 @@ func (o *SaveChecklistRequest) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchChecklistsRequest struct {
 	Query ChecklistSearchQuery `json:"query"`
 	// If not present, will sort by LAST_USED in descending order.
 	SortBy        *SortOptions `json:"sortBy,omitempty"`
-	NextPageToken *api2.Token  `json:"nextPageToken,omitempty"`
+	NextPageToken *api2.Token  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 100. Will throw if larger than 1000.
 	PageSize *int `json:"pageSize,omitempty"`
 	/*
@@ -1126,7 +1220,7 @@ func (o *SubmitJobsResponse) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 type SubmittedJob struct {
-	JobRid  JobRid  `json:"jobRid"`
+	JobRid  JobRid  `json:"jobRid" safelogging:"@Safe"`
 	JobSpec JobSpec `json:"jobSpec"`
 }
 
@@ -1146,8 +1240,9 @@ func (o *SubmittedJob) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type UnarchiveChecklistsRequest struct {
-	Rids []api.ChecklistRid `json:"rids"`
+	Rids []api.ChecklistRid `json:"rids" safelogging:"@Safe"`
 }
 
 func (o UnarchiveChecklistsRequest) MarshalJSON() ([]byte, error) {
@@ -1187,8 +1282,55 @@ func (o *UnarchiveChecklistsRequest) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type UnresolvedBooleanSeriesConditionV1 struct {
+	BooleanSeries api11.BooleanSeries `json:"booleanSeries"`
+	/*
+	   Default overrides for the variables used in the check condition. These variables can be overridden
+	   at checklist execution time.
+	*/
+	Variables map[api3.VariableName]UnresolvedVariableLocator `json:"variables"`
+}
+
+func (o UnresolvedBooleanSeriesConditionV1) MarshalJSON() ([]byte, error) {
+	if o.Variables == nil {
+		o.Variables = make(map[api3.VariableName]UnresolvedVariableLocator)
+	}
+	type _tmpUnresolvedBooleanSeriesConditionV1 UnresolvedBooleanSeriesConditionV1
+	return safejson.Marshal(_tmpUnresolvedBooleanSeriesConditionV1(o))
+}
+
+func (o *UnresolvedBooleanSeriesConditionV1) UnmarshalJSON(data []byte) error {
+	type _tmpUnresolvedBooleanSeriesConditionV1 UnresolvedBooleanSeriesConditionV1
+	var rawUnresolvedBooleanSeriesConditionV1 _tmpUnresolvedBooleanSeriesConditionV1
+	if err := safejson.Unmarshal(data, &rawUnresolvedBooleanSeriesConditionV1); err != nil {
+		return err
+	}
+	if rawUnresolvedBooleanSeriesConditionV1.Variables == nil {
+		rawUnresolvedBooleanSeriesConditionV1.Variables = make(map[api3.VariableName]UnresolvedVariableLocator)
+	}
+	*o = UnresolvedBooleanSeriesConditionV1(rawUnresolvedBooleanSeriesConditionV1)
+	return nil
+}
+
+func (o UnresolvedBooleanSeriesConditionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UnresolvedBooleanSeriesConditionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
 type UnresolvedChecklistVariable struct {
-	Name        api3.VariableName         `json:"name"`
+	Name        api3.VariableName         `json:"name" safelogging:"@Unsafe"`
 	DisplayName *string                   `json:"displayName,omitempty"`
 	Value       UnresolvedVariableLocator `json:"value"`
 }
@@ -1411,12 +1553,13 @@ func (o *UnresolvedVariables) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateChecklistMetadataRequest struct {
-	AssigneeRid *api.UserRid                              `json:"assigneeRid,omitempty"`
+	AssigneeRid *api.UserRid                              `json:"assigneeRid,omitempty" safelogging:"@Safe"`
 	Title       *string                                   `json:"title,omitempty"`
 	Description *string                                   `json:"description,omitempty"`
 	Properties  *map[api2.PropertyName]api2.PropertyValue `json:"properties,omitempty"`
-	Labels      *[]api2.Label                             `json:"labels,omitempty"`
+	Labels      *[]api2.Label                             `json:"labels,omitempty" safelogging:"@Unsafe"`
 	IsPublished *bool                                     `json:"isPublished,omitempty"`
 }
 
@@ -1436,9 +1579,10 @@ func (o *UpdateChecklistMetadataRequest) UnmarshalYAML(unmarshal func(interface{
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type VersionedChecklist struct {
-	Rid      api.ChecklistRid  `json:"rid"`
-	Metadata ChecklistMetadata `json:"metadata"`
+	Rid      api.ChecklistRid  `json:"rid" safelogging:"@Safe"`
+	Metadata ChecklistMetadata `json:"metadata" safelogging:"@Unsafe"`
 	Commit   api5.Commit       `json:"commit"`
 	// Deprecated: The functions field is deprecated and will be removed in a future version.
 	Functions *[]Function      `json:"functions,omitempty"`
@@ -1493,9 +1637,10 @@ func (o *VersionedChecklist) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type VersionedChecklistPage struct {
 	Values        []VersionedChecklist `json:"values"`
-	NextPageToken *api2.Token          `json:"nextPageToken,omitempty"`
+	NextPageToken *api2.Token          `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o VersionedChecklistPage) MarshalJSON() ([]byte, error) {

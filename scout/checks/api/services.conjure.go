@@ -73,6 +73,11 @@ type ChecklistServiceClient interface {
 	BatchGetChecks(ctx context.Context, authHeader bearertoken.Token, ridsArg []api.CheckRid) ([]Check, error)
 	// Returns all labels and properties.
 	GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (GetAllLabelsAndPropertiesResponse, error)
+	/*
+	   Batch edits metadata across multiple checklists. Supports rename/merge for labels and properties.
+	   If more than 1000 checklists are targeted, this endpoint will throw a 400.
+	*/
+	BatchEditChecklistMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg BatchEditChecklistMetadataRequest) (BatchEditChecklistMetadataResponse, error)
 }
 
 type checklistServiceClient struct {
@@ -368,6 +373,24 @@ func (c *checklistServiceClient) GetAllLabelsAndProperties(ctx context.Context, 
 	return *returnVal, nil
 }
 
+func (c *checklistServiceClient) BatchEditChecklistMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg BatchEditChecklistMetadataRequest) (BatchEditChecklistMetadataResponse, error) {
+	var returnVal *BatchEditChecklistMetadataResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchEditChecklistMetadata"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/checklists/metadata/batch-edit"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchEditChecklistMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchEditChecklistMetadata failed")
+	}
+	if returnVal == nil {
+		return *new(BatchEditChecklistMetadataResponse), werror.ErrorWithContextParams(ctx, "batchEditChecklistMetadata response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 /*
 The Checklist Service is responsible for managing checklists and checks.
 A checklist is a collection of checks that can be executed against a set of data sources.
@@ -424,6 +447,11 @@ type ChecklistServiceClientWithAuth interface {
 	BatchGetChecks(ctx context.Context, ridsArg []api.CheckRid) ([]Check, error)
 	// Returns all labels and properties.
 	GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (GetAllLabelsAndPropertiesResponse, error)
+	/*
+	   Batch edits metadata across multiple checklists. Supports rename/merge for labels and properties.
+	   If more than 1000 checklists are targeted, this endpoint will throw a 400.
+	*/
+	BatchEditChecklistMetadata(ctx context.Context, requestArg BatchEditChecklistMetadataRequest) (BatchEditChecklistMetadataResponse, error)
 }
 
 func NewChecklistServiceClientWithAuth(client ChecklistServiceClient, authHeader bearertoken.Token) ChecklistServiceClientWithAuth {
@@ -493,6 +521,10 @@ func (c *checklistServiceClientWithAuth) BatchGetChecks(ctx context.Context, rid
 
 func (c *checklistServiceClientWithAuth) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (GetAllLabelsAndPropertiesResponse, error) {
 	return c.client.GetAllLabelsAndProperties(ctx, c.authHeader, workspacesArg)
+}
+
+func (c *checklistServiceClientWithAuth) BatchEditChecklistMetadata(ctx context.Context, requestArg BatchEditChecklistMetadataRequest) (BatchEditChecklistMetadataResponse, error) {
+	return c.client.BatchEditChecklistMetadata(ctx, c.authHeader, requestArg)
 }
 
 func NewChecklistServiceClientWithTokenProvider(client ChecklistServiceClient, tokenProvider httpclient.TokenProvider) ChecklistServiceClientWithAuth {
@@ -622,4 +654,12 @@ func (c *checklistServiceClientWithTokenProvider) GetAllLabelsAndProperties(ctx 
 		return *new(GetAllLabelsAndPropertiesResponse), err
 	}
 	return c.client.GetAllLabelsAndProperties(ctx, bearertoken.Token(token), workspacesArg)
+}
+
+func (c *checklistServiceClientWithTokenProvider) BatchEditChecklistMetadata(ctx context.Context, requestArg BatchEditChecklistMetadataRequest) (BatchEditChecklistMetadataResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(BatchEditChecklistMetadataResponse), err
+	}
+	return c.client.BatchEditChecklistMetadata(ctx, bearertoken.Token(token), requestArg)
 }

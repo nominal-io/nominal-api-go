@@ -1569,6 +1569,7 @@ func NewJobSpecFromCheckV2(v CheckJobSpec) JobSpec {
 
 type UnresolvedCheckCondition struct {
 	typ                      string
+	booleanSeriesV1          *UnresolvedBooleanSeriesConditionV1
 	numRangesV2              *UnresolvedNumRangesConditionV2
 	numRangesV3              *UnresolvedNumRangesConditionV3
 	parameterizedNumRangesV1 *UnresolvedParameterizedNumRangesConditionV1
@@ -1576,19 +1577,28 @@ type UnresolvedCheckCondition struct {
 
 type unresolvedCheckConditionDeserializer struct {
 	Type                     string                                       `json:"type"`
+	BooleanSeriesV1          *UnresolvedBooleanSeriesConditionV1          `json:"booleanSeriesV1"`
 	NumRangesV2              *UnresolvedNumRangesConditionV2              `json:"numRangesV2"`
 	NumRangesV3              *UnresolvedNumRangesConditionV3              `json:"numRangesV3"`
 	ParameterizedNumRangesV1 *UnresolvedParameterizedNumRangesConditionV1 `json:"parameterizedNumRangesV1"`
 }
 
 func (u *unresolvedCheckConditionDeserializer) toStruct() UnresolvedCheckCondition {
-	return UnresolvedCheckCondition{typ: u.Type, numRangesV2: u.NumRangesV2, numRangesV3: u.NumRangesV3, parameterizedNumRangesV1: u.ParameterizedNumRangesV1}
+	return UnresolvedCheckCondition{typ: u.Type, booleanSeriesV1: u.BooleanSeriesV1, numRangesV2: u.NumRangesV2, numRangesV3: u.NumRangesV3, parameterizedNumRangesV1: u.ParameterizedNumRangesV1}
 }
 
 func (u *UnresolvedCheckCondition) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "booleanSeriesV1":
+		if u.booleanSeriesV1 == nil {
+			return nil, fmt.Errorf("field \"booleanSeriesV1\" is required")
+		}
+		return struct {
+			Type            string                             `json:"type"`
+			BooleanSeriesV1 UnresolvedBooleanSeriesConditionV1 `json:"booleanSeriesV1"`
+		}{Type: "booleanSeriesV1", BooleanSeriesV1: *u.booleanSeriesV1}, nil
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return nil, fmt.Errorf("field \"numRangesV2\" is required")
@@ -1631,6 +1641,10 @@ func (u *UnresolvedCheckCondition) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
+	case "booleanSeriesV1":
+		if u.booleanSeriesV1 == nil {
+			return fmt.Errorf("field \"booleanSeriesV1\" is required")
+		}
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1663,13 +1677,18 @@ func (u *UnresolvedCheckCondition) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UnresolvedCheckCondition) AcceptFuncs(numRangesV2Func func(UnresolvedNumRangesConditionV2) error, numRangesV3Func func(UnresolvedNumRangesConditionV3) error, parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) error, unknownFunc func(string) error) error {
+func (u *UnresolvedCheckCondition) AcceptFuncs(booleanSeriesV1Func func(UnresolvedBooleanSeriesConditionV1) error, numRangesV2Func func(UnresolvedNumRangesConditionV2) error, numRangesV3Func func(UnresolvedNumRangesConditionV3) error, parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in UnresolvedCheckCondition type")
 		}
 		return unknownFunc(u.typ)
+	case "booleanSeriesV1":
+		if u.booleanSeriesV1 == nil {
+			return fmt.Errorf("field \"booleanSeriesV1\" is required")
+		}
+		return booleanSeriesV1Func(*u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1686,6 +1705,10 @@ func (u *UnresolvedCheckCondition) AcceptFuncs(numRangesV2Func func(UnresolvedNu
 		}
 		return parameterizedNumRangesV1Func(*u.parameterizedNumRangesV1)
 	}
+}
+
+func (u *UnresolvedCheckCondition) BooleanSeriesV1NoopSuccess(_ UnresolvedBooleanSeriesConditionV1) error {
+	return nil
 }
 
 func (u *UnresolvedCheckCondition) NumRangesV2NoopSuccess(_ UnresolvedNumRangesConditionV2) error {
@@ -1711,6 +1734,11 @@ func (u *UnresolvedCheckCondition) Accept(v UnresolvedCheckConditionVisitor) err
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
+	case "booleanSeriesV1":
+		if u.booleanSeriesV1 == nil {
+			return fmt.Errorf("field \"booleanSeriesV1\" is required")
+		}
+		return v.VisitBooleanSeriesV1(*u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1730,6 +1758,7 @@ func (u *UnresolvedCheckCondition) Accept(v UnresolvedCheckConditionVisitor) err
 }
 
 type UnresolvedCheckConditionVisitor interface {
+	VisitBooleanSeriesV1(v UnresolvedBooleanSeriesConditionV1) error
 	VisitNumRangesV2(v UnresolvedNumRangesConditionV2) error
 	VisitNumRangesV3(v UnresolvedNumRangesConditionV3) error
 	VisitParameterizedNumRangesV1(v UnresolvedParameterizedNumRangesConditionV1) error
@@ -1743,6 +1772,11 @@ func (u *UnresolvedCheckCondition) AcceptWithContext(ctx context.Context, v Unre
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "booleanSeriesV1":
+		if u.booleanSeriesV1 == nil {
+			return fmt.Errorf("field \"booleanSeriesV1\" is required")
+		}
+		return v.VisitBooleanSeriesV1WithContext(ctx, *u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1762,10 +1796,15 @@ func (u *UnresolvedCheckCondition) AcceptWithContext(ctx context.Context, v Unre
 }
 
 type UnresolvedCheckConditionVisitorWithContext interface {
+	VisitBooleanSeriesV1WithContext(ctx context.Context, v UnresolvedBooleanSeriesConditionV1) error
 	VisitNumRangesV2WithContext(ctx context.Context, v UnresolvedNumRangesConditionV2) error
 	VisitNumRangesV3WithContext(ctx context.Context, v UnresolvedNumRangesConditionV3) error
 	VisitParameterizedNumRangesV1WithContext(ctx context.Context, v UnresolvedParameterizedNumRangesConditionV1) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewUnresolvedCheckConditionFromBooleanSeriesV1(v UnresolvedBooleanSeriesConditionV1) UnresolvedCheckCondition {
+	return UnresolvedCheckCondition{typ: "booleanSeriesV1", booleanSeriesV1: &v}
 }
 
 func NewUnresolvedCheckConditionFromNumRangesV2(v UnresolvedNumRangesConditionV2) UnresolvedCheckCondition {

@@ -718,3 +718,94 @@ func (c *internalIngestJobServiceClientWithTokenProvider) UpdateIngestJobStatus(
 	}
 	return c.client.UpdateIngestJobStatus(ctx, bearertoken.Token(token), ingestJobRidArg, statusArg)
 }
+
+type StreamingSessionServiceClient interface {
+	Resolve(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error)
+	Heartbeat(ctx context.Context, authHeader bearertoken.Token, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error
+}
+
+type streamingSessionServiceClient struct {
+	client httpclient.Client
+}
+
+func NewStreamingSessionServiceClient(client httpclient.Client) StreamingSessionServiceClient {
+	return &streamingSessionServiceClient{client: client}
+}
+
+func (c *streamingSessionServiceClient) Resolve(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error) {
+	var returnVal *ResolveStreamingSessionResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("Resolve"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/internal/streaming-session/dataset/%s/resolve", url.PathEscape(fmt.Sprint(datasetRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(ResolveStreamingSessionResponse), werror.WrapWithContextParams(ctx, err, "resolve failed")
+	}
+	if returnVal == nil {
+		return *new(ResolveStreamingSessionResponse), werror.ErrorWithContextParams(ctx, "resolve response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *streamingSessionServiceClient) Heartbeat(ctx context.Context, authHeader bearertoken.Token, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("Heartbeat"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/internal/streaming-session/%s/heartbeat", url.PathEscape(fmt.Sprint(sessionRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Put(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "heartbeat failed")
+	}
+	return nil
+}
+
+type StreamingSessionServiceClientWithAuth interface {
+	Resolve(ctx context.Context, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error)
+	Heartbeat(ctx context.Context, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error
+}
+
+func NewStreamingSessionServiceClientWithAuth(client StreamingSessionServiceClient, authHeader bearertoken.Token) StreamingSessionServiceClientWithAuth {
+	return &streamingSessionServiceClientWithAuth{client: client, authHeader: authHeader}
+}
+
+type streamingSessionServiceClientWithAuth struct {
+	client     StreamingSessionServiceClient
+	authHeader bearertoken.Token
+}
+
+func (c *streamingSessionServiceClientWithAuth) Resolve(ctx context.Context, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error) {
+	return c.client.Resolve(ctx, c.authHeader, datasetRidArg, requestArg)
+}
+
+func (c *streamingSessionServiceClientWithAuth) Heartbeat(ctx context.Context, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error {
+	return c.client.Heartbeat(ctx, c.authHeader, sessionRidArg, requestArg)
+}
+
+func NewStreamingSessionServiceClientWithTokenProvider(client StreamingSessionServiceClient, tokenProvider httpclient.TokenProvider) StreamingSessionServiceClientWithAuth {
+	return &streamingSessionServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
+}
+
+type streamingSessionServiceClientWithTokenProvider struct {
+	client        StreamingSessionServiceClient
+	tokenProvider httpclient.TokenProvider
+}
+
+func (c *streamingSessionServiceClientWithTokenProvider) Resolve(ctx context.Context, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(ResolveStreamingSessionResponse), err
+	}
+	return c.client.Resolve(ctx, bearertoken.Token(token), datasetRidArg, requestArg)
+}
+
+func (c *streamingSessionServiceClientWithTokenProvider) Heartbeat(ctx context.Context, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.Heartbeat(ctx, bearertoken.Token(token), sessionRidArg, requestArg)
+}

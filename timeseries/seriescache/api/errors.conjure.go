@@ -16,11 +16,12 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type chunkAlreadyExists struct {
-	LogicalSeriesRid api.LogicalSeriesRid `json:"logicalSeriesRid"`
-	StartTimestamp   api.Timestamp        `json:"startTimestamp"`
-	EndTimestamp     api.Timestamp        `json:"endTimestamp"`
-	Resolution       Resolution           `json:"resolution"`
+	LogicalSeriesRid api.LogicalSeriesRid `json:"logicalSeriesRid" safelogging:"@Safe"`
+	StartTimestamp   api.Timestamp        `json:"startTimestamp" safelogging:"@Safe"`
+	EndTimestamp     api.Timestamp        `json:"endTimestamp" safelogging:"@Safe"`
+	Resolution       Resolution           `json:"resolution" safelogging:"@Safe"`
 }
 
 func (o chunkAlreadyExists) MarshalYAML() (interface{}, error) {

@@ -643,8 +643,9 @@ func (e *ConcurrentQueriesExceeded) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type converterInputUnitNotFound struct {
-	InputUnit *api1.UnitSymbol `json:"inputUnit,omitempty"`
+	InputUnit *api1.UnitSymbol `json:"inputUnit,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o converterInputUnitNotFound) MarshalYAML() (interface{}, error) {
@@ -742,7 +743,7 @@ func (e *ConverterInputUnitNotFound) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *ConverterInputUnitNotFound) safeParams() map[string]interface{} {
-	return map[string]interface{}{"inputUnit": e.InputUnit, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -759,7 +760,7 @@ func (e *ConverterInputUnitNotFound) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *ConverterInputUnitNotFound) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"inputUnit": e.InputUnit}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -796,8 +797,9 @@ func (e *ConverterInputUnitNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type converterOutputUnitNotFound struct {
-	InputUnit api1.UnitSymbol `json:"inputUnit"`
+	InputUnit api1.UnitSymbol `json:"inputUnit" safelogging:"@Unsafe"`
 }
 
 func (o converterOutputUnitNotFound) MarshalYAML() (interface{}, error) {
@@ -892,7 +894,7 @@ func (e *ConverterOutputUnitNotFound) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *ConverterOutputUnitNotFound) safeParams() map[string]interface{} {
-	return map[string]interface{}{"inputUnit": e.InputUnit, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -909,7 +911,7 @@ func (e *ConverterOutputUnitNotFound) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *ConverterOutputUnitNotFound) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"inputUnit": e.InputUnit}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -1245,8 +1247,9 @@ func (e *CurveUnequalInputLength) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type duplicateTimestamp struct {
-	Timestamp api2.Timestamp `json:"timestamp"`
+	Timestamp api2.Timestamp `json:"timestamp" safelogging:"@Safe"`
 }
 
 func (o duplicateTimestamp) MarshalYAML() (interface{}, error) {
@@ -2189,7 +2192,7 @@ func IsExternalDatabaseGatewayTimeout(err error) bool {
 }
 
 func (e *ExternalDatabaseGatewayTimeout) Error() string {
-	return fmt.Sprintf("CUSTOM_SERVER ExternalDatabase:ExternalDatabaseGatewayTimeout (%s)", e.errorInstanceID)
+	return fmt.Sprintf("INVALID_ARGUMENT ExternalDatabase:ExternalDatabaseGatewayTimeout (%s)", e.errorInstanceID)
 }
 
 // Cause returns the underlying cause of the error, or nil if none.
@@ -2206,7 +2209,7 @@ func (e *ExternalDatabaseGatewayTimeout) StackTrace() werror.StackTrace {
 
 // Message returns the message body for the error.
 func (e *ExternalDatabaseGatewayTimeout) Message() string {
-	return "CUSTOM_SERVER ExternalDatabase:ExternalDatabaseGatewayTimeout"
+	return "INVALID_ARGUMENT ExternalDatabase:ExternalDatabaseGatewayTimeout"
 }
 
 // Format implements fmt.Formatter, a requirement of werror.Werror.
@@ -2216,7 +2219,7 @@ func (e *ExternalDatabaseGatewayTimeout) Format(state fmt.State, verb rune) {
 
 // Code returns an enum describing error category.
 func (e *ExternalDatabaseGatewayTimeout) Code() errors.ErrorCode {
-	return errors.CustomServer
+	return errors.InvalidArgument
 }
 
 // Name returns an error name identifying error type.
@@ -2273,7 +2276,7 @@ func (e ExternalDatabaseGatewayTimeout) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.CustomServer, ErrorName: "ExternalDatabase:ExternalDatabaseGatewayTimeout", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "ExternalDatabase:ExternalDatabaseGatewayTimeout", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
 }
 
 func (e *ExternalDatabaseGatewayTimeout) UnmarshalJSON(data []byte) error {
@@ -4534,9 +4537,10 @@ func (e *InvalidPlotType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidRangeNodeStartAfterViewRange struct {
-	NodeStart api2.Timestamp `json:"nodeStart"`
-	RangeEnd  api2.Timestamp `json:"rangeEnd"`
+	NodeStart api2.Timestamp `json:"nodeStart" safelogging:"@Safe"`
+	RangeEnd  api2.Timestamp `json:"rangeEnd" safelogging:"@Safe"`
 }
 
 func (o invalidRangeNodeStartAfterViewRange) MarshalYAML() (interface{}, error) {
@@ -4835,8 +4839,9 @@ func (e *InvalidRefpropInputCount) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidSeriesLocator struct {
-	SeriesRid api2.LogicalSeriesRid `json:"seriesRid"`
+	SeriesRid api2.LogicalSeriesRid `json:"seriesRid" safelogging:"@Safe"`
 }
 
 func (o invalidSeriesLocator) MarshalYAML() (interface{}, error) {
@@ -6038,8 +6043,9 @@ func (e *MissingFunctionParameter) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type missingModuleApplication struct {
-	ModuleApplicationRid api3.ModuleApplicationRid `json:"moduleApplicationRid"`
+	ModuleApplicationRid api3.ModuleApplicationRid `json:"moduleApplicationRid" safelogging:"@Safe"`
 }
 
 func (o missingModuleApplication) MarshalYAML() (interface{}, error) {
@@ -6346,8 +6352,9 @@ func (e *MissingModuleFunction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type notAuthorized struct {
-	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids"`
+	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids" safelogging:"@Safe"`
 }
 
 func (o notAuthorized) MarshalJSON() ([]byte, error) {
@@ -10280,9 +10287,10 @@ func (e *UnexpectedTimeout) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type unitConversionInvalid struct {
-	InputUnit  api1.UnitSymbol `json:"inputUnit"`
-	OutputUnit api1.UnitSymbol `json:"outputUnit"`
+	InputUnit  api1.UnitSymbol `json:"inputUnit" safelogging:"@Unsafe"`
+	OutputUnit api1.UnitSymbol `json:"outputUnit" safelogging:"@Unsafe"`
 }
 
 func (o unitConversionInvalid) MarshalYAML() (interface{}, error) {
@@ -10380,7 +10388,7 @@ func (e *UnitConversionInvalid) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *UnitConversionInvalid) safeParams() map[string]interface{} {
-	return map[string]interface{}{"inputUnit": e.InputUnit, "outputUnit": e.OutputUnit, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -10397,7 +10405,7 @@ func (e *UnitConversionInvalid) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *UnitConversionInvalid) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"inputUnit": e.InputUnit, "outputUnit": e.OutputUnit}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -10585,9 +10593,10 @@ func (e *UnsupportedRefpropProperty) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type variableHasWrongType struct {
-	VariableName VariableName `json:"variableName"`
 	ExpectedType string       `json:"expectedType"`
+	VariableName VariableName `json:"variableName" safelogging:"@Unsafe"`
 }
 
 func (o variableHasWrongType) MarshalYAML() (interface{}, error) {
@@ -10607,13 +10616,13 @@ func (o *variableHasWrongType) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 // NewVariableHasWrongType returns new instance of VariableHasWrongType error.
-func NewVariableHasWrongType(variableNameArg VariableName, expectedTypeArg string) *VariableHasWrongType {
-	return &VariableHasWrongType{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), variableHasWrongType: variableHasWrongType{VariableName: variableNameArg, ExpectedType: expectedTypeArg}}
+func NewVariableHasWrongType(expectedTypeArg string, variableNameArg VariableName) *VariableHasWrongType {
+	return &VariableHasWrongType{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), variableHasWrongType: variableHasWrongType{ExpectedType: expectedTypeArg, VariableName: variableNameArg}}
 }
 
 // WrapWithVariableHasWrongType returns new instance of VariableHasWrongType error wrapping an existing error.
-func WrapWithVariableHasWrongType(err error, variableNameArg VariableName, expectedTypeArg string) *VariableHasWrongType {
-	return &VariableHasWrongType{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, variableHasWrongType: variableHasWrongType{VariableName: variableNameArg, ExpectedType: expectedTypeArg}}
+func WrapWithVariableHasWrongType(err error, expectedTypeArg string, variableNameArg VariableName) *VariableHasWrongType {
+	return &VariableHasWrongType{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, variableHasWrongType: variableHasWrongType{ExpectedType: expectedTypeArg, VariableName: variableNameArg}}
 }
 
 // VariableHasWrongType is an error type.
@@ -10676,12 +10685,12 @@ func (e *VariableHasWrongType) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *VariableHasWrongType) Parameters() map[string]interface{} {
-	return map[string]interface{}{"variableName": e.VariableName, "expectedType": e.ExpectedType}
+	return map[string]interface{}{"expectedType": e.ExpectedType, "variableName": e.VariableName}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *VariableHasWrongType) safeParams() map[string]interface{} {
-	return map[string]interface{}{"variableName": e.VariableName, "expectedType": e.ExpectedType, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"expectedType": e.ExpectedType, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -10698,7 +10707,7 @@ func (e *VariableHasWrongType) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *VariableHasWrongType) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"variableName": e.VariableName}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and

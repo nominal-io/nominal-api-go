@@ -31,11 +31,12 @@ func (o *Empty) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Ensure that the extractor job exists in the control plane. Runs in the namespace given by workspaceRid.
+// safelogging:@Unsafe
 type EnsureExtractorJobCreatedRequest struct {
 	BearerToken            bearertoken.Token          `json:"bearerToken"`
-	WorkspaceRid           rids.WorkspaceRid          `json:"workspaceRid"`
+	WorkspaceRid           rids.WorkspaceRid          `json:"workspaceRid" safelogging:"@Safe"`
 	IngestJobUuid          uuid.UUID                  `json:"ingestJobUuid"`
-	ContainerizedExtractor api.ContainerizedExtractor `json:"containerizedExtractor"`
+	ContainerizedExtractor api.ContainerizedExtractor `json:"containerizedExtractor" safelogging:"@Unsafe"`
 	Tag                    string                     `json:"tag"`
 	ValidatedFileInputs    []ValidatedFileInput       `json:"validatedFileInputs"`
 	MultipartUploadDetails MultipartUploadDetails     `json:"multipartUploadDetails"`
@@ -111,7 +112,7 @@ Ensures a Kubernetes secret of type kubernetes.io/dockerconfigjson exists
 for the given registry credentials.
 */
 type EnsureImagePullSecretCreatedRequest struct {
-	WorkspaceRid   rids.WorkspaceRid                 `json:"workspaceRid"`
+	WorkspaceRid   rids.WorkspaceRid                 `json:"workspaceRid" safelogging:"@Safe"`
 	ImageSource    api.DockerImageSource             `json:"imageSource"`
 	Authentication api.UserAndPasswordAuthentication `json:"authentication"`
 	IngestJobUuid  uuid.UUID                         `json:"ingestJobUuid"`
@@ -155,8 +156,9 @@ func (o *EnsureImagePullSecretCreatedResponse) UnmarshalYAML(unmarshal func(inte
 }
 
 // For a given workspace rid, ensures there is a log4j2 config map defined in the namespace.
+// safelogging:@Safe
 type EnsureWorkspaceConfigMapCreatedRequest struct {
-	WorkspaceRid rids.WorkspaceRid `json:"workspaceRid"`
+	WorkspaceRid rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
 }
 
 func (o EnsureWorkspaceConfigMapCreatedRequest) MarshalYAML() (interface{}, error) {
@@ -176,8 +178,9 @@ func (o *EnsureWorkspaceConfigMapCreatedRequest) UnmarshalYAML(unmarshal func(in
 }
 
 // For a given workspace rid, ensures that there is a corresponding K8s namespace created.
+// safelogging:@Safe
 type EnsureWorkspaceNamespaceCreatedRequest struct {
-	WorkspaceRid rids.WorkspaceRid `json:"workspaceRid"`
+	WorkspaceRid rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
 }
 
 func (o EnsureWorkspaceNamespaceCreatedRequest) MarshalYAML() (interface{}, error) {
@@ -197,8 +200,9 @@ func (o *EnsureWorkspaceNamespaceCreatedRequest) UnmarshalYAML(unmarshal func(in
 }
 
 // For a given workspace rid, ensures that there is a service account in the proper K8s Namespace.
+// safelogging:@Safe
 type EnsureWorkspaceServiceAccountCreatedRequest struct {
-	WorkspaceRid rids.WorkspaceRid `json:"workspaceRid"`
+	WorkspaceRid rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
 }
 
 func (o EnsureWorkspaceServiceAccountCreatedRequest) MarshalYAML() (interface{}, error) {
@@ -219,11 +223,11 @@ func (o *EnsureWorkspaceServiceAccountCreatedRequest) UnmarshalYAML(unmarshal fu
 
 // Request to fetch logs for all containers in a completed extractor job's pod.
 type FetchExtractorJobLogsRequest struct {
-	WorkspaceRid  rids.WorkspaceRid             `json:"workspaceRid"`
-	LogDatasetRid rids.DatasetRid               `json:"logDatasetRid"`
+	WorkspaceRid  rids.WorkspaceRid             `json:"workspaceRid" safelogging:"@Safe"`
+	LogDatasetRid rids.DatasetRid               `json:"logDatasetRid" safelogging:"@Safe"`
 	IngestJobUuid uuid.UUID                     `json:"ingestJobUuid"`
 	BearerToken   bearertoken.Token             `json:"bearerToken"`
-	ExtractorRid  api.ContainerizedExtractorRid `json:"extractorRid"`
+	ExtractorRid  api.ContainerizedExtractorRid `json:"extractorRid" safelogging:"@Safe"`
 }
 
 func (o FetchExtractorJobLogsRequest) MarshalYAML() (interface{}, error) {
@@ -261,7 +265,7 @@ func (o *FetchExtractorJobLogsResponse) UnmarshalYAML(unmarshal func(interface{}
 }
 
 type GetExtractorJobStateRequest struct {
-	WorkspaceRid  rids.WorkspaceRid `json:"workspaceRid"`
+	WorkspaceRid  rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
 	IngestJobUuid uuid.UUID         `json:"ingestJobUuid"`
 }
 
@@ -501,8 +505,9 @@ func (o *ObjectLocator) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@DoNotLog
 type PresignedFileInput struct {
-	Url   PresignedUrl       `json:"url"`
+	Url   PresignedUrl       `json:"url" safelogging:"@DoNotLog"`
 	Input ValidatedFileInput `json:"input"`
 }
 

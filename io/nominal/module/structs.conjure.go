@@ -12,8 +12,9 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Safe
 type BatchArchiveModulesRequest struct {
-	Requests []api.ModuleRid `json:"requests"`
+	Requests []api.ModuleRid `json:"requests" safelogging:"@Safe"`
 }
 
 func (o BatchArchiveModulesRequest) MarshalJSON() ([]byte, error) {
@@ -53,8 +54,9 @@ func (o *BatchArchiveModulesRequest) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type BatchArchiveModulesResponse struct {
-	ArchivedModuleRids []api.ModuleRid `json:"archivedModuleRids"`
+	ArchivedModuleRids []api.ModuleRid `json:"archivedModuleRids" safelogging:"@Safe"`
 }
 
 func (o BatchArchiveModulesResponse) MarshalJSON() ([]byte, error) {
@@ -135,8 +137,9 @@ func (o *BatchGetModulesRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type BatchUnarchiveModulesRequest struct {
-	Requests []api.ModuleRid `json:"requests"`
+	Requests []api.ModuleRid `json:"requests" safelogging:"@Safe"`
 }
 
 func (o BatchUnarchiveModulesRequest) MarshalJSON() ([]byte, error) {
@@ -176,8 +179,9 @@ func (o *BatchUnarchiveModulesRequest) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type BatchUnarchiveModulesResponse struct {
-	UnarchivedModuleRids []api.ModuleRid `json:"unarchivedModuleRids"`
+	UnarchivedModuleRids []api.ModuleRid `json:"unarchivedModuleRids" safelogging:"@Safe"`
 }
 
 func (o BatchUnarchiveModulesResponse) MarshalJSON() ([]byte, error) {
@@ -223,7 +227,7 @@ type CreateModuleRequest struct {
 	Title       string                  `json:"title"`
 	Description string                  `json:"description"`
 	Definition  ModuleVersionDefinition `json:"definition"`
-	Workspace   *rids.WorkspaceRid      `json:"workspace,omitempty"`
+	Workspace   *rids.WorkspaceRid      `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateModuleRequest) MarshalYAML() (interface{}, error) {
@@ -288,8 +292,9 @@ func (o *Function) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type FunctionParameter struct {
-	Name ParameterName `json:"name"`
+	Name ParameterName `json:"name" safelogging:"@Unsafe"`
 	Type ValueType     `json:"type"`
 }
 
@@ -351,7 +356,7 @@ func (o *Module) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type ModuleMetadata struct {
-	Rid api.ModuleRid `json:"rid"`
+	Rid api.ModuleRid `json:"rid" safelogging:"@Safe"`
 	/*
 	   This uniquely identifies the module within the org.
 	   Note that this cannot be changed after creation.
@@ -359,7 +364,7 @@ type ModuleMetadata struct {
 	ApiName     string            `json:"apiName"`
 	Title       string            `json:"title"`
 	Description string            `json:"description"`
-	CreatedBy   api1.UserRid      `json:"createdBy"`
+	CreatedBy   api1.UserRid      `json:"createdBy" safelogging:"@Safe"`
 	CreatedAt   datetime.DateTime `json:"createdAt"`
 	// The time at which the module was archived. Unset if the module is not archived.
 	ArchivedAt *datetime.DateTime `json:"archivedAt,omitempty"`
@@ -382,9 +387,9 @@ func (o *ModuleMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type ModuleRef struct {
-	Rid     api.ModuleRid `json:"rid"`
+	Rid     api.ModuleRid `json:"rid" safelogging:"@Safe"`
 	ApiName string        `json:"apiName"`
-	Version ModuleVersion `json:"version"`
+	Version ModuleVersion `json:"version" safelogging:"@Safe"`
 }
 
 func (o ModuleRef) MarshalYAML() (interface{}, error) {
@@ -470,9 +475,9 @@ func (o *ModuleVersionDefinition) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 type ModuleVersionMetadata struct {
-	CreatedBy api1.UserRid      `json:"createdBy"`
+	CreatedBy api1.UserRid      `json:"createdBy" safelogging:"@Safe"`
 	CreatedAt datetime.DateTime `json:"createdAt"`
-	Version   ModuleVersion     `json:"version"`
+	Version   ModuleVersion     `json:"version" safelogging:"@Safe"`
 }
 
 func (o ModuleVersionMetadata) MarshalYAML() (interface{}, error) {
@@ -492,8 +497,9 @@ func (o *ModuleVersionMetadata) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 // This strategy refers to a specific version of the module.
+// safelogging:@Safe
 type PinnedVersionStrategy struct {
-	Version ModuleVersion `json:"version"`
+	Version ModuleVersion `json:"version" safelogging:"@Safe"`
 }
 
 func (o PinnedVersionStrategy) MarshalYAML() (interface{}, error) {
@@ -536,7 +542,7 @@ func (o *RequestModuleNameRef) UnmarshalYAML(unmarshal func(interface{}) error) 
 
 // This is used to refer to modules in requests by rid.
 type RequestModuleRidRef struct {
-	Rid             api.ModuleRid   `json:"rid"`
+	Rid             api.ModuleRid   `json:"rid" safelogging:"@Safe"`
 	VersionStrategy VersionStrategy `json:"versionStrategy"`
 }
 
@@ -556,11 +562,12 @@ func (o *RequestModuleRidRef) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchModulesRequest struct {
 	Query         SearchModulesQuery        `json:"query"`
 	Sort          *SearchModulesSortOptions `json:"sort,omitempty"`
 	PageSize      int                       `json:"pageSize"`
-	NextPageToken *api2.Token               `json:"nextPageToken,omitempty"`
+	NextPageToken *api2.Token               `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived modules in search.
 	ArchivedStatuses *[]api2.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
@@ -581,9 +588,10 @@ func (o *SearchModulesRequest) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type SearchModulesResponse struct {
 	Results       []ModuleSummary `json:"results"`
-	NextPageToken *api2.Token     `json:"nextPageToken,omitempty"`
+	NextPageToken *api2.Token     `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchModulesResponse) MarshalJSON() ([]byte, error) {

@@ -168,8 +168,9 @@ func (e *DerivedSeriesHasWrongType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type missingModuleVariable struct {
-	VariableName api.VariableName `json:"variableName"`
+	VariableName api.VariableName `json:"variableName" safelogging:"@Unsafe"`
 	Context      *Context         `json:"context,omitempty"`
 }
 
@@ -318,8 +319,9 @@ func (e *MissingModuleVariable) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type missingVariable struct {
-	VariableName api.VariableName `json:"variableName"`
+	VariableName api.VariableName `json:"variableName" safelogging:"@Unsafe"`
 	Context      *Context         `json:"context,omitempty"`
 }
 
@@ -414,7 +416,7 @@ func (e *MissingVariable) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *MissingVariable) safeParams() map[string]interface{} {
-	return map[string]interface{}{"variableName": e.VariableName, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -431,7 +433,7 @@ func (e *MissingVariable) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *MissingVariable) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"context": e.Context}
+	return map[string]interface{}{"variableName": e.VariableName, "context": e.Context}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -770,8 +772,8 @@ func (e *NonPositiveResampleInterval) UnmarshalJSON(data []byte) error {
 
 type resolutionIntervalTooSmallForRange struct {
 	RequestedResolution api1.Duration  `json:"requestedResolution"`
-	Start               api2.Timestamp `json:"start"`
-	End                 api2.Timestamp `json:"end"`
+	Start               api2.Timestamp `json:"start" safelogging:"@Safe"`
+	End                 api2.Timestamp `json:"end" safelogging:"@Safe"`
 }
 
 func (o resolutionIntervalTooSmallForRange) MarshalYAML() (interface{}, error) {

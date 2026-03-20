@@ -1866,16 +1866,136 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
+	case "abs":
+		if u.abs == nil {
+			return result, fmt.Errorf("field \"abs\" is required")
+		}
+		return v.VisitAbs(ctx, *u.abs)
+	case "negate":
+		if u.negate == nil {
+			return result, fmt.Errorf("field \"negate\" is required")
+		}
+		return v.VisitNegate(ctx, *u.negate)
+	case "cos":
+		if u.cos == nil {
+			return result, fmt.Errorf("field \"cos\" is required")
+		}
+		return v.VisitCos(ctx, *u.cos)
+	case "sin":
+		if u.sin == nil {
+			return result, fmt.Errorf("field \"sin\" is required")
+		}
+		return v.VisitSin(ctx, *u.sin)
+	case "tan":
+		if u.tan == nil {
+			return result, fmt.Errorf("field \"tan\" is required")
+		}
+		return v.VisitTan(ctx, *u.tan)
+	case "acos":
+		if u.acos == nil {
+			return result, fmt.Errorf("field \"acos\" is required")
+		}
+		return v.VisitAcos(ctx, *u.acos)
+	case "asin":
+		if u.asin == nil {
+			return result, fmt.Errorf("field \"asin\" is required")
+		}
+		return v.VisitAsin(ctx, *u.asin)
+	case "ln":
+		if u.ln == nil {
+			return result, fmt.Errorf("field \"ln\" is required")
+		}
+		return v.VisitLn(ctx, *u.ln)
+	case "log10":
+		if u.log10 == nil {
+			return result, fmt.Errorf("field \"log10\" is required")
+		}
+		return v.VisitLog10(ctx, *u.log10)
+	case "sqrt":
+		if u.sqrt == nil {
+			return result, fmt.Errorf("field \"sqrt\" is required")
+		}
+		return v.VisitSqrt(ctx, *u.sqrt)
+	case "add":
+		if u.add == nil {
+			return result, fmt.Errorf("field \"add\" is required")
+		}
+		return v.VisitAdd(ctx, *u.add)
+	case "subtract":
+		if u.subtract == nil {
+			return result, fmt.Errorf("field \"subtract\" is required")
+		}
+		return v.VisitSubtract(ctx, *u.subtract)
+	case "multiply":
+		if u.multiply == nil {
+			return result, fmt.Errorf("field \"multiply\" is required")
+		}
+		return v.VisitMultiply(ctx, *u.multiply)
+	case "divide":
+		if u.divide == nil {
+			return result, fmt.Errorf("field \"divide\" is required")
+		}
+		return v.VisitDivide(ctx, *u.divide)
+	case "floorDivide":
+		if u.floorDivide == nil {
+			return result, fmt.Errorf("field \"floorDivide\" is required")
+		}
+		return v.VisitFloorDivide(ctx, *u.floorDivide)
+	case "power":
+		if u.power == nil {
+			return result, fmt.Errorf("field \"power\" is required")
+		}
+		return v.VisitPower(ctx, *u.power)
+	case "modulo":
+		if u.modulo == nil {
+			return result, fmt.Errorf("field \"modulo\" is required")
+		}
+		return v.VisitModulo(ctx, *u.modulo)
+	case "atan2":
+		if u.atan2 == nil {
+			return result, fmt.Errorf("field \"atan2\" is required")
+		}
+		return v.VisitAtan2(ctx, *u.atan2)
+	case "max":
+		if u.max == nil {
+			return result, fmt.Errorf("field \"max\" is required")
+		}
+		return v.VisitMax(ctx, *u.max)
+	case "mean":
+		if u.mean == nil {
+			return result, fmt.Errorf("field \"mean\" is required")
+		}
+		return v.VisitMean(ctx, *u.mean)
+	case "min":
+		if u.min == nil {
+			return result, fmt.Errorf("field \"min\" is required")
+		}
+		return v.VisitMin(ctx, *u.min)
+	case "sum":
+		if u.sum == nil {
+			return result, fmt.Errorf("field \"sum\" is required")
+		}
+		return v.VisitSum(ctx, *u.sum)
+	case "union":
+		if u.union == nil {
+			return result, fmt.Errorf("field \"union\" is required")
+		}
+		return v.VisitUnion(ctx, *u.union)
+	case "product":
+		if u.product == nil {
+			return result, fmt.Errorf("field \"product\" is required")
+		}
+		return v.VisitProduct(ctx, *u.product)
+	case "constant":
+		if u.constant == nil {
+			return result, fmt.Errorf("field \"constant\" is required")
+		}
+		return v.VisitConstant(ctx, *u.constant)
 	case "aggregate":
 		if u.aggregate == nil {
 			return result, fmt.Errorf("field \"aggregate\" is required")
 		}
 		return v.VisitAggregate(ctx, *u.aggregate)
-	case "arithmetic":
-		if u.arithmetic == nil {
-			return result, fmt.Errorf("field \"arithmetic\" is required")
-		}
-		return v.VisitArithmetic(ctx, *u.arithmetic)
 	case "bitOperation":
 		if u.bitOperation == nil {
 			return result, fmt.Errorf("field \"bitOperation\" is required")
@@ -1901,21 +2021,6 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 			return result, fmt.Errorf("field \"integral\" is required")
 		}
 		return v.VisitIntegral(ctx, *u.integral)
-	case "max":
-		if u.max == nil {
-			return result, fmt.Errorf("field \"max\" is required")
-		}
-		return v.VisitMax(ctx, *u.max)
-	case "mean":
-		if u.mean == nil {
-			return result, fmt.Errorf("field \"mean\" is required")
-		}
-		return v.VisitMean(ctx, *u.mean)
-	case "min":
-		if u.min == nil {
-			return result, fmt.Errorf("field \"min\" is required")
-		}
-		return v.VisitMin(ctx, *u.min)
 	case "zScore":
 		if u.zScore == nil {
 			return result, fmt.Errorf("field \"zScore\" is required")
@@ -1926,11 +2031,6 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 			return result, fmt.Errorf("field \"offset\" is required")
 		}
 		return v.VisitOffset(ctx, *u.offset)
-	case "product":
-		if u.product == nil {
-			return result, fmt.Errorf("field \"product\" is required")
-		}
-		return v.VisitProduct(ctx, *u.product)
 	case "raw":
 		if u.raw == nil {
 			return result, fmt.Errorf("field \"raw\" is required")
@@ -1961,11 +2061,6 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 			return result, fmt.Errorf("field \"signalFilter\" is required")
 		}
 		return v.VisitSignalFilter(ctx, *u.signalFilter)
-	case "sum":
-		if u.sum == nil {
-			return result, fmt.Errorf("field \"sum\" is required")
-		}
-		return v.VisitSum(ctx, *u.sum)
 	case "scale":
 		if u.scale == nil {
 			return result, fmt.Errorf("field \"scale\" is required")
@@ -1991,21 +2086,6 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 			return result, fmt.Errorf("field \"timeShift\" is required")
 		}
 		return v.VisitTimeShift(ctx, *u.timeShift)
-	case "unaryArithmetic":
-		if u.unaryArithmetic == nil {
-			return result, fmt.Errorf("field \"unaryArithmetic\" is required")
-		}
-		return v.VisitUnaryArithmetic(ctx, *u.unaryArithmetic)
-	case "binaryArithmetic":
-		if u.binaryArithmetic == nil {
-			return result, fmt.Errorf("field \"binaryArithmetic\" is required")
-		}
-		return v.VisitBinaryArithmetic(ctx, *u.binaryArithmetic)
-	case "union":
-		if u.union == nil {
-			return result, fmt.Errorf("field \"union\" is required")
-		}
-		return v.VisitUnion(ctx, *u.union)
 	case "unitConversion":
 		if u.unitConversion == nil {
 			return result, fmt.Errorf("field \"unitConversion\" is required")
@@ -2066,10 +2146,25 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 			return result, fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStruct(ctx, *u.extractFromStruct)
+	case "arithmetic":
+		if u.arithmetic == nil {
+			return result, fmt.Errorf("field \"arithmetic\" is required")
+		}
+		return v.VisitArithmetic(ctx, *u.arithmetic)
+	case "unaryArithmetic":
+		if u.unaryArithmetic == nil {
+			return result, fmt.Errorf("field \"unaryArithmetic\" is required")
+		}
+		return v.VisitUnaryArithmetic(ctx, *u.unaryArithmetic)
+	case "binaryArithmetic":
+		if u.binaryArithmetic == nil {
+			return result, fmt.Errorf("field \"binaryArithmetic\" is required")
+		}
+		return v.VisitBinaryArithmetic(ctx, *u.binaryArithmetic)
 	}
 }
 
-func (u *NumericSeriesWithT[T]) AcceptFuncs(aggregateFunc func(AggregateNumericSeries) (T, error), arithmeticFunc func(ArithmeticSeries) (T, error), bitOperationFunc func(BitOperationSeries) (T, error), countDuplicateFunc func(EnumCountDuplicateSeries) (T, error), cumulativeSumFunc func(CumulativeSumSeries) (T, error), derivativeFunc func(DerivativeSeries) (T, error), integralFunc func(IntegralSeries) (T, error), maxFunc func(MaxSeries) (T, error), meanFunc func(MeanSeries) (T, error), minFunc func(MinSeries) (T, error), zScoreFunc func(ZscoreSeries) (T, error), offsetFunc func(OffsetSeries) (T, error), productFunc func(ProductSeries) (T, error), rawFunc func(api.Reference) (T, error), channelFunc func(api.ChannelSeries) (T, error), derivedFunc func(DerivedSeries) (T, error), resampleFunc func(NumericResampleSeries) (T, error), rollingOperationFunc func(RollingOperationSeries) (T, error), signalFilterFunc func(SignalFilterSeries) (T, error), sumFunc func(SumSeries) (T, error), scaleFunc func(ScaleSeries) (T, error), timeDifferenceFunc func(TimeDifferenceSeries) (T, error), absoluteTimestampFunc func(AbsoluteTimestampSeries) (T, error), timeRangeFilterFunc func(NumericTimeRangeFilterSeries) (T, error), timeShiftFunc func(NumericTimeShiftSeries) (T, error), unaryArithmeticFunc func(UnaryArithmeticSeries) (T, error), binaryArithmeticFunc func(BinaryArithmeticSeries) (T, error), unionFunc func(NumericUnionSeries) (T, error), unitConversionFunc func(UnitConversionSeries) (T, error), valueDifferenceFunc func(ValueDifferenceSeries) (T, error), filterTransformationFunc func(NumericFilterTransformationSeries) (T, error), thresholdFilterFunc func(NumericThresholdFilterSeries) (T, error), approximateFilterFunc func(NumericApproximateFilterSeries) (T, error), select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) (T, error), selectNewestPointsFunc func(SelectNewestPointsSeries) (T, error), aggregateUnderRangesFunc func(AggregateUnderRangesSeries) (T, error), filterByExpressionFunc func(FilterByExpressionSeries) (T, error), enumToNumericFunc func(EnumToNumericSeries) (T, error), refpropFunc func(RefpropSeries) (T, error), extractFromStructFunc func(ExtractNumericFromStructSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *NumericSeriesWithT[T]) AcceptFuncs(absFunc func(Abs) (T, error), negateFunc func(Negate) (T, error), cosFunc func(Cos) (T, error), sinFunc func(Sin) (T, error), tanFunc func(Tan) (T, error), acosFunc func(Acos) (T, error), asinFunc func(Asin) (T, error), lnFunc func(Ln) (T, error), log10Func func(Log10) (T, error), sqrtFunc func(Sqrt) (T, error), addFunc func(Add) (T, error), subtractFunc func(Subtract) (T, error), multiplyFunc func(Multiply) (T, error), divideFunc func(Divide) (T, error), floorDivideFunc func(FloorDivide) (T, error), powerFunc func(Power) (T, error), moduloFunc func(Modulo) (T, error), atan2Func func(Atan2) (T, error), maxFunc func(MaxSeries) (T, error), meanFunc func(MeanSeries) (T, error), minFunc func(MinSeries) (T, error), sumFunc func(SumSeries) (T, error), unionFunc func(NumericUnionSeries) (T, error), productFunc func(ProductSeries) (T, error), constantFunc func(api.ConstantNumericSeries) (T, error), aggregateFunc func(AggregateNumericSeries) (T, error), bitOperationFunc func(BitOperationSeries) (T, error), countDuplicateFunc func(EnumCountDuplicateSeries) (T, error), cumulativeSumFunc func(CumulativeSumSeries) (T, error), derivativeFunc func(DerivativeSeries) (T, error), integralFunc func(IntegralSeries) (T, error), zScoreFunc func(ZscoreSeries) (T, error), offsetFunc func(OffsetSeries) (T, error), rawFunc func(api.Reference) (T, error), channelFunc func(api.ChannelSeries) (T, error), derivedFunc func(DerivedSeries) (T, error), resampleFunc func(NumericResampleSeries) (T, error), rollingOperationFunc func(RollingOperationSeries) (T, error), signalFilterFunc func(SignalFilterSeries) (T, error), scaleFunc func(ScaleSeries) (T, error), timeDifferenceFunc func(TimeDifferenceSeries) (T, error), absoluteTimestampFunc func(AbsoluteTimestampSeries) (T, error), timeRangeFilterFunc func(NumericTimeRangeFilterSeries) (T, error), timeShiftFunc func(NumericTimeShiftSeries) (T, error), unitConversionFunc func(UnitConversionSeries) (T, error), valueDifferenceFunc func(ValueDifferenceSeries) (T, error), filterTransformationFunc func(NumericFilterTransformationSeries) (T, error), thresholdFilterFunc func(NumericThresholdFilterSeries) (T, error), approximateFilterFunc func(NumericApproximateFilterSeries) (T, error), select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) (T, error), selectNewestPointsFunc func(SelectNewestPointsSeries) (T, error), aggregateUnderRangesFunc func(AggregateUnderRangesSeries) (T, error), filterByExpressionFunc func(FilterByExpressionSeries) (T, error), enumToNumericFunc func(EnumToNumericSeries) (T, error), refpropFunc func(RefpropSeries) (T, error), extractFromStructFunc func(ExtractNumericFromStructSeries) (T, error), arithmeticFunc func(ArithmeticSeries) (T, error), unaryArithmeticFunc func(UnaryArithmeticSeries) (T, error), binaryArithmeticFunc func(BinaryArithmeticSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2077,16 +2172,136 @@ func (u *NumericSeriesWithT[T]) AcceptFuncs(aggregateFunc func(AggregateNumericS
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
+	case "abs":
+		if u.abs == nil {
+			return result, fmt.Errorf("field \"abs\" is required")
+		}
+		return absFunc(*u.abs)
+	case "negate":
+		if u.negate == nil {
+			return result, fmt.Errorf("field \"negate\" is required")
+		}
+		return negateFunc(*u.negate)
+	case "cos":
+		if u.cos == nil {
+			return result, fmt.Errorf("field \"cos\" is required")
+		}
+		return cosFunc(*u.cos)
+	case "sin":
+		if u.sin == nil {
+			return result, fmt.Errorf("field \"sin\" is required")
+		}
+		return sinFunc(*u.sin)
+	case "tan":
+		if u.tan == nil {
+			return result, fmt.Errorf("field \"tan\" is required")
+		}
+		return tanFunc(*u.tan)
+	case "acos":
+		if u.acos == nil {
+			return result, fmt.Errorf("field \"acos\" is required")
+		}
+		return acosFunc(*u.acos)
+	case "asin":
+		if u.asin == nil {
+			return result, fmt.Errorf("field \"asin\" is required")
+		}
+		return asinFunc(*u.asin)
+	case "ln":
+		if u.ln == nil {
+			return result, fmt.Errorf("field \"ln\" is required")
+		}
+		return lnFunc(*u.ln)
+	case "log10":
+		if u.log10 == nil {
+			return result, fmt.Errorf("field \"log10\" is required")
+		}
+		return log10Func(*u.log10)
+	case "sqrt":
+		if u.sqrt == nil {
+			return result, fmt.Errorf("field \"sqrt\" is required")
+		}
+		return sqrtFunc(*u.sqrt)
+	case "add":
+		if u.add == nil {
+			return result, fmt.Errorf("field \"add\" is required")
+		}
+		return addFunc(*u.add)
+	case "subtract":
+		if u.subtract == nil {
+			return result, fmt.Errorf("field \"subtract\" is required")
+		}
+		return subtractFunc(*u.subtract)
+	case "multiply":
+		if u.multiply == nil {
+			return result, fmt.Errorf("field \"multiply\" is required")
+		}
+		return multiplyFunc(*u.multiply)
+	case "divide":
+		if u.divide == nil {
+			return result, fmt.Errorf("field \"divide\" is required")
+		}
+		return divideFunc(*u.divide)
+	case "floorDivide":
+		if u.floorDivide == nil {
+			return result, fmt.Errorf("field \"floorDivide\" is required")
+		}
+		return floorDivideFunc(*u.floorDivide)
+	case "power":
+		if u.power == nil {
+			return result, fmt.Errorf("field \"power\" is required")
+		}
+		return powerFunc(*u.power)
+	case "modulo":
+		if u.modulo == nil {
+			return result, fmt.Errorf("field \"modulo\" is required")
+		}
+		return moduloFunc(*u.modulo)
+	case "atan2":
+		if u.atan2 == nil {
+			return result, fmt.Errorf("field \"atan2\" is required")
+		}
+		return atan2Func(*u.atan2)
+	case "max":
+		if u.max == nil {
+			return result, fmt.Errorf("field \"max\" is required")
+		}
+		return maxFunc(*u.max)
+	case "mean":
+		if u.mean == nil {
+			return result, fmt.Errorf("field \"mean\" is required")
+		}
+		return meanFunc(*u.mean)
+	case "min":
+		if u.min == nil {
+			return result, fmt.Errorf("field \"min\" is required")
+		}
+		return minFunc(*u.min)
+	case "sum":
+		if u.sum == nil {
+			return result, fmt.Errorf("field \"sum\" is required")
+		}
+		return sumFunc(*u.sum)
+	case "union":
+		if u.union == nil {
+			return result, fmt.Errorf("field \"union\" is required")
+		}
+		return unionFunc(*u.union)
+	case "product":
+		if u.product == nil {
+			return result, fmt.Errorf("field \"product\" is required")
+		}
+		return productFunc(*u.product)
+	case "constant":
+		if u.constant == nil {
+			return result, fmt.Errorf("field \"constant\" is required")
+		}
+		return constantFunc(*u.constant)
 	case "aggregate":
 		if u.aggregate == nil {
 			return result, fmt.Errorf("field \"aggregate\" is required")
 		}
 		return aggregateFunc(*u.aggregate)
-	case "arithmetic":
-		if u.arithmetic == nil {
-			return result, fmt.Errorf("field \"arithmetic\" is required")
-		}
-		return arithmeticFunc(*u.arithmetic)
 	case "bitOperation":
 		if u.bitOperation == nil {
 			return result, fmt.Errorf("field \"bitOperation\" is required")
@@ -2112,21 +2327,6 @@ func (u *NumericSeriesWithT[T]) AcceptFuncs(aggregateFunc func(AggregateNumericS
 			return result, fmt.Errorf("field \"integral\" is required")
 		}
 		return integralFunc(*u.integral)
-	case "max":
-		if u.max == nil {
-			return result, fmt.Errorf("field \"max\" is required")
-		}
-		return maxFunc(*u.max)
-	case "mean":
-		if u.mean == nil {
-			return result, fmt.Errorf("field \"mean\" is required")
-		}
-		return meanFunc(*u.mean)
-	case "min":
-		if u.min == nil {
-			return result, fmt.Errorf("field \"min\" is required")
-		}
-		return minFunc(*u.min)
 	case "zScore":
 		if u.zScore == nil {
 			return result, fmt.Errorf("field \"zScore\" is required")
@@ -2137,11 +2337,6 @@ func (u *NumericSeriesWithT[T]) AcceptFuncs(aggregateFunc func(AggregateNumericS
 			return result, fmt.Errorf("field \"offset\" is required")
 		}
 		return offsetFunc(*u.offset)
-	case "product":
-		if u.product == nil {
-			return result, fmt.Errorf("field \"product\" is required")
-		}
-		return productFunc(*u.product)
 	case "raw":
 		if u.raw == nil {
 			return result, fmt.Errorf("field \"raw\" is required")
@@ -2172,11 +2367,6 @@ func (u *NumericSeriesWithT[T]) AcceptFuncs(aggregateFunc func(AggregateNumericS
 			return result, fmt.Errorf("field \"signalFilter\" is required")
 		}
 		return signalFilterFunc(*u.signalFilter)
-	case "sum":
-		if u.sum == nil {
-			return result, fmt.Errorf("field \"sum\" is required")
-		}
-		return sumFunc(*u.sum)
 	case "scale":
 		if u.scale == nil {
 			return result, fmt.Errorf("field \"scale\" is required")
@@ -2202,21 +2392,6 @@ func (u *NumericSeriesWithT[T]) AcceptFuncs(aggregateFunc func(AggregateNumericS
 			return result, fmt.Errorf("field \"timeShift\" is required")
 		}
 		return timeShiftFunc(*u.timeShift)
-	case "unaryArithmetic":
-		if u.unaryArithmetic == nil {
-			return result, fmt.Errorf("field \"unaryArithmetic\" is required")
-		}
-		return unaryArithmeticFunc(*u.unaryArithmetic)
-	case "binaryArithmetic":
-		if u.binaryArithmetic == nil {
-			return result, fmt.Errorf("field \"binaryArithmetic\" is required")
-		}
-		return binaryArithmeticFunc(*u.binaryArithmetic)
-	case "union":
-		if u.union == nil {
-			return result, fmt.Errorf("field \"union\" is required")
-		}
-		return unionFunc(*u.union)
 	case "unitConversion":
 		if u.unitConversion == nil {
 			return result, fmt.Errorf("field \"unitConversion\" is required")
@@ -2277,15 +2452,150 @@ func (u *NumericSeriesWithT[T]) AcceptFuncs(aggregateFunc func(AggregateNumericS
 			return result, fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return extractFromStructFunc(*u.extractFromStruct)
+	case "arithmetic":
+		if u.arithmetic == nil {
+			return result, fmt.Errorf("field \"arithmetic\" is required")
+		}
+		return arithmeticFunc(*u.arithmetic)
+	case "unaryArithmetic":
+		if u.unaryArithmetic == nil {
+			return result, fmt.Errorf("field \"unaryArithmetic\" is required")
+		}
+		return unaryArithmeticFunc(*u.unaryArithmetic)
+	case "binaryArithmetic":
+		if u.binaryArithmetic == nil {
+			return result, fmt.Errorf("field \"binaryArithmetic\" is required")
+		}
+		return binaryArithmeticFunc(*u.binaryArithmetic)
 	}
 }
 
-func (u *NumericSeriesWithT[T]) AggregateNoopSuccess(AggregateNumericSeries) (T, error) {
+func (u *NumericSeriesWithT[T]) AbsNoopSuccess(Abs) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *NumericSeriesWithT[T]) ArithmeticNoopSuccess(ArithmeticSeries) (T, error) {
+func (u *NumericSeriesWithT[T]) NegateNoopSuccess(Negate) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) CosNoopSuccess(Cos) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) SinNoopSuccess(Sin) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) TanNoopSuccess(Tan) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) AcosNoopSuccess(Acos) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) AsinNoopSuccess(Asin) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) LnNoopSuccess(Ln) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) Log10NoopSuccess(Log10) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) SqrtNoopSuccess(Sqrt) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) AddNoopSuccess(Add) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) SubtractNoopSuccess(Subtract) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) MultiplyNoopSuccess(Multiply) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) DivideNoopSuccess(Divide) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) FloorDivideNoopSuccess(FloorDivide) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) PowerNoopSuccess(Power) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) ModuloNoopSuccess(Modulo) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) Atan2NoopSuccess(Atan2) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) MaxNoopSuccess(MaxSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) MeanNoopSuccess(MeanSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) MinNoopSuccess(MinSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) SumNoopSuccess(SumSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) UnionNoopSuccess(NumericUnionSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) ProductNoopSuccess(ProductSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) ConstantNoopSuccess(api.ConstantNumericSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) AggregateNoopSuccess(AggregateNumericSeries) (T, error) {
 	var result T
 	return result, nil
 }
@@ -2315,32 +2625,12 @@ func (u *NumericSeriesWithT[T]) IntegralNoopSuccess(IntegralSeries) (T, error) {
 	return result, nil
 }
 
-func (u *NumericSeriesWithT[T]) MaxNoopSuccess(MaxSeries) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *NumericSeriesWithT[T]) MeanNoopSuccess(MeanSeries) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *NumericSeriesWithT[T]) MinNoopSuccess(MinSeries) (T, error) {
-	var result T
-	return result, nil
-}
-
 func (u *NumericSeriesWithT[T]) ZScoreNoopSuccess(ZscoreSeries) (T, error) {
 	var result T
 	return result, nil
 }
 
 func (u *NumericSeriesWithT[T]) OffsetNoopSuccess(OffsetSeries) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *NumericSeriesWithT[T]) ProductNoopSuccess(ProductSeries) (T, error) {
 	var result T
 	return result, nil
 }
@@ -2375,11 +2665,6 @@ func (u *NumericSeriesWithT[T]) SignalFilterNoopSuccess(SignalFilterSeries) (T, 
 	return result, nil
 }
 
-func (u *NumericSeriesWithT[T]) SumNoopSuccess(SumSeries) (T, error) {
-	var result T
-	return result, nil
-}
-
 func (u *NumericSeriesWithT[T]) ScaleNoopSuccess(ScaleSeries) (T, error) {
 	var result T
 	return result, nil
@@ -2401,21 +2686,6 @@ func (u *NumericSeriesWithT[T]) TimeRangeFilterNoopSuccess(NumericTimeRangeFilte
 }
 
 func (u *NumericSeriesWithT[T]) TimeShiftNoopSuccess(NumericTimeShiftSeries) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *NumericSeriesWithT[T]) UnaryArithmeticNoopSuccess(UnaryArithmeticSeries) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *NumericSeriesWithT[T]) BinaryArithmeticNoopSuccess(BinaryArithmeticSeries) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *NumericSeriesWithT[T]) UnionNoopSuccess(NumericUnionSeries) (T, error) {
 	var result T
 	return result, nil
 }
@@ -2480,40 +2750,71 @@ func (u *NumericSeriesWithT[T]) ExtractFromStructNoopSuccess(ExtractNumericFromS
 	return result, nil
 }
 
+func (u *NumericSeriesWithT[T]) ArithmeticNoopSuccess(ArithmeticSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) UnaryArithmeticNoopSuccess(UnaryArithmeticSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) BinaryArithmeticNoopSuccess(BinaryArithmeticSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *NumericSeriesWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
 type NumericSeriesVisitorWithT[T any] interface {
+	VisitAbs(ctx context.Context, v Abs) (T, error)
+	VisitNegate(ctx context.Context, v Negate) (T, error)
+	VisitCos(ctx context.Context, v Cos) (T, error)
+	VisitSin(ctx context.Context, v Sin) (T, error)
+	VisitTan(ctx context.Context, v Tan) (T, error)
+	VisitAcos(ctx context.Context, v Acos) (T, error)
+	VisitAsin(ctx context.Context, v Asin) (T, error)
+	VisitLn(ctx context.Context, v Ln) (T, error)
+	VisitLog10(ctx context.Context, v Log10) (T, error)
+	VisitSqrt(ctx context.Context, v Sqrt) (T, error)
+	VisitAdd(ctx context.Context, v Add) (T, error)
+	VisitSubtract(ctx context.Context, v Subtract) (T, error)
+	VisitMultiply(ctx context.Context, v Multiply) (T, error)
+	VisitDivide(ctx context.Context, v Divide) (T, error)
+	VisitFloorDivide(ctx context.Context, v FloorDivide) (T, error)
+	VisitPower(ctx context.Context, v Power) (T, error)
+	VisitModulo(ctx context.Context, v Modulo) (T, error)
+	VisitAtan2(ctx context.Context, v Atan2) (T, error)
+	VisitMax(ctx context.Context, v MaxSeries) (T, error)
+	VisitMean(ctx context.Context, v MeanSeries) (T, error)
+	VisitMin(ctx context.Context, v MinSeries) (T, error)
+	VisitSum(ctx context.Context, v SumSeries) (T, error)
+	VisitUnion(ctx context.Context, v NumericUnionSeries) (T, error)
+	VisitProduct(ctx context.Context, v ProductSeries) (T, error)
+	VisitConstant(ctx context.Context, v api.ConstantNumericSeries) (T, error)
 	VisitAggregate(ctx context.Context, v AggregateNumericSeries) (T, error)
-	VisitArithmetic(ctx context.Context, v ArithmeticSeries) (T, error)
 	VisitBitOperation(ctx context.Context, v BitOperationSeries) (T, error)
 	VisitCountDuplicate(ctx context.Context, v EnumCountDuplicateSeries) (T, error)
 	VisitCumulativeSum(ctx context.Context, v CumulativeSumSeries) (T, error)
 	VisitDerivative(ctx context.Context, v DerivativeSeries) (T, error)
 	VisitIntegral(ctx context.Context, v IntegralSeries) (T, error)
-	VisitMax(ctx context.Context, v MaxSeries) (T, error)
-	VisitMean(ctx context.Context, v MeanSeries) (T, error)
-	VisitMin(ctx context.Context, v MinSeries) (T, error)
 	VisitZScore(ctx context.Context, v ZscoreSeries) (T, error)
 	VisitOffset(ctx context.Context, v OffsetSeries) (T, error)
-	VisitProduct(ctx context.Context, v ProductSeries) (T, error)
 	VisitRaw(ctx context.Context, v api.Reference) (T, error)
 	VisitChannel(ctx context.Context, v api.ChannelSeries) (T, error)
 	VisitDerived(ctx context.Context, v DerivedSeries) (T, error)
 	VisitResample(ctx context.Context, v NumericResampleSeries) (T, error)
 	VisitRollingOperation(ctx context.Context, v RollingOperationSeries) (T, error)
 	VisitSignalFilter(ctx context.Context, v SignalFilterSeries) (T, error)
-	VisitSum(ctx context.Context, v SumSeries) (T, error)
 	VisitScale(ctx context.Context, v ScaleSeries) (T, error)
 	VisitTimeDifference(ctx context.Context, v TimeDifferenceSeries) (T, error)
 	VisitAbsoluteTimestamp(ctx context.Context, v AbsoluteTimestampSeries) (T, error)
 	VisitTimeRangeFilter(ctx context.Context, v NumericTimeRangeFilterSeries) (T, error)
 	VisitTimeShift(ctx context.Context, v NumericTimeShiftSeries) (T, error)
-	VisitUnaryArithmetic(ctx context.Context, v UnaryArithmeticSeries) (T, error)
-	VisitBinaryArithmetic(ctx context.Context, v BinaryArithmeticSeries) (T, error)
-	VisitUnion(ctx context.Context, v NumericUnionSeries) (T, error)
 	VisitUnitConversion(ctx context.Context, v UnitConversionSeries) (T, error)
 	VisitValueDifference(ctx context.Context, v ValueDifferenceSeries) (T, error)
 	VisitFilterTransformation(ctx context.Context, v NumericFilterTransformationSeries) (T, error)
@@ -2526,6 +2827,9 @@ type NumericSeriesVisitorWithT[T any] interface {
 	VisitEnumToNumeric(ctx context.Context, v EnumToNumericSeries) (T, error)
 	VisitRefprop(ctx context.Context, v RefpropSeries) (T, error)
 	VisitExtractFromStruct(ctx context.Context, v ExtractNumericFromStructSeries) (T, error)
+	VisitArithmetic(ctx context.Context, v ArithmeticSeries) (T, error)
+	VisitUnaryArithmetic(ctx context.Context, v UnaryArithmeticSeries) (T, error)
+	VisitBinaryArithmetic(ctx context.Context, v BinaryArithmeticSeries) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

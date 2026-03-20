@@ -8,7 +8,7 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type ApiKeyRid rid.ResourceIdentifier
+type ApiKeyRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ApiKeyRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -56,8 +56,9 @@ func (a *ApiKeyRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type AssetRefName string
-type AssetRid rid.ResourceIdentifier
+type AssetRefName string // safelogging:@Unsafe
+
+type AssetRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a AssetRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -105,7 +106,7 @@ func (a *AssetRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type CheckAlertRid rid.ResourceIdentifier
+type CheckAlertRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a CheckAlertRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -153,7 +154,7 @@ func (a *CheckAlertRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type CheckLineageRid rid.ResourceIdentifier
+type CheckLineageRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a CheckLineageRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -201,7 +202,7 @@ func (a *CheckLineageRid) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type CheckRid rid.ResourceIdentifier
+type CheckRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a CheckRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -249,7 +250,7 @@ func (a *CheckRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type ChecklistRid rid.ResourceIdentifier
+type ChecklistRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ChecklistRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -297,7 +298,7 @@ func (a *ChecklistRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type DataReviewRid rid.ResourceIdentifier
+type DataReviewRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a DataReviewRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -345,7 +346,7 @@ func (a *DataReviewRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type FunctionLineageRid rid.ResourceIdentifier
+type FunctionLineageRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a FunctionLineageRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -393,7 +394,7 @@ func (a *FunctionLineageRid) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type FunctionRid rid.ResourceIdentifier
+type FunctionRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a FunctionRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -441,7 +442,7 @@ func (a *FunctionRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type GroupRid rid.ResourceIdentifier
+type GroupRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a GroupRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -489,7 +490,7 @@ func (a *GroupRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type MarkingRid rid.ResourceIdentifier
+type MarkingRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a MarkingRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -537,7 +538,7 @@ func (a *MarkingRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type NotebookRid rid.ResourceIdentifier
+type NotebookRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a NotebookRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -585,8 +586,9 @@ func (a *NotebookRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type RunRefName string
-type SavedViewRid rid.ResourceIdentifier
+type RunRefName string // safelogging:@Unsafe
+
+type SavedViewRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a SavedViewRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -634,7 +636,7 @@ func (a *SavedViewRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type SnapshotRid rid.ResourceIdentifier
+type SnapshotRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a SnapshotRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -682,7 +684,7 @@ func (a *SnapshotRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type TemplateRid rid.ResourceIdentifier
+type TemplateRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a TemplateRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -730,7 +732,7 @@ func (a *TemplateRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type TypeRid rid.ResourceIdentifier
+type TypeRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a TypeRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -778,7 +780,7 @@ func (a *TypeRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type UserRid rid.ResourceIdentifier
+type UserRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a UserRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -826,5 +828,6 @@ func (a *UserRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type Version int
-type VizId string
+type Version int // safelogging:@Safe
+
+type VizId string // safelogging:@Safe

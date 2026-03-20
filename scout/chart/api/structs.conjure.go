@@ -7,9 +7,10 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// safelogging:@Unsafe
 type DeprecatedDefinitionAndSchemaVersion struct {
 	SchemaVersion string     `json:"schemaVersion"`
-	Definition    JsonString `json:"definition"`
+	Definition    JsonString `json:"definition" safelogging:"@Unsafe"`
 }
 
 func (o DeprecatedDefinitionAndSchemaVersion) MarshalYAML() (interface{}, error) {

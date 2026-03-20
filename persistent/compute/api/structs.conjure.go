@@ -49,9 +49,9 @@ append result for [117s, 122s].
 */
 type AppendResult struct {
 	// The start of the time range that the append result covers
-	Start api.Timestamp `json:"start"`
+	Start api.Timestamp `json:"start" safelogging:"@Safe"`
 	// The end of the time range that the append result covers
-	End    api.Timestamp             `json:"end"`
+	End    api.Timestamp             `json:"end" safelogging:"@Safe"`
 	Result ComputeNodeAppendResponse `json:"result"`
 }
 
@@ -348,7 +348,7 @@ func (o *SubscriptionCreationError) UnmarshalYAML(unmarshal func(interface{}) er
 }
 
 type SubscriptionCreationMessage struct {
-	SubscriptionId SubscriptionId       `json:"subscriptionId"`
+	SubscriptionId SubscriptionId       `json:"subscriptionId" safelogging:"@Safe"`
 	Creation       SubscriptionCreation `json:"creation"`
 }
 
@@ -391,7 +391,7 @@ func (o *SubscriptionCreationSuccess) UnmarshalYAML(unmarshal func(interface{}) 
 
 type SubscriptionOptions struct {
 	// The minimum delay between `SubscriptionUpdate`s sent for this subscription.
-	MinDelay Milliseconds `json:"minDelay"`
+	MinDelay Milliseconds `json:"minDelay" safelogging:"@Safe"`
 	/*
 	   Can be set to `false` by the client to indicate that it doesn't support appends for this subscription
 	   and always wants to receive full results. Defaults to `false` if not set.
@@ -465,7 +465,7 @@ func (o *SubscriptionUpdateError) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 type SubscriptionUpdateMessage struct {
-	SubscriptionId SubscriptionId     `json:"subscriptionId"`
+	SubscriptionId SubscriptionId     `json:"subscriptionId" safelogging:"@Safe"`
 	Update         SubscriptionUpdate `json:"update"`
 }
 

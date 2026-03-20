@@ -16,8 +16,9 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+// safelogging:@Safe
 type dataSourceNotFound struct {
-	DataSourceRid rids.NominalDataSourceRid `json:"dataSourceRid"`
+	DataSourceRid rids.NominalDataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
 }
 
 func (o dataSourceNotFound) MarshalYAML() (interface{}, error) {
@@ -165,8 +166,9 @@ func (e *DataSourceNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type dataSourcesNotFound struct {
-	DataSourceRids []rids.NominalDataSourceRid `json:"dataSourceRids"`
+	DataSourceRids []rids.NominalDataSourceRid `json:"dataSourceRids" safelogging:"@Safe"`
 }
 
 func (o dataSourcesNotFound) MarshalJSON() ([]byte, error) {
@@ -335,8 +337,9 @@ func (e *DataSourcesNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
 type invalidNominalDataSource struct {
-	DataSourceRid rids.NominalDataSourceRid `json:"dataSourceRid"`
+	DataSourceRid rids.NominalDataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
 }
 
 func (o invalidNominalDataSource) MarshalYAML() (interface{}, error) {
@@ -484,8 +487,9 @@ func (e *InvalidNominalDataSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
 type nominalDataSourceConflict struct {
-	Id NominalDataSourceId `json:"id"`
+	Id NominalDataSourceId `json:"id" safelogging:"@Unsafe"`
 }
 
 func (o nominalDataSourceConflict) MarshalYAML() (interface{}, error) {

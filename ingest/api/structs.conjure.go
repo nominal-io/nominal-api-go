@@ -4,12 +4,13 @@ package api
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
+	api2 "github.com/nominal-io/nominal-api-go/authentication/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/datasource"
-	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
-	api4 "github.com/nominal-io/nominal-api-go/scout/video/api"
-	api3 "github.com/nominal-io/nominal-api-go/secrets/api"
+	api5 "github.com/nominal-io/nominal-api-go/scout/video/api"
+	api4 "github.com/nominal-io/nominal-api-go/secrets/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"
@@ -138,9 +139,10 @@ func (o *CompleteMultipartUploadResponse) UnmarshalYAML(unmarshal func(interface
 }
 
 // Represents a containerized extractor that processes input files using a container.
+// safelogging:@Unsafe
 type ContainerizedExtractor struct {
 	// Unique resource identifier for the extractor.
-	Rid ContainerizedExtractorRid `json:"rid"`
+	Rid ContainerizedExtractorRid `json:"rid" safelogging:"@Safe"`
 	// The name of the extractor as defined by the user.
 	Name string `json:"name"`
 	// Optional description of the extractor.
@@ -154,7 +156,7 @@ type ContainerizedExtractor struct {
 	// Additional properties associated with this extractor.
 	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
 	// Set of labels applied to this extractor.
-	Labels []api.Label `json:"labels"`
+	Labels []api.Label `json:"labels" safelogging:"@Unsafe"`
 	// Timestamp when this extractor was created.
 	CreatedAt datetime.DateTime `json:"createdAt"`
 	// Whether this extractor is archived.
@@ -226,7 +228,7 @@ func (o *ContainerizedExtractor) UnmarshalYAML(unmarshal func(interface{}) error
 type ContainerizedOpts struct {
 	Sources           map[EnvironmentVariable]IngestSource `json:"sources"`
 	Arguments         map[EnvironmentVariable]string       `json:"arguments"`
-	ExtractorRid      ContainerizedExtractorRid            `json:"extractorRid"`
+	ExtractorRid      ContainerizedExtractorRid            `json:"extractorRid" safelogging:"@Safe"`
 	TimestampMetadata *TimestampMetadata                   `json:"timestampMetadata,omitempty"`
 	Tag               *string                              `json:"tag,omitempty"`
 	Target            DatasetIngestTarget                  `json:"target"`
@@ -285,7 +287,7 @@ func (o *ContainerizedOpts) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 // Request to create a new ingest job.
 type CreateIngestJobRequest struct {
-	WorkspaceRid     rids.WorkspaceRid `json:"workspaceRid"`
+	WorkspaceRid     rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
 	IngestJobRequest IngestJobRequest  `json:"ingestJobRequest"`
 }
 
@@ -306,13 +308,14 @@ func (o *CreateIngestJobRequest) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 // Options for ingesting csv files.  Supported file formats include .csv, .csv.gz
+// safelogging:@Unsafe
 type CsvOpts struct {
 	Source            IngestSource        `json:"source"`
 	Target            DatasetIngestTarget `json:"target"`
 	TimestampMetadata TimestampMetadata   `json:"timestampMetadata"`
 	ChannelPrefix     ChannelPrefix       `json:"channelPrefix"`
 	// Deprecated: Deprecated in favor of tagColumns.
-	TagKeysFromColumns *[]api.TagName `json:"tagKeysFromColumns,omitempty"`
+	TagKeysFromColumns *[]api.TagName `json:"tagKeysFromColumns,omitempty" safelogging:"@Unsafe"`
 	// A map of tag names to column names to derive the tag values from.
 	TagColumns *map[api.TagName]api.ColumnName `json:"tagColumns,omitempty"`
 	// Specifies a tag set to apply to all data in the file.
@@ -322,7 +325,7 @@ type CsvOpts struct {
 	   ingested as channels. Useful for excluding columns that contain unsupported
 	   data types like multidimensional arrays.
 	*/
-	ExcludeColumns []api.ColumnName `json:"excludeColumns"`
+	ExcludeColumns []api.ColumnName `json:"excludeColumns" safelogging:"@Unsafe"`
 }
 
 func (o CsvOpts) MarshalJSON() ([]byte, error) {
@@ -362,6 +365,26 @@ func (o *CsvOpts) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type CustomStreamingSessionSource struct {
+	SourceName string `json:"sourceName"`
+}
+
+func (o CustomStreamingSessionSource) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CustomStreamingSessionSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type CustomTimestamp struct {
 	// The format string should be in the format of the `DateTimeFormatter` class in Java.
 	Format string `json:"format"`
@@ -380,6 +403,27 @@ func (o CustomTimestamp) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CustomTimestamp) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Safe
+type DataConnectorStreamingSessionSource struct {
+	DataConnectorRid rids.DataConnectorRid `json:"dataConnectorRid" safelogging:"@Safe"`
+}
+
+func (o DataConnectorStreamingSessionSource) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DataConnectorStreamingSessionSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -532,7 +576,7 @@ type ExistingDatasetIngestDestination struct {
 	   and set the end time to the file's end time.
 	   For runs with existing end times, it will only expand the bounds (earliest start time, latest end time).
 	*/
-	ExpandRunBounds *[]api1.RunRid `json:"expandRunBounds,omitempty"`
+	ExpandRunBounds *[]api1.RunRid `json:"expandRunBounds,omitempty" safelogging:"@Safe"`
 }
 
 func (o ExistingDatasetIngestDestination) MarshalYAML() (interface{}, error) {
@@ -553,7 +597,7 @@ func (o *ExistingDatasetIngestDestination) UnmarshalYAML(unmarshal func(interfac
 
 type ExistingVideoIngestDestination struct {
 	// RID of the video to ingest the newly created video file to.
-	VideoRid rids.VideoRid `json:"videoRid"`
+	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
 	// Metadata to associate with any created video file
 	VideoFileDetails *VideoFileIngestDetails `json:"videoFileDetails,omitempty"`
 }
@@ -575,9 +619,10 @@ func (o *ExistingVideoIngestDestination) UnmarshalYAML(unmarshal func(interface{
 }
 
 // Defines an input file to be provided to the extractor.
+// safelogging:@Unsafe
 type FileExtractionInput struct {
 	// The environment variable that stores the path to the input file.
-	EnvironmentVariable EnvironmentVariable `json:"environmentVariable"`
+	EnvironmentVariable EnvironmentVariable `json:"environmentVariable" safelogging:"@Unsafe"`
 	// Name of the input file which users will be prompted with
 	Name string `json:"name"`
 	// Description of the input file which users will be prompted with
@@ -626,9 +671,10 @@ func (o *FileExtractionInput) UnmarshalYAML(unmarshal func(interface{}) error) e
 }
 
 // Defines an input parameter to be provided to the extractor.
+// safelogging:@Unsafe
 type FileExtractionParameter struct {
 	// The environment variable that stores the argument
-	EnvironmentVariable EnvironmentVariable `json:"environmentVariable"`
+	EnvironmentVariable EnvironmentVariable `json:"environmentVariable" safelogging:"@Unsafe"`
 	// Name of the parameter which users will be prompted with
 	Name string `json:"name"`
 	// Description of the parameter which users will be prompted with
@@ -673,8 +719,9 @@ func (o *GcsIngestSource) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type GetContainerizedExtractorsRequest struct {
-	ExtractorRids []ContainerizedExtractorRid `json:"extractorRids"`
+	ExtractorRids []ContainerizedExtractorRid `json:"extractorRids" safelogging:"@Safe"`
 }
 
 func (o GetContainerizedExtractorsRequest) MarshalJSON() ([]byte, error) {
@@ -755,9 +802,39 @@ func (o *GetContainerizedExtractorsResponse) UnmarshalYAML(unmarshal func(interf
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type HeartbeatStreamingSessionRequest struct {
+	/*
+	   The time range of data points ingested since the last heartbeat.
+	   The server atomically merges this with the session's existing bounds
+	   using LEAST/GREATEST to track the full time range.
+	*/
+	Bounds api.Range `json:"bounds" safelogging:"@Safe"`
+	/*
+	   Number of data points ingested since the last heartbeat.
+	   The server atomically adds this to the session's running total.
+	*/
+	PointsCount int `json:"pointsCount"`
+}
+
+func (o HeartbeatStreamingSessionRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *HeartbeatStreamingSessionRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type IngestDatasetFileDetails struct {
 	DatasetFileId *uuid.UUID      `json:"datasetFileId,omitempty"`
-	DatasetRid    rids.DatasetRid `json:"datasetRid"`
+	DatasetRid    rids.DatasetRid `json:"datasetRid" safelogging:"@Safe"`
 }
 
 func (o IngestDatasetFileDetails) MarshalYAML() (interface{}, error) {
@@ -778,7 +855,7 @@ func (o *IngestDatasetFileDetails) UnmarshalYAML(unmarshal func(interface{}) err
 
 // Ingest job information
 type IngestJob struct {
-	IngestJobRid IngestJobRid    `json:"ingestJobRid"`
+	IngestJobRid IngestJobRid    `json:"ingestJobRid" safelogging:"@Safe"`
 	Status       IngestJobStatus `json:"status"`
 	OriginFiles  *[]string       `json:"originFiles,omitempty"`
 	CreatedBy    uuid.UUID       `json:"createdBy"`
@@ -802,6 +879,7 @@ func (o *IngestJob) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type IngestMcapRequest struct {
 	/*
 	   List of files in S3 to be ingested. These should be ordered by time, as data will be ingested and
@@ -816,7 +894,7 @@ type IngestMcapRequest struct {
 	*/
 	Channels    *McapChannels                          `json:"channels,omitempty"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels      []api.Label                            `json:"labels"`
+	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	Title       *string                                `json:"title,omitempty"`
 	Description *string                                `json:"description,omitempty"`
 	/*
@@ -824,7 +902,7 @@ type IngestMcapRequest struct {
 	   will be created in the default workspace for the user's organization, if the default
 	   workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o IngestMcapRequest) MarshalJSON() ([]byte, error) {
@@ -1015,7 +1093,7 @@ func (o *IngestRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type IngestResponse struct {
 	Details      IngestDetails `json:"details"`
-	IngestJobRid *IngestJobRid `json:"ingestJobRid,omitempty"`
+	IngestJobRid *IngestJobRid `json:"ingestJobRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o IngestResponse) MarshalYAML() (interface{}, error) {
@@ -1055,6 +1133,7 @@ func (o *IngestRunDataSource) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type IngestRunRequest struct {
 	// If a run with the same rid already exists, the run will be updated.
 	Rid         *rid.ResourceIdentifier                `json:"rid,omitempty"`
@@ -1063,7 +1142,7 @@ type IngestRunRequest struct {
 	StartTime   UtcTimestamp                           `json:"startTime"`
 	EndTime     *UtcTimestamp                          `json:"endTime,omitempty"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels      []api.Label                            `json:"labels"`
+	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	// for example, SIM, HTL, FLT
 	RunPrefix   *string                                   `json:"runPrefix,omitempty"`
 	DataSources map[DataSourceRefName]IngestRunDataSource `json:"dataSources"`
@@ -1071,7 +1150,7 @@ type IngestRunRequest struct {
 	   The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o IngestRunRequest) MarshalJSON() ([]byte, error) {
@@ -1123,8 +1202,9 @@ func (o *IngestRunRequest) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type IngestRunResponse struct {
-	RunRid api1.RunRid `json:"runRid"`
+	RunRid api1.RunRid `json:"runRid" safelogging:"@Safe"`
 }
 
 func (o IngestRunResponse) MarshalYAML() (interface{}, error) {
@@ -1163,9 +1243,10 @@ func (o *IngestSourceMetadata) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type IngestVideoFileDetails struct {
-	VideoFileRid rids.VideoFileRid `json:"videoFileRid"`
-	VideoRid     rids.VideoRid     `json:"videoRid"`
+	VideoFileRid rids.VideoFileRid `json:"videoFileRid" safelogging:"@Safe"`
+	VideoRid     rids.VideoRid     `json:"videoRid" safelogging:"@Safe"`
 }
 
 func (o IngestVideoFileDetails) MarshalYAML() (interface{}, error) {
@@ -1184,10 +1265,11 @@ func (o *IngestVideoFileDetails) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type IngestVideoRequest struct {
 	Sources     []IngestSource                         `json:"sources"`
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels      []api.Label                            `json:"labels"`
+	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	Title       *string                                `json:"title,omitempty"`
 	Description *string                                `json:"description,omitempty"`
 	Timestamps  VideoTimestampManifest                 `json:"timestamps"`
@@ -1195,7 +1277,7 @@ type IngestVideoRequest struct {
 	   The workspace in which to create the video. If not provided, the video will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o IngestVideoRequest) MarshalJSON() ([]byte, error) {
@@ -1248,8 +1330,8 @@ func (o *IngestVideoRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 type IngestVideoResponse struct {
-	VideoRid     rids.VideoRid     `json:"videoRid"`
-	VideoFileRid rids.VideoFileRid `json:"videoFileRid"`
+	VideoRid     rids.VideoRid     `json:"videoRid" safelogging:"@Safe"`
+	VideoFileRid rids.VideoFileRid `json:"videoFileRid" safelogging:"@Safe"`
 	// Deprecated: Deprecated
 	AsyncHandle *AsyncHandle `json:"asyncHandle,omitempty"`
 }
@@ -1286,7 +1368,7 @@ type InitiateMultipartUploadRequest struct {
 	   the default workspace for the user's organization, if that is configured and the user
 	   has access to it.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o InitiateMultipartUploadRequest) MarshalYAML() (interface{}, error) {
@@ -1329,7 +1411,7 @@ func (o *InitiateMultipartUploadResponse) UnmarshalYAML(unmarshal func(interface
 
 // Internal ingest job information including the full ingest request details.
 type InternalIngestJob struct {
-	IngestJobRid     IngestJobRid     `json:"ingestJobRid"`
+	IngestJobRid     IngestJobRid     `json:"ingestJobRid" safelogging:"@Safe"`
 	Status           IngestJobStatus  `json:"status"`
 	IngestJobRequest IngestJobRequest `json:"ingestJobRequest"`
 	OriginFiles      *[]string        `json:"originFiles,omitempty"`
@@ -1372,6 +1454,7 @@ func (o *Iso8601Timestamp) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type JournalJsonOpts struct {
 	Source IngestSource        `json:"source"`
 	Target DatasetIngestTarget `json:"target"`
@@ -1379,7 +1462,7 @@ type JournalJsonOpts struct {
 	   If provided, ingests logs to the given channel.
 	   By default, log data will be ingested to a channel named 'logs'.
 	*/
-	Channel *api.Channel `json:"channel,omitempty"`
+	Channel *api.Channel `json:"channel,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o JournalJsonOpts) MarshalYAML() (interface{}, error) {
@@ -1465,7 +1548,7 @@ type McapIngestionOutput struct {
 	   If the destination points to a video, this will be populated with the video file
 	   populated during ingestion.
 	*/
-	VideoFileRid *rids.VideoFileRid `json:"videoFileRid,omitempty"`
+	VideoFileRid *rids.VideoFileRid `json:"videoFileRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o McapIngestionOutput) MarshalYAML() (interface{}, error) {
@@ -1538,10 +1621,33 @@ func (o *McapVideoChannelConfig) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type MeshStreamingSessionSource struct {
+	SourceDatasetRid             rids.DatasetRid `json:"sourceDatasetRid" safelogging:"@Safe"`
+	SourceOrgRid                 api2.OrgRid     `json:"sourceOrgRid" safelogging:"@Safe"`
+	OriginStreamingSessionSource string          `json:"originStreamingSessionSource"`
+}
+
+func (o MeshStreamingSessionSource) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *MeshStreamingSessionSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
 type NewDataSource struct {
 	Source         IngestSource                           `json:"source"`
 	Properties     map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels         []api.Label                            `json:"labels"`
+	Labels         []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	Description    *string                                `json:"description,omitempty"`
 	Name           *string                                `json:"name,omitempty"`
 	TimeColumnSpec *TimestampMetadata                     `json:"timeColumnSpec,omitempty"`
@@ -1591,22 +1697,23 @@ func (o *NewDataSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type NewDatasetIngestDestination struct {
 	DatasetName        *string                                `json:"datasetName,omitempty"`
 	DatasetDescription *string                                `json:"datasetDescription,omitempty"`
 	Properties         map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels             []api.Label                            `json:"labels"`
+	Labels             []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	ChannelConfig      *ChannelConfig                         `json:"channelConfig,omitempty"`
 	/*
 	   The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 	/*
 	   The markings to apply to the created dataset.
 	   If not provided, the dataset will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api2.MarkingRid `json:"markingRids"`
+	MarkingRids []api3.MarkingRid `json:"markingRids" safelogging:"@Safe"`
 }
 
 func (o NewDatasetIngestDestination) MarshalJSON() ([]byte, error) {
@@ -1617,7 +1724,7 @@ func (o NewDatasetIngestDestination) MarshalJSON() ([]byte, error) {
 		o.Labels = make([]api.Label, 0)
 	}
 	if o.MarkingRids == nil {
-		o.MarkingRids = make([]api2.MarkingRid, 0)
+		o.MarkingRids = make([]api3.MarkingRid, 0)
 	}
 	type _tmpNewDatasetIngestDestination NewDatasetIngestDestination
 	return safejson.Marshal(_tmpNewDatasetIngestDestination(o))
@@ -1636,7 +1743,7 @@ func (o *NewDatasetIngestDestination) UnmarshalJSON(data []byte) error {
 		rawNewDatasetIngestDestination.Labels = make([]api.Label, 0)
 	}
 	if rawNewDatasetIngestDestination.MarkingRids == nil {
-		rawNewDatasetIngestDestination.MarkingRids = make([]api2.MarkingRid, 0)
+		rawNewDatasetIngestDestination.MarkingRids = make([]api3.MarkingRid, 0)
 	}
 	*o = NewDatasetIngestDestination(rawNewDatasetIngestDestination)
 	return nil
@@ -1658,6 +1765,7 @@ func (o *NewDatasetIngestDestination) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type NewVideoIngestDestination struct {
 	/*
 	   Title of the Video that will get created.
@@ -1669,19 +1777,19 @@ type NewVideoIngestDestination struct {
 	// Key-Value properties that are applied to the newly created video
 	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
 	// Labels that are applied to the newly created video
-	Labels []api.Label `json:"labels"`
+	Labels []api.Label `json:"labels" safelogging:"@Unsafe"`
 	// Metadata to associate with any created video file
 	VideoFileDetails *VideoFileIngestDetails `json:"videoFileDetails,omitempty"`
 	/*
 	   The workspace in which to create the video. If not provided, the video will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
-	Workspace *rids.WorkspaceRid `json:"workspace,omitempty"`
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 	/*
 	   The markings to apply to the created video.
 	   If not provided, the video will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api2.MarkingRid `json:"markingRids"`
+	MarkingRids []api3.MarkingRid `json:"markingRids" safelogging:"@Safe"`
 }
 
 func (o NewVideoIngestDestination) MarshalJSON() ([]byte, error) {
@@ -1692,7 +1800,7 @@ func (o NewVideoIngestDestination) MarshalJSON() ([]byte, error) {
 		o.Labels = make([]api.Label, 0)
 	}
 	if o.MarkingRids == nil {
-		o.MarkingRids = make([]api2.MarkingRid, 0)
+		o.MarkingRids = make([]api3.MarkingRid, 0)
 	}
 	type _tmpNewVideoIngestDestination NewVideoIngestDestination
 	return safejson.Marshal(_tmpNewVideoIngestDestination(o))
@@ -1711,7 +1819,7 @@ func (o *NewVideoIngestDestination) UnmarshalJSON(data []byte) error {
 		rawNewVideoIngestDestination.Labels = make([]api.Label, 0)
 	}
 	if rawNewVideoIngestDestination.MarkingRids == nil {
-		rawNewVideoIngestDestination.MarkingRids = make([]api2.MarkingRid, 0)
+		rawNewVideoIngestDestination.MarkingRids = make([]api3.MarkingRid, 0)
 	}
 	*o = NewVideoIngestDestination(rawNewVideoIngestDestination)
 	return nil
@@ -1760,13 +1868,14 @@ Options for ingesting parquet files.
 Supported file formats include .parquet, .parquet.gz
 and archives such as .tar, .tar.gz, and .zip (must set the isArchive flag).
 */
+// safelogging:@Unsafe
 type ParquetOpts struct {
 	Source            IngestSource        `json:"source"`
 	Target            DatasetIngestTarget `json:"target"`
 	TimestampMetadata TimestampMetadata   `json:"timestampMetadata"`
 	ChannelPrefix     ChannelPrefix       `json:"channelPrefix"`
 	// Deprecated: Deprecated in favor of tagColumns.
-	TagKeysFromColumns *[]api.TagName `json:"tagKeysFromColumns,omitempty"`
+	TagKeysFromColumns *[]api.TagName `json:"tagKeysFromColumns,omitempty" safelogging:"@Unsafe"`
 	// A map of tag names to column names to derive the tag values from.
 	TagColumns *map[api.TagName]api.ColumnName `json:"tagColumns,omitempty"`
 	// Specifies a tag set to apply to all data in the file.
@@ -1782,7 +1891,7 @@ type ParquetOpts struct {
 	   ingested as channels. Useful for excluding columns that contain unsupported
 	   data types like multidimensional arrays.
 	*/
-	ExcludeColumns []api.ColumnName `json:"excludeColumns"`
+	ExcludeColumns []api.ColumnName `json:"excludeColumns" safelogging:"@Unsafe"`
 }
 
 func (o ParquetOpts) MarshalJSON() ([]byte, error) {
@@ -1903,6 +2012,7 @@ func (o *PublicAuthentication) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type RegisterContainerizedExtractorRequest struct {
 	Name        string            `json:"name"`
 	Description *string           `json:"description,omitempty"`
@@ -1912,9 +2022,9 @@ type RegisterContainerizedExtractorRequest struct {
 	// Describes the parameters of the extractor.
 	Parameters []FileExtractionParameter              `json:"parameters"`
 	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Labels     []api.Label                            `json:"labels"`
+	Labels     []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	// The workspace in which to create the extractor
-	Workspace rids.WorkspaceRid `json:"workspace"`
+	Workspace rids.WorkspaceRid `json:"workspace" safelogging:"@Safe"`
 	/*
 	   Metadata about the intermediate parquet this extractor will produce.
 	   If not set, timestamp metadata must be provided at ingest time.
@@ -1979,8 +2089,9 @@ func (o *RegisterContainerizedExtractorRequest) UnmarshalYAML(unmarshal func(int
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type RegisterContainerizedExtractorResponse struct {
-	ExtractorRid ContainerizedExtractorRid `json:"extractorRid"`
+	ExtractorRid ContainerizedExtractorRid `json:"extractorRid" safelogging:"@Safe"`
 }
 
 func (o RegisterContainerizedExtractorResponse) MarshalYAML() (interface{}, error) {
@@ -2005,7 +2116,7 @@ type ReingestDatasetsRequest struct {
 	   The datasets must be of the same granularity and must only include CSV or Parquet files.
 	   Will attempt to reingest from datasets in list order.
 	*/
-	SourceDatasets []rids.DatasetRid `json:"sourceDatasets"`
+	SourceDatasets []rids.DatasetRid `json:"sourceDatasets" safelogging:"@Safe"`
 	// The dataset to ingest data into. Can either be a new dataset or an existing dataset RID.
 	TargetDataset DatasetIngestTarget `json:"targetDataset"`
 	/*
@@ -2168,8 +2279,9 @@ func (o *RelativeTimestamp) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type RerunIngestRequest struct {
-	IngestJobRid IngestJobRid `json:"ingestJobRid"`
+	IngestJobRid IngestJobRid `json:"ingestJobRid" safelogging:"@Safe"`
 }
 
 func (o RerunIngestRequest) MarshalYAML() (interface{}, error) {
@@ -2181,6 +2293,56 @@ func (o RerunIngestRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *RerunIngestRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ResolveStreamingSessionRequest struct {
+	/*
+	   The source attribution for this streaming session. Each unique source gets
+	   its own in-progress session per dataset. If absent, the session is unattributed.
+	*/
+	Source *StreamingSessionSource `json:"source,omitempty"`
+}
+
+func (o ResolveStreamingSessionRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ResolveStreamingSessionRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ResolveStreamingSessionResponse struct {
+	SessionRid  StreamingSessionRid     `json:"sessionRid" safelogging:"@Safe"`
+	DatasetRid  rids.DatasetRid         `json:"datasetRid" safelogging:"@Safe"`
+	Status      StreamingSessionStatus  `json:"status"`
+	Source      *StreamingSessionSource `json:"source,omitempty"`
+	Bounds      *api.Range              `json:"bounds,omitempty"`
+	PointsCount safelong.SafeLong       `json:"pointsCount"`
+	CreatedAt   api.Timestamp           `json:"createdAt" safelogging:"@Safe"`
+}
+
+func (o ResolveStreamingSessionResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ResolveStreamingSessionResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2379,13 +2541,14 @@ func (o *TimestampMetadata) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateContainerizedExtractorRequest struct {
 	Name              *string                                 `json:"name,omitempty"`
 	Description       *string                                 `json:"description,omitempty"`
 	Inputs            *[]FileExtractionInput                  `json:"inputs,omitempty"`
 	Parameters        *[]FileExtractionParameter              `json:"parameters,omitempty"`
 	Properties        *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
-	Labels            *[]api.Label                            `json:"labels,omitempty"`
+	Labels            *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
 	TimestampMetadata *TimestampMetadata                      `json:"timestampMetadata,omitempty"`
 	OutputFileFormat  *FileOutputFormat                       `json:"outputFileFormat,omitempty"`
 	Registry          *string                                 `json:"registry,omitempty"`
@@ -2417,7 +2580,7 @@ type UserAndPasswordAuthentication struct {
 	// Username for registry authentication.
 	Username string `json:"username"`
 	// The RID of the secret containing the password for registry authentication.
-	PasswordSecretRid api3.SecretRid `json:"passwordSecretRid"`
+	PasswordSecretRid api4.SecretRid `json:"passwordSecretRid" safelogging:"@Safe"`
 }
 
 func (o UserAndPasswordAuthentication) MarshalYAML() (interface{}, error) {
@@ -2457,6 +2620,7 @@ func (o *UtcTimestamp) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type VideoFileIngestDetails struct {
 	/*
 	   Description that is applied to the newly created video file.
@@ -2476,7 +2640,7 @@ type VideoFileIngestDetails struct {
 	   Deprecated: Field is ignored as video files do not have labels.
 	   Will be removed after 4/5/2025
 	*/
-	FileLabels *[]api.Label `json:"fileLabels,omitempty"`
+	FileLabels *[]api.Label `json:"fileLabels,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o VideoFileIngestDetails) MarshalYAML() (interface{}, error) {
@@ -2498,7 +2662,7 @@ func (o *VideoFileIngestDetails) UnmarshalYAML(unmarshal func(interface{}) error
 type VideoOpts struct {
 	Source            IngestSource                    `json:"source"`
 	Target            VideoIngestTarget               `json:"target"`
-	TimestampManifest api4.VideoFileTimestampManifest `json:"timestampManifest"`
+	TimestampManifest api5.VideoFileTimestampManifest `json:"timestampManifest"`
 	/*
 	   If true, overlapping segments from other video files within the same video will be deleted
 	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
@@ -2522,11 +2686,12 @@ func (o *VideoOpts) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type VideoOptsV2 struct {
 	Source            IngestSource                    `json:"source"`
 	Target            DatasetIngestTarget             `json:"target"`
-	TimestampManifest api4.VideoFileTimestampManifest `json:"timestampManifest"`
-	Channel           api.Channel                     `json:"channel"`
+	TimestampManifest api5.VideoFileTimestampManifest `json:"timestampManifest"`
+	Channel           api.Channel                     `json:"channel" safelogging:"@Unsafe"`
 	Tags              map[api.TagName]api.TagValue    `json:"tags"`
 	/*
 	   If true, overlapping segments from other dataset files within the same series will be deleted

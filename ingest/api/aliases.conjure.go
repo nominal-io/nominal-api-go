@@ -63,7 +63,7 @@ func (a *ChannelPrefix) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type ContainerizedExtractorRid rid.ResourceIdentifier
+type ContainerizedExtractorRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a ContainerizedExtractorRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -111,16 +111,16 @@ func (a *ContainerizedExtractorRid) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
-type DataSourceRefName string
+type DataSourceRefName string // safelogging:@Unsafe
 
 // Name of an environment variable to be passed to the container during extraction.
-type EnvironmentVariable string
+type EnvironmentVariable string // safelogging:@Unsafe
 
 // The expected suffix of the file. For example, "parquet", "json", "csv", etc.
-type FileSuffix string
+type FileSuffix string // safelogging:@Safe
 
 // Unique resource identifier for an Ingest Job.
-type IngestJobRid rid.ResourceIdentifier
+type IngestJobRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a IngestJobRid) String() string {
 	return rid.ResourceIdentifier(a).String()
@@ -161,6 +161,55 @@ func (a IngestJobRid) MarshalYAML() (interface{}, error) {
 }
 
 func (a *IngestJobRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+// Unique resource identifier for a Streaming Session.
+type StreamingSessionRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a StreamingSessionRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a StreamingSessionRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *StreamingSessionRid) UnmarshalText(data []byte) error {
+	var rawStreamingSessionRid rid.ResourceIdentifier
+	if err := rawStreamingSessionRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = StreamingSessionRid(rawStreamingSessionRid)
+	return nil
+}
+
+func (a StreamingSessionRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *StreamingSessionRid) UnmarshalJSON(data []byte) error {
+	var rawStreamingSessionRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawStreamingSessionRid); err != nil {
+		return err
+	}
+	*a = StreamingSessionRid(rawStreamingSessionRid)
+	return nil
+}
+
+func (a StreamingSessionRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *StreamingSessionRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

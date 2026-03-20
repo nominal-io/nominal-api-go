@@ -11,8 +11,9 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
+// safelogging:@Unsafe
 type ApiLocator struct {
-	Channel api.Channel                  `json:"channel"`
+	Channel api.Channel                  `json:"channel" safelogging:"@Unsafe"`
 	Tags    map[api.TagName]api.TagValue `json:"tags"`
 	Type    ApiType                      `json:"type"`
 }
@@ -300,11 +301,12 @@ func (o *BatchUpdateExternalStorageLocatorResponse) UnmarshalYAML(unmarshal func
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type BigQueryLocator struct {
 	// The name of the column which has the values for this series
-	ValueColumn ColumnName `json:"valueColumn"`
+	ValueColumn ColumnName `json:"valueColumn" safelogging:"@Unsafe"`
 	// The name of the column which has the timestamps for this series
-	TimeColumn ColumnName `json:"timeColumn"`
+	TimeColumn ColumnName `json:"timeColumn" safelogging:"@Unsafe"`
 	// The mapping of columns to column values to filter on
 	TagValues map[api.TagName]api.TagValue `json:"tagValues"`
 	Type      BigQueryType                 `json:"type"`
@@ -388,21 +390,22 @@ func (o *Context) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateExternalStorageLocator struct {
-	Channel api.Channel `json:"channel"`
+	Channel api.Channel `json:"channel" safelogging:"@Unsafe"`
 	Locator Locator     `json:"locator"`
 	/*
 	   If present, will be used as the locator of the LogicalSeriesRid. If a logical series already exists
 	   with this id, will throw a CONFLICT.
 	*/
 	IdLocator      *uuid.UUID          `json:"idLocator,omitempty"`
-	DataSourceRid  rids.DataSourceRid  `json:"dataSourceRid"`
+	DataSourceRid  rids.DataSourceRid  `json:"dataSourceRid" safelogging:"@Safe"`
 	Description    *string             `json:"description,omitempty"`
-	Unit           *api.Unit           `json:"unit,omitempty"`
+	Unit           *api.Unit           `json:"unit,omitempty" safelogging:"@Unsafe"`
 	SeriesDataType *api.SeriesDataType `json:"seriesDataType,omitempty"`
 	Granularity    *api.Granularity    `json:"granularity,omitempty"`
 	// Deprecated. Do not use.
-	SeriesArchetypeRid *api.SeriesArchetypeRid `json:"seriesArchetypeRid,omitempty"`
+	SeriesArchetypeRid *api.SeriesArchetypeRid `json:"seriesArchetypeRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateExternalStorageLocator) MarshalYAML() (interface{}, error) {
@@ -421,15 +424,16 @@ func (o *CreateExternalStorageLocator) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ExternalStorageLocator struct {
-	Rid           api.LogicalSeriesRid `json:"rid"`
-	DataSourceRid rids.DataSourceRid   `json:"dataSourceRid"`
+	Rid           api.LogicalSeriesRid `json:"rid" safelogging:"@Safe"`
+	DataSourceRid rids.DataSourceRid   `json:"dataSourceRid" safelogging:"@Safe"`
 	Locator       Locator              `json:"locator"`
 	// Only required to be present for legacy CSVs.
 	TimeLocator    *Locator            `json:"timeLocator,omitempty"`
-	Channel        api.Channel         `json:"channel"`
+	Channel        api.Channel         `json:"channel" safelogging:"@Unsafe"`
 	Description    *string             `json:"description,omitempty"`
-	Unit           *api.Unit           `json:"unit,omitempty"`
+	Unit           *api.Unit           `json:"unit,omitempty" safelogging:"@Unsafe"`
 	SeriesDataType *api.SeriesDataType `json:"seriesDataType,omitempty"`
 	/*
 	   Time granularity of the series. If omitted, defaults to nanoseconds.
@@ -455,10 +459,11 @@ func (o *ExternalStorageLocator) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Influx1Locator struct {
-	Database    DatabaseName                 `json:"database"`
-	Measurement MeasurementName              `json:"measurement"`
-	Field       FieldName                    `json:"field"`
+	Database    DatabaseName                 `json:"database" safelogging:"@Unsafe"`
+	Measurement MeasurementName              `json:"measurement" safelogging:"@Unsafe"`
+	Field       FieldName                    `json:"field" safelogging:"@Unsafe"`
 	Tags        map[api.TagName]api.TagValue `json:"tags"`
 	Type        InfluxType                   `json:"type"`
 }
@@ -500,10 +505,11 @@ func (o *Influx1Locator) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Influx2Locator struct {
-	Bucket      BucketName      `json:"bucket"`
-	Measurement MeasurementName `json:"measurement"`
-	Field       FieldName       `json:"field"`
+	Bucket      BucketName      `json:"bucket" safelogging:"@Unsafe"`
+	Measurement MeasurementName `json:"measurement" safelogging:"@Unsafe"`
+	Field       FieldName       `json:"field" safelogging:"@Unsafe"`
 	// If omitted, defaults to `_value`. Can be used to extract tag values.
 	ValueColumn *string                      `json:"valueColumn,omitempty"`
 	Tags        map[api.TagName]api.TagValue `json:"tags"`
@@ -547,8 +553,9 @@ func (o *Influx2Locator) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type NominalLocator struct {
-	Channel api.Channel                  `json:"channel"`
+	Channel api.Channel                  `json:"channel" safelogging:"@Unsafe"`
 	Tags    map[api.TagName]api.TagValue `json:"tags"`
 	Type    api1.NominalDataType         `json:"type"`
 }
@@ -632,9 +639,10 @@ func (o *ResolveSeriesError) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type ResolveSeriesRequest struct {
-	Name       api.Channel                  `json:"name"`
-	Datasource rids.DataSourceRid           `json:"datasource"`
+	Name       api.Channel                  `json:"name" safelogging:"@Unsafe"`
+	Datasource rids.DataSourceRid           `json:"datasource" safelogging:"@Safe"`
 	Tags       map[api.TagName]api.TagValue `json:"tags"`
 }
 
@@ -675,11 +683,12 @@ func (o *ResolveSeriesRequest) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TimescaleDbLocator struct {
-	Table      TableName                    `json:"table"`
-	Schema     SchemaName                   `json:"schema"`
-	Column     ColumnName                   `json:"column"`
-	TimeColumn ColumnName                   `json:"timeColumn"`
+	Table      TableName                    `json:"table" safelogging:"@Unsafe"`
+	Schema     SchemaName                   `json:"schema" safelogging:"@Unsafe"`
+	Column     ColumnName                   `json:"column" safelogging:"@Unsafe"`
+	TimeColumn ColumnName                   `json:"timeColumn" safelogging:"@Unsafe"`
 	Dimensions map[api.TagName]api.TagValue `json:"dimensions"`
 	Type       TimescaleType                `json:"type"`
 }
@@ -721,12 +730,13 @@ func (o *TimescaleDbLocator) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type TimestreamLocator struct {
-	Table      TableName                    `json:"table"`
+	Table      TableName                    `json:"table" safelogging:"@Unsafe"`
 	Dimensions map[api.TagName]api.TagValue `json:"dimensions"`
-	Measure    MeasureName                  `json:"measure"`
+	Measure    MeasureName                  `json:"measure" safelogging:"@Unsafe"`
 	// If present, will be the attribute within the measurement for multi-measures.
-	Attribute *AttributeName `json:"attribute,omitempty"`
+	Attribute *AttributeName `json:"attribute,omitempty" safelogging:"@Unsafe"`
 	Type      TimestreamType `json:"type"`
 }
 
@@ -767,11 +777,12 @@ func (o *TimestreamLocator) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UpdateExternalStorageLocator struct {
-	LogicalSeriesRid api.LogicalSeriesRid `json:"logicalSeriesRid"`
+	LogicalSeriesRid api.LogicalSeriesRid `json:"logicalSeriesRid" safelogging:"@Safe"`
 	Description      *string              `json:"description,omitempty"`
 	// Deprecated: Deprecated. Use unitUpdate instead.
-	Unit       *api.Unit   `json:"unit,omitempty"`
+	Unit       *api.Unit   `json:"unit,omitempty" safelogging:"@Unsafe"`
 	UnitUpdate *UnitUpdate `json:"unitUpdate,omitempty"`
 }
 
@@ -791,15 +802,16 @@ func (o *UpdateExternalStorageLocator) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type VisualCrossingLocator struct {
 	/*
 	   Location to fetch data from.  Can be any arbitrary string (i.e. name, abbreviation,
 	   zip code, lat/long, etc.) as remote endpoint performs location resolution.
 	*/
-	Location LocationName `json:"location"`
+	Location LocationName `json:"location" safelogging:"@Unsafe"`
 	// Defaults to HISTORY.  Endpoint to fetch data from for this series.
 	Endpoint *VisualCrossingEndpointUri `json:"endpoint,omitempty"`
-	Field    FieldName                  `json:"field"`
+	Field    FieldName                  `json:"field" safelogging:"@Unsafe"`
 	Type     VisualCrossingType         `json:"type"`
 }
 
