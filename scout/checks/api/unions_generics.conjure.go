@@ -435,6 +435,104 @@ type ChecklistSearchQueryVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type ComputeExpressionWithT[T any] ComputeExpression
+
+func (u *ComputeExpressionWithT[T]) Accept(ctx context.Context, v ComputeExpressionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *ComputeExpressionWithT[T]) AcceptFuncs(v1Func func(ComputeExpressionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ComputeExpressionWithT[T]) V1NoopSuccess(ComputeExpressionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ComputeExpressionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ComputeExpressionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v ComputeExpressionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type ComputeExpressionV1WithT[T any] ComputeExpressionV1
+
+func (u *ComputeExpressionV1WithT[T]) Accept(ctx context.Context, v ComputeExpressionV1VisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "python":
+		if u.python == nil {
+			return result, fmt.Errorf("field \"python\" is required")
+		}
+		return v.VisitPython(ctx, *u.python)
+	}
+}
+
+func (u *ComputeExpressionV1WithT[T]) AcceptFuncs(pythonFunc func(ComputeExpressionV1Python) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "python":
+		if u.python == nil {
+			return result, fmt.Errorf("field \"python\" is required")
+		}
+		return pythonFunc(*u.python)
+	}
+}
+
+func (u *ComputeExpressionV1WithT[T]) PythonNoopSuccess(ComputeExpressionV1Python) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ComputeExpressionV1WithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ComputeExpressionV1VisitorWithT[T any] interface {
+	VisitPython(ctx context.Context, v ComputeExpressionV1Python) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type CreateChecklistEntryRequestWithT[T any] CreateChecklistEntryRequest
 
 func (u *CreateChecklistEntryRequestWithT[T]) Accept(ctx context.Context, v CreateChecklistEntryRequestVisitorWithT[T]) (T, error) {
@@ -624,11 +722,6 @@ func (u *UnresolvedCheckConditionWithT[T]) Accept(ctx context.Context, v Unresol
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return result, fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return v.VisitBooleanSeriesV1(ctx, *u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return result, fmt.Errorf("field \"numRangesV2\" is required")
@@ -647,7 +740,7 @@ func (u *UnresolvedCheckConditionWithT[T]) Accept(ctx context.Context, v Unresol
 	}
 }
 
-func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(booleanSeriesV1Func func(UnresolvedBooleanSeriesConditionV1) (T, error), numRangesV2Func func(UnresolvedNumRangesConditionV2) (T, error), numRangesV3Func func(UnresolvedNumRangesConditionV3) (T, error), parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(numRangesV2Func func(UnresolvedNumRangesConditionV2) (T, error), numRangesV3Func func(UnresolvedNumRangesConditionV3) (T, error), parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -655,11 +748,6 @@ func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(booleanSeriesV1Func func(
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return result, fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return booleanSeriesV1Func(*u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return result, fmt.Errorf("field \"numRangesV2\" is required")
@@ -676,11 +764,6 @@ func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(booleanSeriesV1Func func(
 		}
 		return parameterizedNumRangesV1Func(*u.parameterizedNumRangesV1)
 	}
-}
-
-func (u *UnresolvedCheckConditionWithT[T]) BooleanSeriesV1NoopSuccess(UnresolvedBooleanSeriesConditionV1) (T, error) {
-	var result T
-	return result, nil
 }
 
 func (u *UnresolvedCheckConditionWithT[T]) NumRangesV2NoopSuccess(UnresolvedNumRangesConditionV2) (T, error) {
@@ -704,7 +787,6 @@ func (u *UnresolvedCheckConditionWithT[T]) ErrorOnUnknown(typeName string) (T, e
 }
 
 type UnresolvedCheckConditionVisitorWithT[T any] interface {
-	VisitBooleanSeriesV1(ctx context.Context, v UnresolvedBooleanSeriesConditionV1) (T, error)
 	VisitNumRangesV2(ctx context.Context, v UnresolvedNumRangesConditionV2) (T, error)
 	VisitNumRangesV3(ctx context.Context, v UnresolvedNumRangesConditionV3) (T, error)
 	VisitParameterizedNumRangesV1(ctx context.Context, v UnresolvedParameterizedNumRangesConditionV1) (T, error)

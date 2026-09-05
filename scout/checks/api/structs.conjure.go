@@ -383,6 +383,7 @@ type ChecklistMetadata struct {
 	Title       string                                   `json:"title"`
 	Description string                                   `json:"description"`
 	CreatedAt   datetime.DateTime                        `json:"createdAt"`
+	UpdatedAt   *datetime.DateTime                       `json:"updatedAt,omitempty"`
 	Properties  map[api2.PropertyName]api2.PropertyValue `json:"properties"`
 	Labels      []api2.Label                             `json:"labels" safelogging:"@Unsafe"`
 	LastUsed    *datetime.DateTime                       `json:"lastUsed,omitempty"`
@@ -464,6 +465,13 @@ type ChecklistVariable struct {
 	Name        api3.VariableName `json:"name" safelogging:"@Unsafe"`
 	DisplayName *string           `json:"displayName,omitempty"`
 	Value       VariableLocator   `json:"value"`
+	/*
+	   Code representation of the compute for this checklist variable. Authoritative when present:
+	   `value` must be exactly what this expression compiles to. The server persists it verbatim and
+	   does not verify that correspondence. The source is preamble-stripped — it does not include the
+	   auto-injected compute imports.
+	*/
+	ComputeExpression *ComputeExpression `json:"computeExpression,omitempty"`
 }
 
 func (o ChecklistVariable) MarshalYAML() (interface{}, error) {
@@ -533,6 +541,37 @@ func (o CommitChecklistRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CommitChecklistRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ComputeExpressionV1Python struct {
+	/*
+	   The python code string representing the compute. Can be up to 10000 characters long. Inputs are
+	   referenced by variable name; the binding from name to locator lives on whichever object carries
+	   this expression.
+	*/
+	Expression string `json:"expression"`
+	/*
+	   The Nominal compute python version identifier which the expression was written in. Used to determine if
+	   any migrations are needed to later versions of the python compute syntax. If not present, assumes the
+	   oldest version.
+	*/
+	NominalComputePythonVersion *string `json:"nominalComputePythonVersion,omitempty"`
+}
+
+func (o ComputeExpressionV1Python) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ComputeExpressionV1Python) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -920,6 +959,13 @@ type NumRangesConditionV3 struct {
 	Variables    map[api3.VariableName]VariableLocator `json:"variables"`
 	// Deprecated: This field is deprecated and will be removed in a future version.
 	FunctionVariables *map[api3.FunctionReference]CheckContext `json:"functionVariables,omitempty"`
+	/*
+	   Code representation of the compute for this check condition. Authoritative when present: `ranges`
+	   must be exactly what this expression compiles to. The server persists it verbatim and does not
+	   verify that correspondence. The source is preamble-stripped — it does not include the
+	   auto-injected compute imports.
+	*/
+	ComputeExpression *ComputeExpression `json:"computeExpression,omitempty"`
 }
 
 func (o NumRangesConditionV3) MarshalJSON() ([]byte, error) {
@@ -966,6 +1012,13 @@ type ParameterizedNumRangesConditionV1 struct {
 	   produced will be associated with the context of the index.
 	*/
 	Implementations []CheckContext `json:"implementations"`
+	/*
+	   Code representation of the compute for this check condition, shared by every implementation.
+	   Authoritative when present: `ranges` must be exactly what this expression compiles to in each
+	   implementation context. The server persists it verbatim and does not verify that correspondence.
+	   The source is preamble-stripped — it does not include the auto-injected compute imports.
+	*/
+	ComputeExpression *ComputeExpression `json:"computeExpression,omitempty"`
 }
 
 func (o ParameterizedNumRangesConditionV1) MarshalJSON() ([]byte, error) {
@@ -1040,6 +1093,11 @@ type SaveChecklistRequest struct {
 	   and otherwise throw CommitConflict.
 	*/
 	LatestCommit *api5.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
+	/*
+	   Message to record on the working-state commit this save creates. At most 4096
+	   characters. Defaults to "auto-save" when absent or blank.
+	*/
+	CommitMessage *string `json:"commitMessage,omitempty"`
 }
 
 func (o SaveChecklistRequest) MarshalJSON() ([]byte, error) {
@@ -1282,57 +1340,18 @@ func (o *UnarchiveChecklistsRequest) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type UnresolvedBooleanSeriesConditionV1 struct {
-	BooleanSeries api11.BooleanSeries `json:"booleanSeries"`
-	/*
-	   Default overrides for the variables used in the check condition. These variables can be overridden
-	   at checklist execution time.
-	*/
-	Variables map[api3.VariableName]UnresolvedVariableLocator `json:"variables"`
-}
-
-func (o UnresolvedBooleanSeriesConditionV1) MarshalJSON() ([]byte, error) {
-	if o.Variables == nil {
-		o.Variables = make(map[api3.VariableName]UnresolvedVariableLocator)
-	}
-	type _tmpUnresolvedBooleanSeriesConditionV1 UnresolvedBooleanSeriesConditionV1
-	return safejson.Marshal(_tmpUnresolvedBooleanSeriesConditionV1(o))
-}
-
-func (o *UnresolvedBooleanSeriesConditionV1) UnmarshalJSON(data []byte) error {
-	type _tmpUnresolvedBooleanSeriesConditionV1 UnresolvedBooleanSeriesConditionV1
-	var rawUnresolvedBooleanSeriesConditionV1 _tmpUnresolvedBooleanSeriesConditionV1
-	if err := safejson.Unmarshal(data, &rawUnresolvedBooleanSeriesConditionV1); err != nil {
-		return err
-	}
-	if rawUnresolvedBooleanSeriesConditionV1.Variables == nil {
-		rawUnresolvedBooleanSeriesConditionV1.Variables = make(map[api3.VariableName]UnresolvedVariableLocator)
-	}
-	*o = UnresolvedBooleanSeriesConditionV1(rawUnresolvedBooleanSeriesConditionV1)
-	return nil
-}
-
-func (o UnresolvedBooleanSeriesConditionV1) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *UnresolvedBooleanSeriesConditionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 // safelogging:@Unsafe
 type UnresolvedChecklistVariable struct {
 	Name        api3.VariableName         `json:"name" safelogging:"@Unsafe"`
 	DisplayName *string                   `json:"displayName,omitempty"`
 	Value       UnresolvedVariableLocator `json:"value"`
+	/*
+	   Code representation of the compute for this checklist variable. Authoritative when present:
+	   `value` must be exactly what this expression compiles to. The server persists it verbatim and
+	   does not verify that correspondence. The source is preamble-stripped — it does not include the
+	   auto-injected compute imports.
+	*/
+	ComputeExpression *ComputeExpression `json:"computeExpression,omitempty"`
 }
 
 func (o UnresolvedChecklistVariable) MarshalYAML() (interface{}, error) {
@@ -1427,6 +1446,13 @@ type UnresolvedNumRangesConditionV3 struct {
 	   at checklist execution time.
 	*/
 	Variables map[api3.VariableName]UnresolvedVariableLocator `json:"variables"`
+	/*
+	   Code representation of the compute for this check condition. Authoritative when present: `ranges`
+	   must be exactly what this expression compiles to. The server persists it verbatim and does not
+	   verify that correspondence. The source is preamble-stripped — it does not include the
+	   auto-injected compute imports.
+	*/
+	ComputeExpression *ComputeExpression `json:"computeExpression,omitempty"`
 }
 
 func (o UnresolvedNumRangesConditionV3) MarshalJSON() ([]byte, error) {
@@ -1473,6 +1499,13 @@ type UnresolvedParameterizedNumRangesConditionV1 struct {
 	   produced will be associated with the context of the index.
 	*/
 	Implementations []UnresolvedVariables `json:"implementations"`
+	/*
+	   Code representation of the compute for this check condition, shared by every implementation.
+	   Authoritative when present: `ranges` must be exactly what this expression compiles to in each
+	   implementation context. The server persists it verbatim and does not verify that correspondence.
+	   The source is preamble-stripped — it does not include the auto-injected compute imports.
+	*/
+	ComputeExpression *ComputeExpression `json:"computeExpression,omitempty"`
 }
 
 func (o UnresolvedParameterizedNumRangesConditionV1) MarshalJSON() ([]byte, error) {

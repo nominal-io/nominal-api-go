@@ -15,6 +15,46 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+type BatchArchiveTemplatesRequest struct {
+	Target TemplateArchiveTarget `json:"target"`
+}
+
+func (o BatchArchiveTemplatesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchArchiveTemplatesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BatchUnarchiveTemplatesRequest struct {
+	Target TemplateArchiveTarget `json:"target"`
+}
+
+func (o BatchUnarchiveTemplatesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchUnarchiveTemplatesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type CommitTemplateRequest struct {
 	// Deprecated: charts are no longer versioned resources. They are stored in workbook content.
 	Charts  *[]api.VersionedVizId `json:"charts,omitempty"`
@@ -57,6 +97,8 @@ type CreateTemplateRequest struct {
 	Layout  api1.WorkbookLayout   `json:"layout"`
 	Content api2.WorkbookContent  `json:"content"`
 	Message string                `json:"message"`
+	// Theme-aware preview image for the template. Falls back to a default illustration if not provided.
+	PreviewImage *api4.ThemeAwareImage `json:"previewImage,omitempty"`
 	/*
 	   The workspace in which to create the template. If not provided, the template will be created in the default workspace for
 	   the user's organization, if the default workspace for the organization is configured.
@@ -100,6 +142,56 @@ func (o CreateTemplateRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CreateTemplateRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Request to duplicate a template. All content fields (layout, content) are copied from the
+source template. Metadata fields can be optionally overridden; if not provided, they default
+to the source template's values (except isPublished, which defaults to false).
+*/
+// safelogging:@Unsafe
+type DuplicateTemplateRequest struct {
+	/*
+	   Override the title of the duplicated template. If not provided, generates a copy title
+	   from the source using the titleSuffix.
+	*/
+	Title *string `json:"title,omitempty"`
+	/*
+	   Custom suffix for generating the copy title (e.g., "v2").
+	   Defaults to "copy". Ignored if title is explicitly provided.
+	*/
+	TitleSuffix *string `json:"titleSuffix,omitempty"`
+	// Override description. Defaults to the source template's description.
+	Description *string `json:"description,omitempty"`
+	// Override published status. Defaults to false.
+	IsPublished *bool `json:"isPublished,omitempty"`
+	/*
+	   The workspace for the duplicated template. If not provided, the template will be created
+	   in the default workspace for the user's organization.
+	*/
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
+	// Override labels. Defaults to the source template's labels.
+	Labels *[]api4.Label `json:"labels,omitempty" safelogging:"@Unsafe"`
+	// Override properties. Defaults to the source template's properties.
+	Properties *map[api4.PropertyName]api4.PropertyValue `json:"properties,omitempty"`
+	// Override preview image. Defaults to the source template's preview image.
+	PreviewImage *api4.ThemeAwareImage `json:"previewImage,omitempty"`
+}
+
+func (o DuplicateTemplateRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DuplicateTemplateRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -194,6 +286,11 @@ type SaveTemplateRequest struct {
 	   and otherwise throw CommitConflict.
 	*/
 	LatestCommit *api3.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
+	/*
+	   Message to record on the working-state commit this save creates. At most 4096
+	   characters. Defaults to "auto-save" when absent or blank.
+	*/
+	CommitMessage *string `json:"commitMessage,omitempty"`
 }
 
 func (o SaveTemplateRequest) MarshalYAML() (interface{}, error) {
@@ -362,7 +459,8 @@ type TemplateMetadata struct {
 	CreatedAt   datetime.DateTime                        `json:"createdAt"`
 	UpdatedAt   datetime.DateTime                        `json:"updatedAt"`
 	// The time of the last permanent commit to the main branch.
-	EditedAt datetime.DateTime `json:"editedAt"`
+	EditedAt     datetime.DateTime     `json:"editedAt"`
+	PreviewImage *api4.ThemeAwareImage `json:"previewImage,omitempty"`
 }
 
 func (o TemplateMetadata) MarshalJSON() ([]byte, error) {
@@ -438,6 +536,8 @@ type UpdateMetadataRequest struct {
 	Properties  *map[api4.PropertyName]api4.PropertyValue `json:"properties,omitempty"`
 	IsArchived  *bool                                     `json:"isArchived,omitempty"`
 	IsPublished *bool                                     `json:"isPublished,omitempty"`
+	// Theme-aware preview image for the template. When provided, replaces the existing preview image.
+	PreviewImage *api4.ThemeAwareImage `json:"previewImage,omitempty"`
 }
 
 func (o UpdateMetadataRequest) MarshalYAML() (interface{}, error) {

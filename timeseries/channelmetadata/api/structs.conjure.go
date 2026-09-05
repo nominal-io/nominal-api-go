@@ -202,6 +202,9 @@ type ChannelMetadata struct {
 	Description       *string             `json:"description,omitempty"`
 	Unit              *api.Unit           `json:"unit,omitempty" safelogging:"@Unsafe"`
 	DataType          *api.SeriesDataType `json:"dataType,omitempty"`
+	IcebergDataType   *api.SeriesDataType `json:"icebergDataType,omitempty"`
+	// Classifies how the channel is used. Omitted values should be treated as STANDARD.
+	ChannelKind *api.ChannelKind `json:"channelKind,omitempty"`
 }
 
 func (o ChannelMetadata) MarshalYAML() (interface{}, error) {

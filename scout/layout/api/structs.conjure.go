@@ -9,7 +9,165 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
-// A layout of objects freely placed on a canvas.
+/*
+A layout for analyst backing workbooks. Panels render inline in the
+conversation, so entries carry no positioning — only per-panel
+settings, keyed by the panel's viz id in WorkbookContent.charts.
+*/
+type AnalystLayout struct {
+	Id     uuid.UUID                  `json:"id"`
+	Panels map[api.VizId]AnalystPanel `json:"panels"`
+}
+
+func (o AnalystLayout) MarshalJSON() ([]byte, error) {
+	if o.Panels == nil {
+		o.Panels = make(map[api.VizId]AnalystPanel)
+	}
+	type _tmpAnalystLayout AnalystLayout
+	return safejson.Marshal(_tmpAnalystLayout(o))
+}
+
+func (o *AnalystLayout) UnmarshalJSON(data []byte) error {
+	type _tmpAnalystLayout AnalystLayout
+	var rawAnalystLayout _tmpAnalystLayout
+	if err := safejson.Unmarshal(data, &rawAnalystLayout); err != nil {
+		return err
+	}
+	if rawAnalystLayout.Panels == nil {
+		rawAnalystLayout.Panels = make(map[api.VizId]AnalystPanel)
+	}
+	*o = AnalystLayout(rawAnalystLayout)
+	return nil
+}
+
+func (o AnalystLayout) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AnalystLayout) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type AnalystPanel struct {
+	TimeRangeInputId *uuid.UUID `json:"timeRangeInputId,omitempty"`
+}
+
+func (o AnalystPanel) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AnalystPanel) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+User-configurable visual styling for a canvas connection. Color is not
+persisted: clients currently derive it from the connected objects.
+*/
+type CanvasConnectionStyle struct {
+	// Defaults to solid when absent.
+	StrokeStyle *CanvasConnectionStrokeStyle `json:"strokeStyle,omitempty"`
+}
+
+func (o CanvasConnectionStyle) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CanvasConnectionStyle) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A connection between two canvas objects. Drawn as a one-way arrow
+from start to end; swap those endpoints to reverse it.
+*/
+type CanvasConnectionV1 struct {
+	/*
+	   The source endpoint. The displayed one-way arrow is drawn from
+	   start to end.
+	*/
+	Start CanvasEndpoint `json:"start"`
+	// The target endpoint.
+	End CanvasEndpoint `json:"end"`
+	// Visual styling for the connection. If absent, clients use defaults.
+	Style *CanvasConnectionStyle `json:"style,omitempty"`
+}
+
+func (o CanvasConnectionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CanvasConnectionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+An endpoint of a canvas connection, identifying an attachment point
+(anchor) on a canvas object.
+*/
+type CanvasEndpoint struct {
+	// The canvas object containing the referenced anchor.
+	ObjectId uuid.UUID `json:"objectId"`
+	/*
+	   Identifier of the attachment point on the canvas object. Kept as a
+	   string so clients can add custom anchors later without an API change.
+	   The initial well-known values are left, top, bottom, and right.
+	*/
+	AnchorId string `json:"anchorId"`
+}
+
+func (o CanvasEndpoint) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CanvasEndpoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A layout of elements freely placed on a canvas. CanvasPanel entries represent
+visualization nodes, and connection entries represent relationships between nodes.
+*/
 type CanvasLayout struct {
 	Id      uuid.UUID                  `json:"id"`
 	Objects map[uuid.UUID]CanvasObject `json:"objects"`
@@ -52,10 +210,14 @@ func (o *CanvasLayout) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// A standard workbook panel placed on a canvas.
+/*
+A panel node or HMI widget placed on a canvas. Other CanvasObject variants may represent
+different node types and have their own behavior.
+*/
 type CanvasPanel struct {
-	Rect       CanvasRect `json:"rect"`
-	HideLegend *bool      `json:"hideLegend,omitempty"`
+	Rect CanvasRect `json:"rect"`
+	// Deprecated: Deprecated.
+	HideLegend *bool `json:"hideLegend,omitempty"`
 }
 
 func (o CanvasPanel) MarshalYAML() (interface{}, error) {
@@ -98,9 +260,12 @@ func (o *CanvasRect) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type ChartPanelV1 struct {
-	Id         PanelId            `json:"id" safelogging:"@Safe"`
-	ChartRid   api.VersionedVizId `json:"chartRid" safelogging:"@Safe"`
-	HideLegend bool               `json:"hideLegend"`
+	Id       PanelId            `json:"id" safelogging:"@Safe"`
+	ChartRid api.VersionedVizId `json:"chartRid" safelogging:"@Safe"`
+	// Deprecated: No longer used.
+	HideLegend bool `json:"hideLegend"`
+	// When omitted, treat as false.
+	HideLabel *bool `json:"hideLabel,omitempty"`
 }
 
 func (o ChartPanelV1) MarshalYAML() (interface{}, error) {
@@ -119,9 +284,96 @@ func (o *ChartPanelV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// safelogging:@Safe
+type DashStrokeStyle struct{}
+
+func (o DashStrokeStyle) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DashStrokeStyle) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A layout of a document with its text editor raw state JSON
+and node objects such as panels metadata.
+*/
+type DocumentLayout struct {
+	Id             uuid.UUID                        `json:"id"`
+	TextEditorJson string                           `json:"textEditorJson"`
+	Nodes          map[uuid.UUID]DocumentNodeObject `json:"nodes"`
+}
+
+func (o DocumentLayout) MarshalJSON() ([]byte, error) {
+	if o.Nodes == nil {
+		o.Nodes = make(map[uuid.UUID]DocumentNodeObject)
+	}
+	type _tmpDocumentLayout DocumentLayout
+	return safejson.Marshal(_tmpDocumentLayout(o))
+}
+
+func (o *DocumentLayout) UnmarshalJSON(data []byte) error {
+	type _tmpDocumentLayout DocumentLayout
+	var rawDocumentLayout _tmpDocumentLayout
+	if err := safejson.Unmarshal(data, &rawDocumentLayout); err != nil {
+		return err
+	}
+	if rawDocumentLayout.Nodes == nil {
+		rawDocumentLayout.Nodes = make(map[uuid.UUID]DocumentNodeObject)
+	}
+	*o = DocumentLayout(rawDocumentLayout)
+	return nil
+}
+
+func (o DocumentLayout) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DocumentLayout) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type DocumentPanel struct {
+	Dimension        NodeDimension `json:"dimension"`
+	TimeRangeInputId *uuid.UUID    `json:"timeRangeInputId,omitempty"`
+}
+
+func (o DocumentPanel) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DocumentPanel) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type EmptyPanelV1 struct {
 	Id PanelId `json:"id" safelogging:"@Safe"`
+	// When omitted, treat as false.
+	HideLabel *bool `json:"hideLabel,omitempty"`
 }
 
 func (o EmptyPanelV1) MarshalYAML() (interface{}, error) {
@@ -133,6 +385,28 @@ func (o EmptyPanelV1) MarshalYAML() (interface{}, error) {
 }
 
 func (o *EmptyPanelV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Dimension of a node in pixels.
+type NodeDimension struct {
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
+}
+
+func (o NodeDimension) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NodeDimension) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -154,6 +428,24 @@ func (o SingleTabV1) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SingleTabV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type SolidStrokeStyle struct{}
+
+func (o SolidStrokeStyle) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SolidStrokeStyle) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -228,9 +520,12 @@ func (o *TabbedPanelV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Deprecated - use ChartPanel instead
 type VizPanelV1 struct {
-	Id         PanelId   `json:"id" safelogging:"@Safe"`
-	VizId      api.VizId `json:"vizId" safelogging:"@Safe"`
-	HideLegend bool      `json:"hideLegend"`
+	Id    PanelId   `json:"id" safelogging:"@Safe"`
+	VizId api.VizId `json:"vizId" safelogging:"@Safe"`
+	// Deprecated: No longer used.
+	HideLegend bool `json:"hideLegend"`
+	// When omitted, treat as false.
+	HideLabel *bool `json:"hideLabel,omitempty"`
 }
 
 func (o VizPanelV1) MarshalYAML() (interface{}, error) {

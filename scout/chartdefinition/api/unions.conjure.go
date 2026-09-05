@@ -465,6 +465,7 @@ type BucketDisplayStat struct {
 	count      *NoConfigDisplayStat
 	sum        *NoConfigDisplayStat
 	percentile *BucketDisplayStatPercentile
+	lttb       *NoConfigDisplayStat
 }
 
 type bucketDisplayStatDeserializer struct {
@@ -475,10 +476,11 @@ type bucketDisplayStatDeserializer struct {
 	Count      *NoConfigDisplayStat         `json:"count"`
 	Sum        *NoConfigDisplayStat         `json:"sum"`
 	Percentile *BucketDisplayStatPercentile `json:"percentile"`
+	Lttb       *NoConfigDisplayStat         `json:"lttb"`
 }
 
 func (u *bucketDisplayStatDeserializer) toStruct() BucketDisplayStat {
-	return BucketDisplayStat{typ: u.Type, mean: u.Mean, min: u.Min, max: u.Max, count: u.Count, sum: u.Sum, percentile: u.Percentile}
+	return BucketDisplayStat{typ: u.Type, mean: u.Mean, min: u.Min, max: u.Max, count: u.Count, sum: u.Sum, percentile: u.Percentile, lttb: u.Lttb}
 }
 
 func (u *BucketDisplayStat) toSerializer() (interface{}, error) {
@@ -533,6 +535,14 @@ func (u *BucketDisplayStat) toSerializer() (interface{}, error) {
 			Type       string                      `json:"type"`
 			Percentile BucketDisplayStatPercentile `json:"percentile"`
 		}{Type: "percentile", Percentile: *u.percentile}, nil
+	case "lttb":
+		if u.lttb == nil {
+			return nil, fmt.Errorf("field \"lttb\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Lttb NoConfigDisplayStat `json:"lttb"`
+		}{Type: "lttb", Lttb: *u.lttb}, nil
 	}
 }
 
@@ -575,6 +585,10 @@ func (u *BucketDisplayStat) UnmarshalJSON(data []byte) error {
 		if u.percentile == nil {
 			return fmt.Errorf("field \"percentile\" is required")
 		}
+	case "lttb":
+		if u.lttb == nil {
+			return fmt.Errorf("field \"lttb\" is required")
+		}
 	}
 	return nil
 }
@@ -595,7 +609,7 @@ func (u *BucketDisplayStat) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *BucketDisplayStat) AcceptFuncs(meanFunc func(NoConfigDisplayStat) error, minFunc func(NoConfigDisplayStat) error, maxFunc func(NoConfigDisplayStat) error, countFunc func(NoConfigDisplayStat) error, sumFunc func(NoConfigDisplayStat) error, percentileFunc func(BucketDisplayStatPercentile) error, unknownFunc func(string) error) error {
+func (u *BucketDisplayStat) AcceptFuncs(meanFunc func(NoConfigDisplayStat) error, minFunc func(NoConfigDisplayStat) error, maxFunc func(NoConfigDisplayStat) error, countFunc func(NoConfigDisplayStat) error, sumFunc func(NoConfigDisplayStat) error, percentileFunc func(BucketDisplayStatPercentile) error, lttbFunc func(NoConfigDisplayStat) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -632,6 +646,11 @@ func (u *BucketDisplayStat) AcceptFuncs(meanFunc func(NoConfigDisplayStat) error
 			return fmt.Errorf("field \"percentile\" is required")
 		}
 		return percentileFunc(*u.percentile)
+	case "lttb":
+		if u.lttb == nil {
+			return fmt.Errorf("field \"lttb\" is required")
+		}
+		return lttbFunc(*u.lttb)
 	}
 }
 
@@ -656,6 +675,10 @@ func (u *BucketDisplayStat) SumNoopSuccess(_ NoConfigDisplayStat) error {
 }
 
 func (u *BucketDisplayStat) PercentileNoopSuccess(_ BucketDisplayStatPercentile) error {
+	return nil
+}
+
+func (u *BucketDisplayStat) LttbNoopSuccess(_ NoConfigDisplayStat) error {
 	return nil
 }
 
@@ -700,6 +723,11 @@ func (u *BucketDisplayStat) Accept(v BucketDisplayStatVisitor) error {
 			return fmt.Errorf("field \"percentile\" is required")
 		}
 		return v.VisitPercentile(*u.percentile)
+	case "lttb":
+		if u.lttb == nil {
+			return fmt.Errorf("field \"lttb\" is required")
+		}
+		return v.VisitLttb(*u.lttb)
 	}
 }
 
@@ -710,6 +738,7 @@ type BucketDisplayStatVisitor interface {
 	VisitCount(v NoConfigDisplayStat) error
 	VisitSum(v NoConfigDisplayStat) error
 	VisitPercentile(v BucketDisplayStatPercentile) error
+	VisitLttb(v NoConfigDisplayStat) error
 	VisitUnknown(typeName string) error
 }
 
@@ -750,6 +779,11 @@ func (u *BucketDisplayStat) AcceptWithContext(ctx context.Context, v BucketDispl
 			return fmt.Errorf("field \"percentile\" is required")
 		}
 		return v.VisitPercentileWithContext(ctx, *u.percentile)
+	case "lttb":
+		if u.lttb == nil {
+			return fmt.Errorf("field \"lttb\" is required")
+		}
+		return v.VisitLttbWithContext(ctx, *u.lttb)
 	}
 }
 
@@ -760,6 +794,7 @@ type BucketDisplayStatVisitorWithContext interface {
 	VisitCountWithContext(ctx context.Context, v NoConfigDisplayStat) error
 	VisitSumWithContext(ctx context.Context, v NoConfigDisplayStat) error
 	VisitPercentileWithContext(ctx context.Context, v BucketDisplayStatPercentile) error
+	VisitLttbWithContext(ctx context.Context, v NoConfigDisplayStat) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -785,6 +820,285 @@ func NewBucketDisplayStatFromSum(v NoConfigDisplayStat) BucketDisplayStat {
 
 func NewBucketDisplayStatFromPercentile(v BucketDisplayStatPercentile) BucketDisplayStat {
 	return BucketDisplayStat{typ: "percentile", percentile: &v}
+}
+
+func NewBucketDisplayStatFromLttb(v NoConfigDisplayStat) BucketDisplayStat {
+	return BucketDisplayStat{typ: "lttb", lttb: &v}
+}
+
+/*
+The action a button performs when clicked. Additional action kinds
+(e.g. starting a procedure execution) may be added as new union
+variants
+*/
+type ButtonAction struct {
+	typ          string
+	sendCommands *SendCommandsButtonAction
+}
+
+type buttonActionDeserializer struct {
+	Type         string                    `json:"type"`
+	SendCommands *SendCommandsButtonAction `json:"sendCommands"`
+}
+
+func (u *buttonActionDeserializer) toStruct() ButtonAction {
+	return ButtonAction{typ: u.Type, sendCommands: u.SendCommands}
+}
+
+func (u *ButtonAction) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "sendCommands":
+		if u.sendCommands == nil {
+			return nil, fmt.Errorf("field \"sendCommands\" is required")
+		}
+		return struct {
+			Type         string                   `json:"type"`
+			SendCommands SendCommandsButtonAction `json:"sendCommands"`
+		}{Type: "sendCommands", SendCommands: *u.sendCommands}, nil
+	}
+}
+
+func (u ButtonAction) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ButtonAction) UnmarshalJSON(data []byte) error {
+	var deser buttonActionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "sendCommands":
+		if u.sendCommands == nil {
+			return fmt.Errorf("field \"sendCommands\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ButtonAction) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ButtonAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ButtonAction) AcceptFuncs(sendCommandsFunc func(SendCommandsButtonAction) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ButtonAction type")
+		}
+		return unknownFunc(u.typ)
+	case "sendCommands":
+		if u.sendCommands == nil {
+			return fmt.Errorf("field \"sendCommands\" is required")
+		}
+		return sendCommandsFunc(*u.sendCommands)
+	}
+}
+
+func (u *ButtonAction) SendCommandsNoopSuccess(_ SendCommandsButtonAction) error {
+	return nil
+}
+
+func (u *ButtonAction) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ButtonAction) Accept(v ButtonActionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "sendCommands":
+		if u.sendCommands == nil {
+			return fmt.Errorf("field \"sendCommands\" is required")
+		}
+		return v.VisitSendCommands(*u.sendCommands)
+	}
+}
+
+type ButtonActionVisitor interface {
+	VisitSendCommands(v SendCommandsButtonAction) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ButtonAction) AcceptWithContext(ctx context.Context, v ButtonActionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "sendCommands":
+		if u.sendCommands == nil {
+			return fmt.Errorf("field \"sendCommands\" is required")
+		}
+		return v.VisitSendCommandsWithContext(ctx, *u.sendCommands)
+	}
+}
+
+type ButtonActionVisitorWithContext interface {
+	VisitSendCommandsWithContext(ctx context.Context, v SendCommandsButtonAction) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewButtonActionFromSendCommands(v SendCommandsButtonAction) ButtonAction {
+	return ButtonAction{typ: "sendCommands", sendCommands: &v}
+}
+
+type ButtonVizDefinition struct {
+	typ string
+	v1  *ButtonVizDefinitionV1
+}
+
+type buttonVizDefinitionDeserializer struct {
+	Type string                 `json:"type"`
+	V1   *ButtonVizDefinitionV1 `json:"v1"`
+}
+
+func (u *buttonVizDefinitionDeserializer) toStruct() ButtonVizDefinition {
+	return ButtonVizDefinition{typ: u.Type, v1: u.V1}
+}
+
+func (u *ButtonVizDefinition) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string                `json:"type"`
+			V1   ButtonVizDefinitionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u ButtonVizDefinition) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ButtonVizDefinition) UnmarshalJSON(data []byte) error {
+	var deser buttonVizDefinitionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ButtonVizDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ButtonVizDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ButtonVizDefinition) AcceptFuncs(v1Func func(ButtonVizDefinitionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ButtonVizDefinition type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ButtonVizDefinition) V1NoopSuccess(_ ButtonVizDefinitionV1) error {
+	return nil
+}
+
+func (u *ButtonVizDefinition) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ButtonVizDefinition) Accept(v ButtonVizDefinitionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type ButtonVizDefinitionVisitor interface {
+	VisitV1(v ButtonVizDefinitionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ButtonVizDefinition) AcceptWithContext(ctx context.Context, v ButtonVizDefinitionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type ButtonVizDefinitionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v ButtonVizDefinitionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewButtonVizDefinitionFromV1(v ButtonVizDefinitionV1) ButtonVizDefinition {
+	return ButtonVizDefinition{typ: "v1", v1: &v}
 }
 
 type CartesianChartDefinition struct {
@@ -1366,6 +1680,325 @@ func NewColorStyleFromSingle(v api1.HexColor) ColorStyle {
 	return ColorStyle{typ: "single", single: &v}
 }
 
+/*
+A union so a later shape arrives as a new arm rather than a retype of
+`ValueTableLayoutColumn.columnTableState`, which would break the wire
+once the field holds data. Same pattern as `ValueTableDefinition`.
+*/
+type ColumnTableState struct {
+	typ string
+	v1  *ColumnTableStateV1
+}
+
+type columnTableStateDeserializer struct {
+	Type string              `json:"type"`
+	V1   *ColumnTableStateV1 `json:"v1"`
+}
+
+func (u *columnTableStateDeserializer) toStruct() ColumnTableState {
+	return ColumnTableState{typ: u.Type, v1: u.V1}
+}
+
+func (u *ColumnTableState) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string             `json:"type"`
+			V1   ColumnTableStateV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u ColumnTableState) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ColumnTableState) UnmarshalJSON(data []byte) error {
+	var deser columnTableStateDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ColumnTableState) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ColumnTableState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ColumnTableState) AcceptFuncs(v1Func func(ColumnTableStateV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ColumnTableState type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ColumnTableState) V1NoopSuccess(_ ColumnTableStateV1) error {
+	return nil
+}
+
+func (u *ColumnTableState) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ColumnTableState) Accept(v ColumnTableStateVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type ColumnTableStateVisitor interface {
+	VisitV1(v ColumnTableStateV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ColumnTableState) AcceptWithContext(ctx context.Context, v ColumnTableStateVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type ColumnTableStateVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v ColumnTableStateV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewColumnTableStateFromV1(v ColumnTableStateV1) ColumnTableState {
+	return ColumnTableState{typ: "v1", v1: &v}
+}
+
+/*
+How data is requested from the backend. Currently supports "full rate" and "bucketed".
+Full rate means every point is its own timestamp. Bucketed means the window in question
+is divided into (say, 1000) buckets and only the aggregates within each bucket are returned.
+*/
+type DataRequestMode struct {
+	typ      string
+	fullRate *NoConfigDataRequestMode
+	bucketed *NoConfigDataRequestMode
+}
+
+type dataRequestModeDeserializer struct {
+	Type     string                   `json:"type"`
+	FullRate *NoConfigDataRequestMode `json:"fullRate"`
+	Bucketed *NoConfigDataRequestMode `json:"bucketed"`
+}
+
+func (u *dataRequestModeDeserializer) toStruct() DataRequestMode {
+	return DataRequestMode{typ: u.Type, fullRate: u.FullRate, bucketed: u.Bucketed}
+}
+
+func (u *DataRequestMode) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "fullRate":
+		if u.fullRate == nil {
+			return nil, fmt.Errorf("field \"fullRate\" is required")
+		}
+		return struct {
+			Type     string                  `json:"type"`
+			FullRate NoConfigDataRequestMode `json:"fullRate"`
+		}{Type: "fullRate", FullRate: *u.fullRate}, nil
+	case "bucketed":
+		if u.bucketed == nil {
+			return nil, fmt.Errorf("field \"bucketed\" is required")
+		}
+		return struct {
+			Type     string                  `json:"type"`
+			Bucketed NoConfigDataRequestMode `json:"bucketed"`
+		}{Type: "bucketed", Bucketed: *u.bucketed}, nil
+	}
+}
+
+func (u DataRequestMode) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *DataRequestMode) UnmarshalJSON(data []byte) error {
+	var deser dataRequestModeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "fullRate":
+		if u.fullRate == nil {
+			return fmt.Errorf("field \"fullRate\" is required")
+		}
+	case "bucketed":
+		if u.bucketed == nil {
+			return fmt.Errorf("field \"bucketed\" is required")
+		}
+	}
+	return nil
+}
+
+func (u DataRequestMode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *DataRequestMode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *DataRequestMode) AcceptFuncs(fullRateFunc func(NoConfigDataRequestMode) error, bucketedFunc func(NoConfigDataRequestMode) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in DataRequestMode type")
+		}
+		return unknownFunc(u.typ)
+	case "fullRate":
+		if u.fullRate == nil {
+			return fmt.Errorf("field \"fullRate\" is required")
+		}
+		return fullRateFunc(*u.fullRate)
+	case "bucketed":
+		if u.bucketed == nil {
+			return fmt.Errorf("field \"bucketed\" is required")
+		}
+		return bucketedFunc(*u.bucketed)
+	}
+}
+
+func (u *DataRequestMode) FullRateNoopSuccess(_ NoConfigDataRequestMode) error {
+	return nil
+}
+
+func (u *DataRequestMode) BucketedNoopSuccess(_ NoConfigDataRequestMode) error {
+	return nil
+}
+
+func (u *DataRequestMode) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *DataRequestMode) Accept(v DataRequestModeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "fullRate":
+		if u.fullRate == nil {
+			return fmt.Errorf("field \"fullRate\" is required")
+		}
+		return v.VisitFullRate(*u.fullRate)
+	case "bucketed":
+		if u.bucketed == nil {
+			return fmt.Errorf("field \"bucketed\" is required")
+		}
+		return v.VisitBucketed(*u.bucketed)
+	}
+}
+
+type DataRequestModeVisitor interface {
+	VisitFullRate(v NoConfigDataRequestMode) error
+	VisitBucketed(v NoConfigDataRequestMode) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *DataRequestMode) AcceptWithContext(ctx context.Context, v DataRequestModeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "fullRate":
+		if u.fullRate == nil {
+			return fmt.Errorf("field \"fullRate\" is required")
+		}
+		return v.VisitFullRateWithContext(ctx, *u.fullRate)
+	case "bucketed":
+		if u.bucketed == nil {
+			return fmt.Errorf("field \"bucketed\" is required")
+		}
+		return v.VisitBucketedWithContext(ctx, *u.bucketed)
+	}
+}
+
+type DataRequestModeVisitorWithContext interface {
+	VisitFullRateWithContext(ctx context.Context, v NoConfigDataRequestMode) error
+	VisitBucketedWithContext(ctx context.Context, v NoConfigDataRequestMode) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewDataRequestModeFromFullRate(v NoConfigDataRequestMode) DataRequestMode {
+	return DataRequestMode{typ: "fullRate", fullRate: &v}
+}
+
+func NewDataRequestModeFromBucketed(v NoConfigDataRequestMode) DataRequestMode {
+	return DataRequestMode{typ: "bucketed", bucketed: &v}
+}
+
 type DecimalPlaces struct {
 	typ   string
 	fixed *FixedDecimalPlaces
@@ -1751,6 +2384,141 @@ func NewDisconnectedValueVisualizationFromNever(v NeverConnectDisconnectedValues
 
 func NewDisconnectedValueVisualizationFromThreshold(v ThresholdDisconnectedValues) DisconnectedValueVisualization {
 	return DisconnectedValueVisualization{typ: "threshold", threshold: &v}
+}
+
+type EndNodeVizDefinition struct {
+	typ string
+	v1  *EndNodeVizDefinitionV1
+}
+
+type endNodeVizDefinitionDeserializer struct {
+	Type string                  `json:"type"`
+	V1   *EndNodeVizDefinitionV1 `json:"v1"`
+}
+
+func (u *endNodeVizDefinitionDeserializer) toStruct() EndNodeVizDefinition {
+	return EndNodeVizDefinition{typ: u.Type, v1: u.V1}
+}
+
+func (u *EndNodeVizDefinition) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string                 `json:"type"`
+			V1   EndNodeVizDefinitionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u EndNodeVizDefinition) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *EndNodeVizDefinition) UnmarshalJSON(data []byte) error {
+	var deser endNodeVizDefinitionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u EndNodeVizDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *EndNodeVizDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *EndNodeVizDefinition) AcceptFuncs(v1Func func(EndNodeVizDefinitionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in EndNodeVizDefinition type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *EndNodeVizDefinition) V1NoopSuccess(_ EndNodeVizDefinitionV1) error {
+	return nil
+}
+
+func (u *EndNodeVizDefinition) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *EndNodeVizDefinition) Accept(v EndNodeVizDefinitionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type EndNodeVizDefinitionVisitor interface {
+	VisitV1(v EndNodeVizDefinitionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *EndNodeVizDefinition) AcceptWithContext(ctx context.Context, v EndNodeVizDefinitionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type EndNodeVizDefinitionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v EndNodeVizDefinitionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewEndNodeVizDefinitionFromV1(v EndNodeVizDefinitionV1) EndNodeVizDefinition {
+	return EndNodeVizDefinition{typ: "v1", v1: &v}
 }
 
 type EnumArrayVisualisation struct {
@@ -3397,6 +4165,185 @@ func NewFrequencyPlotV2FromMultivariate(v FrequencyPlotMultivariate) FrequencyPl
 	return FrequencyPlotV2{typ: "multivariate", multivariate: &v}
 }
 
+/*
+Coordinate reference system for spatial assets (point clouds, meshes) in a
+Geo3d panel. Expressed as a union so future variants (e.g. UTM, local ENU
+with a known origin) can carry their own parameters without a breaking change.
+*/
+type Geo3dCrs struct {
+	typ   string
+	ecef  *Geo3dCrsEcef
+	local *Geo3dCrsCartesian
+}
+
+type geo3dCrsDeserializer struct {
+	Type  string             `json:"type"`
+	Ecef  *Geo3dCrsEcef      `json:"ecef"`
+	Local *Geo3dCrsCartesian `json:"local"`
+}
+
+func (u *geo3dCrsDeserializer) toStruct() Geo3dCrs {
+	return Geo3dCrs{typ: u.Type, ecef: u.Ecef, local: u.Local}
+}
+
+func (u *Geo3dCrs) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "ecef":
+		if u.ecef == nil {
+			return nil, fmt.Errorf("field \"ecef\" is required")
+		}
+		return struct {
+			Type string       `json:"type"`
+			Ecef Geo3dCrsEcef `json:"ecef"`
+		}{Type: "ecef", Ecef: *u.ecef}, nil
+	case "local":
+		if u.local == nil {
+			return nil, fmt.Errorf("field \"local\" is required")
+		}
+		return struct {
+			Type  string            `json:"type"`
+			Local Geo3dCrsCartesian `json:"local"`
+		}{Type: "local", Local: *u.local}, nil
+	}
+}
+
+func (u Geo3dCrs) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *Geo3dCrs) UnmarshalJSON(data []byte) error {
+	var deser geo3dCrsDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "ecef":
+		if u.ecef == nil {
+			return fmt.Errorf("field \"ecef\" is required")
+		}
+	case "local":
+		if u.local == nil {
+			return fmt.Errorf("field \"local\" is required")
+		}
+	}
+	return nil
+}
+
+func (u Geo3dCrs) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *Geo3dCrs) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *Geo3dCrs) AcceptFuncs(ecefFunc func(Geo3dCrsEcef) error, localFunc func(Geo3dCrsCartesian) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in Geo3dCrs type")
+		}
+		return unknownFunc(u.typ)
+	case "ecef":
+		if u.ecef == nil {
+			return fmt.Errorf("field \"ecef\" is required")
+		}
+		return ecefFunc(*u.ecef)
+	case "local":
+		if u.local == nil {
+			return fmt.Errorf("field \"local\" is required")
+		}
+		return localFunc(*u.local)
+	}
+}
+
+func (u *Geo3dCrs) EcefNoopSuccess(_ Geo3dCrsEcef) error {
+	return nil
+}
+
+func (u *Geo3dCrs) LocalNoopSuccess(_ Geo3dCrsCartesian) error {
+	return nil
+}
+
+func (u *Geo3dCrs) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *Geo3dCrs) Accept(v Geo3dCrsVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "ecef":
+		if u.ecef == nil {
+			return fmt.Errorf("field \"ecef\" is required")
+		}
+		return v.VisitEcef(*u.ecef)
+	case "local":
+		if u.local == nil {
+			return fmt.Errorf("field \"local\" is required")
+		}
+		return v.VisitLocal(*u.local)
+	}
+}
+
+type Geo3dCrsVisitor interface {
+	VisitEcef(v Geo3dCrsEcef) error
+	VisitLocal(v Geo3dCrsCartesian) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *Geo3dCrs) AcceptWithContext(ctx context.Context, v Geo3dCrsVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "ecef":
+		if u.ecef == nil {
+			return fmt.Errorf("field \"ecef\" is required")
+		}
+		return v.VisitEcefWithContext(ctx, *u.ecef)
+	case "local":
+		if u.local == nil {
+			return fmt.Errorf("field \"local\" is required")
+		}
+		return v.VisitLocalWithContext(ctx, *u.local)
+	}
+}
+
+type Geo3dCrsVisitorWithContext interface {
+	VisitEcefWithContext(ctx context.Context, v Geo3dCrsEcef) error
+	VisitLocalWithContext(ctx context.Context, v Geo3dCrsCartesian) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewGeo3dCrsFromEcef(v Geo3dCrsEcef) Geo3dCrs {
+	return Geo3dCrs{typ: "ecef", ecef: &v}
+}
+
+func NewGeo3dCrsFromLocal(v Geo3dCrsCartesian) Geo3dCrs {
+	return Geo3dCrs{typ: "local", local: &v}
+}
+
 type Geo3dDefinition struct {
 	typ string
 	v1  *Geo3dDefinitionV1
@@ -3980,16 +4927,18 @@ type Geo3dPosition struct {
 	typ   string
 	wgs84 *Geo3dPositionWgs84
 	ecef  *Geo3dPositionEcef
+	local *Geo3dPositionLocal
 }
 
 type geo3dPositionDeserializer struct {
 	Type  string              `json:"type"`
 	Wgs84 *Geo3dPositionWgs84 `json:"wgs84"`
 	Ecef  *Geo3dPositionEcef  `json:"ecef"`
+	Local *Geo3dPositionLocal `json:"local"`
 }
 
 func (u *geo3dPositionDeserializer) toStruct() Geo3dPosition {
-	return Geo3dPosition{typ: u.Type, wgs84: u.Wgs84, ecef: u.Ecef}
+	return Geo3dPosition{typ: u.Type, wgs84: u.Wgs84, ecef: u.Ecef, local: u.Local}
 }
 
 func (u *Geo3dPosition) toSerializer() (interface{}, error) {
@@ -4012,6 +4961,14 @@ func (u *Geo3dPosition) toSerializer() (interface{}, error) {
 			Type string            `json:"type"`
 			Ecef Geo3dPositionEcef `json:"ecef"`
 		}{Type: "ecef", Ecef: *u.ecef}, nil
+	case "local":
+		if u.local == nil {
+			return nil, fmt.Errorf("field \"local\" is required")
+		}
+		return struct {
+			Type  string             `json:"type"`
+			Local Geo3dPositionLocal `json:"local"`
+		}{Type: "local", Local: *u.local}, nil
 	}
 }
 
@@ -4038,6 +4995,10 @@ func (u *Geo3dPosition) UnmarshalJSON(data []byte) error {
 		if u.ecef == nil {
 			return fmt.Errorf("field \"ecef\" is required")
 		}
+	case "local":
+		if u.local == nil {
+			return fmt.Errorf("field \"local\" is required")
+		}
 	}
 	return nil
 }
@@ -4058,7 +5019,7 @@ func (u *Geo3dPosition) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Geo3dPosition) AcceptFuncs(wgs84Func func(Geo3dPositionWgs84) error, ecefFunc func(Geo3dPositionEcef) error, unknownFunc func(string) error) error {
+func (u *Geo3dPosition) AcceptFuncs(wgs84Func func(Geo3dPositionWgs84) error, ecefFunc func(Geo3dPositionEcef) error, localFunc func(Geo3dPositionLocal) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -4075,6 +5036,11 @@ func (u *Geo3dPosition) AcceptFuncs(wgs84Func func(Geo3dPositionWgs84) error, ec
 			return fmt.Errorf("field \"ecef\" is required")
 		}
 		return ecefFunc(*u.ecef)
+	case "local":
+		if u.local == nil {
+			return fmt.Errorf("field \"local\" is required")
+		}
+		return localFunc(*u.local)
 	}
 }
 
@@ -4083,6 +5049,10 @@ func (u *Geo3dPosition) Wgs84NoopSuccess(_ Geo3dPositionWgs84) error {
 }
 
 func (u *Geo3dPosition) EcefNoopSuccess(_ Geo3dPositionEcef) error {
+	return nil
+}
+
+func (u *Geo3dPosition) LocalNoopSuccess(_ Geo3dPositionLocal) error {
 	return nil
 }
 
@@ -4107,12 +5077,18 @@ func (u *Geo3dPosition) Accept(v Geo3dPositionVisitor) error {
 			return fmt.Errorf("field \"ecef\" is required")
 		}
 		return v.VisitEcef(*u.ecef)
+	case "local":
+		if u.local == nil {
+			return fmt.Errorf("field \"local\" is required")
+		}
+		return v.VisitLocal(*u.local)
 	}
 }
 
 type Geo3dPositionVisitor interface {
 	VisitWgs84(v Geo3dPositionWgs84) error
 	VisitEcef(v Geo3dPositionEcef) error
+	VisitLocal(v Geo3dPositionLocal) error
 	VisitUnknown(typeName string) error
 }
 
@@ -4133,12 +5109,18 @@ func (u *Geo3dPosition) AcceptWithContext(ctx context.Context, v Geo3dPositionVi
 			return fmt.Errorf("field \"ecef\" is required")
 		}
 		return v.VisitEcefWithContext(ctx, *u.ecef)
+	case "local":
+		if u.local == nil {
+			return fmt.Errorf("field \"local\" is required")
+		}
+		return v.VisitLocalWithContext(ctx, *u.local)
 	}
 }
 
 type Geo3dPositionVisitorWithContext interface {
 	VisitWgs84WithContext(ctx context.Context, v Geo3dPositionWgs84) error
 	VisitEcefWithContext(ctx context.Context, v Geo3dPositionEcef) error
+	VisitLocalWithContext(ctx context.Context, v Geo3dPositionLocal) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -4148,6 +5130,10 @@ func NewGeo3dPositionFromWgs84(v Geo3dPositionWgs84) Geo3dPosition {
 
 func NewGeo3dPositionFromEcef(v Geo3dPositionEcef) Geo3dPosition {
 	return Geo3dPosition{typ: "ecef", ecef: &v}
+}
+
+func NewGeo3dPositionFromLocal(v Geo3dPositionLocal) Geo3dPosition {
+	return Geo3dPosition{typ: "local", local: &v}
 }
 
 // Sensor orientation configuration.
@@ -4850,6 +5836,142 @@ func NewGeoCustomFeatureFromPoint(v GeoPoint) GeoCustomFeature {
 	return GeoCustomFeature{typ: "point", point: &v}
 }
 
+// Versioned container for all persisted spatial plot properties.
+type GeoPlot3dSpatialProperties struct {
+	typ string
+	v1  *GeoPlot3dSpatialPropertiesV1
+}
+
+type geoPlot3dSpatialPropertiesDeserializer struct {
+	Type string                        `json:"type"`
+	V1   *GeoPlot3dSpatialPropertiesV1 `json:"v1"`
+}
+
+func (u *geoPlot3dSpatialPropertiesDeserializer) toStruct() GeoPlot3dSpatialProperties {
+	return GeoPlot3dSpatialProperties{typ: u.Type, v1: u.V1}
+}
+
+func (u *GeoPlot3dSpatialProperties) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string                       `json:"type"`
+			V1   GeoPlot3dSpatialPropertiesV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u GeoPlot3dSpatialProperties) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *GeoPlot3dSpatialProperties) UnmarshalJSON(data []byte) error {
+	var deser geoPlot3dSpatialPropertiesDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u GeoPlot3dSpatialProperties) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *GeoPlot3dSpatialProperties) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *GeoPlot3dSpatialProperties) AcceptFuncs(v1Func func(GeoPlot3dSpatialPropertiesV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in GeoPlot3dSpatialProperties type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *GeoPlot3dSpatialProperties) V1NoopSuccess(_ GeoPlot3dSpatialPropertiesV1) error {
+	return nil
+}
+
+func (u *GeoPlot3dSpatialProperties) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *GeoPlot3dSpatialProperties) Accept(v GeoPlot3dSpatialPropertiesVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type GeoPlot3dSpatialPropertiesVisitor interface {
+	VisitV1(v GeoPlot3dSpatialPropertiesV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *GeoPlot3dSpatialProperties) AcceptWithContext(ctx context.Context, v GeoPlot3dSpatialPropertiesVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type GeoPlot3dSpatialPropertiesVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v GeoPlot3dSpatialPropertiesV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewGeoPlot3dSpatialPropertiesFromV1(v GeoPlot3dSpatialPropertiesV1) GeoPlot3dSpatialProperties {
+	return GeoPlot3dSpatialProperties{typ: "v1", v1: &v}
+}
+
 type GeoVizDefinition struct {
 	typ string
 	v1  *GeoVizDefinitionV1
@@ -5120,6 +6242,141 @@ func NewHistogramChartDefinitionFromV1(v HistogramChartDefinitionV1) HistogramCh
 	return HistogramChartDefinition{typ: "v1", v1: &v}
 }
 
+type ImageVizDefinition struct {
+	typ string
+	v1  *ImageVizDefinitionV1
+}
+
+type imageVizDefinitionDeserializer struct {
+	Type string                `json:"type"`
+	V1   *ImageVizDefinitionV1 `json:"v1"`
+}
+
+func (u *imageVizDefinitionDeserializer) toStruct() ImageVizDefinition {
+	return ImageVizDefinition{typ: u.Type, v1: u.V1}
+}
+
+func (u *ImageVizDefinition) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string               `json:"type"`
+			V1   ImageVizDefinitionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u ImageVizDefinition) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ImageVizDefinition) UnmarshalJSON(data []byte) error {
+	var deser imageVizDefinitionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ImageVizDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ImageVizDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ImageVizDefinition) AcceptFuncs(v1Func func(ImageVizDefinitionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ImageVizDefinition type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ImageVizDefinition) V1NoopSuccess(_ ImageVizDefinitionV1) error {
+	return nil
+}
+
+func (u *ImageVizDefinition) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ImageVizDefinition) Accept(v ImageVizDefinitionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type ImageVizDefinitionVisitor interface {
+	VisitV1(v ImageVizDefinitionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ImageVizDefinition) AcceptWithContext(ctx context.Context, v ImageVizDefinitionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type ImageVizDefinitionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v ImageVizDefinitionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewImageVizDefinitionFromV1(v ImageVizDefinitionV1) ImageVizDefinition {
+	return ImageVizDefinition{typ: "v1", v1: &v}
+}
+
 type LineStyle struct {
 	typ string
 	v1  *LineStyleV1
@@ -5253,6 +6510,142 @@ type LineStyleVisitorWithContext interface {
 
 func NewLineStyleFromV1(v LineStyleV1) LineStyle {
 	return LineStyle{typ: "v1", v1: &v}
+}
+
+// Tag field to filter log series data by.
+type LogColumnTagFilters struct {
+	typ     string
+	literal *map[string][]string
+}
+
+type logColumnTagFiltersDeserializer struct {
+	Type    string               `json:"type"`
+	Literal *map[string][]string `json:"literal"`
+}
+
+func (u *logColumnTagFiltersDeserializer) toStruct() LogColumnTagFilters {
+	return LogColumnTagFilters{typ: u.Type, literal: u.Literal}
+}
+
+func (u *LogColumnTagFilters) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "literal":
+		if u.literal == nil {
+			return nil, fmt.Errorf("field \"literal\" is required")
+		}
+		return struct {
+			Type    string              `json:"type"`
+			Literal map[string][]string `json:"literal"`
+		}{Type: "literal", Literal: *u.literal}, nil
+	}
+}
+
+func (u LogColumnTagFilters) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *LogColumnTagFilters) UnmarshalJSON(data []byte) error {
+	var deser logColumnTagFiltersDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+	}
+	return nil
+}
+
+func (u LogColumnTagFilters) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *LogColumnTagFilters) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *LogColumnTagFilters) AcceptFuncs(literalFunc func(map[string][]string) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in LogColumnTagFilters type")
+		}
+		return unknownFunc(u.typ)
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+		return literalFunc(*u.literal)
+	}
+}
+
+func (u *LogColumnTagFilters) LiteralNoopSuccess(_ map[string][]string) error {
+	return nil
+}
+
+func (u *LogColumnTagFilters) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *LogColumnTagFilters) Accept(v LogColumnTagFiltersVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+		return v.VisitLiteral(*u.literal)
+	}
+}
+
+type LogColumnTagFiltersVisitor interface {
+	VisitLiteral(v map[string][]string) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *LogColumnTagFilters) AcceptWithContext(ctx context.Context, v LogColumnTagFiltersVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+		return v.VisitLiteralWithContext(ctx, *u.literal)
+	}
+}
+
+type LogColumnTagFiltersVisitorWithContext interface {
+	VisitLiteralWithContext(ctx context.Context, v map[string][]string) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewLogColumnTagFiltersFromLiteral(v map[string][]string) LogColumnTagFilters {
+	return LogColumnTagFilters{typ: "literal", literal: &v}
 }
 
 type LogPanelDefinition struct {
@@ -7457,6 +8850,181 @@ func NewRangeValueVisualisationFromRaw(v RangeRawVisualisation) RangeValueVisual
 	return RangeValueVisualisation{typ: "raw", raw: &v}
 }
 
+// User-level display format for relative timestamps.
+type RelativeTimestampFormat struct {
+	typ              string
+	temporalSubunits *TemporalSubunitsRelativeTimestampFormat
+	totalSeconds     *TotalSecondsRelativeTimestampFormat
+}
+
+type relativeTimestampFormatDeserializer struct {
+	Type             string                                   `json:"type"`
+	TemporalSubunits *TemporalSubunitsRelativeTimestampFormat `json:"temporalSubunits"`
+	TotalSeconds     *TotalSecondsRelativeTimestampFormat     `json:"totalSeconds"`
+}
+
+func (u *relativeTimestampFormatDeserializer) toStruct() RelativeTimestampFormat {
+	return RelativeTimestampFormat{typ: u.Type, temporalSubunits: u.TemporalSubunits, totalSeconds: u.TotalSeconds}
+}
+
+func (u *RelativeTimestampFormat) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return nil, fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+		return struct {
+			Type             string                                  `json:"type"`
+			TemporalSubunits TemporalSubunitsRelativeTimestampFormat `json:"temporalSubunits"`
+		}{Type: "temporalSubunits", TemporalSubunits: *u.temporalSubunits}, nil
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return nil, fmt.Errorf("field \"totalSeconds\" is required")
+		}
+		return struct {
+			Type         string                              `json:"type"`
+			TotalSeconds TotalSecondsRelativeTimestampFormat `json:"totalSeconds"`
+		}{Type: "totalSeconds", TotalSeconds: *u.totalSeconds}, nil
+	}
+}
+
+func (u RelativeTimestampFormat) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *RelativeTimestampFormat) UnmarshalJSON(data []byte) error {
+	var deser relativeTimestampFormatDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return fmt.Errorf("field \"totalSeconds\" is required")
+		}
+	}
+	return nil
+}
+
+func (u RelativeTimestampFormat) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *RelativeTimestampFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *RelativeTimestampFormat) AcceptFuncs(temporalSubunitsFunc func(TemporalSubunitsRelativeTimestampFormat) error, totalSecondsFunc func(TotalSecondsRelativeTimestampFormat) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in RelativeTimestampFormat type")
+		}
+		return unknownFunc(u.typ)
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+		return temporalSubunitsFunc(*u.temporalSubunits)
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return fmt.Errorf("field \"totalSeconds\" is required")
+		}
+		return totalSecondsFunc(*u.totalSeconds)
+	}
+}
+
+func (u *RelativeTimestampFormat) TemporalSubunitsNoopSuccess(_ TemporalSubunitsRelativeTimestampFormat) error {
+	return nil
+}
+
+func (u *RelativeTimestampFormat) TotalSecondsNoopSuccess(_ TotalSecondsRelativeTimestampFormat) error {
+	return nil
+}
+
+func (u *RelativeTimestampFormat) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *RelativeTimestampFormat) Accept(v RelativeTimestampFormatVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+		return v.VisitTemporalSubunits(*u.temporalSubunits)
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return fmt.Errorf("field \"totalSeconds\" is required")
+		}
+		return v.VisitTotalSeconds(*u.totalSeconds)
+	}
+}
+
+type RelativeTimestampFormatVisitor interface {
+	VisitTemporalSubunits(v TemporalSubunitsRelativeTimestampFormat) error
+	VisitTotalSeconds(v TotalSecondsRelativeTimestampFormat) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *RelativeTimestampFormat) AcceptWithContext(ctx context.Context, v RelativeTimestampFormatVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+		return v.VisitTemporalSubunitsWithContext(ctx, *u.temporalSubunits)
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return fmt.Errorf("field \"totalSeconds\" is required")
+		}
+		return v.VisitTotalSecondsWithContext(ctx, *u.totalSeconds)
+	}
+}
+
+type RelativeTimestampFormatVisitorWithContext interface {
+	VisitTemporalSubunitsWithContext(ctx context.Context, v TemporalSubunitsRelativeTimestampFormat) error
+	VisitTotalSecondsWithContext(ctx context.Context, v TotalSecondsRelativeTimestampFormat) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewRelativeTimestampFormatFromTemporalSubunits(v TemporalSubunitsRelativeTimestampFormat) RelativeTimestampFormat {
+	return RelativeTimestampFormat{typ: "temporalSubunits", temporalSubunits: &v}
+}
+
+func NewRelativeTimestampFormatFromTotalSeconds(v TotalSecondsRelativeTimestampFormat) RelativeTimestampFormat {
+	return RelativeTimestampFormat{typ: "totalSeconds", totalSeconds: &v}
+}
+
 type ScatterDecimation struct {
 	typ      string
 	temporal *TemporalDecimation
@@ -7767,6 +9335,1249 @@ func NewSecondaryVariableOptionsFromAsColors(v ValueToColorMap) SecondaryVariabl
 	return SecondaryVariableOptions{typ: "asColors", asColors: &v}
 }
 
+type Shape struct {
+	typ       string
+	rectangle *RectangleShape
+	ellipse   *EllipseShape
+	triangle  *TriangleShape
+}
+
+type shapeDeserializer struct {
+	Type      string          `json:"type"`
+	Rectangle *RectangleShape `json:"rectangle"`
+	Ellipse   *EllipseShape   `json:"ellipse"`
+	Triangle  *TriangleShape  `json:"triangle"`
+}
+
+func (u *shapeDeserializer) toStruct() Shape {
+	return Shape{typ: u.Type, rectangle: u.Rectangle, ellipse: u.Ellipse, triangle: u.Triangle}
+}
+
+func (u *Shape) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "rectangle":
+		if u.rectangle == nil {
+			return nil, fmt.Errorf("field \"rectangle\" is required")
+		}
+		return struct {
+			Type      string         `json:"type"`
+			Rectangle RectangleShape `json:"rectangle"`
+		}{Type: "rectangle", Rectangle: *u.rectangle}, nil
+	case "ellipse":
+		if u.ellipse == nil {
+			return nil, fmt.Errorf("field \"ellipse\" is required")
+		}
+		return struct {
+			Type    string       `json:"type"`
+			Ellipse EllipseShape `json:"ellipse"`
+		}{Type: "ellipse", Ellipse: *u.ellipse}, nil
+	case "triangle":
+		if u.triangle == nil {
+			return nil, fmt.Errorf("field \"triangle\" is required")
+		}
+		return struct {
+			Type     string        `json:"type"`
+			Triangle TriangleShape `json:"triangle"`
+		}{Type: "triangle", Triangle: *u.triangle}, nil
+	}
+}
+
+func (u Shape) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *Shape) UnmarshalJSON(data []byte) error {
+	var deser shapeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "rectangle":
+		if u.rectangle == nil {
+			return fmt.Errorf("field \"rectangle\" is required")
+		}
+	case "ellipse":
+		if u.ellipse == nil {
+			return fmt.Errorf("field \"ellipse\" is required")
+		}
+	case "triangle":
+		if u.triangle == nil {
+			return fmt.Errorf("field \"triangle\" is required")
+		}
+	}
+	return nil
+}
+
+func (u Shape) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *Shape) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *Shape) AcceptFuncs(rectangleFunc func(RectangleShape) error, ellipseFunc func(EllipseShape) error, triangleFunc func(TriangleShape) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in Shape type")
+		}
+		return unknownFunc(u.typ)
+	case "rectangle":
+		if u.rectangle == nil {
+			return fmt.Errorf("field \"rectangle\" is required")
+		}
+		return rectangleFunc(*u.rectangle)
+	case "ellipse":
+		if u.ellipse == nil {
+			return fmt.Errorf("field \"ellipse\" is required")
+		}
+		return ellipseFunc(*u.ellipse)
+	case "triangle":
+		if u.triangle == nil {
+			return fmt.Errorf("field \"triangle\" is required")
+		}
+		return triangleFunc(*u.triangle)
+	}
+}
+
+func (u *Shape) RectangleNoopSuccess(_ RectangleShape) error {
+	return nil
+}
+
+func (u *Shape) EllipseNoopSuccess(_ EllipseShape) error {
+	return nil
+}
+
+func (u *Shape) TriangleNoopSuccess(_ TriangleShape) error {
+	return nil
+}
+
+func (u *Shape) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *Shape) Accept(v ShapeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "rectangle":
+		if u.rectangle == nil {
+			return fmt.Errorf("field \"rectangle\" is required")
+		}
+		return v.VisitRectangle(*u.rectangle)
+	case "ellipse":
+		if u.ellipse == nil {
+			return fmt.Errorf("field \"ellipse\" is required")
+		}
+		return v.VisitEllipse(*u.ellipse)
+	case "triangle":
+		if u.triangle == nil {
+			return fmt.Errorf("field \"triangle\" is required")
+		}
+		return v.VisitTriangle(*u.triangle)
+	}
+}
+
+type ShapeVisitor interface {
+	VisitRectangle(v RectangleShape) error
+	VisitEllipse(v EllipseShape) error
+	VisitTriangle(v TriangleShape) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *Shape) AcceptWithContext(ctx context.Context, v ShapeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "rectangle":
+		if u.rectangle == nil {
+			return fmt.Errorf("field \"rectangle\" is required")
+		}
+		return v.VisitRectangleWithContext(ctx, *u.rectangle)
+	case "ellipse":
+		if u.ellipse == nil {
+			return fmt.Errorf("field \"ellipse\" is required")
+		}
+		return v.VisitEllipseWithContext(ctx, *u.ellipse)
+	case "triangle":
+		if u.triangle == nil {
+			return fmt.Errorf("field \"triangle\" is required")
+		}
+		return v.VisitTriangleWithContext(ctx, *u.triangle)
+	}
+}
+
+type ShapeVisitorWithContext interface {
+	VisitRectangleWithContext(ctx context.Context, v RectangleShape) error
+	VisitEllipseWithContext(ctx context.Context, v EllipseShape) error
+	VisitTriangleWithContext(ctx context.Context, v TriangleShape) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewShapeFromRectangle(v RectangleShape) Shape {
+	return Shape{typ: "rectangle", rectangle: &v}
+}
+
+func NewShapeFromEllipse(v EllipseShape) Shape {
+	return Shape{typ: "ellipse", ellipse: &v}
+}
+
+func NewShapeFromTriangle(v TriangleShape) Shape {
+	return Shape{typ: "triangle", triangle: &v}
+}
+
+type ShapeVizDefinition struct {
+	typ string
+	v1  *ShapeVizDefinitionV1
+}
+
+type shapeVizDefinitionDeserializer struct {
+	Type string                `json:"type"`
+	V1   *ShapeVizDefinitionV1 `json:"v1"`
+}
+
+func (u *shapeVizDefinitionDeserializer) toStruct() ShapeVizDefinition {
+	return ShapeVizDefinition{typ: u.Type, v1: u.V1}
+}
+
+func (u *ShapeVizDefinition) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string               `json:"type"`
+			V1   ShapeVizDefinitionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u ShapeVizDefinition) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ShapeVizDefinition) UnmarshalJSON(data []byte) error {
+	var deser shapeVizDefinitionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ShapeVizDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ShapeVizDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ShapeVizDefinition) AcceptFuncs(v1Func func(ShapeVizDefinitionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ShapeVizDefinition type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ShapeVizDefinition) V1NoopSuccess(_ ShapeVizDefinitionV1) error {
+	return nil
+}
+
+func (u *ShapeVizDefinition) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ShapeVizDefinition) Accept(v ShapeVizDefinitionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type ShapeVizDefinitionVisitor interface {
+	VisitV1(v ShapeVizDefinitionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ShapeVizDefinition) AcceptWithContext(ctx context.Context, v ShapeVizDefinitionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type ShapeVizDefinitionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v ShapeVizDefinitionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewShapeVizDefinitionFromV1(v ShapeVizDefinitionV1) ShapeVizDefinition {
+	return ShapeVizDefinition{typ: "v1", v1: &v}
+}
+
+// Coloring strategy for a spatial point cloud.
+type SpatialAppearanceColoring struct {
+	typ          string
+	matCap       *SpatialAppearanceColoringMatCap
+	solid        *SpatialAppearanceColoringSolid
+	geometry     *SpatialAppearanceColoringGeometry
+	gradient     *SpatialAppearanceColoringGradient
+	attributeRgb *SpatialAppearanceColoringAttributeRgb
+}
+
+type spatialAppearanceColoringDeserializer struct {
+	Type         string                                 `json:"type"`
+	MatCap       *SpatialAppearanceColoringMatCap       `json:"matCap"`
+	Solid        *SpatialAppearanceColoringSolid        `json:"solid"`
+	Geometry     *SpatialAppearanceColoringGeometry     `json:"geometry"`
+	Gradient     *SpatialAppearanceColoringGradient     `json:"gradient"`
+	AttributeRgb *SpatialAppearanceColoringAttributeRgb `json:"attributeRgb"`
+}
+
+func (u *spatialAppearanceColoringDeserializer) toStruct() SpatialAppearanceColoring {
+	return SpatialAppearanceColoring{typ: u.Type, matCap: u.MatCap, solid: u.Solid, geometry: u.Geometry, gradient: u.Gradient, attributeRgb: u.AttributeRgb}
+}
+
+func (u *SpatialAppearanceColoring) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "matCap":
+		if u.matCap == nil {
+			return nil, fmt.Errorf("field \"matCap\" is required")
+		}
+		return struct {
+			Type   string                          `json:"type"`
+			MatCap SpatialAppearanceColoringMatCap `json:"matCap"`
+		}{Type: "matCap", MatCap: *u.matCap}, nil
+	case "solid":
+		if u.solid == nil {
+			return nil, fmt.Errorf("field \"solid\" is required")
+		}
+		return struct {
+			Type  string                         `json:"type"`
+			Solid SpatialAppearanceColoringSolid `json:"solid"`
+		}{Type: "solid", Solid: *u.solid}, nil
+	case "geometry":
+		if u.geometry == nil {
+			return nil, fmt.Errorf("field \"geometry\" is required")
+		}
+		return struct {
+			Type     string                            `json:"type"`
+			Geometry SpatialAppearanceColoringGeometry `json:"geometry"`
+		}{Type: "geometry", Geometry: *u.geometry}, nil
+	case "gradient":
+		if u.gradient == nil {
+			return nil, fmt.Errorf("field \"gradient\" is required")
+		}
+		return struct {
+			Type     string                            `json:"type"`
+			Gradient SpatialAppearanceColoringGradient `json:"gradient"`
+		}{Type: "gradient", Gradient: *u.gradient}, nil
+	case "attributeRgb":
+		if u.attributeRgb == nil {
+			return nil, fmt.Errorf("field \"attributeRgb\" is required")
+		}
+		return struct {
+			Type         string                                `json:"type"`
+			AttributeRgb SpatialAppearanceColoringAttributeRgb `json:"attributeRgb"`
+		}{Type: "attributeRgb", AttributeRgb: *u.attributeRgb}, nil
+	}
+}
+
+func (u SpatialAppearanceColoring) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *SpatialAppearanceColoring) UnmarshalJSON(data []byte) error {
+	var deser spatialAppearanceColoringDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "matCap":
+		if u.matCap == nil {
+			return fmt.Errorf("field \"matCap\" is required")
+		}
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+	case "geometry":
+		if u.geometry == nil {
+			return fmt.Errorf("field \"geometry\" is required")
+		}
+	case "gradient":
+		if u.gradient == nil {
+			return fmt.Errorf("field \"gradient\" is required")
+		}
+	case "attributeRgb":
+		if u.attributeRgb == nil {
+			return fmt.Errorf("field \"attributeRgb\" is required")
+		}
+	}
+	return nil
+}
+
+func (u SpatialAppearanceColoring) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *SpatialAppearanceColoring) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *SpatialAppearanceColoring) AcceptFuncs(matCapFunc func(SpatialAppearanceColoringMatCap) error, solidFunc func(SpatialAppearanceColoringSolid) error, geometryFunc func(SpatialAppearanceColoringGeometry) error, gradientFunc func(SpatialAppearanceColoringGradient) error, attributeRgbFunc func(SpatialAppearanceColoringAttributeRgb) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in SpatialAppearanceColoring type")
+		}
+		return unknownFunc(u.typ)
+	case "matCap":
+		if u.matCap == nil {
+			return fmt.Errorf("field \"matCap\" is required")
+		}
+		return matCapFunc(*u.matCap)
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+		return solidFunc(*u.solid)
+	case "geometry":
+		if u.geometry == nil {
+			return fmt.Errorf("field \"geometry\" is required")
+		}
+		return geometryFunc(*u.geometry)
+	case "gradient":
+		if u.gradient == nil {
+			return fmt.Errorf("field \"gradient\" is required")
+		}
+		return gradientFunc(*u.gradient)
+	case "attributeRgb":
+		if u.attributeRgb == nil {
+			return fmt.Errorf("field \"attributeRgb\" is required")
+		}
+		return attributeRgbFunc(*u.attributeRgb)
+	}
+}
+
+func (u *SpatialAppearanceColoring) MatCapNoopSuccess(_ SpatialAppearanceColoringMatCap) error {
+	return nil
+}
+
+func (u *SpatialAppearanceColoring) SolidNoopSuccess(_ SpatialAppearanceColoringSolid) error {
+	return nil
+}
+
+func (u *SpatialAppearanceColoring) GeometryNoopSuccess(_ SpatialAppearanceColoringGeometry) error {
+	return nil
+}
+
+func (u *SpatialAppearanceColoring) GradientNoopSuccess(_ SpatialAppearanceColoringGradient) error {
+	return nil
+}
+
+func (u *SpatialAppearanceColoring) AttributeRgbNoopSuccess(_ SpatialAppearanceColoringAttributeRgb) error {
+	return nil
+}
+
+func (u *SpatialAppearanceColoring) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *SpatialAppearanceColoring) Accept(v SpatialAppearanceColoringVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "matCap":
+		if u.matCap == nil {
+			return fmt.Errorf("field \"matCap\" is required")
+		}
+		return v.VisitMatCap(*u.matCap)
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+		return v.VisitSolid(*u.solid)
+	case "geometry":
+		if u.geometry == nil {
+			return fmt.Errorf("field \"geometry\" is required")
+		}
+		return v.VisitGeometry(*u.geometry)
+	case "gradient":
+		if u.gradient == nil {
+			return fmt.Errorf("field \"gradient\" is required")
+		}
+		return v.VisitGradient(*u.gradient)
+	case "attributeRgb":
+		if u.attributeRgb == nil {
+			return fmt.Errorf("field \"attributeRgb\" is required")
+		}
+		return v.VisitAttributeRgb(*u.attributeRgb)
+	}
+}
+
+type SpatialAppearanceColoringVisitor interface {
+	VisitMatCap(v SpatialAppearanceColoringMatCap) error
+	VisitSolid(v SpatialAppearanceColoringSolid) error
+	VisitGeometry(v SpatialAppearanceColoringGeometry) error
+	VisitGradient(v SpatialAppearanceColoringGradient) error
+	VisitAttributeRgb(v SpatialAppearanceColoringAttributeRgb) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *SpatialAppearanceColoring) AcceptWithContext(ctx context.Context, v SpatialAppearanceColoringVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "matCap":
+		if u.matCap == nil {
+			return fmt.Errorf("field \"matCap\" is required")
+		}
+		return v.VisitMatCapWithContext(ctx, *u.matCap)
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+		return v.VisitSolidWithContext(ctx, *u.solid)
+	case "geometry":
+		if u.geometry == nil {
+			return fmt.Errorf("field \"geometry\" is required")
+		}
+		return v.VisitGeometryWithContext(ctx, *u.geometry)
+	case "gradient":
+		if u.gradient == nil {
+			return fmt.Errorf("field \"gradient\" is required")
+		}
+		return v.VisitGradientWithContext(ctx, *u.gradient)
+	case "attributeRgb":
+		if u.attributeRgb == nil {
+			return fmt.Errorf("field \"attributeRgb\" is required")
+		}
+		return v.VisitAttributeRgbWithContext(ctx, *u.attributeRgb)
+	}
+}
+
+type SpatialAppearanceColoringVisitorWithContext interface {
+	VisitMatCapWithContext(ctx context.Context, v SpatialAppearanceColoringMatCap) error
+	VisitSolidWithContext(ctx context.Context, v SpatialAppearanceColoringSolid) error
+	VisitGeometryWithContext(ctx context.Context, v SpatialAppearanceColoringGeometry) error
+	VisitGradientWithContext(ctx context.Context, v SpatialAppearanceColoringGradient) error
+	VisitAttributeRgbWithContext(ctx context.Context, v SpatialAppearanceColoringAttributeRgb) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewSpatialAppearanceColoringFromMatCap(v SpatialAppearanceColoringMatCap) SpatialAppearanceColoring {
+	return SpatialAppearanceColoring{typ: "matCap", matCap: &v}
+}
+
+func NewSpatialAppearanceColoringFromSolid(v SpatialAppearanceColoringSolid) SpatialAppearanceColoring {
+	return SpatialAppearanceColoring{typ: "solid", solid: &v}
+}
+
+func NewSpatialAppearanceColoringFromGeometry(v SpatialAppearanceColoringGeometry) SpatialAppearanceColoring {
+	return SpatialAppearanceColoring{typ: "geometry", geometry: &v}
+}
+
+func NewSpatialAppearanceColoringFromGradient(v SpatialAppearanceColoringGradient) SpatialAppearanceColoring {
+	return SpatialAppearanceColoring{typ: "gradient", gradient: &v}
+}
+
+func NewSpatialAppearanceColoringFromAttributeRgb(v SpatialAppearanceColoringAttributeRgb) SpatialAppearanceColoring {
+	return SpatialAppearanceColoring{typ: "attributeRgb", attributeRgb: &v}
+}
+
+// How to color spatial geometry for display.
+type SpatialColoring struct {
+	typ          string
+	geometryAxis *SpatialColoringGeometryAxis
+	solid        *api1.HexColor
+}
+
+type spatialColoringDeserializer struct {
+	Type         string                       `json:"type"`
+	GeometryAxis *SpatialColoringGeometryAxis `json:"geometryAxis"`
+	Solid        *api1.HexColor               `json:"solid"`
+}
+
+func (u *spatialColoringDeserializer) toStruct() SpatialColoring {
+	return SpatialColoring{typ: u.Type, geometryAxis: u.GeometryAxis, solid: u.Solid}
+}
+
+func (u *SpatialColoring) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "geometryAxis":
+		if u.geometryAxis == nil {
+			return nil, fmt.Errorf("field \"geometryAxis\" is required")
+		}
+		return struct {
+			Type         string                      `json:"type"`
+			GeometryAxis SpatialColoringGeometryAxis `json:"geometryAxis"`
+		}{Type: "geometryAxis", GeometryAxis: *u.geometryAxis}, nil
+	case "solid":
+		if u.solid == nil {
+			return nil, fmt.Errorf("field \"solid\" is required")
+		}
+		return struct {
+			Type  string        `json:"type"`
+			Solid api1.HexColor `json:"solid"`
+		}{Type: "solid", Solid: *u.solid}, nil
+	}
+}
+
+func (u SpatialColoring) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *SpatialColoring) UnmarshalJSON(data []byte) error {
+	var deser spatialColoringDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "geometryAxis":
+		if u.geometryAxis == nil {
+			return fmt.Errorf("field \"geometryAxis\" is required")
+		}
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+	}
+	return nil
+}
+
+func (u SpatialColoring) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *SpatialColoring) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *SpatialColoring) AcceptFuncs(geometryAxisFunc func(SpatialColoringGeometryAxis) error, solidFunc func(api1.HexColor) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in SpatialColoring type")
+		}
+		return unknownFunc(u.typ)
+	case "geometryAxis":
+		if u.geometryAxis == nil {
+			return fmt.Errorf("field \"geometryAxis\" is required")
+		}
+		return geometryAxisFunc(*u.geometryAxis)
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+		return solidFunc(*u.solid)
+	}
+}
+
+func (u *SpatialColoring) GeometryAxisNoopSuccess(_ SpatialColoringGeometryAxis) error {
+	return nil
+}
+
+func (u *SpatialColoring) SolidNoopSuccess(_ api1.HexColor) error {
+	return nil
+}
+
+func (u *SpatialColoring) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *SpatialColoring) Accept(v SpatialColoringVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "geometryAxis":
+		if u.geometryAxis == nil {
+			return fmt.Errorf("field \"geometryAxis\" is required")
+		}
+		return v.VisitGeometryAxis(*u.geometryAxis)
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+		return v.VisitSolid(*u.solid)
+	}
+}
+
+type SpatialColoringVisitor interface {
+	VisitGeometryAxis(v SpatialColoringGeometryAxis) error
+	VisitSolid(v api1.HexColor) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *SpatialColoring) AcceptWithContext(ctx context.Context, v SpatialColoringVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "geometryAxis":
+		if u.geometryAxis == nil {
+			return fmt.Errorf("field \"geometryAxis\" is required")
+		}
+		return v.VisitGeometryAxisWithContext(ctx, *u.geometryAxis)
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+		return v.VisitSolidWithContext(ctx, *u.solid)
+	}
+}
+
+type SpatialColoringVisitorWithContext interface {
+	VisitGeometryAxisWithContext(ctx context.Context, v SpatialColoringGeometryAxis) error
+	VisitSolidWithContext(ctx context.Context, v api1.HexColor) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewSpatialColoringFromGeometryAxis(v SpatialColoringGeometryAxis) SpatialColoring {
+	return SpatialColoring{typ: "geometryAxis", geometryAxis: &v}
+}
+
+func NewSpatialColoringFromSolid(v api1.HexColor) SpatialColoring {
+	return SpatialColoring{typ: "solid", solid: &v}
+}
+
+// Controls which point cloud returns are visible relative to the playhead.
+type SpatialTimeWindow struct {
+	typ         string
+	accumulated *SpatialTimeWindowAccumulated
+	trailing    *SpatialTimeWindowTrailing
+	symmetric   *SpatialTimeWindowSymmetric
+}
+
+type spatialTimeWindowDeserializer struct {
+	Type        string                        `json:"type"`
+	Accumulated *SpatialTimeWindowAccumulated `json:"accumulated"`
+	Trailing    *SpatialTimeWindowTrailing    `json:"trailing"`
+	Symmetric   *SpatialTimeWindowSymmetric   `json:"symmetric"`
+}
+
+func (u *spatialTimeWindowDeserializer) toStruct() SpatialTimeWindow {
+	return SpatialTimeWindow{typ: u.Type, accumulated: u.Accumulated, trailing: u.Trailing, symmetric: u.Symmetric}
+}
+
+func (u *SpatialTimeWindow) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "accumulated":
+		if u.accumulated == nil {
+			return nil, fmt.Errorf("field \"accumulated\" is required")
+		}
+		return struct {
+			Type        string                       `json:"type"`
+			Accumulated SpatialTimeWindowAccumulated `json:"accumulated"`
+		}{Type: "accumulated", Accumulated: *u.accumulated}, nil
+	case "trailing":
+		if u.trailing == nil {
+			return nil, fmt.Errorf("field \"trailing\" is required")
+		}
+		return struct {
+			Type     string                    `json:"type"`
+			Trailing SpatialTimeWindowTrailing `json:"trailing"`
+		}{Type: "trailing", Trailing: *u.trailing}, nil
+	case "symmetric":
+		if u.symmetric == nil {
+			return nil, fmt.Errorf("field \"symmetric\" is required")
+		}
+		return struct {
+			Type      string                     `json:"type"`
+			Symmetric SpatialTimeWindowSymmetric `json:"symmetric"`
+		}{Type: "symmetric", Symmetric: *u.symmetric}, nil
+	}
+}
+
+func (u SpatialTimeWindow) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *SpatialTimeWindow) UnmarshalJSON(data []byte) error {
+	var deser spatialTimeWindowDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "accumulated":
+		if u.accumulated == nil {
+			return fmt.Errorf("field \"accumulated\" is required")
+		}
+	case "trailing":
+		if u.trailing == nil {
+			return fmt.Errorf("field \"trailing\" is required")
+		}
+	case "symmetric":
+		if u.symmetric == nil {
+			return fmt.Errorf("field \"symmetric\" is required")
+		}
+	}
+	return nil
+}
+
+func (u SpatialTimeWindow) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *SpatialTimeWindow) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *SpatialTimeWindow) AcceptFuncs(accumulatedFunc func(SpatialTimeWindowAccumulated) error, trailingFunc func(SpatialTimeWindowTrailing) error, symmetricFunc func(SpatialTimeWindowSymmetric) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in SpatialTimeWindow type")
+		}
+		return unknownFunc(u.typ)
+	case "accumulated":
+		if u.accumulated == nil {
+			return fmt.Errorf("field \"accumulated\" is required")
+		}
+		return accumulatedFunc(*u.accumulated)
+	case "trailing":
+		if u.trailing == nil {
+			return fmt.Errorf("field \"trailing\" is required")
+		}
+		return trailingFunc(*u.trailing)
+	case "symmetric":
+		if u.symmetric == nil {
+			return fmt.Errorf("field \"symmetric\" is required")
+		}
+		return symmetricFunc(*u.symmetric)
+	}
+}
+
+func (u *SpatialTimeWindow) AccumulatedNoopSuccess(_ SpatialTimeWindowAccumulated) error {
+	return nil
+}
+
+func (u *SpatialTimeWindow) TrailingNoopSuccess(_ SpatialTimeWindowTrailing) error {
+	return nil
+}
+
+func (u *SpatialTimeWindow) SymmetricNoopSuccess(_ SpatialTimeWindowSymmetric) error {
+	return nil
+}
+
+func (u *SpatialTimeWindow) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *SpatialTimeWindow) Accept(v SpatialTimeWindowVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "accumulated":
+		if u.accumulated == nil {
+			return fmt.Errorf("field \"accumulated\" is required")
+		}
+		return v.VisitAccumulated(*u.accumulated)
+	case "trailing":
+		if u.trailing == nil {
+			return fmt.Errorf("field \"trailing\" is required")
+		}
+		return v.VisitTrailing(*u.trailing)
+	case "symmetric":
+		if u.symmetric == nil {
+			return fmt.Errorf("field \"symmetric\" is required")
+		}
+		return v.VisitSymmetric(*u.symmetric)
+	}
+}
+
+type SpatialTimeWindowVisitor interface {
+	VisitAccumulated(v SpatialTimeWindowAccumulated) error
+	VisitTrailing(v SpatialTimeWindowTrailing) error
+	VisitSymmetric(v SpatialTimeWindowSymmetric) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *SpatialTimeWindow) AcceptWithContext(ctx context.Context, v SpatialTimeWindowVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "accumulated":
+		if u.accumulated == nil {
+			return fmt.Errorf("field \"accumulated\" is required")
+		}
+		return v.VisitAccumulatedWithContext(ctx, *u.accumulated)
+	case "trailing":
+		if u.trailing == nil {
+			return fmt.Errorf("field \"trailing\" is required")
+		}
+		return v.VisitTrailingWithContext(ctx, *u.trailing)
+	case "symmetric":
+		if u.symmetric == nil {
+			return fmt.Errorf("field \"symmetric\" is required")
+		}
+		return v.VisitSymmetricWithContext(ctx, *u.symmetric)
+	}
+}
+
+type SpatialTimeWindowVisitorWithContext interface {
+	VisitAccumulatedWithContext(ctx context.Context, v SpatialTimeWindowAccumulated) error
+	VisitTrailingWithContext(ctx context.Context, v SpatialTimeWindowTrailing) error
+	VisitSymmetricWithContext(ctx context.Context, v SpatialTimeWindowSymmetric) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewSpatialTimeWindowFromAccumulated(v SpatialTimeWindowAccumulated) SpatialTimeWindow {
+	return SpatialTimeWindow{typ: "accumulated", accumulated: &v}
+}
+
+func NewSpatialTimeWindowFromTrailing(v SpatialTimeWindowTrailing) SpatialTimeWindow {
+	return SpatialTimeWindow{typ: "trailing", trailing: &v}
+}
+
+func NewSpatialTimeWindowFromSymmetric(v SpatialTimeWindowSymmetric) SpatialTimeWindow {
+	return SpatialTimeWindow{typ: "symmetric", symmetric: &v}
+}
+
+// Visibility filter applied to points before rendering.
+type SpatialVolumetricFilter struct {
+	typ          string
+	none         *SpatialVolumetricFilterNone
+	valueRange   *SpatialVolumetricFilterValueRange
+	stringEquals *SpatialVolumetricFilterStringEquals
+}
+
+type spatialVolumetricFilterDeserializer struct {
+	Type         string                               `json:"type"`
+	None         *SpatialVolumetricFilterNone         `json:"none"`
+	ValueRange   *SpatialVolumetricFilterValueRange   `json:"valueRange"`
+	StringEquals *SpatialVolumetricFilterStringEquals `json:"stringEquals"`
+}
+
+func (u *spatialVolumetricFilterDeserializer) toStruct() SpatialVolumetricFilter {
+	return SpatialVolumetricFilter{typ: u.Type, none: u.None, valueRange: u.ValueRange, stringEquals: u.StringEquals}
+}
+
+func (u *SpatialVolumetricFilter) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "none":
+		if u.none == nil {
+			return nil, fmt.Errorf("field \"none\" is required")
+		}
+		return struct {
+			Type string                      `json:"type"`
+			None SpatialVolumetricFilterNone `json:"none"`
+		}{Type: "none", None: *u.none}, nil
+	case "valueRange":
+		if u.valueRange == nil {
+			return nil, fmt.Errorf("field \"valueRange\" is required")
+		}
+		return struct {
+			Type       string                            `json:"type"`
+			ValueRange SpatialVolumetricFilterValueRange `json:"valueRange"`
+		}{Type: "valueRange", ValueRange: *u.valueRange}, nil
+	case "stringEquals":
+		if u.stringEquals == nil {
+			return nil, fmt.Errorf("field \"stringEquals\" is required")
+		}
+		return struct {
+			Type         string                              `json:"type"`
+			StringEquals SpatialVolumetricFilterStringEquals `json:"stringEquals"`
+		}{Type: "stringEquals", StringEquals: *u.stringEquals}, nil
+	}
+}
+
+func (u SpatialVolumetricFilter) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *SpatialVolumetricFilter) UnmarshalJSON(data []byte) error {
+	var deser spatialVolumetricFilterDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "none":
+		if u.none == nil {
+			return fmt.Errorf("field \"none\" is required")
+		}
+	case "valueRange":
+		if u.valueRange == nil {
+			return fmt.Errorf("field \"valueRange\" is required")
+		}
+	case "stringEquals":
+		if u.stringEquals == nil {
+			return fmt.Errorf("field \"stringEquals\" is required")
+		}
+	}
+	return nil
+}
+
+func (u SpatialVolumetricFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *SpatialVolumetricFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *SpatialVolumetricFilter) AcceptFuncs(noneFunc func(SpatialVolumetricFilterNone) error, valueRangeFunc func(SpatialVolumetricFilterValueRange) error, stringEqualsFunc func(SpatialVolumetricFilterStringEquals) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in SpatialVolumetricFilter type")
+		}
+		return unknownFunc(u.typ)
+	case "none":
+		if u.none == nil {
+			return fmt.Errorf("field \"none\" is required")
+		}
+		return noneFunc(*u.none)
+	case "valueRange":
+		if u.valueRange == nil {
+			return fmt.Errorf("field \"valueRange\" is required")
+		}
+		return valueRangeFunc(*u.valueRange)
+	case "stringEquals":
+		if u.stringEquals == nil {
+			return fmt.Errorf("field \"stringEquals\" is required")
+		}
+		return stringEqualsFunc(*u.stringEquals)
+	}
+}
+
+func (u *SpatialVolumetricFilter) NoneNoopSuccess(_ SpatialVolumetricFilterNone) error {
+	return nil
+}
+
+func (u *SpatialVolumetricFilter) ValueRangeNoopSuccess(_ SpatialVolumetricFilterValueRange) error {
+	return nil
+}
+
+func (u *SpatialVolumetricFilter) StringEqualsNoopSuccess(_ SpatialVolumetricFilterStringEquals) error {
+	return nil
+}
+
+func (u *SpatialVolumetricFilter) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *SpatialVolumetricFilter) Accept(v SpatialVolumetricFilterVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "none":
+		if u.none == nil {
+			return fmt.Errorf("field \"none\" is required")
+		}
+		return v.VisitNone(*u.none)
+	case "valueRange":
+		if u.valueRange == nil {
+			return fmt.Errorf("field \"valueRange\" is required")
+		}
+		return v.VisitValueRange(*u.valueRange)
+	case "stringEquals":
+		if u.stringEquals == nil {
+			return fmt.Errorf("field \"stringEquals\" is required")
+		}
+		return v.VisitStringEquals(*u.stringEquals)
+	}
+}
+
+type SpatialVolumetricFilterVisitor interface {
+	VisitNone(v SpatialVolumetricFilterNone) error
+	VisitValueRange(v SpatialVolumetricFilterValueRange) error
+	VisitStringEquals(v SpatialVolumetricFilterStringEquals) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *SpatialVolumetricFilter) AcceptWithContext(ctx context.Context, v SpatialVolumetricFilterVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "none":
+		if u.none == nil {
+			return fmt.Errorf("field \"none\" is required")
+		}
+		return v.VisitNoneWithContext(ctx, *u.none)
+	case "valueRange":
+		if u.valueRange == nil {
+			return fmt.Errorf("field \"valueRange\" is required")
+		}
+		return v.VisitValueRangeWithContext(ctx, *u.valueRange)
+	case "stringEquals":
+		if u.stringEquals == nil {
+			return fmt.Errorf("field \"stringEquals\" is required")
+		}
+		return v.VisitStringEqualsWithContext(ctx, *u.stringEquals)
+	}
+}
+
+type SpatialVolumetricFilterVisitorWithContext interface {
+	VisitNoneWithContext(ctx context.Context, v SpatialVolumetricFilterNone) error
+	VisitValueRangeWithContext(ctx context.Context, v SpatialVolumetricFilterValueRange) error
+	VisitStringEqualsWithContext(ctx context.Context, v SpatialVolumetricFilterStringEquals) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewSpatialVolumetricFilterFromNone(v SpatialVolumetricFilterNone) SpatialVolumetricFilter {
+	return SpatialVolumetricFilter{typ: "none", none: &v}
+}
+
+func NewSpatialVolumetricFilterFromValueRange(v SpatialVolumetricFilterValueRange) SpatialVolumetricFilter {
+	return SpatialVolumetricFilter{typ: "valueRange", valueRange: &v}
+}
+
+func NewSpatialVolumetricFilterFromStringEquals(v SpatialVolumetricFilterStringEquals) SpatialVolumetricFilter {
+	return SpatialVolumetricFilter{typ: "stringEquals", stringEquals: &v}
+}
+
 type StalenessVisualisation struct {
 	typ string
 	raw *NumericRawVisualisationV2
@@ -8074,6 +10885,1267 @@ type StructVisualisationVisitorWithContext interface {
 
 func NewStructVisualisationFromRaw(v StructRawVisualisation) StructVisualisation {
 	return StructVisualisation{typ: "raw", raw: &v}
+}
+
+type TableColumnEnumAggregation struct {
+	typ           string
+	first         *NoConfigAggregation
+	last          *NoConfigAggregation
+	allDistinct   *NoConfigAggregation
+	countDistinct *NoConfigAggregation
+	valueCounts   *NoConfigAggregation
+}
+
+type tableColumnEnumAggregationDeserializer struct {
+	Type          string               `json:"type"`
+	First         *NoConfigAggregation `json:"first"`
+	Last          *NoConfigAggregation `json:"last"`
+	AllDistinct   *NoConfigAggregation `json:"allDistinct"`
+	CountDistinct *NoConfigAggregation `json:"countDistinct"`
+	ValueCounts   *NoConfigAggregation `json:"valueCounts"`
+}
+
+func (u *tableColumnEnumAggregationDeserializer) toStruct() TableColumnEnumAggregation {
+	return TableColumnEnumAggregation{typ: u.Type, first: u.First, last: u.Last, allDistinct: u.AllDistinct, countDistinct: u.CountDistinct, valueCounts: u.ValueCounts}
+}
+
+func (u *TableColumnEnumAggregation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "first":
+		if u.first == nil {
+			return nil, fmt.Errorf("field \"first\" is required")
+		}
+		return struct {
+			Type  string              `json:"type"`
+			First NoConfigAggregation `json:"first"`
+		}{Type: "first", First: *u.first}, nil
+	case "last":
+		if u.last == nil {
+			return nil, fmt.Errorf("field \"last\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Last NoConfigAggregation `json:"last"`
+		}{Type: "last", Last: *u.last}, nil
+	case "allDistinct":
+		if u.allDistinct == nil {
+			return nil, fmt.Errorf("field \"allDistinct\" is required")
+		}
+		return struct {
+			Type        string              `json:"type"`
+			AllDistinct NoConfigAggregation `json:"allDistinct"`
+		}{Type: "allDistinct", AllDistinct: *u.allDistinct}, nil
+	case "countDistinct":
+		if u.countDistinct == nil {
+			return nil, fmt.Errorf("field \"countDistinct\" is required")
+		}
+		return struct {
+			Type          string              `json:"type"`
+			CountDistinct NoConfigAggregation `json:"countDistinct"`
+		}{Type: "countDistinct", CountDistinct: *u.countDistinct}, nil
+	case "valueCounts":
+		if u.valueCounts == nil {
+			return nil, fmt.Errorf("field \"valueCounts\" is required")
+		}
+		return struct {
+			Type        string              `json:"type"`
+			ValueCounts NoConfigAggregation `json:"valueCounts"`
+		}{Type: "valueCounts", ValueCounts: *u.valueCounts}, nil
+	}
+}
+
+func (u TableColumnEnumAggregation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *TableColumnEnumAggregation) UnmarshalJSON(data []byte) error {
+	var deser tableColumnEnumAggregationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "first":
+		if u.first == nil {
+			return fmt.Errorf("field \"first\" is required")
+		}
+	case "last":
+		if u.last == nil {
+			return fmt.Errorf("field \"last\" is required")
+		}
+	case "allDistinct":
+		if u.allDistinct == nil {
+			return fmt.Errorf("field \"allDistinct\" is required")
+		}
+	case "countDistinct":
+		if u.countDistinct == nil {
+			return fmt.Errorf("field \"countDistinct\" is required")
+		}
+	case "valueCounts":
+		if u.valueCounts == nil {
+			return fmt.Errorf("field \"valueCounts\" is required")
+		}
+	}
+	return nil
+}
+
+func (u TableColumnEnumAggregation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *TableColumnEnumAggregation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *TableColumnEnumAggregation) AcceptFuncs(firstFunc func(NoConfigAggregation) error, lastFunc func(NoConfigAggregation) error, allDistinctFunc func(NoConfigAggregation) error, countDistinctFunc func(NoConfigAggregation) error, valueCountsFunc func(NoConfigAggregation) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in TableColumnEnumAggregation type")
+		}
+		return unknownFunc(u.typ)
+	case "first":
+		if u.first == nil {
+			return fmt.Errorf("field \"first\" is required")
+		}
+		return firstFunc(*u.first)
+	case "last":
+		if u.last == nil {
+			return fmt.Errorf("field \"last\" is required")
+		}
+		return lastFunc(*u.last)
+	case "allDistinct":
+		if u.allDistinct == nil {
+			return fmt.Errorf("field \"allDistinct\" is required")
+		}
+		return allDistinctFunc(*u.allDistinct)
+	case "countDistinct":
+		if u.countDistinct == nil {
+			return fmt.Errorf("field \"countDistinct\" is required")
+		}
+		return countDistinctFunc(*u.countDistinct)
+	case "valueCounts":
+		if u.valueCounts == nil {
+			return fmt.Errorf("field \"valueCounts\" is required")
+		}
+		return valueCountsFunc(*u.valueCounts)
+	}
+}
+
+func (u *TableColumnEnumAggregation) FirstNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnEnumAggregation) LastNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnEnumAggregation) AllDistinctNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnEnumAggregation) CountDistinctNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnEnumAggregation) ValueCountsNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnEnumAggregation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *TableColumnEnumAggregation) Accept(v TableColumnEnumAggregationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "first":
+		if u.first == nil {
+			return fmt.Errorf("field \"first\" is required")
+		}
+		return v.VisitFirst(*u.first)
+	case "last":
+		if u.last == nil {
+			return fmt.Errorf("field \"last\" is required")
+		}
+		return v.VisitLast(*u.last)
+	case "allDistinct":
+		if u.allDistinct == nil {
+			return fmt.Errorf("field \"allDistinct\" is required")
+		}
+		return v.VisitAllDistinct(*u.allDistinct)
+	case "countDistinct":
+		if u.countDistinct == nil {
+			return fmt.Errorf("field \"countDistinct\" is required")
+		}
+		return v.VisitCountDistinct(*u.countDistinct)
+	case "valueCounts":
+		if u.valueCounts == nil {
+			return fmt.Errorf("field \"valueCounts\" is required")
+		}
+		return v.VisitValueCounts(*u.valueCounts)
+	}
+}
+
+type TableColumnEnumAggregationVisitor interface {
+	VisitFirst(v NoConfigAggregation) error
+	VisitLast(v NoConfigAggregation) error
+	VisitAllDistinct(v NoConfigAggregation) error
+	VisitCountDistinct(v NoConfigAggregation) error
+	VisitValueCounts(v NoConfigAggregation) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *TableColumnEnumAggregation) AcceptWithContext(ctx context.Context, v TableColumnEnumAggregationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "first":
+		if u.first == nil {
+			return fmt.Errorf("field \"first\" is required")
+		}
+		return v.VisitFirstWithContext(ctx, *u.first)
+	case "last":
+		if u.last == nil {
+			return fmt.Errorf("field \"last\" is required")
+		}
+		return v.VisitLastWithContext(ctx, *u.last)
+	case "allDistinct":
+		if u.allDistinct == nil {
+			return fmt.Errorf("field \"allDistinct\" is required")
+		}
+		return v.VisitAllDistinctWithContext(ctx, *u.allDistinct)
+	case "countDistinct":
+		if u.countDistinct == nil {
+			return fmt.Errorf("field \"countDistinct\" is required")
+		}
+		return v.VisitCountDistinctWithContext(ctx, *u.countDistinct)
+	case "valueCounts":
+		if u.valueCounts == nil {
+			return fmt.Errorf("field \"valueCounts\" is required")
+		}
+		return v.VisitValueCountsWithContext(ctx, *u.valueCounts)
+	}
+}
+
+type TableColumnEnumAggregationVisitorWithContext interface {
+	VisitFirstWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitLastWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitAllDistinctWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitCountDistinctWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitValueCountsWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewTableColumnEnumAggregationFromFirst(v NoConfigAggregation) TableColumnEnumAggregation {
+	return TableColumnEnumAggregation{typ: "first", first: &v}
+}
+
+func NewTableColumnEnumAggregationFromLast(v NoConfigAggregation) TableColumnEnumAggregation {
+	return TableColumnEnumAggregation{typ: "last", last: &v}
+}
+
+func NewTableColumnEnumAggregationFromAllDistinct(v NoConfigAggregation) TableColumnEnumAggregation {
+	return TableColumnEnumAggregation{typ: "allDistinct", allDistinct: &v}
+}
+
+func NewTableColumnEnumAggregationFromCountDistinct(v NoConfigAggregation) TableColumnEnumAggregation {
+	return TableColumnEnumAggregation{typ: "countDistinct", countDistinct: &v}
+}
+
+func NewTableColumnEnumAggregationFromValueCounts(v NoConfigAggregation) TableColumnEnumAggregation {
+	return TableColumnEnumAggregation{typ: "valueCounts", valueCounts: &v}
+}
+
+type TableColumnLogAggregation struct {
+	typ   string
+	count *NoConfigAggregation
+}
+
+type tableColumnLogAggregationDeserializer struct {
+	Type  string               `json:"type"`
+	Count *NoConfigAggregation `json:"count"`
+}
+
+func (u *tableColumnLogAggregationDeserializer) toStruct() TableColumnLogAggregation {
+	return TableColumnLogAggregation{typ: u.Type, count: u.Count}
+}
+
+func (u *TableColumnLogAggregation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "count":
+		if u.count == nil {
+			return nil, fmt.Errorf("field \"count\" is required")
+		}
+		return struct {
+			Type  string              `json:"type"`
+			Count NoConfigAggregation `json:"count"`
+		}{Type: "count", Count: *u.count}, nil
+	}
+}
+
+func (u TableColumnLogAggregation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *TableColumnLogAggregation) UnmarshalJSON(data []byte) error {
+	var deser tableColumnLogAggregationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+	}
+	return nil
+}
+
+func (u TableColumnLogAggregation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *TableColumnLogAggregation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *TableColumnLogAggregation) AcceptFuncs(countFunc func(NoConfigAggregation) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in TableColumnLogAggregation type")
+		}
+		return unknownFunc(u.typ)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return countFunc(*u.count)
+	}
+}
+
+func (u *TableColumnLogAggregation) CountNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnLogAggregation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *TableColumnLogAggregation) Accept(v TableColumnLogAggregationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return v.VisitCount(*u.count)
+	}
+}
+
+type TableColumnLogAggregationVisitor interface {
+	VisitCount(v NoConfigAggregation) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *TableColumnLogAggregation) AcceptWithContext(ctx context.Context, v TableColumnLogAggregationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return v.VisitCountWithContext(ctx, *u.count)
+	}
+}
+
+type TableColumnLogAggregationVisitorWithContext interface {
+	VisitCountWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewTableColumnLogAggregationFromCount(v NoConfigAggregation) TableColumnLogAggregation {
+	return TableColumnLogAggregation{typ: "count", count: &v}
+}
+
+type TableColumnNumericAggregation struct {
+	typ    string
+	first  *NoConfigAggregation
+	last   *NoConfigAggregation
+	mean   *NoConfigAggregation
+	min    *NoConfigAggregation
+	max    *NoConfigAggregation
+	stddev *NoConfigAggregation
+	count  *NoConfigAggregation
+}
+
+type tableColumnNumericAggregationDeserializer struct {
+	Type   string               `json:"type"`
+	First  *NoConfigAggregation `json:"first"`
+	Last   *NoConfigAggregation `json:"last"`
+	Mean   *NoConfigAggregation `json:"mean"`
+	Min    *NoConfigAggregation `json:"min"`
+	Max    *NoConfigAggregation `json:"max"`
+	Stddev *NoConfigAggregation `json:"stddev"`
+	Count  *NoConfigAggregation `json:"count"`
+}
+
+func (u *tableColumnNumericAggregationDeserializer) toStruct() TableColumnNumericAggregation {
+	return TableColumnNumericAggregation{typ: u.Type, first: u.First, last: u.Last, mean: u.Mean, min: u.Min, max: u.Max, stddev: u.Stddev, count: u.Count}
+}
+
+func (u *TableColumnNumericAggregation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "first":
+		if u.first == nil {
+			return nil, fmt.Errorf("field \"first\" is required")
+		}
+		return struct {
+			Type  string              `json:"type"`
+			First NoConfigAggregation `json:"first"`
+		}{Type: "first", First: *u.first}, nil
+	case "last":
+		if u.last == nil {
+			return nil, fmt.Errorf("field \"last\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Last NoConfigAggregation `json:"last"`
+		}{Type: "last", Last: *u.last}, nil
+	case "mean":
+		if u.mean == nil {
+			return nil, fmt.Errorf("field \"mean\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Mean NoConfigAggregation `json:"mean"`
+		}{Type: "mean", Mean: *u.mean}, nil
+	case "min":
+		if u.min == nil {
+			return nil, fmt.Errorf("field \"min\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Min  NoConfigAggregation `json:"min"`
+		}{Type: "min", Min: *u.min}, nil
+	case "max":
+		if u.max == nil {
+			return nil, fmt.Errorf("field \"max\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Max  NoConfigAggregation `json:"max"`
+		}{Type: "max", Max: *u.max}, nil
+	case "stddev":
+		if u.stddev == nil {
+			return nil, fmt.Errorf("field \"stddev\" is required")
+		}
+		return struct {
+			Type   string              `json:"type"`
+			Stddev NoConfigAggregation `json:"stddev"`
+		}{Type: "stddev", Stddev: *u.stddev}, nil
+	case "count":
+		if u.count == nil {
+			return nil, fmt.Errorf("field \"count\" is required")
+		}
+		return struct {
+			Type  string              `json:"type"`
+			Count NoConfigAggregation `json:"count"`
+		}{Type: "count", Count: *u.count}, nil
+	}
+}
+
+func (u TableColumnNumericAggregation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *TableColumnNumericAggregation) UnmarshalJSON(data []byte) error {
+	var deser tableColumnNumericAggregationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "first":
+		if u.first == nil {
+			return fmt.Errorf("field \"first\" is required")
+		}
+	case "last":
+		if u.last == nil {
+			return fmt.Errorf("field \"last\" is required")
+		}
+	case "mean":
+		if u.mean == nil {
+			return fmt.Errorf("field \"mean\" is required")
+		}
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+	case "stddev":
+		if u.stddev == nil {
+			return fmt.Errorf("field \"stddev\" is required")
+		}
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+	}
+	return nil
+}
+
+func (u TableColumnNumericAggregation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *TableColumnNumericAggregation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *TableColumnNumericAggregation) AcceptFuncs(firstFunc func(NoConfigAggregation) error, lastFunc func(NoConfigAggregation) error, meanFunc func(NoConfigAggregation) error, minFunc func(NoConfigAggregation) error, maxFunc func(NoConfigAggregation) error, stddevFunc func(NoConfigAggregation) error, countFunc func(NoConfigAggregation) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in TableColumnNumericAggregation type")
+		}
+		return unknownFunc(u.typ)
+	case "first":
+		if u.first == nil {
+			return fmt.Errorf("field \"first\" is required")
+		}
+		return firstFunc(*u.first)
+	case "last":
+		if u.last == nil {
+			return fmt.Errorf("field \"last\" is required")
+		}
+		return lastFunc(*u.last)
+	case "mean":
+		if u.mean == nil {
+			return fmt.Errorf("field \"mean\" is required")
+		}
+		return meanFunc(*u.mean)
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+		return minFunc(*u.min)
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+		return maxFunc(*u.max)
+	case "stddev":
+		if u.stddev == nil {
+			return fmt.Errorf("field \"stddev\" is required")
+		}
+		return stddevFunc(*u.stddev)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return countFunc(*u.count)
+	}
+}
+
+func (u *TableColumnNumericAggregation) FirstNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnNumericAggregation) LastNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnNumericAggregation) MeanNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnNumericAggregation) MinNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnNumericAggregation) MaxNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnNumericAggregation) StddevNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnNumericAggregation) CountNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnNumericAggregation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *TableColumnNumericAggregation) Accept(v TableColumnNumericAggregationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "first":
+		if u.first == nil {
+			return fmt.Errorf("field \"first\" is required")
+		}
+		return v.VisitFirst(*u.first)
+	case "last":
+		if u.last == nil {
+			return fmt.Errorf("field \"last\" is required")
+		}
+		return v.VisitLast(*u.last)
+	case "mean":
+		if u.mean == nil {
+			return fmt.Errorf("field \"mean\" is required")
+		}
+		return v.VisitMean(*u.mean)
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+		return v.VisitMin(*u.min)
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+		return v.VisitMax(*u.max)
+	case "stddev":
+		if u.stddev == nil {
+			return fmt.Errorf("field \"stddev\" is required")
+		}
+		return v.VisitStddev(*u.stddev)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return v.VisitCount(*u.count)
+	}
+}
+
+type TableColumnNumericAggregationVisitor interface {
+	VisitFirst(v NoConfigAggregation) error
+	VisitLast(v NoConfigAggregation) error
+	VisitMean(v NoConfigAggregation) error
+	VisitMin(v NoConfigAggregation) error
+	VisitMax(v NoConfigAggregation) error
+	VisitStddev(v NoConfigAggregation) error
+	VisitCount(v NoConfigAggregation) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *TableColumnNumericAggregation) AcceptWithContext(ctx context.Context, v TableColumnNumericAggregationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "first":
+		if u.first == nil {
+			return fmt.Errorf("field \"first\" is required")
+		}
+		return v.VisitFirstWithContext(ctx, *u.first)
+	case "last":
+		if u.last == nil {
+			return fmt.Errorf("field \"last\" is required")
+		}
+		return v.VisitLastWithContext(ctx, *u.last)
+	case "mean":
+		if u.mean == nil {
+			return fmt.Errorf("field \"mean\" is required")
+		}
+		return v.VisitMeanWithContext(ctx, *u.mean)
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+		return v.VisitMinWithContext(ctx, *u.min)
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+		return v.VisitMaxWithContext(ctx, *u.max)
+	case "stddev":
+		if u.stddev == nil {
+			return fmt.Errorf("field \"stddev\" is required")
+		}
+		return v.VisitStddevWithContext(ctx, *u.stddev)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return v.VisitCountWithContext(ctx, *u.count)
+	}
+}
+
+type TableColumnNumericAggregationVisitorWithContext interface {
+	VisitFirstWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitLastWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitMeanWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitMinWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitMaxWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitStddevWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitCountWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewTableColumnNumericAggregationFromFirst(v NoConfigAggregation) TableColumnNumericAggregation {
+	return TableColumnNumericAggregation{typ: "first", first: &v}
+}
+
+func NewTableColumnNumericAggregationFromLast(v NoConfigAggregation) TableColumnNumericAggregation {
+	return TableColumnNumericAggregation{typ: "last", last: &v}
+}
+
+func NewTableColumnNumericAggregationFromMean(v NoConfigAggregation) TableColumnNumericAggregation {
+	return TableColumnNumericAggregation{typ: "mean", mean: &v}
+}
+
+func NewTableColumnNumericAggregationFromMin(v NoConfigAggregation) TableColumnNumericAggregation {
+	return TableColumnNumericAggregation{typ: "min", min: &v}
+}
+
+func NewTableColumnNumericAggregationFromMax(v NoConfigAggregation) TableColumnNumericAggregation {
+	return TableColumnNumericAggregation{typ: "max", max: &v}
+}
+
+func NewTableColumnNumericAggregationFromStddev(v NoConfigAggregation) TableColumnNumericAggregation {
+	return TableColumnNumericAggregation{typ: "stddev", stddev: &v}
+}
+
+func NewTableColumnNumericAggregationFromCount(v NoConfigAggregation) TableColumnNumericAggregation {
+	return TableColumnNumericAggregation{typ: "count", count: &v}
+}
+
+type TableColumnRangeAggregation struct {
+	typ         string
+	percentTrue *NoConfigAggregation
+	allDistinct *NoConfigAggregation
+	valueCounts *NoConfigAggregation
+}
+
+type tableColumnRangeAggregationDeserializer struct {
+	Type        string               `json:"type"`
+	PercentTrue *NoConfigAggregation `json:"percentTrue"`
+	AllDistinct *NoConfigAggregation `json:"allDistinct"`
+	ValueCounts *NoConfigAggregation `json:"valueCounts"`
+}
+
+func (u *tableColumnRangeAggregationDeserializer) toStruct() TableColumnRangeAggregation {
+	return TableColumnRangeAggregation{typ: u.Type, percentTrue: u.PercentTrue, allDistinct: u.AllDistinct, valueCounts: u.ValueCounts}
+}
+
+func (u *TableColumnRangeAggregation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "percentTrue":
+		if u.percentTrue == nil {
+			return nil, fmt.Errorf("field \"percentTrue\" is required")
+		}
+		return struct {
+			Type        string              `json:"type"`
+			PercentTrue NoConfigAggregation `json:"percentTrue"`
+		}{Type: "percentTrue", PercentTrue: *u.percentTrue}, nil
+	case "allDistinct":
+		if u.allDistinct == nil {
+			return nil, fmt.Errorf("field \"allDistinct\" is required")
+		}
+		return struct {
+			Type        string              `json:"type"`
+			AllDistinct NoConfigAggregation `json:"allDistinct"`
+		}{Type: "allDistinct", AllDistinct: *u.allDistinct}, nil
+	case "valueCounts":
+		if u.valueCounts == nil {
+			return nil, fmt.Errorf("field \"valueCounts\" is required")
+		}
+		return struct {
+			Type        string              `json:"type"`
+			ValueCounts NoConfigAggregation `json:"valueCounts"`
+		}{Type: "valueCounts", ValueCounts: *u.valueCounts}, nil
+	}
+}
+
+func (u TableColumnRangeAggregation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *TableColumnRangeAggregation) UnmarshalJSON(data []byte) error {
+	var deser tableColumnRangeAggregationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "percentTrue":
+		if u.percentTrue == nil {
+			return fmt.Errorf("field \"percentTrue\" is required")
+		}
+	case "allDistinct":
+		if u.allDistinct == nil {
+			return fmt.Errorf("field \"allDistinct\" is required")
+		}
+	case "valueCounts":
+		if u.valueCounts == nil {
+			return fmt.Errorf("field \"valueCounts\" is required")
+		}
+	}
+	return nil
+}
+
+func (u TableColumnRangeAggregation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *TableColumnRangeAggregation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *TableColumnRangeAggregation) AcceptFuncs(percentTrueFunc func(NoConfigAggregation) error, allDistinctFunc func(NoConfigAggregation) error, valueCountsFunc func(NoConfigAggregation) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in TableColumnRangeAggregation type")
+		}
+		return unknownFunc(u.typ)
+	case "percentTrue":
+		if u.percentTrue == nil {
+			return fmt.Errorf("field \"percentTrue\" is required")
+		}
+		return percentTrueFunc(*u.percentTrue)
+	case "allDistinct":
+		if u.allDistinct == nil {
+			return fmt.Errorf("field \"allDistinct\" is required")
+		}
+		return allDistinctFunc(*u.allDistinct)
+	case "valueCounts":
+		if u.valueCounts == nil {
+			return fmt.Errorf("field \"valueCounts\" is required")
+		}
+		return valueCountsFunc(*u.valueCounts)
+	}
+}
+
+func (u *TableColumnRangeAggregation) PercentTrueNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnRangeAggregation) AllDistinctNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnRangeAggregation) ValueCountsNoopSuccess(_ NoConfigAggregation) error {
+	return nil
+}
+
+func (u *TableColumnRangeAggregation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *TableColumnRangeAggregation) Accept(v TableColumnRangeAggregationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "percentTrue":
+		if u.percentTrue == nil {
+			return fmt.Errorf("field \"percentTrue\" is required")
+		}
+		return v.VisitPercentTrue(*u.percentTrue)
+	case "allDistinct":
+		if u.allDistinct == nil {
+			return fmt.Errorf("field \"allDistinct\" is required")
+		}
+		return v.VisitAllDistinct(*u.allDistinct)
+	case "valueCounts":
+		if u.valueCounts == nil {
+			return fmt.Errorf("field \"valueCounts\" is required")
+		}
+		return v.VisitValueCounts(*u.valueCounts)
+	}
+}
+
+type TableColumnRangeAggregationVisitor interface {
+	VisitPercentTrue(v NoConfigAggregation) error
+	VisitAllDistinct(v NoConfigAggregation) error
+	VisitValueCounts(v NoConfigAggregation) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *TableColumnRangeAggregation) AcceptWithContext(ctx context.Context, v TableColumnRangeAggregationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "percentTrue":
+		if u.percentTrue == nil {
+			return fmt.Errorf("field \"percentTrue\" is required")
+		}
+		return v.VisitPercentTrueWithContext(ctx, *u.percentTrue)
+	case "allDistinct":
+		if u.allDistinct == nil {
+			return fmt.Errorf("field \"allDistinct\" is required")
+		}
+		return v.VisitAllDistinctWithContext(ctx, *u.allDistinct)
+	case "valueCounts":
+		if u.valueCounts == nil {
+			return fmt.Errorf("field \"valueCounts\" is required")
+		}
+		return v.VisitValueCountsWithContext(ctx, *u.valueCounts)
+	}
+}
+
+type TableColumnRangeAggregationVisitorWithContext interface {
+	VisitPercentTrueWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitAllDistinctWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitValueCountsWithContext(ctx context.Context, v NoConfigAggregation) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewTableColumnRangeAggregationFromPercentTrue(v NoConfigAggregation) TableColumnRangeAggregation {
+	return TableColumnRangeAggregation{typ: "percentTrue", percentTrue: &v}
+}
+
+func NewTableColumnRangeAggregationFromAllDistinct(v NoConfigAggregation) TableColumnRangeAggregation {
+	return TableColumnRangeAggregation{typ: "allDistinct", allDistinct: &v}
+}
+
+func NewTableColumnRangeAggregationFromValueCounts(v NoConfigAggregation) TableColumnRangeAggregation {
+	return TableColumnRangeAggregation{typ: "valueCounts", valueCounts: &v}
+}
+
+// Any configuration that is specific to the type in question
+type TableColumnTypedConfig struct {
+	typ     string
+	numeric *TableColumnNumericConfig
+	enum    *TableColumnEnumConfig
+	range_  *TableColumnRangeConfig
+	log     *TableColumnLogConfig
+}
+
+type tableColumnTypedConfigDeserializer struct {
+	Type    string                    `json:"type"`
+	Numeric *TableColumnNumericConfig `json:"numeric"`
+	Enum    *TableColumnEnumConfig    `json:"enum"`
+	Range   *TableColumnRangeConfig   `json:"range"`
+	Log     *TableColumnLogConfig     `json:"log"`
+}
+
+func (u *tableColumnTypedConfigDeserializer) toStruct() TableColumnTypedConfig {
+	return TableColumnTypedConfig{typ: u.Type, numeric: u.Numeric, enum: u.Enum, range_: u.Range, log: u.Log}
+}
+
+func (u *TableColumnTypedConfig) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return nil, fmt.Errorf("field \"numeric\" is required")
+		}
+		return struct {
+			Type    string                   `json:"type"`
+			Numeric TableColumnNumericConfig `json:"numeric"`
+		}{Type: "numeric", Numeric: *u.numeric}, nil
+	case "enum":
+		if u.enum == nil {
+			return nil, fmt.Errorf("field \"enum\" is required")
+		}
+		return struct {
+			Type string                `json:"type"`
+			Enum TableColumnEnumConfig `json:"enum"`
+		}{Type: "enum", Enum: *u.enum}, nil
+	case "range":
+		if u.range_ == nil {
+			return nil, fmt.Errorf("field \"range\" is required")
+		}
+		return struct {
+			Type  string                 `json:"type"`
+			Range TableColumnRangeConfig `json:"range"`
+		}{Type: "range", Range: *u.range_}, nil
+	case "log":
+		if u.log == nil {
+			return nil, fmt.Errorf("field \"log\" is required")
+		}
+		return struct {
+			Type string               `json:"type"`
+			Log  TableColumnLogConfig `json:"log"`
+		}{Type: "log", Log: *u.log}, nil
+	}
+}
+
+func (u TableColumnTypedConfig) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *TableColumnTypedConfig) UnmarshalJSON(data []byte) error {
+	var deser tableColumnTypedConfigDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+	case "range":
+		if u.range_ == nil {
+			return fmt.Errorf("field \"range\" is required")
+		}
+	case "log":
+		if u.log == nil {
+			return fmt.Errorf("field \"log\" is required")
+		}
+	}
+	return nil
+}
+
+func (u TableColumnTypedConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *TableColumnTypedConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *TableColumnTypedConfig) AcceptFuncs(numericFunc func(TableColumnNumericConfig) error, enumFunc func(TableColumnEnumConfig) error, range_Func func(TableColumnRangeConfig) error, logFunc func(TableColumnLogConfig) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in TableColumnTypedConfig type")
+		}
+		return unknownFunc(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return numericFunc(*u.numeric)
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+		return enumFunc(*u.enum)
+	case "range":
+		if u.range_ == nil {
+			return fmt.Errorf("field \"range\" is required")
+		}
+		return range_Func(*u.range_)
+	case "log":
+		if u.log == nil {
+			return fmt.Errorf("field \"log\" is required")
+		}
+		return logFunc(*u.log)
+	}
+}
+
+func (u *TableColumnTypedConfig) NumericNoopSuccess(_ TableColumnNumericConfig) error {
+	return nil
+}
+
+func (u *TableColumnTypedConfig) EnumNoopSuccess(_ TableColumnEnumConfig) error {
+	return nil
+}
+
+func (u *TableColumnTypedConfig) RangeNoopSuccess(_ TableColumnRangeConfig) error {
+	return nil
+}
+
+func (u *TableColumnTypedConfig) LogNoopSuccess(_ TableColumnLogConfig) error {
+	return nil
+}
+
+func (u *TableColumnTypedConfig) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *TableColumnTypedConfig) Accept(v TableColumnTypedConfigVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumeric(*u.numeric)
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+		return v.VisitEnum(*u.enum)
+	case "range":
+		if u.range_ == nil {
+			return fmt.Errorf("field \"range\" is required")
+		}
+		return v.VisitRange(*u.range_)
+	case "log":
+		if u.log == nil {
+			return fmt.Errorf("field \"log\" is required")
+		}
+		return v.VisitLog(*u.log)
+	}
+}
+
+type TableColumnTypedConfigVisitor interface {
+	VisitNumeric(v TableColumnNumericConfig) error
+	VisitEnum(v TableColumnEnumConfig) error
+	VisitRange(v TableColumnRangeConfig) error
+	VisitLog(v TableColumnLogConfig) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *TableColumnTypedConfig) AcceptWithContext(ctx context.Context, v TableColumnTypedConfigVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumericWithContext(ctx, *u.numeric)
+	case "enum":
+		if u.enum == nil {
+			return fmt.Errorf("field \"enum\" is required")
+		}
+		return v.VisitEnumWithContext(ctx, *u.enum)
+	case "range":
+		if u.range_ == nil {
+			return fmt.Errorf("field \"range\" is required")
+		}
+		return v.VisitRangeWithContext(ctx, *u.range_)
+	case "log":
+		if u.log == nil {
+			return fmt.Errorf("field \"log\" is required")
+		}
+		return v.VisitLogWithContext(ctx, *u.log)
+	}
+}
+
+type TableColumnTypedConfigVisitorWithContext interface {
+	VisitNumericWithContext(ctx context.Context, v TableColumnNumericConfig) error
+	VisitEnumWithContext(ctx context.Context, v TableColumnEnumConfig) error
+	VisitRangeWithContext(ctx context.Context, v TableColumnRangeConfig) error
+	VisitLogWithContext(ctx context.Context, v TableColumnLogConfig) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewTableColumnTypedConfigFromNumeric(v TableColumnNumericConfig) TableColumnTypedConfig {
+	return TableColumnTypedConfig{typ: "numeric", numeric: &v}
+}
+
+func NewTableColumnTypedConfigFromEnum(v TableColumnEnumConfig) TableColumnTypedConfig {
+	return TableColumnTypedConfig{typ: "enum", enum: &v}
+}
+
+func NewTableColumnTypedConfigFromRange(v TableColumnRangeConfig) TableColumnTypedConfig {
+	return TableColumnTypedConfig{typ: "range", range_: &v}
+}
+
+func NewTableColumnTypedConfigFromLog(v TableColumnLogConfig) TableColumnTypedConfig {
+	return TableColumnTypedConfig{typ: "log", log: &v}
 }
 
 type TimeSeriesChartDefinition struct {
@@ -8422,6 +12494,141 @@ func NewTimeSeriesPlotConfigFromRange(v TimeSeriesRangePlot) TimeSeriesPlotConfi
 
 func NewTimeSeriesPlotConfigFromEnum(v TimeSeriesEnumPlot) TimeSeriesPlotConfig {
 	return TimeSeriesPlotConfig{typ: "enum", enum: &v}
+}
+
+type TimeSeriesTablePanelDefinition struct {
+	typ string
+	v1  *TimeSeriesTablePanelDefinitionV1
+}
+
+type timeSeriesTablePanelDefinitionDeserializer struct {
+	Type string                            `json:"type"`
+	V1   *TimeSeriesTablePanelDefinitionV1 `json:"v1"`
+}
+
+func (u *timeSeriesTablePanelDefinitionDeserializer) toStruct() TimeSeriesTablePanelDefinition {
+	return TimeSeriesTablePanelDefinition{typ: u.Type, v1: u.V1}
+}
+
+func (u *TimeSeriesTablePanelDefinition) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string                           `json:"type"`
+			V1   TimeSeriesTablePanelDefinitionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u TimeSeriesTablePanelDefinition) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *TimeSeriesTablePanelDefinition) UnmarshalJSON(data []byte) error {
+	var deser timeSeriesTablePanelDefinitionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u TimeSeriesTablePanelDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *TimeSeriesTablePanelDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *TimeSeriesTablePanelDefinition) AcceptFuncs(v1Func func(TimeSeriesTablePanelDefinitionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in TimeSeriesTablePanelDefinition type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *TimeSeriesTablePanelDefinition) V1NoopSuccess(_ TimeSeriesTablePanelDefinitionV1) error {
+	return nil
+}
+
+func (u *TimeSeriesTablePanelDefinition) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *TimeSeriesTablePanelDefinition) Accept(v TimeSeriesTablePanelDefinitionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type TimeSeriesTablePanelDefinitionVisitor interface {
+	VisitV1(v TimeSeriesTablePanelDefinitionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *TimeSeriesTablePanelDefinition) AcceptWithContext(ctx context.Context, v TimeSeriesTablePanelDefinitionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type TimeSeriesTablePanelDefinitionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v TimeSeriesTablePanelDefinitionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewTimeSeriesTablePanelDefinitionFromV1(v TimeSeriesTablePanelDefinitionV1) TimeSeriesTablePanelDefinition {
+	return TimeSeriesTablePanelDefinition{typ: "v1", v1: &v}
 }
 
 type TraceComputeConfig struct {
@@ -9184,16 +13391,18 @@ type ValueTableDefinition struct {
 	typ string
 	v1  *ValueTableDefinitionV1
 	v2  *ValueTableDefinitionV2
+	v3  *ValueTableDefinitionV3
 }
 
 type valueTableDefinitionDeserializer struct {
 	Type string                  `json:"type"`
 	V1   *ValueTableDefinitionV1 `json:"v1"`
 	V2   *ValueTableDefinitionV2 `json:"v2"`
+	V3   *ValueTableDefinitionV3 `json:"v3"`
 }
 
 func (u *valueTableDefinitionDeserializer) toStruct() ValueTableDefinition {
-	return ValueTableDefinition{typ: u.Type, v1: u.V1, v2: u.V2}
+	return ValueTableDefinition{typ: u.Type, v1: u.V1, v2: u.V2, v3: u.V3}
 }
 
 func (u *ValueTableDefinition) toSerializer() (interface{}, error) {
@@ -9216,6 +13425,14 @@ func (u *ValueTableDefinition) toSerializer() (interface{}, error) {
 			Type string                 `json:"type"`
 			V2   ValueTableDefinitionV2 `json:"v2"`
 		}{Type: "v2", V2: *u.v2}, nil
+	case "v3":
+		if u.v3 == nil {
+			return nil, fmt.Errorf("field \"v3\" is required")
+		}
+		return struct {
+			Type string                 `json:"type"`
+			V3   ValueTableDefinitionV3 `json:"v3"`
+		}{Type: "v3", V3: *u.v3}, nil
 	}
 }
 
@@ -9242,6 +13459,10 @@ func (u *ValueTableDefinition) UnmarshalJSON(data []byte) error {
 		if u.v2 == nil {
 			return fmt.Errorf("field \"v2\" is required")
 		}
+	case "v3":
+		if u.v3 == nil {
+			return fmt.Errorf("field \"v3\" is required")
+		}
 	}
 	return nil
 }
@@ -9262,7 +13483,7 @@ func (u *ValueTableDefinition) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ValueTableDefinition) AcceptFuncs(v1Func func(ValueTableDefinitionV1) error, v2Func func(ValueTableDefinitionV2) error, unknownFunc func(string) error) error {
+func (u *ValueTableDefinition) AcceptFuncs(v1Func func(ValueTableDefinitionV1) error, v2Func func(ValueTableDefinitionV2) error, v3Func func(ValueTableDefinitionV3) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -9279,6 +13500,11 @@ func (u *ValueTableDefinition) AcceptFuncs(v1Func func(ValueTableDefinitionV1) e
 			return fmt.Errorf("field \"v2\" is required")
 		}
 		return v2Func(*u.v2)
+	case "v3":
+		if u.v3 == nil {
+			return fmt.Errorf("field \"v3\" is required")
+		}
+		return v3Func(*u.v3)
 	}
 }
 
@@ -9287,6 +13513,10 @@ func (u *ValueTableDefinition) V1NoopSuccess(_ ValueTableDefinitionV1) error {
 }
 
 func (u *ValueTableDefinition) V2NoopSuccess(_ ValueTableDefinitionV2) error {
+	return nil
+}
+
+func (u *ValueTableDefinition) V3NoopSuccess(_ ValueTableDefinitionV3) error {
 	return nil
 }
 
@@ -9311,12 +13541,18 @@ func (u *ValueTableDefinition) Accept(v ValueTableDefinitionVisitor) error {
 			return fmt.Errorf("field \"v2\" is required")
 		}
 		return v.VisitV2(*u.v2)
+	case "v3":
+		if u.v3 == nil {
+			return fmt.Errorf("field \"v3\" is required")
+		}
+		return v.VisitV3(*u.v3)
 	}
 }
 
 type ValueTableDefinitionVisitor interface {
 	VisitV1(v ValueTableDefinitionV1) error
 	VisitV2(v ValueTableDefinitionV2) error
+	VisitV3(v ValueTableDefinitionV3) error
 	VisitUnknown(typeName string) error
 }
 
@@ -9337,12 +13573,18 @@ func (u *ValueTableDefinition) AcceptWithContext(ctx context.Context, v ValueTab
 			return fmt.Errorf("field \"v2\" is required")
 		}
 		return v.VisitV2WithContext(ctx, *u.v2)
+	case "v3":
+		if u.v3 == nil {
+			return fmt.Errorf("field \"v3\" is required")
+		}
+		return v.VisitV3WithContext(ctx, *u.v3)
 	}
 }
 
 type ValueTableDefinitionVisitorWithContext interface {
 	VisitV1WithContext(ctx context.Context, v ValueTableDefinitionV1) error
 	VisitV2WithContext(ctx context.Context, v ValueTableDefinitionV2) error
+	VisitV3WithContext(ctx context.Context, v ValueTableDefinitionV3) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -9352,6 +13594,10 @@ func NewValueTableDefinitionFromV1(v ValueTableDefinitionV1) ValueTableDefinitio
 
 func NewValueTableDefinitionFromV2(v ValueTableDefinitionV2) ValueTableDefinition {
 	return ValueTableDefinition{typ: "v2", v2: &v}
+}
+
+func NewValueTableDefinitionFromV3(v ValueTableDefinitionV3) ValueTableDefinition {
+	return ValueTableDefinition{typ: "v3", v3: &v}
 }
 
 type ValueTableLayout struct {
@@ -9487,6 +13733,224 @@ type ValueTableLayoutVisitorWithContext interface {
 
 func NewValueTableLayoutFromGrid(v ValueTableLayoutGrid) ValueTableLayout {
 	return ValueTableLayout{typ: "grid", grid: &v}
+}
+
+/*
+Separate from `ValueTableLayout` so new arms cannot widen
+`ValueTableDefinitionV2.layout`, which clients read as `v2.layout.grid`
+without checking the tag. The `grid` arm is the same object.
+*/
+type ValueTableLayoutV2 struct {
+	typ    string
+	grid   *ValueTableLayoutGrid
+	flow   *ValueTableLayoutFlow
+	column *ValueTableLayoutColumn
+}
+
+type valueTableLayoutV2Deserializer struct {
+	Type   string                  `json:"type"`
+	Grid   *ValueTableLayoutGrid   `json:"grid"`
+	Flow   *ValueTableLayoutFlow   `json:"flow"`
+	Column *ValueTableLayoutColumn `json:"column"`
+}
+
+func (u *valueTableLayoutV2Deserializer) toStruct() ValueTableLayoutV2 {
+	return ValueTableLayoutV2{typ: u.Type, grid: u.Grid, flow: u.Flow, column: u.Column}
+}
+
+func (u *ValueTableLayoutV2) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "grid":
+		if u.grid == nil {
+			return nil, fmt.Errorf("field \"grid\" is required")
+		}
+		return struct {
+			Type string               `json:"type"`
+			Grid ValueTableLayoutGrid `json:"grid"`
+		}{Type: "grid", Grid: *u.grid}, nil
+	case "flow":
+		if u.flow == nil {
+			return nil, fmt.Errorf("field \"flow\" is required")
+		}
+		return struct {
+			Type string               `json:"type"`
+			Flow ValueTableLayoutFlow `json:"flow"`
+		}{Type: "flow", Flow: *u.flow}, nil
+	case "column":
+		if u.column == nil {
+			return nil, fmt.Errorf("field \"column\" is required")
+		}
+		return struct {
+			Type   string                 `json:"type"`
+			Column ValueTableLayoutColumn `json:"column"`
+		}{Type: "column", Column: *u.column}, nil
+	}
+}
+
+func (u ValueTableLayoutV2) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ValueTableLayoutV2) UnmarshalJSON(data []byte) error {
+	var deser valueTableLayoutV2Deserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "grid":
+		if u.grid == nil {
+			return fmt.Errorf("field \"grid\" is required")
+		}
+	case "flow":
+		if u.flow == nil {
+			return fmt.Errorf("field \"flow\" is required")
+		}
+	case "column":
+		if u.column == nil {
+			return fmt.Errorf("field \"column\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ValueTableLayoutV2) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ValueTableLayoutV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ValueTableLayoutV2) AcceptFuncs(gridFunc func(ValueTableLayoutGrid) error, flowFunc func(ValueTableLayoutFlow) error, columnFunc func(ValueTableLayoutColumn) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ValueTableLayoutV2 type")
+		}
+		return unknownFunc(u.typ)
+	case "grid":
+		if u.grid == nil {
+			return fmt.Errorf("field \"grid\" is required")
+		}
+		return gridFunc(*u.grid)
+	case "flow":
+		if u.flow == nil {
+			return fmt.Errorf("field \"flow\" is required")
+		}
+		return flowFunc(*u.flow)
+	case "column":
+		if u.column == nil {
+			return fmt.Errorf("field \"column\" is required")
+		}
+		return columnFunc(*u.column)
+	}
+}
+
+func (u *ValueTableLayoutV2) GridNoopSuccess(_ ValueTableLayoutGrid) error {
+	return nil
+}
+
+func (u *ValueTableLayoutV2) FlowNoopSuccess(_ ValueTableLayoutFlow) error {
+	return nil
+}
+
+func (u *ValueTableLayoutV2) ColumnNoopSuccess(_ ValueTableLayoutColumn) error {
+	return nil
+}
+
+func (u *ValueTableLayoutV2) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ValueTableLayoutV2) Accept(v ValueTableLayoutV2Visitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "grid":
+		if u.grid == nil {
+			return fmt.Errorf("field \"grid\" is required")
+		}
+		return v.VisitGrid(*u.grid)
+	case "flow":
+		if u.flow == nil {
+			return fmt.Errorf("field \"flow\" is required")
+		}
+		return v.VisitFlow(*u.flow)
+	case "column":
+		if u.column == nil {
+			return fmt.Errorf("field \"column\" is required")
+		}
+		return v.VisitColumn(*u.column)
+	}
+}
+
+type ValueTableLayoutV2Visitor interface {
+	VisitGrid(v ValueTableLayoutGrid) error
+	VisitFlow(v ValueTableLayoutFlow) error
+	VisitColumn(v ValueTableLayoutColumn) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ValueTableLayoutV2) AcceptWithContext(ctx context.Context, v ValueTableLayoutV2VisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "grid":
+		if u.grid == nil {
+			return fmt.Errorf("field \"grid\" is required")
+		}
+		return v.VisitGridWithContext(ctx, *u.grid)
+	case "flow":
+		if u.flow == nil {
+			return fmt.Errorf("field \"flow\" is required")
+		}
+		return v.VisitFlowWithContext(ctx, *u.flow)
+	case "column":
+		if u.column == nil {
+			return fmt.Errorf("field \"column\" is required")
+		}
+		return v.VisitColumnWithContext(ctx, *u.column)
+	}
+}
+
+type ValueTableLayoutV2VisitorWithContext interface {
+	VisitGridWithContext(ctx context.Context, v ValueTableLayoutGrid) error
+	VisitFlowWithContext(ctx context.Context, v ValueTableLayoutFlow) error
+	VisitColumnWithContext(ctx context.Context, v ValueTableLayoutColumn) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewValueTableLayoutV2FromGrid(v ValueTableLayoutGrid) ValueTableLayoutV2 {
+	return ValueTableLayoutV2{typ: "grid", grid: &v}
+}
+
+func NewValueTableLayoutV2FromFlow(v ValueTableLayoutFlow) ValueTableLayoutV2 {
+	return ValueTableLayoutV2{typ: "flow", flow: &v}
+}
+
+func NewValueTableLayoutV2FromColumn(v ValueTableLayoutColumn) ValueTableLayoutV2 {
+	return ValueTableLayoutV2{typ: "column", column: &v}
 }
 
 // Color interpolations for numeric and enum values.
@@ -10014,47 +14478,65 @@ func NewVideoVizDefinitionFromV2(v VideoVizDefinitionV2) VideoVizDefinition {
 }
 
 type VizDefinition struct {
-	typ        string
-	cartesian  *CartesianChartDefinition
-	checklist  *ChecklistChartDefinition
-	frequency  *FrequencyChartDefinition
-	geo        *GeoVizDefinition
-	geo3d      *Geo3dDefinition
-	histogram  *HistogramChartDefinition
-	log        *LogPanelDefinition
-	markdown   *MarkdownPanelDefinition
-	plotly     *PlotlyPanelDefinition
-	procedure  *ProcedureVizDefinition
-	timeSeries *TimeSeriesChartDefinition
-	valueTable *ValueTableDefinition
-	video      *VideoVizDefinition
+	typ             string
+	button          *ButtonVizDefinition
+	cartesian       *CartesianChartDefinition
+	checklist       *ChecklistChartDefinition
+	endNode         *EndNodeVizDefinition
+	frequency       *FrequencyChartDefinition
+	geo             *GeoVizDefinition
+	geo3d           *Geo3dDefinition
+	histogram       *HistogramChartDefinition
+	image           *ImageVizDefinition
+	log             *LogPanelDefinition
+	markdown        *MarkdownPanelDefinition
+	plotly          *PlotlyPanelDefinition
+	procedure       *ProcedureVizDefinition
+	shape           *ShapeVizDefinition
+	timeSeries      *TimeSeriesChartDefinition
+	timeSeriesTable *TimeSeriesTablePanelDefinition
+	valueTable      *ValueTableDefinition
+	video           *VideoVizDefinition
 }
 
 type vizDefinitionDeserializer struct {
-	Type       string                     `json:"type"`
-	Cartesian  *CartesianChartDefinition  `json:"cartesian"`
-	Checklist  *ChecklistChartDefinition  `json:"checklist"`
-	Frequency  *FrequencyChartDefinition  `json:"frequency"`
-	Geo        *GeoVizDefinition          `json:"geo"`
-	Geo3d      *Geo3dDefinition           `json:"geo3d"`
-	Histogram  *HistogramChartDefinition  `json:"histogram"`
-	Log        *LogPanelDefinition        `json:"log"`
-	Markdown   *MarkdownPanelDefinition   `json:"markdown"`
-	Plotly     *PlotlyPanelDefinition     `json:"plotly"`
-	Procedure  *ProcedureVizDefinition    `json:"procedure"`
-	TimeSeries *TimeSeriesChartDefinition `json:"timeSeries"`
-	ValueTable *ValueTableDefinition      `json:"valueTable"`
-	Video      *VideoVizDefinition        `json:"video"`
+	Type            string                          `json:"type"`
+	Button          *ButtonVizDefinition            `json:"button"`
+	Cartesian       *CartesianChartDefinition       `json:"cartesian"`
+	Checklist       *ChecklistChartDefinition       `json:"checklist"`
+	EndNode         *EndNodeVizDefinition           `json:"endNode"`
+	Frequency       *FrequencyChartDefinition       `json:"frequency"`
+	Geo             *GeoVizDefinition               `json:"geo"`
+	Geo3d           *Geo3dDefinition                `json:"geo3d"`
+	Histogram       *HistogramChartDefinition       `json:"histogram"`
+	Image           *ImageVizDefinition             `json:"image"`
+	Log             *LogPanelDefinition             `json:"log"`
+	Markdown        *MarkdownPanelDefinition        `json:"markdown"`
+	Plotly          *PlotlyPanelDefinition          `json:"plotly"`
+	Procedure       *ProcedureVizDefinition         `json:"procedure"`
+	Shape           *ShapeVizDefinition             `json:"shape"`
+	TimeSeries      *TimeSeriesChartDefinition      `json:"timeSeries"`
+	TimeSeriesTable *TimeSeriesTablePanelDefinition `json:"timeSeriesTable"`
+	ValueTable      *ValueTableDefinition           `json:"valueTable"`
+	Video           *VideoVizDefinition             `json:"video"`
 }
 
 func (u *vizDefinitionDeserializer) toStruct() VizDefinition {
-	return VizDefinition{typ: u.Type, cartesian: u.Cartesian, checklist: u.Checklist, frequency: u.Frequency, geo: u.Geo, geo3d: u.Geo3d, histogram: u.Histogram, log: u.Log, markdown: u.Markdown, plotly: u.Plotly, procedure: u.Procedure, timeSeries: u.TimeSeries, valueTable: u.ValueTable, video: u.Video}
+	return VizDefinition{typ: u.Type, button: u.Button, cartesian: u.Cartesian, checklist: u.Checklist, endNode: u.EndNode, frequency: u.Frequency, geo: u.Geo, geo3d: u.Geo3d, histogram: u.Histogram, image: u.Image, log: u.Log, markdown: u.Markdown, plotly: u.Plotly, procedure: u.Procedure, shape: u.Shape, timeSeries: u.TimeSeries, timeSeriesTable: u.TimeSeriesTable, valueTable: u.ValueTable, video: u.Video}
 }
 
 func (u *VizDefinition) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "button":
+		if u.button == nil {
+			return nil, fmt.Errorf("field \"button\" is required")
+		}
+		return struct {
+			Type   string              `json:"type"`
+			Button ButtonVizDefinition `json:"button"`
+		}{Type: "button", Button: *u.button}, nil
 	case "cartesian":
 		if u.cartesian == nil {
 			return nil, fmt.Errorf("field \"cartesian\" is required")
@@ -10071,6 +14553,14 @@ func (u *VizDefinition) toSerializer() (interface{}, error) {
 			Type      string                   `json:"type"`
 			Checklist ChecklistChartDefinition `json:"checklist"`
 		}{Type: "checklist", Checklist: *u.checklist}, nil
+	case "endNode":
+		if u.endNode == nil {
+			return nil, fmt.Errorf("field \"endNode\" is required")
+		}
+		return struct {
+			Type    string               `json:"type"`
+			EndNode EndNodeVizDefinition `json:"endNode"`
+		}{Type: "endNode", EndNode: *u.endNode}, nil
 	case "frequency":
 		if u.frequency == nil {
 			return nil, fmt.Errorf("field \"frequency\" is required")
@@ -10103,6 +14593,14 @@ func (u *VizDefinition) toSerializer() (interface{}, error) {
 			Type      string                   `json:"type"`
 			Histogram HistogramChartDefinition `json:"histogram"`
 		}{Type: "histogram", Histogram: *u.histogram}, nil
+	case "image":
+		if u.image == nil {
+			return nil, fmt.Errorf("field \"image\" is required")
+		}
+		return struct {
+			Type  string             `json:"type"`
+			Image ImageVizDefinition `json:"image"`
+		}{Type: "image", Image: *u.image}, nil
 	case "log":
 		if u.log == nil {
 			return nil, fmt.Errorf("field \"log\" is required")
@@ -10135,6 +14633,14 @@ func (u *VizDefinition) toSerializer() (interface{}, error) {
 			Type      string                 `json:"type"`
 			Procedure ProcedureVizDefinition `json:"procedure"`
 		}{Type: "procedure", Procedure: *u.procedure}, nil
+	case "shape":
+		if u.shape == nil {
+			return nil, fmt.Errorf("field \"shape\" is required")
+		}
+		return struct {
+			Type  string             `json:"type"`
+			Shape ShapeVizDefinition `json:"shape"`
+		}{Type: "shape", Shape: *u.shape}, nil
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return nil, fmt.Errorf("field \"timeSeries\" is required")
@@ -10143,6 +14649,14 @@ func (u *VizDefinition) toSerializer() (interface{}, error) {
 			Type       string                    `json:"type"`
 			TimeSeries TimeSeriesChartDefinition `json:"timeSeries"`
 		}{Type: "timeSeries", TimeSeries: *u.timeSeries}, nil
+	case "timeSeriesTable":
+		if u.timeSeriesTable == nil {
+			return nil, fmt.Errorf("field \"timeSeriesTable\" is required")
+		}
+		return struct {
+			Type            string                         `json:"type"`
+			TimeSeriesTable TimeSeriesTablePanelDefinition `json:"timeSeriesTable"`
+		}{Type: "timeSeriesTable", TimeSeriesTable: *u.timeSeriesTable}, nil
 	case "valueTable":
 		if u.valueTable == nil {
 			return nil, fmt.Errorf("field \"valueTable\" is required")
@@ -10177,6 +14691,10 @@ func (u *VizDefinition) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
+	case "button":
+		if u.button == nil {
+			return fmt.Errorf("field \"button\" is required")
+		}
 	case "cartesian":
 		if u.cartesian == nil {
 			return fmt.Errorf("field \"cartesian\" is required")
@@ -10184,6 +14702,10 @@ func (u *VizDefinition) UnmarshalJSON(data []byte) error {
 	case "checklist":
 		if u.checklist == nil {
 			return fmt.Errorf("field \"checklist\" is required")
+		}
+	case "endNode":
+		if u.endNode == nil {
+			return fmt.Errorf("field \"endNode\" is required")
 		}
 	case "frequency":
 		if u.frequency == nil {
@@ -10201,6 +14723,10 @@ func (u *VizDefinition) UnmarshalJSON(data []byte) error {
 		if u.histogram == nil {
 			return fmt.Errorf("field \"histogram\" is required")
 		}
+	case "image":
+		if u.image == nil {
+			return fmt.Errorf("field \"image\" is required")
+		}
 	case "log":
 		if u.log == nil {
 			return fmt.Errorf("field \"log\" is required")
@@ -10217,9 +14743,17 @@ func (u *VizDefinition) UnmarshalJSON(data []byte) error {
 		if u.procedure == nil {
 			return fmt.Errorf("field \"procedure\" is required")
 		}
+	case "shape":
+		if u.shape == nil {
+			return fmt.Errorf("field \"shape\" is required")
+		}
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return fmt.Errorf("field \"timeSeries\" is required")
+		}
+	case "timeSeriesTable":
+		if u.timeSeriesTable == nil {
+			return fmt.Errorf("field \"timeSeriesTable\" is required")
 		}
 	case "valueTable":
 		if u.valueTable == nil {
@@ -10249,13 +14783,18 @@ func (u *VizDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition) error, checklistFunc func(ChecklistChartDefinition) error, frequencyFunc func(FrequencyChartDefinition) error, geoFunc func(GeoVizDefinition) error, geo3dFunc func(Geo3dDefinition) error, histogramFunc func(HistogramChartDefinition) error, logFunc func(LogPanelDefinition) error, markdownFunc func(MarkdownPanelDefinition) error, plotlyFunc func(PlotlyPanelDefinition) error, procedureFunc func(ProcedureVizDefinition) error, timeSeriesFunc func(TimeSeriesChartDefinition) error, valueTableFunc func(ValueTableDefinition) error, videoFunc func(VideoVizDefinition) error, unknownFunc func(string) error) error {
+func (u *VizDefinition) AcceptFuncs(buttonFunc func(ButtonVizDefinition) error, cartesianFunc func(CartesianChartDefinition) error, checklistFunc func(ChecklistChartDefinition) error, endNodeFunc func(EndNodeVizDefinition) error, frequencyFunc func(FrequencyChartDefinition) error, geoFunc func(GeoVizDefinition) error, geo3dFunc func(Geo3dDefinition) error, histogramFunc func(HistogramChartDefinition) error, imageFunc func(ImageVizDefinition) error, logFunc func(LogPanelDefinition) error, markdownFunc func(MarkdownPanelDefinition) error, plotlyFunc func(PlotlyPanelDefinition) error, procedureFunc func(ProcedureVizDefinition) error, shapeFunc func(ShapeVizDefinition) error, timeSeriesFunc func(TimeSeriesChartDefinition) error, timeSeriesTableFunc func(TimeSeriesTablePanelDefinition) error, valueTableFunc func(ValueTableDefinition) error, videoFunc func(VideoVizDefinition) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in VizDefinition type")
 		}
 		return unknownFunc(u.typ)
+	case "button":
+		if u.button == nil {
+			return fmt.Errorf("field \"button\" is required")
+		}
+		return buttonFunc(*u.button)
 	case "cartesian":
 		if u.cartesian == nil {
 			return fmt.Errorf("field \"cartesian\" is required")
@@ -10266,6 +14805,11 @@ func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition)
 			return fmt.Errorf("field \"checklist\" is required")
 		}
 		return checklistFunc(*u.checklist)
+	case "endNode":
+		if u.endNode == nil {
+			return fmt.Errorf("field \"endNode\" is required")
+		}
+		return endNodeFunc(*u.endNode)
 	case "frequency":
 		if u.frequency == nil {
 			return fmt.Errorf("field \"frequency\" is required")
@@ -10286,6 +14830,11 @@ func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition)
 			return fmt.Errorf("field \"histogram\" is required")
 		}
 		return histogramFunc(*u.histogram)
+	case "image":
+		if u.image == nil {
+			return fmt.Errorf("field \"image\" is required")
+		}
+		return imageFunc(*u.image)
 	case "log":
 		if u.log == nil {
 			return fmt.Errorf("field \"log\" is required")
@@ -10306,11 +14855,21 @@ func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition)
 			return fmt.Errorf("field \"procedure\" is required")
 		}
 		return procedureFunc(*u.procedure)
+	case "shape":
+		if u.shape == nil {
+			return fmt.Errorf("field \"shape\" is required")
+		}
+		return shapeFunc(*u.shape)
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return fmt.Errorf("field \"timeSeries\" is required")
 		}
 		return timeSeriesFunc(*u.timeSeries)
+	case "timeSeriesTable":
+		if u.timeSeriesTable == nil {
+			return fmt.Errorf("field \"timeSeriesTable\" is required")
+		}
+		return timeSeriesTableFunc(*u.timeSeriesTable)
 	case "valueTable":
 		if u.valueTable == nil {
 			return fmt.Errorf("field \"valueTable\" is required")
@@ -10324,11 +14883,19 @@ func (u *VizDefinition) AcceptFuncs(cartesianFunc func(CartesianChartDefinition)
 	}
 }
 
+func (u *VizDefinition) ButtonNoopSuccess(_ ButtonVizDefinition) error {
+	return nil
+}
+
 func (u *VizDefinition) CartesianNoopSuccess(_ CartesianChartDefinition) error {
 	return nil
 }
 
 func (u *VizDefinition) ChecklistNoopSuccess(_ ChecklistChartDefinition) error {
+	return nil
+}
+
+func (u *VizDefinition) EndNodeNoopSuccess(_ EndNodeVizDefinition) error {
 	return nil
 }
 
@@ -10348,6 +14915,10 @@ func (u *VizDefinition) HistogramNoopSuccess(_ HistogramChartDefinition) error {
 	return nil
 }
 
+func (u *VizDefinition) ImageNoopSuccess(_ ImageVizDefinition) error {
+	return nil
+}
+
 func (u *VizDefinition) LogNoopSuccess(_ LogPanelDefinition) error {
 	return nil
 }
@@ -10364,7 +14935,15 @@ func (u *VizDefinition) ProcedureNoopSuccess(_ ProcedureVizDefinition) error {
 	return nil
 }
 
+func (u *VizDefinition) ShapeNoopSuccess(_ ShapeVizDefinition) error {
+	return nil
+}
+
 func (u *VizDefinition) TimeSeriesNoopSuccess(_ TimeSeriesChartDefinition) error {
+	return nil
+}
+
+func (u *VizDefinition) TimeSeriesTableNoopSuccess(_ TimeSeriesTablePanelDefinition) error {
 	return nil
 }
 
@@ -10387,6 +14966,11 @@ func (u *VizDefinition) Accept(v VizDefinitionVisitor) error {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
+	case "button":
+		if u.button == nil {
+			return fmt.Errorf("field \"button\" is required")
+		}
+		return v.VisitButton(*u.button)
 	case "cartesian":
 		if u.cartesian == nil {
 			return fmt.Errorf("field \"cartesian\" is required")
@@ -10397,6 +14981,11 @@ func (u *VizDefinition) Accept(v VizDefinitionVisitor) error {
 			return fmt.Errorf("field \"checklist\" is required")
 		}
 		return v.VisitChecklist(*u.checklist)
+	case "endNode":
+		if u.endNode == nil {
+			return fmt.Errorf("field \"endNode\" is required")
+		}
+		return v.VisitEndNode(*u.endNode)
 	case "frequency":
 		if u.frequency == nil {
 			return fmt.Errorf("field \"frequency\" is required")
@@ -10417,6 +15006,11 @@ func (u *VizDefinition) Accept(v VizDefinitionVisitor) error {
 			return fmt.Errorf("field \"histogram\" is required")
 		}
 		return v.VisitHistogram(*u.histogram)
+	case "image":
+		if u.image == nil {
+			return fmt.Errorf("field \"image\" is required")
+		}
+		return v.VisitImage(*u.image)
 	case "log":
 		if u.log == nil {
 			return fmt.Errorf("field \"log\" is required")
@@ -10437,11 +15031,21 @@ func (u *VizDefinition) Accept(v VizDefinitionVisitor) error {
 			return fmt.Errorf("field \"procedure\" is required")
 		}
 		return v.VisitProcedure(*u.procedure)
+	case "shape":
+		if u.shape == nil {
+			return fmt.Errorf("field \"shape\" is required")
+		}
+		return v.VisitShape(*u.shape)
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return fmt.Errorf("field \"timeSeries\" is required")
 		}
 		return v.VisitTimeSeries(*u.timeSeries)
+	case "timeSeriesTable":
+		if u.timeSeriesTable == nil {
+			return fmt.Errorf("field \"timeSeriesTable\" is required")
+		}
+		return v.VisitTimeSeriesTable(*u.timeSeriesTable)
 	case "valueTable":
 		if u.valueTable == nil {
 			return fmt.Errorf("field \"valueTable\" is required")
@@ -10456,17 +15060,22 @@ func (u *VizDefinition) Accept(v VizDefinitionVisitor) error {
 }
 
 type VizDefinitionVisitor interface {
+	VisitButton(v ButtonVizDefinition) error
 	VisitCartesian(v CartesianChartDefinition) error
 	VisitChecklist(v ChecklistChartDefinition) error
+	VisitEndNode(v EndNodeVizDefinition) error
 	VisitFrequency(v FrequencyChartDefinition) error
 	VisitGeo(v GeoVizDefinition) error
 	VisitGeo3d(v Geo3dDefinition) error
 	VisitHistogram(v HistogramChartDefinition) error
+	VisitImage(v ImageVizDefinition) error
 	VisitLog(v LogPanelDefinition) error
 	VisitMarkdown(v MarkdownPanelDefinition) error
 	VisitPlotly(v PlotlyPanelDefinition) error
 	VisitProcedure(v ProcedureVizDefinition) error
+	VisitShape(v ShapeVizDefinition) error
 	VisitTimeSeries(v TimeSeriesChartDefinition) error
+	VisitTimeSeriesTable(v TimeSeriesTablePanelDefinition) error
 	VisitValueTable(v ValueTableDefinition) error
 	VisitVideo(v VideoVizDefinition) error
 	VisitUnknown(typeName string) error
@@ -10479,6 +15088,11 @@ func (u *VizDefinition) AcceptWithContext(ctx context.Context, v VizDefinitionVi
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "button":
+		if u.button == nil {
+			return fmt.Errorf("field \"button\" is required")
+		}
+		return v.VisitButtonWithContext(ctx, *u.button)
 	case "cartesian":
 		if u.cartesian == nil {
 			return fmt.Errorf("field \"cartesian\" is required")
@@ -10489,6 +15103,11 @@ func (u *VizDefinition) AcceptWithContext(ctx context.Context, v VizDefinitionVi
 			return fmt.Errorf("field \"checklist\" is required")
 		}
 		return v.VisitChecklistWithContext(ctx, *u.checklist)
+	case "endNode":
+		if u.endNode == nil {
+			return fmt.Errorf("field \"endNode\" is required")
+		}
+		return v.VisitEndNodeWithContext(ctx, *u.endNode)
 	case "frequency":
 		if u.frequency == nil {
 			return fmt.Errorf("field \"frequency\" is required")
@@ -10509,6 +15128,11 @@ func (u *VizDefinition) AcceptWithContext(ctx context.Context, v VizDefinitionVi
 			return fmt.Errorf("field \"histogram\" is required")
 		}
 		return v.VisitHistogramWithContext(ctx, *u.histogram)
+	case "image":
+		if u.image == nil {
+			return fmt.Errorf("field \"image\" is required")
+		}
+		return v.VisitImageWithContext(ctx, *u.image)
 	case "log":
 		if u.log == nil {
 			return fmt.Errorf("field \"log\" is required")
@@ -10529,11 +15153,21 @@ func (u *VizDefinition) AcceptWithContext(ctx context.Context, v VizDefinitionVi
 			return fmt.Errorf("field \"procedure\" is required")
 		}
 		return v.VisitProcedureWithContext(ctx, *u.procedure)
+	case "shape":
+		if u.shape == nil {
+			return fmt.Errorf("field \"shape\" is required")
+		}
+		return v.VisitShapeWithContext(ctx, *u.shape)
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return fmt.Errorf("field \"timeSeries\" is required")
 		}
 		return v.VisitTimeSeriesWithContext(ctx, *u.timeSeries)
+	case "timeSeriesTable":
+		if u.timeSeriesTable == nil {
+			return fmt.Errorf("field \"timeSeriesTable\" is required")
+		}
+		return v.VisitTimeSeriesTableWithContext(ctx, *u.timeSeriesTable)
 	case "valueTable":
 		if u.valueTable == nil {
 			return fmt.Errorf("field \"valueTable\" is required")
@@ -10548,20 +15182,29 @@ func (u *VizDefinition) AcceptWithContext(ctx context.Context, v VizDefinitionVi
 }
 
 type VizDefinitionVisitorWithContext interface {
+	VisitButtonWithContext(ctx context.Context, v ButtonVizDefinition) error
 	VisitCartesianWithContext(ctx context.Context, v CartesianChartDefinition) error
 	VisitChecklistWithContext(ctx context.Context, v ChecklistChartDefinition) error
+	VisitEndNodeWithContext(ctx context.Context, v EndNodeVizDefinition) error
 	VisitFrequencyWithContext(ctx context.Context, v FrequencyChartDefinition) error
 	VisitGeoWithContext(ctx context.Context, v GeoVizDefinition) error
 	VisitGeo3dWithContext(ctx context.Context, v Geo3dDefinition) error
 	VisitHistogramWithContext(ctx context.Context, v HistogramChartDefinition) error
+	VisitImageWithContext(ctx context.Context, v ImageVizDefinition) error
 	VisitLogWithContext(ctx context.Context, v LogPanelDefinition) error
 	VisitMarkdownWithContext(ctx context.Context, v MarkdownPanelDefinition) error
 	VisitPlotlyWithContext(ctx context.Context, v PlotlyPanelDefinition) error
 	VisitProcedureWithContext(ctx context.Context, v ProcedureVizDefinition) error
+	VisitShapeWithContext(ctx context.Context, v ShapeVizDefinition) error
 	VisitTimeSeriesWithContext(ctx context.Context, v TimeSeriesChartDefinition) error
+	VisitTimeSeriesTableWithContext(ctx context.Context, v TimeSeriesTablePanelDefinition) error
 	VisitValueTableWithContext(ctx context.Context, v ValueTableDefinition) error
 	VisitVideoWithContext(ctx context.Context, v VideoVizDefinition) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewVizDefinitionFromButton(v ButtonVizDefinition) VizDefinition {
+	return VizDefinition{typ: "button", button: &v}
 }
 
 func NewVizDefinitionFromCartesian(v CartesianChartDefinition) VizDefinition {
@@ -10570,6 +15213,10 @@ func NewVizDefinitionFromCartesian(v CartesianChartDefinition) VizDefinition {
 
 func NewVizDefinitionFromChecklist(v ChecklistChartDefinition) VizDefinition {
 	return VizDefinition{typ: "checklist", checklist: &v}
+}
+
+func NewVizDefinitionFromEndNode(v EndNodeVizDefinition) VizDefinition {
+	return VizDefinition{typ: "endNode", endNode: &v}
 }
 
 func NewVizDefinitionFromFrequency(v FrequencyChartDefinition) VizDefinition {
@@ -10588,6 +15235,10 @@ func NewVizDefinitionFromHistogram(v HistogramChartDefinition) VizDefinition {
 	return VizDefinition{typ: "histogram", histogram: &v}
 }
 
+func NewVizDefinitionFromImage(v ImageVizDefinition) VizDefinition {
+	return VizDefinition{typ: "image", image: &v}
+}
+
 func NewVizDefinitionFromLog(v LogPanelDefinition) VizDefinition {
 	return VizDefinition{typ: "log", log: &v}
 }
@@ -10604,8 +15255,16 @@ func NewVizDefinitionFromProcedure(v ProcedureVizDefinition) VizDefinition {
 	return VizDefinition{typ: "procedure", procedure: &v}
 }
 
+func NewVizDefinitionFromShape(v ShapeVizDefinition) VizDefinition {
+	return VizDefinition{typ: "shape", shape: &v}
+}
+
 func NewVizDefinitionFromTimeSeries(v TimeSeriesChartDefinition) VizDefinition {
 	return VizDefinition{typ: "timeSeries", timeSeries: &v}
+}
+
+func NewVizDefinitionFromTimeSeriesTable(v TimeSeriesTablePanelDefinition) VizDefinition {
+	return VizDefinition{typ: "timeSeriesTable", timeSeriesTable: &v}
 }
 
 func NewVizDefinitionFromValueTable(v ValueTableDefinition) VizDefinition {

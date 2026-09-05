@@ -58,6 +58,87 @@ type ColorVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type CommandValueWithT[T any] CommandValue
+
+func (u *CommandValueWithT[T]) Accept(ctx context.Context, v CommandValueVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "floatValue":
+		if u.floatValue == nil {
+			return result, fmt.Errorf("field \"floatValue\" is required")
+		}
+		return v.VisitFloatValue(ctx, *u.floatValue)
+	case "intValue":
+		if u.intValue == nil {
+			return result, fmt.Errorf("field \"intValue\" is required")
+		}
+		return v.VisitIntValue(ctx, *u.intValue)
+	case "enumValue":
+		if u.enumValue == nil {
+			return result, fmt.Errorf("field \"enumValue\" is required")
+		}
+		return v.VisitEnumValue(ctx, *u.enumValue)
+	}
+}
+
+func (u *CommandValueWithT[T]) AcceptFuncs(floatValueFunc func(float64) (T, error), intValueFunc func(CommandIntValue) (T, error), enumValueFunc func(string) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "floatValue":
+		if u.floatValue == nil {
+			return result, fmt.Errorf("field \"floatValue\" is required")
+		}
+		return floatValueFunc(*u.floatValue)
+	case "intValue":
+		if u.intValue == nil {
+			return result, fmt.Errorf("field \"intValue\" is required")
+		}
+		return intValueFunc(*u.intValue)
+	case "enumValue":
+		if u.enumValue == nil {
+			return result, fmt.Errorf("field \"enumValue\" is required")
+		}
+		return enumValueFunc(*u.enumValue)
+	}
+}
+
+func (u *CommandValueWithT[T]) FloatValueNoopSuccess(float64) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CommandValueWithT[T]) IntValueNoopSuccess(CommandIntValue) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CommandValueWithT[T]) EnumValueNoopSuccess(string) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CommandValueWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type CommandValueVisitorWithT[T any] interface {
+	VisitFloatValue(ctx context.Context, v float64) (T, error)
+	VisitIntValue(ctx context.Context, v CommandIntValue) (T, error)
+	VisitEnumValue(ctx context.Context, v string) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type DispositionStateWithT[T any] DispositionState
 
 func (u *DispositionStateWithT[T]) Accept(ctx context.Context, v DispositionStateVisitorWithT[T]) (T, error) {

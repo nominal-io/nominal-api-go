@@ -65,7 +65,11 @@ type EventServiceClient interface {
 	BatchAggregateEvents(ctx context.Context, authHeader bearertoken.Token, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error)
 	// Gets a histogram of events that match the given filters.
 	GetEventsHistogram(ctx context.Context, authHeader bearertoken.Token, requestArg EventsHistogramRequest) (EventsHistogramResponse, error)
-	// Lists the properties and labels of all events in the provided workspaces.
+	/*
+	   Lists the properties and labels of active events in the provided workspaces.
+	   Returns up to 500 of the most-used labels, and up to 500 of the most-used values for each property key.
+	   Property keys are not capped. Response maps and sets are unordered.
+	*/
 	ListPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, requestArg ListPropertiesAndLabelsRequest) (metadata.ListPropertiesAndLabelsResponse, error)
 }
 
@@ -383,7 +387,11 @@ type EventServiceClientWithAuth interface {
 	BatchAggregateEvents(ctx context.Context, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error)
 	// Gets a histogram of events that match the given filters.
 	GetEventsHistogram(ctx context.Context, requestArg EventsHistogramRequest) (EventsHistogramResponse, error)
-	// Lists the properties and labels of all events in the provided workspaces.
+	/*
+	   Lists the properties and labels of active events in the provided workspaces.
+	   Returns up to 500 of the most-used labels, and up to 500 of the most-used values for each property key.
+	   Property keys are not capped. Response maps and sets are unordered.
+	*/
 	ListPropertiesAndLabels(ctx context.Context, requestArg ListPropertiesAndLabelsRequest) (metadata.ListPropertiesAndLabelsResponse, error)
 }
 

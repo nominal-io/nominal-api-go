@@ -10,18 +10,330 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-type CanvasObject struct {
+type CanvasConnection struct {
+	typ string
+	v1  *CanvasConnectionV1
+}
+
+type canvasConnectionDeserializer struct {
+	Type string              `json:"type"`
+	V1   *CanvasConnectionV1 `json:"v1"`
+}
+
+func (u *canvasConnectionDeserializer) toStruct() CanvasConnection {
+	return CanvasConnection{typ: u.Type, v1: u.V1}
+}
+
+func (u *CanvasConnection) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string             `json:"type"`
+			V1   CanvasConnectionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u CanvasConnection) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *CanvasConnection) UnmarshalJSON(data []byte) error {
+	var deser canvasConnectionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u CanvasConnection) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *CanvasConnection) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *CanvasConnection) AcceptFuncs(v1Func func(CanvasConnectionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in CanvasConnection type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *CanvasConnection) V1NoopSuccess(_ CanvasConnectionV1) error {
+	return nil
+}
+
+func (u *CanvasConnection) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *CanvasConnection) Accept(v CanvasConnectionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type CanvasConnectionVisitor interface {
+	VisitV1(v CanvasConnectionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *CanvasConnection) AcceptWithContext(ctx context.Context, v CanvasConnectionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type CanvasConnectionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v CanvasConnectionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewCanvasConnectionFromV1(v CanvasConnectionV1) CanvasConnection {
+	return CanvasConnection{typ: "v1", v1: &v}
+}
+
+// Visual stroke style for a canvas connection.
+type CanvasConnectionStrokeStyle struct {
 	typ   string
-	panel *CanvasPanel
+	solid *SolidStrokeStyle
+	dash  *DashStrokeStyle
+}
+
+type canvasConnectionStrokeStyleDeserializer struct {
+	Type  string            `json:"type"`
+	Solid *SolidStrokeStyle `json:"solid"`
+	Dash  *DashStrokeStyle  `json:"dash"`
+}
+
+func (u *canvasConnectionStrokeStyleDeserializer) toStruct() CanvasConnectionStrokeStyle {
+	return CanvasConnectionStrokeStyle{typ: u.Type, solid: u.Solid, dash: u.Dash}
+}
+
+func (u *CanvasConnectionStrokeStyle) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "solid":
+		if u.solid == nil {
+			return nil, fmt.Errorf("field \"solid\" is required")
+		}
+		return struct {
+			Type  string           `json:"type"`
+			Solid SolidStrokeStyle `json:"solid"`
+		}{Type: "solid", Solid: *u.solid}, nil
+	case "dash":
+		if u.dash == nil {
+			return nil, fmt.Errorf("field \"dash\" is required")
+		}
+		return struct {
+			Type string          `json:"type"`
+			Dash DashStrokeStyle `json:"dash"`
+		}{Type: "dash", Dash: *u.dash}, nil
+	}
+}
+
+func (u CanvasConnectionStrokeStyle) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *CanvasConnectionStrokeStyle) UnmarshalJSON(data []byte) error {
+	var deser canvasConnectionStrokeStyleDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+	case "dash":
+		if u.dash == nil {
+			return fmt.Errorf("field \"dash\" is required")
+		}
+	}
+	return nil
+}
+
+func (u CanvasConnectionStrokeStyle) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *CanvasConnectionStrokeStyle) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *CanvasConnectionStrokeStyle) AcceptFuncs(solidFunc func(SolidStrokeStyle) error, dashFunc func(DashStrokeStyle) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in CanvasConnectionStrokeStyle type")
+		}
+		return unknownFunc(u.typ)
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+		return solidFunc(*u.solid)
+	case "dash":
+		if u.dash == nil {
+			return fmt.Errorf("field \"dash\" is required")
+		}
+		return dashFunc(*u.dash)
+	}
+}
+
+func (u *CanvasConnectionStrokeStyle) SolidNoopSuccess(_ SolidStrokeStyle) error {
+	return nil
+}
+
+func (u *CanvasConnectionStrokeStyle) DashNoopSuccess(_ DashStrokeStyle) error {
+	return nil
+}
+
+func (u *CanvasConnectionStrokeStyle) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *CanvasConnectionStrokeStyle) Accept(v CanvasConnectionStrokeStyleVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+		return v.VisitSolid(*u.solid)
+	case "dash":
+		if u.dash == nil {
+			return fmt.Errorf("field \"dash\" is required")
+		}
+		return v.VisitDash(*u.dash)
+	}
+}
+
+type CanvasConnectionStrokeStyleVisitor interface {
+	VisitSolid(v SolidStrokeStyle) error
+	VisitDash(v DashStrokeStyle) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *CanvasConnectionStrokeStyle) AcceptWithContext(ctx context.Context, v CanvasConnectionStrokeStyleVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "solid":
+		if u.solid == nil {
+			return fmt.Errorf("field \"solid\" is required")
+		}
+		return v.VisitSolidWithContext(ctx, *u.solid)
+	case "dash":
+		if u.dash == nil {
+			return fmt.Errorf("field \"dash\" is required")
+		}
+		return v.VisitDashWithContext(ctx, *u.dash)
+	}
+}
+
+type CanvasConnectionStrokeStyleVisitorWithContext interface {
+	VisitSolidWithContext(ctx context.Context, v SolidStrokeStyle) error
+	VisitDashWithContext(ctx context.Context, v DashStrokeStyle) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewCanvasConnectionStrokeStyleFromSolid(v SolidStrokeStyle) CanvasConnectionStrokeStyle {
+	return CanvasConnectionStrokeStyle{typ: "solid", solid: &v}
+}
+
+func NewCanvasConnectionStrokeStyleFromDash(v DashStrokeStyle) CanvasConnectionStrokeStyle {
+	return CanvasConnectionStrokeStyle{typ: "dash", dash: &v}
+}
+
+type CanvasObject struct {
+	typ        string
+	panel      *CanvasPanel
+	connection *CanvasConnection
 }
 
 type canvasObjectDeserializer struct {
-	Type  string       `json:"type"`
-	Panel *CanvasPanel `json:"panel"`
+	Type       string            `json:"type"`
+	Panel      *CanvasPanel      `json:"panel"`
+	Connection *CanvasConnection `json:"connection"`
 }
 
 func (u *canvasObjectDeserializer) toStruct() CanvasObject {
-	return CanvasObject{typ: u.Type, panel: u.Panel}
+	return CanvasObject{typ: u.Type, panel: u.Panel, connection: u.Connection}
 }
 
 func (u *CanvasObject) toSerializer() (interface{}, error) {
@@ -36,6 +348,14 @@ func (u *CanvasObject) toSerializer() (interface{}, error) {
 			Type  string      `json:"type"`
 			Panel CanvasPanel `json:"panel"`
 		}{Type: "panel", Panel: *u.panel}, nil
+	case "connection":
+		if u.connection == nil {
+			return nil, fmt.Errorf("field \"connection\" is required")
+		}
+		return struct {
+			Type       string           `json:"type"`
+			Connection CanvasConnection `json:"connection"`
+		}{Type: "connection", Connection: *u.connection}, nil
 	}
 }
 
@@ -58,6 +378,10 @@ func (u *CanvasObject) UnmarshalJSON(data []byte) error {
 		if u.panel == nil {
 			return fmt.Errorf("field \"panel\" is required")
 		}
+	case "connection":
+		if u.connection == nil {
+			return fmt.Errorf("field \"connection\" is required")
+		}
 	}
 	return nil
 }
@@ -78,7 +402,7 @@ func (u *CanvasObject) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *CanvasObject) AcceptFuncs(panelFunc func(CanvasPanel) error, unknownFunc func(string) error) error {
+func (u *CanvasObject) AcceptFuncs(panelFunc func(CanvasPanel) error, connectionFunc func(CanvasConnection) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -90,10 +414,19 @@ func (u *CanvasObject) AcceptFuncs(panelFunc func(CanvasPanel) error, unknownFun
 			return fmt.Errorf("field \"panel\" is required")
 		}
 		return panelFunc(*u.panel)
+	case "connection":
+		if u.connection == nil {
+			return fmt.Errorf("field \"connection\" is required")
+		}
+		return connectionFunc(*u.connection)
 	}
 }
 
 func (u *CanvasObject) PanelNoopSuccess(_ CanvasPanel) error {
+	return nil
+}
+
+func (u *CanvasObject) ConnectionNoopSuccess(_ CanvasConnection) error {
 	return nil
 }
 
@@ -113,11 +446,17 @@ func (u *CanvasObject) Accept(v CanvasObjectVisitor) error {
 			return fmt.Errorf("field \"panel\" is required")
 		}
 		return v.VisitPanel(*u.panel)
+	case "connection":
+		if u.connection == nil {
+			return fmt.Errorf("field \"connection\" is required")
+		}
+		return v.VisitConnection(*u.connection)
 	}
 }
 
 type CanvasObjectVisitor interface {
 	VisitPanel(v CanvasPanel) error
+	VisitConnection(v CanvasConnection) error
 	VisitUnknown(typeName string) error
 }
 
@@ -133,16 +472,26 @@ func (u *CanvasObject) AcceptWithContext(ctx context.Context, v CanvasObjectVisi
 			return fmt.Errorf("field \"panel\" is required")
 		}
 		return v.VisitPanelWithContext(ctx, *u.panel)
+	case "connection":
+		if u.connection == nil {
+			return fmt.Errorf("field \"connection\" is required")
+		}
+		return v.VisitConnectionWithContext(ctx, *u.connection)
 	}
 }
 
 type CanvasObjectVisitorWithContext interface {
 	VisitPanelWithContext(ctx context.Context, v CanvasPanel) error
+	VisitConnectionWithContext(ctx context.Context, v CanvasConnection) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
 func NewCanvasObjectFromPanel(v CanvasPanel) CanvasObject {
 	return CanvasObject{typ: "panel", panel: &v}
+}
+
+func NewCanvasObjectFromConnection(v CanvasConnection) CanvasObject {
+	return CanvasObject{typ: "connection", connection: &v}
 }
 
 type ChartPanel struct {
@@ -278,6 +627,141 @@ type ChartPanelVisitorWithContext interface {
 
 func NewChartPanelFromV1(v ChartPanelV1) ChartPanel {
 	return ChartPanel{typ: "v1", v1: &v}
+}
+
+type DocumentNodeObject struct {
+	typ   string
+	panel *DocumentPanel
+}
+
+type documentNodeObjectDeserializer struct {
+	Type  string         `json:"type"`
+	Panel *DocumentPanel `json:"panel"`
+}
+
+func (u *documentNodeObjectDeserializer) toStruct() DocumentNodeObject {
+	return DocumentNodeObject{typ: u.Type, panel: u.Panel}
+}
+
+func (u *DocumentNodeObject) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "panel":
+		if u.panel == nil {
+			return nil, fmt.Errorf("field \"panel\" is required")
+		}
+		return struct {
+			Type  string        `json:"type"`
+			Panel DocumentPanel `json:"panel"`
+		}{Type: "panel", Panel: *u.panel}, nil
+	}
+}
+
+func (u DocumentNodeObject) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *DocumentNodeObject) UnmarshalJSON(data []byte) error {
+	var deser documentNodeObjectDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "panel":
+		if u.panel == nil {
+			return fmt.Errorf("field \"panel\" is required")
+		}
+	}
+	return nil
+}
+
+func (u DocumentNodeObject) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *DocumentNodeObject) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *DocumentNodeObject) AcceptFuncs(panelFunc func(DocumentPanel) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in DocumentNodeObject type")
+		}
+		return unknownFunc(u.typ)
+	case "panel":
+		if u.panel == nil {
+			return fmt.Errorf("field \"panel\" is required")
+		}
+		return panelFunc(*u.panel)
+	}
+}
+
+func (u *DocumentNodeObject) PanelNoopSuccess(_ DocumentPanel) error {
+	return nil
+}
+
+func (u *DocumentNodeObject) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *DocumentNodeObject) Accept(v DocumentNodeObjectVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "panel":
+		if u.panel == nil {
+			return fmt.Errorf("field \"panel\" is required")
+		}
+		return v.VisitPanel(*u.panel)
+	}
+}
+
+type DocumentNodeObjectVisitor interface {
+	VisitPanel(v DocumentPanel) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *DocumentNodeObject) AcceptWithContext(ctx context.Context, v DocumentNodeObjectVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "panel":
+		if u.panel == nil {
+			return fmt.Errorf("field \"panel\" is required")
+		}
+		return v.VisitPanelWithContext(ctx, *u.panel)
+	}
+}
+
+type DocumentNodeObjectVisitorWithContext interface {
+	VisitPanelWithContext(ctx context.Context, v DocumentPanel) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewDocumentNodeObjectFromPanel(v DocumentPanel) DocumentNodeObject {
+	return DocumentNodeObject{typ: "panel", panel: &v}
 }
 
 type EmptyPanel struct {
@@ -416,27 +900,31 @@ func NewEmptyPanelFromV1(v EmptyPanelV1) EmptyPanel {
 }
 
 type Panel struct {
-	typ    string
-	viz    *VizPanel
-	chart  *ChartPanel
-	empty  *EmptyPanel
-	split  *SplitPanel
-	tabbed *TabbedPanel
-	canvas *CanvasLayout
+	typ      string
+	viz      *VizPanel
+	chart    *ChartPanel
+	empty    *EmptyPanel
+	split    *SplitPanel
+	tabbed   *TabbedPanel
+	canvas   *CanvasLayout
+	document *DocumentLayout
+	analyst  *AnalystLayout
 }
 
 type panelDeserializer struct {
-	Type   string        `json:"type"`
-	Viz    *VizPanel     `json:"viz"`
-	Chart  *ChartPanel   `json:"chart"`
-	Empty  *EmptyPanel   `json:"empty"`
-	Split  *SplitPanel   `json:"split"`
-	Tabbed *TabbedPanel  `json:"tabbed"`
-	Canvas *CanvasLayout `json:"canvas"`
+	Type     string          `json:"type"`
+	Viz      *VizPanel       `json:"viz"`
+	Chart    *ChartPanel     `json:"chart"`
+	Empty    *EmptyPanel     `json:"empty"`
+	Split    *SplitPanel     `json:"split"`
+	Tabbed   *TabbedPanel    `json:"tabbed"`
+	Canvas   *CanvasLayout   `json:"canvas"`
+	Document *DocumentLayout `json:"document"`
+	Analyst  *AnalystLayout  `json:"analyst"`
 }
 
 func (u *panelDeserializer) toStruct() Panel {
-	return Panel{typ: u.Type, viz: u.Viz, chart: u.Chart, empty: u.Empty, split: u.Split, tabbed: u.Tabbed, canvas: u.Canvas}
+	return Panel{typ: u.Type, viz: u.Viz, chart: u.Chart, empty: u.Empty, split: u.Split, tabbed: u.Tabbed, canvas: u.Canvas, document: u.Document, analyst: u.Analyst}
 }
 
 func (u *Panel) toSerializer() (interface{}, error) {
@@ -491,6 +979,22 @@ func (u *Panel) toSerializer() (interface{}, error) {
 			Type   string       `json:"type"`
 			Canvas CanvasLayout `json:"canvas"`
 		}{Type: "canvas", Canvas: *u.canvas}, nil
+	case "document":
+		if u.document == nil {
+			return nil, fmt.Errorf("field \"document\" is required")
+		}
+		return struct {
+			Type     string         `json:"type"`
+			Document DocumentLayout `json:"document"`
+		}{Type: "document", Document: *u.document}, nil
+	case "analyst":
+		if u.analyst == nil {
+			return nil, fmt.Errorf("field \"analyst\" is required")
+		}
+		return struct {
+			Type    string        `json:"type"`
+			Analyst AnalystLayout `json:"analyst"`
+		}{Type: "analyst", Analyst: *u.analyst}, nil
 	}
 }
 
@@ -533,6 +1037,14 @@ func (u *Panel) UnmarshalJSON(data []byte) error {
 		if u.canvas == nil {
 			return fmt.Errorf("field \"canvas\" is required")
 		}
+	case "document":
+		if u.document == nil {
+			return fmt.Errorf("field \"document\" is required")
+		}
+	case "analyst":
+		if u.analyst == nil {
+			return fmt.Errorf("field \"analyst\" is required")
+		}
 	}
 	return nil
 }
@@ -553,7 +1065,7 @@ func (u *Panel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPanel) error, emptyFunc func(EmptyPanel) error, splitFunc func(SplitPanel) error, tabbedFunc func(TabbedPanel) error, canvasFunc func(CanvasLayout) error, unknownFunc func(string) error) error {
+func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPanel) error, emptyFunc func(EmptyPanel) error, splitFunc func(SplitPanel) error, tabbedFunc func(TabbedPanel) error, canvasFunc func(CanvasLayout) error, documentFunc func(DocumentLayout) error, analystFunc func(AnalystLayout) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -590,6 +1102,16 @@ func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPa
 			return fmt.Errorf("field \"canvas\" is required")
 		}
 		return canvasFunc(*u.canvas)
+	case "document":
+		if u.document == nil {
+			return fmt.Errorf("field \"document\" is required")
+		}
+		return documentFunc(*u.document)
+	case "analyst":
+		if u.analyst == nil {
+			return fmt.Errorf("field \"analyst\" is required")
+		}
+		return analystFunc(*u.analyst)
 	}
 }
 
@@ -614,6 +1136,14 @@ func (u *Panel) TabbedNoopSuccess(_ TabbedPanel) error {
 }
 
 func (u *Panel) CanvasNoopSuccess(_ CanvasLayout) error {
+	return nil
+}
+
+func (u *Panel) DocumentNoopSuccess(_ DocumentLayout) error {
+	return nil
+}
+
+func (u *Panel) AnalystNoopSuccess(_ AnalystLayout) error {
 	return nil
 }
 
@@ -658,6 +1188,16 @@ func (u *Panel) Accept(v PanelVisitor) error {
 			return fmt.Errorf("field \"canvas\" is required")
 		}
 		return v.VisitCanvas(*u.canvas)
+	case "document":
+		if u.document == nil {
+			return fmt.Errorf("field \"document\" is required")
+		}
+		return v.VisitDocument(*u.document)
+	case "analyst":
+		if u.analyst == nil {
+			return fmt.Errorf("field \"analyst\" is required")
+		}
+		return v.VisitAnalyst(*u.analyst)
 	}
 }
 
@@ -668,6 +1208,8 @@ type PanelVisitor interface {
 	VisitSplit(v SplitPanel) error
 	VisitTabbed(v TabbedPanel) error
 	VisitCanvas(v CanvasLayout) error
+	VisitDocument(v DocumentLayout) error
+	VisitAnalyst(v AnalystLayout) error
 	VisitUnknown(typeName string) error
 }
 
@@ -708,6 +1250,16 @@ func (u *Panel) AcceptWithContext(ctx context.Context, v PanelVisitorWithContext
 			return fmt.Errorf("field \"canvas\" is required")
 		}
 		return v.VisitCanvasWithContext(ctx, *u.canvas)
+	case "document":
+		if u.document == nil {
+			return fmt.Errorf("field \"document\" is required")
+		}
+		return v.VisitDocumentWithContext(ctx, *u.document)
+	case "analyst":
+		if u.analyst == nil {
+			return fmt.Errorf("field \"analyst\" is required")
+		}
+		return v.VisitAnalystWithContext(ctx, *u.analyst)
 	}
 }
 
@@ -718,6 +1270,8 @@ type PanelVisitorWithContext interface {
 	VisitSplitWithContext(ctx context.Context, v SplitPanel) error
 	VisitTabbedWithContext(ctx context.Context, v TabbedPanel) error
 	VisitCanvasWithContext(ctx context.Context, v CanvasLayout) error
+	VisitDocumentWithContext(ctx context.Context, v DocumentLayout) error
+	VisitAnalystWithContext(ctx context.Context, v AnalystLayout) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -743,6 +1297,14 @@ func NewPanelFromTabbed(v TabbedPanel) Panel {
 
 func NewPanelFromCanvas(v CanvasLayout) Panel {
 	return Panel{typ: "canvas", canvas: &v}
+}
+
+func NewPanelFromDocument(v DocumentLayout) Panel {
+	return Panel{typ: "document", document: &v}
+}
+
+func NewPanelFromAnalyst(v AnalystLayout) Panel {
+	return Panel{typ: "analyst", analyst: &v}
 }
 
 type SingleTab struct {

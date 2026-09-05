@@ -64,10 +64,12 @@ func (o *AddDataScopesToAssetRequest) UnmarshalYAML(unmarshal func(interface{}) 
 
 // safelogging:@Unsafe
 type Asset struct {
-	Rid         api.AssetRid                             `json:"rid" safelogging:"@Safe"`
-	Title       string                                   `json:"title"`
-	Description *string                                  `json:"description,omitempty"`
-	Properties  map[api1.PropertyName]api1.PropertyValue `json:"properties"`
+	Rid         api.AssetRid `json:"rid" safelogging:"@Safe"`
+	Title       string       `json:"title"`
+	Description *string      `json:"description,omitempty"`
+	// Deprecated: use typedProperties
+	Properties      map[api1.PropertyName]api1.PropertyValue      `json:"properties"`
+	TypedProperties map[api1.PropertyName]api1.TypedPropertyValue `json:"typedProperties"`
 	/*
 	   Labels associated with the asset. These labels do not have a time dimension.
 	   To associate labels with a range of time, create a time range on the asset with labels.
@@ -88,11 +90,19 @@ type Asset struct {
 	// Auto created assets are considered staged by default.
 	IsStaged   bool `json:"isStaged"`
 	IsArchived bool `json:"isArchived"`
+	/*
+	   The dataset that backs this asset's data. Absent when none of the asset's data scopes
+	   could be mirrored into a dataset.
+	*/
+	DatasetRid *rids.DatasetRid `json:"datasetRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o Asset) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
 		o.Properties = make(map[api1.PropertyName]api1.PropertyValue)
+	}
+	if o.TypedProperties == nil {
+		o.TypedProperties = make(map[api1.PropertyName]api1.TypedPropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api1.Label, 0)
@@ -118,6 +128,9 @@ func (o *Asset) UnmarshalJSON(data []byte) error {
 	}
 	if rawAsset.Properties == nil {
 		rawAsset.Properties = make(map[api1.PropertyName]api1.PropertyValue)
+	}
+	if rawAsset.TypedProperties == nil {
+		rawAsset.TypedProperties = make(map[api1.PropertyName]api1.TypedPropertyValue)
 	}
 	if rawAsset.Labels == nil {
 		rawAsset.Labels = make([]api1.Label, 0)
@@ -403,11 +416,13 @@ func (o *CreateAssetDataScope) UnmarshalYAML(unmarshal func(interface{}) error) 
 
 // safelogging:@Unsafe
 type CreateAssetRequest struct {
-	Title       string                                   `json:"title"`
-	Description *string                                  `json:"description,omitempty"`
-	Properties  map[api1.PropertyName]api1.PropertyValue `json:"properties"`
-	Labels      []api1.Label                             `json:"labels" safelogging:"@Unsafe"`
-	Links       []api2.Link                              `json:"links"`
+	Title       string  `json:"title"`
+	Description *string `json:"description,omitempty"`
+	// Deprecated: use typedProperties
+	Properties      map[api1.PropertyName]api1.PropertyValue      `json:"properties"`
+	TypedProperties map[api1.PropertyName]api1.TypedPropertyValue `json:"typedProperties"`
+	Labels          []api1.Label                                  `json:"labels" safelogging:"@Unsafe"`
+	Links           []api2.Link                                   `json:"links"`
 	// The data scopes associated with the asset.
 	DataScopes  []CreateAssetDataScope `json:"dataScopes"`
 	Attachments []rids.AttachmentRid   `json:"attachments" safelogging:"@Safe"`
@@ -424,6 +439,9 @@ type CreateAssetRequest struct {
 func (o CreateAssetRequest) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
 		o.Properties = make(map[api1.PropertyName]api1.PropertyValue)
+	}
+	if o.TypedProperties == nil {
+		o.TypedProperties = make(map[api1.PropertyName]api1.TypedPropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api1.Label, 0)
@@ -449,6 +467,9 @@ func (o *CreateAssetRequest) UnmarshalJSON(data []byte) error {
 	}
 	if rawCreateAssetRequest.Properties == nil {
 		rawCreateAssetRequest.Properties = make(map[api1.PropertyName]api1.PropertyValue)
+	}
+	if rawCreateAssetRequest.TypedProperties == nil {
+		rawCreateAssetRequest.TypedProperties = make(map[api1.PropertyName]api1.TypedPropertyValue)
 	}
 	if rawCreateAssetRequest.Labels == nil {
 		rawCreateAssetRequest.Labels = make([]api1.Label, 0)
@@ -706,6 +727,12 @@ type SearchAssetsRequest struct {
 	Query         SearchAssetsQuery `json:"query"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search.
 	ArchivedStatuses *[]api1.ArchivedStatus `json:"archivedStatuses,omitempty"`
+	/*
+	   When true, the response populates totalCount with the number of assets matching the query. Defaults to
+	   false. Computing the count is an additional query whose cost grows with the size of the matching set, so
+	   only set this when the count is needed.
+	*/
+	IncludeMatchCount *bool `json:"includeMatchCount,omitempty"`
 }
 
 func (o SearchAssetsRequest) MarshalYAML() (interface{}, error) {
@@ -728,6 +755,11 @@ func (o *SearchAssetsRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 type SearchAssetsResponse struct {
 	Results       []Asset     `json:"results"`
 	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+	/*
+	   The number of assets matching the query, workspace, and archived filters. Present only when
+	   includeMatchCount was set to true on the request.
+	*/
+	TotalCount *int `json:"totalCount,omitempty"`
 }
 
 func (o SearchAssetsResponse) MarshalJSON() ([]byte, error) {
@@ -983,11 +1015,13 @@ func (o *UpdateAssetRefNamesRequest) UnmarshalYAML(unmarshal func(interface{}) e
 
 // safelogging:@Unsafe
 type UpdateAssetRequest struct {
-	Title       *string                                   `json:"title,omitempty"`
-	Description *string                                   `json:"description,omitempty"`
-	Properties  *map[api1.PropertyName]api1.PropertyValue `json:"properties,omitempty"`
-	Labels      *[]api1.Label                             `json:"labels,omitempty" safelogging:"@Unsafe"`
-	Links       *[]api2.Link                              `json:"links,omitempty"`
+	Title       *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+	// Deprecated: use typedProperties
+	Properties      *map[api1.PropertyName]api1.PropertyValue      `json:"properties,omitempty"`
+	TypedProperties *map[api1.PropertyName]api1.TypedPropertyValue `json:"typedProperties,omitempty"`
+	Labels          *[]api1.Label                                  `json:"labels,omitempty" safelogging:"@Unsafe"`
+	Links           *[]api2.Link                                   `json:"links,omitempty"`
 	// The data scopes for the asset. This will replace all existing data scopes with the scopes specified.
 	DataScopes *[]CreateAssetDataScope  `json:"dataScopes,omitempty"`
 	Type       *UpdateOrRemoveAssetType `json:"type,omitempty"`

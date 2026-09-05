@@ -17,12 +17,13 @@ const (
 	DataSourceType_CONNECTION DataSourceType_Value = "CONNECTION"
 	DataSourceType_LOGSET     DataSourceType_Value = "LOGSET"
 	DataSourceType_VIDEO      DataSourceType_Value = "VIDEO"
+	DataSourceType_SPATIAL    DataSourceType_Value = "SPATIAL"
 	DataSourceType_UNKNOWN    DataSourceType_Value = "UNKNOWN"
 )
 
 // DataSourceType_Values returns all known variants of DataSourceType.
 func DataSourceType_Values() []DataSourceType_Value {
-	return []DataSourceType_Value{DataSourceType_DATASET, DataSourceType_CONNECTION, DataSourceType_LOGSET, DataSourceType_VIDEO}
+	return []DataSourceType_Value{DataSourceType_DATASET, DataSourceType_CONNECTION, DataSourceType_LOGSET, DataSourceType_VIDEO, DataSourceType_SPATIAL}
 }
 
 func New_DataSourceType(value DataSourceType_Value) DataSourceType {
@@ -32,7 +33,7 @@ func New_DataSourceType(value DataSourceType_Value) DataSourceType {
 // IsUnknown returns false for all known variants of DataSourceType and true otherwise.
 func (e DataSourceType) IsUnknown() bool {
 	switch e.val {
-	case DataSourceType_DATASET, DataSourceType_CONNECTION, DataSourceType_LOGSET, DataSourceType_VIDEO:
+	case DataSourceType_DATASET, DataSourceType_CONNECTION, DataSourceType_LOGSET, DataSourceType_VIDEO, DataSourceType_SPATIAL:
 		return false
 	}
 	return true
@@ -65,6 +66,66 @@ func (e *DataSourceType) UnmarshalText(data []byte) error {
 		*e = New_DataSourceType(DataSourceType_LOGSET)
 	case "VIDEO":
 		*e = New_DataSourceType(DataSourceType_VIDEO)
+	case "SPATIAL":
+		*e = New_DataSourceType(DataSourceType_SPATIAL)
+	}
+	return nil
+}
+
+// Whether the run is locked, preventing any changes from being made.
+type LockStatus struct {
+	val LockStatus_Value
+}
+
+type LockStatus_Value string
+
+const (
+	LockStatus_LOCKED   LockStatus_Value = "LOCKED"
+	LockStatus_UNLOCKED LockStatus_Value = "UNLOCKED"
+	LockStatus_UNKNOWN  LockStatus_Value = "UNKNOWN"
+)
+
+// LockStatus_Values returns all known variants of LockStatus.
+func LockStatus_Values() []LockStatus_Value {
+	return []LockStatus_Value{LockStatus_LOCKED, LockStatus_UNLOCKED}
+}
+
+func New_LockStatus(value LockStatus_Value) LockStatus {
+	return LockStatus{val: value}
+}
+
+// IsUnknown returns false for all known variants of LockStatus and true otherwise.
+func (e LockStatus) IsUnknown() bool {
+	switch e.val {
+	case LockStatus_LOCKED, LockStatus_UNLOCKED:
+		return false
+	}
+	return true
+}
+
+func (e LockStatus) Value() LockStatus_Value {
+	if e.IsUnknown() {
+		return LockStatus_UNKNOWN
+	}
+	return e.val
+}
+
+func (e LockStatus) String() string {
+	return string(e.val)
+}
+
+func (e LockStatus) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *LockStatus) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_LockStatus(LockStatus_Value(v))
+	case "LOCKED":
+		*e = New_LockStatus(LockStatus_LOCKED)
+	case "UNLOCKED":
+		*e = New_LockStatus(LockStatus_UNLOCKED)
 	}
 	return nil
 }

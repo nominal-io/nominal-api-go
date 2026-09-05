@@ -1562,6 +1562,7 @@ type VideoFileTimestampManifest struct {
 	typ        string
 	mcap       *McapTimestampManifest
 	s3path     *api.S3Path
+	s3paths    *[]api.S3Path
 	noManifest *NoTimestampManifest
 }
 
@@ -1569,11 +1570,12 @@ type videoFileTimestampManifestDeserializer struct {
 	Type       string                 `json:"type"`
 	Mcap       *McapTimestampManifest `json:"mcap"`
 	S3path     *api.S3Path            `json:"s3path"`
+	S3paths    *[]api.S3Path          `json:"s3paths"`
 	NoManifest *NoTimestampManifest   `json:"noManifest"`
 }
 
 func (u *videoFileTimestampManifestDeserializer) toStruct() VideoFileTimestampManifest {
-	return VideoFileTimestampManifest{typ: u.Type, mcap: u.Mcap, s3path: u.S3path, noManifest: u.NoManifest}
+	return VideoFileTimestampManifest{typ: u.Type, mcap: u.Mcap, s3path: u.S3path, s3paths: u.S3paths, noManifest: u.NoManifest}
 }
 
 func (u *VideoFileTimestampManifest) toSerializer() (interface{}, error) {
@@ -1596,6 +1598,14 @@ func (u *VideoFileTimestampManifest) toSerializer() (interface{}, error) {
 			Type   string     `json:"type"`
 			S3path api.S3Path `json:"s3path"`
 		}{Type: "s3path", S3path: *u.s3path}, nil
+	case "s3paths":
+		if u.s3paths == nil {
+			return nil, fmt.Errorf("field \"s3paths\" is required")
+		}
+		return struct {
+			Type    string       `json:"type"`
+			S3paths []api.S3Path `json:"s3paths"`
+		}{Type: "s3paths", S3paths: *u.s3paths}, nil
 	case "noManifest":
 		if u.noManifest == nil {
 			return nil, fmt.Errorf("field \"noManifest\" is required")
@@ -1630,6 +1640,10 @@ func (u *VideoFileTimestampManifest) UnmarshalJSON(data []byte) error {
 		if u.s3path == nil {
 			return fmt.Errorf("field \"s3path\" is required")
 		}
+	case "s3paths":
+		if u.s3paths == nil {
+			return fmt.Errorf("field \"s3paths\" is required")
+		}
 	case "noManifest":
 		if u.noManifest == nil {
 			return fmt.Errorf("field \"noManifest\" is required")
@@ -1654,7 +1668,7 @@ func (u *VideoFileTimestampManifest) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *VideoFileTimestampManifest) AcceptFuncs(mcapFunc func(McapTimestampManifest) error, s3pathFunc func(api.S3Path) error, noManifestFunc func(NoTimestampManifest) error, unknownFunc func(string) error) error {
+func (u *VideoFileTimestampManifest) AcceptFuncs(mcapFunc func(McapTimestampManifest) error, s3pathFunc func(api.S3Path) error, s3pathsFunc func([]api.S3Path) error, noManifestFunc func(NoTimestampManifest) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1671,6 +1685,11 @@ func (u *VideoFileTimestampManifest) AcceptFuncs(mcapFunc func(McapTimestampMani
 			return fmt.Errorf("field \"s3path\" is required")
 		}
 		return s3pathFunc(*u.s3path)
+	case "s3paths":
+		if u.s3paths == nil {
+			return fmt.Errorf("field \"s3paths\" is required")
+		}
+		return s3pathsFunc(*u.s3paths)
 	case "noManifest":
 		if u.noManifest == nil {
 			return fmt.Errorf("field \"noManifest\" is required")
@@ -1684,6 +1703,10 @@ func (u *VideoFileTimestampManifest) McapNoopSuccess(_ McapTimestampManifest) er
 }
 
 func (u *VideoFileTimestampManifest) S3pathNoopSuccess(_ api.S3Path) error {
+	return nil
+}
+
+func (u *VideoFileTimestampManifest) S3pathsNoopSuccess(_ []api.S3Path) error {
 	return nil
 }
 
@@ -1712,6 +1735,11 @@ func (u *VideoFileTimestampManifest) Accept(v VideoFileTimestampManifestVisitor)
 			return fmt.Errorf("field \"s3path\" is required")
 		}
 		return v.VisitS3path(*u.s3path)
+	case "s3paths":
+		if u.s3paths == nil {
+			return fmt.Errorf("field \"s3paths\" is required")
+		}
+		return v.VisitS3paths(*u.s3paths)
 	case "noManifest":
 		if u.noManifest == nil {
 			return fmt.Errorf("field \"noManifest\" is required")
@@ -1723,6 +1751,7 @@ func (u *VideoFileTimestampManifest) Accept(v VideoFileTimestampManifestVisitor)
 type VideoFileTimestampManifestVisitor interface {
 	VisitMcap(v McapTimestampManifest) error
 	VisitS3path(v api.S3Path) error
+	VisitS3paths(v []api.S3Path) error
 	VisitNoManifest(v NoTimestampManifest) error
 	VisitUnknown(typeName string) error
 }
@@ -1744,6 +1773,11 @@ func (u *VideoFileTimestampManifest) AcceptWithContext(ctx context.Context, v Vi
 			return fmt.Errorf("field \"s3path\" is required")
 		}
 		return v.VisitS3pathWithContext(ctx, *u.s3path)
+	case "s3paths":
+		if u.s3paths == nil {
+			return fmt.Errorf("field \"s3paths\" is required")
+		}
+		return v.VisitS3pathsWithContext(ctx, *u.s3paths)
 	case "noManifest":
 		if u.noManifest == nil {
 			return fmt.Errorf("field \"noManifest\" is required")
@@ -1755,6 +1789,7 @@ func (u *VideoFileTimestampManifest) AcceptWithContext(ctx context.Context, v Vi
 type VideoFileTimestampManifestVisitorWithContext interface {
 	VisitMcapWithContext(ctx context.Context, v McapTimestampManifest) error
 	VisitS3pathWithContext(ctx context.Context, v api.S3Path) error
+	VisitS3pathsWithContext(ctx context.Context, v []api.S3Path) error
 	VisitNoManifestWithContext(ctx context.Context, v NoTimestampManifest) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
@@ -1765,6 +1800,10 @@ func NewVideoFileTimestampManifestFromMcap(v McapTimestampManifest) VideoFileTim
 
 func NewVideoFileTimestampManifestFromS3path(v api.S3Path) VideoFileTimestampManifest {
 	return VideoFileTimestampManifest{typ: "s3path", s3path: &v}
+}
+
+func NewVideoFileTimestampManifestFromS3paths(v []api.S3Path) VideoFileTimestampManifest {
+	return VideoFileTimestampManifest{typ: "s3paths", s3paths: &v}
 }
 
 func NewVideoFileTimestampManifestFromNoManifest(v NoTimestampManifest) VideoFileTimestampManifest {

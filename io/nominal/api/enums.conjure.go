@@ -63,6 +63,64 @@ func (e *ArchivedStatus) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// Classifies how a channel is used. COMMAND channels accept commands through the Command Service.
+type ChannelKind struct {
+	val ChannelKind_Value
+}
+
+type ChannelKind_Value string
+
+const (
+	ChannelKind_STANDARD ChannelKind_Value = "STANDARD"
+	ChannelKind_COMMAND  ChannelKind_Value = "COMMAND"
+	ChannelKind_UNKNOWN  ChannelKind_Value = "UNKNOWN"
+)
+
+// ChannelKind_Values returns all known variants of ChannelKind.
+func ChannelKind_Values() []ChannelKind_Value {
+	return []ChannelKind_Value{ChannelKind_STANDARD, ChannelKind_COMMAND}
+}
+
+func New_ChannelKind(value ChannelKind_Value) ChannelKind {
+	return ChannelKind{val: value}
+}
+
+// IsUnknown returns false for all known variants of ChannelKind and true otherwise.
+func (e ChannelKind) IsUnknown() bool {
+	switch e.val {
+	case ChannelKind_STANDARD, ChannelKind_COMMAND:
+		return false
+	}
+	return true
+}
+
+func (e ChannelKind) Value() ChannelKind_Value {
+	if e.IsUnknown() {
+		return ChannelKind_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ChannelKind) String() string {
+	return string(e.val)
+}
+
+func (e ChannelKind) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ChannelKind) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ChannelKind(ChannelKind_Value(v))
+	case "STANDARD":
+		*e = New_ChannelKind(ChannelKind_STANDARD)
+	case "COMMAND":
+		*e = New_ChannelKind(ChannelKind_COMMAND)
+	}
+	return nil
+}
+
 type DataSourceType struct {
 	val DataSourceType_Value
 }
@@ -73,12 +131,13 @@ const (
 	DataSourceType_DATASET    DataSourceType_Value = "DATASET"
 	DataSourceType_CONNECTION DataSourceType_Value = "CONNECTION"
 	DataSourceType_VIDEO      DataSourceType_Value = "VIDEO"
+	DataSourceType_SPATIAL    DataSourceType_Value = "SPATIAL"
 	DataSourceType_UNKNOWN    DataSourceType_Value = "UNKNOWN"
 )
 
 // DataSourceType_Values returns all known variants of DataSourceType.
 func DataSourceType_Values() []DataSourceType_Value {
-	return []DataSourceType_Value{DataSourceType_DATASET, DataSourceType_CONNECTION, DataSourceType_VIDEO}
+	return []DataSourceType_Value{DataSourceType_DATASET, DataSourceType_CONNECTION, DataSourceType_VIDEO, DataSourceType_SPATIAL}
 }
 
 func New_DataSourceType(value DataSourceType_Value) DataSourceType {
@@ -88,7 +147,7 @@ func New_DataSourceType(value DataSourceType_Value) DataSourceType {
 // IsUnknown returns false for all known variants of DataSourceType and true otherwise.
 func (e DataSourceType) IsUnknown() bool {
 	switch e.val {
-	case DataSourceType_DATASET, DataSourceType_CONNECTION, DataSourceType_VIDEO:
+	case DataSourceType_DATASET, DataSourceType_CONNECTION, DataSourceType_VIDEO, DataSourceType_SPATIAL:
 		return false
 	}
 	return true
@@ -119,6 +178,8 @@ func (e *DataSourceType) UnmarshalText(data []byte) error {
 		*e = New_DataSourceType(DataSourceType_CONNECTION)
 	case "VIDEO":
 		*e = New_DataSourceType(DataSourceType_VIDEO)
+	case "SPATIAL":
+		*e = New_DataSourceType(DataSourceType_SPATIAL)
 	}
 	return nil
 }
@@ -130,14 +191,13 @@ type Granularity struct {
 type Granularity_Value string
 
 const (
-	Granularity_PICOSECONDS Granularity_Value = "PICOSECONDS"
 	Granularity_NANOSECONDS Granularity_Value = "NANOSECONDS"
 	Granularity_UNKNOWN     Granularity_Value = "UNKNOWN"
 )
 
 // Granularity_Values returns all known variants of Granularity.
 func Granularity_Values() []Granularity_Value {
-	return []Granularity_Value{Granularity_PICOSECONDS, Granularity_NANOSECONDS}
+	return []Granularity_Value{Granularity_NANOSECONDS}
 }
 
 func New_Granularity(value Granularity_Value) Granularity {
@@ -147,7 +207,7 @@ func New_Granularity(value Granularity_Value) Granularity {
 // IsUnknown returns false for all known variants of Granularity and true otherwise.
 func (e Granularity) IsUnknown() bool {
 	switch e.val {
-	case Granularity_PICOSECONDS, Granularity_NANOSECONDS:
+	case Granularity_NANOSECONDS:
 		return false
 	}
 	return true
@@ -172,8 +232,6 @@ func (e *Granularity) UnmarshalText(data []byte) error {
 	switch v := strings.ToUpper(string(data)); v {
 	default:
 		*e = New_Granularity(Granularity_Value(v))
-	case "PICOSECONDS":
-		*e = New_Granularity(Granularity_PICOSECONDS)
 	case "NANOSECONDS":
 		*e = New_Granularity(Granularity_NANOSECONDS)
 	}
@@ -240,6 +298,132 @@ func (e *IngestStatus) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type NumericPropertyRangeOperator struct {
+	val NumericPropertyRangeOperator_Value
+}
+
+type NumericPropertyRangeOperator_Value string
+
+const (
+	NumericPropertyRangeOperator_BETWEEN     NumericPropertyRangeOperator_Value = "BETWEEN"
+	NumericPropertyRangeOperator_NOT_BETWEEN NumericPropertyRangeOperator_Value = "NOT_BETWEEN"
+	NumericPropertyRangeOperator_UNKNOWN     NumericPropertyRangeOperator_Value = "UNKNOWN"
+)
+
+// NumericPropertyRangeOperator_Values returns all known variants of NumericPropertyRangeOperator.
+func NumericPropertyRangeOperator_Values() []NumericPropertyRangeOperator_Value {
+	return []NumericPropertyRangeOperator_Value{NumericPropertyRangeOperator_BETWEEN, NumericPropertyRangeOperator_NOT_BETWEEN}
+}
+
+func New_NumericPropertyRangeOperator(value NumericPropertyRangeOperator_Value) NumericPropertyRangeOperator {
+	return NumericPropertyRangeOperator{val: value}
+}
+
+// IsUnknown returns false for all known variants of NumericPropertyRangeOperator and true otherwise.
+func (e NumericPropertyRangeOperator) IsUnknown() bool {
+	switch e.val {
+	case NumericPropertyRangeOperator_BETWEEN, NumericPropertyRangeOperator_NOT_BETWEEN:
+		return false
+	}
+	return true
+}
+
+func (e NumericPropertyRangeOperator) Value() NumericPropertyRangeOperator_Value {
+	if e.IsUnknown() {
+		return NumericPropertyRangeOperator_UNKNOWN
+	}
+	return e.val
+}
+
+func (e NumericPropertyRangeOperator) String() string {
+	return string(e.val)
+}
+
+func (e NumericPropertyRangeOperator) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *NumericPropertyRangeOperator) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_NumericPropertyRangeOperator(NumericPropertyRangeOperator_Value(v))
+	case "BETWEEN":
+		*e = New_NumericPropertyRangeOperator(NumericPropertyRangeOperator_BETWEEN)
+	case "NOT_BETWEEN":
+		*e = New_NumericPropertyRangeOperator(NumericPropertyRangeOperator_NOT_BETWEEN)
+	}
+	return nil
+}
+
+type PropertyComparisonOperator struct {
+	val PropertyComparisonOperator_Value
+}
+
+type PropertyComparisonOperator_Value string
+
+const (
+	PropertyComparisonOperator_EQ      PropertyComparisonOperator_Value = "EQ"
+	PropertyComparisonOperator_NEQ     PropertyComparisonOperator_Value = "NEQ"
+	PropertyComparisonOperator_GT      PropertyComparisonOperator_Value = "GT"
+	PropertyComparisonOperator_GTE     PropertyComparisonOperator_Value = "GTE"
+	PropertyComparisonOperator_LT      PropertyComparisonOperator_Value = "LT"
+	PropertyComparisonOperator_LTE     PropertyComparisonOperator_Value = "LTE"
+	PropertyComparisonOperator_UNKNOWN PropertyComparisonOperator_Value = "UNKNOWN"
+)
+
+// PropertyComparisonOperator_Values returns all known variants of PropertyComparisonOperator.
+func PropertyComparisonOperator_Values() []PropertyComparisonOperator_Value {
+	return []PropertyComparisonOperator_Value{PropertyComparisonOperator_EQ, PropertyComparisonOperator_NEQ, PropertyComparisonOperator_GT, PropertyComparisonOperator_GTE, PropertyComparisonOperator_LT, PropertyComparisonOperator_LTE}
+}
+
+func New_PropertyComparisonOperator(value PropertyComparisonOperator_Value) PropertyComparisonOperator {
+	return PropertyComparisonOperator{val: value}
+}
+
+// IsUnknown returns false for all known variants of PropertyComparisonOperator and true otherwise.
+func (e PropertyComparisonOperator) IsUnknown() bool {
+	switch e.val {
+	case PropertyComparisonOperator_EQ, PropertyComparisonOperator_NEQ, PropertyComparisonOperator_GT, PropertyComparisonOperator_GTE, PropertyComparisonOperator_LT, PropertyComparisonOperator_LTE:
+		return false
+	}
+	return true
+}
+
+func (e PropertyComparisonOperator) Value() PropertyComparisonOperator_Value {
+	if e.IsUnknown() {
+		return PropertyComparisonOperator_UNKNOWN
+	}
+	return e.val
+}
+
+func (e PropertyComparisonOperator) String() string {
+	return string(e.val)
+}
+
+func (e PropertyComparisonOperator) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *PropertyComparisonOperator) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_PropertyComparisonOperator(PropertyComparisonOperator_Value(v))
+	case "EQ":
+		*e = New_PropertyComparisonOperator(PropertyComparisonOperator_EQ)
+	case "NEQ":
+		*e = New_PropertyComparisonOperator(PropertyComparisonOperator_NEQ)
+	case "GT":
+		*e = New_PropertyComparisonOperator(PropertyComparisonOperator_GT)
+	case "GTE":
+		*e = New_PropertyComparisonOperator(PropertyComparisonOperator_GTE)
+	case "LT":
+		*e = New_PropertyComparisonOperator(PropertyComparisonOperator_LT)
+	case "LTE":
+		*e = New_PropertyComparisonOperator(PropertyComparisonOperator_LTE)
+	}
+	return nil
+}
+
 // The data types that are available for querying.
 type SeriesDataType struct {
 	val SeriesDataType_Value
@@ -257,12 +441,13 @@ const (
 	SeriesDataType_STRING_ARRAY SeriesDataType_Value = "STRING_ARRAY"
 	SeriesDataType_STRUCT       SeriesDataType_Value = "STRUCT"
 	SeriesDataType_VIDEO        SeriesDataType_Value = "VIDEO"
+	SeriesDataType_SPATIAL      SeriesDataType_Value = "SPATIAL"
 	SeriesDataType_UNKNOWN      SeriesDataType_Value = "UNKNOWN"
 )
 
 // SeriesDataType_Values returns all known variants of SeriesDataType.
 func SeriesDataType_Values() []SeriesDataType_Value {
-	return []SeriesDataType_Value{SeriesDataType_DOUBLE, SeriesDataType_STRING, SeriesDataType_LOG, SeriesDataType_INT, SeriesDataType_UINT, SeriesDataType_DOUBLE_ARRAY, SeriesDataType_STRING_ARRAY, SeriesDataType_STRUCT, SeriesDataType_VIDEO}
+	return []SeriesDataType_Value{SeriesDataType_DOUBLE, SeriesDataType_STRING, SeriesDataType_LOG, SeriesDataType_INT, SeriesDataType_UINT, SeriesDataType_DOUBLE_ARRAY, SeriesDataType_STRING_ARRAY, SeriesDataType_STRUCT, SeriesDataType_VIDEO, SeriesDataType_SPATIAL}
 }
 
 func New_SeriesDataType(value SeriesDataType_Value) SeriesDataType {
@@ -272,7 +457,7 @@ func New_SeriesDataType(value SeriesDataType_Value) SeriesDataType {
 // IsUnknown returns false for all known variants of SeriesDataType and true otherwise.
 func (e SeriesDataType) IsUnknown() bool {
 	switch e.val {
-	case SeriesDataType_DOUBLE, SeriesDataType_STRING, SeriesDataType_LOG, SeriesDataType_INT, SeriesDataType_UINT, SeriesDataType_DOUBLE_ARRAY, SeriesDataType_STRING_ARRAY, SeriesDataType_STRUCT, SeriesDataType_VIDEO:
+	case SeriesDataType_DOUBLE, SeriesDataType_STRING, SeriesDataType_LOG, SeriesDataType_INT, SeriesDataType_UINT, SeriesDataType_DOUBLE_ARRAY, SeriesDataType_STRING_ARRAY, SeriesDataType_STRUCT, SeriesDataType_VIDEO, SeriesDataType_SPATIAL:
 		return false
 	}
 	return true
@@ -315,6 +500,8 @@ func (e *SeriesDataType) UnmarshalText(data []byte) error {
 		*e = New_SeriesDataType(SeriesDataType_STRUCT)
 	case "VIDEO":
 		*e = New_SeriesDataType(SeriesDataType_VIDEO)
+	case "SPATIAL":
+		*e = New_SeriesDataType(SeriesDataType_SPATIAL)
 	}
 	return nil
 }
@@ -390,13 +577,12 @@ const (
 	TimeUnit_MILLISECONDS TimeUnit_Value = "MILLISECONDS"
 	TimeUnit_MICROSECONDS TimeUnit_Value = "MICROSECONDS"
 	TimeUnit_NANOSECONDS  TimeUnit_Value = "NANOSECONDS"
-	TimeUnit_PICOSECONDS  TimeUnit_Value = "PICOSECONDS"
 	TimeUnit_UNKNOWN      TimeUnit_Value = "UNKNOWN"
 )
 
 // TimeUnit_Values returns all known variants of TimeUnit.
 func TimeUnit_Values() []TimeUnit_Value {
-	return []TimeUnit_Value{TimeUnit_DAYS, TimeUnit_HOURS, TimeUnit_MINUTES, TimeUnit_SECONDS, TimeUnit_MILLISECONDS, TimeUnit_MICROSECONDS, TimeUnit_NANOSECONDS, TimeUnit_PICOSECONDS}
+	return []TimeUnit_Value{TimeUnit_DAYS, TimeUnit_HOURS, TimeUnit_MINUTES, TimeUnit_SECONDS, TimeUnit_MILLISECONDS, TimeUnit_MICROSECONDS, TimeUnit_NANOSECONDS}
 }
 
 func New_TimeUnit(value TimeUnit_Value) TimeUnit {
@@ -406,7 +592,7 @@ func New_TimeUnit(value TimeUnit_Value) TimeUnit {
 // IsUnknown returns false for all known variants of TimeUnit and true otherwise.
 func (e TimeUnit) IsUnknown() bool {
 	switch e.val {
-	case TimeUnit_DAYS, TimeUnit_HOURS, TimeUnit_MINUTES, TimeUnit_SECONDS, TimeUnit_MILLISECONDS, TimeUnit_MICROSECONDS, TimeUnit_NANOSECONDS, TimeUnit_PICOSECONDS:
+	case TimeUnit_DAYS, TimeUnit_HOURS, TimeUnit_MINUTES, TimeUnit_SECONDS, TimeUnit_MILLISECONDS, TimeUnit_MICROSECONDS, TimeUnit_NANOSECONDS:
 		return false
 	}
 	return true
@@ -445,8 +631,6 @@ func (e *TimeUnit) UnmarshalText(data []byte) error {
 		*e = New_TimeUnit(TimeUnit_MICROSECONDS)
 	case "NANOSECONDS":
 		*e = New_TimeUnit(TimeUnit_NANOSECONDS)
-	case "PICOSECONDS":
-		*e = New_TimeUnit(TimeUnit_PICOSECONDS)
 	}
 	return nil
 }

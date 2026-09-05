@@ -297,6 +297,11 @@ func (o *ListPropertiesAndLabelsRequest) UnmarshalYAML(unmarshal func(interface{
 
 // safelogging:@Unsafe
 type ListPropertiesAndLabelsResponse struct {
+	/*
+	   Legacy string-only property values.
+
+	   Deprecated: Use the paginated searchPropertyKeys and searchPropertyValues methods instead.
+	*/
 	Properties map[api1.PropertyName][]api1.PropertyValue `json:"properties"`
 	Labels     []api1.Label                               `json:"labels" safelogging:"@Unsafe"`
 }
@@ -365,7 +370,10 @@ func (o *MatchCount) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Merge one or more values of a property key into a single target value.
+/*
+Merge one or more string values of a property key into a single target value.
+Merge applies to categorical aliases; continuous numeric values are intentionally excluded.
+*/
 // safelogging:@Unsafe
 type MergePropertyValuesForKey struct {
 	Key    api1.PropertyName    `json:"key" safelogging:"@Unsafe"`
@@ -403,6 +411,27 @@ func (o MergePropertyValuesForKey) MarshalYAML() (interface{}, error) {
 }
 
 func (o *MergePropertyValuesForKey) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type NumericPropertySummary struct {
+	DocumentCount int     `json:"documentCount"`
+	Mean          float64 `json:"mean"`
+}
+
+func (o NumericPropertySummary) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericPropertySummary) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -459,9 +488,19 @@ func (o *OverwriteOnConflict) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 // safelogging:@Unsafe
 type PropertyKeyWithCount struct {
-	PropertyKey   api1.PropertyName `json:"propertyKey" safelogging:"@Unsafe"`
-	DocumentCount int               `json:"documentCount"`
-	ValueCount    int               `json:"valueCount"`
+	PropertyKey api1.PropertyName `json:"propertyKey" safelogging:"@Unsafe"`
+	// Number of documents with either a string or numeric value for this key.
+	DocumentCount int `json:"documentCount"`
+	/*
+	   Number of distinct string values. Numeric values are intentionally excluded.
+
+	   Deprecated: Retained for backward compatibility. Use string.distinctValueCount instead.
+	*/
+	ValueCount int `json:"valueCount"`
+	// Present when this key has string values.
+	String *StringPropertySummary `json:"string,omitempty"`
+	// Present when this key has numeric values.
+	Numeric *NumericPropertySummary `json:"numeric,omitempty"`
 }
 
 func (o PropertyKeyWithCount) MarshalYAML() (interface{}, error) {
@@ -818,6 +857,27 @@ func (o StringArrayLengthQuery) MarshalYAML() (interface{}, error) {
 }
 
 func (o *StringArrayLengthQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type StringPropertySummary struct {
+	DocumentCount      int `json:"documentCount"`
+	DistinctValueCount int `json:"distinctValueCount"`
+}
+
+func (o StringPropertySummary) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StringPropertySummary) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

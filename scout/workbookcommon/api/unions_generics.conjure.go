@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 
+	api2 "github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/comparisonnotebook/api"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 )
@@ -32,10 +33,35 @@ func (u *DataScopeInputValueWithT[T]) Accept(ctx context.Context, v DataScopeInp
 			return result, fmt.Errorf("field \"run\" is required")
 		}
 		return v.VisitRun(ctx, *u.run)
+	case "assetList":
+		if u.assetList == nil {
+			return result, fmt.Errorf("field \"assetList\" is required")
+		}
+		return v.VisitAssetList(ctx, *u.assetList)
+	case "runList":
+		if u.runList == nil {
+			return result, fmt.Errorf("field \"runList\" is required")
+		}
+		return v.VisitRunList(ctx, *u.runList)
+	case "assetQuery":
+		if u.assetQuery == nil {
+			return result, fmt.Errorf("field \"assetQuery\" is required")
+		}
+		return v.VisitAssetQuery(ctx, *u.assetQuery)
+	case "runQuery":
+		if u.runQuery == nil {
+			return result, fmt.Errorf("field \"runQuery\" is required")
+		}
+		return v.VisitRunQuery(ctx, *u.runQuery)
+	case "datasetList":
+		if u.datasetList == nil {
+			return result, fmt.Errorf("field \"datasetList\" is required")
+		}
+		return v.VisitDatasetList(ctx, *u.datasetList)
 	}
 }
 
-func (u *DataScopeInputValueWithT[T]) AcceptFuncs(assetFunc func(AssetDataScopeInputValue) (T, error), runFunc func(RunDataScopeInputValue) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *DataScopeInputValueWithT[T]) AcceptFuncs(assetFunc func(AssetDataScopeInputValue) (T, error), runFunc func(RunDataScopeInputValue) (T, error), assetListFunc func(AssetListDataScopeInputValue) (T, error), runListFunc func(RunListDataScopeInputValue) (T, error), assetQueryFunc func(AssetQueryDataScopeInputValue) (T, error), runQueryFunc func(RunQueryDataScopeInputValue) (T, error), datasetListFunc func(DatasetListDataScopeInputValue) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -53,6 +79,31 @@ func (u *DataScopeInputValueWithT[T]) AcceptFuncs(assetFunc func(AssetDataScopeI
 			return result, fmt.Errorf("field \"run\" is required")
 		}
 		return runFunc(*u.run)
+	case "assetList":
+		if u.assetList == nil {
+			return result, fmt.Errorf("field \"assetList\" is required")
+		}
+		return assetListFunc(*u.assetList)
+	case "runList":
+		if u.runList == nil {
+			return result, fmt.Errorf("field \"runList\" is required")
+		}
+		return runListFunc(*u.runList)
+	case "assetQuery":
+		if u.assetQuery == nil {
+			return result, fmt.Errorf("field \"assetQuery\" is required")
+		}
+		return assetQueryFunc(*u.assetQuery)
+	case "runQuery":
+		if u.runQuery == nil {
+			return result, fmt.Errorf("field \"runQuery\" is required")
+		}
+		return runQueryFunc(*u.runQuery)
+	case "datasetList":
+		if u.datasetList == nil {
+			return result, fmt.Errorf("field \"datasetList\" is required")
+		}
+		return datasetListFunc(*u.datasetList)
 	}
 }
 
@@ -66,6 +117,31 @@ func (u *DataScopeInputValueWithT[T]) RunNoopSuccess(RunDataScopeInputValue) (T,
 	return result, nil
 }
 
+func (u *DataScopeInputValueWithT[T]) AssetListNoopSuccess(AssetListDataScopeInputValue) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DataScopeInputValueWithT[T]) RunListNoopSuccess(RunListDataScopeInputValue) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DataScopeInputValueWithT[T]) AssetQueryNoopSuccess(AssetQueryDataScopeInputValue) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DataScopeInputValueWithT[T]) RunQueryNoopSuccess(RunQueryDataScopeInputValue) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DataScopeInputValueWithT[T]) DatasetListNoopSuccess(DatasetListDataScopeInputValue) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *DataScopeInputValueWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -74,6 +150,11 @@ func (u *DataScopeInputValueWithT[T]) ErrorOnUnknown(typeName string) (T, error)
 type DataScopeInputValueVisitorWithT[T any] interface {
 	VisitAsset(ctx context.Context, v AssetDataScopeInputValue) (T, error)
 	VisitRun(ctx context.Context, v RunDataScopeInputValue) (T, error)
+	VisitAssetList(ctx context.Context, v AssetListDataScopeInputValue) (T, error)
+	VisitRunList(ctx context.Context, v RunListDataScopeInputValue) (T, error)
+	VisitAssetQuery(ctx context.Context, v AssetQueryDataScopeInputValue) (T, error)
+	VisitRunQuery(ctx context.Context, v RunQueryDataScopeInputValue) (T, error)
+	VisitDatasetList(ctx context.Context, v DatasetListDataScopeInputValue) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -276,10 +357,15 @@ func (u *UnifiedWorkbookContentWithT[T]) Accept(ctx context.Context, v UnifiedWo
 			return result, fmt.Errorf("field \"comparisonWorkbook\" is required")
 		}
 		return v.VisitComparisonWorkbook(ctx, *u.comparisonWorkbook)
+	case "reportWorkbook":
+		if u.reportWorkbook == nil {
+			return result, fmt.Errorf("field \"reportWorkbook\" is required")
+		}
+		return v.VisitReportWorkbook(ctx, *u.reportWorkbook)
 	}
 }
 
-func (u *UnifiedWorkbookContentWithT[T]) AcceptFuncs(workbookFunc func(WorkbookContent) (T, error), comparisonWorkbookFunc func(api1.ComparisonWorkbookContent) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UnifiedWorkbookContentWithT[T]) AcceptFuncs(workbookFunc func(WorkbookContent) (T, error), comparisonWorkbookFunc func(api1.ComparisonWorkbookContent) (T, error), reportWorkbookFunc func(WorkbookContent) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -297,6 +383,11 @@ func (u *UnifiedWorkbookContentWithT[T]) AcceptFuncs(workbookFunc func(WorkbookC
 			return result, fmt.Errorf("field \"comparisonWorkbook\" is required")
 		}
 		return comparisonWorkbookFunc(*u.comparisonWorkbook)
+	case "reportWorkbook":
+		if u.reportWorkbook == nil {
+			return result, fmt.Errorf("field \"reportWorkbook\" is required")
+		}
+		return reportWorkbookFunc(*u.reportWorkbook)
 	}
 }
 
@@ -310,6 +401,11 @@ func (u *UnifiedWorkbookContentWithT[T]) ComparisonWorkbookNoopSuccess(api1.Comp
 	return result, nil
 }
 
+func (u *UnifiedWorkbookContentWithT[T]) ReportWorkbookNoopSuccess(WorkbookContent) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *UnifiedWorkbookContentWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -318,6 +414,169 @@ func (u *UnifiedWorkbookContentWithT[T]) ErrorOnUnknown(typeName string) (T, err
 type UnifiedWorkbookContentVisitorWithT[T any] interface {
 	VisitWorkbook(ctx context.Context, v WorkbookContent) (T, error)
 	VisitComparisonWorkbook(ctx context.Context, v api1.ComparisonWorkbookContent) (T, error)
+	VisitReportWorkbook(ctx context.Context, v WorkbookContent) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type WorkbookAlignmentStrategyWithT[T any] WorkbookAlignmentStrategy
+
+func (u *WorkbookAlignmentStrategyWithT[T]) Accept(ctx context.Context, v WorkbookAlignmentStrategyVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return result, fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return v.VisitDriverSeries(ctx, *u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return result, fmt.Errorf("field \"union\" is required")
+		}
+		return v.VisitUnion(ctx, *u.union)
+	case "intersect":
+		if u.intersect == nil {
+			return result, fmt.Errorf("field \"intersect\" is required")
+		}
+		return v.VisitIntersect(ctx, *u.intersect)
+	}
+}
+
+func (u *WorkbookAlignmentStrategyWithT[T]) AcceptFuncs(driverSeriesFunc func(DriverSeriesAlignment) (T, error), unionFunc func(UnionAlignment) (T, error), intersectFunc func(IntersectAlignment) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return result, fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return driverSeriesFunc(*u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return result, fmt.Errorf("field \"union\" is required")
+		}
+		return unionFunc(*u.union)
+	case "intersect":
+		if u.intersect == nil {
+			return result, fmt.Errorf("field \"intersect\" is required")
+		}
+		return intersectFunc(*u.intersect)
+	}
+}
+
+func (u *WorkbookAlignmentStrategyWithT[T]) DriverSeriesNoopSuccess(DriverSeriesAlignment) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookAlignmentStrategyWithT[T]) UnionNoopSuccess(UnionAlignment) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookAlignmentStrategyWithT[T]) IntersectNoopSuccess(IntersectAlignment) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookAlignmentStrategyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type WorkbookAlignmentStrategyVisitorWithT[T any] interface {
+	VisitDriverSeries(ctx context.Context, v DriverSeriesAlignment) (T, error)
+	VisitUnion(ctx context.Context, v UnionAlignment) (T, error)
+	VisitIntersect(ctx context.Context, v IntersectAlignment) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type WorkbookDataScopeInputColorModeWithT[T any] WorkbookDataScopeInputColorMode
+
+func (u *WorkbookDataScopeInputColorModeWithT[T]) Accept(ctx context.Context, v WorkbookDataScopeInputColorModeVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "byChannel":
+		if u.byChannel == nil {
+			return result, fmt.Errorf("field \"byChannel\" is required")
+		}
+		return v.VisitByChannel(ctx, *u.byChannel)
+	case "bySource":
+		if u.bySource == nil {
+			return result, fmt.Errorf("field \"bySource\" is required")
+		}
+		return v.VisitBySource(ctx, *u.bySource)
+	case "bySeries":
+		if u.bySeries == nil {
+			return result, fmt.Errorf("field \"bySeries\" is required")
+		}
+		return v.VisitBySeries(ctx, *u.bySeries)
+	}
+}
+
+func (u *WorkbookDataScopeInputColorModeWithT[T]) AcceptFuncs(byChannelFunc func(ByChannelColorMode) (T, error), bySourceFunc func(BySourceColorMode) (T, error), bySeriesFunc func(BySeriesColorMode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "byChannel":
+		if u.byChannel == nil {
+			return result, fmt.Errorf("field \"byChannel\" is required")
+		}
+		return byChannelFunc(*u.byChannel)
+	case "bySource":
+		if u.bySource == nil {
+			return result, fmt.Errorf("field \"bySource\" is required")
+		}
+		return bySourceFunc(*u.bySource)
+	case "bySeries":
+		if u.bySeries == nil {
+			return result, fmt.Errorf("field \"bySeries\" is required")
+		}
+		return bySeriesFunc(*u.bySeries)
+	}
+}
+
+func (u *WorkbookDataScopeInputColorModeWithT[T]) ByChannelNoopSuccess(ByChannelColorMode) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookDataScopeInputColorModeWithT[T]) BySourceNoopSuccess(BySourceColorMode) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookDataScopeInputColorModeWithT[T]) BySeriesNoopSuccess(BySeriesColorMode) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookDataScopeInputColorModeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type WorkbookDataScopeInputColorModeVisitorWithT[T any] interface {
+	VisitByChannel(ctx context.Context, v ByChannelColorMode) (T, error)
+	VisitBySource(ctx context.Context, v BySourceColorMode) (T, error)
+	VisitBySeries(ctx context.Context, v BySeriesColorMode) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -367,6 +626,71 @@ func (u *WorkbookDataScopeInputsWithT[T]) ErrorOnUnknown(typeName string) (T, er
 
 type WorkbookDataScopeInputsVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v WorkbookDataScopeInputsV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type WorkbookFillStrategyWithT[T any] WorkbookFillStrategy
+
+func (u *WorkbookFillStrategyWithT[T]) Accept(ctx context.Context, v WorkbookFillStrategyVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return result, fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return v.VisitForwardFill(ctx, *u.forwardFill)
+	case "linear":
+		if u.linear == nil {
+			return result, fmt.Errorf("field \"linear\" is required")
+		}
+		return v.VisitLinear(ctx, *u.linear)
+	}
+}
+
+func (u *WorkbookFillStrategyWithT[T]) AcceptFuncs(forwardFillFunc func(api.UserDuration) (T, error), linearFunc func(api.UserDuration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return result, fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return forwardFillFunc(*u.forwardFill)
+	case "linear":
+		if u.linear == nil {
+			return result, fmt.Errorf("field \"linear\" is required")
+		}
+		return linearFunc(*u.linear)
+	}
+}
+
+func (u *WorkbookFillStrategyWithT[T]) ForwardFillNoopSuccess(api.UserDuration) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookFillStrategyWithT[T]) LinearNoopSuccess(api.UserDuration) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookFillStrategyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type WorkbookFillStrategyVisitorWithT[T any] interface {
+	VisitForwardFill(ctx context.Context, v api.UserDuration) (T, error)
+	VisitLinear(ctx context.Context, v api.UserDuration) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -465,6 +789,87 @@ func (u *WorkbookOffsetsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type WorkbookOffsetsVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v WorkbookOffsetsV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type WorkbookRelativeTimestampFormatWithT[T any] WorkbookRelativeTimestampFormat
+
+func (u *WorkbookRelativeTimestampFormatWithT[T]) Accept(ctx context.Context, v WorkbookRelativeTimestampFormatVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "inherit":
+		if u.inherit == nil {
+			return result, fmt.Errorf("field \"inherit\" is required")
+		}
+		return v.VisitInherit(ctx, *u.inherit)
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return result, fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+		return v.VisitTemporalSubunits(ctx, *u.temporalSubunits)
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return result, fmt.Errorf("field \"totalSeconds\" is required")
+		}
+		return v.VisitTotalSeconds(ctx, *u.totalSeconds)
+	}
+}
+
+func (u *WorkbookRelativeTimestampFormatWithT[T]) AcceptFuncs(inheritFunc func(InheritRelativeTimestampFormat) (T, error), temporalSubunitsFunc func(api2.TemporalSubunitsRelativeTimestampFormat) (T, error), totalSecondsFunc func(api2.TotalSecondsRelativeTimestampFormat) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "inherit":
+		if u.inherit == nil {
+			return result, fmt.Errorf("field \"inherit\" is required")
+		}
+		return inheritFunc(*u.inherit)
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return result, fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+		return temporalSubunitsFunc(*u.temporalSubunits)
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return result, fmt.Errorf("field \"totalSeconds\" is required")
+		}
+		return totalSecondsFunc(*u.totalSeconds)
+	}
+}
+
+func (u *WorkbookRelativeTimestampFormatWithT[T]) InheritNoopSuccess(InheritRelativeTimestampFormat) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookRelativeTimestampFormatWithT[T]) TemporalSubunitsNoopSuccess(api2.TemporalSubunitsRelativeTimestampFormat) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookRelativeTimestampFormatWithT[T]) TotalSecondsNoopSuccess(api2.TotalSecondsRelativeTimestampFormat) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *WorkbookRelativeTimestampFormatWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type WorkbookRelativeTimestampFormatVisitorWithT[T any] interface {
+	VisitInherit(ctx context.Context, v InheritRelativeTimestampFormat) (T, error)
+	VisitTemporalSubunits(ctx context.Context, v api2.TemporalSubunitsRelativeTimestampFormat) (T, error)
+	VisitTotalSeconds(ctx context.Context, v api2.TotalSecondsRelativeTimestampFormat) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
