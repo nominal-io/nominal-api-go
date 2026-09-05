@@ -9,6 +9,7 @@ import (
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
+	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/datasource"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-contract/errors"
 	"github.com/palantir/pkg/rid"
@@ -17,6 +18,156 @@ import (
 	"github.com/palantir/pkg/uuid"
 	werror "github.com/palantir/witchcraft-go-error"
 )
+
+type cannotAddFileToDerivedDataset struct {
+	DatasetRid rid.ResourceIdentifier `json:"datasetRid"`
+}
+
+func (o cannotAddFileToDerivedDataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *cannotAddFileToDerivedDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewCannotAddFileToDerivedDataset returns new instance of CannotAddFileToDerivedDataset error.
+func NewCannotAddFileToDerivedDataset(datasetRidArg rid.ResourceIdentifier) *CannotAddFileToDerivedDataset {
+	return &CannotAddFileToDerivedDataset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cannotAddFileToDerivedDataset: cannotAddFileToDerivedDataset{DatasetRid: datasetRidArg}}
+}
+
+// WrapWithCannotAddFileToDerivedDataset returns new instance of CannotAddFileToDerivedDataset error wrapping an existing error.
+func WrapWithCannotAddFileToDerivedDataset(err error, datasetRidArg rid.ResourceIdentifier) *CannotAddFileToDerivedDataset {
+	return &CannotAddFileToDerivedDataset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, cannotAddFileToDerivedDataset: cannotAddFileToDerivedDataset{DatasetRid: datasetRidArg}}
+}
+
+// CannotAddFileToDerivedDataset is an error type.
+// Derived datasets are backed by other datasets and do not support file ingest.
+type CannotAddFileToDerivedDataset struct {
+	errorInstanceID uuid.UUID
+	cannotAddFileToDerivedDataset
+	cause error
+	stack werror.StackTrace
+}
+
+// IsCannotAddFileToDerivedDataset returns true if err is an instance of CannotAddFileToDerivedDataset.
+func IsCannotAddFileToDerivedDataset(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*CannotAddFileToDerivedDataset)
+	return ok
+}
+
+func (e *CannotAddFileToDerivedDataset) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Catalog:CannotAddFileToDerivedDataset (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *CannotAddFileToDerivedDataset) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *CannotAddFileToDerivedDataset) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *CannotAddFileToDerivedDataset) Message() string {
+	return "INVALID_ARGUMENT Catalog:CannotAddFileToDerivedDataset"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *CannotAddFileToDerivedDataset) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *CannotAddFileToDerivedDataset) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *CannotAddFileToDerivedDataset) Name() string {
+	return "Catalog:CannotAddFileToDerivedDataset"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *CannotAddFileToDerivedDataset) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *CannotAddFileToDerivedDataset) Parameters() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *CannotAddFileToDerivedDataset) safeParams() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotAddFileToDerivedDataset) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *CannotAddFileToDerivedDataset) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotAddFileToDerivedDataset) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e CannotAddFileToDerivedDataset) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.cannotAddFileToDerivedDataset)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Catalog:CannotAddFileToDerivedDataset", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *CannotAddFileToDerivedDataset) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters cannotAddFileToDerivedDataset
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.cannotAddFileToDerivedDataset = parameters
+	return nil
+}
 
 type cannotAddToLegacyDataset struct {
 	DatasetRid rid.ResourceIdentifier `json:"datasetRid"`
@@ -168,6 +319,613 @@ func (e *CannotAddToLegacyDataset) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type cannotCreateNestedDerivedDataset struct {
+	DatasetRid rid.ResourceIdentifier `json:"datasetRid"`
+}
+
+func (o cannotCreateNestedDerivedDataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *cannotCreateNestedDerivedDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewCannotCreateNestedDerivedDataset returns new instance of CannotCreateNestedDerivedDataset error.
+func NewCannotCreateNestedDerivedDataset(datasetRidArg rid.ResourceIdentifier) *CannotCreateNestedDerivedDataset {
+	return &CannotCreateNestedDerivedDataset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cannotCreateNestedDerivedDataset: cannotCreateNestedDerivedDataset{DatasetRid: datasetRidArg}}
+}
+
+// WrapWithCannotCreateNestedDerivedDataset returns new instance of CannotCreateNestedDerivedDataset error wrapping an existing error.
+func WrapWithCannotCreateNestedDerivedDataset(err error, datasetRidArg rid.ResourceIdentifier) *CannotCreateNestedDerivedDataset {
+	return &CannotCreateNestedDerivedDataset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, cannotCreateNestedDerivedDataset: cannotCreateNestedDerivedDataset{DatasetRid: datasetRidArg}}
+}
+
+// CannotCreateNestedDerivedDataset is an error type.
+// Derived datasets cannot currently be backed by other derived datasets.
+type CannotCreateNestedDerivedDataset struct {
+	errorInstanceID uuid.UUID
+	cannotCreateNestedDerivedDataset
+	cause error
+	stack werror.StackTrace
+}
+
+// IsCannotCreateNestedDerivedDataset returns true if err is an instance of CannotCreateNestedDerivedDataset.
+func IsCannotCreateNestedDerivedDataset(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*CannotCreateNestedDerivedDataset)
+	return ok
+}
+
+func (e *CannotCreateNestedDerivedDataset) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Catalog:CannotCreateNestedDerivedDataset (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *CannotCreateNestedDerivedDataset) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *CannotCreateNestedDerivedDataset) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *CannotCreateNestedDerivedDataset) Message() string {
+	return "INVALID_ARGUMENT Catalog:CannotCreateNestedDerivedDataset"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *CannotCreateNestedDerivedDataset) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *CannotCreateNestedDerivedDataset) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *CannotCreateNestedDerivedDataset) Name() string {
+	return "Catalog:CannotCreateNestedDerivedDataset"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *CannotCreateNestedDerivedDataset) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *CannotCreateNestedDerivedDataset) Parameters() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *CannotCreateNestedDerivedDataset) safeParams() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotCreateNestedDerivedDataset) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *CannotCreateNestedDerivedDataset) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotCreateNestedDerivedDataset) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e CannotCreateNestedDerivedDataset) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.cannotCreateNestedDerivedDataset)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Catalog:CannotCreateNestedDerivedDataset", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *CannotCreateNestedDerivedDataset) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters cannotCreateNestedDerivedDataset
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.cannotCreateNestedDerivedDataset = parameters
+	return nil
+}
+
+type cannotCreateUnsupportedDerivedDataset struct {
+	FrameType string `json:"frameType"`
+}
+
+func (o cannotCreateUnsupportedDerivedDataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *cannotCreateUnsupportedDerivedDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewCannotCreateUnsupportedDerivedDataset returns new instance of CannotCreateUnsupportedDerivedDataset error.
+func NewCannotCreateUnsupportedDerivedDataset(frameTypeArg string) *CannotCreateUnsupportedDerivedDataset {
+	return &CannotCreateUnsupportedDerivedDataset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cannotCreateUnsupportedDerivedDataset: cannotCreateUnsupportedDerivedDataset{FrameType: frameTypeArg}}
+}
+
+// WrapWithCannotCreateUnsupportedDerivedDataset returns new instance of CannotCreateUnsupportedDerivedDataset error wrapping an existing error.
+func WrapWithCannotCreateUnsupportedDerivedDataset(err error, frameTypeArg string) *CannotCreateUnsupportedDerivedDataset {
+	return &CannotCreateUnsupportedDerivedDataset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, cannotCreateUnsupportedDerivedDataset: cannotCreateUnsupportedDerivedDataset{FrameType: frameTypeArg}}
+}
+
+// CannotCreateUnsupportedDerivedDataset is an error type.
+// Derived datasets can currently only be backed by ordinary datasets.
+type CannotCreateUnsupportedDerivedDataset struct {
+	errorInstanceID uuid.UUID
+	cannotCreateUnsupportedDerivedDataset
+	cause error
+	stack werror.StackTrace
+}
+
+// IsCannotCreateUnsupportedDerivedDataset returns true if err is an instance of CannotCreateUnsupportedDerivedDataset.
+func IsCannotCreateUnsupportedDerivedDataset(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*CannotCreateUnsupportedDerivedDataset)
+	return ok
+}
+
+func (e *CannotCreateUnsupportedDerivedDataset) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Catalog:CannotCreateUnsupportedDerivedDataset (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *CannotCreateUnsupportedDerivedDataset) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *CannotCreateUnsupportedDerivedDataset) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *CannotCreateUnsupportedDerivedDataset) Message() string {
+	return "INVALID_ARGUMENT Catalog:CannotCreateUnsupportedDerivedDataset"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *CannotCreateUnsupportedDerivedDataset) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *CannotCreateUnsupportedDerivedDataset) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *CannotCreateUnsupportedDerivedDataset) Name() string {
+	return "Catalog:CannotCreateUnsupportedDerivedDataset"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *CannotCreateUnsupportedDerivedDataset) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *CannotCreateUnsupportedDerivedDataset) Parameters() map[string]interface{} {
+	return map[string]interface{}{"frameType": e.FrameType}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *CannotCreateUnsupportedDerivedDataset) safeParams() map[string]interface{} {
+	return map[string]interface{}{"frameType": e.FrameType, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotCreateUnsupportedDerivedDataset) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *CannotCreateUnsupportedDerivedDataset) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotCreateUnsupportedDerivedDataset) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e CannotCreateUnsupportedDerivedDataset) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.cannotCreateUnsupportedDerivedDataset)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Catalog:CannotCreateUnsupportedDerivedDataset", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *CannotCreateUnsupportedDerivedDataset) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters cannotCreateUnsupportedDerivedDataset
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.cannotCreateUnsupportedDerivedDataset = parameters
+	return nil
+}
+
+type cannotInitializeDerivedOnNonEmptyDataset struct {
+	DatasetRid rid.ResourceIdentifier `json:"datasetRid"`
+}
+
+func (o cannotInitializeDerivedOnNonEmptyDataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *cannotInitializeDerivedOnNonEmptyDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewCannotInitializeDerivedOnNonEmptyDataset returns new instance of CannotInitializeDerivedOnNonEmptyDataset error.
+func NewCannotInitializeDerivedOnNonEmptyDataset(datasetRidArg rid.ResourceIdentifier) *CannotInitializeDerivedOnNonEmptyDataset {
+	return &CannotInitializeDerivedOnNonEmptyDataset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cannotInitializeDerivedOnNonEmptyDataset: cannotInitializeDerivedOnNonEmptyDataset{DatasetRid: datasetRidArg}}
+}
+
+// WrapWithCannotInitializeDerivedOnNonEmptyDataset returns new instance of CannotInitializeDerivedOnNonEmptyDataset error wrapping an existing error.
+func WrapWithCannotInitializeDerivedOnNonEmptyDataset(err error, datasetRidArg rid.ResourceIdentifier) *CannotInitializeDerivedOnNonEmptyDataset {
+	return &CannotInitializeDerivedOnNonEmptyDataset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, cannotInitializeDerivedOnNonEmptyDataset: cannotInitializeDerivedOnNonEmptyDataset{DatasetRid: datasetRidArg}}
+}
+
+// CannotInitializeDerivedOnNonEmptyDataset is an error type.
+/*
+A derived definition can only be initialized on a dataset with no ingest or streaming state:
+no files, no create-time file handle, no global bounds, no external connection config,
+and no streaming sessions.
+*/
+type CannotInitializeDerivedOnNonEmptyDataset struct {
+	errorInstanceID uuid.UUID
+	cannotInitializeDerivedOnNonEmptyDataset
+	cause error
+	stack werror.StackTrace
+}
+
+// IsCannotInitializeDerivedOnNonEmptyDataset returns true if err is an instance of CannotInitializeDerivedOnNonEmptyDataset.
+func IsCannotInitializeDerivedOnNonEmptyDataset(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*CannotInitializeDerivedOnNonEmptyDataset)
+	return ok
+}
+
+func (e *CannotInitializeDerivedOnNonEmptyDataset) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Catalog:CannotInitializeDerivedOnNonEmptyDataset (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) Message() string {
+	return "INVALID_ARGUMENT Catalog:CannotInitializeDerivedOnNonEmptyDataset"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) Name() string {
+	return "Catalog:CannotInitializeDerivedOnNonEmptyDataset"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) Parameters() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) safeParams() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotInitializeDerivedOnNonEmptyDataset) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e CannotInitializeDerivedOnNonEmptyDataset) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.cannotInitializeDerivedOnNonEmptyDataset)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Catalog:CannotInitializeDerivedOnNonEmptyDataset", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *CannotInitializeDerivedOnNonEmptyDataset) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters cannotInitializeDerivedOnNonEmptyDataset
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.cannotInitializeDerivedOnNonEmptyDataset = parameters
+	return nil
+}
+
+type cannotUpdateNonDerivedDataset struct {
+	DatasetRid rid.ResourceIdentifier `json:"datasetRid"`
+}
+
+func (o cannotUpdateNonDerivedDataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *cannotUpdateNonDerivedDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewCannotUpdateNonDerivedDataset returns new instance of CannotUpdateNonDerivedDataset error.
+func NewCannotUpdateNonDerivedDataset(datasetRidArg rid.ResourceIdentifier) *CannotUpdateNonDerivedDataset {
+	return &CannotUpdateNonDerivedDataset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cannotUpdateNonDerivedDataset: cannotUpdateNonDerivedDataset{DatasetRid: datasetRidArg}}
+}
+
+// WrapWithCannotUpdateNonDerivedDataset returns new instance of CannotUpdateNonDerivedDataset error wrapping an existing error.
+func WrapWithCannotUpdateNonDerivedDataset(err error, datasetRidArg rid.ResourceIdentifier) *CannotUpdateNonDerivedDataset {
+	return &CannotUpdateNonDerivedDataset{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, cannotUpdateNonDerivedDataset: cannotUpdateNonDerivedDataset{DatasetRid: datasetRidArg}}
+}
+
+// CannotUpdateNonDerivedDataset is an error type.
+/*
+Dataset derived definitions can only be updated for datasets that are already derived.
+To initialize a derived definition on an empty dataset, use createDatasetDerivedDefinition.
+*/
+type CannotUpdateNonDerivedDataset struct {
+	errorInstanceID uuid.UUID
+	cannotUpdateNonDerivedDataset
+	cause error
+	stack werror.StackTrace
+}
+
+// IsCannotUpdateNonDerivedDataset returns true if err is an instance of CannotUpdateNonDerivedDataset.
+func IsCannotUpdateNonDerivedDataset(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*CannotUpdateNonDerivedDataset)
+	return ok
+}
+
+func (e *CannotUpdateNonDerivedDataset) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Catalog:CannotUpdateNonDerivedDataset (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *CannotUpdateNonDerivedDataset) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *CannotUpdateNonDerivedDataset) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *CannotUpdateNonDerivedDataset) Message() string {
+	return "INVALID_ARGUMENT Catalog:CannotUpdateNonDerivedDataset"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *CannotUpdateNonDerivedDataset) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *CannotUpdateNonDerivedDataset) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *CannotUpdateNonDerivedDataset) Name() string {
+	return "Catalog:CannotUpdateNonDerivedDataset"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *CannotUpdateNonDerivedDataset) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *CannotUpdateNonDerivedDataset) Parameters() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *CannotUpdateNonDerivedDataset) safeParams() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotUpdateNonDerivedDataset) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *CannotUpdateNonDerivedDataset) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *CannotUpdateNonDerivedDataset) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e CannotUpdateNonDerivedDataset) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.cannotUpdateNonDerivedDataset)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Catalog:CannotUpdateNonDerivedDataset", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *CannotUpdateNonDerivedDataset) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters cannotUpdateNonDerivedDataset
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.cannotUpdateNonDerivedDataset = parameters
+	return nil
+}
+
 type channelNotFound struct {
 	ChannelRid rid.ResourceIdentifier `json:"channelRid"`
 }
@@ -314,6 +1072,357 @@ func (e *ChannelNotFound) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.channelNotFound = parameters
+	return nil
+}
+
+// safelogging:@Unsafe
+type channelSearchSplitTagKeyNotInDerivedDefinition struct {
+	SplitTagKey              api.TagName   `json:"splitTagKey" safelogging:"@Unsafe"`
+	DerivedDefinitionTagKeys []api.TagName `json:"derivedDefinitionTagKeys" safelogging:"@Unsafe"`
+}
+
+func (o channelSearchSplitTagKeyNotInDerivedDefinition) MarshalJSON() ([]byte, error) {
+	if o.DerivedDefinitionTagKeys == nil {
+		o.DerivedDefinitionTagKeys = make([]api.TagName, 0)
+	}
+	type _tmpchannelSearchSplitTagKeyNotInDerivedDefinition channelSearchSplitTagKeyNotInDerivedDefinition
+	return safejson.Marshal(_tmpchannelSearchSplitTagKeyNotInDerivedDefinition(o))
+}
+
+func (o *channelSearchSplitTagKeyNotInDerivedDefinition) UnmarshalJSON(data []byte) error {
+	type _tmpchannelSearchSplitTagKeyNotInDerivedDefinition channelSearchSplitTagKeyNotInDerivedDefinition
+	var rawchannelSearchSplitTagKeyNotInDerivedDefinition _tmpchannelSearchSplitTagKeyNotInDerivedDefinition
+	if err := safejson.Unmarshal(data, &rawchannelSearchSplitTagKeyNotInDerivedDefinition); err != nil {
+		return err
+	}
+	if rawchannelSearchSplitTagKeyNotInDerivedDefinition.DerivedDefinitionTagKeys == nil {
+		rawchannelSearchSplitTagKeyNotInDerivedDefinition.DerivedDefinitionTagKeys = make([]api.TagName, 0)
+	}
+	*o = channelSearchSplitTagKeyNotInDerivedDefinition(rawchannelSearchSplitTagKeyNotInDerivedDefinition)
+	return nil
+}
+
+func (o channelSearchSplitTagKeyNotInDerivedDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *channelSearchSplitTagKeyNotInDerivedDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewChannelSearchSplitTagKeyNotInDerivedDefinition returns new instance of ChannelSearchSplitTagKeyNotInDerivedDefinition error.
+func NewChannelSearchSplitTagKeyNotInDerivedDefinition(splitTagKeyArg api.TagName, derivedDefinitionTagKeysArg []api.TagName) *ChannelSearchSplitTagKeyNotInDerivedDefinition {
+	return &ChannelSearchSplitTagKeyNotInDerivedDefinition{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), channelSearchSplitTagKeyNotInDerivedDefinition: channelSearchSplitTagKeyNotInDerivedDefinition{SplitTagKey: splitTagKeyArg, DerivedDefinitionTagKeys: derivedDefinitionTagKeysArg}}
+}
+
+// WrapWithChannelSearchSplitTagKeyNotInDerivedDefinition returns new instance of ChannelSearchSplitTagKeyNotInDerivedDefinition error wrapping an existing error.
+func WrapWithChannelSearchSplitTagKeyNotInDerivedDefinition(err error, splitTagKeyArg api.TagName, derivedDefinitionTagKeysArg []api.TagName) *ChannelSearchSplitTagKeyNotInDerivedDefinition {
+	return &ChannelSearchSplitTagKeyNotInDerivedDefinition{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, channelSearchSplitTagKeyNotInDerivedDefinition: channelSearchSplitTagKeyNotInDerivedDefinition{SplitTagKey: splitTagKeyArg, DerivedDefinitionTagKeys: derivedDefinitionTagKeysArg}}
+}
+
+// ChannelSearchSplitTagKeyNotInDerivedDefinition is an error type.
+/*
+A channel-search split tag key is not injected by the dataset's derived definition. Split tag keys must name
+a tag the definition produces.
+*/
+type ChannelSearchSplitTagKeyNotInDerivedDefinition struct {
+	errorInstanceID uuid.UUID
+	channelSearchSplitTagKeyNotInDerivedDefinition
+	cause error
+	stack werror.StackTrace
+}
+
+// IsChannelSearchSplitTagKeyNotInDerivedDefinition returns true if err is an instance of ChannelSearchSplitTagKeyNotInDerivedDefinition.
+func IsChannelSearchSplitTagKeyNotInDerivedDefinition(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ChannelSearchSplitTagKeyNotInDerivedDefinition)
+	return ok
+}
+
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) Message() string {
+	return "INVALID_ARGUMENT Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) Name() string {
+	return "Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) Parameters() map[string]interface{} {
+	return map[string]interface{}{"splitTagKey": e.SplitTagKey, "derivedDefinitionTagKeys": e.DerivedDefinitionTagKeys}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"splitTagKey": e.SplitTagKey, "derivedDefinitionTagKeys": e.DerivedDefinitionTagKeys}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ChannelSearchSplitTagKeyNotInDerivedDefinition) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.channelSearchSplitTagKeyNotInDerivedDefinition)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ChannelSearchSplitTagKeyNotInDerivedDefinition) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters channelSearchSplitTagKeyNotInDerivedDefinition
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.channelSearchSplitTagKeyNotInDerivedDefinition = parameters
+	return nil
+}
+
+// safelogging:@Unsafe
+type channelSearchSplitTagKeysWithoutDerivedDefinition struct {
+	SplitTagKeys []api.TagName `json:"splitTagKeys" safelogging:"@Unsafe"`
+}
+
+func (o channelSearchSplitTagKeysWithoutDerivedDefinition) MarshalJSON() ([]byte, error) {
+	if o.SplitTagKeys == nil {
+		o.SplitTagKeys = make([]api.TagName, 0)
+	}
+	type _tmpchannelSearchSplitTagKeysWithoutDerivedDefinition channelSearchSplitTagKeysWithoutDerivedDefinition
+	return safejson.Marshal(_tmpchannelSearchSplitTagKeysWithoutDerivedDefinition(o))
+}
+
+func (o *channelSearchSplitTagKeysWithoutDerivedDefinition) UnmarshalJSON(data []byte) error {
+	type _tmpchannelSearchSplitTagKeysWithoutDerivedDefinition channelSearchSplitTagKeysWithoutDerivedDefinition
+	var rawchannelSearchSplitTagKeysWithoutDerivedDefinition _tmpchannelSearchSplitTagKeysWithoutDerivedDefinition
+	if err := safejson.Unmarshal(data, &rawchannelSearchSplitTagKeysWithoutDerivedDefinition); err != nil {
+		return err
+	}
+	if rawchannelSearchSplitTagKeysWithoutDerivedDefinition.SplitTagKeys == nil {
+		rawchannelSearchSplitTagKeysWithoutDerivedDefinition.SplitTagKeys = make([]api.TagName, 0)
+	}
+	*o = channelSearchSplitTagKeysWithoutDerivedDefinition(rawchannelSearchSplitTagKeysWithoutDerivedDefinition)
+	return nil
+}
+
+func (o channelSearchSplitTagKeysWithoutDerivedDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *channelSearchSplitTagKeysWithoutDerivedDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewChannelSearchSplitTagKeysWithoutDerivedDefinition returns new instance of ChannelSearchSplitTagKeysWithoutDerivedDefinition error.
+func NewChannelSearchSplitTagKeysWithoutDerivedDefinition(splitTagKeysArg []api.TagName) *ChannelSearchSplitTagKeysWithoutDerivedDefinition {
+	return &ChannelSearchSplitTagKeysWithoutDerivedDefinition{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), channelSearchSplitTagKeysWithoutDerivedDefinition: channelSearchSplitTagKeysWithoutDerivedDefinition{SplitTagKeys: splitTagKeysArg}}
+}
+
+// WrapWithChannelSearchSplitTagKeysWithoutDerivedDefinition returns new instance of ChannelSearchSplitTagKeysWithoutDerivedDefinition error wrapping an existing error.
+func WrapWithChannelSearchSplitTagKeysWithoutDerivedDefinition(err error, splitTagKeysArg []api.TagName) *ChannelSearchSplitTagKeysWithoutDerivedDefinition {
+	return &ChannelSearchSplitTagKeysWithoutDerivedDefinition{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, channelSearchSplitTagKeysWithoutDerivedDefinition: channelSearchSplitTagKeysWithoutDerivedDefinition{SplitTagKeys: splitTagKeysArg}}
+}
+
+// ChannelSearchSplitTagKeysWithoutDerivedDefinition is an error type.
+/*
+Channel-search split tag keys were supplied for a dataset with no derived definition. Only tag keys a
+derived definition produces can be split on; ingested tag keys cannot.
+*/
+type ChannelSearchSplitTagKeysWithoutDerivedDefinition struct {
+	errorInstanceID uuid.UUID
+	channelSearchSplitTagKeysWithoutDerivedDefinition
+	cause error
+	stack werror.StackTrace
+}
+
+// IsChannelSearchSplitTagKeysWithoutDerivedDefinition returns true if err is an instance of ChannelSearchSplitTagKeysWithoutDerivedDefinition.
+func IsChannelSearchSplitTagKeysWithoutDerivedDefinition(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ChannelSearchSplitTagKeysWithoutDerivedDefinition)
+	return ok
+}
+
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Catalog:ChannelSearchSplitTagKeysWithoutDerivedDefinition (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) Message() string {
+	return "INVALID_ARGUMENT Catalog:ChannelSearchSplitTagKeysWithoutDerivedDefinition"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) Name() string {
+	return "Catalog:ChannelSearchSplitTagKeysWithoutDerivedDefinition"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) Parameters() map[string]interface{} {
+	return map[string]interface{}{"splitTagKeys": e.SplitTagKeys}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"splitTagKeys": e.SplitTagKeys}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ChannelSearchSplitTagKeysWithoutDerivedDefinition) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.channelSearchSplitTagKeysWithoutDerivedDefinition)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Catalog:ChannelSearchSplitTagKeysWithoutDerivedDefinition", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ChannelSearchSplitTagKeysWithoutDerivedDefinition) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters channelSearchSplitTagKeysWithoutDerivedDefinition
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.channelSearchSplitTagKeysWithoutDerivedDefinition = parameters
 	return nil
 }
 
@@ -762,6 +1871,156 @@ func (e *ConflictOnSeriesCreation) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.conflictOnSeriesCreation = parameters
+	return nil
+}
+
+type datasetAlreadyDerived struct {
+	DatasetRid rid.ResourceIdentifier `json:"datasetRid"`
+}
+
+func (o datasetAlreadyDerived) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *datasetAlreadyDerived) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDatasetAlreadyDerived returns new instance of DatasetAlreadyDerived error.
+func NewDatasetAlreadyDerived(datasetRidArg rid.ResourceIdentifier) *DatasetAlreadyDerived {
+	return &DatasetAlreadyDerived{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), datasetAlreadyDerived: datasetAlreadyDerived{DatasetRid: datasetRidArg}}
+}
+
+// WrapWithDatasetAlreadyDerived returns new instance of DatasetAlreadyDerived error wrapping an existing error.
+func WrapWithDatasetAlreadyDerived(err error, datasetRidArg rid.ResourceIdentifier) *DatasetAlreadyDerived {
+	return &DatasetAlreadyDerived{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, datasetAlreadyDerived: datasetAlreadyDerived{DatasetRid: datasetRidArg}}
+}
+
+// DatasetAlreadyDerived is an error type.
+// The dataset already has a derived definition. Use commitDerivedDefinition to update it.
+type DatasetAlreadyDerived struct {
+	errorInstanceID uuid.UUID
+	datasetAlreadyDerived
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDatasetAlreadyDerived returns true if err is an instance of DatasetAlreadyDerived.
+func IsDatasetAlreadyDerived(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DatasetAlreadyDerived)
+	return ok
+}
+
+func (e *DatasetAlreadyDerived) Error() string {
+	return fmt.Sprintf("CONFLICT Catalog:DatasetAlreadyDerived (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DatasetAlreadyDerived) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DatasetAlreadyDerived) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DatasetAlreadyDerived) Message() string {
+	return "CONFLICT Catalog:DatasetAlreadyDerived"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DatasetAlreadyDerived) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DatasetAlreadyDerived) Code() errors.ErrorCode {
+	return errors.Conflict
+}
+
+// Name returns an error name identifying error type.
+func (e *DatasetAlreadyDerived) Name() string {
+	return "Catalog:DatasetAlreadyDerived"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DatasetAlreadyDerived) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DatasetAlreadyDerived) Parameters() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DatasetAlreadyDerived) safeParams() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DatasetAlreadyDerived) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DatasetAlreadyDerived) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DatasetAlreadyDerived) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DatasetAlreadyDerived) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.datasetAlreadyDerived)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Catalog:DatasetAlreadyDerived", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DatasetAlreadyDerived) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters datasetAlreadyDerived
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.datasetAlreadyDerived = parameters
 	return nil
 }
 
@@ -1385,6 +2644,154 @@ func (e *DatasetsNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type derivedDatasetsNotEnabled struct{}
+
+func (o derivedDatasetsNotEnabled) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *derivedDatasetsNotEnabled) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDerivedDatasetsNotEnabled returns new instance of DerivedDatasetsNotEnabled error.
+func NewDerivedDatasetsNotEnabled() *DerivedDatasetsNotEnabled {
+	return &DerivedDatasetsNotEnabled{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), derivedDatasetsNotEnabled: derivedDatasetsNotEnabled{}}
+}
+
+// WrapWithDerivedDatasetsNotEnabled returns new instance of DerivedDatasetsNotEnabled error wrapping an existing error.
+func WrapWithDerivedDatasetsNotEnabled(err error) *DerivedDatasetsNotEnabled {
+	return &DerivedDatasetsNotEnabled{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, derivedDatasetsNotEnabled: derivedDatasetsNotEnabled{}}
+}
+
+// DerivedDatasetsNotEnabled is an error type.
+// Derived dataset creation is not enabled for this environment.
+type DerivedDatasetsNotEnabled struct {
+	errorInstanceID uuid.UUID
+	derivedDatasetsNotEnabled
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDerivedDatasetsNotEnabled returns true if err is an instance of DerivedDatasetsNotEnabled.
+func IsDerivedDatasetsNotEnabled(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DerivedDatasetsNotEnabled)
+	return ok
+}
+
+func (e *DerivedDatasetsNotEnabled) Error() string {
+	return fmt.Sprintf("FAILED_PRECONDITION Catalog:DerivedDatasetsNotEnabled (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DerivedDatasetsNotEnabled) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DerivedDatasetsNotEnabled) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DerivedDatasetsNotEnabled) Message() string {
+	return "FAILED_PRECONDITION Catalog:DerivedDatasetsNotEnabled"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DerivedDatasetsNotEnabled) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DerivedDatasetsNotEnabled) Code() errors.ErrorCode {
+	return errors.FailedPrecondition
+}
+
+// Name returns an error name identifying error type.
+func (e *DerivedDatasetsNotEnabled) Name() string {
+	return "Catalog:DerivedDatasetsNotEnabled"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DerivedDatasetsNotEnabled) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DerivedDatasetsNotEnabled) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DerivedDatasetsNotEnabled) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DerivedDatasetsNotEnabled) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DerivedDatasetsNotEnabled) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DerivedDatasetsNotEnabled) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DerivedDatasetsNotEnabled) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.derivedDatasetsNotEnabled)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.FailedPrecondition, ErrorName: "Catalog:DerivedDatasetsNotEnabled", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DerivedDatasetsNotEnabled) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters derivedDatasetsNotEnabled
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.derivedDatasetsNotEnabled = parameters
+	return nil
+}
+
 type granularityMismatch struct {
 	DatasetRid rid.ResourceIdentifier `json:"datasetRid"`
 }
@@ -1416,7 +2823,7 @@ func WrapWithGranularityMismatch(err error, datasetRidArg rid.ResourceIdentifier
 }
 
 // GranularityMismatch is an error type.
-// Different time units are not allowed for the same dataset. Must be either all nanoseconds or all picoseconds.
+// Different time units are not allowed for the same dataset. Must be all nanoseconds.
 type GranularityMismatch struct {
 	errorInstanceID uuid.UUID
 	granularityMismatch
@@ -2137,15 +3544,24 @@ func (e *VideoFileNotFound) UnmarshalJSON(data []byte) error {
 }
 
 func init() {
+	conjureerrors.RegisterErrorType("Catalog:CannotAddFileToDerivedDataset", reflect.TypeOf(CannotAddFileToDerivedDataset{}))
 	conjureerrors.RegisterErrorType("Catalog:CannotAddToLegacyDataset", reflect.TypeOf(CannotAddToLegacyDataset{}))
+	conjureerrors.RegisterErrorType("Catalog:CannotCreateNestedDerivedDataset", reflect.TypeOf(CannotCreateNestedDerivedDataset{}))
+	conjureerrors.RegisterErrorType("Catalog:CannotCreateUnsupportedDerivedDataset", reflect.TypeOf(CannotCreateUnsupportedDerivedDataset{}))
+	conjureerrors.RegisterErrorType("Catalog:CannotInitializeDerivedOnNonEmptyDataset", reflect.TypeOf(CannotInitializeDerivedOnNonEmptyDataset{}))
+	conjureerrors.RegisterErrorType("Catalog:CannotUpdateNonDerivedDataset", reflect.TypeOf(CannotUpdateNonDerivedDataset{}))
 	conjureerrors.RegisterErrorType("Catalog:ChannelNotFound", reflect.TypeOf(ChannelNotFound{}))
+	conjureerrors.RegisterErrorType("Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition", reflect.TypeOf(ChannelSearchSplitTagKeyNotInDerivedDefinition{}))
+	conjureerrors.RegisterErrorType("Catalog:ChannelSearchSplitTagKeysWithoutDerivedDefinition", reflect.TypeOf(ChannelSearchSplitTagKeysWithoutDerivedDefinition{}))
 	conjureerrors.RegisterErrorType("Catalog:ConflictOnDatasetCreation", reflect.TypeOf(ConflictOnDatasetCreation{}))
 	conjureerrors.RegisterErrorType("Catalog:ConflictOnDatasetFileCreateOrUpdate", reflect.TypeOf(ConflictOnDatasetFileCreateOrUpdate{}))
 	conjureerrors.RegisterErrorType("Catalog:ConflictOnSeriesCreation", reflect.TypeOf(ConflictOnSeriesCreation{}))
+	conjureerrors.RegisterErrorType("Catalog:DatasetAlreadyDerived", reflect.TypeOf(DatasetAlreadyDerived{}))
 	conjureerrors.RegisterErrorType("Catalog:DatasetExistsInOtherWorkspace", reflect.TypeOf(DatasetExistsInOtherWorkspace{}))
 	conjureerrors.RegisterErrorType("Catalog:DatasetFileNotFound", reflect.TypeOf(DatasetFileNotFound{}))
 	conjureerrors.RegisterErrorType("Catalog:DatasetNotFound", reflect.TypeOf(DatasetNotFound{}))
 	conjureerrors.RegisterErrorType("Catalog:DatasetsNotFound", reflect.TypeOf(DatasetsNotFound{}))
+	conjureerrors.RegisterErrorType("Catalog:DerivedDatasetsNotEnabled", reflect.TypeOf(DerivedDatasetsNotEnabled{}))
 	conjureerrors.RegisterErrorType("Catalog:GranularityMismatch", reflect.TypeOf(GranularityMismatch{}))
 	conjureerrors.RegisterErrorType("Catalog:IcebergNotSupported", reflect.TypeOf(IcebergNotSupported{}))
 	conjureerrors.RegisterErrorType("Catalog:InvalidStateForAddingAdditionalFile", reflect.TypeOf(InvalidStateForAddingAdditionalFile{}))

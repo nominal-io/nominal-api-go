@@ -921,6 +921,157 @@ func (e *InvalidTimestamp) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type invalidVideoFileBatchUpdateRequest struct {
+	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
+	Reason   string        `json:"reason"`
+}
+
+func (o invalidVideoFileBatchUpdateRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidVideoFileBatchUpdateRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidVideoFileBatchUpdateRequest returns new instance of InvalidVideoFileBatchUpdateRequest error.
+func NewInvalidVideoFileBatchUpdateRequest(videoRidArg rids.VideoRid, reasonArg string) *InvalidVideoFileBatchUpdateRequest {
+	return &InvalidVideoFileBatchUpdateRequest{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidVideoFileBatchUpdateRequest: invalidVideoFileBatchUpdateRequest{VideoRid: videoRidArg, Reason: reasonArg}}
+}
+
+// WrapWithInvalidVideoFileBatchUpdateRequest returns new instance of InvalidVideoFileBatchUpdateRequest error wrapping an existing error.
+func WrapWithInvalidVideoFileBatchUpdateRequest(err error, videoRidArg rids.VideoRid, reasonArg string) *InvalidVideoFileBatchUpdateRequest {
+	return &InvalidVideoFileBatchUpdateRequest{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidVideoFileBatchUpdateRequest: invalidVideoFileBatchUpdateRequest{VideoRid: videoRidArg, Reason: reasonArg}}
+}
+
+// InvalidVideoFileBatchUpdateRequest is an error type.
+// Attempting to batch update video files with an invalid request shape.
+type InvalidVideoFileBatchUpdateRequest struct {
+	errorInstanceID uuid.UUID
+	invalidVideoFileBatchUpdateRequest
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidVideoFileBatchUpdateRequest returns true if err is an instance of InvalidVideoFileBatchUpdateRequest.
+func IsInvalidVideoFileBatchUpdateRequest(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidVideoFileBatchUpdateRequest)
+	return ok
+}
+
+func (e *InvalidVideoFileBatchUpdateRequest) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Video:InvalidVideoFileBatchUpdateRequest (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidVideoFileBatchUpdateRequest) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidVideoFileBatchUpdateRequest) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidVideoFileBatchUpdateRequest) Message() string {
+	return "INVALID_ARGUMENT Video:InvalidVideoFileBatchUpdateRequest"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidVideoFileBatchUpdateRequest) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidVideoFileBatchUpdateRequest) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidVideoFileBatchUpdateRequest) Name() string {
+	return "Video:InvalidVideoFileBatchUpdateRequest"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidVideoFileBatchUpdateRequest) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidVideoFileBatchUpdateRequest) Parameters() map[string]interface{} {
+	return map[string]interface{}{"videoRid": e.VideoRid, "reason": e.Reason}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidVideoFileBatchUpdateRequest) safeParams() map[string]interface{} {
+	return map[string]interface{}{"videoRid": e.VideoRid, "reason": e.Reason, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidVideoFileBatchUpdateRequest) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidVideoFileBatchUpdateRequest) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidVideoFileBatchUpdateRequest) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidVideoFileBatchUpdateRequest) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidVideoFileBatchUpdateRequest)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Video:InvalidVideoFileBatchUpdateRequest", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidVideoFileBatchUpdateRequest) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidVideoFileBatchUpdateRequest
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidVideoFileBatchUpdateRequest = parameters
+	return nil
+}
+
 type missingTimestampBoundPair struct {
 	HasStart bool `json:"hasStart"`
 	HasEnd   bool `json:"hasEnd"`
@@ -1430,7 +1581,7 @@ func WrapWithSegmentConflict(err error, videoRidArg rids.VideoRid, segment1Bound
 }
 
 // SegmentConflict is an error type.
-// Attempting to create multiple segments with overlapping timestamps
+// Attempting to fetch segments that have overlapping timestamps.
 type SegmentConflict struct {
 	errorInstanceID uuid.UUID
 	segmentConflict
@@ -1582,7 +1733,11 @@ func WrapWithSegmentConflictV2(err error, seriesUuidArg uuid.UUID, segment1Bound
 }
 
 // SegmentConflictV2 is an error type.
-// Attempting to create multiple segments with overlapping timestamps for a given series
+/*
+Video segments have overlapping timestamps for a given channel. This occurs when multiple videos are tagged with the
+same channel variable tags. To resolve, apply different tags to each video or use the channel's tag filter to select
+a specific video.
+*/
 type SegmentConflictV2 struct {
 	errorInstanceID uuid.UUID
 	segmentConflictV2
@@ -2462,6 +2617,7 @@ func init() {
 	conjureerrors.RegisterErrorType("VideoSegmenter:InvalidSourceVideo", reflect.TypeOf(InvalidSourceVideo{}))
 	conjureerrors.RegisterErrorType("Video:InvalidTags", reflect.TypeOf(InvalidTags{}))
 	conjureerrors.RegisterErrorType("Video:InvalidTimestamp", reflect.TypeOf(InvalidTimestamp{}))
+	conjureerrors.RegisterErrorType("Video:InvalidVideoFileBatchUpdateRequest", reflect.TypeOf(InvalidVideoFileBatchUpdateRequest{}))
 	conjureerrors.RegisterErrorType("Video:MissingTimestampBoundPair", reflect.TypeOf(MissingTimestampBoundPair{}))
 	conjureerrors.RegisterErrorType("Video:NoSegmentsInBounds", reflect.TypeOf(NoSegmentsInBounds{}))
 	conjureerrors.RegisterErrorType("Video:NotAuthorized", reflect.TypeOf(NotAuthorized{}))

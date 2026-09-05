@@ -2,6 +2,12 @@
 
 package api
 
+/*
+A decimal int64 rendered as a string for lossless persistence,
+matching the canonical proto3 JSON encoding of int64.
+*/
+type CommandIntValue string // safelogging:@Unsafe
+
 type DataSourceRefName string // safelogging:@Unsafe
 
 type HexColor string // safelogging:@Safe

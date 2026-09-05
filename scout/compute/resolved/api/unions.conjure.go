@@ -6,11 +6,186 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nominal-io/nominal-api-go/scout/compute/api"
-	api1 "github.com/nominal-io/nominal-api-go/timeseries/logicalseries/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api2 "github.com/nominal-io/nominal-api-go/timeseries/logicalseries/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
+
+type Alignment struct {
+	typ          string
+	driverSeries *DriverSeries
+	union        *UnionAlignment
+}
+
+type alignmentDeserializer struct {
+	Type         string          `json:"type"`
+	DriverSeries *DriverSeries   `json:"driverSeries"`
+	Union        *UnionAlignment `json:"union"`
+}
+
+func (u *alignmentDeserializer) toStruct() Alignment {
+	return Alignment{typ: u.Type, driverSeries: u.DriverSeries, union: u.Union}
+}
+
+func (u *Alignment) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return nil, fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return struct {
+			Type         string       `json:"type"`
+			DriverSeries DriverSeries `json:"driverSeries"`
+		}{Type: "driverSeries", DriverSeries: *u.driverSeries}, nil
+	case "union":
+		if u.union == nil {
+			return nil, fmt.Errorf("field \"union\" is required")
+		}
+		return struct {
+			Type  string         `json:"type"`
+			Union UnionAlignment `json:"union"`
+		}{Type: "union", Union: *u.union}, nil
+	}
+}
+
+func (u Alignment) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *Alignment) UnmarshalJSON(data []byte) error {
+	var deser alignmentDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+	}
+	return nil
+}
+
+func (u Alignment) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *Alignment) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *Alignment) AcceptFuncs(driverSeriesFunc func(DriverSeries) error, unionFunc func(UnionAlignment) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in Alignment type")
+		}
+		return unknownFunc(u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return driverSeriesFunc(*u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+		return unionFunc(*u.union)
+	}
+}
+
+func (u *Alignment) DriverSeriesNoopSuccess(_ DriverSeries) error {
+	return nil
+}
+
+func (u *Alignment) UnionNoopSuccess(_ UnionAlignment) error {
+	return nil
+}
+
+func (u *Alignment) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *Alignment) Accept(v AlignmentVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return v.VisitDriverSeries(*u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+		return v.VisitUnion(*u.union)
+	}
+}
+
+type AlignmentVisitor interface {
+	VisitDriverSeries(v DriverSeries) error
+	VisitUnion(v UnionAlignment) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *Alignment) AcceptWithContext(ctx context.Context, v AlignmentVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return v.VisitDriverSeriesWithContext(ctx, *u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+		return v.VisitUnionWithContext(ctx, *u.union)
+	}
+}
+
+type AlignmentVisitorWithContext interface {
+	VisitDriverSeriesWithContext(ctx context.Context, v DriverSeries) error
+	VisitUnionWithContext(ctx context.Context, v UnionAlignment) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewAlignmentFromDriverSeries(v DriverSeries) Alignment {
+	return Alignment{typ: "driverSeries", driverSeries: &v}
+}
+
+func NewAlignmentFromUnion(v UnionAlignment) Alignment {
+	return Alignment{typ: "union", union: &v}
+}
 
 type ArraySeriesNode struct {
 	typ       string
@@ -184,453 +359,6 @@ func NewArraySeriesNodeFromNumeric1d(v NumericArraySeriesNode) ArraySeriesNode {
 
 func NewArraySeriesNodeFromEnum1d(v EnumArraySeriesNode) ArraySeriesNode {
 	return ArraySeriesNode{typ: "enum1d", enum1d: &v}
-}
-
-type BooleanSeriesNode struct {
-	typ                  string
-	greaterThan          *GreaterThanSeriesNode
-	lessThan             *LessThanSeriesNode
-	equalTo              *EqualToSeriesNode
-	notEqualTo           *NotEqualToSeriesNode
-	greaterThanOrEqualTo *GreaterThanOrEqualToSeriesNode
-	lessThanOrEqualTo    *LessThanOrEqualToSeriesNode
-	not                  *NotSeriesNode
-	and                  *AndSeriesNode
-	or                   *OrSeriesNode
-}
-
-type booleanSeriesNodeDeserializer struct {
-	Type                 string                          `json:"type"`
-	GreaterThan          *GreaterThanSeriesNode          `json:"greaterThan"`
-	LessThan             *LessThanSeriesNode             `json:"lessThan"`
-	EqualTo              *EqualToSeriesNode              `json:"equalTo"`
-	NotEqualTo           *NotEqualToSeriesNode           `json:"notEqualTo"`
-	GreaterThanOrEqualTo *GreaterThanOrEqualToSeriesNode `json:"greaterThanOrEqualTo"`
-	LessThanOrEqualTo    *LessThanOrEqualToSeriesNode    `json:"lessThanOrEqualTo"`
-	Not                  *NotSeriesNode                  `json:"not"`
-	And                  *AndSeriesNode                  `json:"and"`
-	Or                   *OrSeriesNode                   `json:"or"`
-}
-
-func (u *booleanSeriesNodeDeserializer) toStruct() BooleanSeriesNode {
-	return BooleanSeriesNode{typ: u.Type, greaterThan: u.GreaterThan, lessThan: u.LessThan, equalTo: u.EqualTo, notEqualTo: u.NotEqualTo, greaterThanOrEqualTo: u.GreaterThanOrEqualTo, lessThanOrEqualTo: u.LessThanOrEqualTo, not: u.Not, and: u.And, or: u.Or}
-}
-
-func (u *BooleanSeriesNode) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "greaterThan":
-		if u.greaterThan == nil {
-			return nil, fmt.Errorf("field \"greaterThan\" is required")
-		}
-		return struct {
-			Type        string                `json:"type"`
-			GreaterThan GreaterThanSeriesNode `json:"greaterThan"`
-		}{Type: "greaterThan", GreaterThan: *u.greaterThan}, nil
-	case "lessThan":
-		if u.lessThan == nil {
-			return nil, fmt.Errorf("field \"lessThan\" is required")
-		}
-		return struct {
-			Type     string             `json:"type"`
-			LessThan LessThanSeriesNode `json:"lessThan"`
-		}{Type: "lessThan", LessThan: *u.lessThan}, nil
-	case "equalTo":
-		if u.equalTo == nil {
-			return nil, fmt.Errorf("field \"equalTo\" is required")
-		}
-		return struct {
-			Type    string            `json:"type"`
-			EqualTo EqualToSeriesNode `json:"equalTo"`
-		}{Type: "equalTo", EqualTo: *u.equalTo}, nil
-	case "notEqualTo":
-		if u.notEqualTo == nil {
-			return nil, fmt.Errorf("field \"notEqualTo\" is required")
-		}
-		return struct {
-			Type       string               `json:"type"`
-			NotEqualTo NotEqualToSeriesNode `json:"notEqualTo"`
-		}{Type: "notEqualTo", NotEqualTo: *u.notEqualTo}, nil
-	case "greaterThanOrEqualTo":
-		if u.greaterThanOrEqualTo == nil {
-			return nil, fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
-		}
-		return struct {
-			Type                 string                         `json:"type"`
-			GreaterThanOrEqualTo GreaterThanOrEqualToSeriesNode `json:"greaterThanOrEqualTo"`
-		}{Type: "greaterThanOrEqualTo", GreaterThanOrEqualTo: *u.greaterThanOrEqualTo}, nil
-	case "lessThanOrEqualTo":
-		if u.lessThanOrEqualTo == nil {
-			return nil, fmt.Errorf("field \"lessThanOrEqualTo\" is required")
-		}
-		return struct {
-			Type              string                      `json:"type"`
-			LessThanOrEqualTo LessThanOrEqualToSeriesNode `json:"lessThanOrEqualTo"`
-		}{Type: "lessThanOrEqualTo", LessThanOrEqualTo: *u.lessThanOrEqualTo}, nil
-	case "not":
-		if u.not == nil {
-			return nil, fmt.Errorf("field \"not\" is required")
-		}
-		return struct {
-			Type string        `json:"type"`
-			Not  NotSeriesNode `json:"not"`
-		}{Type: "not", Not: *u.not}, nil
-	case "and":
-		if u.and == nil {
-			return nil, fmt.Errorf("field \"and\" is required")
-		}
-		return struct {
-			Type string        `json:"type"`
-			And  AndSeriesNode `json:"and"`
-		}{Type: "and", And: *u.and}, nil
-	case "or":
-		if u.or == nil {
-			return nil, fmt.Errorf("field \"or\" is required")
-		}
-		return struct {
-			Type string       `json:"type"`
-			Or   OrSeriesNode `json:"or"`
-		}{Type: "or", Or: *u.or}, nil
-	}
-}
-
-func (u BooleanSeriesNode) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *BooleanSeriesNode) UnmarshalJSON(data []byte) error {
-	var deser booleanSeriesNodeDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "greaterThan":
-		if u.greaterThan == nil {
-			return fmt.Errorf("field \"greaterThan\" is required")
-		}
-	case "lessThan":
-		if u.lessThan == nil {
-			return fmt.Errorf("field \"lessThan\" is required")
-		}
-	case "equalTo":
-		if u.equalTo == nil {
-			return fmt.Errorf("field \"equalTo\" is required")
-		}
-	case "notEqualTo":
-		if u.notEqualTo == nil {
-			return fmt.Errorf("field \"notEqualTo\" is required")
-		}
-	case "greaterThanOrEqualTo":
-		if u.greaterThanOrEqualTo == nil {
-			return fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
-		}
-	case "lessThanOrEqualTo":
-		if u.lessThanOrEqualTo == nil {
-			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
-		}
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-	case "and":
-		if u.and == nil {
-			return fmt.Errorf("field \"and\" is required")
-		}
-	case "or":
-		if u.or == nil {
-			return fmt.Errorf("field \"or\" is required")
-		}
-	}
-	return nil
-}
-
-func (u BooleanSeriesNode) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *BooleanSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *BooleanSeriesNode) AcceptFuncs(greaterThanFunc func(GreaterThanSeriesNode) error, lessThanFunc func(LessThanSeriesNode) error, equalToFunc func(EqualToSeriesNode) error, notEqualToFunc func(NotEqualToSeriesNode) error, greaterThanOrEqualToFunc func(GreaterThanOrEqualToSeriesNode) error, lessThanOrEqualToFunc func(LessThanOrEqualToSeriesNode) error, notFunc func(NotSeriesNode) error, andFunc func(AndSeriesNode) error, orFunc func(OrSeriesNode) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in BooleanSeriesNode type")
-		}
-		return unknownFunc(u.typ)
-	case "greaterThan":
-		if u.greaterThan == nil {
-			return fmt.Errorf("field \"greaterThan\" is required")
-		}
-		return greaterThanFunc(*u.greaterThan)
-	case "lessThan":
-		if u.lessThan == nil {
-			return fmt.Errorf("field \"lessThan\" is required")
-		}
-		return lessThanFunc(*u.lessThan)
-	case "equalTo":
-		if u.equalTo == nil {
-			return fmt.Errorf("field \"equalTo\" is required")
-		}
-		return equalToFunc(*u.equalTo)
-	case "notEqualTo":
-		if u.notEqualTo == nil {
-			return fmt.Errorf("field \"notEqualTo\" is required")
-		}
-		return notEqualToFunc(*u.notEqualTo)
-	case "greaterThanOrEqualTo":
-		if u.greaterThanOrEqualTo == nil {
-			return fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
-		}
-		return greaterThanOrEqualToFunc(*u.greaterThanOrEqualTo)
-	case "lessThanOrEqualTo":
-		if u.lessThanOrEqualTo == nil {
-			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
-		}
-		return lessThanOrEqualToFunc(*u.lessThanOrEqualTo)
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-		return notFunc(*u.not)
-	case "and":
-		if u.and == nil {
-			return fmt.Errorf("field \"and\" is required")
-		}
-		return andFunc(*u.and)
-	case "or":
-		if u.or == nil {
-			return fmt.Errorf("field \"or\" is required")
-		}
-		return orFunc(*u.or)
-	}
-}
-
-func (u *BooleanSeriesNode) GreaterThanNoopSuccess(_ GreaterThanSeriesNode) error {
-	return nil
-}
-
-func (u *BooleanSeriesNode) LessThanNoopSuccess(_ LessThanSeriesNode) error {
-	return nil
-}
-
-func (u *BooleanSeriesNode) EqualToNoopSuccess(_ EqualToSeriesNode) error {
-	return nil
-}
-
-func (u *BooleanSeriesNode) NotEqualToNoopSuccess(_ NotEqualToSeriesNode) error {
-	return nil
-}
-
-func (u *BooleanSeriesNode) GreaterThanOrEqualToNoopSuccess(_ GreaterThanOrEqualToSeriesNode) error {
-	return nil
-}
-
-func (u *BooleanSeriesNode) LessThanOrEqualToNoopSuccess(_ LessThanOrEqualToSeriesNode) error {
-	return nil
-}
-
-func (u *BooleanSeriesNode) NotNoopSuccess(_ NotSeriesNode) error {
-	return nil
-}
-
-func (u *BooleanSeriesNode) AndNoopSuccess(_ AndSeriesNode) error {
-	return nil
-}
-
-func (u *BooleanSeriesNode) OrNoopSuccess(_ OrSeriesNode) error {
-	return nil
-}
-
-func (u *BooleanSeriesNode) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *BooleanSeriesNode) Accept(v BooleanSeriesNodeVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
-	case "greaterThan":
-		if u.greaterThan == nil {
-			return fmt.Errorf("field \"greaterThan\" is required")
-		}
-		return v.VisitGreaterThan(*u.greaterThan)
-	case "lessThan":
-		if u.lessThan == nil {
-			return fmt.Errorf("field \"lessThan\" is required")
-		}
-		return v.VisitLessThan(*u.lessThan)
-	case "equalTo":
-		if u.equalTo == nil {
-			return fmt.Errorf("field \"equalTo\" is required")
-		}
-		return v.VisitEqualTo(*u.equalTo)
-	case "notEqualTo":
-		if u.notEqualTo == nil {
-			return fmt.Errorf("field \"notEqualTo\" is required")
-		}
-		return v.VisitNotEqualTo(*u.notEqualTo)
-	case "greaterThanOrEqualTo":
-		if u.greaterThanOrEqualTo == nil {
-			return fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
-		}
-		return v.VisitGreaterThanOrEqualTo(*u.greaterThanOrEqualTo)
-	case "lessThanOrEqualTo":
-		if u.lessThanOrEqualTo == nil {
-			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
-		}
-		return v.VisitLessThanOrEqualTo(*u.lessThanOrEqualTo)
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-		return v.VisitNot(*u.not)
-	case "and":
-		if u.and == nil {
-			return fmt.Errorf("field \"and\" is required")
-		}
-		return v.VisitAnd(*u.and)
-	case "or":
-		if u.or == nil {
-			return fmt.Errorf("field \"or\" is required")
-		}
-		return v.VisitOr(*u.or)
-	}
-}
-
-type BooleanSeriesNodeVisitor interface {
-	VisitGreaterThan(v GreaterThanSeriesNode) error
-	VisitLessThan(v LessThanSeriesNode) error
-	VisitEqualTo(v EqualToSeriesNode) error
-	VisitNotEqualTo(v NotEqualToSeriesNode) error
-	VisitGreaterThanOrEqualTo(v GreaterThanOrEqualToSeriesNode) error
-	VisitLessThanOrEqualTo(v LessThanOrEqualToSeriesNode) error
-	VisitNot(v NotSeriesNode) error
-	VisitAnd(v AndSeriesNode) error
-	VisitOr(v OrSeriesNode) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *BooleanSeriesNode) AcceptWithContext(ctx context.Context, v BooleanSeriesNodeVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "greaterThan":
-		if u.greaterThan == nil {
-			return fmt.Errorf("field \"greaterThan\" is required")
-		}
-		return v.VisitGreaterThanWithContext(ctx, *u.greaterThan)
-	case "lessThan":
-		if u.lessThan == nil {
-			return fmt.Errorf("field \"lessThan\" is required")
-		}
-		return v.VisitLessThanWithContext(ctx, *u.lessThan)
-	case "equalTo":
-		if u.equalTo == nil {
-			return fmt.Errorf("field \"equalTo\" is required")
-		}
-		return v.VisitEqualToWithContext(ctx, *u.equalTo)
-	case "notEqualTo":
-		if u.notEqualTo == nil {
-			return fmt.Errorf("field \"notEqualTo\" is required")
-		}
-		return v.VisitNotEqualToWithContext(ctx, *u.notEqualTo)
-	case "greaterThanOrEqualTo":
-		if u.greaterThanOrEqualTo == nil {
-			return fmt.Errorf("field \"greaterThanOrEqualTo\" is required")
-		}
-		return v.VisitGreaterThanOrEqualToWithContext(ctx, *u.greaterThanOrEqualTo)
-	case "lessThanOrEqualTo":
-		if u.lessThanOrEqualTo == nil {
-			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
-		}
-		return v.VisitLessThanOrEqualToWithContext(ctx, *u.lessThanOrEqualTo)
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-		return v.VisitNotWithContext(ctx, *u.not)
-	case "and":
-		if u.and == nil {
-			return fmt.Errorf("field \"and\" is required")
-		}
-		return v.VisitAndWithContext(ctx, *u.and)
-	case "or":
-		if u.or == nil {
-			return fmt.Errorf("field \"or\" is required")
-		}
-		return v.VisitOrWithContext(ctx, *u.or)
-	}
-}
-
-type BooleanSeriesNodeVisitorWithContext interface {
-	VisitGreaterThanWithContext(ctx context.Context, v GreaterThanSeriesNode) error
-	VisitLessThanWithContext(ctx context.Context, v LessThanSeriesNode) error
-	VisitEqualToWithContext(ctx context.Context, v EqualToSeriesNode) error
-	VisitNotEqualToWithContext(ctx context.Context, v NotEqualToSeriesNode) error
-	VisitGreaterThanOrEqualToWithContext(ctx context.Context, v GreaterThanOrEqualToSeriesNode) error
-	VisitLessThanOrEqualToWithContext(ctx context.Context, v LessThanOrEqualToSeriesNode) error
-	VisitNotWithContext(ctx context.Context, v NotSeriesNode) error
-	VisitAndWithContext(ctx context.Context, v AndSeriesNode) error
-	VisitOrWithContext(ctx context.Context, v OrSeriesNode) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewBooleanSeriesNodeFromGreaterThan(v GreaterThanSeriesNode) BooleanSeriesNode {
-	return BooleanSeriesNode{typ: "greaterThan", greaterThan: &v}
-}
-
-func NewBooleanSeriesNodeFromLessThan(v LessThanSeriesNode) BooleanSeriesNode {
-	return BooleanSeriesNode{typ: "lessThan", lessThan: &v}
-}
-
-func NewBooleanSeriesNodeFromEqualTo(v EqualToSeriesNode) BooleanSeriesNode {
-	return BooleanSeriesNode{typ: "equalTo", equalTo: &v}
-}
-
-func NewBooleanSeriesNodeFromNotEqualTo(v NotEqualToSeriesNode) BooleanSeriesNode {
-	return BooleanSeriesNode{typ: "notEqualTo", notEqualTo: &v}
-}
-
-func NewBooleanSeriesNodeFromGreaterThanOrEqualTo(v GreaterThanOrEqualToSeriesNode) BooleanSeriesNode {
-	return BooleanSeriesNode{typ: "greaterThanOrEqualTo", greaterThanOrEqualTo: &v}
-}
-
-func NewBooleanSeriesNodeFromLessThanOrEqualTo(v LessThanOrEqualToSeriesNode) BooleanSeriesNode {
-	return BooleanSeriesNode{typ: "lessThanOrEqualTo", lessThanOrEqualTo: &v}
-}
-
-func NewBooleanSeriesNodeFromNot(v NotSeriesNode) BooleanSeriesNode {
-	return BooleanSeriesNode{typ: "not", not: &v}
-}
-
-func NewBooleanSeriesNodeFromAnd(v AndSeriesNode) BooleanSeriesNode {
-	return BooleanSeriesNode{typ: "and", and: &v}
-}
-
-func NewBooleanSeriesNodeFromOr(v OrSeriesNode) BooleanSeriesNode {
-	return BooleanSeriesNode{typ: "or", or: &v}
 }
 
 type Cartesian3dNode struct {
@@ -903,27 +631,203 @@ func NewCartesianNodeFromScatter(v ScatterNode) CartesianNode {
 	return CartesianNode{typ: "scatter", scatter: &v}
 }
 
-type CurveFitDetails struct {
+type ChannelInclusion struct {
+	typ  string
+	all  *api.Empty
+	only *[]string
+}
+
+type channelInclusionDeserializer struct {
+	Type string     `json:"type"`
+	All  *api.Empty `json:"all"`
+	Only *[]string  `json:"only"`
+}
+
+func (u *channelInclusionDeserializer) toStruct() ChannelInclusion {
+	return ChannelInclusion{typ: u.Type, all: u.All, only: u.Only}
+}
+
+func (u *ChannelInclusion) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "all":
+		if u.all == nil {
+			return nil, fmt.Errorf("field \"all\" is required")
+		}
+		return struct {
+			Type string    `json:"type"`
+			All  api.Empty `json:"all"`
+		}{Type: "all", All: *u.all}, nil
+	case "only":
+		if u.only == nil {
+			return nil, fmt.Errorf("field \"only\" is required")
+		}
+		return struct {
+			Type string   `json:"type"`
+			Only []string `json:"only"`
+		}{Type: "only", Only: *u.only}, nil
+	}
+}
+
+func (u ChannelInclusion) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ChannelInclusion) UnmarshalJSON(data []byte) error {
+	var deser channelInclusionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "all":
+		if u.all == nil {
+			return fmt.Errorf("field \"all\" is required")
+		}
+	case "only":
+		if u.only == nil {
+			return fmt.Errorf("field \"only\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ChannelInclusion) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ChannelInclusion) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ChannelInclusion) AcceptFuncs(allFunc func(api.Empty) error, onlyFunc func([]string) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ChannelInclusion type")
+		}
+		return unknownFunc(u.typ)
+	case "all":
+		if u.all == nil {
+			return fmt.Errorf("field \"all\" is required")
+		}
+		return allFunc(*u.all)
+	case "only":
+		if u.only == nil {
+			return fmt.Errorf("field \"only\" is required")
+		}
+		return onlyFunc(*u.only)
+	}
+}
+
+func (u *ChannelInclusion) AllNoopSuccess(_ api.Empty) error {
+	return nil
+}
+
+func (u *ChannelInclusion) OnlyNoopSuccess(_ []string) error {
+	return nil
+}
+
+func (u *ChannelInclusion) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ChannelInclusion) Accept(v ChannelInclusionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "all":
+		if u.all == nil {
+			return fmt.Errorf("field \"all\" is required")
+		}
+		return v.VisitAll(*u.all)
+	case "only":
+		if u.only == nil {
+			return fmt.Errorf("field \"only\" is required")
+		}
+		return v.VisitOnly(*u.only)
+	}
+}
+
+type ChannelInclusionVisitor interface {
+	VisitAll(v api.Empty) error
+	VisitOnly(v []string) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ChannelInclusion) AcceptWithContext(ctx context.Context, v ChannelInclusionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "all":
+		if u.all == nil {
+			return fmt.Errorf("field \"all\" is required")
+		}
+		return v.VisitAllWithContext(ctx, *u.all)
+	case "only":
+		if u.only == nil {
+			return fmt.Errorf("field \"only\" is required")
+		}
+		return v.VisitOnlyWithContext(ctx, *u.only)
+	}
+}
+
+type ChannelInclusionVisitorWithContext interface {
+	VisitAllWithContext(ctx context.Context, v api.Empty) error
+	VisitOnlyWithContext(ctx context.Context, v []string) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewChannelInclusionFromAll(v api.Empty) ChannelInclusion {
+	return ChannelInclusion{typ: "all", all: &v}
+}
+
+func NewChannelInclusionFromOnly(v []string) ChannelInclusion {
+	return ChannelInclusion{typ: "only", only: &v}
+}
+
+type CurveFitV2Details struct {
 	typ         string
-	exponential *ExponentialCurve
-	logarithmic *LogarithmicCurve
-	polynomial  *PolynomialCurve
-	power       *PowerCurve
+	exponential *BuiltInCurveFit
+	logarithmic *BuiltInCurveFit
+	polynomial  *PolynomialCurveFit
+	power       *BuiltInCurveFit
+	custom      *CustomCurveFit
 }
 
-type curveFitDetailsDeserializer struct {
-	Type        string            `json:"type"`
-	Exponential *ExponentialCurve `json:"exponential"`
-	Logarithmic *LogarithmicCurve `json:"logarithmic"`
-	Polynomial  *PolynomialCurve  `json:"polynomial"`
-	Power       *PowerCurve       `json:"power"`
+type curveFitV2DetailsDeserializer struct {
+	Type        string              `json:"type"`
+	Exponential *BuiltInCurveFit    `json:"exponential"`
+	Logarithmic *BuiltInCurveFit    `json:"logarithmic"`
+	Polynomial  *PolynomialCurveFit `json:"polynomial"`
+	Power       *BuiltInCurveFit    `json:"power"`
+	Custom      *CustomCurveFit     `json:"custom"`
 }
 
-func (u *curveFitDetailsDeserializer) toStruct() CurveFitDetails {
-	return CurveFitDetails{typ: u.Type, exponential: u.Exponential, logarithmic: u.Logarithmic, polynomial: u.Polynomial, power: u.Power}
+func (u *curveFitV2DetailsDeserializer) toStruct() CurveFitV2Details {
+	return CurveFitV2Details{typ: u.Type, exponential: u.Exponential, logarithmic: u.Logarithmic, polynomial: u.Polynomial, power: u.Power, custom: u.Custom}
 }
 
-func (u *CurveFitDetails) toSerializer() (interface{}, error) {
+func (u *CurveFitV2Details) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
@@ -932,37 +836,45 @@ func (u *CurveFitDetails) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"exponential\" is required")
 		}
 		return struct {
-			Type        string           `json:"type"`
-			Exponential ExponentialCurve `json:"exponential"`
+			Type        string          `json:"type"`
+			Exponential BuiltInCurveFit `json:"exponential"`
 		}{Type: "exponential", Exponential: *u.exponential}, nil
 	case "logarithmic":
 		if u.logarithmic == nil {
 			return nil, fmt.Errorf("field \"logarithmic\" is required")
 		}
 		return struct {
-			Type        string           `json:"type"`
-			Logarithmic LogarithmicCurve `json:"logarithmic"`
+			Type        string          `json:"type"`
+			Logarithmic BuiltInCurveFit `json:"logarithmic"`
 		}{Type: "logarithmic", Logarithmic: *u.logarithmic}, nil
 	case "polynomial":
 		if u.polynomial == nil {
 			return nil, fmt.Errorf("field \"polynomial\" is required")
 		}
 		return struct {
-			Type       string          `json:"type"`
-			Polynomial PolynomialCurve `json:"polynomial"`
+			Type       string             `json:"type"`
+			Polynomial PolynomialCurveFit `json:"polynomial"`
 		}{Type: "polynomial", Polynomial: *u.polynomial}, nil
 	case "power":
 		if u.power == nil {
 			return nil, fmt.Errorf("field \"power\" is required")
 		}
 		return struct {
-			Type  string     `json:"type"`
-			Power PowerCurve `json:"power"`
+			Type  string          `json:"type"`
+			Power BuiltInCurveFit `json:"power"`
 		}{Type: "power", Power: *u.power}, nil
+	case "custom":
+		if u.custom == nil {
+			return nil, fmt.Errorf("field \"custom\" is required")
+		}
+		return struct {
+			Type   string         `json:"type"`
+			Custom CustomCurveFit `json:"custom"`
+		}{Type: "custom", Custom: *u.custom}, nil
 	}
 }
 
-func (u CurveFitDetails) MarshalJSON() ([]byte, error) {
+func (u CurveFitV2Details) MarshalJSON() ([]byte, error) {
 	ser, err := u.toSerializer()
 	if err != nil {
 		return nil, err
@@ -970,8 +882,8 @@ func (u CurveFitDetails) MarshalJSON() ([]byte, error) {
 	return safejson.Marshal(ser)
 }
 
-func (u *CurveFitDetails) UnmarshalJSON(data []byte) error {
-	var deser curveFitDetailsDeserializer
+func (u *CurveFitV2Details) UnmarshalJSON(data []byte) error {
+	var deser curveFitV2DetailsDeserializer
 	if err := safejson.Unmarshal(data, &deser); err != nil {
 		return err
 	}
@@ -993,11 +905,15 @@ func (u *CurveFitDetails) UnmarshalJSON(data []byte) error {
 		if u.power == nil {
 			return fmt.Errorf("field \"power\" is required")
 		}
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
 	}
 	return nil
 }
 
-func (u CurveFitDetails) MarshalYAML() (interface{}, error) {
+func (u CurveFitV2Details) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(u)
 	if err != nil {
 		return nil, err
@@ -1005,7 +921,7 @@ func (u CurveFitDetails) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (u *CurveFitDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (u *CurveFitV2Details) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1013,11 +929,11 @@ func (u *CurveFitDetails) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *CurveFitDetails) AcceptFuncs(exponentialFunc func(ExponentialCurve) error, logarithmicFunc func(LogarithmicCurve) error, polynomialFunc func(PolynomialCurve) error, powerFunc func(PowerCurve) error, unknownFunc func(string) error) error {
+func (u *CurveFitV2Details) AcceptFuncs(exponentialFunc func(BuiltInCurveFit) error, logarithmicFunc func(BuiltInCurveFit) error, polynomialFunc func(PolynomialCurveFit) error, powerFunc func(BuiltInCurveFit) error, customFunc func(CustomCurveFit) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in CurveFitDetails type")
+			return fmt.Errorf("invalid value in CurveFitV2Details type")
 		}
 		return unknownFunc(u.typ)
 	case "exponential":
@@ -1040,30 +956,39 @@ func (u *CurveFitDetails) AcceptFuncs(exponentialFunc func(ExponentialCurve) err
 			return fmt.Errorf("field \"power\" is required")
 		}
 		return powerFunc(*u.power)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return customFunc(*u.custom)
 	}
 }
 
-func (u *CurveFitDetails) ExponentialNoopSuccess(_ ExponentialCurve) error {
+func (u *CurveFitV2Details) ExponentialNoopSuccess(_ BuiltInCurveFit) error {
 	return nil
 }
 
-func (u *CurveFitDetails) LogarithmicNoopSuccess(_ LogarithmicCurve) error {
+func (u *CurveFitV2Details) LogarithmicNoopSuccess(_ BuiltInCurveFit) error {
 	return nil
 }
 
-func (u *CurveFitDetails) PolynomialNoopSuccess(_ PolynomialCurve) error {
+func (u *CurveFitV2Details) PolynomialNoopSuccess(_ PolynomialCurveFit) error {
 	return nil
 }
 
-func (u *CurveFitDetails) PowerNoopSuccess(_ PowerCurve) error {
+func (u *CurveFitV2Details) PowerNoopSuccess(_ BuiltInCurveFit) error {
 	return nil
 }
 
-func (u *CurveFitDetails) ErrorOnUnknown(typeName string) error {
+func (u *CurveFitV2Details) CustomNoopSuccess(_ CustomCurveFit) error {
+	return nil
+}
+
+func (u *CurveFitV2Details) ErrorOnUnknown(typeName string) error {
 	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
-func (u *CurveFitDetails) Accept(v CurveFitDetailsVisitor) error {
+func (u *CurveFitV2Details) Accept(v CurveFitV2DetailsVisitor) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1090,18 +1015,24 @@ func (u *CurveFitDetails) Accept(v CurveFitDetailsVisitor) error {
 			return fmt.Errorf("field \"power\" is required")
 		}
 		return v.VisitPower(*u.power)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustom(*u.custom)
 	}
 }
 
-type CurveFitDetailsVisitor interface {
-	VisitExponential(v ExponentialCurve) error
-	VisitLogarithmic(v LogarithmicCurve) error
-	VisitPolynomial(v PolynomialCurve) error
-	VisitPower(v PowerCurve) error
+type CurveFitV2DetailsVisitor interface {
+	VisitExponential(v BuiltInCurveFit) error
+	VisitLogarithmic(v BuiltInCurveFit) error
+	VisitPolynomial(v PolynomialCurveFit) error
+	VisitPower(v BuiltInCurveFit) error
+	VisitCustom(v CustomCurveFit) error
 	VisitUnknown(typeName string) error
 }
 
-func (u *CurveFitDetails) AcceptWithContext(ctx context.Context, v CurveFitDetailsVisitorWithContext) error {
+func (u *CurveFitV2Details) AcceptWithContext(ctx context.Context, v CurveFitV2DetailsVisitorWithContext) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1128,73 +1059,83 @@ func (u *CurveFitDetails) AcceptWithContext(ctx context.Context, v CurveFitDetai
 			return fmt.Errorf("field \"power\" is required")
 		}
 		return v.VisitPowerWithContext(ctx, *u.power)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustomWithContext(ctx, *u.custom)
 	}
 }
 
-type CurveFitDetailsVisitorWithContext interface {
-	VisitExponentialWithContext(ctx context.Context, v ExponentialCurve) error
-	VisitLogarithmicWithContext(ctx context.Context, v LogarithmicCurve) error
-	VisitPolynomialWithContext(ctx context.Context, v PolynomialCurve) error
-	VisitPowerWithContext(ctx context.Context, v PowerCurve) error
+type CurveFitV2DetailsVisitorWithContext interface {
+	VisitExponentialWithContext(ctx context.Context, v BuiltInCurveFit) error
+	VisitLogarithmicWithContext(ctx context.Context, v BuiltInCurveFit) error
+	VisitPolynomialWithContext(ctx context.Context, v PolynomialCurveFit) error
+	VisitPowerWithContext(ctx context.Context, v BuiltInCurveFit) error
+	VisitCustomWithContext(ctx context.Context, v CustomCurveFit) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewCurveFitDetailsFromExponential(v ExponentialCurve) CurveFitDetails {
-	return CurveFitDetails{typ: "exponential", exponential: &v}
+func NewCurveFitV2DetailsFromExponential(v BuiltInCurveFit) CurveFitV2Details {
+	return CurveFitV2Details{typ: "exponential", exponential: &v}
 }
 
-func NewCurveFitDetailsFromLogarithmic(v LogarithmicCurve) CurveFitDetails {
-	return CurveFitDetails{typ: "logarithmic", logarithmic: &v}
+func NewCurveFitV2DetailsFromLogarithmic(v BuiltInCurveFit) CurveFitV2Details {
+	return CurveFitV2Details{typ: "logarithmic", logarithmic: &v}
 }
 
-func NewCurveFitDetailsFromPolynomial(v PolynomialCurve) CurveFitDetails {
-	return CurveFitDetails{typ: "polynomial", polynomial: &v}
+func NewCurveFitV2DetailsFromPolynomial(v PolynomialCurveFit) CurveFitV2Details {
+	return CurveFitV2Details{typ: "polynomial", polynomial: &v}
 }
 
-func NewCurveFitDetailsFromPower(v PowerCurve) CurveFitDetails {
-	return CurveFitDetails{typ: "power", power: &v}
+func NewCurveFitV2DetailsFromPower(v BuiltInCurveFit) CurveFitV2Details {
+	return CurveFitV2Details{typ: "power", power: &v}
 }
 
-type CurveFitPlotTypeNode struct {
-	typ        string
-	timeSeries *TimeSeriesCurveFitNode
-	scatter    *ScatterCurveFitNode
+func NewCurveFitV2DetailsFromCustom(v CustomCurveFit) CurveFitV2Details {
+	return CurveFitV2Details{typ: "custom", custom: &v}
 }
 
-type curveFitPlotTypeNodeDeserializer struct {
-	Type       string                  `json:"type"`
-	TimeSeries *TimeSeriesCurveFitNode `json:"timeSeries"`
-	Scatter    *ScatterCurveFitNode    `json:"scatter"`
+type CurveFitVariable struct {
+	typ     string
+	numeric *CurveFitSeriesVariable
+	time    *CurveFitTimeVariable
 }
 
-func (u *curveFitPlotTypeNodeDeserializer) toStruct() CurveFitPlotTypeNode {
-	return CurveFitPlotTypeNode{typ: u.Type, timeSeries: u.TimeSeries, scatter: u.Scatter}
+type curveFitVariableDeserializer struct {
+	Type    string                  `json:"type"`
+	Numeric *CurveFitSeriesVariable `json:"numeric"`
+	Time    *CurveFitTimeVariable   `json:"time"`
 }
 
-func (u *CurveFitPlotTypeNode) toSerializer() (interface{}, error) {
+func (u *curveFitVariableDeserializer) toStruct() CurveFitVariable {
+	return CurveFitVariable{typ: u.Type, numeric: u.Numeric, time: u.Time}
+}
+
+func (u *CurveFitVariable) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "timeSeries":
-		if u.timeSeries == nil {
-			return nil, fmt.Errorf("field \"timeSeries\" is required")
+	case "numeric":
+		if u.numeric == nil {
+			return nil, fmt.Errorf("field \"numeric\" is required")
 		}
 		return struct {
-			Type       string                 `json:"type"`
-			TimeSeries TimeSeriesCurveFitNode `json:"timeSeries"`
-		}{Type: "timeSeries", TimeSeries: *u.timeSeries}, nil
-	case "scatter":
-		if u.scatter == nil {
-			return nil, fmt.Errorf("field \"scatter\" is required")
+			Type    string                 `json:"type"`
+			Numeric CurveFitSeriesVariable `json:"numeric"`
+		}{Type: "numeric", Numeric: *u.numeric}, nil
+	case "time":
+		if u.time == nil {
+			return nil, fmt.Errorf("field \"time\" is required")
 		}
 		return struct {
-			Type    string              `json:"type"`
-			Scatter ScatterCurveFitNode `json:"scatter"`
-		}{Type: "scatter", Scatter: *u.scatter}, nil
+			Type string               `json:"type"`
+			Time CurveFitTimeVariable `json:"time"`
+		}{Type: "time", Time: *u.time}, nil
 	}
 }
 
-func (u CurveFitPlotTypeNode) MarshalJSON() ([]byte, error) {
+func (u CurveFitVariable) MarshalJSON() ([]byte, error) {
 	ser, err := u.toSerializer()
 	if err != nil {
 		return nil, err
@@ -1202,26 +1143,26 @@ func (u CurveFitPlotTypeNode) MarshalJSON() ([]byte, error) {
 	return safejson.Marshal(ser)
 }
 
-func (u *CurveFitPlotTypeNode) UnmarshalJSON(data []byte) error {
-	var deser curveFitPlotTypeNodeDeserializer
+func (u *CurveFitVariable) UnmarshalJSON(data []byte) error {
+	var deser curveFitVariableDeserializer
 	if err := safejson.Unmarshal(data, &deser); err != nil {
 		return err
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "timeSeries":
-		if u.timeSeries == nil {
-			return fmt.Errorf("field \"timeSeries\" is required")
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
 		}
-	case "scatter":
-		if u.scatter == nil {
-			return fmt.Errorf("field \"scatter\" is required")
+	case "time":
+		if u.time == nil {
+			return fmt.Errorf("field \"time\" is required")
 		}
 	}
 	return nil
 }
 
-func (u CurveFitPlotTypeNode) MarshalYAML() (interface{}, error) {
+func (u CurveFitVariable) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(u)
 	if err != nil {
 		return nil, err
@@ -1229,7 +1170,7 @@ func (u CurveFitPlotTypeNode) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (u *CurveFitPlotTypeNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (u *CurveFitVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1237,110 +1178,114 @@ func (u *CurveFitPlotTypeNode) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *CurveFitPlotTypeNode) AcceptFuncs(timeSeriesFunc func(TimeSeriesCurveFitNode) error, scatterFunc func(ScatterCurveFitNode) error, unknownFunc func(string) error) error {
+func (u *CurveFitVariable) AcceptFuncs(numericFunc func(CurveFitSeriesVariable) error, timeFunc func(CurveFitTimeVariable) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
-			return fmt.Errorf("invalid value in CurveFitPlotTypeNode type")
+			return fmt.Errorf("invalid value in CurveFitVariable type")
 		}
 		return unknownFunc(u.typ)
-	case "timeSeries":
-		if u.timeSeries == nil {
-			return fmt.Errorf("field \"timeSeries\" is required")
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
 		}
-		return timeSeriesFunc(*u.timeSeries)
-	case "scatter":
-		if u.scatter == nil {
-			return fmt.Errorf("field \"scatter\" is required")
+		return numericFunc(*u.numeric)
+	case "time":
+		if u.time == nil {
+			return fmt.Errorf("field \"time\" is required")
 		}
-		return scatterFunc(*u.scatter)
+		return timeFunc(*u.time)
 	}
 }
 
-func (u *CurveFitPlotTypeNode) TimeSeriesNoopSuccess(_ TimeSeriesCurveFitNode) error {
+func (u *CurveFitVariable) NumericNoopSuccess(_ CurveFitSeriesVariable) error {
 	return nil
 }
 
-func (u *CurveFitPlotTypeNode) ScatterNoopSuccess(_ ScatterCurveFitNode) error {
+func (u *CurveFitVariable) TimeNoopSuccess(_ CurveFitTimeVariable) error {
 	return nil
 }
 
-func (u *CurveFitPlotTypeNode) ErrorOnUnknown(typeName string) error {
+func (u *CurveFitVariable) ErrorOnUnknown(typeName string) error {
 	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
 
-func (u *CurveFitPlotTypeNode) Accept(v CurveFitPlotTypeNodeVisitor) error {
+func (u *CurveFitVariable) Accept(v CurveFitVariableVisitor) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "timeSeries":
-		if u.timeSeries == nil {
-			return fmt.Errorf("field \"timeSeries\" is required")
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
 		}
-		return v.VisitTimeSeries(*u.timeSeries)
-	case "scatter":
-		if u.scatter == nil {
-			return fmt.Errorf("field \"scatter\" is required")
+		return v.VisitNumeric(*u.numeric)
+	case "time":
+		if u.time == nil {
+			return fmt.Errorf("field \"time\" is required")
 		}
-		return v.VisitScatter(*u.scatter)
+		return v.VisitTime(*u.time)
 	}
 }
 
-type CurveFitPlotTypeNodeVisitor interface {
-	VisitTimeSeries(v TimeSeriesCurveFitNode) error
-	VisitScatter(v ScatterCurveFitNode) error
+type CurveFitVariableVisitor interface {
+	VisitNumeric(v CurveFitSeriesVariable) error
+	VisitTime(v CurveFitTimeVariable) error
 	VisitUnknown(typeName string) error
 }
 
-func (u *CurveFitPlotTypeNode) AcceptWithContext(ctx context.Context, v CurveFitPlotTypeNodeVisitorWithContext) error {
+func (u *CurveFitVariable) AcceptWithContext(ctx context.Context, v CurveFitVariableVisitorWithContext) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "timeSeries":
-		if u.timeSeries == nil {
-			return fmt.Errorf("field \"timeSeries\" is required")
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
 		}
-		return v.VisitTimeSeriesWithContext(ctx, *u.timeSeries)
-	case "scatter":
-		if u.scatter == nil {
-			return fmt.Errorf("field \"scatter\" is required")
+		return v.VisitNumericWithContext(ctx, *u.numeric)
+	case "time":
+		if u.time == nil {
+			return fmt.Errorf("field \"time\" is required")
 		}
-		return v.VisitScatterWithContext(ctx, *u.scatter)
+		return v.VisitTimeWithContext(ctx, *u.time)
 	}
 }
 
-type CurveFitPlotTypeNodeVisitorWithContext interface {
-	VisitTimeSeriesWithContext(ctx context.Context, v TimeSeriesCurveFitNode) error
-	VisitScatterWithContext(ctx context.Context, v ScatterCurveFitNode) error
+type CurveFitVariableVisitorWithContext interface {
+	VisitNumericWithContext(ctx context.Context, v CurveFitSeriesVariable) error
+	VisitTimeWithContext(ctx context.Context, v CurveFitTimeVariable) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewCurveFitPlotTypeNodeFromTimeSeries(v TimeSeriesCurveFitNode) CurveFitPlotTypeNode {
-	return CurveFitPlotTypeNode{typ: "timeSeries", timeSeries: &v}
+func NewCurveFitVariableFromNumeric(v CurveFitSeriesVariable) CurveFitVariable {
+	return CurveFitVariable{typ: "numeric", numeric: &v}
 }
 
-func NewCurveFitPlotTypeNodeFromScatter(v ScatterCurveFitNode) CurveFitPlotTypeNode {
-	return CurveFitPlotTypeNode{typ: "scatter", scatter: &v}
+func NewCurveFitVariableFromTime(v CurveFitTimeVariable) CurveFitVariable {
+	return CurveFitVariable{typ: "time", time: &v}
 }
 
 type EnumArraySeriesNode struct {
-	typ string
-	raw *ResolvedSeries
+	typ               string
+	raw               *ResolvedSeries
+	genericTransform  *GenericTransformNode
+	extractFromStruct *ExtractEnumArrayFromStructSeriesNode
 }
 
 type enumArraySeriesNodeDeserializer struct {
-	Type string          `json:"type"`
-	Raw  *ResolvedSeries `json:"raw"`
+	Type              string                                `json:"type"`
+	Raw               *ResolvedSeries                       `json:"raw"`
+	GenericTransform  *GenericTransformNode                 `json:"genericTransform"`
+	ExtractFromStruct *ExtractEnumArrayFromStructSeriesNode `json:"extractFromStruct"`
 }
 
 func (u *enumArraySeriesNodeDeserializer) toStruct() EnumArraySeriesNode {
-	return EnumArraySeriesNode{typ: u.Type, raw: u.Raw}
+	return EnumArraySeriesNode{typ: u.Type, raw: u.Raw, genericTransform: u.GenericTransform, extractFromStruct: u.ExtractFromStruct}
 }
 
 func (u *EnumArraySeriesNode) toSerializer() (interface{}, error) {
@@ -1355,6 +1300,22 @@ func (u *EnumArraySeriesNode) toSerializer() (interface{}, error) {
 			Type string         `json:"type"`
 			Raw  ResolvedSeries `json:"raw"`
 		}{Type: "raw", Raw: *u.raw}, nil
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return nil, fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return struct {
+			Type             string               `json:"type"`
+			GenericTransform GenericTransformNode `json:"genericTransform"`
+		}{Type: "genericTransform", GenericTransform: *u.genericTransform}, nil
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return nil, fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return struct {
+			Type              string                               `json:"type"`
+			ExtractFromStruct ExtractEnumArrayFromStructSeriesNode `json:"extractFromStruct"`
+		}{Type: "extractFromStruct", ExtractFromStruct: *u.extractFromStruct}, nil
 	}
 }
 
@@ -1377,6 +1338,14 @@ func (u *EnumArraySeriesNode) UnmarshalJSON(data []byte) error {
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
 		}
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
 	}
 	return nil
 }
@@ -1397,7 +1366,7 @@ func (u *EnumArraySeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *EnumArraySeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, unknownFunc func(string) error) error {
+func (u *EnumArraySeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, genericTransformFunc func(GenericTransformNode) error, extractFromStructFunc func(ExtractEnumArrayFromStructSeriesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1409,10 +1378,28 @@ func (u *EnumArraySeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, un
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return rawFunc(*u.raw)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return genericTransformFunc(*u.genericTransform)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return extractFromStructFunc(*u.extractFromStruct)
 	}
 }
 
 func (u *EnumArraySeriesNode) RawNoopSuccess(_ ResolvedSeries) error {
+	return nil
+}
+
+func (u *EnumArraySeriesNode) GenericTransformNoopSuccess(_ GenericTransformNode) error {
+	return nil
+}
+
+func (u *EnumArraySeriesNode) ExtractFromStructNoopSuccess(_ ExtractEnumArrayFromStructSeriesNode) error {
 	return nil
 }
 
@@ -1432,11 +1419,23 @@ func (u *EnumArraySeriesNode) Accept(v EnumArraySeriesNodeVisitor) error {
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRaw(*u.raw)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return v.VisitGenericTransform(*u.genericTransform)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return v.VisitExtractFromStruct(*u.extractFromStruct)
 	}
 }
 
 type EnumArraySeriesNodeVisitor interface {
 	VisitRaw(v ResolvedSeries) error
+	VisitGenericTransform(v GenericTransformNode) error
+	VisitExtractFromStruct(v ExtractEnumArrayFromStructSeriesNode) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1452,11 +1451,23 @@ func (u *EnumArraySeriesNode) AcceptWithContext(ctx context.Context, v EnumArray
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRawWithContext(ctx, *u.raw)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return v.VisitGenericTransformWithContext(ctx, *u.genericTransform)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return v.VisitExtractFromStructWithContext(ctx, *u.extractFromStruct)
 	}
 }
 
 type EnumArraySeriesNodeVisitorWithContext interface {
 	VisitRawWithContext(ctx context.Context, v ResolvedSeries) error
+	VisitGenericTransformWithContext(ctx context.Context, v GenericTransformNode) error
+	VisitExtractFromStructWithContext(ctx context.Context, v ExtractEnumArrayFromStructSeriesNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1464,19 +1475,28 @@ func NewEnumArraySeriesNodeFromRaw(v ResolvedSeries) EnumArraySeriesNode {
 	return EnumArraySeriesNode{typ: "raw", raw: &v}
 }
 
+func NewEnumArraySeriesNodeFromGenericTransform(v GenericTransformNode) EnumArraySeriesNode {
+	return EnumArraySeriesNode{typ: "genericTransform", genericTransform: &v}
+}
+
+func NewEnumArraySeriesNodeFromExtractFromStruct(v ExtractEnumArrayFromStructSeriesNode) EnumArraySeriesNode {
+	return EnumArraySeriesNode{typ: "extractFromStruct", extractFromStruct: &v}
+}
+
 type EnumSeriesNode struct {
 	typ                  string
 	literal              *LiteralEnumSeriesNode
 	raw                  *RawEnumSeriesNode
 	resample             *EnumResampleSeriesNode
-	timeRangeFilter      *EnumTimeRangeFilterSeriesNode
-	timeShift            *EnumTimeShiftSeriesNode
+	nthPointDownsample   *EnumNthPointDownsampleSeriesNode
 	union                *EnumUnionSeriesNode
 	aggregate            *AggregateEnumSeriesNode
 	filterTransformation *EnumFilterTransformationSeriesNode
 	valueMap             *ValueMapSeriesNode
 	arraySelect          *SelectIndexFromEnumArraySeriesNode
 	extractFromStruct    *ExtractEnumFromStructSeriesNode
+	genericTransform     *GenericTransformNode
+	scalarUdf            *ScalarUdfSeriesNode
 }
 
 type enumSeriesNodeDeserializer struct {
@@ -1484,18 +1504,19 @@ type enumSeriesNodeDeserializer struct {
 	Literal              *LiteralEnumSeriesNode              `json:"literal"`
 	Raw                  *RawEnumSeriesNode                  `json:"raw"`
 	Resample             *EnumResampleSeriesNode             `json:"resample"`
-	TimeRangeFilter      *EnumTimeRangeFilterSeriesNode      `json:"timeRangeFilter"`
-	TimeShift            *EnumTimeShiftSeriesNode            `json:"timeShift"`
+	NthPointDownsample   *EnumNthPointDownsampleSeriesNode   `json:"nthPointDownsample"`
 	Union                *EnumUnionSeriesNode                `json:"union"`
 	Aggregate            *AggregateEnumSeriesNode            `json:"aggregate"`
 	FilterTransformation *EnumFilterTransformationSeriesNode `json:"filterTransformation"`
 	ValueMap             *ValueMapSeriesNode                 `json:"valueMap"`
 	ArraySelect          *SelectIndexFromEnumArraySeriesNode `json:"arraySelect"`
 	ExtractFromStruct    *ExtractEnumFromStructSeriesNode    `json:"extractFromStruct"`
+	GenericTransform     *GenericTransformNode               `json:"genericTransform"`
+	ScalarUdf            *ScalarUdfSeriesNode                `json:"scalarUdf"`
 }
 
 func (u *enumSeriesNodeDeserializer) toStruct() EnumSeriesNode {
-	return EnumSeriesNode{typ: u.Type, literal: u.Literal, raw: u.Raw, resample: u.Resample, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, union: u.Union, aggregate: u.Aggregate, filterTransformation: u.FilterTransformation, valueMap: u.ValueMap, arraySelect: u.ArraySelect, extractFromStruct: u.ExtractFromStruct}
+	return EnumSeriesNode{typ: u.Type, literal: u.Literal, raw: u.Raw, resample: u.Resample, nthPointDownsample: u.NthPointDownsample, union: u.Union, aggregate: u.Aggregate, filterTransformation: u.FilterTransformation, valueMap: u.ValueMap, arraySelect: u.ArraySelect, extractFromStruct: u.ExtractFromStruct, genericTransform: u.GenericTransform, scalarUdf: u.ScalarUdf}
 }
 
 func (u *EnumSeriesNode) toSerializer() (interface{}, error) {
@@ -1526,22 +1547,14 @@ func (u *EnumSeriesNode) toSerializer() (interface{}, error) {
 			Type     string                 `json:"type"`
 			Resample EnumResampleSeriesNode `json:"resample"`
 		}{Type: "resample", Resample: *u.resample}, nil
-	case "timeRangeFilter":
-		if u.timeRangeFilter == nil {
-			return nil, fmt.Errorf("field \"timeRangeFilter\" is required")
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return nil, fmt.Errorf("field \"nthPointDownsample\" is required")
 		}
 		return struct {
-			Type            string                        `json:"type"`
-			TimeRangeFilter EnumTimeRangeFilterSeriesNode `json:"timeRangeFilter"`
-		}{Type: "timeRangeFilter", TimeRangeFilter: *u.timeRangeFilter}, nil
-	case "timeShift":
-		if u.timeShift == nil {
-			return nil, fmt.Errorf("field \"timeShift\" is required")
-		}
-		return struct {
-			Type      string                  `json:"type"`
-			TimeShift EnumTimeShiftSeriesNode `json:"timeShift"`
-		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
+			Type               string                           `json:"type"`
+			NthPointDownsample EnumNthPointDownsampleSeriesNode `json:"nthPointDownsample"`
+		}{Type: "nthPointDownsample", NthPointDownsample: *u.nthPointDownsample}, nil
 	case "union":
 		if u.union == nil {
 			return nil, fmt.Errorf("field \"union\" is required")
@@ -1590,6 +1603,22 @@ func (u *EnumSeriesNode) toSerializer() (interface{}, error) {
 			Type              string                          `json:"type"`
 			ExtractFromStruct ExtractEnumFromStructSeriesNode `json:"extractFromStruct"`
 		}{Type: "extractFromStruct", ExtractFromStruct: *u.extractFromStruct}, nil
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return nil, fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return struct {
+			Type             string               `json:"type"`
+			GenericTransform GenericTransformNode `json:"genericTransform"`
+		}{Type: "genericTransform", GenericTransform: *u.genericTransform}, nil
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return nil, fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return struct {
+			Type      string              `json:"type"`
+			ScalarUdf ScalarUdfSeriesNode `json:"scalarUdf"`
+		}{Type: "scalarUdf", ScalarUdf: *u.scalarUdf}, nil
 	}
 }
 
@@ -1620,13 +1649,9 @@ func (u *EnumSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.resample == nil {
 			return fmt.Errorf("field \"resample\" is required")
 		}
-	case "timeRangeFilter":
-		if u.timeRangeFilter == nil {
-			return fmt.Errorf("field \"timeRangeFilter\" is required")
-		}
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
 		}
 	case "union":
 		if u.union == nil {
@@ -1652,6 +1677,14 @@ func (u *EnumSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
 	}
 	return nil
 }
@@ -1672,7 +1705,7 @@ func (u *EnumSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *EnumSeriesNode) AcceptFuncs(literalFunc func(LiteralEnumSeriesNode) error, rawFunc func(RawEnumSeriesNode) error, resampleFunc func(EnumResampleSeriesNode) error, timeRangeFilterFunc func(EnumTimeRangeFilterSeriesNode) error, timeShiftFunc func(EnumTimeShiftSeriesNode) error, unionFunc func(EnumUnionSeriesNode) error, aggregateFunc func(AggregateEnumSeriesNode) error, filterTransformationFunc func(EnumFilterTransformationSeriesNode) error, valueMapFunc func(ValueMapSeriesNode) error, arraySelectFunc func(SelectIndexFromEnumArraySeriesNode) error, extractFromStructFunc func(ExtractEnumFromStructSeriesNode) error, unknownFunc func(string) error) error {
+func (u *EnumSeriesNode) AcceptFuncs(literalFunc func(LiteralEnumSeriesNode) error, rawFunc func(RawEnumSeriesNode) error, resampleFunc func(EnumResampleSeriesNode) error, nthPointDownsampleFunc func(EnumNthPointDownsampleSeriesNode) error, unionFunc func(EnumUnionSeriesNode) error, aggregateFunc func(AggregateEnumSeriesNode) error, filterTransformationFunc func(EnumFilterTransformationSeriesNode) error, valueMapFunc func(ValueMapSeriesNode) error, arraySelectFunc func(SelectIndexFromEnumArraySeriesNode) error, extractFromStructFunc func(ExtractEnumFromStructSeriesNode) error, genericTransformFunc func(GenericTransformNode) error, scalarUdfFunc func(ScalarUdfSeriesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1694,16 +1727,11 @@ func (u *EnumSeriesNode) AcceptFuncs(literalFunc func(LiteralEnumSeriesNode) err
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return resampleFunc(*u.resample)
-	case "timeRangeFilter":
-		if u.timeRangeFilter == nil {
-			return fmt.Errorf("field \"timeRangeFilter\" is required")
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
 		}
-		return timeRangeFilterFunc(*u.timeRangeFilter)
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
-		}
-		return timeShiftFunc(*u.timeShift)
+		return nthPointDownsampleFunc(*u.nthPointDownsample)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -1734,6 +1762,16 @@ func (u *EnumSeriesNode) AcceptFuncs(literalFunc func(LiteralEnumSeriesNode) err
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return extractFromStructFunc(*u.extractFromStruct)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return genericTransformFunc(*u.genericTransform)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return scalarUdfFunc(*u.scalarUdf)
 	}
 }
 
@@ -1749,11 +1787,7 @@ func (u *EnumSeriesNode) ResampleNoopSuccess(_ EnumResampleSeriesNode) error {
 	return nil
 }
 
-func (u *EnumSeriesNode) TimeRangeFilterNoopSuccess(_ EnumTimeRangeFilterSeriesNode) error {
-	return nil
-}
-
-func (u *EnumSeriesNode) TimeShiftNoopSuccess(_ EnumTimeShiftSeriesNode) error {
+func (u *EnumSeriesNode) NthPointDownsampleNoopSuccess(_ EnumNthPointDownsampleSeriesNode) error {
 	return nil
 }
 
@@ -1778,6 +1812,14 @@ func (u *EnumSeriesNode) ArraySelectNoopSuccess(_ SelectIndexFromEnumArraySeries
 }
 
 func (u *EnumSeriesNode) ExtractFromStructNoopSuccess(_ ExtractEnumFromStructSeriesNode) error {
+	return nil
+}
+
+func (u *EnumSeriesNode) GenericTransformNoopSuccess(_ GenericTransformNode) error {
+	return nil
+}
+
+func (u *EnumSeriesNode) ScalarUdfNoopSuccess(_ ScalarUdfSeriesNode) error {
 	return nil
 }
 
@@ -1807,16 +1849,11 @@ func (u *EnumSeriesNode) Accept(v EnumSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return v.VisitResample(*u.resample)
-	case "timeRangeFilter":
-		if u.timeRangeFilter == nil {
-			return fmt.Errorf("field \"timeRangeFilter\" is required")
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
 		}
-		return v.VisitTimeRangeFilter(*u.timeRangeFilter)
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
-		}
-		return v.VisitTimeShift(*u.timeShift)
+		return v.VisitNthPointDownsample(*u.nthPointDownsample)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -1847,6 +1884,16 @@ func (u *EnumSeriesNode) Accept(v EnumSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStruct(*u.extractFromStruct)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return v.VisitGenericTransform(*u.genericTransform)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return v.VisitScalarUdf(*u.scalarUdf)
 	}
 }
 
@@ -1854,14 +1901,15 @@ type EnumSeriesNodeVisitor interface {
 	VisitLiteral(v LiteralEnumSeriesNode) error
 	VisitRaw(v RawEnumSeriesNode) error
 	VisitResample(v EnumResampleSeriesNode) error
-	VisitTimeRangeFilter(v EnumTimeRangeFilterSeriesNode) error
-	VisitTimeShift(v EnumTimeShiftSeriesNode) error
+	VisitNthPointDownsample(v EnumNthPointDownsampleSeriesNode) error
 	VisitUnion(v EnumUnionSeriesNode) error
 	VisitAggregate(v AggregateEnumSeriesNode) error
 	VisitFilterTransformation(v EnumFilterTransformationSeriesNode) error
 	VisitValueMap(v ValueMapSeriesNode) error
 	VisitArraySelect(v SelectIndexFromEnumArraySeriesNode) error
 	VisitExtractFromStruct(v ExtractEnumFromStructSeriesNode) error
+	VisitGenericTransform(v GenericTransformNode) error
+	VisitScalarUdf(v ScalarUdfSeriesNode) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1887,16 +1935,11 @@ func (u *EnumSeriesNode) AcceptWithContext(ctx context.Context, v EnumSeriesNode
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return v.VisitResampleWithContext(ctx, *u.resample)
-	case "timeRangeFilter":
-		if u.timeRangeFilter == nil {
-			return fmt.Errorf("field \"timeRangeFilter\" is required")
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
 		}
-		return v.VisitTimeRangeFilterWithContext(ctx, *u.timeRangeFilter)
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
-		}
-		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
+		return v.VisitNthPointDownsampleWithContext(ctx, *u.nthPointDownsample)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -1927,6 +1970,16 @@ func (u *EnumSeriesNode) AcceptWithContext(ctx context.Context, v EnumSeriesNode
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStructWithContext(ctx, *u.extractFromStruct)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return v.VisitGenericTransformWithContext(ctx, *u.genericTransform)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return v.VisitScalarUdfWithContext(ctx, *u.scalarUdf)
 	}
 }
 
@@ -1934,14 +1987,15 @@ type EnumSeriesNodeVisitorWithContext interface {
 	VisitLiteralWithContext(ctx context.Context, v LiteralEnumSeriesNode) error
 	VisitRawWithContext(ctx context.Context, v RawEnumSeriesNode) error
 	VisitResampleWithContext(ctx context.Context, v EnumResampleSeriesNode) error
-	VisitTimeRangeFilterWithContext(ctx context.Context, v EnumTimeRangeFilterSeriesNode) error
-	VisitTimeShiftWithContext(ctx context.Context, v EnumTimeShiftSeriesNode) error
+	VisitNthPointDownsampleWithContext(ctx context.Context, v EnumNthPointDownsampleSeriesNode) error
 	VisitUnionWithContext(ctx context.Context, v EnumUnionSeriesNode) error
 	VisitAggregateWithContext(ctx context.Context, v AggregateEnumSeriesNode) error
 	VisitFilterTransformationWithContext(ctx context.Context, v EnumFilterTransformationSeriesNode) error
 	VisitValueMapWithContext(ctx context.Context, v ValueMapSeriesNode) error
 	VisitArraySelectWithContext(ctx context.Context, v SelectIndexFromEnumArraySeriesNode) error
 	VisitExtractFromStructWithContext(ctx context.Context, v ExtractEnumFromStructSeriesNode) error
+	VisitGenericTransformWithContext(ctx context.Context, v GenericTransformNode) error
+	VisitScalarUdfWithContext(ctx context.Context, v ScalarUdfSeriesNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1957,12 +2011,8 @@ func NewEnumSeriesNodeFromResample(v EnumResampleSeriesNode) EnumSeriesNode {
 	return EnumSeriesNode{typ: "resample", resample: &v}
 }
 
-func NewEnumSeriesNodeFromTimeRangeFilter(v EnumTimeRangeFilterSeriesNode) EnumSeriesNode {
-	return EnumSeriesNode{typ: "timeRangeFilter", timeRangeFilter: &v}
-}
-
-func NewEnumSeriesNodeFromTimeShift(v EnumTimeShiftSeriesNode) EnumSeriesNode {
-	return EnumSeriesNode{typ: "timeShift", timeShift: &v}
+func NewEnumSeriesNodeFromNthPointDownsample(v EnumNthPointDownsampleSeriesNode) EnumSeriesNode {
+	return EnumSeriesNode{typ: "nthPointDownsample", nthPointDownsample: &v}
 }
 
 func NewEnumSeriesNodeFromUnion(v EnumUnionSeriesNode) EnumSeriesNode {
@@ -1987,6 +2037,149 @@ func NewEnumSeriesNodeFromArraySelect(v SelectIndexFromEnumArraySeriesNode) Enum
 
 func NewEnumSeriesNodeFromExtractFromStruct(v ExtractEnumFromStructSeriesNode) EnumSeriesNode {
 	return EnumSeriesNode{typ: "extractFromStruct", extractFromStruct: &v}
+}
+
+func NewEnumSeriesNodeFromGenericTransform(v GenericTransformNode) EnumSeriesNode {
+	return EnumSeriesNode{typ: "genericTransform", genericTransform: &v}
+}
+
+func NewEnumSeriesNodeFromScalarUdf(v ScalarUdfSeriesNode) EnumSeriesNode {
+	return EnumSeriesNode{typ: "scalarUdf", scalarUdf: &v}
+}
+
+type FillStrategy struct {
+	typ         string
+	forwardFill *ForwardFill
+}
+
+type fillStrategyDeserializer struct {
+	Type        string       `json:"type"`
+	ForwardFill *ForwardFill `json:"forwardFill"`
+}
+
+func (u *fillStrategyDeserializer) toStruct() FillStrategy {
+	return FillStrategy{typ: u.Type, forwardFill: u.ForwardFill}
+}
+
+func (u *FillStrategy) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return nil, fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return struct {
+			Type        string      `json:"type"`
+			ForwardFill ForwardFill `json:"forwardFill"`
+		}{Type: "forwardFill", ForwardFill: *u.forwardFill}, nil
+	}
+}
+
+func (u FillStrategy) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *FillStrategy) UnmarshalJSON(data []byte) error {
+	var deser fillStrategyDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+	}
+	return nil
+}
+
+func (u FillStrategy) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *FillStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *FillStrategy) AcceptFuncs(forwardFillFunc func(ForwardFill) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in FillStrategy type")
+		}
+		return unknownFunc(u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return forwardFillFunc(*u.forwardFill)
+	}
+}
+
+func (u *FillStrategy) ForwardFillNoopSuccess(_ ForwardFill) error {
+	return nil
+}
+
+func (u *FillStrategy) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *FillStrategy) Accept(v FillStrategyVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return v.VisitForwardFill(*u.forwardFill)
+	}
+}
+
+type FillStrategyVisitor interface {
+	VisitForwardFill(v ForwardFill) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *FillStrategy) AcceptWithContext(ctx context.Context, v FillStrategyVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return v.VisitForwardFillWithContext(ctx, *u.forwardFill)
+	}
+}
+
+type FillStrategyVisitorWithContext interface {
+	VisitForwardFillWithContext(ctx context.Context, v ForwardFill) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewFillStrategyFromForwardFill(v ForwardFill) FillStrategy {
+	return FillStrategy{typ: "forwardFill", forwardFill: &v}
 }
 
 type FrequencyDomainNode struct {
@@ -2454,6 +2647,414 @@ func NewFrequencyDomainNodeV2FromBode(v BodeNode) FrequencyDomainNodeV2 {
 	return FrequencyDomainNodeV2{typ: "bode", bode: &v}
 }
 
+type GenericTransformNode struct {
+	typ               string
+	unionAll          *UnionAllSeriesNode
+	combinedRead      *CombinedSourceReadNode
+	selectTags        *SelectTagsSeriesNode
+	tagByIntervals    *TagByIntervalsSeriesNode
+	tagInjection      *TagInjectionSeriesNode
+	timeRangeFilter   *TimeRangeFilterSeriesNode
+	timeShift         *TimeShiftSeriesNode
+	toStartOfInterval *ToStartOfIntervalSeriesNode
+}
+
+type genericTransformNodeDeserializer struct {
+	Type              string                       `json:"type"`
+	UnionAll          *UnionAllSeriesNode          `json:"unionAll"`
+	CombinedRead      *CombinedSourceReadNode      `json:"combinedRead"`
+	SelectTags        *SelectTagsSeriesNode        `json:"selectTags"`
+	TagByIntervals    *TagByIntervalsSeriesNode    `json:"tagByIntervals"`
+	TagInjection      *TagInjectionSeriesNode      `json:"tagInjection"`
+	TimeRangeFilter   *TimeRangeFilterSeriesNode   `json:"timeRangeFilter"`
+	TimeShift         *TimeShiftSeriesNode         `json:"timeShift"`
+	ToStartOfInterval *ToStartOfIntervalSeriesNode `json:"toStartOfInterval"`
+}
+
+func (u *genericTransformNodeDeserializer) toStruct() GenericTransformNode {
+	return GenericTransformNode{typ: u.Type, unionAll: u.UnionAll, combinedRead: u.CombinedRead, selectTags: u.SelectTags, tagByIntervals: u.TagByIntervals, tagInjection: u.TagInjection, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, toStartOfInterval: u.ToStartOfInterval}
+}
+
+func (u *GenericTransformNode) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "unionAll":
+		if u.unionAll == nil {
+			return nil, fmt.Errorf("field \"unionAll\" is required")
+		}
+		return struct {
+			Type     string             `json:"type"`
+			UnionAll UnionAllSeriesNode `json:"unionAll"`
+		}{Type: "unionAll", UnionAll: *u.unionAll}, nil
+	case "combinedRead":
+		if u.combinedRead == nil {
+			return nil, fmt.Errorf("field \"combinedRead\" is required")
+		}
+		return struct {
+			Type         string                 `json:"type"`
+			CombinedRead CombinedSourceReadNode `json:"combinedRead"`
+		}{Type: "combinedRead", CombinedRead: *u.combinedRead}, nil
+	case "selectTags":
+		if u.selectTags == nil {
+			return nil, fmt.Errorf("field \"selectTags\" is required")
+		}
+		return struct {
+			Type       string               `json:"type"`
+			SelectTags SelectTagsSeriesNode `json:"selectTags"`
+		}{Type: "selectTags", SelectTags: *u.selectTags}, nil
+	case "tagByIntervals":
+		if u.tagByIntervals == nil {
+			return nil, fmt.Errorf("field \"tagByIntervals\" is required")
+		}
+		return struct {
+			Type           string                   `json:"type"`
+			TagByIntervals TagByIntervalsSeriesNode `json:"tagByIntervals"`
+		}{Type: "tagByIntervals", TagByIntervals: *u.tagByIntervals}, nil
+	case "tagInjection":
+		if u.tagInjection == nil {
+			return nil, fmt.Errorf("field \"tagInjection\" is required")
+		}
+		return struct {
+			Type         string                 `json:"type"`
+			TagInjection TagInjectionSeriesNode `json:"tagInjection"`
+		}{Type: "tagInjection", TagInjection: *u.tagInjection}, nil
+	case "timeRangeFilter":
+		if u.timeRangeFilter == nil {
+			return nil, fmt.Errorf("field \"timeRangeFilter\" is required")
+		}
+		return struct {
+			Type            string                    `json:"type"`
+			TimeRangeFilter TimeRangeFilterSeriesNode `json:"timeRangeFilter"`
+		}{Type: "timeRangeFilter", TimeRangeFilter: *u.timeRangeFilter}, nil
+	case "timeShift":
+		if u.timeShift == nil {
+			return nil, fmt.Errorf("field \"timeShift\" is required")
+		}
+		return struct {
+			Type      string              `json:"type"`
+			TimeShift TimeShiftSeriesNode `json:"timeShift"`
+		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return nil, fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return struct {
+			Type              string                      `json:"type"`
+			ToStartOfInterval ToStartOfIntervalSeriesNode `json:"toStartOfInterval"`
+		}{Type: "toStartOfInterval", ToStartOfInterval: *u.toStartOfInterval}, nil
+	}
+}
+
+func (u GenericTransformNode) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *GenericTransformNode) UnmarshalJSON(data []byte) error {
+	var deser genericTransformNodeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "unionAll":
+		if u.unionAll == nil {
+			return fmt.Errorf("field \"unionAll\" is required")
+		}
+	case "combinedRead":
+		if u.combinedRead == nil {
+			return fmt.Errorf("field \"combinedRead\" is required")
+		}
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+	case "tagByIntervals":
+		if u.tagByIntervals == nil {
+			return fmt.Errorf("field \"tagByIntervals\" is required")
+		}
+	case "tagInjection":
+		if u.tagInjection == nil {
+			return fmt.Errorf("field \"tagInjection\" is required")
+		}
+	case "timeRangeFilter":
+		if u.timeRangeFilter == nil {
+			return fmt.Errorf("field \"timeRangeFilter\" is required")
+		}
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+	}
+	return nil
+}
+
+func (u GenericTransformNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *GenericTransformNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *GenericTransformNode) AcceptFuncs(unionAllFunc func(UnionAllSeriesNode) error, combinedReadFunc func(CombinedSourceReadNode) error, selectTagsFunc func(SelectTagsSeriesNode) error, tagByIntervalsFunc func(TagByIntervalsSeriesNode) error, tagInjectionFunc func(TagInjectionSeriesNode) error, timeRangeFilterFunc func(TimeRangeFilterSeriesNode) error, timeShiftFunc func(TimeShiftSeriesNode) error, toStartOfIntervalFunc func(ToStartOfIntervalSeriesNode) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in GenericTransformNode type")
+		}
+		return unknownFunc(u.typ)
+	case "unionAll":
+		if u.unionAll == nil {
+			return fmt.Errorf("field \"unionAll\" is required")
+		}
+		return unionAllFunc(*u.unionAll)
+	case "combinedRead":
+		if u.combinedRead == nil {
+			return fmt.Errorf("field \"combinedRead\" is required")
+		}
+		return combinedReadFunc(*u.combinedRead)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return selectTagsFunc(*u.selectTags)
+	case "tagByIntervals":
+		if u.tagByIntervals == nil {
+			return fmt.Errorf("field \"tagByIntervals\" is required")
+		}
+		return tagByIntervalsFunc(*u.tagByIntervals)
+	case "tagInjection":
+		if u.tagInjection == nil {
+			return fmt.Errorf("field \"tagInjection\" is required")
+		}
+		return tagInjectionFunc(*u.tagInjection)
+	case "timeRangeFilter":
+		if u.timeRangeFilter == nil {
+			return fmt.Errorf("field \"timeRangeFilter\" is required")
+		}
+		return timeRangeFilterFunc(*u.timeRangeFilter)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return timeShiftFunc(*u.timeShift)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return toStartOfIntervalFunc(*u.toStartOfInterval)
+	}
+}
+
+func (u *GenericTransformNode) UnionAllNoopSuccess(_ UnionAllSeriesNode) error {
+	return nil
+}
+
+func (u *GenericTransformNode) CombinedReadNoopSuccess(_ CombinedSourceReadNode) error {
+	return nil
+}
+
+func (u *GenericTransformNode) SelectTagsNoopSuccess(_ SelectTagsSeriesNode) error {
+	return nil
+}
+
+func (u *GenericTransformNode) TagByIntervalsNoopSuccess(_ TagByIntervalsSeriesNode) error {
+	return nil
+}
+
+func (u *GenericTransformNode) TagInjectionNoopSuccess(_ TagInjectionSeriesNode) error {
+	return nil
+}
+
+func (u *GenericTransformNode) TimeRangeFilterNoopSuccess(_ TimeRangeFilterSeriesNode) error {
+	return nil
+}
+
+func (u *GenericTransformNode) TimeShiftNoopSuccess(_ TimeShiftSeriesNode) error {
+	return nil
+}
+
+func (u *GenericTransformNode) ToStartOfIntervalNoopSuccess(_ ToStartOfIntervalSeriesNode) error {
+	return nil
+}
+
+func (u *GenericTransformNode) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *GenericTransformNode) Accept(v GenericTransformNodeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "unionAll":
+		if u.unionAll == nil {
+			return fmt.Errorf("field \"unionAll\" is required")
+		}
+		return v.VisitUnionAll(*u.unionAll)
+	case "combinedRead":
+		if u.combinedRead == nil {
+			return fmt.Errorf("field \"combinedRead\" is required")
+		}
+		return v.VisitCombinedRead(*u.combinedRead)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTags(*u.selectTags)
+	case "tagByIntervals":
+		if u.tagByIntervals == nil {
+			return fmt.Errorf("field \"tagByIntervals\" is required")
+		}
+		return v.VisitTagByIntervals(*u.tagByIntervals)
+	case "tagInjection":
+		if u.tagInjection == nil {
+			return fmt.Errorf("field \"tagInjection\" is required")
+		}
+		return v.VisitTagInjection(*u.tagInjection)
+	case "timeRangeFilter":
+		if u.timeRangeFilter == nil {
+			return fmt.Errorf("field \"timeRangeFilter\" is required")
+		}
+		return v.VisitTimeRangeFilter(*u.timeRangeFilter)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return v.VisitTimeShift(*u.timeShift)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfInterval(*u.toStartOfInterval)
+	}
+}
+
+type GenericTransformNodeVisitor interface {
+	VisitUnionAll(v UnionAllSeriesNode) error
+	VisitCombinedRead(v CombinedSourceReadNode) error
+	VisitSelectTags(v SelectTagsSeriesNode) error
+	VisitTagByIntervals(v TagByIntervalsSeriesNode) error
+	VisitTagInjection(v TagInjectionSeriesNode) error
+	VisitTimeRangeFilter(v TimeRangeFilterSeriesNode) error
+	VisitTimeShift(v TimeShiftSeriesNode) error
+	VisitToStartOfInterval(v ToStartOfIntervalSeriesNode) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *GenericTransformNode) AcceptWithContext(ctx context.Context, v GenericTransformNodeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "unionAll":
+		if u.unionAll == nil {
+			return fmt.Errorf("field \"unionAll\" is required")
+		}
+		return v.VisitUnionAllWithContext(ctx, *u.unionAll)
+	case "combinedRead":
+		if u.combinedRead == nil {
+			return fmt.Errorf("field \"combinedRead\" is required")
+		}
+		return v.VisitCombinedReadWithContext(ctx, *u.combinedRead)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTagsWithContext(ctx, *u.selectTags)
+	case "tagByIntervals":
+		if u.tagByIntervals == nil {
+			return fmt.Errorf("field \"tagByIntervals\" is required")
+		}
+		return v.VisitTagByIntervalsWithContext(ctx, *u.tagByIntervals)
+	case "tagInjection":
+		if u.tagInjection == nil {
+			return fmt.Errorf("field \"tagInjection\" is required")
+		}
+		return v.VisitTagInjectionWithContext(ctx, *u.tagInjection)
+	case "timeRangeFilter":
+		if u.timeRangeFilter == nil {
+			return fmt.Errorf("field \"timeRangeFilter\" is required")
+		}
+		return v.VisitTimeRangeFilterWithContext(ctx, *u.timeRangeFilter)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfIntervalWithContext(ctx, *u.toStartOfInterval)
+	}
+}
+
+type GenericTransformNodeVisitorWithContext interface {
+	VisitUnionAllWithContext(ctx context.Context, v UnionAllSeriesNode) error
+	VisitCombinedReadWithContext(ctx context.Context, v CombinedSourceReadNode) error
+	VisitSelectTagsWithContext(ctx context.Context, v SelectTagsSeriesNode) error
+	VisitTagByIntervalsWithContext(ctx context.Context, v TagByIntervalsSeriesNode) error
+	VisitTagInjectionWithContext(ctx context.Context, v TagInjectionSeriesNode) error
+	VisitTimeRangeFilterWithContext(ctx context.Context, v TimeRangeFilterSeriesNode) error
+	VisitTimeShiftWithContext(ctx context.Context, v TimeShiftSeriesNode) error
+	VisitToStartOfIntervalWithContext(ctx context.Context, v ToStartOfIntervalSeriesNode) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewGenericTransformNodeFromUnionAll(v UnionAllSeriesNode) GenericTransformNode {
+	return GenericTransformNode{typ: "unionAll", unionAll: &v}
+}
+
+func NewGenericTransformNodeFromCombinedRead(v CombinedSourceReadNode) GenericTransformNode {
+	return GenericTransformNode{typ: "combinedRead", combinedRead: &v}
+}
+
+func NewGenericTransformNodeFromSelectTags(v SelectTagsSeriesNode) GenericTransformNode {
+	return GenericTransformNode{typ: "selectTags", selectTags: &v}
+}
+
+func NewGenericTransformNodeFromTagByIntervals(v TagByIntervalsSeriesNode) GenericTransformNode {
+	return GenericTransformNode{typ: "tagByIntervals", tagByIntervals: &v}
+}
+
+func NewGenericTransformNodeFromTagInjection(v TagInjectionSeriesNode) GenericTransformNode {
+	return GenericTransformNode{typ: "tagInjection", tagInjection: &v}
+}
+
+func NewGenericTransformNodeFromTimeRangeFilter(v TimeRangeFilterSeriesNode) GenericTransformNode {
+	return GenericTransformNode{typ: "timeRangeFilter", timeRangeFilter: &v}
+}
+
+func NewGenericTransformNodeFromTimeShift(v TimeShiftSeriesNode) GenericTransformNode {
+	return GenericTransformNode{typ: "timeShift", timeShift: &v}
+}
+
+func NewGenericTransformNodeFromToStartOfInterval(v ToStartOfIntervalSeriesNode) GenericTransformNode {
+	return GenericTransformNode{typ: "toStartOfInterval", toStartOfInterval: &v}
+}
+
 type HistogramNode struct {
 	typ              string
 	numericHistogram *NumericHistogramNode
@@ -2628,159 +3229,24 @@ func NewHistogramNodeFromEnumHistogram(v EnumHistogramNode) HistogramNode {
 	return HistogramNode{typ: "enumHistogram", enumHistogram: &v}
 }
 
-type InterpolationConfiguration struct {
-	typ                      string
-	forwardFillInterpolation *ForwardFillInterpolation
-}
-
-type interpolationConfigurationDeserializer struct {
-	Type                     string                    `json:"type"`
-	ForwardFillInterpolation *ForwardFillInterpolation `json:"forwardFillInterpolation"`
-}
-
-func (u *interpolationConfigurationDeserializer) toStruct() InterpolationConfiguration {
-	return InterpolationConfiguration{typ: u.Type, forwardFillInterpolation: u.ForwardFillInterpolation}
-}
-
-func (u *InterpolationConfiguration) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "forwardFillInterpolation":
-		if u.forwardFillInterpolation == nil {
-			return nil, fmt.Errorf("field \"forwardFillInterpolation\" is required")
-		}
-		return struct {
-			Type                     string                   `json:"type"`
-			ForwardFillInterpolation ForwardFillInterpolation `json:"forwardFillInterpolation"`
-		}{Type: "forwardFillInterpolation", ForwardFillInterpolation: *u.forwardFillInterpolation}, nil
-	}
-}
-
-func (u InterpolationConfiguration) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *InterpolationConfiguration) UnmarshalJSON(data []byte) error {
-	var deser interpolationConfigurationDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "forwardFillInterpolation":
-		if u.forwardFillInterpolation == nil {
-			return fmt.Errorf("field \"forwardFillInterpolation\" is required")
-		}
-	}
-	return nil
-}
-
-func (u InterpolationConfiguration) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *InterpolationConfiguration) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *InterpolationConfiguration) AcceptFuncs(forwardFillInterpolationFunc func(ForwardFillInterpolation) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in InterpolationConfiguration type")
-		}
-		return unknownFunc(u.typ)
-	case "forwardFillInterpolation":
-		if u.forwardFillInterpolation == nil {
-			return fmt.Errorf("field \"forwardFillInterpolation\" is required")
-		}
-		return forwardFillInterpolationFunc(*u.forwardFillInterpolation)
-	}
-}
-
-func (u *InterpolationConfiguration) ForwardFillInterpolationNoopSuccess(_ ForwardFillInterpolation) error {
-	return nil
-}
-
-func (u *InterpolationConfiguration) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *InterpolationConfiguration) Accept(v InterpolationConfigurationVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
-	case "forwardFillInterpolation":
-		if u.forwardFillInterpolation == nil {
-			return fmt.Errorf("field \"forwardFillInterpolation\" is required")
-		}
-		return v.VisitForwardFillInterpolation(*u.forwardFillInterpolation)
-	}
-}
-
-type InterpolationConfigurationVisitor interface {
-	VisitForwardFillInterpolation(v ForwardFillInterpolation) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *InterpolationConfiguration) AcceptWithContext(ctx context.Context, v InterpolationConfigurationVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "forwardFillInterpolation":
-		if u.forwardFillInterpolation == nil {
-			return fmt.Errorf("field \"forwardFillInterpolation\" is required")
-		}
-		return v.VisitForwardFillInterpolationWithContext(ctx, *u.forwardFillInterpolation)
-	}
-}
-
-type InterpolationConfigurationVisitorWithContext interface {
-	VisitForwardFillInterpolationWithContext(ctx context.Context, v ForwardFillInterpolation) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewInterpolationConfigurationFromForwardFillInterpolation(v ForwardFillInterpolation) InterpolationConfiguration {
-	return InterpolationConfiguration{typ: "forwardFillInterpolation", forwardFillInterpolation: &v}
-}
-
 type LogSeriesNode struct {
-	typ       string
-	raw       *RawLogSeriesNode
-	union     *LogUnionSeriesNode
-	filter    *LogFilterSeriesNode
-	timeShift *LogTimeShiftSeriesNode
+	typ              string
+	raw              *RawLogSeriesNode
+	union            *LogUnionSeriesNode
+	filter           *LogFilterSeriesNode
+	genericTransform *GenericTransformNode
 }
 
 type logSeriesNodeDeserializer struct {
-	Type      string                  `json:"type"`
-	Raw       *RawLogSeriesNode       `json:"raw"`
-	Union     *LogUnionSeriesNode     `json:"union"`
-	Filter    *LogFilterSeriesNode    `json:"filter"`
-	TimeShift *LogTimeShiftSeriesNode `json:"timeShift"`
+	Type             string                `json:"type"`
+	Raw              *RawLogSeriesNode     `json:"raw"`
+	Union            *LogUnionSeriesNode   `json:"union"`
+	Filter           *LogFilterSeriesNode  `json:"filter"`
+	GenericTransform *GenericTransformNode `json:"genericTransform"`
 }
 
 func (u *logSeriesNodeDeserializer) toStruct() LogSeriesNode {
-	return LogSeriesNode{typ: u.Type, raw: u.Raw, union: u.Union, filter: u.Filter, timeShift: u.TimeShift}
+	return LogSeriesNode{typ: u.Type, raw: u.Raw, union: u.Union, filter: u.Filter, genericTransform: u.GenericTransform}
 }
 
 func (u *LogSeriesNode) toSerializer() (interface{}, error) {
@@ -2811,14 +3277,14 @@ func (u *LogSeriesNode) toSerializer() (interface{}, error) {
 			Type   string              `json:"type"`
 			Filter LogFilterSeriesNode `json:"filter"`
 		}{Type: "filter", Filter: *u.filter}, nil
-	case "timeShift":
-		if u.timeShift == nil {
-			return nil, fmt.Errorf("field \"timeShift\" is required")
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return nil, fmt.Errorf("field \"genericTransform\" is required")
 		}
 		return struct {
-			Type      string                 `json:"type"`
-			TimeShift LogTimeShiftSeriesNode `json:"timeShift"`
-		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
+			Type             string               `json:"type"`
+			GenericTransform GenericTransformNode `json:"genericTransform"`
+		}{Type: "genericTransform", GenericTransform: *u.genericTransform}, nil
 	}
 }
 
@@ -2849,9 +3315,9 @@ func (u *LogSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.filter == nil {
 			return fmt.Errorf("field \"filter\" is required")
 		}
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
 		}
 	}
 	return nil
@@ -2873,7 +3339,7 @@ func (u *LogSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *LogSeriesNode) AcceptFuncs(rawFunc func(RawLogSeriesNode) error, unionFunc func(LogUnionSeriesNode) error, filterFunc func(LogFilterSeriesNode) error, timeShiftFunc func(LogTimeShiftSeriesNode) error, unknownFunc func(string) error) error {
+func (u *LogSeriesNode) AcceptFuncs(rawFunc func(RawLogSeriesNode) error, unionFunc func(LogUnionSeriesNode) error, filterFunc func(LogFilterSeriesNode) error, genericTransformFunc func(GenericTransformNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2895,11 +3361,11 @@ func (u *LogSeriesNode) AcceptFuncs(rawFunc func(RawLogSeriesNode) error, unionF
 			return fmt.Errorf("field \"filter\" is required")
 		}
 		return filterFunc(*u.filter)
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
 		}
-		return timeShiftFunc(*u.timeShift)
+		return genericTransformFunc(*u.genericTransform)
 	}
 }
 
@@ -2915,7 +3381,7 @@ func (u *LogSeriesNode) FilterNoopSuccess(_ LogFilterSeriesNode) error {
 	return nil
 }
 
-func (u *LogSeriesNode) TimeShiftNoopSuccess(_ LogTimeShiftSeriesNode) error {
+func (u *LogSeriesNode) GenericTransformNoopSuccess(_ GenericTransformNode) error {
 	return nil
 }
 
@@ -2945,11 +3411,11 @@ func (u *LogSeriesNode) Accept(v LogSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"filter\" is required")
 		}
 		return v.VisitFilter(*u.filter)
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
 		}
-		return v.VisitTimeShift(*u.timeShift)
+		return v.VisitGenericTransform(*u.genericTransform)
 	}
 }
 
@@ -2957,7 +3423,7 @@ type LogSeriesNodeVisitor interface {
 	VisitRaw(v RawLogSeriesNode) error
 	VisitUnion(v LogUnionSeriesNode) error
 	VisitFilter(v LogFilterSeriesNode) error
-	VisitTimeShift(v LogTimeShiftSeriesNode) error
+	VisitGenericTransform(v GenericTransformNode) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2983,11 +3449,11 @@ func (u *LogSeriesNode) AcceptWithContext(ctx context.Context, v LogSeriesNodeVi
 			return fmt.Errorf("field \"filter\" is required")
 		}
 		return v.VisitFilterWithContext(ctx, *u.filter)
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
 		}
-		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
+		return v.VisitGenericTransformWithContext(ctx, *u.genericTransform)
 	}
 }
 
@@ -2995,7 +3461,7 @@ type LogSeriesNodeVisitorWithContext interface {
 	VisitRawWithContext(ctx context.Context, v RawLogSeriesNode) error
 	VisitUnionWithContext(ctx context.Context, v LogUnionSeriesNode) error
 	VisitFilterWithContext(ctx context.Context, v LogFilterSeriesNode) error
-	VisitTimeShiftWithContext(ctx context.Context, v LogTimeShiftSeriesNode) error
+	VisitGenericTransformWithContext(ctx context.Context, v GenericTransformNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -3011,8 +3477,182 @@ func NewLogSeriesNodeFromFilter(v LogFilterSeriesNode) LogSeriesNode {
 	return LogSeriesNode{typ: "filter", filter: &v}
 }
 
-func NewLogSeriesNodeFromTimeShift(v LogTimeShiftSeriesNode) LogSeriesNode {
-	return LogSeriesNode{typ: "timeShift", timeShift: &v}
+func NewLogSeriesNodeFromGenericTransform(v GenericTransformNode) LogSeriesNode {
+	return LogSeriesNode{typ: "genericTransform", genericTransform: &v}
+}
+
+type MultivariateDecimateStrategy struct {
+	typ        string
+	resolution *api1.DecimateWithResolution
+	buckets    *api1.DecimateWithBuckets
+}
+
+type multivariateDecimateStrategyDeserializer struct {
+	Type       string                       `json:"type"`
+	Resolution *api1.DecimateWithResolution `json:"resolution"`
+	Buckets    *api1.DecimateWithBuckets    `json:"buckets"`
+}
+
+func (u *multivariateDecimateStrategyDeserializer) toStruct() MultivariateDecimateStrategy {
+	return MultivariateDecimateStrategy{typ: u.Type, resolution: u.Resolution, buckets: u.Buckets}
+}
+
+func (u *MultivariateDecimateStrategy) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "resolution":
+		if u.resolution == nil {
+			return nil, fmt.Errorf("field \"resolution\" is required")
+		}
+		return struct {
+			Type       string                      `json:"type"`
+			Resolution api1.DecimateWithResolution `json:"resolution"`
+		}{Type: "resolution", Resolution: *u.resolution}, nil
+	case "buckets":
+		if u.buckets == nil {
+			return nil, fmt.Errorf("field \"buckets\" is required")
+		}
+		return struct {
+			Type    string                   `json:"type"`
+			Buckets api1.DecimateWithBuckets `json:"buckets"`
+		}{Type: "buckets", Buckets: *u.buckets}, nil
+	}
+}
+
+func (u MultivariateDecimateStrategy) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *MultivariateDecimateStrategy) UnmarshalJSON(data []byte) error {
+	var deser multivariateDecimateStrategyDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "resolution":
+		if u.resolution == nil {
+			return fmt.Errorf("field \"resolution\" is required")
+		}
+	case "buckets":
+		if u.buckets == nil {
+			return fmt.Errorf("field \"buckets\" is required")
+		}
+	}
+	return nil
+}
+
+func (u MultivariateDecimateStrategy) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *MultivariateDecimateStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *MultivariateDecimateStrategy) AcceptFuncs(resolutionFunc func(api1.DecimateWithResolution) error, bucketsFunc func(api1.DecimateWithBuckets) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in MultivariateDecimateStrategy type")
+		}
+		return unknownFunc(u.typ)
+	case "resolution":
+		if u.resolution == nil {
+			return fmt.Errorf("field \"resolution\" is required")
+		}
+		return resolutionFunc(*u.resolution)
+	case "buckets":
+		if u.buckets == nil {
+			return fmt.Errorf("field \"buckets\" is required")
+		}
+		return bucketsFunc(*u.buckets)
+	}
+}
+
+func (u *MultivariateDecimateStrategy) ResolutionNoopSuccess(_ api1.DecimateWithResolution) error {
+	return nil
+}
+
+func (u *MultivariateDecimateStrategy) BucketsNoopSuccess(_ api1.DecimateWithBuckets) error {
+	return nil
+}
+
+func (u *MultivariateDecimateStrategy) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *MultivariateDecimateStrategy) Accept(v MultivariateDecimateStrategyVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "resolution":
+		if u.resolution == nil {
+			return fmt.Errorf("field \"resolution\" is required")
+		}
+		return v.VisitResolution(*u.resolution)
+	case "buckets":
+		if u.buckets == nil {
+			return fmt.Errorf("field \"buckets\" is required")
+		}
+		return v.VisitBuckets(*u.buckets)
+	}
+}
+
+type MultivariateDecimateStrategyVisitor interface {
+	VisitResolution(v api1.DecimateWithResolution) error
+	VisitBuckets(v api1.DecimateWithBuckets) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *MultivariateDecimateStrategy) AcceptWithContext(ctx context.Context, v MultivariateDecimateStrategyVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "resolution":
+		if u.resolution == nil {
+			return fmt.Errorf("field \"resolution\" is required")
+		}
+		return v.VisitResolutionWithContext(ctx, *u.resolution)
+	case "buckets":
+		if u.buckets == nil {
+			return fmt.Errorf("field \"buckets\" is required")
+		}
+		return v.VisitBucketsWithContext(ctx, *u.buckets)
+	}
+}
+
+type MultivariateDecimateStrategyVisitorWithContext interface {
+	VisitResolutionWithContext(ctx context.Context, v api1.DecimateWithResolution) error
+	VisitBucketsWithContext(ctx context.Context, v api1.DecimateWithBuckets) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewMultivariateDecimateStrategyFromResolution(v api1.DecimateWithResolution) MultivariateDecimateStrategy {
+	return MultivariateDecimateStrategy{typ: "resolution", resolution: &v}
+}
+
+func NewMultivariateDecimateStrategyFromBuckets(v api1.DecimateWithBuckets) MultivariateDecimateStrategy {
+	return MultivariateDecimateStrategy{typ: "buckets", buckets: &v}
 }
 
 type MultivariateInputNode struct {
@@ -3190,17 +3830,21 @@ func NewMultivariateInputNodeFromEnum(v MultivariateEnumInputNode) MultivariateI
 }
 
 type NumericArraySeriesNode struct {
-	typ string
-	raw *ResolvedSeries
+	typ               string
+	raw               *ResolvedSeries
+	genericTransform  *GenericTransformNode
+	extractFromStruct *ExtractNumericArrayFromStructSeriesNode
 }
 
 type numericArraySeriesNodeDeserializer struct {
-	Type string          `json:"type"`
-	Raw  *ResolvedSeries `json:"raw"`
+	Type              string                                   `json:"type"`
+	Raw               *ResolvedSeries                          `json:"raw"`
+	GenericTransform  *GenericTransformNode                    `json:"genericTransform"`
+	ExtractFromStruct *ExtractNumericArrayFromStructSeriesNode `json:"extractFromStruct"`
 }
 
 func (u *numericArraySeriesNodeDeserializer) toStruct() NumericArraySeriesNode {
-	return NumericArraySeriesNode{typ: u.Type, raw: u.Raw}
+	return NumericArraySeriesNode{typ: u.Type, raw: u.Raw, genericTransform: u.GenericTransform, extractFromStruct: u.ExtractFromStruct}
 }
 
 func (u *NumericArraySeriesNode) toSerializer() (interface{}, error) {
@@ -3215,6 +3859,22 @@ func (u *NumericArraySeriesNode) toSerializer() (interface{}, error) {
 			Type string         `json:"type"`
 			Raw  ResolvedSeries `json:"raw"`
 		}{Type: "raw", Raw: *u.raw}, nil
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return nil, fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return struct {
+			Type             string               `json:"type"`
+			GenericTransform GenericTransformNode `json:"genericTransform"`
+		}{Type: "genericTransform", GenericTransform: *u.genericTransform}, nil
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return nil, fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return struct {
+			Type              string                                  `json:"type"`
+			ExtractFromStruct ExtractNumericArrayFromStructSeriesNode `json:"extractFromStruct"`
+		}{Type: "extractFromStruct", ExtractFromStruct: *u.extractFromStruct}, nil
 	}
 }
 
@@ -3237,6 +3897,14 @@ func (u *NumericArraySeriesNode) UnmarshalJSON(data []byte) error {
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
 		}
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
 	}
 	return nil
 }
@@ -3257,7 +3925,7 @@ func (u *NumericArraySeriesNode) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *NumericArraySeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, unknownFunc func(string) error) error {
+func (u *NumericArraySeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, genericTransformFunc func(GenericTransformNode) error, extractFromStructFunc func(ExtractNumericArrayFromStructSeriesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -3269,10 +3937,28 @@ func (u *NumericArraySeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error,
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return rawFunc(*u.raw)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return genericTransformFunc(*u.genericTransform)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return extractFromStructFunc(*u.extractFromStruct)
 	}
 }
 
 func (u *NumericArraySeriesNode) RawNoopSuccess(_ ResolvedSeries) error {
+	return nil
+}
+
+func (u *NumericArraySeriesNode) GenericTransformNoopSuccess(_ GenericTransformNode) error {
+	return nil
+}
+
+func (u *NumericArraySeriesNode) ExtractFromStructNoopSuccess(_ ExtractNumericArrayFromStructSeriesNode) error {
 	return nil
 }
 
@@ -3292,11 +3978,23 @@ func (u *NumericArraySeriesNode) Accept(v NumericArraySeriesNodeVisitor) error {
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRaw(*u.raw)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return v.VisitGenericTransform(*u.genericTransform)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return v.VisitExtractFromStruct(*u.extractFromStruct)
 	}
 }
 
 type NumericArraySeriesNodeVisitor interface {
 	VisitRaw(v ResolvedSeries) error
+	VisitGenericTransform(v GenericTransformNode) error
+	VisitExtractFromStruct(v ExtractNumericArrayFromStructSeriesNode) error
 	VisitUnknown(typeName string) error
 }
 
@@ -3312,16 +4010,36 @@ func (u *NumericArraySeriesNode) AcceptWithContext(ctx context.Context, v Numeri
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRawWithContext(ctx, *u.raw)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return v.VisitGenericTransformWithContext(ctx, *u.genericTransform)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return v.VisitExtractFromStructWithContext(ctx, *u.extractFromStruct)
 	}
 }
 
 type NumericArraySeriesNodeVisitorWithContext interface {
 	VisitRawWithContext(ctx context.Context, v ResolvedSeries) error
+	VisitGenericTransformWithContext(ctx context.Context, v GenericTransformNode) error
+	VisitExtractFromStructWithContext(ctx context.Context, v ExtractNumericArrayFromStructSeriesNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
 func NewNumericArraySeriesNodeFromRaw(v ResolvedSeries) NumericArraySeriesNode {
 	return NumericArraySeriesNode{typ: "raw", raw: &v}
+}
+
+func NewNumericArraySeriesNodeFromGenericTransform(v GenericTransformNode) NumericArraySeriesNode {
+	return NumericArraySeriesNode{typ: "genericTransform", genericTransform: &v}
+}
+
+func NewNumericArraySeriesNodeFromExtractFromStruct(v ExtractNumericArrayFromStructSeriesNode) NumericArraySeriesNode {
+	return NumericArraySeriesNode{typ: "extractFromStruct", extractFromStruct: &v}
 }
 
 type NumericHistogramBucketStrategy struct {
@@ -3512,78 +4230,90 @@ type NumericSeriesNode struct {
 	min                               *MinSeriesNode
 	offset                            *OffsetSeriesNode
 	product                           *ProductSeriesNode
+	oldestPoints                      *SelectOldestPointsSeriesNode
 	raw                               *RawNumericSeriesNode
 	resample                          *NumericResampleSeriesNode
+	nthPointDownsample                *NumericNthPointDownsampleSeriesNode
+	largestTriangleThreeBuckets       *NumericLargestTriangleThreeBucketsSeriesNode
 	rollingOperation                  *RollingOperationSeriesNode
+	rollingPointOperation             *RollingPointOperationSeriesNode
 	aggregate                         *AggregateNumericSeriesNode
 	signalFilter                      *SignalFilterSeriesNode
 	sum                               *SumSeriesNode
 	scale                             *ScaleSeriesNode
 	timeDifference                    *TimeDifferenceSeriesNode
-	timeRangeFilter                   *NumericTimeRangeFilterSeriesNode
-	timeShift                         *NumericTimeShiftSeriesNode
-	unaryArithmetic                   *UnaryArithmeticSeriesNode
-	binaryArithmetic                  *BinaryArithmeticSeriesNode
 	union                             *NumericUnionSeriesNode
 	unitConversion                    *UnitConversionSeriesNode
 	valueDifference                   *ValueDifferenceSeriesNode
 	filterTransformation              *NumericFilterTransformationSeriesNode
 	thresholdFilter                   *NumericThresholdFilterSeriesNode
+	dropNan                           *NumericNanFilterNode
 	arraySelect                       *SelectIndexFromNumericArraySeriesNode
 	absoluteTimestamp                 *AbsoluteTimestampSeriesNode
 	newestPoints                      *SelectNewestPointsSeriesNode
 	rangesNumericAggregationToNumeric *RangesNumericAggregationToNumericSeriesNode
+	rangeDuration                     *RangeDurationSeriesNode
 	filterByExpression                *FilterByExpressionSeriesNode
+	scalarUdf                         *ScalarUdfSeriesNode
 	enumToNumeric                     *EnumToNumericSeriesNode
+	contains                          *ContainsSeriesNode
 	refprop                           *RefpropSeriesNode
 	extractFromStruct                 *ExtractNumericFromStructSeriesNode
 	zScore                            *ZscoreSeriesNode
+	phaseUnwrap                       *PhaseUnwrapSeriesNode
+	genericTransform                  *GenericTransformNode
 }
 
 type numericSeriesNodeDeserializer struct {
-	Type                              string                                       `json:"type"`
-	Constant                          *ConstantNumericSeriesNode                   `json:"constant"`
-	Arithmetic                        *ArithmeticSeriesNode                        `json:"arithmetic"`
-	BitOperation                      *BitOperationSeriesNode                      `json:"bitOperation"`
-	CountDuplicate                    *EnumCountDuplicateSeriesNode                `json:"countDuplicate"`
-	CumulativeSum                     *CumulativeSumSeriesNode                     `json:"cumulativeSum"`
-	Derivative                        *DerivativeSeriesNode                        `json:"derivative"`
-	Integral                          *IntegralSeriesNode                          `json:"integral"`
-	Max                               *MaxSeriesNode                               `json:"max"`
-	Mean                              *MeanSeriesNode                              `json:"mean"`
-	Min                               *MinSeriesNode                               `json:"min"`
-	Offset                            *OffsetSeriesNode                            `json:"offset"`
-	Product                           *ProductSeriesNode                           `json:"product"`
-	Raw                               *RawNumericSeriesNode                        `json:"raw"`
-	Resample                          *NumericResampleSeriesNode                   `json:"resample"`
-	RollingOperation                  *RollingOperationSeriesNode                  `json:"rollingOperation"`
-	Aggregate                         *AggregateNumericSeriesNode                  `json:"aggregate"`
-	SignalFilter                      *SignalFilterSeriesNode                      `json:"signalFilter"`
-	Sum                               *SumSeriesNode                               `json:"sum"`
-	Scale                             *ScaleSeriesNode                             `json:"scale"`
-	TimeDifference                    *TimeDifferenceSeriesNode                    `json:"timeDifference"`
-	TimeRangeFilter                   *NumericTimeRangeFilterSeriesNode            `json:"timeRangeFilter"`
-	TimeShift                         *NumericTimeShiftSeriesNode                  `json:"timeShift"`
-	UnaryArithmetic                   *UnaryArithmeticSeriesNode                   `json:"unaryArithmetic"`
-	BinaryArithmetic                  *BinaryArithmeticSeriesNode                  `json:"binaryArithmetic"`
-	Union                             *NumericUnionSeriesNode                      `json:"union"`
-	UnitConversion                    *UnitConversionSeriesNode                    `json:"unitConversion"`
-	ValueDifference                   *ValueDifferenceSeriesNode                   `json:"valueDifference"`
-	FilterTransformation              *NumericFilterTransformationSeriesNode       `json:"filterTransformation"`
-	ThresholdFilter                   *NumericThresholdFilterSeriesNode            `json:"thresholdFilter"`
-	ArraySelect                       *SelectIndexFromNumericArraySeriesNode       `json:"arraySelect"`
-	AbsoluteTimestamp                 *AbsoluteTimestampSeriesNode                 `json:"absoluteTimestamp"`
-	NewestPoints                      *SelectNewestPointsSeriesNode                `json:"newestPoints"`
-	RangesNumericAggregationToNumeric *RangesNumericAggregationToNumericSeriesNode `json:"rangesNumericAggregationToNumeric"`
-	FilterByExpression                *FilterByExpressionSeriesNode                `json:"filterByExpression"`
-	EnumToNumeric                     *EnumToNumericSeriesNode                     `json:"enumToNumeric"`
-	Refprop                           *RefpropSeriesNode                           `json:"refprop"`
-	ExtractFromStruct                 *ExtractNumericFromStructSeriesNode          `json:"extractFromStruct"`
-	ZScore                            *ZscoreSeriesNode                            `json:"zScore"`
+	Type                              string                                        `json:"type"`
+	Constant                          *ConstantNumericSeriesNode                    `json:"constant"`
+	Arithmetic                        *ArithmeticSeriesNode                         `json:"arithmetic"`
+	BitOperation                      *BitOperationSeriesNode                       `json:"bitOperation"`
+	CountDuplicate                    *EnumCountDuplicateSeriesNode                 `json:"countDuplicate"`
+	CumulativeSum                     *CumulativeSumSeriesNode                      `json:"cumulativeSum"`
+	Derivative                        *DerivativeSeriesNode                         `json:"derivative"`
+	Integral                          *IntegralSeriesNode                           `json:"integral"`
+	Max                               *MaxSeriesNode                                `json:"max"`
+	Mean                              *MeanSeriesNode                               `json:"mean"`
+	Min                               *MinSeriesNode                                `json:"min"`
+	Offset                            *OffsetSeriesNode                             `json:"offset"`
+	Product                           *ProductSeriesNode                            `json:"product"`
+	OldestPoints                      *SelectOldestPointsSeriesNode                 `json:"oldestPoints"`
+	Raw                               *RawNumericSeriesNode                         `json:"raw"`
+	Resample                          *NumericResampleSeriesNode                    `json:"resample"`
+	NthPointDownsample                *NumericNthPointDownsampleSeriesNode          `json:"nthPointDownsample"`
+	LargestTriangleThreeBuckets       *NumericLargestTriangleThreeBucketsSeriesNode `json:"largestTriangleThreeBuckets"`
+	RollingOperation                  *RollingOperationSeriesNode                   `json:"rollingOperation"`
+	RollingPointOperation             *RollingPointOperationSeriesNode              `json:"rollingPointOperation"`
+	Aggregate                         *AggregateNumericSeriesNode                   `json:"aggregate"`
+	SignalFilter                      *SignalFilterSeriesNode                       `json:"signalFilter"`
+	Sum                               *SumSeriesNode                                `json:"sum"`
+	Scale                             *ScaleSeriesNode                              `json:"scale"`
+	TimeDifference                    *TimeDifferenceSeriesNode                     `json:"timeDifference"`
+	Union                             *NumericUnionSeriesNode                       `json:"union"`
+	UnitConversion                    *UnitConversionSeriesNode                     `json:"unitConversion"`
+	ValueDifference                   *ValueDifferenceSeriesNode                    `json:"valueDifference"`
+	FilterTransformation              *NumericFilterTransformationSeriesNode        `json:"filterTransformation"`
+	ThresholdFilter                   *NumericThresholdFilterSeriesNode             `json:"thresholdFilter"`
+	DropNan                           *NumericNanFilterNode                         `json:"dropNan"`
+	ArraySelect                       *SelectIndexFromNumericArraySeriesNode        `json:"arraySelect"`
+	AbsoluteTimestamp                 *AbsoluteTimestampSeriesNode                  `json:"absoluteTimestamp"`
+	NewestPoints                      *SelectNewestPointsSeriesNode                 `json:"newestPoints"`
+	RangesNumericAggregationToNumeric *RangesNumericAggregationToNumericSeriesNode  `json:"rangesNumericAggregationToNumeric"`
+	RangeDuration                     *RangeDurationSeriesNode                      `json:"rangeDuration"`
+	FilterByExpression                *FilterByExpressionSeriesNode                 `json:"filterByExpression"`
+	ScalarUdf                         *ScalarUdfSeriesNode                          `json:"scalarUdf"`
+	EnumToNumeric                     *EnumToNumericSeriesNode                      `json:"enumToNumeric"`
+	Contains                          *ContainsSeriesNode                           `json:"contains"`
+	Refprop                           *RefpropSeriesNode                            `json:"refprop"`
+	ExtractFromStruct                 *ExtractNumericFromStructSeriesNode           `json:"extractFromStruct"`
+	ZScore                            *ZscoreSeriesNode                             `json:"zScore"`
+	PhaseUnwrap                       *PhaseUnwrapSeriesNode                        `json:"phaseUnwrap"`
+	GenericTransform                  *GenericTransformNode                         `json:"genericTransform"`
 }
 
 func (u *numericSeriesNodeDeserializer) toStruct() NumericSeriesNode {
-	return NumericSeriesNode{typ: u.Type, constant: u.Constant, arithmetic: u.Arithmetic, bitOperation: u.BitOperation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, max: u.Max, mean: u.Mean, min: u.Min, offset: u.Offset, product: u.Product, raw: u.Raw, resample: u.Resample, rollingOperation: u.RollingOperation, aggregate: u.Aggregate, signalFilter: u.SignalFilter, sum: u.Sum, scale: u.Scale, timeDifference: u.TimeDifference, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic, union: u.Union, unitConversion: u.UnitConversion, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, thresholdFilter: u.ThresholdFilter, arraySelect: u.ArraySelect, absoluteTimestamp: u.AbsoluteTimestamp, newestPoints: u.NewestPoints, rangesNumericAggregationToNumeric: u.RangesNumericAggregationToNumeric, filterByExpression: u.FilterByExpression, enumToNumeric: u.EnumToNumeric, refprop: u.Refprop, extractFromStruct: u.ExtractFromStruct, zScore: u.ZScore}
+	return NumericSeriesNode{typ: u.Type, constant: u.Constant, arithmetic: u.Arithmetic, bitOperation: u.BitOperation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, max: u.Max, mean: u.Mean, min: u.Min, offset: u.Offset, product: u.Product, oldestPoints: u.OldestPoints, raw: u.Raw, resample: u.Resample, nthPointDownsample: u.NthPointDownsample, largestTriangleThreeBuckets: u.LargestTriangleThreeBuckets, rollingOperation: u.RollingOperation, rollingPointOperation: u.RollingPointOperation, aggregate: u.Aggregate, signalFilter: u.SignalFilter, sum: u.Sum, scale: u.Scale, timeDifference: u.TimeDifference, union: u.Union, unitConversion: u.UnitConversion, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, thresholdFilter: u.ThresholdFilter, dropNan: u.DropNan, arraySelect: u.ArraySelect, absoluteTimestamp: u.AbsoluteTimestamp, newestPoints: u.NewestPoints, rangesNumericAggregationToNumeric: u.RangesNumericAggregationToNumeric, rangeDuration: u.RangeDuration, filterByExpression: u.FilterByExpression, scalarUdf: u.ScalarUdf, enumToNumeric: u.EnumToNumeric, contains: u.Contains, refprop: u.Refprop, extractFromStruct: u.ExtractFromStruct, zScore: u.ZScore, phaseUnwrap: u.PhaseUnwrap, genericTransform: u.GenericTransform}
 }
 
 func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
@@ -3686,6 +4416,14 @@ func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 			Type    string            `json:"type"`
 			Product ProductSeriesNode `json:"product"`
 		}{Type: "product", Product: *u.product}, nil
+	case "oldestPoints":
+		if u.oldestPoints == nil {
+			return nil, fmt.Errorf("field \"oldestPoints\" is required")
+		}
+		return struct {
+			Type         string                       `json:"type"`
+			OldestPoints SelectOldestPointsSeriesNode `json:"oldestPoints"`
+		}{Type: "oldestPoints", OldestPoints: *u.oldestPoints}, nil
 	case "raw":
 		if u.raw == nil {
 			return nil, fmt.Errorf("field \"raw\" is required")
@@ -3702,6 +4440,22 @@ func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 			Type     string                    `json:"type"`
 			Resample NumericResampleSeriesNode `json:"resample"`
 		}{Type: "resample", Resample: *u.resample}, nil
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return nil, fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return struct {
+			Type               string                              `json:"type"`
+			NthPointDownsample NumericNthPointDownsampleSeriesNode `json:"nthPointDownsample"`
+		}{Type: "nthPointDownsample", NthPointDownsample: *u.nthPointDownsample}, nil
+	case "largestTriangleThreeBuckets":
+		if u.largestTriangleThreeBuckets == nil {
+			return nil, fmt.Errorf("field \"largestTriangleThreeBuckets\" is required")
+		}
+		return struct {
+			Type                        string                                       `json:"type"`
+			LargestTriangleThreeBuckets NumericLargestTriangleThreeBucketsSeriesNode `json:"largestTriangleThreeBuckets"`
+		}{Type: "largestTriangleThreeBuckets", LargestTriangleThreeBuckets: *u.largestTriangleThreeBuckets}, nil
 	case "rollingOperation":
 		if u.rollingOperation == nil {
 			return nil, fmt.Errorf("field \"rollingOperation\" is required")
@@ -3710,6 +4464,14 @@ func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 			Type             string                     `json:"type"`
 			RollingOperation RollingOperationSeriesNode `json:"rollingOperation"`
 		}{Type: "rollingOperation", RollingOperation: *u.rollingOperation}, nil
+	case "rollingPointOperation":
+		if u.rollingPointOperation == nil {
+			return nil, fmt.Errorf("field \"rollingPointOperation\" is required")
+		}
+		return struct {
+			Type                  string                          `json:"type"`
+			RollingPointOperation RollingPointOperationSeriesNode `json:"rollingPointOperation"`
+		}{Type: "rollingPointOperation", RollingPointOperation: *u.rollingPointOperation}, nil
 	case "aggregate":
 		if u.aggregate == nil {
 			return nil, fmt.Errorf("field \"aggregate\" is required")
@@ -3750,38 +4512,6 @@ func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 			Type           string                   `json:"type"`
 			TimeDifference TimeDifferenceSeriesNode `json:"timeDifference"`
 		}{Type: "timeDifference", TimeDifference: *u.timeDifference}, nil
-	case "timeRangeFilter":
-		if u.timeRangeFilter == nil {
-			return nil, fmt.Errorf("field \"timeRangeFilter\" is required")
-		}
-		return struct {
-			Type            string                           `json:"type"`
-			TimeRangeFilter NumericTimeRangeFilterSeriesNode `json:"timeRangeFilter"`
-		}{Type: "timeRangeFilter", TimeRangeFilter: *u.timeRangeFilter}, nil
-	case "timeShift":
-		if u.timeShift == nil {
-			return nil, fmt.Errorf("field \"timeShift\" is required")
-		}
-		return struct {
-			Type      string                     `json:"type"`
-			TimeShift NumericTimeShiftSeriesNode `json:"timeShift"`
-		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
-	case "unaryArithmetic":
-		if u.unaryArithmetic == nil {
-			return nil, fmt.Errorf("field \"unaryArithmetic\" is required")
-		}
-		return struct {
-			Type            string                    `json:"type"`
-			UnaryArithmetic UnaryArithmeticSeriesNode `json:"unaryArithmetic"`
-		}{Type: "unaryArithmetic", UnaryArithmetic: *u.unaryArithmetic}, nil
-	case "binaryArithmetic":
-		if u.binaryArithmetic == nil {
-			return nil, fmt.Errorf("field \"binaryArithmetic\" is required")
-		}
-		return struct {
-			Type             string                     `json:"type"`
-			BinaryArithmetic BinaryArithmeticSeriesNode `json:"binaryArithmetic"`
-		}{Type: "binaryArithmetic", BinaryArithmetic: *u.binaryArithmetic}, nil
 	case "union":
 		if u.union == nil {
 			return nil, fmt.Errorf("field \"union\" is required")
@@ -3822,6 +4552,14 @@ func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 			Type            string                           `json:"type"`
 			ThresholdFilter NumericThresholdFilterSeriesNode `json:"thresholdFilter"`
 		}{Type: "thresholdFilter", ThresholdFilter: *u.thresholdFilter}, nil
+	case "dropNan":
+		if u.dropNan == nil {
+			return nil, fmt.Errorf("field \"dropNan\" is required")
+		}
+		return struct {
+			Type    string               `json:"type"`
+			DropNan NumericNanFilterNode `json:"dropNan"`
+		}{Type: "dropNan", DropNan: *u.dropNan}, nil
 	case "arraySelect":
 		if u.arraySelect == nil {
 			return nil, fmt.Errorf("field \"arraySelect\" is required")
@@ -3854,6 +4592,14 @@ func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 			Type                              string                                      `json:"type"`
 			RangesNumericAggregationToNumeric RangesNumericAggregationToNumericSeriesNode `json:"rangesNumericAggregationToNumeric"`
 		}{Type: "rangesNumericAggregationToNumeric", RangesNumericAggregationToNumeric: *u.rangesNumericAggregationToNumeric}, nil
+	case "rangeDuration":
+		if u.rangeDuration == nil {
+			return nil, fmt.Errorf("field \"rangeDuration\" is required")
+		}
+		return struct {
+			Type          string                  `json:"type"`
+			RangeDuration RangeDurationSeriesNode `json:"rangeDuration"`
+		}{Type: "rangeDuration", RangeDuration: *u.rangeDuration}, nil
 	case "filterByExpression":
 		if u.filterByExpression == nil {
 			return nil, fmt.Errorf("field \"filterByExpression\" is required")
@@ -3862,6 +4608,14 @@ func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 			Type               string                       `json:"type"`
 			FilterByExpression FilterByExpressionSeriesNode `json:"filterByExpression"`
 		}{Type: "filterByExpression", FilterByExpression: *u.filterByExpression}, nil
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return nil, fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return struct {
+			Type      string              `json:"type"`
+			ScalarUdf ScalarUdfSeriesNode `json:"scalarUdf"`
+		}{Type: "scalarUdf", ScalarUdf: *u.scalarUdf}, nil
 	case "enumToNumeric":
 		if u.enumToNumeric == nil {
 			return nil, fmt.Errorf("field \"enumToNumeric\" is required")
@@ -3870,6 +4624,14 @@ func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 			Type          string                  `json:"type"`
 			EnumToNumeric EnumToNumericSeriesNode `json:"enumToNumeric"`
 		}{Type: "enumToNumeric", EnumToNumeric: *u.enumToNumeric}, nil
+	case "contains":
+		if u.contains == nil {
+			return nil, fmt.Errorf("field \"contains\" is required")
+		}
+		return struct {
+			Type     string             `json:"type"`
+			Contains ContainsSeriesNode `json:"contains"`
+		}{Type: "contains", Contains: *u.contains}, nil
 	case "refprop":
 		if u.refprop == nil {
 			return nil, fmt.Errorf("field \"refprop\" is required")
@@ -3894,6 +4656,22 @@ func (u *NumericSeriesNode) toSerializer() (interface{}, error) {
 			Type   string           `json:"type"`
 			ZScore ZscoreSeriesNode `json:"zScore"`
 		}{Type: "zScore", ZScore: *u.zScore}, nil
+	case "phaseUnwrap":
+		if u.phaseUnwrap == nil {
+			return nil, fmt.Errorf("field \"phaseUnwrap\" is required")
+		}
+		return struct {
+			Type        string                `json:"type"`
+			PhaseUnwrap PhaseUnwrapSeriesNode `json:"phaseUnwrap"`
+		}{Type: "phaseUnwrap", PhaseUnwrap: *u.phaseUnwrap}, nil
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return nil, fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return struct {
+			Type             string               `json:"type"`
+			GenericTransform GenericTransformNode `json:"genericTransform"`
+		}{Type: "genericTransform", GenericTransform: *u.genericTransform}, nil
 	}
 }
 
@@ -3960,6 +4738,10 @@ func (u *NumericSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.product == nil {
 			return fmt.Errorf("field \"product\" is required")
 		}
+	case "oldestPoints":
+		if u.oldestPoints == nil {
+			return fmt.Errorf("field \"oldestPoints\" is required")
+		}
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -3968,9 +4750,21 @@ func (u *NumericSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.resample == nil {
 			return fmt.Errorf("field \"resample\" is required")
 		}
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+	case "largestTriangleThreeBuckets":
+		if u.largestTriangleThreeBuckets == nil {
+			return fmt.Errorf("field \"largestTriangleThreeBuckets\" is required")
+		}
 	case "rollingOperation":
 		if u.rollingOperation == nil {
 			return fmt.Errorf("field \"rollingOperation\" is required")
+		}
+	case "rollingPointOperation":
+		if u.rollingPointOperation == nil {
+			return fmt.Errorf("field \"rollingPointOperation\" is required")
 		}
 	case "aggregate":
 		if u.aggregate == nil {
@@ -3992,22 +4786,6 @@ func (u *NumericSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.timeDifference == nil {
 			return fmt.Errorf("field \"timeDifference\" is required")
 		}
-	case "timeRangeFilter":
-		if u.timeRangeFilter == nil {
-			return fmt.Errorf("field \"timeRangeFilter\" is required")
-		}
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
-		}
-	case "unaryArithmetic":
-		if u.unaryArithmetic == nil {
-			return fmt.Errorf("field \"unaryArithmetic\" is required")
-		}
-	case "binaryArithmetic":
-		if u.binaryArithmetic == nil {
-			return fmt.Errorf("field \"binaryArithmetic\" is required")
-		}
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -4028,6 +4806,10 @@ func (u *NumericSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.thresholdFilter == nil {
 			return fmt.Errorf("field \"thresholdFilter\" is required")
 		}
+	case "dropNan":
+		if u.dropNan == nil {
+			return fmt.Errorf("field \"dropNan\" is required")
+		}
 	case "arraySelect":
 		if u.arraySelect == nil {
 			return fmt.Errorf("field \"arraySelect\" is required")
@@ -4044,13 +4826,25 @@ func (u *NumericSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.rangesNumericAggregationToNumeric == nil {
 			return fmt.Errorf("field \"rangesNumericAggregationToNumeric\" is required")
 		}
+	case "rangeDuration":
+		if u.rangeDuration == nil {
+			return fmt.Errorf("field \"rangeDuration\" is required")
+		}
 	case "filterByExpression":
 		if u.filterByExpression == nil {
 			return fmt.Errorf("field \"filterByExpression\" is required")
 		}
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
 	case "enumToNumeric":
 		if u.enumToNumeric == nil {
 			return fmt.Errorf("field \"enumToNumeric\" is required")
+		}
+	case "contains":
+		if u.contains == nil {
+			return fmt.Errorf("field \"contains\" is required")
 		}
 	case "refprop":
 		if u.refprop == nil {
@@ -4063,6 +4857,14 @@ func (u *NumericSeriesNode) UnmarshalJSON(data []byte) error {
 	case "zScore":
 		if u.zScore == nil {
 			return fmt.Errorf("field \"zScore\" is required")
+		}
+	case "phaseUnwrap":
+		if u.phaseUnwrap == nil {
+			return fmt.Errorf("field \"phaseUnwrap\" is required")
+		}
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
 		}
 	}
 	return nil
@@ -4084,7 +4886,7 @@ func (u *NumericSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *NumericSeriesNode) AcceptFuncs(constantFunc func(ConstantNumericSeriesNode) error, arithmeticFunc func(ArithmeticSeriesNode) error, bitOperationFunc func(BitOperationSeriesNode) error, countDuplicateFunc func(EnumCountDuplicateSeriesNode) error, cumulativeSumFunc func(CumulativeSumSeriesNode) error, derivativeFunc func(DerivativeSeriesNode) error, integralFunc func(IntegralSeriesNode) error, maxFunc func(MaxSeriesNode) error, meanFunc func(MeanSeriesNode) error, minFunc func(MinSeriesNode) error, offsetFunc func(OffsetSeriesNode) error, productFunc func(ProductSeriesNode) error, rawFunc func(RawNumericSeriesNode) error, resampleFunc func(NumericResampleSeriesNode) error, rollingOperationFunc func(RollingOperationSeriesNode) error, aggregateFunc func(AggregateNumericSeriesNode) error, signalFilterFunc func(SignalFilterSeriesNode) error, sumFunc func(SumSeriesNode) error, scaleFunc func(ScaleSeriesNode) error, timeDifferenceFunc func(TimeDifferenceSeriesNode) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeriesNode) error, timeShiftFunc func(NumericTimeShiftSeriesNode) error, unaryArithmeticFunc func(UnaryArithmeticSeriesNode) error, binaryArithmeticFunc func(BinaryArithmeticSeriesNode) error, unionFunc func(NumericUnionSeriesNode) error, unitConversionFunc func(UnitConversionSeriesNode) error, valueDifferenceFunc func(ValueDifferenceSeriesNode) error, filterTransformationFunc func(NumericFilterTransformationSeriesNode) error, thresholdFilterFunc func(NumericThresholdFilterSeriesNode) error, arraySelectFunc func(SelectIndexFromNumericArraySeriesNode) error, absoluteTimestampFunc func(AbsoluteTimestampSeriesNode) error, newestPointsFunc func(SelectNewestPointsSeriesNode) error, rangesNumericAggregationToNumericFunc func(RangesNumericAggregationToNumericSeriesNode) error, filterByExpressionFunc func(FilterByExpressionSeriesNode) error, enumToNumericFunc func(EnumToNumericSeriesNode) error, refpropFunc func(RefpropSeriesNode) error, extractFromStructFunc func(ExtractNumericFromStructSeriesNode) error, zScoreFunc func(ZscoreSeriesNode) error, unknownFunc func(string) error) error {
+func (u *NumericSeriesNode) AcceptFuncs(constantFunc func(ConstantNumericSeriesNode) error, arithmeticFunc func(ArithmeticSeriesNode) error, bitOperationFunc func(BitOperationSeriesNode) error, countDuplicateFunc func(EnumCountDuplicateSeriesNode) error, cumulativeSumFunc func(CumulativeSumSeriesNode) error, derivativeFunc func(DerivativeSeriesNode) error, integralFunc func(IntegralSeriesNode) error, maxFunc func(MaxSeriesNode) error, meanFunc func(MeanSeriesNode) error, minFunc func(MinSeriesNode) error, offsetFunc func(OffsetSeriesNode) error, productFunc func(ProductSeriesNode) error, oldestPointsFunc func(SelectOldestPointsSeriesNode) error, rawFunc func(RawNumericSeriesNode) error, resampleFunc func(NumericResampleSeriesNode) error, nthPointDownsampleFunc func(NumericNthPointDownsampleSeriesNode) error, largestTriangleThreeBucketsFunc func(NumericLargestTriangleThreeBucketsSeriesNode) error, rollingOperationFunc func(RollingOperationSeriesNode) error, rollingPointOperationFunc func(RollingPointOperationSeriesNode) error, aggregateFunc func(AggregateNumericSeriesNode) error, signalFilterFunc func(SignalFilterSeriesNode) error, sumFunc func(SumSeriesNode) error, scaleFunc func(ScaleSeriesNode) error, timeDifferenceFunc func(TimeDifferenceSeriesNode) error, unionFunc func(NumericUnionSeriesNode) error, unitConversionFunc func(UnitConversionSeriesNode) error, valueDifferenceFunc func(ValueDifferenceSeriesNode) error, filterTransformationFunc func(NumericFilterTransformationSeriesNode) error, thresholdFilterFunc func(NumericThresholdFilterSeriesNode) error, dropNanFunc func(NumericNanFilterNode) error, arraySelectFunc func(SelectIndexFromNumericArraySeriesNode) error, absoluteTimestampFunc func(AbsoluteTimestampSeriesNode) error, newestPointsFunc func(SelectNewestPointsSeriesNode) error, rangesNumericAggregationToNumericFunc func(RangesNumericAggregationToNumericSeriesNode) error, rangeDurationFunc func(RangeDurationSeriesNode) error, filterByExpressionFunc func(FilterByExpressionSeriesNode) error, scalarUdfFunc func(ScalarUdfSeriesNode) error, enumToNumericFunc func(EnumToNumericSeriesNode) error, containsFunc func(ContainsSeriesNode) error, refpropFunc func(RefpropSeriesNode) error, extractFromStructFunc func(ExtractNumericFromStructSeriesNode) error, zScoreFunc func(ZscoreSeriesNode) error, phaseUnwrapFunc func(PhaseUnwrapSeriesNode) error, genericTransformFunc func(GenericTransformNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -4151,6 +4953,11 @@ func (u *NumericSeriesNode) AcceptFuncs(constantFunc func(ConstantNumericSeriesN
 			return fmt.Errorf("field \"product\" is required")
 		}
 		return productFunc(*u.product)
+	case "oldestPoints":
+		if u.oldestPoints == nil {
+			return fmt.Errorf("field \"oldestPoints\" is required")
+		}
+		return oldestPointsFunc(*u.oldestPoints)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -4161,11 +4968,26 @@ func (u *NumericSeriesNode) AcceptFuncs(constantFunc func(ConstantNumericSeriesN
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return resampleFunc(*u.resample)
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return nthPointDownsampleFunc(*u.nthPointDownsample)
+	case "largestTriangleThreeBuckets":
+		if u.largestTriangleThreeBuckets == nil {
+			return fmt.Errorf("field \"largestTriangleThreeBuckets\" is required")
+		}
+		return largestTriangleThreeBucketsFunc(*u.largestTriangleThreeBuckets)
 	case "rollingOperation":
 		if u.rollingOperation == nil {
 			return fmt.Errorf("field \"rollingOperation\" is required")
 		}
 		return rollingOperationFunc(*u.rollingOperation)
+	case "rollingPointOperation":
+		if u.rollingPointOperation == nil {
+			return fmt.Errorf("field \"rollingPointOperation\" is required")
+		}
+		return rollingPointOperationFunc(*u.rollingPointOperation)
 	case "aggregate":
 		if u.aggregate == nil {
 			return fmt.Errorf("field \"aggregate\" is required")
@@ -4191,26 +5013,6 @@ func (u *NumericSeriesNode) AcceptFuncs(constantFunc func(ConstantNumericSeriesN
 			return fmt.Errorf("field \"timeDifference\" is required")
 		}
 		return timeDifferenceFunc(*u.timeDifference)
-	case "timeRangeFilter":
-		if u.timeRangeFilter == nil {
-			return fmt.Errorf("field \"timeRangeFilter\" is required")
-		}
-		return timeRangeFilterFunc(*u.timeRangeFilter)
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
-		}
-		return timeShiftFunc(*u.timeShift)
-	case "unaryArithmetic":
-		if u.unaryArithmetic == nil {
-			return fmt.Errorf("field \"unaryArithmetic\" is required")
-		}
-		return unaryArithmeticFunc(*u.unaryArithmetic)
-	case "binaryArithmetic":
-		if u.binaryArithmetic == nil {
-			return fmt.Errorf("field \"binaryArithmetic\" is required")
-		}
-		return binaryArithmeticFunc(*u.binaryArithmetic)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -4236,6 +5038,11 @@ func (u *NumericSeriesNode) AcceptFuncs(constantFunc func(ConstantNumericSeriesN
 			return fmt.Errorf("field \"thresholdFilter\" is required")
 		}
 		return thresholdFilterFunc(*u.thresholdFilter)
+	case "dropNan":
+		if u.dropNan == nil {
+			return fmt.Errorf("field \"dropNan\" is required")
+		}
+		return dropNanFunc(*u.dropNan)
 	case "arraySelect":
 		if u.arraySelect == nil {
 			return fmt.Errorf("field \"arraySelect\" is required")
@@ -4256,16 +5063,31 @@ func (u *NumericSeriesNode) AcceptFuncs(constantFunc func(ConstantNumericSeriesN
 			return fmt.Errorf("field \"rangesNumericAggregationToNumeric\" is required")
 		}
 		return rangesNumericAggregationToNumericFunc(*u.rangesNumericAggregationToNumeric)
+	case "rangeDuration":
+		if u.rangeDuration == nil {
+			return fmt.Errorf("field \"rangeDuration\" is required")
+		}
+		return rangeDurationFunc(*u.rangeDuration)
 	case "filterByExpression":
 		if u.filterByExpression == nil {
 			return fmt.Errorf("field \"filterByExpression\" is required")
 		}
 		return filterByExpressionFunc(*u.filterByExpression)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return scalarUdfFunc(*u.scalarUdf)
 	case "enumToNumeric":
 		if u.enumToNumeric == nil {
 			return fmt.Errorf("field \"enumToNumeric\" is required")
 		}
 		return enumToNumericFunc(*u.enumToNumeric)
+	case "contains":
+		if u.contains == nil {
+			return fmt.Errorf("field \"contains\" is required")
+		}
+		return containsFunc(*u.contains)
 	case "refprop":
 		if u.refprop == nil {
 			return fmt.Errorf("field \"refprop\" is required")
@@ -4281,6 +5103,16 @@ func (u *NumericSeriesNode) AcceptFuncs(constantFunc func(ConstantNumericSeriesN
 			return fmt.Errorf("field \"zScore\" is required")
 		}
 		return zScoreFunc(*u.zScore)
+	case "phaseUnwrap":
+		if u.phaseUnwrap == nil {
+			return fmt.Errorf("field \"phaseUnwrap\" is required")
+		}
+		return phaseUnwrapFunc(*u.phaseUnwrap)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return genericTransformFunc(*u.genericTransform)
 	}
 }
 
@@ -4332,6 +5164,10 @@ func (u *NumericSeriesNode) ProductNoopSuccess(_ ProductSeriesNode) error {
 	return nil
 }
 
+func (u *NumericSeriesNode) OldestPointsNoopSuccess(_ SelectOldestPointsSeriesNode) error {
+	return nil
+}
+
 func (u *NumericSeriesNode) RawNoopSuccess(_ RawNumericSeriesNode) error {
 	return nil
 }
@@ -4340,7 +5176,19 @@ func (u *NumericSeriesNode) ResampleNoopSuccess(_ NumericResampleSeriesNode) err
 	return nil
 }
 
+func (u *NumericSeriesNode) NthPointDownsampleNoopSuccess(_ NumericNthPointDownsampleSeriesNode) error {
+	return nil
+}
+
+func (u *NumericSeriesNode) LargestTriangleThreeBucketsNoopSuccess(_ NumericLargestTriangleThreeBucketsSeriesNode) error {
+	return nil
+}
+
 func (u *NumericSeriesNode) RollingOperationNoopSuccess(_ RollingOperationSeriesNode) error {
+	return nil
+}
+
+func (u *NumericSeriesNode) RollingPointOperationNoopSuccess(_ RollingPointOperationSeriesNode) error {
 	return nil
 }
 
@@ -4364,22 +5212,6 @@ func (u *NumericSeriesNode) TimeDifferenceNoopSuccess(_ TimeDifferenceSeriesNode
 	return nil
 }
 
-func (u *NumericSeriesNode) TimeRangeFilterNoopSuccess(_ NumericTimeRangeFilterSeriesNode) error {
-	return nil
-}
-
-func (u *NumericSeriesNode) TimeShiftNoopSuccess(_ NumericTimeShiftSeriesNode) error {
-	return nil
-}
-
-func (u *NumericSeriesNode) UnaryArithmeticNoopSuccess(_ UnaryArithmeticSeriesNode) error {
-	return nil
-}
-
-func (u *NumericSeriesNode) BinaryArithmeticNoopSuccess(_ BinaryArithmeticSeriesNode) error {
-	return nil
-}
-
 func (u *NumericSeriesNode) UnionNoopSuccess(_ NumericUnionSeriesNode) error {
 	return nil
 }
@@ -4400,6 +5232,10 @@ func (u *NumericSeriesNode) ThresholdFilterNoopSuccess(_ NumericThresholdFilterS
 	return nil
 }
 
+func (u *NumericSeriesNode) DropNanNoopSuccess(_ NumericNanFilterNode) error {
+	return nil
+}
+
 func (u *NumericSeriesNode) ArraySelectNoopSuccess(_ SelectIndexFromNumericArraySeriesNode) error {
 	return nil
 }
@@ -4416,11 +5252,23 @@ func (u *NumericSeriesNode) RangesNumericAggregationToNumericNoopSuccess(_ Range
 	return nil
 }
 
+func (u *NumericSeriesNode) RangeDurationNoopSuccess(_ RangeDurationSeriesNode) error {
+	return nil
+}
+
 func (u *NumericSeriesNode) FilterByExpressionNoopSuccess(_ FilterByExpressionSeriesNode) error {
 	return nil
 }
 
+func (u *NumericSeriesNode) ScalarUdfNoopSuccess(_ ScalarUdfSeriesNode) error {
+	return nil
+}
+
 func (u *NumericSeriesNode) EnumToNumericNoopSuccess(_ EnumToNumericSeriesNode) error {
+	return nil
+}
+
+func (u *NumericSeriesNode) ContainsNoopSuccess(_ ContainsSeriesNode) error {
 	return nil
 }
 
@@ -4433,6 +5281,14 @@ func (u *NumericSeriesNode) ExtractFromStructNoopSuccess(_ ExtractNumericFromStr
 }
 
 func (u *NumericSeriesNode) ZScoreNoopSuccess(_ ZscoreSeriesNode) error {
+	return nil
+}
+
+func (u *NumericSeriesNode) PhaseUnwrapNoopSuccess(_ PhaseUnwrapSeriesNode) error {
+	return nil
+}
+
+func (u *NumericSeriesNode) GenericTransformNoopSuccess(_ GenericTransformNode) error {
 	return nil
 }
 
@@ -4507,6 +5363,11 @@ func (u *NumericSeriesNode) Accept(v NumericSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"product\" is required")
 		}
 		return v.VisitProduct(*u.product)
+	case "oldestPoints":
+		if u.oldestPoints == nil {
+			return fmt.Errorf("field \"oldestPoints\" is required")
+		}
+		return v.VisitOldestPoints(*u.oldestPoints)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -4517,11 +5378,26 @@ func (u *NumericSeriesNode) Accept(v NumericSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return v.VisitResample(*u.resample)
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return v.VisitNthPointDownsample(*u.nthPointDownsample)
+	case "largestTriangleThreeBuckets":
+		if u.largestTriangleThreeBuckets == nil {
+			return fmt.Errorf("field \"largestTriangleThreeBuckets\" is required")
+		}
+		return v.VisitLargestTriangleThreeBuckets(*u.largestTriangleThreeBuckets)
 	case "rollingOperation":
 		if u.rollingOperation == nil {
 			return fmt.Errorf("field \"rollingOperation\" is required")
 		}
 		return v.VisitRollingOperation(*u.rollingOperation)
+	case "rollingPointOperation":
+		if u.rollingPointOperation == nil {
+			return fmt.Errorf("field \"rollingPointOperation\" is required")
+		}
+		return v.VisitRollingPointOperation(*u.rollingPointOperation)
 	case "aggregate":
 		if u.aggregate == nil {
 			return fmt.Errorf("field \"aggregate\" is required")
@@ -4547,26 +5423,6 @@ func (u *NumericSeriesNode) Accept(v NumericSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"timeDifference\" is required")
 		}
 		return v.VisitTimeDifference(*u.timeDifference)
-	case "timeRangeFilter":
-		if u.timeRangeFilter == nil {
-			return fmt.Errorf("field \"timeRangeFilter\" is required")
-		}
-		return v.VisitTimeRangeFilter(*u.timeRangeFilter)
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
-		}
-		return v.VisitTimeShift(*u.timeShift)
-	case "unaryArithmetic":
-		if u.unaryArithmetic == nil {
-			return fmt.Errorf("field \"unaryArithmetic\" is required")
-		}
-		return v.VisitUnaryArithmetic(*u.unaryArithmetic)
-	case "binaryArithmetic":
-		if u.binaryArithmetic == nil {
-			return fmt.Errorf("field \"binaryArithmetic\" is required")
-		}
-		return v.VisitBinaryArithmetic(*u.binaryArithmetic)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -4592,6 +5448,11 @@ func (u *NumericSeriesNode) Accept(v NumericSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"thresholdFilter\" is required")
 		}
 		return v.VisitThresholdFilter(*u.thresholdFilter)
+	case "dropNan":
+		if u.dropNan == nil {
+			return fmt.Errorf("field \"dropNan\" is required")
+		}
+		return v.VisitDropNan(*u.dropNan)
 	case "arraySelect":
 		if u.arraySelect == nil {
 			return fmt.Errorf("field \"arraySelect\" is required")
@@ -4612,16 +5473,31 @@ func (u *NumericSeriesNode) Accept(v NumericSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"rangesNumericAggregationToNumeric\" is required")
 		}
 		return v.VisitRangesNumericAggregationToNumeric(*u.rangesNumericAggregationToNumeric)
+	case "rangeDuration":
+		if u.rangeDuration == nil {
+			return fmt.Errorf("field \"rangeDuration\" is required")
+		}
+		return v.VisitRangeDuration(*u.rangeDuration)
 	case "filterByExpression":
 		if u.filterByExpression == nil {
 			return fmt.Errorf("field \"filterByExpression\" is required")
 		}
 		return v.VisitFilterByExpression(*u.filterByExpression)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return v.VisitScalarUdf(*u.scalarUdf)
 	case "enumToNumeric":
 		if u.enumToNumeric == nil {
 			return fmt.Errorf("field \"enumToNumeric\" is required")
 		}
 		return v.VisitEnumToNumeric(*u.enumToNumeric)
+	case "contains":
+		if u.contains == nil {
+			return fmt.Errorf("field \"contains\" is required")
+		}
+		return v.VisitContains(*u.contains)
 	case "refprop":
 		if u.refprop == nil {
 			return fmt.Errorf("field \"refprop\" is required")
@@ -4637,6 +5513,16 @@ func (u *NumericSeriesNode) Accept(v NumericSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"zScore\" is required")
 		}
 		return v.VisitZScore(*u.zScore)
+	case "phaseUnwrap":
+		if u.phaseUnwrap == nil {
+			return fmt.Errorf("field \"phaseUnwrap\" is required")
+		}
+		return v.VisitPhaseUnwrap(*u.phaseUnwrap)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return v.VisitGenericTransform(*u.genericTransform)
 	}
 }
 
@@ -4653,32 +5539,38 @@ type NumericSeriesNodeVisitor interface {
 	VisitMin(v MinSeriesNode) error
 	VisitOffset(v OffsetSeriesNode) error
 	VisitProduct(v ProductSeriesNode) error
+	VisitOldestPoints(v SelectOldestPointsSeriesNode) error
 	VisitRaw(v RawNumericSeriesNode) error
 	VisitResample(v NumericResampleSeriesNode) error
+	VisitNthPointDownsample(v NumericNthPointDownsampleSeriesNode) error
+	VisitLargestTriangleThreeBuckets(v NumericLargestTriangleThreeBucketsSeriesNode) error
 	VisitRollingOperation(v RollingOperationSeriesNode) error
+	VisitRollingPointOperation(v RollingPointOperationSeriesNode) error
 	VisitAggregate(v AggregateNumericSeriesNode) error
 	VisitSignalFilter(v SignalFilterSeriesNode) error
 	VisitSum(v SumSeriesNode) error
 	VisitScale(v ScaleSeriesNode) error
 	VisitTimeDifference(v TimeDifferenceSeriesNode) error
-	VisitTimeRangeFilter(v NumericTimeRangeFilterSeriesNode) error
-	VisitTimeShift(v NumericTimeShiftSeriesNode) error
-	VisitUnaryArithmetic(v UnaryArithmeticSeriesNode) error
-	VisitBinaryArithmetic(v BinaryArithmeticSeriesNode) error
 	VisitUnion(v NumericUnionSeriesNode) error
 	VisitUnitConversion(v UnitConversionSeriesNode) error
 	VisitValueDifference(v ValueDifferenceSeriesNode) error
 	VisitFilterTransformation(v NumericFilterTransformationSeriesNode) error
 	VisitThresholdFilter(v NumericThresholdFilterSeriesNode) error
+	VisitDropNan(v NumericNanFilterNode) error
 	VisitArraySelect(v SelectIndexFromNumericArraySeriesNode) error
 	VisitAbsoluteTimestamp(v AbsoluteTimestampSeriesNode) error
 	VisitNewestPoints(v SelectNewestPointsSeriesNode) error
 	VisitRangesNumericAggregationToNumeric(v RangesNumericAggregationToNumericSeriesNode) error
+	VisitRangeDuration(v RangeDurationSeriesNode) error
 	VisitFilterByExpression(v FilterByExpressionSeriesNode) error
+	VisitScalarUdf(v ScalarUdfSeriesNode) error
 	VisitEnumToNumeric(v EnumToNumericSeriesNode) error
+	VisitContains(v ContainsSeriesNode) error
 	VisitRefprop(v RefpropSeriesNode) error
 	VisitExtractFromStruct(v ExtractNumericFromStructSeriesNode) error
 	VisitZScore(v ZscoreSeriesNode) error
+	VisitPhaseUnwrap(v PhaseUnwrapSeriesNode) error
+	VisitGenericTransform(v GenericTransformNode) error
 	VisitUnknown(typeName string) error
 }
 
@@ -4749,6 +5641,11 @@ func (u *NumericSeriesNode) AcceptWithContext(ctx context.Context, v NumericSeri
 			return fmt.Errorf("field \"product\" is required")
 		}
 		return v.VisitProductWithContext(ctx, *u.product)
+	case "oldestPoints":
+		if u.oldestPoints == nil {
+			return fmt.Errorf("field \"oldestPoints\" is required")
+		}
+		return v.VisitOldestPointsWithContext(ctx, *u.oldestPoints)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -4759,11 +5656,26 @@ func (u *NumericSeriesNode) AcceptWithContext(ctx context.Context, v NumericSeri
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return v.VisitResampleWithContext(ctx, *u.resample)
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return v.VisitNthPointDownsampleWithContext(ctx, *u.nthPointDownsample)
+	case "largestTriangleThreeBuckets":
+		if u.largestTriangleThreeBuckets == nil {
+			return fmt.Errorf("field \"largestTriangleThreeBuckets\" is required")
+		}
+		return v.VisitLargestTriangleThreeBucketsWithContext(ctx, *u.largestTriangleThreeBuckets)
 	case "rollingOperation":
 		if u.rollingOperation == nil {
 			return fmt.Errorf("field \"rollingOperation\" is required")
 		}
 		return v.VisitRollingOperationWithContext(ctx, *u.rollingOperation)
+	case "rollingPointOperation":
+		if u.rollingPointOperation == nil {
+			return fmt.Errorf("field \"rollingPointOperation\" is required")
+		}
+		return v.VisitRollingPointOperationWithContext(ctx, *u.rollingPointOperation)
 	case "aggregate":
 		if u.aggregate == nil {
 			return fmt.Errorf("field \"aggregate\" is required")
@@ -4789,26 +5701,6 @@ func (u *NumericSeriesNode) AcceptWithContext(ctx context.Context, v NumericSeri
 			return fmt.Errorf("field \"timeDifference\" is required")
 		}
 		return v.VisitTimeDifferenceWithContext(ctx, *u.timeDifference)
-	case "timeRangeFilter":
-		if u.timeRangeFilter == nil {
-			return fmt.Errorf("field \"timeRangeFilter\" is required")
-		}
-		return v.VisitTimeRangeFilterWithContext(ctx, *u.timeRangeFilter)
-	case "timeShift":
-		if u.timeShift == nil {
-			return fmt.Errorf("field \"timeShift\" is required")
-		}
-		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
-	case "unaryArithmetic":
-		if u.unaryArithmetic == nil {
-			return fmt.Errorf("field \"unaryArithmetic\" is required")
-		}
-		return v.VisitUnaryArithmeticWithContext(ctx, *u.unaryArithmetic)
-	case "binaryArithmetic":
-		if u.binaryArithmetic == nil {
-			return fmt.Errorf("field \"binaryArithmetic\" is required")
-		}
-		return v.VisitBinaryArithmeticWithContext(ctx, *u.binaryArithmetic)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -4834,6 +5726,11 @@ func (u *NumericSeriesNode) AcceptWithContext(ctx context.Context, v NumericSeri
 			return fmt.Errorf("field \"thresholdFilter\" is required")
 		}
 		return v.VisitThresholdFilterWithContext(ctx, *u.thresholdFilter)
+	case "dropNan":
+		if u.dropNan == nil {
+			return fmt.Errorf("field \"dropNan\" is required")
+		}
+		return v.VisitDropNanWithContext(ctx, *u.dropNan)
 	case "arraySelect":
 		if u.arraySelect == nil {
 			return fmt.Errorf("field \"arraySelect\" is required")
@@ -4854,16 +5751,31 @@ func (u *NumericSeriesNode) AcceptWithContext(ctx context.Context, v NumericSeri
 			return fmt.Errorf("field \"rangesNumericAggregationToNumeric\" is required")
 		}
 		return v.VisitRangesNumericAggregationToNumericWithContext(ctx, *u.rangesNumericAggregationToNumeric)
+	case "rangeDuration":
+		if u.rangeDuration == nil {
+			return fmt.Errorf("field \"rangeDuration\" is required")
+		}
+		return v.VisitRangeDurationWithContext(ctx, *u.rangeDuration)
 	case "filterByExpression":
 		if u.filterByExpression == nil {
 			return fmt.Errorf("field \"filterByExpression\" is required")
 		}
 		return v.VisitFilterByExpressionWithContext(ctx, *u.filterByExpression)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return v.VisitScalarUdfWithContext(ctx, *u.scalarUdf)
 	case "enumToNumeric":
 		if u.enumToNumeric == nil {
 			return fmt.Errorf("field \"enumToNumeric\" is required")
 		}
 		return v.VisitEnumToNumericWithContext(ctx, *u.enumToNumeric)
+	case "contains":
+		if u.contains == nil {
+			return fmt.Errorf("field \"contains\" is required")
+		}
+		return v.VisitContainsWithContext(ctx, *u.contains)
 	case "refprop":
 		if u.refprop == nil {
 			return fmt.Errorf("field \"refprop\" is required")
@@ -4879,6 +5791,16 @@ func (u *NumericSeriesNode) AcceptWithContext(ctx context.Context, v NumericSeri
 			return fmt.Errorf("field \"zScore\" is required")
 		}
 		return v.VisitZScoreWithContext(ctx, *u.zScore)
+	case "phaseUnwrap":
+		if u.phaseUnwrap == nil {
+			return fmt.Errorf("field \"phaseUnwrap\" is required")
+		}
+		return v.VisitPhaseUnwrapWithContext(ctx, *u.phaseUnwrap)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return v.VisitGenericTransformWithContext(ctx, *u.genericTransform)
 	}
 }
 
@@ -4895,32 +5817,38 @@ type NumericSeriesNodeVisitorWithContext interface {
 	VisitMinWithContext(ctx context.Context, v MinSeriesNode) error
 	VisitOffsetWithContext(ctx context.Context, v OffsetSeriesNode) error
 	VisitProductWithContext(ctx context.Context, v ProductSeriesNode) error
+	VisitOldestPointsWithContext(ctx context.Context, v SelectOldestPointsSeriesNode) error
 	VisitRawWithContext(ctx context.Context, v RawNumericSeriesNode) error
 	VisitResampleWithContext(ctx context.Context, v NumericResampleSeriesNode) error
+	VisitNthPointDownsampleWithContext(ctx context.Context, v NumericNthPointDownsampleSeriesNode) error
+	VisitLargestTriangleThreeBucketsWithContext(ctx context.Context, v NumericLargestTriangleThreeBucketsSeriesNode) error
 	VisitRollingOperationWithContext(ctx context.Context, v RollingOperationSeriesNode) error
+	VisitRollingPointOperationWithContext(ctx context.Context, v RollingPointOperationSeriesNode) error
 	VisitAggregateWithContext(ctx context.Context, v AggregateNumericSeriesNode) error
 	VisitSignalFilterWithContext(ctx context.Context, v SignalFilterSeriesNode) error
 	VisitSumWithContext(ctx context.Context, v SumSeriesNode) error
 	VisitScaleWithContext(ctx context.Context, v ScaleSeriesNode) error
 	VisitTimeDifferenceWithContext(ctx context.Context, v TimeDifferenceSeriesNode) error
-	VisitTimeRangeFilterWithContext(ctx context.Context, v NumericTimeRangeFilterSeriesNode) error
-	VisitTimeShiftWithContext(ctx context.Context, v NumericTimeShiftSeriesNode) error
-	VisitUnaryArithmeticWithContext(ctx context.Context, v UnaryArithmeticSeriesNode) error
-	VisitBinaryArithmeticWithContext(ctx context.Context, v BinaryArithmeticSeriesNode) error
 	VisitUnionWithContext(ctx context.Context, v NumericUnionSeriesNode) error
 	VisitUnitConversionWithContext(ctx context.Context, v UnitConversionSeriesNode) error
 	VisitValueDifferenceWithContext(ctx context.Context, v ValueDifferenceSeriesNode) error
 	VisitFilterTransformationWithContext(ctx context.Context, v NumericFilterTransformationSeriesNode) error
 	VisitThresholdFilterWithContext(ctx context.Context, v NumericThresholdFilterSeriesNode) error
+	VisitDropNanWithContext(ctx context.Context, v NumericNanFilterNode) error
 	VisitArraySelectWithContext(ctx context.Context, v SelectIndexFromNumericArraySeriesNode) error
 	VisitAbsoluteTimestampWithContext(ctx context.Context, v AbsoluteTimestampSeriesNode) error
 	VisitNewestPointsWithContext(ctx context.Context, v SelectNewestPointsSeriesNode) error
 	VisitRangesNumericAggregationToNumericWithContext(ctx context.Context, v RangesNumericAggregationToNumericSeriesNode) error
+	VisitRangeDurationWithContext(ctx context.Context, v RangeDurationSeriesNode) error
 	VisitFilterByExpressionWithContext(ctx context.Context, v FilterByExpressionSeriesNode) error
+	VisitScalarUdfWithContext(ctx context.Context, v ScalarUdfSeriesNode) error
 	VisitEnumToNumericWithContext(ctx context.Context, v EnumToNumericSeriesNode) error
+	VisitContainsWithContext(ctx context.Context, v ContainsSeriesNode) error
 	VisitRefpropWithContext(ctx context.Context, v RefpropSeriesNode) error
 	VisitExtractFromStructWithContext(ctx context.Context, v ExtractNumericFromStructSeriesNode) error
 	VisitZScoreWithContext(ctx context.Context, v ZscoreSeriesNode) error
+	VisitPhaseUnwrapWithContext(ctx context.Context, v PhaseUnwrapSeriesNode) error
+	VisitGenericTransformWithContext(ctx context.Context, v GenericTransformNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -4972,6 +5900,10 @@ func NewNumericSeriesNodeFromProduct(v ProductSeriesNode) NumericSeriesNode {
 	return NumericSeriesNode{typ: "product", product: &v}
 }
 
+func NewNumericSeriesNodeFromOldestPoints(v SelectOldestPointsSeriesNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "oldestPoints", oldestPoints: &v}
+}
+
 func NewNumericSeriesNodeFromRaw(v RawNumericSeriesNode) NumericSeriesNode {
 	return NumericSeriesNode{typ: "raw", raw: &v}
 }
@@ -4980,8 +5912,20 @@ func NewNumericSeriesNodeFromResample(v NumericResampleSeriesNode) NumericSeries
 	return NumericSeriesNode{typ: "resample", resample: &v}
 }
 
+func NewNumericSeriesNodeFromNthPointDownsample(v NumericNthPointDownsampleSeriesNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "nthPointDownsample", nthPointDownsample: &v}
+}
+
+func NewNumericSeriesNodeFromLargestTriangleThreeBuckets(v NumericLargestTriangleThreeBucketsSeriesNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "largestTriangleThreeBuckets", largestTriangleThreeBuckets: &v}
+}
+
 func NewNumericSeriesNodeFromRollingOperation(v RollingOperationSeriesNode) NumericSeriesNode {
 	return NumericSeriesNode{typ: "rollingOperation", rollingOperation: &v}
+}
+
+func NewNumericSeriesNodeFromRollingPointOperation(v RollingPointOperationSeriesNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "rollingPointOperation", rollingPointOperation: &v}
 }
 
 func NewNumericSeriesNodeFromAggregate(v AggregateNumericSeriesNode) NumericSeriesNode {
@@ -5004,22 +5948,6 @@ func NewNumericSeriesNodeFromTimeDifference(v TimeDifferenceSeriesNode) NumericS
 	return NumericSeriesNode{typ: "timeDifference", timeDifference: &v}
 }
 
-func NewNumericSeriesNodeFromTimeRangeFilter(v NumericTimeRangeFilterSeriesNode) NumericSeriesNode {
-	return NumericSeriesNode{typ: "timeRangeFilter", timeRangeFilter: &v}
-}
-
-func NewNumericSeriesNodeFromTimeShift(v NumericTimeShiftSeriesNode) NumericSeriesNode {
-	return NumericSeriesNode{typ: "timeShift", timeShift: &v}
-}
-
-func NewNumericSeriesNodeFromUnaryArithmetic(v UnaryArithmeticSeriesNode) NumericSeriesNode {
-	return NumericSeriesNode{typ: "unaryArithmetic", unaryArithmetic: &v}
-}
-
-func NewNumericSeriesNodeFromBinaryArithmetic(v BinaryArithmeticSeriesNode) NumericSeriesNode {
-	return NumericSeriesNode{typ: "binaryArithmetic", binaryArithmetic: &v}
-}
-
 func NewNumericSeriesNodeFromUnion(v NumericUnionSeriesNode) NumericSeriesNode {
 	return NumericSeriesNode{typ: "union", union: &v}
 }
@@ -5040,6 +5968,10 @@ func NewNumericSeriesNodeFromThresholdFilter(v NumericThresholdFilterSeriesNode)
 	return NumericSeriesNode{typ: "thresholdFilter", thresholdFilter: &v}
 }
 
+func NewNumericSeriesNodeFromDropNan(v NumericNanFilterNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "dropNan", dropNan: &v}
+}
+
 func NewNumericSeriesNodeFromArraySelect(v SelectIndexFromNumericArraySeriesNode) NumericSeriesNode {
 	return NumericSeriesNode{typ: "arraySelect", arraySelect: &v}
 }
@@ -5056,12 +5988,24 @@ func NewNumericSeriesNodeFromRangesNumericAggregationToNumeric(v RangesNumericAg
 	return NumericSeriesNode{typ: "rangesNumericAggregationToNumeric", rangesNumericAggregationToNumeric: &v}
 }
 
+func NewNumericSeriesNodeFromRangeDuration(v RangeDurationSeriesNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "rangeDuration", rangeDuration: &v}
+}
+
 func NewNumericSeriesNodeFromFilterByExpression(v FilterByExpressionSeriesNode) NumericSeriesNode {
 	return NumericSeriesNode{typ: "filterByExpression", filterByExpression: &v}
 }
 
+func NewNumericSeriesNodeFromScalarUdf(v ScalarUdfSeriesNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "scalarUdf", scalarUdf: &v}
+}
+
 func NewNumericSeriesNodeFromEnumToNumeric(v EnumToNumericSeriesNode) NumericSeriesNode {
 	return NumericSeriesNode{typ: "enumToNumeric", enumToNumeric: &v}
+}
+
+func NewNumericSeriesNodeFromContains(v ContainsSeriesNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "contains", contains: &v}
 }
 
 func NewNumericSeriesNodeFromRefprop(v RefpropSeriesNode) NumericSeriesNode {
@@ -5076,9 +6020,16 @@ func NewNumericSeriesNodeFromZScore(v ZscoreSeriesNode) NumericSeriesNode {
 	return NumericSeriesNode{typ: "zScore", zScore: &v}
 }
 
+func NewNumericSeriesNodeFromPhaseUnwrap(v PhaseUnwrapSeriesNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "phaseUnwrap", phaseUnwrap: &v}
+}
+
+func NewNumericSeriesNodeFromGenericTransform(v GenericTransformNode) NumericSeriesNode {
+	return NumericSeriesNode{typ: "genericTransform", genericTransform: &v}
+}
+
 type RangesNode struct {
 	typ                       string
-	booleanToRanges           *BooleanToRangesNode
 	durationFilter            *DurationFilterRangesNode
 	enumEquality              *EnumEqualityRangesNode
 	enumFilter                *EnumFilterRangesNode
@@ -5099,7 +6050,6 @@ type RangesNode struct {
 
 type rangesNodeDeserializer struct {
 	Type                      string                        `json:"type"`
-	BooleanToRanges           *BooleanToRangesNode          `json:"booleanToRanges"`
 	DurationFilter            *DurationFilterRangesNode     `json:"durationFilter"`
 	EnumEquality              *EnumEqualityRangesNode       `json:"enumEquality"`
 	EnumFilter                *EnumFilterRangesNode         `json:"enumFilter"`
@@ -5119,21 +6069,13 @@ type rangesNodeDeserializer struct {
 }
 
 func (u *rangesNodeDeserializer) toStruct() RangesNode {
-	return RangesNode{typ: u.Type, booleanToRanges: u.BooleanToRanges, durationFilter: u.DurationFilter, enumEquality: u.EnumEquality, enumFilter: u.EnumFilter, extrema: u.Extrema, intersectRange: u.IntersectRange, literalRanges: u.LiteralRanges, minMaxThreshold: u.MinMaxThreshold, not: u.Not, onChange: u.OnChange, rangeNumericAggregation: u.RangeNumericAggregation, seriesCrossoverRangesNode: u.SeriesCrossoverRangesNode, staleRange: u.StaleRange, stabilityDetection: u.StabilityDetection, threshold: u.Threshold, unionRange: u.UnionRange, paddedRanges: u.PaddedRanges}
+	return RangesNode{typ: u.Type, durationFilter: u.DurationFilter, enumEquality: u.EnumEquality, enumFilter: u.EnumFilter, extrema: u.Extrema, intersectRange: u.IntersectRange, literalRanges: u.LiteralRanges, minMaxThreshold: u.MinMaxThreshold, not: u.Not, onChange: u.OnChange, rangeNumericAggregation: u.RangeNumericAggregation, seriesCrossoverRangesNode: u.SeriesCrossoverRangesNode, staleRange: u.StaleRange, stabilityDetection: u.StabilityDetection, threshold: u.Threshold, unionRange: u.UnionRange, paddedRanges: u.PaddedRanges}
 }
 
 func (u *RangesNode) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "booleanToRanges":
-		if u.booleanToRanges == nil {
-			return nil, fmt.Errorf("field \"booleanToRanges\" is required")
-		}
-		return struct {
-			Type            string              `json:"type"`
-			BooleanToRanges BooleanToRangesNode `json:"booleanToRanges"`
-		}{Type: "booleanToRanges", BooleanToRanges: *u.booleanToRanges}, nil
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return nil, fmt.Errorf("field \"durationFilter\" is required")
@@ -5280,10 +6222,6 @@ func (u *RangesNode) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "booleanToRanges":
-		if u.booleanToRanges == nil {
-			return fmt.Errorf("field \"booleanToRanges\" is required")
-		}
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
@@ -5368,18 +6306,13 @@ func (u *RangesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *RangesNode) AcceptFuncs(booleanToRangesFunc func(BooleanToRangesNode) error, durationFilterFunc func(DurationFilterRangesNode) error, enumEqualityFunc func(EnumEqualityRangesNode) error, enumFilterFunc func(EnumFilterRangesNode) error, extremaFunc func(ExtremaRangesNode) error, intersectRangeFunc func(IntersectRangesNode) error, literalRangesFunc func(LiteralRangesNode) error, minMaxThresholdFunc func(MinMaxThresholdRangesNode) error, notFunc func(NotRangesNode) error, onChangeFunc func(OnChangeRangesNode) error, rangeNumericAggregationFunc func(RangesNumericAggregationNode) error, seriesCrossoverRangesNodeFunc func(SeriesCrossoverRangesNode) error, staleRangeFunc func(StaleRangesNode) error, stabilityDetectionFunc func(StabilityDetectionRangesNode) error, thresholdFunc func(ThresholdingRangesNode) error, unionRangeFunc func(UnionRangesNode) error, paddedRangesFunc func(PaddedRangesNode) error, unknownFunc func(string) error) error {
+func (u *RangesNode) AcceptFuncs(durationFilterFunc func(DurationFilterRangesNode) error, enumEqualityFunc func(EnumEqualityRangesNode) error, enumFilterFunc func(EnumFilterRangesNode) error, extremaFunc func(ExtremaRangesNode) error, intersectRangeFunc func(IntersectRangesNode) error, literalRangesFunc func(LiteralRangesNode) error, minMaxThresholdFunc func(MinMaxThresholdRangesNode) error, notFunc func(NotRangesNode) error, onChangeFunc func(OnChangeRangesNode) error, rangeNumericAggregationFunc func(RangesNumericAggregationNode) error, seriesCrossoverRangesNodeFunc func(SeriesCrossoverRangesNode) error, staleRangeFunc func(StaleRangesNode) error, stabilityDetectionFunc func(StabilityDetectionRangesNode) error, thresholdFunc func(ThresholdingRangesNode) error, unionRangeFunc func(UnionRangesNode) error, paddedRangesFunc func(PaddedRangesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in RangesNode type")
 		}
 		return unknownFunc(u.typ)
-	case "booleanToRanges":
-		if u.booleanToRanges == nil {
-			return fmt.Errorf("field \"booleanToRanges\" is required")
-		}
-		return booleanToRangesFunc(*u.booleanToRanges)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
@@ -5463,10 +6396,6 @@ func (u *RangesNode) AcceptFuncs(booleanToRangesFunc func(BooleanToRangesNode) e
 	}
 }
 
-func (u *RangesNode) BooleanToRangesNoopSuccess(_ BooleanToRangesNode) error {
-	return nil
-}
-
 func (u *RangesNode) DurationFilterNoopSuccess(_ DurationFilterRangesNode) error {
 	return nil
 }
@@ -5542,11 +6471,6 @@ func (u *RangesNode) Accept(v RangesNodeVisitor) error {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "booleanToRanges":
-		if u.booleanToRanges == nil {
-			return fmt.Errorf("field \"booleanToRanges\" is required")
-		}
-		return v.VisitBooleanToRanges(*u.booleanToRanges)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
@@ -5631,7 +6555,6 @@ func (u *RangesNode) Accept(v RangesNodeVisitor) error {
 }
 
 type RangesNodeVisitor interface {
-	VisitBooleanToRanges(v BooleanToRangesNode) error
 	VisitDurationFilter(v DurationFilterRangesNode) error
 	VisitEnumEquality(v EnumEqualityRangesNode) error
 	VisitEnumFilter(v EnumFilterRangesNode) error
@@ -5658,11 +6581,6 @@ func (u *RangesNode) AcceptWithContext(ctx context.Context, v RangesNodeVisitorW
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "booleanToRanges":
-		if u.booleanToRanges == nil {
-			return fmt.Errorf("field \"booleanToRanges\" is required")
-		}
-		return v.VisitBooleanToRangesWithContext(ctx, *u.booleanToRanges)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
@@ -5747,7 +6665,6 @@ func (u *RangesNode) AcceptWithContext(ctx context.Context, v RangesNodeVisitorW
 }
 
 type RangesNodeVisitorWithContext interface {
-	VisitBooleanToRangesWithContext(ctx context.Context, v BooleanToRangesNode) error
 	VisitDurationFilterWithContext(ctx context.Context, v DurationFilterRangesNode) error
 	VisitEnumEqualityWithContext(ctx context.Context, v EnumEqualityRangesNode) error
 	VisitEnumFilterWithContext(ctx context.Context, v EnumFilterRangesNode) error
@@ -5765,10 +6682,6 @@ type RangesNodeVisitorWithContext interface {
 	VisitUnionRangeWithContext(ctx context.Context, v UnionRangesNode) error
 	VisitPaddedRangesWithContext(ctx context.Context, v PaddedRangesNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewRangesNodeFromBooleanToRanges(v BooleanToRangesNode) RangesNode {
-	return RangesNode{typ: "booleanToRanges", booleanToRanges: &v}
 }
 
 func NewRangesNodeFromDurationFilter(v DurationFilterRangesNode) RangesNode {
@@ -6183,6 +7096,220 @@ func NewResampleInterpolationConstantDefaultValueFromEnum(v string) ResampleInte
 	return ResampleInterpolationConstantDefaultValue{typ: "enum", enum: &v}
 }
 
+// Unified resolved enum aggregation used by per-timestamp/grouped enum aggregation.
+type ResolvedEnumAggregation struct {
+	typ string
+	min *api.Empty
+	max *api.Empty
+	udf *ResolvedEnumAggregationUdf
+}
+
+type resolvedEnumAggregationDeserializer struct {
+	Type string                      `json:"type"`
+	Min  *api.Empty                  `json:"min"`
+	Max  *api.Empty                  `json:"max"`
+	Udf  *ResolvedEnumAggregationUdf `json:"udf"`
+}
+
+func (u *resolvedEnumAggregationDeserializer) toStruct() ResolvedEnumAggregation {
+	return ResolvedEnumAggregation{typ: u.Type, min: u.Min, max: u.Max, udf: u.Udf}
+}
+
+func (u *ResolvedEnumAggregation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "min":
+		if u.min == nil {
+			return nil, fmt.Errorf("field \"min\" is required")
+		}
+		return struct {
+			Type string    `json:"type"`
+			Min  api.Empty `json:"min"`
+		}{Type: "min", Min: *u.min}, nil
+	case "max":
+		if u.max == nil {
+			return nil, fmt.Errorf("field \"max\" is required")
+		}
+		return struct {
+			Type string    `json:"type"`
+			Max  api.Empty `json:"max"`
+		}{Type: "max", Max: *u.max}, nil
+	case "udf":
+		if u.udf == nil {
+			return nil, fmt.Errorf("field \"udf\" is required")
+		}
+		return struct {
+			Type string                     `json:"type"`
+			Udf  ResolvedEnumAggregationUdf `json:"udf"`
+		}{Type: "udf", Udf: *u.udf}, nil
+	}
+}
+
+func (u ResolvedEnumAggregation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ResolvedEnumAggregation) UnmarshalJSON(data []byte) error {
+	var deser resolvedEnumAggregationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ResolvedEnumAggregation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ResolvedEnumAggregation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ResolvedEnumAggregation) AcceptFuncs(minFunc func(api.Empty) error, maxFunc func(api.Empty) error, udfFunc func(ResolvedEnumAggregationUdf) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ResolvedEnumAggregation type")
+		}
+		return unknownFunc(u.typ)
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+		return minFunc(*u.min)
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+		return maxFunc(*u.max)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return udfFunc(*u.udf)
+	}
+}
+
+func (u *ResolvedEnumAggregation) MinNoopSuccess(_ api.Empty) error {
+	return nil
+}
+
+func (u *ResolvedEnumAggregation) MaxNoopSuccess(_ api.Empty) error {
+	return nil
+}
+
+func (u *ResolvedEnumAggregation) UdfNoopSuccess(_ ResolvedEnumAggregationUdf) error {
+	return nil
+}
+
+func (u *ResolvedEnumAggregation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ResolvedEnumAggregation) Accept(v ResolvedEnumAggregationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+		return v.VisitMin(*u.min)
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+		return v.VisitMax(*u.max)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return v.VisitUdf(*u.udf)
+	}
+}
+
+type ResolvedEnumAggregationVisitor interface {
+	VisitMin(v api.Empty) error
+	VisitMax(v api.Empty) error
+	VisitUdf(v ResolvedEnumAggregationUdf) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ResolvedEnumAggregation) AcceptWithContext(ctx context.Context, v ResolvedEnumAggregationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+		return v.VisitMinWithContext(ctx, *u.min)
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+		return v.VisitMaxWithContext(ctx, *u.max)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return v.VisitUdfWithContext(ctx, *u.udf)
+	}
+}
+
+type ResolvedEnumAggregationVisitorWithContext interface {
+	VisitMinWithContext(ctx context.Context, v api.Empty) error
+	VisitMaxWithContext(ctx context.Context, v api.Empty) error
+	VisitUdfWithContext(ctx context.Context, v ResolvedEnumAggregationUdf) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewResolvedEnumAggregationFromMin(v api.Empty) ResolvedEnumAggregation {
+	return ResolvedEnumAggregation{typ: "min", min: &v}
+}
+
+func NewResolvedEnumAggregationFromMax(v api.Empty) ResolvedEnumAggregation {
+	return ResolvedEnumAggregation{typ: "max", max: &v}
+}
+
+func NewResolvedEnumAggregationFromUdf(v ResolvedEnumAggregationUdf) ResolvedEnumAggregation {
+	return ResolvedEnumAggregation{typ: "udf", udf: &v}
+}
+
 type ResolvedNode struct {
 	typ          string
 	ranges       *SummarizeRangesNode
@@ -6193,7 +7320,8 @@ type ResolvedNode struct {
 	frequency    *FrequencyDomainNode
 	frequencyV2  *FrequencyDomainNodeV2
 	histogram    *HistogramNode
-	curve        *CurveFitNode
+	curve        *CurveFitV2Node
+	curveV2      *CurveFitV2Node
 	multivariate *SummarizeMultivariateNode
 }
 
@@ -6207,12 +7335,13 @@ type resolvedNodeDeserializer struct {
 	Frequency    *FrequencyDomainNode       `json:"frequency"`
 	FrequencyV2  *FrequencyDomainNodeV2     `json:"frequencyV2"`
 	Histogram    *HistogramNode             `json:"histogram"`
-	Curve        *CurveFitNode              `json:"curve"`
+	Curve        *CurveFitV2Node            `json:"curve"`
+	CurveV2      *CurveFitV2Node            `json:"curveV2"`
 	Multivariate *SummarizeMultivariateNode `json:"multivariate"`
 }
 
 func (u *resolvedNodeDeserializer) toStruct() ResolvedNode {
-	return ResolvedNode{typ: u.Type, ranges: u.Ranges, series: u.Series, value: u.Value, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, frequency: u.Frequency, frequencyV2: u.FrequencyV2, histogram: u.Histogram, curve: u.Curve, multivariate: u.Multivariate}
+	return ResolvedNode{typ: u.Type, ranges: u.Ranges, series: u.Series, value: u.Value, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, frequency: u.Frequency, frequencyV2: u.FrequencyV2, histogram: u.Histogram, curve: u.Curve, curveV2: u.CurveV2, multivariate: u.Multivariate}
 }
 
 func (u *ResolvedNode) toSerializer() (interface{}, error) {
@@ -6288,9 +7417,17 @@ func (u *ResolvedNode) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"curve\" is required")
 		}
 		return struct {
-			Type  string       `json:"type"`
-			Curve CurveFitNode `json:"curve"`
+			Type  string         `json:"type"`
+			Curve CurveFitV2Node `json:"curve"`
 		}{Type: "curve", Curve: *u.curve}, nil
+	case "curveV2":
+		if u.curveV2 == nil {
+			return nil, fmt.Errorf("field \"curveV2\" is required")
+		}
+		return struct {
+			Type    string         `json:"type"`
+			CurveV2 CurveFitV2Node `json:"curveV2"`
+		}{Type: "curveV2", CurveV2: *u.curveV2}, nil
 	case "multivariate":
 		if u.multivariate == nil {
 			return nil, fmt.Errorf("field \"multivariate\" is required")
@@ -6353,6 +7490,10 @@ func (u *ResolvedNode) UnmarshalJSON(data []byte) error {
 		if u.curve == nil {
 			return fmt.Errorf("field \"curve\" is required")
 		}
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
 	case "multivariate":
 		if u.multivariate == nil {
 			return fmt.Errorf("field \"multivariate\" is required")
@@ -6377,7 +7518,7 @@ func (u *ResolvedNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ResolvedNode) AcceptFuncs(rangesFunc func(SummarizeRangesNode) error, seriesFunc func(SummarizeSeriesNode) error, valueFunc func(SelectValueNode) error, cartesianFunc func(SummarizeCartesianNode) error, cartesian3dFunc func(SummarizeCartesian3dNode) error, frequencyFunc func(FrequencyDomainNode) error, frequencyV2Func func(FrequencyDomainNodeV2) error, histogramFunc func(HistogramNode) error, curveFunc func(CurveFitNode) error, multivariateFunc func(SummarizeMultivariateNode) error, unknownFunc func(string) error) error {
+func (u *ResolvedNode) AcceptFuncs(rangesFunc func(SummarizeRangesNode) error, seriesFunc func(SummarizeSeriesNode) error, valueFunc func(SelectValueNode) error, cartesianFunc func(SummarizeCartesianNode) error, cartesian3dFunc func(SummarizeCartesian3dNode) error, frequencyFunc func(FrequencyDomainNode) error, frequencyV2Func func(FrequencyDomainNodeV2) error, histogramFunc func(HistogramNode) error, curveFunc func(CurveFitV2Node) error, curveV2Func func(CurveFitV2Node) error, multivariateFunc func(SummarizeMultivariateNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -6429,6 +7570,11 @@ func (u *ResolvedNode) AcceptFuncs(rangesFunc func(SummarizeRangesNode) error, s
 			return fmt.Errorf("field \"curve\" is required")
 		}
 		return curveFunc(*u.curve)
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
+		return curveV2Func(*u.curveV2)
 	case "multivariate":
 		if u.multivariate == nil {
 			return fmt.Errorf("field \"multivariate\" is required")
@@ -6469,7 +7615,11 @@ func (u *ResolvedNode) HistogramNoopSuccess(_ HistogramNode) error {
 	return nil
 }
 
-func (u *ResolvedNode) CurveNoopSuccess(_ CurveFitNode) error {
+func (u *ResolvedNode) CurveNoopSuccess(_ CurveFitV2Node) error {
+	return nil
+}
+
+func (u *ResolvedNode) CurveV2NoopSuccess(_ CurveFitV2Node) error {
 	return nil
 }
 
@@ -6533,6 +7683,11 @@ func (u *ResolvedNode) Accept(v ResolvedNodeVisitor) error {
 			return fmt.Errorf("field \"curve\" is required")
 		}
 		return v.VisitCurve(*u.curve)
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
+		return v.VisitCurveV2(*u.curveV2)
 	case "multivariate":
 		if u.multivariate == nil {
 			return fmt.Errorf("field \"multivariate\" is required")
@@ -6550,7 +7705,8 @@ type ResolvedNodeVisitor interface {
 	VisitFrequency(v FrequencyDomainNode) error
 	VisitFrequencyV2(v FrequencyDomainNodeV2) error
 	VisitHistogram(v HistogramNode) error
-	VisitCurve(v CurveFitNode) error
+	VisitCurve(v CurveFitV2Node) error
+	VisitCurveV2(v CurveFitV2Node) error
 	VisitMultivariate(v SummarizeMultivariateNode) error
 	VisitUnknown(typeName string) error
 }
@@ -6607,6 +7763,11 @@ func (u *ResolvedNode) AcceptWithContext(ctx context.Context, v ResolvedNodeVisi
 			return fmt.Errorf("field \"curve\" is required")
 		}
 		return v.VisitCurveWithContext(ctx, *u.curve)
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
+		return v.VisitCurveV2WithContext(ctx, *u.curveV2)
 	case "multivariate":
 		if u.multivariate == nil {
 			return fmt.Errorf("field \"multivariate\" is required")
@@ -6624,7 +7785,8 @@ type ResolvedNodeVisitorWithContext interface {
 	VisitFrequencyWithContext(ctx context.Context, v FrequencyDomainNode) error
 	VisitFrequencyV2WithContext(ctx context.Context, v FrequencyDomainNodeV2) error
 	VisitHistogramWithContext(ctx context.Context, v HistogramNode) error
-	VisitCurveWithContext(ctx context.Context, v CurveFitNode) error
+	VisitCurveWithContext(ctx context.Context, v CurveFitV2Node) error
+	VisitCurveV2WithContext(ctx context.Context, v CurveFitV2Node) error
 	VisitMultivariateWithContext(ctx context.Context, v SummarizeMultivariateNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
@@ -6661,32 +7823,112 @@ func NewResolvedNodeFromHistogram(v HistogramNode) ResolvedNode {
 	return ResolvedNode{typ: "histogram", histogram: &v}
 }
 
-func NewResolvedNodeFromCurve(v CurveFitNode) ResolvedNode {
+func NewResolvedNodeFromCurve(v CurveFitV2Node) ResolvedNode {
 	return ResolvedNode{typ: "curve", curve: &v}
+}
+
+func NewResolvedNodeFromCurveV2(v CurveFitV2Node) ResolvedNode {
+	return ResolvedNode{typ: "curveV2", curveV2: &v}
 }
 
 func NewResolvedNodeFromMultivariate(v SummarizeMultivariateNode) ResolvedNode {
 	return ResolvedNode{typ: "multivariate", multivariate: &v}
 }
 
+/*
+Unified resolved numeric aggregation used across rolling windows, plain aggregates, range aggregates,
+union merges, and per-bucket summarization.
+*/
 type ResolvedNumericAggregation struct {
-	typ        string
-	percentile *ResolvedPercentile
+	typ               string
+	sum               *api1.Summation
+	average           *api1.Average
+	min               *api1.Minimum
+	max               *api1.Maximum
+	count             *api1.Count
+	standardDeviation *api1.StandardDeviation
+	rootMeanSquare    *api1.RootMeanSquare
+	percentile        *ResolvedPercentile
+	udf               *ResolvedNumericAggregationUdf
 }
 
 type resolvedNumericAggregationDeserializer struct {
-	Type       string              `json:"type"`
-	Percentile *ResolvedPercentile `json:"percentile"`
+	Type              string                         `json:"type"`
+	Sum               *api1.Summation                `json:"sum"`
+	Average           *api1.Average                  `json:"average"`
+	Min               *api1.Minimum                  `json:"min"`
+	Max               *api1.Maximum                  `json:"max"`
+	Count             *api1.Count                    `json:"count"`
+	StandardDeviation *api1.StandardDeviation        `json:"standardDeviation"`
+	RootMeanSquare    *api1.RootMeanSquare           `json:"rootMeanSquare"`
+	Percentile        *ResolvedPercentile            `json:"percentile"`
+	Udf               *ResolvedNumericAggregationUdf `json:"udf"`
 }
 
 func (u *resolvedNumericAggregationDeserializer) toStruct() ResolvedNumericAggregation {
-	return ResolvedNumericAggregation{typ: u.Type, percentile: u.Percentile}
+	return ResolvedNumericAggregation{typ: u.Type, sum: u.Sum, average: u.Average, min: u.Min, max: u.Max, count: u.Count, standardDeviation: u.StandardDeviation, rootMeanSquare: u.RootMeanSquare, percentile: u.Percentile, udf: u.Udf}
 }
 
 func (u *ResolvedNumericAggregation) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "sum":
+		if u.sum == nil {
+			return nil, fmt.Errorf("field \"sum\" is required")
+		}
+		return struct {
+			Type string         `json:"type"`
+			Sum  api1.Summation `json:"sum"`
+		}{Type: "sum", Sum: *u.sum}, nil
+	case "average":
+		if u.average == nil {
+			return nil, fmt.Errorf("field \"average\" is required")
+		}
+		return struct {
+			Type    string       `json:"type"`
+			Average api1.Average `json:"average"`
+		}{Type: "average", Average: *u.average}, nil
+	case "min":
+		if u.min == nil {
+			return nil, fmt.Errorf("field \"min\" is required")
+		}
+		return struct {
+			Type string       `json:"type"`
+			Min  api1.Minimum `json:"min"`
+		}{Type: "min", Min: *u.min}, nil
+	case "max":
+		if u.max == nil {
+			return nil, fmt.Errorf("field \"max\" is required")
+		}
+		return struct {
+			Type string       `json:"type"`
+			Max  api1.Maximum `json:"max"`
+		}{Type: "max", Max: *u.max}, nil
+	case "count":
+		if u.count == nil {
+			return nil, fmt.Errorf("field \"count\" is required")
+		}
+		return struct {
+			Type  string     `json:"type"`
+			Count api1.Count `json:"count"`
+		}{Type: "count", Count: *u.count}, nil
+	case "standardDeviation":
+		if u.standardDeviation == nil {
+			return nil, fmt.Errorf("field \"standardDeviation\" is required")
+		}
+		return struct {
+			Type              string                 `json:"type"`
+			StandardDeviation api1.StandardDeviation `json:"standardDeviation"`
+		}{Type: "standardDeviation", StandardDeviation: *u.standardDeviation}, nil
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return nil, fmt.Errorf("field \"rootMeanSquare\" is required")
+		}
+		return struct {
+			Type           string              `json:"type"`
+			RootMeanSquare api1.RootMeanSquare `json:"rootMeanSquare"`
+		}{Type: "rootMeanSquare", RootMeanSquare: *u.rootMeanSquare}, nil
 	case "percentile":
 		if u.percentile == nil {
 			return nil, fmt.Errorf("field \"percentile\" is required")
@@ -6695,6 +7937,14 @@ func (u *ResolvedNumericAggregation) toSerializer() (interface{}, error) {
 			Type       string             `json:"type"`
 			Percentile ResolvedPercentile `json:"percentile"`
 		}{Type: "percentile", Percentile: *u.percentile}, nil
+	case "udf":
+		if u.udf == nil {
+			return nil, fmt.Errorf("field \"udf\" is required")
+		}
+		return struct {
+			Type string                        `json:"type"`
+			Udf  ResolvedNumericAggregationUdf `json:"udf"`
+		}{Type: "udf", Udf: *u.udf}, nil
 	}
 }
 
@@ -6713,9 +7963,41 @@ func (u *ResolvedNumericAggregation) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
+	case "sum":
+		if u.sum == nil {
+			return fmt.Errorf("field \"sum\" is required")
+		}
+	case "average":
+		if u.average == nil {
+			return fmt.Errorf("field \"average\" is required")
+		}
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+	case "standardDeviation":
+		if u.standardDeviation == nil {
+			return fmt.Errorf("field \"standardDeviation\" is required")
+		}
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return fmt.Errorf("field \"rootMeanSquare\" is required")
+		}
 	case "percentile":
 		if u.percentile == nil {
 			return fmt.Errorf("field \"percentile\" is required")
+		}
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
 		}
 	}
 	return nil
@@ -6737,22 +8019,94 @@ func (u *ResolvedNumericAggregation) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ResolvedNumericAggregation) AcceptFuncs(percentileFunc func(ResolvedPercentile) error, unknownFunc func(string) error) error {
+func (u *ResolvedNumericAggregation) AcceptFuncs(sumFunc func(api1.Summation) error, averageFunc func(api1.Average) error, minFunc func(api1.Minimum) error, maxFunc func(api1.Maximum) error, countFunc func(api1.Count) error, standardDeviationFunc func(api1.StandardDeviation) error, rootMeanSquareFunc func(api1.RootMeanSquare) error, percentileFunc func(ResolvedPercentile) error, udfFunc func(ResolvedNumericAggregationUdf) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in ResolvedNumericAggregation type")
 		}
 		return unknownFunc(u.typ)
+	case "sum":
+		if u.sum == nil {
+			return fmt.Errorf("field \"sum\" is required")
+		}
+		return sumFunc(*u.sum)
+	case "average":
+		if u.average == nil {
+			return fmt.Errorf("field \"average\" is required")
+		}
+		return averageFunc(*u.average)
+	case "min":
+		if u.min == nil {
+			return fmt.Errorf("field \"min\" is required")
+		}
+		return minFunc(*u.min)
+	case "max":
+		if u.max == nil {
+			return fmt.Errorf("field \"max\" is required")
+		}
+		return maxFunc(*u.max)
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
+		}
+		return countFunc(*u.count)
+	case "standardDeviation":
+		if u.standardDeviation == nil {
+			return fmt.Errorf("field \"standardDeviation\" is required")
+		}
+		return standardDeviationFunc(*u.standardDeviation)
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return fmt.Errorf("field \"rootMeanSquare\" is required")
+		}
+		return rootMeanSquareFunc(*u.rootMeanSquare)
 	case "percentile":
 		if u.percentile == nil {
 			return fmt.Errorf("field \"percentile\" is required")
 		}
 		return percentileFunc(*u.percentile)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return udfFunc(*u.udf)
 	}
 }
 
+func (u *ResolvedNumericAggregation) SumNoopSuccess(_ api1.Summation) error {
+	return nil
+}
+
+func (u *ResolvedNumericAggregation) AverageNoopSuccess(_ api1.Average) error {
+	return nil
+}
+
+func (u *ResolvedNumericAggregation) MinNoopSuccess(_ api1.Minimum) error {
+	return nil
+}
+
+func (u *ResolvedNumericAggregation) MaxNoopSuccess(_ api1.Maximum) error {
+	return nil
+}
+
+func (u *ResolvedNumericAggregation) CountNoopSuccess(_ api1.Count) error {
+	return nil
+}
+
+func (u *ResolvedNumericAggregation) StandardDeviationNoopSuccess(_ api1.StandardDeviation) error {
+	return nil
+}
+
+func (u *ResolvedNumericAggregation) RootMeanSquareNoopSuccess(_ api1.RootMeanSquare) error {
+	return nil
+}
+
 func (u *ResolvedNumericAggregation) PercentileNoopSuccess(_ ResolvedPercentile) error {
+	return nil
+}
+
+func (u *ResolvedNumericAggregation) UdfNoopSuccess(_ ResolvedNumericAggregationUdf) error {
 	return nil
 }
 
@@ -6767,289 +8121,16 @@ func (u *ResolvedNumericAggregation) Accept(v ResolvedNumericAggregationVisitor)
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "percentile":
-		if u.percentile == nil {
-			return fmt.Errorf("field \"percentile\" is required")
-		}
-		return v.VisitPercentile(*u.percentile)
-	}
-}
-
-type ResolvedNumericAggregationVisitor interface {
-	VisitPercentile(v ResolvedPercentile) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *ResolvedNumericAggregation) AcceptWithContext(ctx context.Context, v ResolvedNumericAggregationVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "percentile":
-		if u.percentile == nil {
-			return fmt.Errorf("field \"percentile\" is required")
-		}
-		return v.VisitPercentileWithContext(ctx, *u.percentile)
-	}
-}
-
-type ResolvedNumericAggregationVisitorWithContext interface {
-	VisitPercentileWithContext(ctx context.Context, v ResolvedPercentile) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewResolvedNumericAggregationFromPercentile(v ResolvedPercentile) ResolvedNumericAggregation {
-	return ResolvedNumericAggregation{typ: "percentile", percentile: &v}
-}
-
-type RollingOperator struct {
-	typ               string
-	average           *api.Average
-	count             *api.Count
-	min               *api.Minimum
-	max               *api.Maximum
-	percentile        *ResolvedPercentile
-	standardDeviation *api.StandardDeviation
-	sum               *api.Sum
-}
-
-type rollingOperatorDeserializer struct {
-	Type              string                 `json:"type"`
-	Average           *api.Average           `json:"average"`
-	Count             *api.Count             `json:"count"`
-	Min               *api.Minimum           `json:"min"`
-	Max               *api.Maximum           `json:"max"`
-	Percentile        *ResolvedPercentile    `json:"percentile"`
-	StandardDeviation *api.StandardDeviation `json:"standardDeviation"`
-	Sum               *api.Sum               `json:"sum"`
-}
-
-func (u *rollingOperatorDeserializer) toStruct() RollingOperator {
-	return RollingOperator{typ: u.Type, average: u.Average, count: u.Count, min: u.Min, max: u.Max, percentile: u.Percentile, standardDeviation: u.StandardDeviation, sum: u.Sum}
-}
-
-func (u *RollingOperator) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "average":
-		if u.average == nil {
-			return nil, fmt.Errorf("field \"average\" is required")
-		}
-		return struct {
-			Type    string      `json:"type"`
-			Average api.Average `json:"average"`
-		}{Type: "average", Average: *u.average}, nil
-	case "count":
-		if u.count == nil {
-			return nil, fmt.Errorf("field \"count\" is required")
-		}
-		return struct {
-			Type  string    `json:"type"`
-			Count api.Count `json:"count"`
-		}{Type: "count", Count: *u.count}, nil
-	case "min":
-		if u.min == nil {
-			return nil, fmt.Errorf("field \"min\" is required")
-		}
-		return struct {
-			Type string      `json:"type"`
-			Min  api.Minimum `json:"min"`
-		}{Type: "min", Min: *u.min}, nil
-	case "max":
-		if u.max == nil {
-			return nil, fmt.Errorf("field \"max\" is required")
-		}
-		return struct {
-			Type string      `json:"type"`
-			Max  api.Maximum `json:"max"`
-		}{Type: "max", Max: *u.max}, nil
-	case "percentile":
-		if u.percentile == nil {
-			return nil, fmt.Errorf("field \"percentile\" is required")
-		}
-		return struct {
-			Type       string             `json:"type"`
-			Percentile ResolvedPercentile `json:"percentile"`
-		}{Type: "percentile", Percentile: *u.percentile}, nil
-	case "standardDeviation":
-		if u.standardDeviation == nil {
-			return nil, fmt.Errorf("field \"standardDeviation\" is required")
-		}
-		return struct {
-			Type              string                `json:"type"`
-			StandardDeviation api.StandardDeviation `json:"standardDeviation"`
-		}{Type: "standardDeviation", StandardDeviation: *u.standardDeviation}, nil
-	case "sum":
-		if u.sum == nil {
-			return nil, fmt.Errorf("field \"sum\" is required")
-		}
-		return struct {
-			Type string  `json:"type"`
-			Sum  api.Sum `json:"sum"`
-		}{Type: "sum", Sum: *u.sum}, nil
-	}
-}
-
-func (u RollingOperator) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *RollingOperator) UnmarshalJSON(data []byte) error {
-	var deser rollingOperatorDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "average":
-		if u.average == nil {
-			return fmt.Errorf("field \"average\" is required")
-		}
-	case "count":
-		if u.count == nil {
-			return fmt.Errorf("field \"count\" is required")
-		}
-	case "min":
-		if u.min == nil {
-			return fmt.Errorf("field \"min\" is required")
-		}
-	case "max":
-		if u.max == nil {
-			return fmt.Errorf("field \"max\" is required")
-		}
-	case "percentile":
-		if u.percentile == nil {
-			return fmt.Errorf("field \"percentile\" is required")
-		}
-	case "standardDeviation":
-		if u.standardDeviation == nil {
-			return fmt.Errorf("field \"standardDeviation\" is required")
-		}
 	case "sum":
 		if u.sum == nil {
 			return fmt.Errorf("field \"sum\" is required")
 		}
-	}
-	return nil
-}
-
-func (u RollingOperator) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *RollingOperator) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *RollingOperator) AcceptFuncs(averageFunc func(api.Average) error, countFunc func(api.Count) error, minFunc func(api.Minimum) error, maxFunc func(api.Maximum) error, percentileFunc func(ResolvedPercentile) error, standardDeviationFunc func(api.StandardDeviation) error, sumFunc func(api.Sum) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in RollingOperator type")
-		}
-		return unknownFunc(u.typ)
-	case "average":
-		if u.average == nil {
-			return fmt.Errorf("field \"average\" is required")
-		}
-		return averageFunc(*u.average)
-	case "count":
-		if u.count == nil {
-			return fmt.Errorf("field \"count\" is required")
-		}
-		return countFunc(*u.count)
-	case "min":
-		if u.min == nil {
-			return fmt.Errorf("field \"min\" is required")
-		}
-		return minFunc(*u.min)
-	case "max":
-		if u.max == nil {
-			return fmt.Errorf("field \"max\" is required")
-		}
-		return maxFunc(*u.max)
-	case "percentile":
-		if u.percentile == nil {
-			return fmt.Errorf("field \"percentile\" is required")
-		}
-		return percentileFunc(*u.percentile)
-	case "standardDeviation":
-		if u.standardDeviation == nil {
-			return fmt.Errorf("field \"standardDeviation\" is required")
-		}
-		return standardDeviationFunc(*u.standardDeviation)
-	case "sum":
-		if u.sum == nil {
-			return fmt.Errorf("field \"sum\" is required")
-		}
-		return sumFunc(*u.sum)
-	}
-}
-
-func (u *RollingOperator) AverageNoopSuccess(_ api.Average) error {
-	return nil
-}
-
-func (u *RollingOperator) CountNoopSuccess(_ api.Count) error {
-	return nil
-}
-
-func (u *RollingOperator) MinNoopSuccess(_ api.Minimum) error {
-	return nil
-}
-
-func (u *RollingOperator) MaxNoopSuccess(_ api.Maximum) error {
-	return nil
-}
-
-func (u *RollingOperator) PercentileNoopSuccess(_ ResolvedPercentile) error {
-	return nil
-}
-
-func (u *RollingOperator) StandardDeviationNoopSuccess(_ api.StandardDeviation) error {
-	return nil
-}
-
-func (u *RollingOperator) SumNoopSuccess(_ api.Sum) error {
-	return nil
-}
-
-func (u *RollingOperator) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *RollingOperator) Accept(v RollingOperatorVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
+		return v.VisitSum(*u.sum)
 	case "average":
 		if u.average == nil {
 			return fmt.Errorf("field \"average\" is required")
 		}
 		return v.VisitAverage(*u.average)
-	case "count":
-		if u.count == nil {
-			return fmt.Errorf("field \"count\" is required")
-		}
-		return v.VisitCount(*u.count)
 	case "min":
 		if u.min == nil {
 			return fmt.Errorf("field \"min\" is required")
@@ -7060,52 +8141,64 @@ func (u *RollingOperator) Accept(v RollingOperatorVisitor) error {
 			return fmt.Errorf("field \"max\" is required")
 		}
 		return v.VisitMax(*u.max)
-	case "percentile":
-		if u.percentile == nil {
-			return fmt.Errorf("field \"percentile\" is required")
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
 		}
-		return v.VisitPercentile(*u.percentile)
+		return v.VisitCount(*u.count)
 	case "standardDeviation":
 		if u.standardDeviation == nil {
 			return fmt.Errorf("field \"standardDeviation\" is required")
 		}
 		return v.VisitStandardDeviation(*u.standardDeviation)
-	case "sum":
-		if u.sum == nil {
-			return fmt.Errorf("field \"sum\" is required")
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return fmt.Errorf("field \"rootMeanSquare\" is required")
 		}
-		return v.VisitSum(*u.sum)
+		return v.VisitRootMeanSquare(*u.rootMeanSquare)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentile(*u.percentile)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return v.VisitUdf(*u.udf)
 	}
 }
 
-type RollingOperatorVisitor interface {
-	VisitAverage(v api.Average) error
-	VisitCount(v api.Count) error
-	VisitMin(v api.Minimum) error
-	VisitMax(v api.Maximum) error
+type ResolvedNumericAggregationVisitor interface {
+	VisitSum(v api1.Summation) error
+	VisitAverage(v api1.Average) error
+	VisitMin(v api1.Minimum) error
+	VisitMax(v api1.Maximum) error
+	VisitCount(v api1.Count) error
+	VisitStandardDeviation(v api1.StandardDeviation) error
+	VisitRootMeanSquare(v api1.RootMeanSquare) error
 	VisitPercentile(v ResolvedPercentile) error
-	VisitStandardDeviation(v api.StandardDeviation) error
-	VisitSum(v api.Sum) error
+	VisitUdf(v ResolvedNumericAggregationUdf) error
 	VisitUnknown(typeName string) error
 }
 
-func (u *RollingOperator) AcceptWithContext(ctx context.Context, v RollingOperatorVisitorWithContext) error {
+func (u *ResolvedNumericAggregation) AcceptWithContext(ctx context.Context, v ResolvedNumericAggregationVisitorWithContext) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "sum":
+		if u.sum == nil {
+			return fmt.Errorf("field \"sum\" is required")
+		}
+		return v.VisitSumWithContext(ctx, *u.sum)
 	case "average":
 		if u.average == nil {
 			return fmt.Errorf("field \"average\" is required")
 		}
 		return v.VisitAverageWithContext(ctx, *u.average)
-	case "count":
-		if u.count == nil {
-			return fmt.Errorf("field \"count\" is required")
-		}
-		return v.VisitCountWithContext(ctx, *u.count)
 	case "min":
 		if u.min == nil {
 			return fmt.Errorf("field \"min\" is required")
@@ -7116,61 +8209,429 @@ func (u *RollingOperator) AcceptWithContext(ctx context.Context, v RollingOperat
 			return fmt.Errorf("field \"max\" is required")
 		}
 		return v.VisitMaxWithContext(ctx, *u.max)
-	case "percentile":
-		if u.percentile == nil {
-			return fmt.Errorf("field \"percentile\" is required")
+	case "count":
+		if u.count == nil {
+			return fmt.Errorf("field \"count\" is required")
 		}
-		return v.VisitPercentileWithContext(ctx, *u.percentile)
+		return v.VisitCountWithContext(ctx, *u.count)
 	case "standardDeviation":
 		if u.standardDeviation == nil {
 			return fmt.Errorf("field \"standardDeviation\" is required")
 		}
 		return v.VisitStandardDeviationWithContext(ctx, *u.standardDeviation)
-	case "sum":
-		if u.sum == nil {
-			return fmt.Errorf("field \"sum\" is required")
+	case "rootMeanSquare":
+		if u.rootMeanSquare == nil {
+			return fmt.Errorf("field \"rootMeanSquare\" is required")
 		}
-		return v.VisitSumWithContext(ctx, *u.sum)
+		return v.VisitRootMeanSquareWithContext(ctx, *u.rootMeanSquare)
+	case "percentile":
+		if u.percentile == nil {
+			return fmt.Errorf("field \"percentile\" is required")
+		}
+		return v.VisitPercentileWithContext(ctx, *u.percentile)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return v.VisitUdfWithContext(ctx, *u.udf)
 	}
 }
 
-type RollingOperatorVisitorWithContext interface {
-	VisitAverageWithContext(ctx context.Context, v api.Average) error
-	VisitCountWithContext(ctx context.Context, v api.Count) error
-	VisitMinWithContext(ctx context.Context, v api.Minimum) error
-	VisitMaxWithContext(ctx context.Context, v api.Maximum) error
+type ResolvedNumericAggregationVisitorWithContext interface {
+	VisitSumWithContext(ctx context.Context, v api1.Summation) error
+	VisitAverageWithContext(ctx context.Context, v api1.Average) error
+	VisitMinWithContext(ctx context.Context, v api1.Minimum) error
+	VisitMaxWithContext(ctx context.Context, v api1.Maximum) error
+	VisitCountWithContext(ctx context.Context, v api1.Count) error
+	VisitStandardDeviationWithContext(ctx context.Context, v api1.StandardDeviation) error
+	VisitRootMeanSquareWithContext(ctx context.Context, v api1.RootMeanSquare) error
 	VisitPercentileWithContext(ctx context.Context, v ResolvedPercentile) error
-	VisitStandardDeviationWithContext(ctx context.Context, v api.StandardDeviation) error
-	VisitSumWithContext(ctx context.Context, v api.Sum) error
+	VisitUdfWithContext(ctx context.Context, v ResolvedNumericAggregationUdf) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewRollingOperatorFromAverage(v api.Average) RollingOperator {
-	return RollingOperator{typ: "average", average: &v}
+func NewResolvedNumericAggregationFromSum(v api1.Summation) ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: "sum", sum: &v}
 }
 
-func NewRollingOperatorFromCount(v api.Count) RollingOperator {
-	return RollingOperator{typ: "count", count: &v}
+func NewResolvedNumericAggregationFromAverage(v api1.Average) ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: "average", average: &v}
 }
 
-func NewRollingOperatorFromMin(v api.Minimum) RollingOperator {
-	return RollingOperator{typ: "min", min: &v}
+func NewResolvedNumericAggregationFromMin(v api1.Minimum) ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: "min", min: &v}
 }
 
-func NewRollingOperatorFromMax(v api.Maximum) RollingOperator {
-	return RollingOperator{typ: "max", max: &v}
+func NewResolvedNumericAggregationFromMax(v api1.Maximum) ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: "max", max: &v}
 }
 
-func NewRollingOperatorFromPercentile(v ResolvedPercentile) RollingOperator {
-	return RollingOperator{typ: "percentile", percentile: &v}
+func NewResolvedNumericAggregationFromCount(v api1.Count) ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: "count", count: &v}
 }
 
-func NewRollingOperatorFromStandardDeviation(v api.StandardDeviation) RollingOperator {
-	return RollingOperator{typ: "standardDeviation", standardDeviation: &v}
+func NewResolvedNumericAggregationFromStandardDeviation(v api1.StandardDeviation) ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: "standardDeviation", standardDeviation: &v}
 }
 
-func NewRollingOperatorFromSum(v api.Sum) RollingOperator {
-	return RollingOperator{typ: "sum", sum: &v}
+func NewResolvedNumericAggregationFromRootMeanSquare(v api1.RootMeanSquare) ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: "rootMeanSquare", rootMeanSquare: &v}
+}
+
+func NewResolvedNumericAggregationFromPercentile(v ResolvedPercentile) ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: "percentile", percentile: &v}
+}
+
+func NewResolvedNumericAggregationFromUdf(v ResolvedNumericAggregationUdf) ResolvedNumericAggregation {
+	return ResolvedNumericAggregation{typ: "udf", udf: &v}
+}
+
+type ResolvedNumericUnionOperation struct {
+	typ              string
+	aggregation      *ResolvedNumericAggregation
+	throwOnDuplicate *ThrowOnDuplicateOperation
+}
+
+type resolvedNumericUnionOperationDeserializer struct {
+	Type             string                      `json:"type"`
+	Aggregation      *ResolvedNumericAggregation `json:"aggregation"`
+	ThrowOnDuplicate *ThrowOnDuplicateOperation  `json:"throwOnDuplicate"`
+}
+
+func (u *resolvedNumericUnionOperationDeserializer) toStruct() ResolvedNumericUnionOperation {
+	return ResolvedNumericUnionOperation{typ: u.Type, aggregation: u.Aggregation, throwOnDuplicate: u.ThrowOnDuplicate}
+}
+
+func (u *ResolvedNumericUnionOperation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "aggregation":
+		if u.aggregation == nil {
+			return nil, fmt.Errorf("field \"aggregation\" is required")
+		}
+		return struct {
+			Type        string                     `json:"type"`
+			Aggregation ResolvedNumericAggregation `json:"aggregation"`
+		}{Type: "aggregation", Aggregation: *u.aggregation}, nil
+	case "throwOnDuplicate":
+		if u.throwOnDuplicate == nil {
+			return nil, fmt.Errorf("field \"throwOnDuplicate\" is required")
+		}
+		return struct {
+			Type             string                    `json:"type"`
+			ThrowOnDuplicate ThrowOnDuplicateOperation `json:"throwOnDuplicate"`
+		}{Type: "throwOnDuplicate", ThrowOnDuplicate: *u.throwOnDuplicate}, nil
+	}
+}
+
+func (u ResolvedNumericUnionOperation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ResolvedNumericUnionOperation) UnmarshalJSON(data []byte) error {
+	var deser resolvedNumericUnionOperationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "aggregation":
+		if u.aggregation == nil {
+			return fmt.Errorf("field \"aggregation\" is required")
+		}
+	case "throwOnDuplicate":
+		if u.throwOnDuplicate == nil {
+			return fmt.Errorf("field \"throwOnDuplicate\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ResolvedNumericUnionOperation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ResolvedNumericUnionOperation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ResolvedNumericUnionOperation) AcceptFuncs(aggregationFunc func(ResolvedNumericAggregation) error, throwOnDuplicateFunc func(ThrowOnDuplicateOperation) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ResolvedNumericUnionOperation type")
+		}
+		return unknownFunc(u.typ)
+	case "aggregation":
+		if u.aggregation == nil {
+			return fmt.Errorf("field \"aggregation\" is required")
+		}
+		return aggregationFunc(*u.aggregation)
+	case "throwOnDuplicate":
+		if u.throwOnDuplicate == nil {
+			return fmt.Errorf("field \"throwOnDuplicate\" is required")
+		}
+		return throwOnDuplicateFunc(*u.throwOnDuplicate)
+	}
+}
+
+func (u *ResolvedNumericUnionOperation) AggregationNoopSuccess(_ ResolvedNumericAggregation) error {
+	return nil
+}
+
+func (u *ResolvedNumericUnionOperation) ThrowOnDuplicateNoopSuccess(_ ThrowOnDuplicateOperation) error {
+	return nil
+}
+
+func (u *ResolvedNumericUnionOperation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ResolvedNumericUnionOperation) Accept(v ResolvedNumericUnionOperationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "aggregation":
+		if u.aggregation == nil {
+			return fmt.Errorf("field \"aggregation\" is required")
+		}
+		return v.VisitAggregation(*u.aggregation)
+	case "throwOnDuplicate":
+		if u.throwOnDuplicate == nil {
+			return fmt.Errorf("field \"throwOnDuplicate\" is required")
+		}
+		return v.VisitThrowOnDuplicate(*u.throwOnDuplicate)
+	}
+}
+
+type ResolvedNumericUnionOperationVisitor interface {
+	VisitAggregation(v ResolvedNumericAggregation) error
+	VisitThrowOnDuplicate(v ThrowOnDuplicateOperation) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ResolvedNumericUnionOperation) AcceptWithContext(ctx context.Context, v ResolvedNumericUnionOperationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "aggregation":
+		if u.aggregation == nil {
+			return fmt.Errorf("field \"aggregation\" is required")
+		}
+		return v.VisitAggregationWithContext(ctx, *u.aggregation)
+	case "throwOnDuplicate":
+		if u.throwOnDuplicate == nil {
+			return fmt.Errorf("field \"throwOnDuplicate\" is required")
+		}
+		return v.VisitThrowOnDuplicateWithContext(ctx, *u.throwOnDuplicate)
+	}
+}
+
+type ResolvedNumericUnionOperationVisitorWithContext interface {
+	VisitAggregationWithContext(ctx context.Context, v ResolvedNumericAggregation) error
+	VisitThrowOnDuplicateWithContext(ctx context.Context, v ThrowOnDuplicateOperation) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewResolvedNumericUnionOperationFromAggregation(v ResolvedNumericAggregation) ResolvedNumericUnionOperation {
+	return ResolvedNumericUnionOperation{typ: "aggregation", aggregation: &v}
+}
+
+func NewResolvedNumericUnionOperationFromThrowOnDuplicate(v ThrowOnDuplicateOperation) ResolvedNumericUnionOperation {
+	return ResolvedNumericUnionOperation{typ: "throwOnDuplicate", throwOnDuplicate: &v}
+}
+
+type Sampling struct {
+	typ               string
+	everyNthPerSeries *EveryNthPerSeriesSampling
+	hashSubsample     *HashSubsampleSampling
+}
+
+type samplingDeserializer struct {
+	Type              string                     `json:"type"`
+	EveryNthPerSeries *EveryNthPerSeriesSampling `json:"everyNthPerSeries"`
+	HashSubsample     *HashSubsampleSampling     `json:"hashSubsample"`
+}
+
+func (u *samplingDeserializer) toStruct() Sampling {
+	return Sampling{typ: u.Type, everyNthPerSeries: u.EveryNthPerSeries, hashSubsample: u.HashSubsample}
+}
+
+func (u *Sampling) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "everyNthPerSeries":
+		if u.everyNthPerSeries == nil {
+			return nil, fmt.Errorf("field \"everyNthPerSeries\" is required")
+		}
+		return struct {
+			Type              string                    `json:"type"`
+			EveryNthPerSeries EveryNthPerSeriesSampling `json:"everyNthPerSeries"`
+		}{Type: "everyNthPerSeries", EveryNthPerSeries: *u.everyNthPerSeries}, nil
+	case "hashSubsample":
+		if u.hashSubsample == nil {
+			return nil, fmt.Errorf("field \"hashSubsample\" is required")
+		}
+		return struct {
+			Type          string                `json:"type"`
+			HashSubsample HashSubsampleSampling `json:"hashSubsample"`
+		}{Type: "hashSubsample", HashSubsample: *u.hashSubsample}, nil
+	}
+}
+
+func (u Sampling) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *Sampling) UnmarshalJSON(data []byte) error {
+	var deser samplingDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "everyNthPerSeries":
+		if u.everyNthPerSeries == nil {
+			return fmt.Errorf("field \"everyNthPerSeries\" is required")
+		}
+	case "hashSubsample":
+		if u.hashSubsample == nil {
+			return fmt.Errorf("field \"hashSubsample\" is required")
+		}
+	}
+	return nil
+}
+
+func (u Sampling) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *Sampling) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *Sampling) AcceptFuncs(everyNthPerSeriesFunc func(EveryNthPerSeriesSampling) error, hashSubsampleFunc func(HashSubsampleSampling) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in Sampling type")
+		}
+		return unknownFunc(u.typ)
+	case "everyNthPerSeries":
+		if u.everyNthPerSeries == nil {
+			return fmt.Errorf("field \"everyNthPerSeries\" is required")
+		}
+		return everyNthPerSeriesFunc(*u.everyNthPerSeries)
+	case "hashSubsample":
+		if u.hashSubsample == nil {
+			return fmt.Errorf("field \"hashSubsample\" is required")
+		}
+		return hashSubsampleFunc(*u.hashSubsample)
+	}
+}
+
+func (u *Sampling) EveryNthPerSeriesNoopSuccess(_ EveryNthPerSeriesSampling) error {
+	return nil
+}
+
+func (u *Sampling) HashSubsampleNoopSuccess(_ HashSubsampleSampling) error {
+	return nil
+}
+
+func (u *Sampling) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *Sampling) Accept(v SamplingVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "everyNthPerSeries":
+		if u.everyNthPerSeries == nil {
+			return fmt.Errorf("field \"everyNthPerSeries\" is required")
+		}
+		return v.VisitEveryNthPerSeries(*u.everyNthPerSeries)
+	case "hashSubsample":
+		if u.hashSubsample == nil {
+			return fmt.Errorf("field \"hashSubsample\" is required")
+		}
+		return v.VisitHashSubsample(*u.hashSubsample)
+	}
+}
+
+type SamplingVisitor interface {
+	VisitEveryNthPerSeries(v EveryNthPerSeriesSampling) error
+	VisitHashSubsample(v HashSubsampleSampling) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *Sampling) AcceptWithContext(ctx context.Context, v SamplingVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "everyNthPerSeries":
+		if u.everyNthPerSeries == nil {
+			return fmt.Errorf("field \"everyNthPerSeries\" is required")
+		}
+		return v.VisitEveryNthPerSeriesWithContext(ctx, *u.everyNthPerSeries)
+	case "hashSubsample":
+		if u.hashSubsample == nil {
+			return fmt.Errorf("field \"hashSubsample\" is required")
+		}
+		return v.VisitHashSubsampleWithContext(ctx, *u.hashSubsample)
+	}
+}
+
+type SamplingVisitorWithContext interface {
+	VisitEveryNthPerSeriesWithContext(ctx context.Context, v EveryNthPerSeriesSampling) error
+	VisitHashSubsampleWithContext(ctx context.Context, v HashSubsampleSampling) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewSamplingFromEveryNthPerSeries(v EveryNthPerSeriesSampling) Sampling {
+	return Sampling{typ: "everyNthPerSeries", everyNthPerSeries: &v}
+}
+
+func NewSamplingFromHashSubsample(v HashSubsampleSampling) Sampling {
+	return Sampling{typ: "hashSubsample", hashSubsample: &v}
 }
 
 type SelectValueNode struct {
@@ -7467,7 +8928,6 @@ func NewSelectValueNodeFromNthRange(v NthRangeNode) SelectValueNode {
 type SeriesNode struct {
 	typ     string
 	raw     *RawUntypedSeriesNode
-	boolean *BooleanSeriesNode
 	enum    *EnumSeriesNode
 	numeric *NumericSeriesNode
 	log     *LogSeriesNode
@@ -7478,7 +8938,6 @@ type SeriesNode struct {
 type seriesNodeDeserializer struct {
 	Type    string                `json:"type"`
 	Raw     *RawUntypedSeriesNode `json:"raw"`
-	Boolean *BooleanSeriesNode    `json:"boolean"`
 	Enum    *EnumSeriesNode       `json:"enum"`
 	Numeric *NumericSeriesNode    `json:"numeric"`
 	Log     *LogSeriesNode        `json:"log"`
@@ -7487,7 +8946,7 @@ type seriesNodeDeserializer struct {
 }
 
 func (u *seriesNodeDeserializer) toStruct() SeriesNode {
-	return SeriesNode{typ: u.Type, raw: u.Raw, boolean: u.Boolean, enum: u.Enum, numeric: u.Numeric, log: u.Log, array: u.Array, struct_: u.Struct}
+	return SeriesNode{typ: u.Type, raw: u.Raw, enum: u.Enum, numeric: u.Numeric, log: u.Log, array: u.Array, struct_: u.Struct}
 }
 
 func (u *SeriesNode) toSerializer() (interface{}, error) {
@@ -7502,14 +8961,6 @@ func (u *SeriesNode) toSerializer() (interface{}, error) {
 			Type string               `json:"type"`
 			Raw  RawUntypedSeriesNode `json:"raw"`
 		}{Type: "raw", Raw: *u.raw}, nil
-	case "boolean":
-		if u.boolean == nil {
-			return nil, fmt.Errorf("field \"boolean\" is required")
-		}
-		return struct {
-			Type    string            `json:"type"`
-			Boolean BooleanSeriesNode `json:"boolean"`
-		}{Type: "boolean", Boolean: *u.boolean}, nil
 	case "enum":
 		if u.enum == nil {
 			return nil, fmt.Errorf("field \"enum\" is required")
@@ -7572,10 +9023,6 @@ func (u *SeriesNode) UnmarshalJSON(data []byte) error {
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
 		}
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -7616,7 +9063,7 @@ func (u *SeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SeriesNode) AcceptFuncs(rawFunc func(RawUntypedSeriesNode) error, booleanFunc func(BooleanSeriesNode) error, enumFunc func(EnumSeriesNode) error, numericFunc func(NumericSeriesNode) error, logFunc func(LogSeriesNode) error, arrayFunc func(ArraySeriesNode) error, struct_Func func(StructSeriesNode) error, unknownFunc func(string) error) error {
+func (u *SeriesNode) AcceptFuncs(rawFunc func(RawUntypedSeriesNode) error, enumFunc func(EnumSeriesNode) error, numericFunc func(NumericSeriesNode) error, logFunc func(LogSeriesNode) error, arrayFunc func(ArraySeriesNode) error, struct_Func func(StructSeriesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -7628,11 +9075,6 @@ func (u *SeriesNode) AcceptFuncs(rawFunc func(RawUntypedSeriesNode) error, boole
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return rawFunc(*u.raw)
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
-		return booleanFunc(*u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -7662,10 +9104,6 @@ func (u *SeriesNode) AcceptFuncs(rawFunc func(RawUntypedSeriesNode) error, boole
 }
 
 func (u *SeriesNode) RawNoopSuccess(_ RawUntypedSeriesNode) error {
-	return nil
-}
-
-func (u *SeriesNode) BooleanNoopSuccess(_ BooleanSeriesNode) error {
 	return nil
 }
 
@@ -7705,11 +9143,6 @@ func (u *SeriesNode) Accept(v SeriesNodeVisitor) error {
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRaw(*u.raw)
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
-		return v.VisitBoolean(*u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -7740,7 +9173,6 @@ func (u *SeriesNode) Accept(v SeriesNodeVisitor) error {
 
 type SeriesNodeVisitor interface {
 	VisitRaw(v RawUntypedSeriesNode) error
-	VisitBoolean(v BooleanSeriesNode) error
 	VisitEnum(v EnumSeriesNode) error
 	VisitNumeric(v NumericSeriesNode) error
 	VisitLog(v LogSeriesNode) error
@@ -7761,11 +9193,6 @@ func (u *SeriesNode) AcceptWithContext(ctx context.Context, v SeriesNodeVisitorW
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRawWithContext(ctx, *u.raw)
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
-		return v.VisitBooleanWithContext(ctx, *u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -7796,7 +9223,6 @@ func (u *SeriesNode) AcceptWithContext(ctx context.Context, v SeriesNodeVisitorW
 
 type SeriesNodeVisitorWithContext interface {
 	VisitRawWithContext(ctx context.Context, v RawUntypedSeriesNode) error
-	VisitBooleanWithContext(ctx context.Context, v BooleanSeriesNode) error
 	VisitEnumWithContext(ctx context.Context, v EnumSeriesNode) error
 	VisitNumericWithContext(ctx context.Context, v NumericSeriesNode) error
 	VisitLogWithContext(ctx context.Context, v LogSeriesNode) error
@@ -7807,10 +9233,6 @@ type SeriesNodeVisitorWithContext interface {
 
 func NewSeriesNodeFromRaw(v RawUntypedSeriesNode) SeriesNode {
 	return SeriesNode{typ: "raw", raw: &v}
-}
-
-func NewSeriesNodeFromBoolean(v BooleanSeriesNode) SeriesNode {
-	return SeriesNode{typ: "boolean", boolean: &v}
 }
 
 func NewSeriesNodeFromEnum(v EnumSeriesNode) SeriesNode {
@@ -8088,13 +9510,13 @@ func NewSignalFilterConfigurationFromBandStop(v BandStopConfiguration) SignalFil
 type StorageLocator struct {
 	typ      string
 	nominal  *NominalStorageLocator
-	external *api1.ExternalStorageLocator
+	external *api2.ExternalStorageLocator
 }
 
 type storageLocatorDeserializer struct {
 	Type     string                       `json:"type"`
 	Nominal  *NominalStorageLocator       `json:"nominal"`
-	External *api1.ExternalStorageLocator `json:"external"`
+	External *api2.ExternalStorageLocator `json:"external"`
 }
 
 func (u *storageLocatorDeserializer) toStruct() StorageLocator {
@@ -8119,7 +9541,7 @@ func (u *StorageLocator) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type     string                      `json:"type"`
-			External api1.ExternalStorageLocator `json:"external"`
+			External api2.ExternalStorageLocator `json:"external"`
 		}{Type: "external", External: *u.external}, nil
 	}
 }
@@ -8167,7 +9589,7 @@ func (u *StorageLocator) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *StorageLocator) AcceptFuncs(nominalFunc func(NominalStorageLocator) error, externalFunc func(api1.ExternalStorageLocator) error, unknownFunc func(string) error) error {
+func (u *StorageLocator) AcceptFuncs(nominalFunc func(NominalStorageLocator) error, externalFunc func(api2.ExternalStorageLocator) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -8191,7 +9613,7 @@ func (u *StorageLocator) NominalNoopSuccess(_ NominalStorageLocator) error {
 	return nil
 }
 
-func (u *StorageLocator) ExternalNoopSuccess(_ api1.ExternalStorageLocator) error {
+func (u *StorageLocator) ExternalNoopSuccess(_ api2.ExternalStorageLocator) error {
 	return nil
 }
 
@@ -8221,7 +9643,7 @@ func (u *StorageLocator) Accept(v StorageLocatorVisitor) error {
 
 type StorageLocatorVisitor interface {
 	VisitNominal(v NominalStorageLocator) error
-	VisitExternal(v api1.ExternalStorageLocator) error
+	VisitExternal(v api2.ExternalStorageLocator) error
 	VisitUnknown(typeName string) error
 }
 
@@ -8247,7 +9669,7 @@ func (u *StorageLocator) AcceptWithContext(ctx context.Context, v StorageLocator
 
 type StorageLocatorVisitorWithContext interface {
 	VisitNominalWithContext(ctx context.Context, v NominalStorageLocator) error
-	VisitExternalWithContext(ctx context.Context, v api1.ExternalStorageLocator) error
+	VisitExternalWithContext(ctx context.Context, v api2.ExternalStorageLocator) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -8255,7 +9677,7 @@ func NewStorageLocatorFromNominal(v NominalStorageLocator) StorageLocator {
 	return StorageLocator{typ: "nominal", nominal: &v}
 }
 
-func NewStorageLocatorFromExternal(v api1.ExternalStorageLocator) StorageLocator {
+func NewStorageLocatorFromExternal(v api2.ExternalStorageLocator) StorageLocator {
 	return StorageLocator{typ: "external", external: &v}
 }
 
@@ -8436,17 +9858,21 @@ func NewStructFieldPathTokenFromIndex(v StructFieldPathIndex) StructFieldPathTok
 type StructSeriesNode struct {
 	typ               string
 	raw               *ResolvedSeries
+	combine           *CombineStructSeriesNode
 	extractFromStruct *ExtractStructFromStructSeriesNode
+	genericTransform  *GenericTransformNode
 }
 
 type structSeriesNodeDeserializer struct {
 	Type              string                             `json:"type"`
 	Raw               *ResolvedSeries                    `json:"raw"`
+	Combine           *CombineStructSeriesNode           `json:"combine"`
 	ExtractFromStruct *ExtractStructFromStructSeriesNode `json:"extractFromStruct"`
+	GenericTransform  *GenericTransformNode              `json:"genericTransform"`
 }
 
 func (u *structSeriesNodeDeserializer) toStruct() StructSeriesNode {
-	return StructSeriesNode{typ: u.Type, raw: u.Raw, extractFromStruct: u.ExtractFromStruct}
+	return StructSeriesNode{typ: u.Type, raw: u.Raw, combine: u.Combine, extractFromStruct: u.ExtractFromStruct, genericTransform: u.GenericTransform}
 }
 
 func (u *StructSeriesNode) toSerializer() (interface{}, error) {
@@ -8461,6 +9887,14 @@ func (u *StructSeriesNode) toSerializer() (interface{}, error) {
 			Type string         `json:"type"`
 			Raw  ResolvedSeries `json:"raw"`
 		}{Type: "raw", Raw: *u.raw}, nil
+	case "combine":
+		if u.combine == nil {
+			return nil, fmt.Errorf("field \"combine\" is required")
+		}
+		return struct {
+			Type    string                  `json:"type"`
+			Combine CombineStructSeriesNode `json:"combine"`
+		}{Type: "combine", Combine: *u.combine}, nil
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return nil, fmt.Errorf("field \"extractFromStruct\" is required")
@@ -8469,6 +9903,14 @@ func (u *StructSeriesNode) toSerializer() (interface{}, error) {
 			Type              string                            `json:"type"`
 			ExtractFromStruct ExtractStructFromStructSeriesNode `json:"extractFromStruct"`
 		}{Type: "extractFromStruct", ExtractFromStruct: *u.extractFromStruct}, nil
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return nil, fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return struct {
+			Type             string               `json:"type"`
+			GenericTransform GenericTransformNode `json:"genericTransform"`
+		}{Type: "genericTransform", GenericTransform: *u.genericTransform}, nil
 	}
 }
 
@@ -8491,9 +9933,17 @@ func (u *StructSeriesNode) UnmarshalJSON(data []byte) error {
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
 		}
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
 		}
 	}
 	return nil
@@ -8515,7 +9965,7 @@ func (u *StructSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *StructSeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, extractFromStructFunc func(ExtractStructFromStructSeriesNode) error, unknownFunc func(string) error) error {
+func (u *StructSeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, combineFunc func(CombineStructSeriesNode) error, extractFromStructFunc func(ExtractStructFromStructSeriesNode) error, genericTransformFunc func(GenericTransformNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -8527,11 +9977,21 @@ func (u *StructSeriesNode) AcceptFuncs(rawFunc func(ResolvedSeries) error, extra
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return rawFunc(*u.raw)
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+		return combineFunc(*u.combine)
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return extractFromStructFunc(*u.extractFromStruct)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return genericTransformFunc(*u.genericTransform)
 	}
 }
 
@@ -8539,7 +9999,15 @@ func (u *StructSeriesNode) RawNoopSuccess(_ ResolvedSeries) error {
 	return nil
 }
 
+func (u *StructSeriesNode) CombineNoopSuccess(_ CombineStructSeriesNode) error {
+	return nil
+}
+
 func (u *StructSeriesNode) ExtractFromStructNoopSuccess(_ ExtractStructFromStructSeriesNode) error {
+	return nil
+}
+
+func (u *StructSeriesNode) GenericTransformNoopSuccess(_ GenericTransformNode) error {
 	return nil
 }
 
@@ -8559,17 +10027,29 @@ func (u *StructSeriesNode) Accept(v StructSeriesNodeVisitor) error {
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRaw(*u.raw)
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+		return v.VisitCombine(*u.combine)
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStruct(*u.extractFromStruct)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return v.VisitGenericTransform(*u.genericTransform)
 	}
 }
 
 type StructSeriesNodeVisitor interface {
 	VisitRaw(v ResolvedSeries) error
+	VisitCombine(v CombineStructSeriesNode) error
 	VisitExtractFromStruct(v ExtractStructFromStructSeriesNode) error
+	VisitGenericTransform(v GenericTransformNode) error
 	VisitUnknown(typeName string) error
 }
 
@@ -8585,17 +10065,29 @@ func (u *StructSeriesNode) AcceptWithContext(ctx context.Context, v StructSeries
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRawWithContext(ctx, *u.raw)
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+		return v.VisitCombineWithContext(ctx, *u.combine)
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStructWithContext(ctx, *u.extractFromStruct)
+	case "genericTransform":
+		if u.genericTransform == nil {
+			return fmt.Errorf("field \"genericTransform\" is required")
+		}
+		return v.VisitGenericTransformWithContext(ctx, *u.genericTransform)
 	}
 }
 
 type StructSeriesNodeVisitorWithContext interface {
 	VisitRawWithContext(ctx context.Context, v ResolvedSeries) error
+	VisitCombineWithContext(ctx context.Context, v CombineStructSeriesNode) error
 	VisitExtractFromStructWithContext(ctx context.Context, v ExtractStructFromStructSeriesNode) error
+	VisitGenericTransformWithContext(ctx context.Context, v GenericTransformNode) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -8603,8 +10095,16 @@ func NewStructSeriesNodeFromRaw(v ResolvedSeries) StructSeriesNode {
 	return StructSeriesNode{typ: "raw", raw: &v}
 }
 
+func NewStructSeriesNodeFromCombine(v CombineStructSeriesNode) StructSeriesNode {
+	return StructSeriesNode{typ: "combine", combine: &v}
+}
+
 func NewStructSeriesNodeFromExtractFromStruct(v ExtractStructFromStructSeriesNode) StructSeriesNode {
 	return StructSeriesNode{typ: "extractFromStruct", extractFromStruct: &v}
+}
+
+func NewStructSeriesNodeFromGenericTransform(v GenericTransformNode) StructSeriesNode {
+	return StructSeriesNode{typ: "genericTransform", genericTransform: &v}
 }
 
 type TagFilters struct {

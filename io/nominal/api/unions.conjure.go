@@ -145,6 +145,223 @@ func NewHandleFromS3(v S3Path) Handle {
 	return Handle{typ: "s3", s3: &v}
 }
 
+/*
+Sub-phase of an in-progress ingest. Absent on InProgressResult for a generic in-progress file; when
+present it indicates where in the pipeline the in-progress file currently is.
+*/
+type InProgressDetails struct {
+	typ       string
+	queued    *Queued
+	parsing   *Parsing
+	ingesting *Ingesting
+}
+
+type inProgressDetailsDeserializer struct {
+	Type      string     `json:"type"`
+	Queued    *Queued    `json:"queued"`
+	Parsing   *Parsing   `json:"parsing"`
+	Ingesting *Ingesting `json:"ingesting"`
+}
+
+func (u *inProgressDetailsDeserializer) toStruct() InProgressDetails {
+	return InProgressDetails{typ: u.Type, queued: u.Queued, parsing: u.Parsing, ingesting: u.Ingesting}
+}
+
+func (u *InProgressDetails) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "queued":
+		if u.queued == nil {
+			return nil, fmt.Errorf("field \"queued\" is required")
+		}
+		return struct {
+			Type   string `json:"type"`
+			Queued Queued `json:"queued"`
+		}{Type: "queued", Queued: *u.queued}, nil
+	case "parsing":
+		if u.parsing == nil {
+			return nil, fmt.Errorf("field \"parsing\" is required")
+		}
+		return struct {
+			Type    string  `json:"type"`
+			Parsing Parsing `json:"parsing"`
+		}{Type: "parsing", Parsing: *u.parsing}, nil
+	case "ingesting":
+		if u.ingesting == nil {
+			return nil, fmt.Errorf("field \"ingesting\" is required")
+		}
+		return struct {
+			Type      string    `json:"type"`
+			Ingesting Ingesting `json:"ingesting"`
+		}{Type: "ingesting", Ingesting: *u.ingesting}, nil
+	}
+}
+
+func (u InProgressDetails) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *InProgressDetails) UnmarshalJSON(data []byte) error {
+	var deser inProgressDetailsDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "queued":
+		if u.queued == nil {
+			return fmt.Errorf("field \"queued\" is required")
+		}
+	case "parsing":
+		if u.parsing == nil {
+			return fmt.Errorf("field \"parsing\" is required")
+		}
+	case "ingesting":
+		if u.ingesting == nil {
+			return fmt.Errorf("field \"ingesting\" is required")
+		}
+	}
+	return nil
+}
+
+func (u InProgressDetails) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *InProgressDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *InProgressDetails) AcceptFuncs(queuedFunc func(Queued) error, parsingFunc func(Parsing) error, ingestingFunc func(Ingesting) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in InProgressDetails type")
+		}
+		return unknownFunc(u.typ)
+	case "queued":
+		if u.queued == nil {
+			return fmt.Errorf("field \"queued\" is required")
+		}
+		return queuedFunc(*u.queued)
+	case "parsing":
+		if u.parsing == nil {
+			return fmt.Errorf("field \"parsing\" is required")
+		}
+		return parsingFunc(*u.parsing)
+	case "ingesting":
+		if u.ingesting == nil {
+			return fmt.Errorf("field \"ingesting\" is required")
+		}
+		return ingestingFunc(*u.ingesting)
+	}
+}
+
+func (u *InProgressDetails) QueuedNoopSuccess(_ Queued) error {
+	return nil
+}
+
+func (u *InProgressDetails) ParsingNoopSuccess(_ Parsing) error {
+	return nil
+}
+
+func (u *InProgressDetails) IngestingNoopSuccess(_ Ingesting) error {
+	return nil
+}
+
+func (u *InProgressDetails) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *InProgressDetails) Accept(v InProgressDetailsVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "queued":
+		if u.queued == nil {
+			return fmt.Errorf("field \"queued\" is required")
+		}
+		return v.VisitQueued(*u.queued)
+	case "parsing":
+		if u.parsing == nil {
+			return fmt.Errorf("field \"parsing\" is required")
+		}
+		return v.VisitParsing(*u.parsing)
+	case "ingesting":
+		if u.ingesting == nil {
+			return fmt.Errorf("field \"ingesting\" is required")
+		}
+		return v.VisitIngesting(*u.ingesting)
+	}
+}
+
+type InProgressDetailsVisitor interface {
+	VisitQueued(v Queued) error
+	VisitParsing(v Parsing) error
+	VisitIngesting(v Ingesting) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *InProgressDetails) AcceptWithContext(ctx context.Context, v InProgressDetailsVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "queued":
+		if u.queued == nil {
+			return fmt.Errorf("field \"queued\" is required")
+		}
+		return v.VisitQueuedWithContext(ctx, *u.queued)
+	case "parsing":
+		if u.parsing == nil {
+			return fmt.Errorf("field \"parsing\" is required")
+		}
+		return v.VisitParsingWithContext(ctx, *u.parsing)
+	case "ingesting":
+		if u.ingesting == nil {
+			return fmt.Errorf("field \"ingesting\" is required")
+		}
+		return v.VisitIngestingWithContext(ctx, *u.ingesting)
+	}
+}
+
+type InProgressDetailsVisitorWithContext interface {
+	VisitQueuedWithContext(ctx context.Context, v Queued) error
+	VisitParsingWithContext(ctx context.Context, v Parsing) error
+	VisitIngestingWithContext(ctx context.Context, v Ingesting) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewInProgressDetailsFromQueued(v Queued) InProgressDetails {
+	return InProgressDetails{typ: "queued", queued: &v}
+}
+
+func NewInProgressDetailsFromParsing(v Parsing) InProgressDetails {
+	return InProgressDetails{typ: "parsing", parsing: &v}
+}
+
+func NewInProgressDetailsFromIngesting(v Ingesting) InProgressDetails {
+	return InProgressDetails{typ: "ingesting", ingesting: &v}
+}
+
 type IngestStatusV2 struct {
 	typ                string
 	success            *SuccessResult
@@ -152,6 +369,9 @@ type IngestStatusV2 struct {
 	inProgress         *InProgressResult
 	deletionInProgress *DeletionInProgress
 	deleted            *Deleted
+	queued             *Queued
+	parsing            *Parsing
+	ingesting          *Ingesting
 }
 
 type ingestStatusV2Deserializer struct {
@@ -161,10 +381,13 @@ type ingestStatusV2Deserializer struct {
 	InProgress         *InProgressResult   `json:"inProgress"`
 	DeletionInProgress *DeletionInProgress `json:"deletionInProgress"`
 	Deleted            *Deleted            `json:"deleted"`
+	Queued             *Queued             `json:"queued"`
+	Parsing            *Parsing            `json:"parsing"`
+	Ingesting          *Ingesting          `json:"ingesting"`
 }
 
 func (u *ingestStatusV2Deserializer) toStruct() IngestStatusV2 {
-	return IngestStatusV2{typ: u.Type, success: u.Success, error: u.Error, inProgress: u.InProgress, deletionInProgress: u.DeletionInProgress, deleted: u.Deleted}
+	return IngestStatusV2{typ: u.Type, success: u.Success, error: u.Error, inProgress: u.InProgress, deletionInProgress: u.DeletionInProgress, deleted: u.Deleted, queued: u.Queued, parsing: u.Parsing, ingesting: u.Ingesting}
 }
 
 func (u *IngestStatusV2) toSerializer() (interface{}, error) {
@@ -211,6 +434,30 @@ func (u *IngestStatusV2) toSerializer() (interface{}, error) {
 			Type    string  `json:"type"`
 			Deleted Deleted `json:"deleted"`
 		}{Type: "deleted", Deleted: *u.deleted}, nil
+	case "queued":
+		if u.queued == nil {
+			return nil, fmt.Errorf("field \"queued\" is required")
+		}
+		return struct {
+			Type   string `json:"type"`
+			Queued Queued `json:"queued"`
+		}{Type: "queued", Queued: *u.queued}, nil
+	case "parsing":
+		if u.parsing == nil {
+			return nil, fmt.Errorf("field \"parsing\" is required")
+		}
+		return struct {
+			Type    string  `json:"type"`
+			Parsing Parsing `json:"parsing"`
+		}{Type: "parsing", Parsing: *u.parsing}, nil
+	case "ingesting":
+		if u.ingesting == nil {
+			return nil, fmt.Errorf("field \"ingesting\" is required")
+		}
+		return struct {
+			Type      string    `json:"type"`
+			Ingesting Ingesting `json:"ingesting"`
+		}{Type: "ingesting", Ingesting: *u.ingesting}, nil
 	}
 }
 
@@ -249,6 +496,18 @@ func (u *IngestStatusV2) UnmarshalJSON(data []byte) error {
 		if u.deleted == nil {
 			return fmt.Errorf("field \"deleted\" is required")
 		}
+	case "queued":
+		if u.queued == nil {
+			return fmt.Errorf("field \"queued\" is required")
+		}
+	case "parsing":
+		if u.parsing == nil {
+			return fmt.Errorf("field \"parsing\" is required")
+		}
+	case "ingesting":
+		if u.ingesting == nil {
+			return fmt.Errorf("field \"ingesting\" is required")
+		}
 	}
 	return nil
 }
@@ -269,7 +528,7 @@ func (u *IngestStatusV2) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *IngestStatusV2) AcceptFuncs(successFunc func(SuccessResult) error, errorFunc func(ErrorResult) error, inProgressFunc func(InProgressResult) error, deletionInProgressFunc func(DeletionInProgress) error, deletedFunc func(Deleted) error, unknownFunc func(string) error) error {
+func (u *IngestStatusV2) AcceptFuncs(successFunc func(SuccessResult) error, errorFunc func(ErrorResult) error, inProgressFunc func(InProgressResult) error, deletionInProgressFunc func(DeletionInProgress) error, deletedFunc func(Deleted) error, queuedFunc func(Queued) error, parsingFunc func(Parsing) error, ingestingFunc func(Ingesting) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -301,6 +560,21 @@ func (u *IngestStatusV2) AcceptFuncs(successFunc func(SuccessResult) error, erro
 			return fmt.Errorf("field \"deleted\" is required")
 		}
 		return deletedFunc(*u.deleted)
+	case "queued":
+		if u.queued == nil {
+			return fmt.Errorf("field \"queued\" is required")
+		}
+		return queuedFunc(*u.queued)
+	case "parsing":
+		if u.parsing == nil {
+			return fmt.Errorf("field \"parsing\" is required")
+		}
+		return parsingFunc(*u.parsing)
+	case "ingesting":
+		if u.ingesting == nil {
+			return fmt.Errorf("field \"ingesting\" is required")
+		}
+		return ingestingFunc(*u.ingesting)
 	}
 }
 
@@ -321,6 +595,18 @@ func (u *IngestStatusV2) DeletionInProgressNoopSuccess(_ DeletionInProgress) err
 }
 
 func (u *IngestStatusV2) DeletedNoopSuccess(_ Deleted) error {
+	return nil
+}
+
+func (u *IngestStatusV2) QueuedNoopSuccess(_ Queued) error {
+	return nil
+}
+
+func (u *IngestStatusV2) ParsingNoopSuccess(_ Parsing) error {
+	return nil
+}
+
+func (u *IngestStatusV2) IngestingNoopSuccess(_ Ingesting) error {
 	return nil
 }
 
@@ -360,6 +646,21 @@ func (u *IngestStatusV2) Accept(v IngestStatusV2Visitor) error {
 			return fmt.Errorf("field \"deleted\" is required")
 		}
 		return v.VisitDeleted(*u.deleted)
+	case "queued":
+		if u.queued == nil {
+			return fmt.Errorf("field \"queued\" is required")
+		}
+		return v.VisitQueued(*u.queued)
+	case "parsing":
+		if u.parsing == nil {
+			return fmt.Errorf("field \"parsing\" is required")
+		}
+		return v.VisitParsing(*u.parsing)
+	case "ingesting":
+		if u.ingesting == nil {
+			return fmt.Errorf("field \"ingesting\" is required")
+		}
+		return v.VisitIngesting(*u.ingesting)
 	}
 }
 
@@ -369,6 +670,9 @@ type IngestStatusV2Visitor interface {
 	VisitInProgress(v InProgressResult) error
 	VisitDeletionInProgress(v DeletionInProgress) error
 	VisitDeleted(v Deleted) error
+	VisitQueued(v Queued) error
+	VisitParsing(v Parsing) error
+	VisitIngesting(v Ingesting) error
 	VisitUnknown(typeName string) error
 }
 
@@ -404,6 +708,21 @@ func (u *IngestStatusV2) AcceptWithContext(ctx context.Context, v IngestStatusV2
 			return fmt.Errorf("field \"deleted\" is required")
 		}
 		return v.VisitDeletedWithContext(ctx, *u.deleted)
+	case "queued":
+		if u.queued == nil {
+			return fmt.Errorf("field \"queued\" is required")
+		}
+		return v.VisitQueuedWithContext(ctx, *u.queued)
+	case "parsing":
+		if u.parsing == nil {
+			return fmt.Errorf("field \"parsing\" is required")
+		}
+		return v.VisitParsingWithContext(ctx, *u.parsing)
+	case "ingesting":
+		if u.ingesting == nil {
+			return fmt.Errorf("field \"ingesting\" is required")
+		}
+		return v.VisitIngestingWithContext(ctx, *u.ingesting)
 	}
 }
 
@@ -413,6 +732,9 @@ type IngestStatusV2VisitorWithContext interface {
 	VisitInProgressWithContext(ctx context.Context, v InProgressResult) error
 	VisitDeletionInProgressWithContext(ctx context.Context, v DeletionInProgress) error
 	VisitDeletedWithContext(ctx context.Context, v Deleted) error
+	VisitQueuedWithContext(ctx context.Context, v Queued) error
+	VisitParsingWithContext(ctx context.Context, v Parsing) error
+	VisitIngestingWithContext(ctx context.Context, v Ingesting) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -434,6 +756,18 @@ func NewIngestStatusV2FromDeletionInProgress(v DeletionInProgress) IngestStatusV
 
 func NewIngestStatusV2FromDeleted(v Deleted) IngestStatusV2 {
 	return IngestStatusV2{typ: "deleted", deleted: &v}
+}
+
+func NewIngestStatusV2FromQueued(v Queued) IngestStatusV2 {
+	return IngestStatusV2{typ: "queued", queued: &v}
+}
+
+func NewIngestStatusV2FromParsing(v Parsing) IngestStatusV2 {
+	return IngestStatusV2{typ: "parsing", parsing: &v}
+}
+
+func NewIngestStatusV2FromIngesting(v Ingesting) IngestStatusV2 {
+	return IngestStatusV2{typ: "ingesting", ingesting: &v}
 }
 
 /*
@@ -612,4 +946,179 @@ func NewMcapChannelLocatorFromTopic(v McapChannelTopic) McapChannelLocator {
 
 func NewMcapChannelLocatorFromId(v McapChannelId) McapChannelLocator {
 	return McapChannelLocator{typ: "id", id: &v}
+}
+
+// Typed metadata value. Additional variants may be added as property types expand.
+type TypedPropertyValue struct {
+	typ          string
+	stringValue  *PropertyValue
+	numericValue *float64
+}
+
+type typedPropertyValueDeserializer struct {
+	Type         string         `json:"type"`
+	StringValue  *PropertyValue `json:"stringValue"`
+	NumericValue *float64       `json:"numericValue"`
+}
+
+func (u *typedPropertyValueDeserializer) toStruct() TypedPropertyValue {
+	return TypedPropertyValue{typ: u.Type, stringValue: u.StringValue, numericValue: u.NumericValue}
+}
+
+func (u *TypedPropertyValue) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "stringValue":
+		if u.stringValue == nil {
+			return nil, fmt.Errorf("field \"stringValue\" is required")
+		}
+		return struct {
+			Type        string        `json:"type"`
+			StringValue PropertyValue `json:"stringValue"`
+		}{Type: "stringValue", StringValue: *u.stringValue}, nil
+	case "numericValue":
+		if u.numericValue == nil {
+			return nil, fmt.Errorf("field \"numericValue\" is required")
+		}
+		return struct {
+			Type         string  `json:"type"`
+			NumericValue float64 `json:"numericValue"`
+		}{Type: "numericValue", NumericValue: *u.numericValue}, nil
+	}
+}
+
+func (u TypedPropertyValue) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *TypedPropertyValue) UnmarshalJSON(data []byte) error {
+	var deser typedPropertyValueDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "stringValue":
+		if u.stringValue == nil {
+			return fmt.Errorf("field \"stringValue\" is required")
+		}
+	case "numericValue":
+		if u.numericValue == nil {
+			return fmt.Errorf("field \"numericValue\" is required")
+		}
+	}
+	return nil
+}
+
+func (u TypedPropertyValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *TypedPropertyValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *TypedPropertyValue) AcceptFuncs(stringValueFunc func(PropertyValue) error, numericValueFunc func(float64) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in TypedPropertyValue type")
+		}
+		return unknownFunc(u.typ)
+	case "stringValue":
+		if u.stringValue == nil {
+			return fmt.Errorf("field \"stringValue\" is required")
+		}
+		return stringValueFunc(*u.stringValue)
+	case "numericValue":
+		if u.numericValue == nil {
+			return fmt.Errorf("field \"numericValue\" is required")
+		}
+		return numericValueFunc(*u.numericValue)
+	}
+}
+
+func (u *TypedPropertyValue) StringValueNoopSuccess(_ PropertyValue) error {
+	return nil
+}
+
+func (u *TypedPropertyValue) NumericValueNoopSuccess(_ float64) error {
+	return nil
+}
+
+func (u *TypedPropertyValue) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *TypedPropertyValue) Accept(v TypedPropertyValueVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "stringValue":
+		if u.stringValue == nil {
+			return fmt.Errorf("field \"stringValue\" is required")
+		}
+		return v.VisitStringValue(*u.stringValue)
+	case "numericValue":
+		if u.numericValue == nil {
+			return fmt.Errorf("field \"numericValue\" is required")
+		}
+		return v.VisitNumericValue(*u.numericValue)
+	}
+}
+
+type TypedPropertyValueVisitor interface {
+	VisitStringValue(v PropertyValue) error
+	VisitNumericValue(v float64) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *TypedPropertyValue) AcceptWithContext(ctx context.Context, v TypedPropertyValueVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "stringValue":
+		if u.stringValue == nil {
+			return fmt.Errorf("field \"stringValue\" is required")
+		}
+		return v.VisitStringValueWithContext(ctx, *u.stringValue)
+	case "numericValue":
+		if u.numericValue == nil {
+			return fmt.Errorf("field \"numericValue\" is required")
+		}
+		return v.VisitNumericValueWithContext(ctx, *u.numericValue)
+	}
+}
+
+type TypedPropertyValueVisitorWithContext interface {
+	VisitStringValueWithContext(ctx context.Context, v PropertyValue) error
+	VisitNumericValueWithContext(ctx context.Context, v float64) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewTypedPropertyValueFromStringValue(v PropertyValue) TypedPropertyValue {
+	return TypedPropertyValue{typ: "stringValue", stringValue: &v}
+}
+
+func NewTypedPropertyValueFromNumericValue(v float64) TypedPropertyValue {
+	return TypedPropertyValue{typ: "numericValue", numericValue: &v}
 }

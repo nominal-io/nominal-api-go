@@ -6,6 +6,63 @@ import (
 	"strings"
 )
 
+type AlignmentDriverSeries struct {
+	val AlignmentDriverSeries_Value
+}
+
+type AlignmentDriverSeries_Value string
+
+const (
+	AlignmentDriverSeries_FIRST   AlignmentDriverSeries_Value = "FIRST"
+	AlignmentDriverSeries_SECOND  AlignmentDriverSeries_Value = "SECOND"
+	AlignmentDriverSeries_UNKNOWN AlignmentDriverSeries_Value = "UNKNOWN"
+)
+
+// AlignmentDriverSeries_Values returns all known variants of AlignmentDriverSeries.
+func AlignmentDriverSeries_Values() []AlignmentDriverSeries_Value {
+	return []AlignmentDriverSeries_Value{AlignmentDriverSeries_FIRST, AlignmentDriverSeries_SECOND}
+}
+
+func New_AlignmentDriverSeries(value AlignmentDriverSeries_Value) AlignmentDriverSeries {
+	return AlignmentDriverSeries{val: value}
+}
+
+// IsUnknown returns false for all known variants of AlignmentDriverSeries and true otherwise.
+func (e AlignmentDriverSeries) IsUnknown() bool {
+	switch e.val {
+	case AlignmentDriverSeries_FIRST, AlignmentDriverSeries_SECOND:
+		return false
+	}
+	return true
+}
+
+func (e AlignmentDriverSeries) Value() AlignmentDriverSeries_Value {
+	if e.IsUnknown() {
+		return AlignmentDriverSeries_UNKNOWN
+	}
+	return e.val
+}
+
+func (e AlignmentDriverSeries) String() string {
+	return string(e.val)
+}
+
+func (e AlignmentDriverSeries) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *AlignmentDriverSeries) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_AlignmentDriverSeries(AlignmentDriverSeries_Value(v))
+	case "FIRST":
+		*e = New_AlignmentDriverSeries(AlignmentDriverSeries_FIRST)
+	case "SECOND":
+		*e = New_AlignmentDriverSeries(AlignmentDriverSeries_SECOND)
+	}
+	return nil
+}
+
 type ApproximateThresholdOperator struct {
 	val ApproximateThresholdOperator_Value
 }
@@ -246,6 +303,10 @@ func (e *DriverSeries3d) UnmarshalText(data []byte) error {
 	return nil
 }
 
+/*
+Aggregates duplicate timestamps on a single enum series. For aggregating across tag groupings, use
+`EnumSeries.enumAggregation` with `aggregation.AggregationBuilder.groupBy`.
+*/
 type EnumAggregationFunction struct {
 	val EnumAggregationFunction_Value
 }
@@ -310,14 +371,21 @@ type EnumFilterOperator struct {
 type EnumFilterOperator_Value string
 
 const (
-	EnumFilterOperator_IS_IN     EnumFilterOperator_Value = "IS_IN"
+	// True when the value is contained in the set.
+	EnumFilterOperator_IS_IN EnumFilterOperator_Value = "IS_IN"
+	// True when the value is not contained in the set.
 	EnumFilterOperator_IS_NOT_IN EnumFilterOperator_Value = "IS_NOT_IN"
-	EnumFilterOperator_UNKNOWN   EnumFilterOperator_Value = "UNKNOWN"
+	/*
+	   True when the value matches at least one pattern in the set.
+	   Values are RE2 regular expressions, anchored to the entire string.
+	*/
+	EnumFilterOperator_MATCHES_ANY_REGEX EnumFilterOperator_Value = "MATCHES_ANY_REGEX"
+	EnumFilterOperator_UNKNOWN           EnumFilterOperator_Value = "UNKNOWN"
 )
 
 // EnumFilterOperator_Values returns all known variants of EnumFilterOperator.
 func EnumFilterOperator_Values() []EnumFilterOperator_Value {
-	return []EnumFilterOperator_Value{EnumFilterOperator_IS_IN, EnumFilterOperator_IS_NOT_IN}
+	return []EnumFilterOperator_Value{EnumFilterOperator_IS_IN, EnumFilterOperator_IS_NOT_IN, EnumFilterOperator_MATCHES_ANY_REGEX}
 }
 
 func New_EnumFilterOperator(value EnumFilterOperator_Value) EnumFilterOperator {
@@ -327,7 +395,7 @@ func New_EnumFilterOperator(value EnumFilterOperator_Value) EnumFilterOperator {
 // IsUnknown returns false for all known variants of EnumFilterOperator and true otherwise.
 func (e EnumFilterOperator) IsUnknown() bool {
 	switch e.val {
-	case EnumFilterOperator_IS_IN, EnumFilterOperator_IS_NOT_IN:
+	case EnumFilterOperator_IS_IN, EnumFilterOperator_IS_NOT_IN, EnumFilterOperator_MATCHES_ANY_REGEX:
 		return false
 	}
 	return true
@@ -356,6 +424,8 @@ func (e *EnumFilterOperator) UnmarshalText(data []byte) error {
 		*e = New_EnumFilterOperator(EnumFilterOperator_IS_IN)
 	case "IS_NOT_IN":
 		*e = New_EnumFilterOperator(EnumFilterOperator_IS_NOT_IN)
+	case "MATCHES_ANY_REGEX":
+		*e = New_EnumFilterOperator(EnumFilterOperator_MATCHES_ANY_REGEX)
 	}
 	return nil
 }
@@ -531,6 +601,63 @@ func (e *EqualityOperator) UnmarshalText(data []byte) error {
 		*e = New_EqualityOperator(EqualityOperator_ALL_EQUAL)
 	case "NOT_ALL_EQUAL":
 		*e = New_EqualityOperator(EqualityOperator_NOT_ALL_EQUAL)
+	}
+	return nil
+}
+
+type EventSortOrder struct {
+	val EventSortOrder_Value
+}
+
+type EventSortOrder_Value string
+
+const (
+	EventSortOrder_ASC     EventSortOrder_Value = "ASC"
+	EventSortOrder_DESC    EventSortOrder_Value = "DESC"
+	EventSortOrder_UNKNOWN EventSortOrder_Value = "UNKNOWN"
+)
+
+// EventSortOrder_Values returns all known variants of EventSortOrder.
+func EventSortOrder_Values() []EventSortOrder_Value {
+	return []EventSortOrder_Value{EventSortOrder_ASC, EventSortOrder_DESC}
+}
+
+func New_EventSortOrder(value EventSortOrder_Value) EventSortOrder {
+	return EventSortOrder{val: value}
+}
+
+// IsUnknown returns false for all known variants of EventSortOrder and true otherwise.
+func (e EventSortOrder) IsUnknown() bool {
+	switch e.val {
+	case EventSortOrder_ASC, EventSortOrder_DESC:
+		return false
+	}
+	return true
+}
+
+func (e EventSortOrder) Value() EventSortOrder_Value {
+	if e.IsUnknown() {
+		return EventSortOrder_UNKNOWN
+	}
+	return e.val
+}
+
+func (e EventSortOrder) String() string {
+	return string(e.val)
+}
+
+func (e EventSortOrder) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *EventSortOrder) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_EventSortOrder(EventSortOrder_Value(v))
+	case "ASC":
+		*e = New_EventSortOrder(EventSortOrder_ASC)
+	case "DESC":
+		*e = New_EventSortOrder(EventSortOrder_DESC)
 	}
 	return nil
 }
@@ -716,6 +843,70 @@ func (e *MagnitudeScaling) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// Math constants referenceable by name.
+type MathConstant struct {
+	val MathConstant_Value
+}
+
+type MathConstant_Value string
+
+const (
+	// The circle constant π (dimensionless).
+	MathConstant_PI MathConstant_Value = "PI"
+	// The circle constant τ = 2π (dimensionless).
+	MathConstant_TAU MathConstant_Value = "TAU"
+	// Euler's number e (dimensionless).
+	MathConstant_E       MathConstant_Value = "E"
+	MathConstant_UNKNOWN MathConstant_Value = "UNKNOWN"
+)
+
+// MathConstant_Values returns all known variants of MathConstant.
+func MathConstant_Values() []MathConstant_Value {
+	return []MathConstant_Value{MathConstant_PI, MathConstant_TAU, MathConstant_E}
+}
+
+func New_MathConstant(value MathConstant_Value) MathConstant {
+	return MathConstant{val: value}
+}
+
+// IsUnknown returns false for all known variants of MathConstant and true otherwise.
+func (e MathConstant) IsUnknown() bool {
+	switch e.val {
+	case MathConstant_PI, MathConstant_TAU, MathConstant_E:
+		return false
+	}
+	return true
+}
+
+func (e MathConstant) Value() MathConstant_Value {
+	if e.IsUnknown() {
+		return MathConstant_UNKNOWN
+	}
+	return e.val
+}
+
+func (e MathConstant) String() string {
+	return string(e.val)
+}
+
+func (e MathConstant) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *MathConstant) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_MathConstant(MathConstant_Value(v))
+	case "PI":
+		*e = New_MathConstant(MathConstant_PI)
+	case "TAU":
+		*e = New_MathConstant(MathConstant_TAU)
+	case "E":
+		*e = New_MathConstant(MathConstant_E)
+	}
+	return nil
+}
+
 type MinMaxThresholdOperator struct {
 	val MinMaxThresholdOperator_Value
 }
@@ -779,6 +970,7 @@ func (e *MinMaxThresholdOperator) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// DEPRECATED. Use `NumericAggregationOperator` instead.
 type NumericAggregationFunction struct {
 	val NumericAggregationFunction_Value
 }
@@ -1050,6 +1242,88 @@ func (e *NumericOutputField) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type NumericOutputFieldV2Name struct {
+	val NumericOutputFieldV2Name_Value
+}
+
+type NumericOutputFieldV2Name_Value string
+
+const (
+	NumericOutputFieldV2Name_MIN                NumericOutputFieldV2Name_Value = "MIN"
+	NumericOutputFieldV2Name_MAX                NumericOutputFieldV2Name_Value = "MAX"
+	NumericOutputFieldV2Name_MEAN               NumericOutputFieldV2Name_Value = "MEAN"
+	NumericOutputFieldV2Name_COUNT              NumericOutputFieldV2Name_Value = "COUNT"
+	NumericOutputFieldV2Name_VARIANCE           NumericOutputFieldV2Name_Value = "VARIANCE"
+	NumericOutputFieldV2Name_FIRST_POINT        NumericOutputFieldV2Name_Value = "FIRST_POINT"
+	NumericOutputFieldV2Name_LAST_POINT         NumericOutputFieldV2Name_Value = "LAST_POINT"
+	NumericOutputFieldV2Name_SUM                NumericOutputFieldV2Name_Value = "SUM"
+	NumericOutputFieldV2Name_STANDARD_DEVIATION NumericOutputFieldV2Name_Value = "STANDARD_DEVIATION"
+	NumericOutputFieldV2Name_ROOT_MEAN_SQUARE   NumericOutputFieldV2Name_Value = "ROOT_MEAN_SQUARE"
+	NumericOutputFieldV2Name_UNKNOWN            NumericOutputFieldV2Name_Value = "UNKNOWN"
+)
+
+// NumericOutputFieldV2Name_Values returns all known variants of NumericOutputFieldV2Name.
+func NumericOutputFieldV2Name_Values() []NumericOutputFieldV2Name_Value {
+	return []NumericOutputFieldV2Name_Value{NumericOutputFieldV2Name_MIN, NumericOutputFieldV2Name_MAX, NumericOutputFieldV2Name_MEAN, NumericOutputFieldV2Name_COUNT, NumericOutputFieldV2Name_VARIANCE, NumericOutputFieldV2Name_FIRST_POINT, NumericOutputFieldV2Name_LAST_POINT, NumericOutputFieldV2Name_SUM, NumericOutputFieldV2Name_STANDARD_DEVIATION, NumericOutputFieldV2Name_ROOT_MEAN_SQUARE}
+}
+
+func New_NumericOutputFieldV2Name(value NumericOutputFieldV2Name_Value) NumericOutputFieldV2Name {
+	return NumericOutputFieldV2Name{val: value}
+}
+
+// IsUnknown returns false for all known variants of NumericOutputFieldV2Name and true otherwise.
+func (e NumericOutputFieldV2Name) IsUnknown() bool {
+	switch e.val {
+	case NumericOutputFieldV2Name_MIN, NumericOutputFieldV2Name_MAX, NumericOutputFieldV2Name_MEAN, NumericOutputFieldV2Name_COUNT, NumericOutputFieldV2Name_VARIANCE, NumericOutputFieldV2Name_FIRST_POINT, NumericOutputFieldV2Name_LAST_POINT, NumericOutputFieldV2Name_SUM, NumericOutputFieldV2Name_STANDARD_DEVIATION, NumericOutputFieldV2Name_ROOT_MEAN_SQUARE:
+		return false
+	}
+	return true
+}
+
+func (e NumericOutputFieldV2Name) Value() NumericOutputFieldV2Name_Value {
+	if e.IsUnknown() {
+		return NumericOutputFieldV2Name_UNKNOWN
+	}
+	return e.val
+}
+
+func (e NumericOutputFieldV2Name) String() string {
+	return string(e.val)
+}
+
+func (e NumericOutputFieldV2Name) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *NumericOutputFieldV2Name) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_Value(v))
+	case "MIN":
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_MIN)
+	case "MAX":
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_MAX)
+	case "MEAN":
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_MEAN)
+	case "COUNT":
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_COUNT)
+	case "VARIANCE":
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_VARIANCE)
+	case "FIRST_POINT":
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_FIRST_POINT)
+	case "LAST_POINT":
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_LAST_POINT)
+	case "SUM":
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_SUM)
+	case "STANDARD_DEVIATION":
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_STANDARD_DEVIATION)
+	case "ROOT_MEAN_SQUARE":
+		*e = New_NumericOutputFieldV2Name(NumericOutputFieldV2Name_ROOT_MEAN_SQUARE)
+	}
+	return nil
+}
+
+// DEPRECATED: apply aggregations as a separate step over the unioned output.
 type NumericUnionOperation struct {
 	val NumericUnionOperation_Value
 }
@@ -1140,6 +1414,7 @@ type OutputFormat struct {
 type OutputFormat_Value string
 
 const (
+	OutputFormat_ARROW_V4 OutputFormat_Value = "ARROW_V4"
 	OutputFormat_ARROW_V3 OutputFormat_Value = "ARROW_V3"
 	OutputFormat_LEGACY   OutputFormat_Value = "LEGACY"
 	OutputFormat_UNKNOWN  OutputFormat_Value = "UNKNOWN"
@@ -1147,7 +1422,7 @@ const (
 
 // OutputFormat_Values returns all known variants of OutputFormat.
 func OutputFormat_Values() []OutputFormat_Value {
-	return []OutputFormat_Value{OutputFormat_ARROW_V3, OutputFormat_LEGACY}
+	return []OutputFormat_Value{OutputFormat_ARROW_V4, OutputFormat_ARROW_V3, OutputFormat_LEGACY}
 }
 
 func New_OutputFormat(value OutputFormat_Value) OutputFormat {
@@ -1157,7 +1432,7 @@ func New_OutputFormat(value OutputFormat_Value) OutputFormat {
 // IsUnknown returns false for all known variants of OutputFormat and true otherwise.
 func (e OutputFormat) IsUnknown() bool {
 	switch e.val {
-	case OutputFormat_ARROW_V3, OutputFormat_LEGACY:
+	case OutputFormat_ARROW_V4, OutputFormat_ARROW_V3, OutputFormat_LEGACY:
 		return false
 	}
 	return true
@@ -1182,6 +1457,8 @@ func (e *OutputFormat) UnmarshalText(data []byte) error {
 	switch v := strings.ToUpper(string(data)); v {
 	default:
 		*e = New_OutputFormat(OutputFormat_Value(v))
+	case "ARROW_V4":
+		*e = New_OutputFormat(OutputFormat_ARROW_V4)
 	case "ARROW_V3":
 		*e = New_OutputFormat(OutputFormat_ARROW_V3)
 	case "LEGACY":
@@ -1437,7 +1714,106 @@ func (e *PeriodogramMethod) UnmarshalText(data []byte) error {
 	return nil
 }
 
-// Identifies where a compute query originated from. Used for observability (perf metrics, ClickHouse log_comment)
+/*
+Physical constants referenceable by name.
+The server resolves the symbol to its numeric value in SI units.
+*/
+type PhysicalConstant struct {
+	val PhysicalConstant_Value
+}
+
+type PhysicalConstant_Value string
+
+const (
+	// Speed of light in vacuum, 299792458 m/s (exact).
+	PhysicalConstant_SPEED_OF_LIGHT PhysicalConstant_Value = "SPEED_OF_LIGHT"
+	// Avogadro constant, 6.02214076e23 mol^-1 (exact).
+	PhysicalConstant_AVOGADRO PhysicalConstant_Value = "AVOGADRO"
+	// Boltzmann constant, 1.380649e-23 J/K (exact).
+	PhysicalConstant_BOLTZMANN PhysicalConstant_Value = "BOLTZMANN"
+	// Planck constant, 6.62607015e-34 J*s (exact).
+	PhysicalConstant_PLANCK PhysicalConstant_Value = "PLANCK"
+	// Elementary charge, 1.602176634e-19 C (exact).
+	PhysicalConstant_ELEMENTARY_CHARGE PhysicalConstant_Value = "ELEMENTARY_CHARGE"
+	// Molar gas constant, 8.31446261815324 J/(mol*K) (exact, Avogadro times Boltzmann).
+	PhysicalConstant_GAS_CONSTANT PhysicalConstant_Value = "GAS_CONSTANT"
+	// Standard acceleration of gravity, 9.80665 m/s^2 (exact by convention).
+	PhysicalConstant_STANDARD_GRAVITY PhysicalConstant_Value = "STANDARD_GRAVITY"
+	// Standard atmosphere, 101325 Pa (exact by convention).
+	PhysicalConstant_STANDARD_ATMOSPHERE PhysicalConstant_Value = "STANDARD_ATMOSPHERE"
+	// Absolute zero expressed in degrees Celsius, -273.15 (exact).
+	PhysicalConstant_ABSOLUTE_ZERO_CELSIUS PhysicalConstant_Value = "ABSOLUTE_ZERO_CELSIUS"
+	// Newtonian constant of gravitation, 6.67430e-11 m^3/(kg*s^2) (CODATA 2022, measured).
+	PhysicalConstant_GRAVITATIONAL_CONSTANT PhysicalConstant_Value = "GRAVITATIONAL_CONSTANT"
+	// Stefan-Boltzmann constant, 5.670374419e-8 W/(m^2*K^4) (exact derived).
+	PhysicalConstant_STEFAN_BOLTZMANN PhysicalConstant_Value = "STEFAN_BOLTZMANN"
+	PhysicalConstant_UNKNOWN          PhysicalConstant_Value = "UNKNOWN"
+)
+
+// PhysicalConstant_Values returns all known variants of PhysicalConstant.
+func PhysicalConstant_Values() []PhysicalConstant_Value {
+	return []PhysicalConstant_Value{PhysicalConstant_SPEED_OF_LIGHT, PhysicalConstant_AVOGADRO, PhysicalConstant_BOLTZMANN, PhysicalConstant_PLANCK, PhysicalConstant_ELEMENTARY_CHARGE, PhysicalConstant_GAS_CONSTANT, PhysicalConstant_STANDARD_GRAVITY, PhysicalConstant_STANDARD_ATMOSPHERE, PhysicalConstant_ABSOLUTE_ZERO_CELSIUS, PhysicalConstant_GRAVITATIONAL_CONSTANT, PhysicalConstant_STEFAN_BOLTZMANN}
+}
+
+func New_PhysicalConstant(value PhysicalConstant_Value) PhysicalConstant {
+	return PhysicalConstant{val: value}
+}
+
+// IsUnknown returns false for all known variants of PhysicalConstant and true otherwise.
+func (e PhysicalConstant) IsUnknown() bool {
+	switch e.val {
+	case PhysicalConstant_SPEED_OF_LIGHT, PhysicalConstant_AVOGADRO, PhysicalConstant_BOLTZMANN, PhysicalConstant_PLANCK, PhysicalConstant_ELEMENTARY_CHARGE, PhysicalConstant_GAS_CONSTANT, PhysicalConstant_STANDARD_GRAVITY, PhysicalConstant_STANDARD_ATMOSPHERE, PhysicalConstant_ABSOLUTE_ZERO_CELSIUS, PhysicalConstant_GRAVITATIONAL_CONSTANT, PhysicalConstant_STEFAN_BOLTZMANN:
+		return false
+	}
+	return true
+}
+
+func (e PhysicalConstant) Value() PhysicalConstant_Value {
+	if e.IsUnknown() {
+		return PhysicalConstant_UNKNOWN
+	}
+	return e.val
+}
+
+func (e PhysicalConstant) String() string {
+	return string(e.val)
+}
+
+func (e PhysicalConstant) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *PhysicalConstant) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_PhysicalConstant(PhysicalConstant_Value(v))
+	case "SPEED_OF_LIGHT":
+		*e = New_PhysicalConstant(PhysicalConstant_SPEED_OF_LIGHT)
+	case "AVOGADRO":
+		*e = New_PhysicalConstant(PhysicalConstant_AVOGADRO)
+	case "BOLTZMANN":
+		*e = New_PhysicalConstant(PhysicalConstant_BOLTZMANN)
+	case "PLANCK":
+		*e = New_PhysicalConstant(PhysicalConstant_PLANCK)
+	case "ELEMENTARY_CHARGE":
+		*e = New_PhysicalConstant(PhysicalConstant_ELEMENTARY_CHARGE)
+	case "GAS_CONSTANT":
+		*e = New_PhysicalConstant(PhysicalConstant_GAS_CONSTANT)
+	case "STANDARD_GRAVITY":
+		*e = New_PhysicalConstant(PhysicalConstant_STANDARD_GRAVITY)
+	case "STANDARD_ATMOSPHERE":
+		*e = New_PhysicalConstant(PhysicalConstant_STANDARD_ATMOSPHERE)
+	case "ABSOLUTE_ZERO_CELSIUS":
+		*e = New_PhysicalConstant(PhysicalConstant_ABSOLUTE_ZERO_CELSIUS)
+	case "GRAVITATIONAL_CONSTANT":
+		*e = New_PhysicalConstant(PhysicalConstant_GRAVITATIONAL_CONSTANT)
+	case "STEFAN_BOLTZMANN":
+		*e = New_PhysicalConstant(PhysicalConstant_STEFAN_BOLTZMANN)
+	}
+	return nil
+}
+
+// Identifies where a ClickHouse query originated from. Used for observability (perf metrics, ClickHouse log_comment)
 type QuerySource struct {
 	val QuerySource_Value
 }
@@ -1450,12 +1826,14 @@ const (
 	QuerySource_STREAMING_CHECKLIST QuerySource_Value = "STREAMING_CHECKLIST"
 	QuerySource_EXPORT              QuerySource_Value = "EXPORT"
 	QuerySource_PERSISTENT_COMPUTE  QuerySource_Value = "PERSISTENT_COMPUTE"
+	QuerySource_SQL_QUERY           QuerySource_Value = "SQL_QUERY"
+	QuerySource_CHANNEL_SEARCH      QuerySource_Value = "CHANNEL_SEARCH"
 	QuerySource_UNKNOWN             QuerySource_Value = "UNKNOWN"
 )
 
 // QuerySource_Values returns all known variants of QuerySource.
 func QuerySource_Values() []QuerySource_Value {
-	return []QuerySource_Value{QuerySource_WORKBOOK, QuerySource_CHECKLIST, QuerySource_STREAMING_CHECKLIST, QuerySource_EXPORT, QuerySource_PERSISTENT_COMPUTE}
+	return []QuerySource_Value{QuerySource_WORKBOOK, QuerySource_CHECKLIST, QuerySource_STREAMING_CHECKLIST, QuerySource_EXPORT, QuerySource_PERSISTENT_COMPUTE, QuerySource_SQL_QUERY, QuerySource_CHANNEL_SEARCH}
 }
 
 func New_QuerySource(value QuerySource_Value) QuerySource {
@@ -1465,7 +1843,7 @@ func New_QuerySource(value QuerySource_Value) QuerySource {
 // IsUnknown returns false for all known variants of QuerySource and true otherwise.
 func (e QuerySource) IsUnknown() bool {
 	switch e.val {
-	case QuerySource_WORKBOOK, QuerySource_CHECKLIST, QuerySource_STREAMING_CHECKLIST, QuerySource_EXPORT, QuerySource_PERSISTENT_COMPUTE:
+	case QuerySource_WORKBOOK, QuerySource_CHECKLIST, QuerySource_STREAMING_CHECKLIST, QuerySource_EXPORT, QuerySource_PERSISTENT_COMPUTE, QuerySource_SQL_QUERY, QuerySource_CHANNEL_SEARCH:
 		return false
 	}
 	return true
@@ -1500,6 +1878,77 @@ func (e *QuerySource) UnmarshalText(data []byte) error {
 		*e = New_QuerySource(QuerySource_EXPORT)
 	case "PERSISTENT_COMPUTE":
 		*e = New_QuerySource(QuerySource_PERSISTENT_COMPUTE)
+	case "SQL_QUERY":
+		*e = New_QuerySource(QuerySource_SQL_QUERY)
+	case "CHANNEL_SEARCH":
+		*e = New_QuerySource(QuerySource_CHANNEL_SEARCH)
+	}
+	return nil
+}
+
+// Resource types that can be limited by the per-user compute quota.
+type QuotaResourceType struct {
+	val QuotaResourceType_Value
+}
+
+type QuotaResourceType_Value string
+
+const (
+	QuotaResourceType_READ_ROWS      QuotaResourceType_Value = "READ_ROWS"
+	QuotaResourceType_READ_BYTES     QuotaResourceType_Value = "READ_BYTES"
+	QuotaResourceType_QUERIES        QuotaResourceType_Value = "QUERIES"
+	QuotaResourceType_ERRORS         QuotaResourceType_Value = "ERRORS"
+	QuotaResourceType_EXECUTION_TIME QuotaResourceType_Value = "EXECUTION_TIME"
+	QuotaResourceType_UNKNOWN        QuotaResourceType_Value = "UNKNOWN"
+)
+
+// QuotaResourceType_Values returns all known variants of QuotaResourceType.
+func QuotaResourceType_Values() []QuotaResourceType_Value {
+	return []QuotaResourceType_Value{QuotaResourceType_READ_ROWS, QuotaResourceType_READ_BYTES, QuotaResourceType_QUERIES, QuotaResourceType_ERRORS, QuotaResourceType_EXECUTION_TIME}
+}
+
+func New_QuotaResourceType(value QuotaResourceType_Value) QuotaResourceType {
+	return QuotaResourceType{val: value}
+}
+
+// IsUnknown returns false for all known variants of QuotaResourceType and true otherwise.
+func (e QuotaResourceType) IsUnknown() bool {
+	switch e.val {
+	case QuotaResourceType_READ_ROWS, QuotaResourceType_READ_BYTES, QuotaResourceType_QUERIES, QuotaResourceType_ERRORS, QuotaResourceType_EXECUTION_TIME:
+		return false
+	}
+	return true
+}
+
+func (e QuotaResourceType) Value() QuotaResourceType_Value {
+	if e.IsUnknown() {
+		return QuotaResourceType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e QuotaResourceType) String() string {
+	return string(e.val)
+}
+
+func (e QuotaResourceType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *QuotaResourceType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_QuotaResourceType(QuotaResourceType_Value(v))
+	case "READ_ROWS":
+		*e = New_QuotaResourceType(QuotaResourceType_READ_ROWS)
+	case "READ_BYTES":
+		*e = New_QuotaResourceType(QuotaResourceType_READ_BYTES)
+	case "QUERIES":
+		*e = New_QuotaResourceType(QuotaResourceType_QUERIES)
+	case "ERRORS":
+		*e = New_QuotaResourceType(QuotaResourceType_ERRORS)
+	case "EXECUTION_TIME":
+		*e = New_QuotaResourceType(QuotaResourceType_EXECUTION_TIME)
 	}
 	return nil
 }
@@ -1625,7 +2074,65 @@ func (e *RangeSortOrder) UnmarshalText(data []byte) error {
 	return nil
 }
 
-// Supported properties for REFPROP calculations
+// Selects which point of a satisfied condition begins the output range.
+type RangeStart struct {
+	val RangeStart_Value
+}
+
+type RangeStart_Value string
+
+const (
+	RangeStart_CONDITION_START   RangeStart_Value = "CONDITION_START"
+	RangeStart_PERSISTENCE_START RangeStart_Value = "PERSISTENCE_START"
+	RangeStart_UNKNOWN           RangeStart_Value = "UNKNOWN"
+)
+
+// RangeStart_Values returns all known variants of RangeStart.
+func RangeStart_Values() []RangeStart_Value {
+	return []RangeStart_Value{RangeStart_CONDITION_START, RangeStart_PERSISTENCE_START}
+}
+
+func New_RangeStart(value RangeStart_Value) RangeStart {
+	return RangeStart{val: value}
+}
+
+// IsUnknown returns false for all known variants of RangeStart and true otherwise.
+func (e RangeStart) IsUnknown() bool {
+	switch e.val {
+	case RangeStart_CONDITION_START, RangeStart_PERSISTENCE_START:
+		return false
+	}
+	return true
+}
+
+func (e RangeStart) Value() RangeStart_Value {
+	if e.IsUnknown() {
+		return RangeStart_UNKNOWN
+	}
+	return e.val
+}
+
+func (e RangeStart) String() string {
+	return string(e.val)
+}
+
+func (e RangeStart) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *RangeStart) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_RangeStart(RangeStart_Value(v))
+	case "CONDITION_START":
+		*e = New_RangeStart(RangeStart_CONDITION_START)
+	case "PERSISTENCE_START":
+		*e = New_RangeStart(RangeStart_PERSISTENCE_START)
+	}
+	return nil
+}
+
+// Supported properties for REFPROP calculations.
 type RefpropProperty struct {
 	val RefpropProperty_Value
 }
@@ -1639,12 +2146,13 @@ const (
 	RefpropProperty_MASS_SPECIFIC_ENTHALPY        RefpropProperty_Value = "MASS_SPECIFIC_ENTHALPY"
 	RefpropProperty_MASS_SPECIFIC_INTERNAL_ENERGY RefpropProperty_Value = "MASS_SPECIFIC_INTERNAL_ENERGY"
 	RefpropProperty_MASS_SPECIFIC_ENTROPY         RefpropProperty_Value = "MASS_SPECIFIC_ENTROPY"
+	RefpropProperty_VISCOSITY                     RefpropProperty_Value = "VISCOSITY"
 	RefpropProperty_UNKNOWN                       RefpropProperty_Value = "UNKNOWN"
 )
 
 // RefpropProperty_Values returns all known variants of RefpropProperty.
 func RefpropProperty_Values() []RefpropProperty_Value {
-	return []RefpropProperty_Value{RefpropProperty_TEMPERATURE, RefpropProperty_PRESSURE, RefpropProperty_MASS_DENSITY, RefpropProperty_MASS_SPECIFIC_ENTHALPY, RefpropProperty_MASS_SPECIFIC_INTERNAL_ENERGY, RefpropProperty_MASS_SPECIFIC_ENTROPY}
+	return []RefpropProperty_Value{RefpropProperty_TEMPERATURE, RefpropProperty_PRESSURE, RefpropProperty_MASS_DENSITY, RefpropProperty_MASS_SPECIFIC_ENTHALPY, RefpropProperty_MASS_SPECIFIC_INTERNAL_ENERGY, RefpropProperty_MASS_SPECIFIC_ENTROPY, RefpropProperty_VISCOSITY}
 }
 
 func New_RefpropProperty(value RefpropProperty_Value) RefpropProperty {
@@ -1654,7 +2162,7 @@ func New_RefpropProperty(value RefpropProperty_Value) RefpropProperty {
 // IsUnknown returns false for all known variants of RefpropProperty and true otherwise.
 func (e RefpropProperty) IsUnknown() bool {
 	switch e.val {
-	case RefpropProperty_TEMPERATURE, RefpropProperty_PRESSURE, RefpropProperty_MASS_DENSITY, RefpropProperty_MASS_SPECIFIC_ENTHALPY, RefpropProperty_MASS_SPECIFIC_INTERNAL_ENERGY, RefpropProperty_MASS_SPECIFIC_ENTROPY:
+	case RefpropProperty_TEMPERATURE, RefpropProperty_PRESSURE, RefpropProperty_MASS_DENSITY, RefpropProperty_MASS_SPECIFIC_ENTHALPY, RefpropProperty_MASS_SPECIFIC_INTERNAL_ENERGY, RefpropProperty_MASS_SPECIFIC_ENTROPY, RefpropProperty_VISCOSITY:
 		return false
 	}
 	return true
@@ -1691,6 +2199,8 @@ func (e *RefpropProperty) UnmarshalText(data []byte) error {
 		*e = New_RefpropProperty(RefpropProperty_MASS_SPECIFIC_INTERNAL_ENERGY)
 	case "MASS_SPECIFIC_ENTROPY":
 		*e = New_RefpropProperty(RefpropProperty_MASS_SPECIFIC_ENTROPY)
+	case "VISCOSITY":
+		*e = New_RefpropProperty(RefpropProperty_VISCOSITY)
 	}
 	return nil
 }
@@ -1703,22 +2213,25 @@ type RefpropSubstance struct {
 type RefpropSubstance_Value string
 
 const (
-	RefpropSubstance_NITROGEN RefpropSubstance_Value = "NITROGEN"
-	RefpropSubstance_OXYGEN   RefpropSubstance_Value = "OXYGEN"
-	RefpropSubstance_HELIUM   RefpropSubstance_Value = "HELIUM"
-	RefpropSubstance_HYDROGEN RefpropSubstance_Value = "HYDROGEN"
-	RefpropSubstance_METHANE  RefpropSubstance_Value = "METHANE"
-	RefpropSubstance_PROPANE  RefpropSubstance_Value = "PROPANE"
-	RefpropSubstance_BUTANE   RefpropSubstance_Value = "BUTANE"
-	RefpropSubstance_WATER    RefpropSubstance_Value = "WATER"
-	RefpropSubstance_XENON    RefpropSubstance_Value = "XENON"
-	RefpropSubstance_AIR      RefpropSubstance_Value = "AIR"
-	RefpropSubstance_UNKNOWN  RefpropSubstance_Value = "UNKNOWN"
+	RefpropSubstance_NITROGEN        RefpropSubstance_Value = "NITROGEN"
+	RefpropSubstance_OXYGEN          RefpropSubstance_Value = "OXYGEN"
+	RefpropSubstance_HELIUM          RefpropSubstance_Value = "HELIUM"
+	RefpropSubstance_HYDROGEN        RefpropSubstance_Value = "HYDROGEN"
+	RefpropSubstance_METHANE         RefpropSubstance_Value = "METHANE"
+	RefpropSubstance_PROPANE         RefpropSubstance_Value = "PROPANE"
+	RefpropSubstance_BUTANE          RefpropSubstance_Value = "BUTANE"
+	RefpropSubstance_WATER           RefpropSubstance_Value = "WATER"
+	RefpropSubstance_XENON           RefpropSubstance_Value = "XENON"
+	RefpropSubstance_AIR             RefpropSubstance_Value = "AIR"
+	RefpropSubstance_CARBON_DIOXIDE  RefpropSubstance_Value = "CARBON_DIOXIDE"
+	RefpropSubstance_ARGON           RefpropSubstance_Value = "ARGON"
+	RefpropSubstance_CARBON_MONOXIDE RefpropSubstance_Value = "CARBON_MONOXIDE"
+	RefpropSubstance_UNKNOWN         RefpropSubstance_Value = "UNKNOWN"
 )
 
 // RefpropSubstance_Values returns all known variants of RefpropSubstance.
 func RefpropSubstance_Values() []RefpropSubstance_Value {
-	return []RefpropSubstance_Value{RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR}
+	return []RefpropSubstance_Value{RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR, RefpropSubstance_CARBON_DIOXIDE, RefpropSubstance_ARGON, RefpropSubstance_CARBON_MONOXIDE}
 }
 
 func New_RefpropSubstance(value RefpropSubstance_Value) RefpropSubstance {
@@ -1728,7 +2241,7 @@ func New_RefpropSubstance(value RefpropSubstance_Value) RefpropSubstance {
 // IsUnknown returns false for all known variants of RefpropSubstance and true otherwise.
 func (e RefpropSubstance) IsUnknown() bool {
 	switch e.val {
-	case RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR:
+	case RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR, RefpropSubstance_CARBON_DIOXIDE, RefpropSubstance_ARGON, RefpropSubstance_CARBON_MONOXIDE:
 		return false
 	}
 	return true
@@ -1773,6 +2286,99 @@ func (e *RefpropSubstance) UnmarshalText(data []byte) error {
 		*e = New_RefpropSubstance(RefpropSubstance_XENON)
 	case "AIR":
 		*e = New_RefpropSubstance(RefpropSubstance_AIR)
+	case "CARBON_DIOXIDE":
+		*e = New_RefpropSubstance(RefpropSubstance_CARBON_DIOXIDE)
+	case "ARGON":
+		*e = New_RefpropSubstance(RefpropSubstance_ARGON)
+	case "CARBON_MONOXIDE":
+		*e = New_RefpropSubstance(RefpropSubstance_CARBON_MONOXIDE)
+	}
+	return nil
+}
+
+/*
+Tag keys reserved by the compute system.
+Notes:
+  - ASSET_RID, DATA_SCOPE, RUN_RID are emitted as branch tags by frame
+    expansion (assets and runs).
+  - INTERVAL_INDEX, INTERVAL_START, EVENT_LEVEL are emitted as interval tags by
+    tagByIntervals.
+  - EVENT_LABEL_PREFIX is a prefix, not a fixed key. The full key for an event label
+    is EVENT_LABEL_PREFIX + ":" + labelName (for example "EVENT_LABEL_PREFIX:reviewed").
+  - NOMINAL_CHANNEL carries the channel name, so channels can be filtered and grouped
+    the same way tags are (see the SelectSeries node).
+*/
+type ReservedTagKey struct {
+	val ReservedTagKey_Value
+}
+
+type ReservedTagKey_Value string
+
+const (
+	ReservedTagKey_ASSET_RID          ReservedTagKey_Value = "ASSET_RID"
+	ReservedTagKey_DATA_SCOPE         ReservedTagKey_Value = "DATA_SCOPE"
+	ReservedTagKey_RUN_RID            ReservedTagKey_Value = "RUN_RID"
+	ReservedTagKey_INTERVAL_INDEX     ReservedTagKey_Value = "INTERVAL_INDEX"
+	ReservedTagKey_INTERVAL_START     ReservedTagKey_Value = "INTERVAL_START"
+	ReservedTagKey_EVENT_LEVEL        ReservedTagKey_Value = "EVENT_LEVEL"
+	ReservedTagKey_EVENT_LABEL_PREFIX ReservedTagKey_Value = "EVENT_LABEL_PREFIX"
+	ReservedTagKey_NOMINAL_CHANNEL    ReservedTagKey_Value = "NOMINAL_CHANNEL"
+	ReservedTagKey_UNKNOWN            ReservedTagKey_Value = "UNKNOWN"
+)
+
+// ReservedTagKey_Values returns all known variants of ReservedTagKey.
+func ReservedTagKey_Values() []ReservedTagKey_Value {
+	return []ReservedTagKey_Value{ReservedTagKey_ASSET_RID, ReservedTagKey_DATA_SCOPE, ReservedTagKey_RUN_RID, ReservedTagKey_INTERVAL_INDEX, ReservedTagKey_INTERVAL_START, ReservedTagKey_EVENT_LEVEL, ReservedTagKey_EVENT_LABEL_PREFIX, ReservedTagKey_NOMINAL_CHANNEL}
+}
+
+func New_ReservedTagKey(value ReservedTagKey_Value) ReservedTagKey {
+	return ReservedTagKey{val: value}
+}
+
+// IsUnknown returns false for all known variants of ReservedTagKey and true otherwise.
+func (e ReservedTagKey) IsUnknown() bool {
+	switch e.val {
+	case ReservedTagKey_ASSET_RID, ReservedTagKey_DATA_SCOPE, ReservedTagKey_RUN_RID, ReservedTagKey_INTERVAL_INDEX, ReservedTagKey_INTERVAL_START, ReservedTagKey_EVENT_LEVEL, ReservedTagKey_EVENT_LABEL_PREFIX, ReservedTagKey_NOMINAL_CHANNEL:
+		return false
+	}
+	return true
+}
+
+func (e ReservedTagKey) Value() ReservedTagKey_Value {
+	if e.IsUnknown() {
+		return ReservedTagKey_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ReservedTagKey) String() string {
+	return string(e.val)
+}
+
+func (e ReservedTagKey) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ReservedTagKey) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ReservedTagKey(ReservedTagKey_Value(v))
+	case "ASSET_RID":
+		*e = New_ReservedTagKey(ReservedTagKey_ASSET_RID)
+	case "DATA_SCOPE":
+		*e = New_ReservedTagKey(ReservedTagKey_DATA_SCOPE)
+	case "RUN_RID":
+		*e = New_ReservedTagKey(ReservedTagKey_RUN_RID)
+	case "INTERVAL_INDEX":
+		*e = New_ReservedTagKey(ReservedTagKey_INTERVAL_INDEX)
+	case "INTERVAL_START":
+		*e = New_ReservedTagKey(ReservedTagKey_INTERVAL_START)
+	case "EVENT_LEVEL":
+		*e = New_ReservedTagKey(ReservedTagKey_EVENT_LEVEL)
+	case "EVENT_LABEL_PREFIX":
+		*e = New_ReservedTagKey(ReservedTagKey_EVENT_LABEL_PREFIX)
+	case "NOMINAL_CHANNEL":
+		*e = New_ReservedTagKey(ReservedTagKey_NOMINAL_CHANNEL)
 	}
 	return nil
 }
@@ -1843,6 +2449,69 @@ func (e *ScatterTemporalAggregation) UnmarshalText(data []byte) error {
 	return nil
 }
 
+/*
+The storage engine a series is read from. A dataset written to both Iceberg and ClickHouse can be read
+from either engine, and a series may name the one it wants; every other dataset is readable only from the
+single engine backing it, so naming the other one is an invalid request. When unset, the engine configured
+for the caller is used.
+*/
+type SeriesStorage struct {
+	val SeriesStorage_Value
+}
+
+type SeriesStorage_Value string
+
+const (
+	SeriesStorage_ICEBERG    SeriesStorage_Value = "ICEBERG"
+	SeriesStorage_CLICKHOUSE SeriesStorage_Value = "CLICKHOUSE"
+	SeriesStorage_UNKNOWN    SeriesStorage_Value = "UNKNOWN"
+)
+
+// SeriesStorage_Values returns all known variants of SeriesStorage.
+func SeriesStorage_Values() []SeriesStorage_Value {
+	return []SeriesStorage_Value{SeriesStorage_ICEBERG, SeriesStorage_CLICKHOUSE}
+}
+
+func New_SeriesStorage(value SeriesStorage_Value) SeriesStorage {
+	return SeriesStorage{val: value}
+}
+
+// IsUnknown returns false for all known variants of SeriesStorage and true otherwise.
+func (e SeriesStorage) IsUnknown() bool {
+	switch e.val {
+	case SeriesStorage_ICEBERG, SeriesStorage_CLICKHOUSE:
+		return false
+	}
+	return true
+}
+
+func (e SeriesStorage) Value() SeriesStorage_Value {
+	if e.IsUnknown() {
+		return SeriesStorage_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SeriesStorage) String() string {
+	return string(e.val)
+}
+
+func (e SeriesStorage) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SeriesStorage) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SeriesStorage(SeriesStorage_Value(v))
+	case "ICEBERG":
+		*e = New_SeriesStorage(SeriesStorage_ICEBERG)
+	case "CLICKHOUSE":
+		*e = New_SeriesStorage(SeriesStorage_CLICKHOUSE)
+	}
+	return nil
+}
+
 type TagFilterOperator struct {
 	val TagFilterOperator_Value
 }
@@ -1896,72 +2565,6 @@ func (e *TagFilterOperator) UnmarshalText(data []byte) error {
 		*e = New_TagFilterOperator(TagFilterOperator_IN)
 	case "NOT_IN":
 		*e = New_TagFilterOperator(TagFilterOperator_NOT_IN)
-	}
-	return nil
-}
-
-type TagFilterValidationErrorType struct {
-	val TagFilterValidationErrorType_Value
-}
-
-type TagFilterValidationErrorType_Value string
-
-const (
-	TagFilterValidationErrorType_BOTH_TAGS_AND_TAG_FILTERS_PROVIDED TagFilterValidationErrorType_Value = "BOTH_TAGS_AND_TAG_FILTERS_PROVIDED"
-	TagFilterValidationErrorType_EMPTY_FILTER_LIST                  TagFilterValidationErrorType_Value = "EMPTY_FILTER_LIST"
-	TagFilterValidationErrorType_EMPTY_TAG_VALUE_SET                TagFilterValidationErrorType_Value = "EMPTY_TAG_VALUE_SET"
-	TagFilterValidationErrorType_NESTED_AND_OPERATIONS              TagFilterValidationErrorType_Value = "NESTED_AND_OPERATIONS"
-	TagFilterValidationErrorType_DUPLICATE_TAG_KEY                  TagFilterValidationErrorType_Value = "DUPLICATE_TAG_KEY"
-	TagFilterValidationErrorType_UNKNOWN                            TagFilterValidationErrorType_Value = "UNKNOWN"
-)
-
-// TagFilterValidationErrorType_Values returns all known variants of TagFilterValidationErrorType.
-func TagFilterValidationErrorType_Values() []TagFilterValidationErrorType_Value {
-	return []TagFilterValidationErrorType_Value{TagFilterValidationErrorType_BOTH_TAGS_AND_TAG_FILTERS_PROVIDED, TagFilterValidationErrorType_EMPTY_FILTER_LIST, TagFilterValidationErrorType_EMPTY_TAG_VALUE_SET, TagFilterValidationErrorType_NESTED_AND_OPERATIONS, TagFilterValidationErrorType_DUPLICATE_TAG_KEY}
-}
-
-func New_TagFilterValidationErrorType(value TagFilterValidationErrorType_Value) TagFilterValidationErrorType {
-	return TagFilterValidationErrorType{val: value}
-}
-
-// IsUnknown returns false for all known variants of TagFilterValidationErrorType and true otherwise.
-func (e TagFilterValidationErrorType) IsUnknown() bool {
-	switch e.val {
-	case TagFilterValidationErrorType_BOTH_TAGS_AND_TAG_FILTERS_PROVIDED, TagFilterValidationErrorType_EMPTY_FILTER_LIST, TagFilterValidationErrorType_EMPTY_TAG_VALUE_SET, TagFilterValidationErrorType_NESTED_AND_OPERATIONS, TagFilterValidationErrorType_DUPLICATE_TAG_KEY:
-		return false
-	}
-	return true
-}
-
-func (e TagFilterValidationErrorType) Value() TagFilterValidationErrorType_Value {
-	if e.IsUnknown() {
-		return TagFilterValidationErrorType_UNKNOWN
-	}
-	return e.val
-}
-
-func (e TagFilterValidationErrorType) String() string {
-	return string(e.val)
-}
-
-func (e TagFilterValidationErrorType) MarshalText() ([]byte, error) {
-	return []byte(e.val), nil
-}
-
-func (e *TagFilterValidationErrorType) UnmarshalText(data []byte) error {
-	switch v := strings.ToUpper(string(data)); v {
-	default:
-		*e = New_TagFilterValidationErrorType(TagFilterValidationErrorType_Value(v))
-	case "BOTH_TAGS_AND_TAG_FILTERS_PROVIDED":
-		*e = New_TagFilterValidationErrorType(TagFilterValidationErrorType_BOTH_TAGS_AND_TAG_FILTERS_PROVIDED)
-	case "EMPTY_FILTER_LIST":
-		*e = New_TagFilterValidationErrorType(TagFilterValidationErrorType_EMPTY_FILTER_LIST)
-	case "EMPTY_TAG_VALUE_SET":
-		*e = New_TagFilterValidationErrorType(TagFilterValidationErrorType_EMPTY_TAG_VALUE_SET)
-	case "NESTED_AND_OPERATIONS":
-		*e = New_TagFilterValidationErrorType(TagFilterValidationErrorType_NESTED_AND_OPERATIONS)
-	case "DUPLICATE_TAG_KEY":
-		*e = New_TagFilterValidationErrorType(TagFilterValidationErrorType_DUPLICATE_TAG_KEY)
 	}
 	return nil
 }

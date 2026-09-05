@@ -6,6 +6,63 @@ import (
 	"strings"
 )
 
+type AssetsFilterOperator struct {
+	val AssetsFilterOperator_Value
+}
+
+type AssetsFilterOperator_Value string
+
+const (
+	AssetsFilterOperator_OR      AssetsFilterOperator_Value = "OR"
+	AssetsFilterOperator_AND     AssetsFilterOperator_Value = "AND"
+	AssetsFilterOperator_UNKNOWN AssetsFilterOperator_Value = "UNKNOWN"
+)
+
+// AssetsFilterOperator_Values returns all known variants of AssetsFilterOperator.
+func AssetsFilterOperator_Values() []AssetsFilterOperator_Value {
+	return []AssetsFilterOperator_Value{AssetsFilterOperator_OR, AssetsFilterOperator_AND}
+}
+
+func New_AssetsFilterOperator(value AssetsFilterOperator_Value) AssetsFilterOperator {
+	return AssetsFilterOperator{val: value}
+}
+
+// IsUnknown returns false for all known variants of AssetsFilterOperator and true otherwise.
+func (e AssetsFilterOperator) IsUnknown() bool {
+	switch e.val {
+	case AssetsFilterOperator_OR, AssetsFilterOperator_AND:
+		return false
+	}
+	return true
+}
+
+func (e AssetsFilterOperator) Value() AssetsFilterOperator_Value {
+	if e.IsUnknown() {
+		return AssetsFilterOperator_UNKNOWN
+	}
+	return e.val
+}
+
+func (e AssetsFilterOperator) String() string {
+	return string(e.val)
+}
+
+func (e AssetsFilterOperator) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *AssetsFilterOperator) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_AssetsFilterOperator(AssetsFilterOperator_Value(v))
+	case "OR":
+		*e = New_AssetsFilterOperator(AssetsFilterOperator_OR)
+	case "AND":
+		*e = New_AssetsFilterOperator(AssetsFilterOperator_AND)
+	}
+	return nil
+}
+
 type MetricColumnAggregation struct {
 	val MetricColumnAggregation_Value
 }
@@ -120,6 +177,192 @@ func (e *MetricColumnThresholdType) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type ProcedureExecutionProgressStatus struct {
+	val ProcedureExecutionProgressStatus_Value
+}
+
+type ProcedureExecutionProgressStatus_Value string
+
+const (
+	ProcedureExecutionProgressStatus_NOT_STARTED ProcedureExecutionProgressStatus_Value = "NOT_STARTED"
+	ProcedureExecutionProgressStatus_IN_PROGRESS ProcedureExecutionProgressStatus_Value = "IN_PROGRESS"
+	ProcedureExecutionProgressStatus_FINISHED    ProcedureExecutionProgressStatus_Value = "FINISHED"
+	ProcedureExecutionProgressStatus_ABORTED     ProcedureExecutionProgressStatus_Value = "ABORTED"
+	ProcedureExecutionProgressStatus_UNKNOWN     ProcedureExecutionProgressStatus_Value = "UNKNOWN"
+)
+
+// ProcedureExecutionProgressStatus_Values returns all known variants of ProcedureExecutionProgressStatus.
+func ProcedureExecutionProgressStatus_Values() []ProcedureExecutionProgressStatus_Value {
+	return []ProcedureExecutionProgressStatus_Value{ProcedureExecutionProgressStatus_NOT_STARTED, ProcedureExecutionProgressStatus_IN_PROGRESS, ProcedureExecutionProgressStatus_FINISHED, ProcedureExecutionProgressStatus_ABORTED}
+}
+
+func New_ProcedureExecutionProgressStatus(value ProcedureExecutionProgressStatus_Value) ProcedureExecutionProgressStatus {
+	return ProcedureExecutionProgressStatus{val: value}
+}
+
+// IsUnknown returns false for all known variants of ProcedureExecutionProgressStatus and true otherwise.
+func (e ProcedureExecutionProgressStatus) IsUnknown() bool {
+	switch e.val {
+	case ProcedureExecutionProgressStatus_NOT_STARTED, ProcedureExecutionProgressStatus_IN_PROGRESS, ProcedureExecutionProgressStatus_FINISHED, ProcedureExecutionProgressStatus_ABORTED:
+		return false
+	}
+	return true
+}
+
+func (e ProcedureExecutionProgressStatus) Value() ProcedureExecutionProgressStatus_Value {
+	if e.IsUnknown() {
+		return ProcedureExecutionProgressStatus_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ProcedureExecutionProgressStatus) String() string {
+	return string(e.val)
+}
+
+func (e ProcedureExecutionProgressStatus) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ProcedureExecutionProgressStatus) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ProcedureExecutionProgressStatus(ProcedureExecutionProgressStatus_Value(v))
+	case "NOT_STARTED":
+		*e = New_ProcedureExecutionProgressStatus(ProcedureExecutionProgressStatus_NOT_STARTED)
+	case "IN_PROGRESS":
+		*e = New_ProcedureExecutionProgressStatus(ProcedureExecutionProgressStatus_IN_PROGRESS)
+	case "FINISHED":
+		*e = New_ProcedureExecutionProgressStatus(ProcedureExecutionProgressStatus_FINISHED)
+	case "ABORTED":
+		*e = New_ProcedureExecutionProgressStatus(ProcedureExecutionProgressStatus_ABORTED)
+	}
+	return nil
+}
+
+type ProcedureExecutionSortField struct {
+	val ProcedureExecutionSortField_Value
+}
+
+type ProcedureExecutionSortField_Value string
+
+const (
+	ProcedureExecutionSortField_CREATED_AT  ProcedureExecutionSortField_Value = "CREATED_AT"
+	ProcedureExecutionSortField_STARTED_AT  ProcedureExecutionSortField_Value = "STARTED_AT"
+	ProcedureExecutionSortField_FINISHED_AT ProcedureExecutionSortField_Value = "FINISHED_AT"
+	ProcedureExecutionSortField_UPDATED_AT  ProcedureExecutionSortField_Value = "UPDATED_AT"
+	ProcedureExecutionSortField_UNKNOWN     ProcedureExecutionSortField_Value = "UNKNOWN"
+)
+
+// ProcedureExecutionSortField_Values returns all known variants of ProcedureExecutionSortField.
+func ProcedureExecutionSortField_Values() []ProcedureExecutionSortField_Value {
+	return []ProcedureExecutionSortField_Value{ProcedureExecutionSortField_CREATED_AT, ProcedureExecutionSortField_STARTED_AT, ProcedureExecutionSortField_FINISHED_AT, ProcedureExecutionSortField_UPDATED_AT}
+}
+
+func New_ProcedureExecutionSortField(value ProcedureExecutionSortField_Value) ProcedureExecutionSortField {
+	return ProcedureExecutionSortField{val: value}
+}
+
+// IsUnknown returns false for all known variants of ProcedureExecutionSortField and true otherwise.
+func (e ProcedureExecutionSortField) IsUnknown() bool {
+	switch e.val {
+	case ProcedureExecutionSortField_CREATED_AT, ProcedureExecutionSortField_STARTED_AT, ProcedureExecutionSortField_FINISHED_AT, ProcedureExecutionSortField_UPDATED_AT:
+		return false
+	}
+	return true
+}
+
+func (e ProcedureExecutionSortField) Value() ProcedureExecutionSortField_Value {
+	if e.IsUnknown() {
+		return ProcedureExecutionSortField_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ProcedureExecutionSortField) String() string {
+	return string(e.val)
+}
+
+func (e ProcedureExecutionSortField) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ProcedureExecutionSortField) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ProcedureExecutionSortField(ProcedureExecutionSortField_Value(v))
+	case "CREATED_AT":
+		*e = New_ProcedureExecutionSortField(ProcedureExecutionSortField_CREATED_AT)
+	case "STARTED_AT":
+		*e = New_ProcedureExecutionSortField(ProcedureExecutionSortField_STARTED_AT)
+	case "FINISHED_AT":
+		*e = New_ProcedureExecutionSortField(ProcedureExecutionSortField_FINISHED_AT)
+	case "UPDATED_AT":
+		*e = New_ProcedureExecutionSortField(ProcedureExecutionSortField_UPDATED_AT)
+	}
+	return nil
+}
+
+type ProcedureSortField struct {
+	val ProcedureSortField_Value
+}
+
+type ProcedureSortField_Value string
+
+const (
+	ProcedureSortField_NAME       ProcedureSortField_Value = "NAME"
+	ProcedureSortField_CREATED_AT ProcedureSortField_Value = "CREATED_AT"
+	ProcedureSortField_UPDATED_AT ProcedureSortField_Value = "UPDATED_AT"
+	ProcedureSortField_UNKNOWN    ProcedureSortField_Value = "UNKNOWN"
+)
+
+// ProcedureSortField_Values returns all known variants of ProcedureSortField.
+func ProcedureSortField_Values() []ProcedureSortField_Value {
+	return []ProcedureSortField_Value{ProcedureSortField_NAME, ProcedureSortField_CREATED_AT, ProcedureSortField_UPDATED_AT}
+}
+
+func New_ProcedureSortField(value ProcedureSortField_Value) ProcedureSortField {
+	return ProcedureSortField{val: value}
+}
+
+// IsUnknown returns false for all known variants of ProcedureSortField and true otherwise.
+func (e ProcedureSortField) IsUnknown() bool {
+	switch e.val {
+	case ProcedureSortField_NAME, ProcedureSortField_CREATED_AT, ProcedureSortField_UPDATED_AT:
+		return false
+	}
+	return true
+}
+
+func (e ProcedureSortField) Value() ProcedureSortField_Value {
+	if e.IsUnknown() {
+		return ProcedureSortField_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ProcedureSortField) String() string {
+	return string(e.val)
+}
+
+func (e ProcedureSortField) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ProcedureSortField) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ProcedureSortField(ProcedureSortField_Value(v))
+	case "NAME":
+		*e = New_ProcedureSortField(ProcedureSortField_NAME)
+	case "CREATED_AT":
+		*e = New_ProcedureSortField(ProcedureSortField_CREATED_AT)
+	case "UPDATED_AT":
+		*e = New_ProcedureSortField(ProcedureSortField_UPDATED_AT)
+	}
+	return nil
+}
+
 type ResourceType struct {
 	val ResourceType_Value
 }
@@ -127,17 +370,19 @@ type ResourceType struct {
 type ResourceType_Value string
 
 const (
-	ResourceType_ASSET     ResourceType_Value = "ASSET"
-	ResourceType_RUN       ResourceType_Value = "RUN"
-	ResourceType_WORKBOOK  ResourceType_Value = "WORKBOOK"
-	ResourceType_CHECKLIST ResourceType_Value = "CHECKLIST"
-	ResourceType_TEMPLATE  ResourceType_Value = "TEMPLATE"
-	ResourceType_UNKNOWN   ResourceType_Value = "UNKNOWN"
+	ResourceType_ASSET               ResourceType_Value = "ASSET"
+	ResourceType_RUN                 ResourceType_Value = "RUN"
+	ResourceType_WORKBOOK            ResourceType_Value = "WORKBOOK"
+	ResourceType_CHECKLIST           ResourceType_Value = "CHECKLIST"
+	ResourceType_TEMPLATE            ResourceType_Value = "TEMPLATE"
+	ResourceType_PROCEDURE           ResourceType_Value = "PROCEDURE"
+	ResourceType_PROCEDURE_EXECUTION ResourceType_Value = "PROCEDURE_EXECUTION"
+	ResourceType_UNKNOWN             ResourceType_Value = "UNKNOWN"
 )
 
 // ResourceType_Values returns all known variants of ResourceType.
 func ResourceType_Values() []ResourceType_Value {
-	return []ResourceType_Value{ResourceType_ASSET, ResourceType_RUN, ResourceType_WORKBOOK, ResourceType_CHECKLIST, ResourceType_TEMPLATE}
+	return []ResourceType_Value{ResourceType_ASSET, ResourceType_RUN, ResourceType_WORKBOOK, ResourceType_CHECKLIST, ResourceType_TEMPLATE, ResourceType_PROCEDURE, ResourceType_PROCEDURE_EXECUTION}
 }
 
 func New_ResourceType(value ResourceType_Value) ResourceType {
@@ -147,7 +392,7 @@ func New_ResourceType(value ResourceType_Value) ResourceType {
 // IsUnknown returns false for all known variants of ResourceType and true otherwise.
 func (e ResourceType) IsUnknown() bool {
 	switch e.val {
-	case ResourceType_ASSET, ResourceType_RUN, ResourceType_WORKBOOK, ResourceType_CHECKLIST, ResourceType_TEMPLATE:
+	case ResourceType_ASSET, ResourceType_RUN, ResourceType_WORKBOOK, ResourceType_CHECKLIST, ResourceType_TEMPLATE, ResourceType_PROCEDURE, ResourceType_PROCEDURE_EXECUTION:
 		return false
 	}
 	return true
@@ -182,6 +427,10 @@ func (e *ResourceType) UnmarshalText(data []byte) error {
 		*e = New_ResourceType(ResourceType_CHECKLIST)
 	case "TEMPLATE":
 		*e = New_ResourceType(ResourceType_TEMPLATE)
+	case "PROCEDURE":
+		*e = New_ResourceType(ResourceType_PROCEDURE)
+	case "PROCEDURE_EXECUTION":
+		*e = New_ResourceType(ResourceType_PROCEDURE_EXECUTION)
 	}
 	return nil
 }

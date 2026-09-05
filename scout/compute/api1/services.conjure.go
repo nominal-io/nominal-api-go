@@ -56,6 +56,25 @@ type ComputeServiceClient interface {
 	   one or more underlying operations, all of which will be cancelled.
 	*/
 	BatchKillRequests(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchKillRequestsRequest) error
+	/*
+	   Returns a point-in-time snapshot of progress for the given active compute requests. Each
+	   ID should be the request ID that the client originally passed when starting the request.
+	   Intended to be polled (roughly once per second) for requests that have been running
+	   longer than the slow-query threshold.
+
+	   A request with no active queries is not necessarily finished: its underlying queries may
+	   not have started yet, the request may be in a post-processing phase, or the request's
+	   work may be executed somewhere that does not report progress — in which case it stays
+	   inactive for its entire duration. Clients should derive progress from the raw row
+	   counters and must not assume monotonicity, since totalRowsApprox can grow while a
+	   request runs.
+	*/
+	BatchGetRequestProgress(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetRequestProgressRequest) (api.BatchGetRequestProgressResponse, error)
+	/*
+	   Returns the calling user's compute quota usage for their current organization, one entry
+	   per quota window. Returns no intervals when quotas are not enabled for the organization.
+	*/
+	GetQuotaUsage(ctx context.Context, authHeader bearertoken.Token) (api.GetQuotaUsageResponse, error)
 }
 
 type computeServiceClient struct {
@@ -187,6 +206,41 @@ func (c *computeServiceClient) BatchKillRequests(ctx context.Context, authHeader
 	return nil
 }
 
+func (c *computeServiceClient) BatchGetRequestProgress(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetRequestProgressRequest) (api.BatchGetRequestProgressResponse, error) {
+	var returnVal *api.BatchGetRequestProgressResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetRequestProgress"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/compute/v2/compute/batch/progress"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchGetRequestProgressResponse), werror.WrapWithContextParams(ctx, err, "batchGetRequestProgress failed")
+	}
+	if returnVal == nil {
+		return *new(api.BatchGetRequestProgressResponse), werror.ErrorWithContextParams(ctx, "batchGetRequestProgress response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *computeServiceClient) GetQuotaUsage(ctx context.Context, authHeader bearertoken.Token) (api.GetQuotaUsageResponse, error) {
+	var returnVal *api.GetQuotaUsageResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetQuotaUsage"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/compute/v2/compute/quota/usage"))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(api.GetQuotaUsageResponse), werror.WrapWithContextParams(ctx, err, "getQuotaUsage failed")
+	}
+	if returnVal == nil {
+		return *new(api.GetQuotaUsageResponse), werror.ErrorWithContextParams(ctx, "getQuotaUsage response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 // The Compute Service provides the ability to compute the output of compute graphs.
 type ComputeServiceClientWithAuth interface {
 	// Computes the output of the compute graph specified by a ComputeNodeRequest.
@@ -230,6 +284,25 @@ type ComputeServiceClientWithAuth interface {
 	   one or more underlying operations, all of which will be cancelled.
 	*/
 	BatchKillRequests(ctx context.Context, requestArg api.BatchKillRequestsRequest) error
+	/*
+	   Returns a point-in-time snapshot of progress for the given active compute requests. Each
+	   ID should be the request ID that the client originally passed when starting the request.
+	   Intended to be polled (roughly once per second) for requests that have been running
+	   longer than the slow-query threshold.
+
+	   A request with no active queries is not necessarily finished: its underlying queries may
+	   not have started yet, the request may be in a post-processing phase, or the request's
+	   work may be executed somewhere that does not report progress — in which case it stays
+	   inactive for its entire duration. Clients should derive progress from the raw row
+	   counters and must not assume monotonicity, since totalRowsApprox can grow while a
+	   request runs.
+	*/
+	BatchGetRequestProgress(ctx context.Context, requestArg api.BatchGetRequestProgressRequest) (api.BatchGetRequestProgressResponse, error)
+	/*
+	   Returns the calling user's compute quota usage for their current organization, one entry
+	   per quota window. Returns no intervals when quotas are not enabled for the organization.
+	*/
+	GetQuotaUsage(ctx context.Context) (api.GetQuotaUsageResponse, error)
 }
 
 func NewComputeServiceClientWithAuth(client ComputeServiceClient, authHeader bearertoken.Token) ComputeServiceClientWithAuth {
@@ -267,6 +340,14 @@ func (c *computeServiceClientWithAuth) ComputeWithUnits(ctx context.Context, req
 
 func (c *computeServiceClientWithAuth) BatchKillRequests(ctx context.Context, requestArg api.BatchKillRequestsRequest) error {
 	return c.client.BatchKillRequests(ctx, c.authHeader, requestArg)
+}
+
+func (c *computeServiceClientWithAuth) BatchGetRequestProgress(ctx context.Context, requestArg api.BatchGetRequestProgressRequest) (api.BatchGetRequestProgressResponse, error) {
+	return c.client.BatchGetRequestProgress(ctx, c.authHeader, requestArg)
+}
+
+func (c *computeServiceClientWithAuth) GetQuotaUsage(ctx context.Context) (api.GetQuotaUsageResponse, error) {
+	return c.client.GetQuotaUsage(ctx, c.authHeader)
 }
 
 func NewComputeServiceClientWithTokenProvider(client ComputeServiceClient, tokenProvider httpclient.TokenProvider) ComputeServiceClientWithAuth {
@@ -332,4 +413,20 @@ func (c *computeServiceClientWithTokenProvider) BatchKillRequests(ctx context.Co
 		return err
 	}
 	return c.client.BatchKillRequests(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *computeServiceClientWithTokenProvider) BatchGetRequestProgress(ctx context.Context, requestArg api.BatchGetRequestProgressRequest) (api.BatchGetRequestProgressResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.BatchGetRequestProgressResponse), err
+	}
+	return c.client.BatchGetRequestProgress(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *computeServiceClientWithTokenProvider) GetQuotaUsage(ctx context.Context) (api.GetQuotaUsageResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.GetQuotaUsageResponse), err
+	}
+	return c.client.GetQuotaUsage(ctx, bearertoken.Token(token))
 }

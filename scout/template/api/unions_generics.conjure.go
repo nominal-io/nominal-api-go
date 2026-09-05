@@ -285,3 +285,52 @@ type SearchTemplatesQueryVisitorWithT[T any] interface {
 	VisitAuthorRids(ctx context.Context, v []api1.UserRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
+
+type TemplateArchiveTargetWithT[T any] TemplateArchiveTarget
+
+func (u *TemplateArchiveTargetWithT[T]) Accept(ctx context.Context, v TemplateArchiveTargetVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "rids":
+		if u.rids == nil {
+			return result, fmt.Errorf("field \"rids\" is required")
+		}
+		return v.VisitRids(ctx, *u.rids)
+	}
+}
+
+func (u *TemplateArchiveTargetWithT[T]) AcceptFuncs(ridsFunc func([]api1.TemplateRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "rids":
+		if u.rids == nil {
+			return result, fmt.Errorf("field \"rids\" is required")
+		}
+		return ridsFunc(*u.rids)
+	}
+}
+
+func (u *TemplateArchiveTargetWithT[T]) RidsNoopSuccess([]api1.TemplateRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *TemplateArchiveTargetWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type TemplateArchiveTargetVisitorWithT[T any] interface {
+	VisitRids(ctx context.Context, v []api1.TemplateRid) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}

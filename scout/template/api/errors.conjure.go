@@ -808,10 +808,161 @@ func (e *TemplatesNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type tooManyTemplatesRequested struct {
+	RequestedCount int `json:"requestedCount"`
+	AllowedCount   int `json:"allowedCount"`
+}
+
+func (o tooManyTemplatesRequested) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *tooManyTemplatesRequested) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewTooManyTemplatesRequested returns new instance of TooManyTemplatesRequested error.
+func NewTooManyTemplatesRequested(requestedCountArg int, allowedCountArg int) *TooManyTemplatesRequested {
+	return &TooManyTemplatesRequested{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooManyTemplatesRequested: tooManyTemplatesRequested{RequestedCount: requestedCountArg, AllowedCount: allowedCountArg}}
+}
+
+// WrapWithTooManyTemplatesRequested returns new instance of TooManyTemplatesRequested error wrapping an existing error.
+func WrapWithTooManyTemplatesRequested(err error, requestedCountArg int, allowedCountArg int) *TooManyTemplatesRequested {
+	return &TooManyTemplatesRequested{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooManyTemplatesRequested: tooManyTemplatesRequested{RequestedCount: requestedCountArg, AllowedCount: allowedCountArg}}
+}
+
+// TooManyTemplatesRequested is an error type.
+type TooManyTemplatesRequested struct {
+	errorInstanceID uuid.UUID
+	tooManyTemplatesRequested
+	cause error
+	stack werror.StackTrace
+}
+
+// IsTooManyTemplatesRequested returns true if err is an instance of TooManyTemplatesRequested.
+func IsTooManyTemplatesRequested(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*TooManyTemplatesRequested)
+	return ok
+}
+
+func (e *TooManyTemplatesRequested) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:TooManyTemplatesRequested (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *TooManyTemplatesRequested) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *TooManyTemplatesRequested) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *TooManyTemplatesRequested) Message() string {
+	return "INVALID_ARGUMENT Scout:TooManyTemplatesRequested"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *TooManyTemplatesRequested) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *TooManyTemplatesRequested) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *TooManyTemplatesRequested) Name() string {
+	return "Scout:TooManyTemplatesRequested"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *TooManyTemplatesRequested) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *TooManyTemplatesRequested) Parameters() map[string]interface{} {
+	return map[string]interface{}{"requestedCount": e.RequestedCount, "allowedCount": e.AllowedCount}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *TooManyTemplatesRequested) safeParams() map[string]interface{} {
+	return map[string]interface{}{"requestedCount": e.RequestedCount, "allowedCount": e.AllowedCount, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyTemplatesRequested) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *TooManyTemplatesRequested) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyTemplatesRequested) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e TooManyTemplatesRequested) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.tooManyTemplatesRequested)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:TooManyTemplatesRequested", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *TooManyTemplatesRequested) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters tooManyTemplatesRequested
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.tooManyTemplatesRequested = parameters
+	return nil
+}
+
 func init() {
 	conjureerrors.RegisterErrorType("Scout:CannotReadTemplateRefNames", reflect.TypeOf(CannotReadTemplateRefNames{}))
 	conjureerrors.RegisterErrorType("Scout:ChartsNotFound", reflect.TypeOf(ChartsNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:CommitToArchivedTemplate", reflect.TypeOf(CommitToArchivedTemplate{}))
 	conjureerrors.RegisterErrorType("Scout:SearchTemplatesLimitExceeded", reflect.TypeOf(SearchTemplatesLimitExceeded{}))
 	conjureerrors.RegisterErrorType("Scout:TemplatesNotFound", reflect.TypeOf(TemplatesNotFound{}))
+	conjureerrors.RegisterErrorType("Scout:TooManyTemplatesRequested", reflect.TypeOf(TooManyTemplatesRequested{}))
 }

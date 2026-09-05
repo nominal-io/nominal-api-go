@@ -6,6 +6,7 @@ import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/units/api"
+	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safelong"
 	"github.com/palantir/pkg/safeyaml"
@@ -14,6 +15,7 @@ import (
 
 // Threshold defined as a real number corresponding the unit of a series.
 type AbsoluteThreshold struct {
+	// Allowed spread, in the series' own unit.
 	Value DoubleConstant `json:"value"`
 }
 
@@ -73,17 +75,30 @@ func (o *AllowNegativeValues) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type ArrowBucketedEnumPlot struct {
-	// The raw binary containing Arrow IPC stream for BucketedEnumPlot
+/*
+A generic Arrow IPC plot response. Used for all Arrow-serialized plot types (numeric, bucketed numeric,
+enum, bucketed enum, struct, bucketed struct, full resolution, and bucketed multivariate).
+*/
+type ArrowPlot struct {
+	// The raw binary containing an Arrow IPC stream.
 	ArrowBinary []byte `json:"arrowBinary"`
 	/*
 	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
 	   this list represents the superset of all group by keys used across every individual channel.
 	*/
 	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
+	/*
+	   Continuation token for this paged result. Can only be returned if paging was requested.
+	   To retrieve the next page, repeat the same request with this
+	   value as `pageToken` and keep the pageSize sign unchanged. Returned only when this response
+	   contains exactly `abs(pageSize)` points; the next response may still be empty if this page ended exactly at
+	   the result-set boundary. Empty means this response was short and there are no further points in the
+	   requested direction.
+	*/
+	NextPageToken *PageToken `json:"nextPageToken,omitempty"`
 }
 
-func (o ArrowBucketedEnumPlot) MarshalYAML() (interface{}, error) {
+func (o ArrowPlot) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -91,7 +106,7 @@ func (o ArrowBucketedEnumPlot) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *ArrowBucketedEnumPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *ArrowPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -99,17 +114,16 @@ func (o *ArrowBucketedEnumPlot) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type ArrowBucketedMultivariatePlot struct {
-	// The raw binary containing Arrow IPC stream for BucketedMultivariatePlot
-	ArrowBinary []byte `json:"arrowBinary"`
-	/*
-	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
-	   this list represents the superset of all group by keys used across every individual channel.
-	*/
-	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
+/*
+Asset reference for `Dataset.asset`. The `rid` field accepts either a literal asset RID or a
+`StringConstant` reference resolved from `Context`.
+*/
+type Asset struct {
+	// Resource identifier of an asset
+	Rid StringConstant `json:"rid"`
 }
 
-func (o ArrowBucketedMultivariatePlot) MarshalYAML() (interface{}, error) {
+func (o Asset) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -117,137 +131,7 @@ func (o ArrowBucketedMultivariatePlot) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *ArrowBucketedMultivariatePlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type ArrowBucketedNumericPlot struct {
-	// The raw binary containing Arrow IPC stream for BucketedNumericPlot
-	ArrowBinary []byte `json:"arrowBinary"`
-	/*
-	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
-	   this list represents the superset of all group by keys used across every individual channel.
-	*/
-	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
-}
-
-func (o ArrowBucketedNumericPlot) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ArrowBucketedNumericPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type ArrowBucketedStructPlot struct {
-	// The raw binary containing Arrow IPC stream for bucketed struct plot
-	ArrowBinary []byte `json:"arrowBinary"`
-	/*
-	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
-	   this list represents the superset of all group by keys used across every individual channel.
-	*/
-	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
-}
-
-func (o ArrowBucketedStructPlot) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ArrowBucketedStructPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type ArrowEnumPlot struct {
-	// The raw binary containing Arrow IPC stream for EnumPlot
-	ArrowBinary []byte `json:"arrowBinary"`
-	/*
-	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
-	   this list represents the superset of all group by keys used across every individual channel.
-	*/
-	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
-}
-
-func (o ArrowEnumPlot) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ArrowEnumPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type ArrowFullResolutionPlot struct {
-	// The raw binary containing Arrow IPC stream for the first n rows of a full resolution plot sorted by timestamp.
-	ArrowBinary []byte `json:"arrowBinary"`
-	/*
-	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
-	   this list represents the superset of all group by keys used across every individual channel.
-	*/
-	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
-}
-
-func (o ArrowFullResolutionPlot) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ArrowFullResolutionPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type ArrowNumericPlot struct {
-	// The raw binary containing Arrow IPC stream for NumericPlot
-	ArrowBinary []byte `json:"arrowBinary"`
-	/*
-	   This field specifies the tags that the final output is grouped by. When you combine multiple channels,
-	   this list represents the superset of all group by keys used across every individual channel.
-	*/
-	GroupByKeys *[]string `json:"groupByKeys,omitempty"`
-}
-
-func (o ArrowNumericPlot) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *ArrowNumericPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *Asset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -462,6 +346,90 @@ func (o BatchComputeWithUnitsResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *BatchComputeWithUnitsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BatchGetRequestProgressRequest struct {
+	// Limited to 300 IDs per call.
+	RequestIds []uuid.UUID `json:"requestIds"`
+}
+
+func (o BatchGetRequestProgressRequest) MarshalJSON() ([]byte, error) {
+	if o.RequestIds == nil {
+		o.RequestIds = make([]uuid.UUID, 0)
+	}
+	type _tmpBatchGetRequestProgressRequest BatchGetRequestProgressRequest
+	return safejson.Marshal(_tmpBatchGetRequestProgressRequest(o))
+}
+
+func (o *BatchGetRequestProgressRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchGetRequestProgressRequest BatchGetRequestProgressRequest
+	var rawBatchGetRequestProgressRequest _tmpBatchGetRequestProgressRequest
+	if err := safejson.Unmarshal(data, &rawBatchGetRequestProgressRequest); err != nil {
+		return err
+	}
+	if rawBatchGetRequestProgressRequest.RequestIds == nil {
+		rawBatchGetRequestProgressRequest.RequestIds = make([]uuid.UUID, 0)
+	}
+	*o = BatchGetRequestProgressRequest(rawBatchGetRequestProgressRequest)
+	return nil
+}
+
+func (o BatchGetRequestProgressRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchGetRequestProgressRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BatchGetRequestProgressResponse struct {
+	// Contains an entry for every requested request ID.
+	ProgressByRequestId map[uuid.UUID]RequestProgress `json:"progressByRequestId"`
+}
+
+func (o BatchGetRequestProgressResponse) MarshalJSON() ([]byte, error) {
+	if o.ProgressByRequestId == nil {
+		o.ProgressByRequestId = make(map[uuid.UUID]RequestProgress)
+	}
+	type _tmpBatchGetRequestProgressResponse BatchGetRequestProgressResponse
+	return safejson.Marshal(_tmpBatchGetRequestProgressResponse(o))
+}
+
+func (o *BatchGetRequestProgressResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchGetRequestProgressResponse BatchGetRequestProgressResponse
+	var rawBatchGetRequestProgressResponse _tmpBatchGetRequestProgressResponse
+	if err := safejson.Unmarshal(data, &rawBatchGetRequestProgressResponse); err != nil {
+		return err
+	}
+	if rawBatchGetRequestProgressResponse.ProgressByRequestId == nil {
+		rawBatchGetRequestProgressResponse.ProgressByRequestId = make(map[uuid.UUID]RequestProgress)
+	}
+	*o = BatchGetRequestProgressResponse(rawBatchGetRequestProgressResponse)
+	return nil
+}
+
+func (o BatchGetRequestProgressResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchGetRequestProgressResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1267,6 +1235,27 @@ func (o *Count) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type CurveFitBoundsConfiguration struct {
+	Min *DoubleConstant `json:"min,omitempty"`
+	Max *DoubleConstant `json:"max,omitempty"`
+}
+
+func (o CurveFitBoundsConfiguration) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CurveFitBoundsConfiguration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type CurveFitOptions struct {
 	StartTime TimestampConstant `json:"startTime"`
 	EndTime   TimestampConstant `json:"endTime"`
@@ -1288,12 +1277,55 @@ func (o *CurveFitOptions) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type CurveFitRange struct {
+	StartTime TimestampConstant `json:"startTime"`
+	EndTime   TimestampConstant `json:"endTime"`
+}
+
+func (o CurveFitRange) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CurveFitRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type CurveFitResult struct {
 	/*
 	   R^2 (coefficient of determination) for the fit curve, a normalized measure of how well the curve fits the data.
 	   Usually ranges from 0 to 1, with higher indicating better fit (points closer to fit line).
 	*/
 	R2 float64 `json:"r2"`
+	/*
+	   Mean Absolute Error (MAE) - the average of the absolute differences between predicted and actual values.
+	   Measured in the same units as the y-values.
+	*/
+	Mae float64 `json:"mae"`
+	/*
+	   Mean Squared Error (MSE) - the average of the squared differences between predicted and actual values.
+	   Measured in the squared units of the y-values.
+	*/
+	Mse float64 `json:"mse"`
+	/*
+	   Root Mean Squared Error (RMSE) - the square root of the mean squared error.
+	   Measured in the same units as the y-values.
+	*/
+	Rmse float64 `json:"rmse"`
+	/*
+	   Maximum Absolute Error - the largest absolute difference between any predicted and actual value.
+	   Measured in the same units as the y-values.
+	*/
+	MaxAbsoluteError float64 `json:"maxAbsoluteError"`
+	// The number of data points used in the curve fitting calculation.
+	SampleCount int `json:"sampleCount"`
 	// Description of the fit curve.
 	CurveResultDetails CurveResultDetails `json:"curveResultDetails"`
 }
@@ -1307,6 +1339,126 @@ func (o CurveFitResult) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CurveFitResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type CurveFitResultV2 struct {
+	/*
+	   R^2 (coefficient of determination) for the fit curve, a normalized measure of how well the curve fits the data.
+	   Usually ranges from 0 to 1, with higher indicating better fit (points closer to fit line).
+	*/
+	R2 float64 `json:"r2"`
+	/*
+	   Mean Absolute Error (MAE) - the average of the absolute differences between predicted and actual values.
+	   Measured in the same units as the y-values.
+	*/
+	Mae float64 `json:"mae"`
+	/*
+	   Mean Squared Error (MSE) - the average of the squared differences between predicted and actual values.
+	   Measured in the squared units of the y-values.
+	*/
+	Mse float64 `json:"mse"`
+	/*
+	   Root Mean Squared Error (RMSE) - the square root of the mean squared error.
+	   Measured in the same units as the y-values.
+	*/
+	Rmse float64 `json:"rmse"`
+	/*
+	   Maximum Absolute Error - the largest absolute difference between any predicted and actual value.
+	   Measured in the same units as the y-values.
+	*/
+	MaxAbsoluteError float64 `json:"maxAbsoluteError"`
+	// The number of data points used in the curve fitting calculation.
+	SampleCount int `json:"sampleCount"`
+	// Description of the fit curve.
+	CurveResultDetails CurveResultDetailsV2 `json:"curveResultDetails"`
+}
+
+func (o CurveFitResultV2) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CurveFitResultV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type CurveFitTimeVariable struct {
+	// The unit of the time variable in the formula expression. If not specified, the time unit is assumed to be seconds.
+	TimeUnit *api.TimeUnit `json:"timeUnit,omitempty"`
+}
+
+func (o CurveFitTimeVariable) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CurveFitTimeVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// The result of fitting a custom curve, containing the optimized values for each named parameter.
+type CustomCurveResultDetails struct {
+	// Optimized parameter values produced by the curve fit. Keys match the parameter names provided in the request.
+	Parameters map[string]float64 `json:"parameters"`
+	/*
+	   Whether the optimizer converged to a solution within its iteration limit.
+	   When false, the returned parameters are the best estimate found before the iteration cap was
+	   reached and did not satisfy the solver's convergence tolerances.
+	*/
+	Converged bool `json:"converged"`
+	// Number of iterations the solver completed.
+	Iterations int `json:"iterations"`
+}
+
+func (o CustomCurveResultDetails) MarshalJSON() ([]byte, error) {
+	if o.Parameters == nil {
+		o.Parameters = make(map[string]float64)
+	}
+	type _tmpCustomCurveResultDetails CustomCurveResultDetails
+	return safejson.Marshal(_tmpCustomCurveResultDetails(o))
+}
+
+func (o *CustomCurveResultDetails) UnmarshalJSON(data []byte) error {
+	type _tmpCustomCurveResultDetails CustomCurveResultDetails
+	var rawCustomCurveResultDetails _tmpCustomCurveResultDetails
+	if err := safejson.Unmarshal(data, &rawCustomCurveResultDetails); err != nil {
+		return err
+	}
+	if rawCustomCurveResultDetails.Parameters == nil {
+		rawCustomCurveResultDetails.Parameters = make(map[string]float64)
+	}
+	*o = CustomCurveResultDetails(rawCustomCurveResultDetails)
+	return nil
+}
+
+func (o CustomCurveResultDetails) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CustomCurveResultDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1352,6 +1504,12 @@ type DataSourceChannel struct {
 	   with an entry for each grouping. Only one of tagsToGroupBy and groupByTags should be specified.
 	*/
 	GroupByTags []StringConstant `json:"groupByTags"`
+	/*
+	   Storage engine to read this series from. Only applies to datasets written to both engines; see
+	   `SeriesStorage`. Defaults to the engine configured for the caller. In general this field should
+	   not be specified, and will be removed at a later date.
+	*/
+	Storage *SeriesStorage `json:"storage,omitempty"`
 }
 
 func (o DataSourceChannel) MarshalJSON() ([]byte, error) {
@@ -1403,6 +1561,28 @@ func (o *DataSourceChannel) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// References a named dataset in `Context.datasetReferences`.
+type DatasetReference struct {
+	// Name of the dataset reference to resolve from the context.
+	Name StringConstant `json:"name"`
+}
+
+func (o DatasetReference) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DatasetReference) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type DecimateWithBuckets struct {
 	// Number of points to generate in the output series.
 	Buckets int `json:"buckets"`
@@ -1425,10 +1605,7 @@ func (o *DecimateWithBuckets) UnmarshalYAML(unmarshal func(interface{}) error) e
 }
 
 type DecimateWithResolution struct {
-	/*
-	   Resolution of the output series specifying time interval between decimated points.
-	   Picoseconds for picosecond-granularity dataset, nanoseconds otherwise.
-	*/
+	// Resolution of the output series specifying time interval between decimated points, in nanoseconds.
 	Resolution safelong.SafeLong `json:"resolution"`
 }
 
@@ -1441,6 +1618,274 @@ func (o DecimateWithResolution) MarshalYAML() (interface{}, error) {
 }
 
 func (o *DecimateWithResolution) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Uses the driver series timestamps as the alignment grid.
+type DriverSeries struct{}
+
+func (o DriverSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DriverSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// The sum of two durations.
+type DurationAdd struct {
+	// First duration.
+	Left Duration `json:"left"`
+	// Second duration.
+	Right Duration `json:"right"`
+}
+
+func (o DurationAdd) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DurationAdd) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Constructs a duration from a number of days.
+type DurationDays struct {
+	// The number of days.
+	Days IntegerConstant `json:"days"`
+}
+
+func (o DurationDays) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DurationDays) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Constructs a duration from a number of hours.
+type DurationHours struct {
+	// The number of hours.
+	Hours IntegerConstant `json:"hours"`
+}
+
+func (o DurationHours) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DurationHours) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Constructs a duration from a number of milliseconds.
+type DurationMilliseconds struct {
+	// The number of milliseconds.
+	Milliseconds IntegerConstant `json:"milliseconds"`
+}
+
+func (o DurationMilliseconds) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DurationMilliseconds) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Constructs a duration from a number of minutes.
+type DurationMinutes struct {
+	// The number of minutes.
+	Minutes IntegerConstant `json:"minutes"`
+}
+
+func (o DurationMinutes) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DurationMinutes) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Constructs a duration from a number of nanoseconds. Limited to values within the
+32-bit integer range (~2.1 billion ns, or ~2.1 seconds). For larger durations,
+use DurationSeconds or DurationMilliseconds.
+*/
+type DurationNanoseconds struct {
+	// The number of nanoseconds.
+	Nanoseconds IntegerConstant `json:"nanoseconds"`
+}
+
+func (o DurationNanoseconds) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DurationNanoseconds) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Negates a duration (reverses its sign).
+type DurationNegate struct {
+	// The duration to negate.
+	Input Duration `json:"input"`
+}
+
+func (o DurationNegate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DurationNegate) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Constructs a duration from a number of seconds.
+type DurationSeconds struct {
+	// The number of seconds.
+	Seconds IntegerConstant `json:"seconds"`
+}
+
+func (o DurationSeconds) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DurationSeconds) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// The difference of two durations (left minus right).
+type DurationSubtract struct {
+	// Duration to subtract from.
+	Left Duration `json:"left"`
+	// Duration to subtract.
+	Right Duration `json:"right"`
+}
+
+func (o DurationSubtract) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DurationSubtract) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Selects the earliest anchor resolved from the input.
+type EarliestAnchorReference struct{}
+
+func (o EarliestAnchorReference) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EarliestAnchorReference) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A user-defined enum aggregation. The supported ABI is a Rust function with one vector input and a
+`String` return value. Numeric input series use `Vec<f64>` and enum input series use `Vec<String>`.
+*/
+type EnumAggregationUdf struct {
+	Source UdfSource `json:"source"`
+}
+
+func (o EnumAggregationUdf) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EnumAggregationUdf) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1612,6 +2057,15 @@ type EnumPlot struct {
 	Timestamps []api.Timestamp `json:"timestamps"`
 	Values     []int           `json:"values"`
 	Categories []string        `json:"categories"`
+	/*
+	   Continuation token for this paged result. Can only be returned if paging was requested.
+	   To retrieve the next page, repeat the same request with this
+	   value as `pageToken` and keep the pageSize sign unchanged. Returned only when this response
+	   contains exactly `abs(pageSize)` points; the next response may still be empty if this page ended exactly at
+	   the result-set boundary. Empty means this response was short and there are no further points in the
+	   requested direction.
+	*/
+	NextPageToken *PageToken `json:"nextPageToken,omitempty"`
 }
 
 func (o EnumPlot) MarshalJSON() ([]byte, error) {
@@ -1699,6 +2153,86 @@ func (o ErrorResult) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ErrorResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type EventLabelTag struct {
+	Label StringConstant `json:"label"`
+}
+
+func (o EventLabelTag) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EventLabelTag) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type EventLevelTag struct{}
+
+func (o EventLevelTag) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EventLevelTag) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type EventPropertyTag struct {
+	PropertyName StringConstant `json:"propertyName"`
+}
+
+func (o EventPropertyTag) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EventPropertyTag) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Returns every Nth timestamp-ordered point from each distinct series.
+type EveryNthPerSeriesSampling struct {
+	// Keep every Nth point starting from the earliest in each series. Must be > 1.
+	N IntegerConstant `json:"n"`
+}
+
+func (o EveryNthPerSeriesSampling) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EveryNthPerSeriesSampling) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1848,13 +2382,15 @@ type FrequencyDecimateWithBuckets struct {
 	// Target number of frequency bins/buckets.
 	Buckets int `json:"buckets"`
 	/*
-	   Optional minimum frequency bound (Hz). When set, frequencies below this value are excluded
+	   Optional minimum frequency bound. When set, frequencies below this value are excluded
 	   before bucketing, increasing resolution within the requested range. This bound is inclusive.
+	   The bound uses the same unit as the transform's output frequency.
 	*/
 	MinFrequency *float64 `json:"minFrequency,omitempty"`
 	/*
-	   Optional maximum frequency bound (Hz). When set, frequencies above this value are excluded
+	   Optional maximum frequency bound. When set, frequencies above this value are excluded
 	   before bucketing, increasing resolution within the requested range. This bound is exclusive.
+	   The bound uses the same unit as the transform's output frequency.
 	*/
 	MaxFrequency *float64 `json:"maxFrequency,omitempty"`
 }
@@ -2055,6 +2591,93 @@ func (o *FrequencyPoint) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type GetQuotaUsageResponse struct {
+	/*
+	   One entry per quota window, ordered by ascending duration. Empty when quotas are not
+	   enabled for the organization or the user has no recorded usage yet.
+	*/
+	Intervals []QuotaIntervalUsage `json:"intervals"`
+}
+
+func (o GetQuotaUsageResponse) MarshalJSON() ([]byte, error) {
+	if o.Intervals == nil {
+		o.Intervals = make([]QuotaIntervalUsage, 0)
+	}
+	type _tmpGetQuotaUsageResponse GetQuotaUsageResponse
+	return safejson.Marshal(_tmpGetQuotaUsageResponse(o))
+}
+
+func (o *GetQuotaUsageResponse) UnmarshalJSON(data []byte) error {
+	type _tmpGetQuotaUsageResponse GetQuotaUsageResponse
+	var rawGetQuotaUsageResponse _tmpGetQuotaUsageResponse
+	if err := safejson.Unmarshal(data, &rawGetQuotaUsageResponse); err != nil {
+		return err
+	}
+	if rawGetQuotaUsageResponse.Intervals == nil {
+		rawGetQuotaUsageResponse.Intervals = make([]QuotaIntervalUsage, 0)
+	}
+	*o = GetQuotaUsageResponse(rawGetQuotaUsageResponse)
+	return nil
+}
+
+func (o GetQuotaUsageResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetQuotaUsageResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GroupBySubsetTags struct {
+	// Tag keys to group by.
+	Tags []StringConstant `json:"tags"`
+}
+
+func (o GroupBySubsetTags) MarshalJSON() ([]byte, error) {
+	if o.Tags == nil {
+		o.Tags = make([]StringConstant, 0)
+	}
+	type _tmpGroupBySubsetTags GroupBySubsetTags
+	return safejson.Marshal(_tmpGroupBySubsetTags(o))
+}
+
+func (o *GroupBySubsetTags) UnmarshalJSON(data []byte) error {
+	type _tmpGroupBySubsetTags GroupBySubsetTags
+	var rawGroupBySubsetTags _tmpGroupBySubsetTags
+	if err := safejson.Unmarshal(data, &rawGroupBySubsetTags); err != nil {
+		return err
+	}
+	if rawGroupBySubsetTags.Tags == nil {
+		rawGroupBySubsetTags.Tags = make([]StringConstant, 0)
+	}
+	*o = GroupBySubsetTags(rawGroupBySubsetTags)
+	return nil
+}
+
+func (o GroupBySubsetTags) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GroupBySubsetTags) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type GroupedComputeNodeResponse struct {
 	Grouping Grouping            `json:"grouping"`
 	Response ComputeNodeResponse `json:"response"`
@@ -2114,6 +2737,28 @@ func (o GroupedComputeNodeResponses) MarshalYAML() (interface{}, error) {
 }
 
 func (o *GroupedComputeNodeResponses) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Keeps approximately 1/N of raw points via a stateless hash of each point's timestamp.
+type HashSubsampleSampling struct {
+	// Keep approximately one out of every N points. Must be > 1.
+	N IntegerConstant `json:"n"`
+}
+
+func (o HashSubsampleSampling) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *HashSubsampleSampling) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2206,6 +2851,80 @@ func (o *IncompatibleUnitOperation) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Shift by each tagging interval's resolved end; resolution throws if end is missing.
+type IntervalEndTimeShift struct{}
+
+func (o IntervalEndTimeShift) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *IntervalEndTimeShift) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type IntervalIndexTag struct{}
+
+func (o IntervalIndexTag) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *IntervalIndexTag) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Shift by each tagging interval's resolved start; resolution throws if start is missing.
+type IntervalStartTimeShift struct{}
+
+func (o IntervalStartTimeShift) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *IntervalStartTimeShift) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type IntervalStartTimestampTag struct{}
+
+func (o IntervalStartTimestampTag) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *IntervalStartTimestampTag) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type LatLongPoint struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
@@ -2231,6 +2950,7 @@ func (o *LatLongPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type LiteralRange struct {
 	StartTimestamp *TimestampConstant `json:"startTimestamp,omitempty"`
 	EndTimestamp   *TimestampConstant `json:"endTimestamp,omitempty"`
+	Tags           *map[string]string `json:"tags,omitempty"`
 }
 
 func (o LiteralRange) MarshalYAML() (interface{}, error) {
@@ -2291,6 +3011,28 @@ func (o *LiteralRanges) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Matches against a single log arg.
+type LogArgFilterOperator struct {
+	Key      StringConstant         `json:"key"`
+	Operator LogRegexFilterOperator `json:"operator"`
+}
+
+func (o LogArgFilterOperator) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LogArgFilterOperator) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 /*
 Filters points such that the log message in each point contains an exact case-insensitive match of the
 provided token.
@@ -2308,6 +3050,54 @@ func (o LogExactMatchCaseInsensitiveFilter) MarshalYAML() (interface{}, error) {
 }
 
 func (o *LogExactMatchCaseInsensitiveFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type LogPlot struct {
+	Timestamps []api.Timestamp `json:"timestamps"`
+	Values     []LogValue      `json:"values"`
+}
+
+func (o LogPlot) MarshalJSON() ([]byte, error) {
+	if o.Timestamps == nil {
+		o.Timestamps = make([]api.Timestamp, 0)
+	}
+	if o.Values == nil {
+		o.Values = make([]LogValue, 0)
+	}
+	type _tmpLogPlot LogPlot
+	return safejson.Marshal(_tmpLogPlot(o))
+}
+
+func (o *LogPlot) UnmarshalJSON(data []byte) error {
+	type _tmpLogPlot LogPlot
+	var rawLogPlot _tmpLogPlot
+	if err := safejson.Unmarshal(data, &rawLogPlot); err != nil {
+		return err
+	}
+	if rawLogPlot.Timestamps == nil {
+		rawLogPlot.Timestamps = make([]api.Timestamp, 0)
+	}
+	if rawLogPlot.Values == nil {
+		rawLogPlot.Values = make([]LogValue, 0)
+	}
+	*o = LogPlot(rawLogPlot)
+	return nil
+}
+
+func (o LogPlot) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LogPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2337,7 +3127,7 @@ func (o *LogPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 /*
-Filters points such that the log message in each point matches the given re2 regular expression.
+Matches a text value against the given re2 regular expression.
 Regular expression syntax: https://github.com/google/re2/wiki/Syntax.
 */
 type LogRegexFilterOperator struct {
@@ -2456,6 +3246,27 @@ func (o LowPassConfiguration) MarshalYAML() (interface{}, error) {
 }
 
 func (o *LowPassConfiguration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type LttbStrategy struct {
+	// Maximum number of selected points to return for each group. Must be positive and no greater than 10,000.
+	MaxPointsPerGroup int `json:"maxPointsPerGroup"`
+}
+
+func (o LttbStrategy) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LttbStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2585,16 +3396,77 @@ func (o *MultivariateUnitResult) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+A user-defined numeric aggregation. The aggregation builder controls grouping/windowing.
+Supported Rust entrypoints accept grouped value vectors, optionally with leading sample timestamps,
+and return either one numeric value or timestamped numeric point(s), e.g.
+`fn rms(values: Vec<f64>) -> f64`,
+`fn energy(timestamp_ns: Vec<i64>, values: Vec<f64>) -> f64`,
+`fn first(timestamp_ns: Vec<i64>, values: Vec<f64>) -> (i64, f64)`, or
+`fn passthrough(timestamp_ns: Vec<i64>, values: Vec<f64>) -> Vec<(i64, f64)>`.
+The value vector's element type follows the aggregated series: `Vec<f64>` for a numeric series, and
+`Vec<String>` for a categorical or struct series, where each struct row arrives as a JSON object. A UDF
+over a combined struct series may instead take one vector per named struct field it needs, e.g.
+`fn mean_product(channel0: Vec<f64>, channel1: Vec<f64>) -> f64`.
+Parameter names select the fields, so a subset of the struct's fields in any order is accepted.
+*/
+type NumericAggregationUdf struct {
+	Source UdfSource `json:"source"`
+}
+
+func (o NumericAggregationUdf) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericAggregationUdf) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type NumericBucket struct {
-	Min   float64           `json:"min"`
-	Max   float64           `json:"max"`
-	Mean  float64           `json:"mean"`
-	Count safelong.SafeLong `json:"count"`
+	Min   *float64           `json:"min,omitempty"`
+	Max   *float64           `json:"max,omitempty"`
+	Mean  *float64           `json:"mean,omitempty"`
+	Count *safelong.SafeLong `json:"count,omitempty"`
 	// The population variance of the bucket. If the bucket has only one value, this will be 0.
-	Variance   float64      `json:"variance"`
-	FirstPoint NumericPoint `json:"firstPoint"`
+	Variance   *float64      `json:"variance,omitempty"`
+	FirstPoint *NumericPoint `json:"firstPoint,omitempty"`
 	// Will be empty if the bucket only has a single point.
 	LastPoint *NumericPoint `json:"lastPoint,omitempty"`
+	/*
+	   Additional per-bucket aggregations that have no dedicated field above, keyed by the output column name
+	   requested via `numericAggregations` or `numericOutputFieldsV2` (e.g. `sum`, `standardDeviation`,
+	   `rootMeanSquare`, `p50`). Empty when no additional aggregations were requested.
+	*/
+	Aggregations map[string]float64 `json:"aggregations"`
+}
+
+func (o NumericBucket) MarshalJSON() ([]byte, error) {
+	if o.Aggregations == nil {
+		o.Aggregations = make(map[string]float64)
+	}
+	type _tmpNumericBucket NumericBucket
+	return safejson.Marshal(_tmpNumericBucket(o))
+}
+
+func (o *NumericBucket) UnmarshalJSON(data []byte) error {
+	type _tmpNumericBucket NumericBucket
+	var rawNumericBucket _tmpNumericBucket
+	if err := safejson.Unmarshal(data, &rawNumericBucket); err != nil {
+		return err
+	}
+	if rawNumericBucket.Aggregations == nil {
+		rawNumericBucket.Aggregations = make(map[string]float64)
+	}
+	*o = NumericBucket(rawNumericBucket)
+	return nil
 }
 
 func (o NumericBucket) MarshalYAML() (interface{}, error) {
@@ -2768,9 +3640,41 @@ func (o *NumericHistogramPlot) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type NumericOutputPercentile struct {
+	// Percentile to compute, in range [0, 1].
+	Percentile DoubleConstant `json:"percentile"`
+	// Optional output column name. Defaults to pXX, e.g. p95 for 0.95.
+	OutputName *string `json:"outputName,omitempty"`
+}
+
+func (o NumericOutputPercentile) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericOutputPercentile) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type NumericPlot struct {
 	Timestamps []api.Timestamp `json:"timestamps"`
 	Values     []float64       `json:"values"`
+	/*
+	   Continuation token for this paged result. Can only be returned if paging was requested.
+	   To retrieve the next page, repeat the same request with this
+	   value as `pageToken` and keep the pageSize sign unchanged. Returned only when this response
+	   contains exactly `abs(pageSize)` points; the next response may still be empty if this page ended exactly at
+	   the result-set boundary. Empty means this response was short and there are no further points in the
+	   requested direction.
+	*/
+	NextPageToken *PageToken `json:"nextPageToken,omitempty"`
 }
 
 func (o NumericPlot) MarshalJSON() ([]byte, error) {
@@ -2838,8 +3742,11 @@ func (o *NumericPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 /*
-Specification of a page for a series. Returns raw undecimated points beginning nearest to the given page
-token, advancing pageSize points in the time direction specified by the sign of the page size.
+Specification of a page for a series. Returns full resolution points beginning nearest to the given page
+token, advancing pageSize points in the time direction specified by the sign of the page size. Throws if the
+absolute pageSize is greater than 5,000.
+Paging cursors are not guaranteed to distinguish exact duplicate non-log points with the same timestamp,
+tags, and value. If those duplicates straddle a page boundary, later duplicates may be skipped.
 */
 type PageInfo struct {
 	PageToken *PageToken `json:"pageToken,omitempty"`
@@ -2866,9 +3773,12 @@ type PagedLogPlot struct {
 	Timestamps []api.Timestamp `json:"timestamps"`
 	Values     []LogValue      `json:"values"`
 	/*
-	   The token to retrieve the next page of logs in the direction originally requested (exclusive - not
-	   included in these results). May be empty if there are no further logs in the requested time range in the
-	   direction originally requested.
+	   Continuation token for this paged result. Can only be returned if paging was requested.
+	   To retrieve the next page, repeat the same request with this
+	   value as `pageToken` and keep the pageSize sign unchanged. Returned only when this response
+	   contains exactly `abs(pageSize)` points; the next response may still be empty if this page ended exactly at
+	   the result-set boundary. Empty means this response was short and there are no further points in the
+	   requested direction.
 	*/
 	NextPageToken *PageToken `json:"nextPageToken,omitempty"`
 }
@@ -2959,6 +3869,7 @@ func (o *ParameterizedComputeNodeResponse) UnmarshalYAML(unmarshal func(interfac
 
 // Threshold defined as the percentage of a given value.
 type PercentageThreshold struct {
+	// Allowed spread, as a percentage of the window's mean value.
 	Value DoubleConstant `json:"value"`
 }
 
@@ -2978,7 +3889,7 @@ func (o *PercentageThreshold) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// The value at the specified percentile within the time window.
+// The value at the specified percentile.
 type Percentile struct {
 	// Percentile to compute, in range [0, 1]. E.g. 0.5 for median, 0.95 for p95.
 	Percentile DoubleConstant `json:"percentile"`
@@ -3148,6 +4059,100 @@ func (o *PowerResultDetails) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type QuotaIntervalUsage struct {
+	// Length of the quota window in seconds.
+	DurationSeconds safelong.SafeLong `json:"durationSeconds"`
+	// Bounds of the current quota window. Usage counters reset at the window's end.
+	CurrentWindow *QuotaWindow `json:"currentWindow,omitempty"`
+	// Usage per limited resource. Resources without a configured limit are not reported.
+	Resources []QuotaResourceUsage `json:"resources"`
+}
+
+func (o QuotaIntervalUsage) MarshalJSON() ([]byte, error) {
+	if o.Resources == nil {
+		o.Resources = make([]QuotaResourceUsage, 0)
+	}
+	type _tmpQuotaIntervalUsage QuotaIntervalUsage
+	return safejson.Marshal(_tmpQuotaIntervalUsage(o))
+}
+
+func (o *QuotaIntervalUsage) UnmarshalJSON(data []byte) error {
+	type _tmpQuotaIntervalUsage QuotaIntervalUsage
+	var rawQuotaIntervalUsage _tmpQuotaIntervalUsage
+	if err := safejson.Unmarshal(data, &rawQuotaIntervalUsage); err != nil {
+		return err
+	}
+	if rawQuotaIntervalUsage.Resources == nil {
+		rawQuotaIntervalUsage.Resources = make([]QuotaResourceUsage, 0)
+	}
+	*o = QuotaIntervalUsage(rawQuotaIntervalUsage)
+	return nil
+}
+
+func (o QuotaIntervalUsage) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *QuotaIntervalUsage) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type QuotaResourceUsage struct {
+	Resource QuotaResourceType `json:"resource"`
+	/*
+	   Amount consumed within the current window, in the resource's native unit (rows,
+	   bytes, query count, or seconds for EXECUTION_TIME).
+	*/
+	Used float64 `json:"used"`
+	// The cap for this resource in this window.
+	Limit float64 `json:"limit"`
+}
+
+func (o QuotaResourceUsage) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *QuotaResourceUsage) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type QuotaWindow struct {
+	StartTime datetime.DateTime `json:"startTime"`
+	EndTime   datetime.DateTime `json:"endTime"`
+}
+
+func (o QuotaWindow) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *QuotaWindow) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 /*
 The end represents the first timestamp that does not belong to the range. If absent, there is no known
 end to the range.
@@ -3297,6 +4302,7 @@ func (o *RangesSummary) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // safelogging:@Unsafe
 type Reference struct {
+	// A reference to a value not defined in the current compute scope.
 	Name VariableName `json:"name" safelogging:"@Unsafe"`
 }
 
@@ -3316,6 +4322,48 @@ func (o *Reference) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Summed across the request's active queries when it fans out into more than one.
+type RequestInProgress struct {
+	ReadRows safelong.SafeLong `json:"readRows"`
+	// May grow while a query runs as new sources to process become known.
+	TotalRowsApprox safelong.SafeLong `json:"totalRowsApprox"`
+}
+
+func (o RequestInProgress) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RequestInProgress) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// No query for this request was running at sample time; not necessarily finished.
+type RequestInactive struct{}
+
+func (o RequestInactive) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RequestInactive) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // The root mean square of points inside the time window.
 type RootMeanSquare struct{}
 
@@ -3328,6 +4376,31 @@ func (o RootMeanSquare) MarshalYAML() (interface{}, error) {
 }
 
 func (o *RootMeanSquare) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Run reference for `Dataset.run`. The `rid` field accepts either a literal run RID or a
+`StringConstant` reference resolved from `Context`.
+*/
+type Run struct {
+	// Resource identifier of a run
+	Rid StringConstant `json:"rid"`
+}
+
+func (o Run) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Run) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -3404,6 +4477,54 @@ func (o RunChannel) MarshalYAML() (interface{}, error) {
 }
 
 func (o *RunChannel) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Rust source code defining the UDF entrypoint and any helper functions.
+type RustUdfSource struct {
+	/*
+	   Rust source code to transpile into WASM. The operation consuming this source defines the entrypoint
+	   signature: scalar UDFs receive one scalar per input series, while aggregation UDFs receive grouped
+	   value vectors. If several functions appear at the top level, annotate the entrypoint with `#[main]`.
+	*/
+	SourceCode string `json:"sourceCode"`
+}
+
+func (o RustUdfSource) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RustUdfSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Query a dataset stored in the nominal Dataset catalog
+type SavedDataset struct {
+	// Resource identifier of a dataset
+	Rid StringConstant `json:"rid"`
+}
+
+func (o SavedDataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SavedDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -3571,25 +4692,6 @@ func (o *StftOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// The sum of point values inside the time window.
-type Sum struct{}
-
-func (o Sum) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *Sum) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 // The sum of points inside the time window.
 type Summation struct{}
 
@@ -3602,6 +4704,28 @@ func (o Summation) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Summation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Conjunction of two tag predicates (both must hold).
+type TagAnd struct {
+	Left  TagPredicate `json:"left"`
+	Right TagPredicate `json:"right"`
+}
+
+func (o TagAnd) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TagAnd) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -3656,6 +4780,50 @@ func (o *TagFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Constrains a tag key to be in the given set of values.
+type TagIn struct {
+	Key    StringConstant      `json:"key"`
+	Values StringSetConstantV2 `json:"values"`
+}
+
+func (o TagIn) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TagIn) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Constrains a tag key to not be in the given set of values.
+type TagNotIn struct {
+	Key    StringConstant      `json:"key"`
+	Values StringSetConstantV2 `json:"values"`
+}
+
+func (o TagNotIn) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TagNotIn) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 /*
 Buckets the input by time range into equally sized buckets.
 The number of buckets is determined by the maxPoints parameter.
@@ -3677,6 +4845,55 @@ func (o TemporalDecimateStrategy) MarshalYAML() (interface{}, error) {
 }
 
 func (o *TemporalDecimateStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// An equality comparison against a numeric threshold, within an optional tolerance.
+type ThresholdRangesEqualityComparison struct {
+	// The value each input point is compared against.
+	Threshold DoubleConstant `json:"threshold"`
+	/*
+	   Maximum absolute difference from the threshold still counted as equal. Defaults to zero, i.e. exact
+	   equality.
+	*/
+	Tolerance *DoubleConstant `json:"tolerance,omitempty"`
+}
+
+func (o ThresholdRangesEqualityComparison) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ThresholdRangesEqualityComparison) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// An ordering comparison against a single numeric threshold.
+type ThresholdRangesOrderedComparison struct {
+	// The value each input point is compared against.
+	Threshold DoubleConstant `json:"threshold"`
+}
+
+func (o ThresholdRangesOrderedComparison) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ThresholdRangesOrderedComparison) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -3719,6 +4936,25 @@ func (o TimestampAndId) MarshalYAML() (interface{}, error) {
 }
 
 func (o *TimestampAndId) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Uses the union of all input timestamps as the alignment grid.
+type Union struct{}
+
+func (o Union) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Union) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

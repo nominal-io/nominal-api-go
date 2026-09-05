@@ -1084,6 +1084,276 @@ func NewChecklistSearchQueryFromIsArchived(v bool) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "isArchived", isArchived: &v}
 }
 
+type ComputeExpression struct {
+	typ string
+	v1  *ComputeExpressionV1
+}
+
+type computeExpressionDeserializer struct {
+	Type string               `json:"type"`
+	V1   *ComputeExpressionV1 `json:"v1"`
+}
+
+func (u *computeExpressionDeserializer) toStruct() ComputeExpression {
+	return ComputeExpression{typ: u.Type, v1: u.V1}
+}
+
+func (u *ComputeExpression) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			V1   ComputeExpressionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u ComputeExpression) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ComputeExpression) UnmarshalJSON(data []byte) error {
+	var deser computeExpressionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ComputeExpression) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ComputeExpression) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ComputeExpression) AcceptFuncs(v1Func func(ComputeExpressionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ComputeExpression type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ComputeExpression) V1NoopSuccess(_ ComputeExpressionV1) error {
+	return nil
+}
+
+func (u *ComputeExpression) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ComputeExpression) Accept(v ComputeExpressionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type ComputeExpressionVisitor interface {
+	VisitV1(v ComputeExpressionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ComputeExpression) AcceptWithContext(ctx context.Context, v ComputeExpressionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type ComputeExpressionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v ComputeExpressionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewComputeExpressionFromV1(v ComputeExpressionV1) ComputeExpression {
+	return ComputeExpression{typ: "v1", v1: &v}
+}
+
+type ComputeExpressionV1 struct {
+	typ    string
+	python *ComputeExpressionV1Python
+}
+
+type computeExpressionV1Deserializer struct {
+	Type   string                     `json:"type"`
+	Python *ComputeExpressionV1Python `json:"python"`
+}
+
+func (u *computeExpressionV1Deserializer) toStruct() ComputeExpressionV1 {
+	return ComputeExpressionV1{typ: u.Type, python: u.Python}
+}
+
+func (u *ComputeExpressionV1) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "python":
+		if u.python == nil {
+			return nil, fmt.Errorf("field \"python\" is required")
+		}
+		return struct {
+			Type   string                    `json:"type"`
+			Python ComputeExpressionV1Python `json:"python"`
+		}{Type: "python", Python: *u.python}, nil
+	}
+}
+
+func (u ComputeExpressionV1) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ComputeExpressionV1) UnmarshalJSON(data []byte) error {
+	var deser computeExpressionV1Deserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ComputeExpressionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ComputeExpressionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ComputeExpressionV1) AcceptFuncs(pythonFunc func(ComputeExpressionV1Python) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ComputeExpressionV1 type")
+		}
+		return unknownFunc(u.typ)
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+		return pythonFunc(*u.python)
+	}
+}
+
+func (u *ComputeExpressionV1) PythonNoopSuccess(_ ComputeExpressionV1Python) error {
+	return nil
+}
+
+func (u *ComputeExpressionV1) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ComputeExpressionV1) Accept(v ComputeExpressionV1Visitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+		return v.VisitPython(*u.python)
+	}
+}
+
+type ComputeExpressionV1Visitor interface {
+	VisitPython(v ComputeExpressionV1Python) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ComputeExpressionV1) AcceptWithContext(ctx context.Context, v ComputeExpressionV1VisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+		return v.VisitPythonWithContext(ctx, *u.python)
+	}
+}
+
+type ComputeExpressionV1VisitorWithContext interface {
+	VisitPythonWithContext(ctx context.Context, v ComputeExpressionV1Python) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewComputeExpressionV1FromPython(v ComputeExpressionV1Python) ComputeExpressionV1 {
+	return ComputeExpressionV1{typ: "python", python: &v}
+}
+
 type CreateChecklistEntryRequest struct {
 	typ         string
 	createCheck *CreateCheckRequest
@@ -1569,7 +1839,6 @@ func NewJobSpecFromCheckV2(v CheckJobSpec) JobSpec {
 
 type UnresolvedCheckCondition struct {
 	typ                      string
-	booleanSeriesV1          *UnresolvedBooleanSeriesConditionV1
 	numRangesV2              *UnresolvedNumRangesConditionV2
 	numRangesV3              *UnresolvedNumRangesConditionV3
 	parameterizedNumRangesV1 *UnresolvedParameterizedNumRangesConditionV1
@@ -1577,28 +1846,19 @@ type UnresolvedCheckCondition struct {
 
 type unresolvedCheckConditionDeserializer struct {
 	Type                     string                                       `json:"type"`
-	BooleanSeriesV1          *UnresolvedBooleanSeriesConditionV1          `json:"booleanSeriesV1"`
 	NumRangesV2              *UnresolvedNumRangesConditionV2              `json:"numRangesV2"`
 	NumRangesV3              *UnresolvedNumRangesConditionV3              `json:"numRangesV3"`
 	ParameterizedNumRangesV1 *UnresolvedParameterizedNumRangesConditionV1 `json:"parameterizedNumRangesV1"`
 }
 
 func (u *unresolvedCheckConditionDeserializer) toStruct() UnresolvedCheckCondition {
-	return UnresolvedCheckCondition{typ: u.Type, booleanSeriesV1: u.BooleanSeriesV1, numRangesV2: u.NumRangesV2, numRangesV3: u.NumRangesV3, parameterizedNumRangesV1: u.ParameterizedNumRangesV1}
+	return UnresolvedCheckCondition{typ: u.Type, numRangesV2: u.NumRangesV2, numRangesV3: u.NumRangesV3, parameterizedNumRangesV1: u.ParameterizedNumRangesV1}
 }
 
 func (u *UnresolvedCheckCondition) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return nil, fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return struct {
-			Type            string                             `json:"type"`
-			BooleanSeriesV1 UnresolvedBooleanSeriesConditionV1 `json:"booleanSeriesV1"`
-		}{Type: "booleanSeriesV1", BooleanSeriesV1: *u.booleanSeriesV1}, nil
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return nil, fmt.Errorf("field \"numRangesV2\" is required")
@@ -1641,10 +1901,6 @@ func (u *UnresolvedCheckCondition) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1677,18 +1933,13 @@ func (u *UnresolvedCheckCondition) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UnresolvedCheckCondition) AcceptFuncs(booleanSeriesV1Func func(UnresolvedBooleanSeriesConditionV1) error, numRangesV2Func func(UnresolvedNumRangesConditionV2) error, numRangesV3Func func(UnresolvedNumRangesConditionV3) error, parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) error, unknownFunc func(string) error) error {
+func (u *UnresolvedCheckCondition) AcceptFuncs(numRangesV2Func func(UnresolvedNumRangesConditionV2) error, numRangesV3Func func(UnresolvedNumRangesConditionV3) error, parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in UnresolvedCheckCondition type")
 		}
 		return unknownFunc(u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return booleanSeriesV1Func(*u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1705,10 +1956,6 @@ func (u *UnresolvedCheckCondition) AcceptFuncs(booleanSeriesV1Func func(Unresolv
 		}
 		return parameterizedNumRangesV1Func(*u.parameterizedNumRangesV1)
 	}
-}
-
-func (u *UnresolvedCheckCondition) BooleanSeriesV1NoopSuccess(_ UnresolvedBooleanSeriesConditionV1) error {
-	return nil
 }
 
 func (u *UnresolvedCheckCondition) NumRangesV2NoopSuccess(_ UnresolvedNumRangesConditionV2) error {
@@ -1734,11 +1981,6 @@ func (u *UnresolvedCheckCondition) Accept(v UnresolvedCheckConditionVisitor) err
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return v.VisitBooleanSeriesV1(*u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1758,7 +2000,6 @@ func (u *UnresolvedCheckCondition) Accept(v UnresolvedCheckConditionVisitor) err
 }
 
 type UnresolvedCheckConditionVisitor interface {
-	VisitBooleanSeriesV1(v UnresolvedBooleanSeriesConditionV1) error
 	VisitNumRangesV2(v UnresolvedNumRangesConditionV2) error
 	VisitNumRangesV3(v UnresolvedNumRangesConditionV3) error
 	VisitParameterizedNumRangesV1(v UnresolvedParameterizedNumRangesConditionV1) error
@@ -1772,11 +2013,6 @@ func (u *UnresolvedCheckCondition) AcceptWithContext(ctx context.Context, v Unre
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return v.VisitBooleanSeriesV1WithContext(ctx, *u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1796,15 +2032,10 @@ func (u *UnresolvedCheckCondition) AcceptWithContext(ctx context.Context, v Unre
 }
 
 type UnresolvedCheckConditionVisitorWithContext interface {
-	VisitBooleanSeriesV1WithContext(ctx context.Context, v UnresolvedBooleanSeriesConditionV1) error
 	VisitNumRangesV2WithContext(ctx context.Context, v UnresolvedNumRangesConditionV2) error
 	VisitNumRangesV3WithContext(ctx context.Context, v UnresolvedNumRangesConditionV3) error
 	VisitParameterizedNumRangesV1WithContext(ctx context.Context, v UnresolvedParameterizedNumRangesConditionV1) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewUnresolvedCheckConditionFromBooleanSeriesV1(v UnresolvedBooleanSeriesConditionV1) UnresolvedCheckCondition {
-	return UnresolvedCheckCondition{typ: "booleanSeriesV1", booleanSeriesV1: &v}
 }
 
 func NewUnresolvedCheckConditionFromNumRangesV2(v UnresolvedNumRangesConditionV2) UnresolvedCheckCondition {

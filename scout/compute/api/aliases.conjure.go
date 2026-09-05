@@ -2,6 +2,9 @@
 
 package api
 
+// Key type for `Context.datasetReferences`.
+type DatasetReferenceName string // safelogging:@Unsafe
+
 type ErrorCode int // safelogging:@Safe
 
 // Should be of the format Namespace:ErrorType
@@ -16,4 +19,5 @@ type LocalVariableName string // safelogging:@Unsafe
 
 type SeriesName string // safelogging:@Unsafe
 
+// A variable reference name.
 type VariableName string // safelogging:@Unsafe

@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 
+	api2 "github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/comparisonnotebook/api"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
@@ -13,19 +14,29 @@ import (
 )
 
 type DataScopeInputValue struct {
-	typ   string
-	asset *AssetDataScopeInputValue
-	run   *RunDataScopeInputValue
+	typ         string
+	asset       *AssetDataScopeInputValue
+	run         *RunDataScopeInputValue
+	assetList   *AssetListDataScopeInputValue
+	runList     *RunListDataScopeInputValue
+	assetQuery  *AssetQueryDataScopeInputValue
+	runQuery    *RunQueryDataScopeInputValue
+	datasetList *DatasetListDataScopeInputValue
 }
 
 type dataScopeInputValueDeserializer struct {
-	Type  string                    `json:"type"`
-	Asset *AssetDataScopeInputValue `json:"asset"`
-	Run   *RunDataScopeInputValue   `json:"run"`
+	Type        string                          `json:"type"`
+	Asset       *AssetDataScopeInputValue       `json:"asset"`
+	Run         *RunDataScopeInputValue         `json:"run"`
+	AssetList   *AssetListDataScopeInputValue   `json:"assetList"`
+	RunList     *RunListDataScopeInputValue     `json:"runList"`
+	AssetQuery  *AssetQueryDataScopeInputValue  `json:"assetQuery"`
+	RunQuery    *RunQueryDataScopeInputValue    `json:"runQuery"`
+	DatasetList *DatasetListDataScopeInputValue `json:"datasetList"`
 }
 
 func (u *dataScopeInputValueDeserializer) toStruct() DataScopeInputValue {
-	return DataScopeInputValue{typ: u.Type, asset: u.Asset, run: u.Run}
+	return DataScopeInputValue{typ: u.Type, asset: u.Asset, run: u.Run, assetList: u.AssetList, runList: u.RunList, assetQuery: u.AssetQuery, runQuery: u.RunQuery, datasetList: u.DatasetList}
 }
 
 func (u *DataScopeInputValue) toSerializer() (interface{}, error) {
@@ -48,6 +59,46 @@ func (u *DataScopeInputValue) toSerializer() (interface{}, error) {
 			Type string                 `json:"type"`
 			Run  RunDataScopeInputValue `json:"run"`
 		}{Type: "run", Run: *u.run}, nil
+	case "assetList":
+		if u.assetList == nil {
+			return nil, fmt.Errorf("field \"assetList\" is required")
+		}
+		return struct {
+			Type      string                       `json:"type"`
+			AssetList AssetListDataScopeInputValue `json:"assetList"`
+		}{Type: "assetList", AssetList: *u.assetList}, nil
+	case "runList":
+		if u.runList == nil {
+			return nil, fmt.Errorf("field \"runList\" is required")
+		}
+		return struct {
+			Type    string                     `json:"type"`
+			RunList RunListDataScopeInputValue `json:"runList"`
+		}{Type: "runList", RunList: *u.runList}, nil
+	case "assetQuery":
+		if u.assetQuery == nil {
+			return nil, fmt.Errorf("field \"assetQuery\" is required")
+		}
+		return struct {
+			Type       string                        `json:"type"`
+			AssetQuery AssetQueryDataScopeInputValue `json:"assetQuery"`
+		}{Type: "assetQuery", AssetQuery: *u.assetQuery}, nil
+	case "runQuery":
+		if u.runQuery == nil {
+			return nil, fmt.Errorf("field \"runQuery\" is required")
+		}
+		return struct {
+			Type     string                      `json:"type"`
+			RunQuery RunQueryDataScopeInputValue `json:"runQuery"`
+		}{Type: "runQuery", RunQuery: *u.runQuery}, nil
+	case "datasetList":
+		if u.datasetList == nil {
+			return nil, fmt.Errorf("field \"datasetList\" is required")
+		}
+		return struct {
+			Type        string                         `json:"type"`
+			DatasetList DatasetListDataScopeInputValue `json:"datasetList"`
+		}{Type: "datasetList", DatasetList: *u.datasetList}, nil
 	}
 }
 
@@ -74,6 +125,26 @@ func (u *DataScopeInputValue) UnmarshalJSON(data []byte) error {
 		if u.run == nil {
 			return fmt.Errorf("field \"run\" is required")
 		}
+	case "assetList":
+		if u.assetList == nil {
+			return fmt.Errorf("field \"assetList\" is required")
+		}
+	case "runList":
+		if u.runList == nil {
+			return fmt.Errorf("field \"runList\" is required")
+		}
+	case "assetQuery":
+		if u.assetQuery == nil {
+			return fmt.Errorf("field \"assetQuery\" is required")
+		}
+	case "runQuery":
+		if u.runQuery == nil {
+			return fmt.Errorf("field \"runQuery\" is required")
+		}
+	case "datasetList":
+		if u.datasetList == nil {
+			return fmt.Errorf("field \"datasetList\" is required")
+		}
 	}
 	return nil
 }
@@ -94,7 +165,7 @@ func (u *DataScopeInputValue) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *DataScopeInputValue) AcceptFuncs(assetFunc func(AssetDataScopeInputValue) error, runFunc func(RunDataScopeInputValue) error, unknownFunc func(string) error) error {
+func (u *DataScopeInputValue) AcceptFuncs(assetFunc func(AssetDataScopeInputValue) error, runFunc func(RunDataScopeInputValue) error, assetListFunc func(AssetListDataScopeInputValue) error, runListFunc func(RunListDataScopeInputValue) error, assetQueryFunc func(AssetQueryDataScopeInputValue) error, runQueryFunc func(RunQueryDataScopeInputValue) error, datasetListFunc func(DatasetListDataScopeInputValue) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -111,6 +182,31 @@ func (u *DataScopeInputValue) AcceptFuncs(assetFunc func(AssetDataScopeInputValu
 			return fmt.Errorf("field \"run\" is required")
 		}
 		return runFunc(*u.run)
+	case "assetList":
+		if u.assetList == nil {
+			return fmt.Errorf("field \"assetList\" is required")
+		}
+		return assetListFunc(*u.assetList)
+	case "runList":
+		if u.runList == nil {
+			return fmt.Errorf("field \"runList\" is required")
+		}
+		return runListFunc(*u.runList)
+	case "assetQuery":
+		if u.assetQuery == nil {
+			return fmt.Errorf("field \"assetQuery\" is required")
+		}
+		return assetQueryFunc(*u.assetQuery)
+	case "runQuery":
+		if u.runQuery == nil {
+			return fmt.Errorf("field \"runQuery\" is required")
+		}
+		return runQueryFunc(*u.runQuery)
+	case "datasetList":
+		if u.datasetList == nil {
+			return fmt.Errorf("field \"datasetList\" is required")
+		}
+		return datasetListFunc(*u.datasetList)
 	}
 }
 
@@ -119,6 +215,26 @@ func (u *DataScopeInputValue) AssetNoopSuccess(_ AssetDataScopeInputValue) error
 }
 
 func (u *DataScopeInputValue) RunNoopSuccess(_ RunDataScopeInputValue) error {
+	return nil
+}
+
+func (u *DataScopeInputValue) AssetListNoopSuccess(_ AssetListDataScopeInputValue) error {
+	return nil
+}
+
+func (u *DataScopeInputValue) RunListNoopSuccess(_ RunListDataScopeInputValue) error {
+	return nil
+}
+
+func (u *DataScopeInputValue) AssetQueryNoopSuccess(_ AssetQueryDataScopeInputValue) error {
+	return nil
+}
+
+func (u *DataScopeInputValue) RunQueryNoopSuccess(_ RunQueryDataScopeInputValue) error {
+	return nil
+}
+
+func (u *DataScopeInputValue) DatasetListNoopSuccess(_ DatasetListDataScopeInputValue) error {
 	return nil
 }
 
@@ -143,12 +259,42 @@ func (u *DataScopeInputValue) Accept(v DataScopeInputValueVisitor) error {
 			return fmt.Errorf("field \"run\" is required")
 		}
 		return v.VisitRun(*u.run)
+	case "assetList":
+		if u.assetList == nil {
+			return fmt.Errorf("field \"assetList\" is required")
+		}
+		return v.VisitAssetList(*u.assetList)
+	case "runList":
+		if u.runList == nil {
+			return fmt.Errorf("field \"runList\" is required")
+		}
+		return v.VisitRunList(*u.runList)
+	case "assetQuery":
+		if u.assetQuery == nil {
+			return fmt.Errorf("field \"assetQuery\" is required")
+		}
+		return v.VisitAssetQuery(*u.assetQuery)
+	case "runQuery":
+		if u.runQuery == nil {
+			return fmt.Errorf("field \"runQuery\" is required")
+		}
+		return v.VisitRunQuery(*u.runQuery)
+	case "datasetList":
+		if u.datasetList == nil {
+			return fmt.Errorf("field \"datasetList\" is required")
+		}
+		return v.VisitDatasetList(*u.datasetList)
 	}
 }
 
 type DataScopeInputValueVisitor interface {
 	VisitAsset(v AssetDataScopeInputValue) error
 	VisitRun(v RunDataScopeInputValue) error
+	VisitAssetList(v AssetListDataScopeInputValue) error
+	VisitRunList(v RunListDataScopeInputValue) error
+	VisitAssetQuery(v AssetQueryDataScopeInputValue) error
+	VisitRunQuery(v RunQueryDataScopeInputValue) error
+	VisitDatasetList(v DatasetListDataScopeInputValue) error
 	VisitUnknown(typeName string) error
 }
 
@@ -169,12 +315,42 @@ func (u *DataScopeInputValue) AcceptWithContext(ctx context.Context, v DataScope
 			return fmt.Errorf("field \"run\" is required")
 		}
 		return v.VisitRunWithContext(ctx, *u.run)
+	case "assetList":
+		if u.assetList == nil {
+			return fmt.Errorf("field \"assetList\" is required")
+		}
+		return v.VisitAssetListWithContext(ctx, *u.assetList)
+	case "runList":
+		if u.runList == nil {
+			return fmt.Errorf("field \"runList\" is required")
+		}
+		return v.VisitRunListWithContext(ctx, *u.runList)
+	case "assetQuery":
+		if u.assetQuery == nil {
+			return fmt.Errorf("field \"assetQuery\" is required")
+		}
+		return v.VisitAssetQueryWithContext(ctx, *u.assetQuery)
+	case "runQuery":
+		if u.runQuery == nil {
+			return fmt.Errorf("field \"runQuery\" is required")
+		}
+		return v.VisitRunQueryWithContext(ctx, *u.runQuery)
+	case "datasetList":
+		if u.datasetList == nil {
+			return fmt.Errorf("field \"datasetList\" is required")
+		}
+		return v.VisitDatasetListWithContext(ctx, *u.datasetList)
 	}
 }
 
 type DataScopeInputValueVisitorWithContext interface {
 	VisitAssetWithContext(ctx context.Context, v AssetDataScopeInputValue) error
 	VisitRunWithContext(ctx context.Context, v RunDataScopeInputValue) error
+	VisitAssetListWithContext(ctx context.Context, v AssetListDataScopeInputValue) error
+	VisitRunListWithContext(ctx context.Context, v RunListDataScopeInputValue) error
+	VisitAssetQueryWithContext(ctx context.Context, v AssetQueryDataScopeInputValue) error
+	VisitRunQueryWithContext(ctx context.Context, v RunQueryDataScopeInputValue) error
+	VisitDatasetListWithContext(ctx context.Context, v DatasetListDataScopeInputValue) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -184,6 +360,26 @@ func NewDataScopeInputValueFromAsset(v AssetDataScopeInputValue) DataScopeInputV
 
 func NewDataScopeInputValueFromRun(v RunDataScopeInputValue) DataScopeInputValue {
 	return DataScopeInputValue{typ: "run", run: &v}
+}
+
+func NewDataScopeInputValueFromAssetList(v AssetListDataScopeInputValue) DataScopeInputValue {
+	return DataScopeInputValue{typ: "assetList", assetList: &v}
+}
+
+func NewDataScopeInputValueFromRunList(v RunListDataScopeInputValue) DataScopeInputValue {
+	return DataScopeInputValue{typ: "runList", runList: &v}
+}
+
+func NewDataScopeInputValueFromAssetQuery(v AssetQueryDataScopeInputValue) DataScopeInputValue {
+	return DataScopeInputValue{typ: "assetQuery", assetQuery: &v}
+}
+
+func NewDataScopeInputValueFromRunQuery(v RunQueryDataScopeInputValue) DataScopeInputValue {
+	return DataScopeInputValue{typ: "runQuery", runQuery: &v}
+}
+
+func NewDataScopeInputValueFromDatasetList(v DatasetListDataScopeInputValue) DataScopeInputValue {
+	return DataScopeInputValue{typ: "datasetList", datasetList: &v}
 }
 
 type InputType struct {
@@ -673,16 +869,18 @@ type UnifiedWorkbookContent struct {
 	typ                string
 	workbook           *WorkbookContent
 	comparisonWorkbook *api1.ComparisonWorkbookContent
+	reportWorkbook     *WorkbookContent
 }
 
 type unifiedWorkbookContentDeserializer struct {
 	Type               string                          `json:"type"`
 	Workbook           *WorkbookContent                `json:"workbook"`
 	ComparisonWorkbook *api1.ComparisonWorkbookContent `json:"comparisonWorkbook"`
+	ReportWorkbook     *WorkbookContent                `json:"reportWorkbook"`
 }
 
 func (u *unifiedWorkbookContentDeserializer) toStruct() UnifiedWorkbookContent {
-	return UnifiedWorkbookContent{typ: u.Type, workbook: u.Workbook, comparisonWorkbook: u.ComparisonWorkbook}
+	return UnifiedWorkbookContent{typ: u.Type, workbook: u.Workbook, comparisonWorkbook: u.ComparisonWorkbook, reportWorkbook: u.ReportWorkbook}
 }
 
 func (u *UnifiedWorkbookContent) toSerializer() (interface{}, error) {
@@ -705,6 +903,14 @@ func (u *UnifiedWorkbookContent) toSerializer() (interface{}, error) {
 			Type               string                         `json:"type"`
 			ComparisonWorkbook api1.ComparisonWorkbookContent `json:"comparisonWorkbook"`
 		}{Type: "comparisonWorkbook", ComparisonWorkbook: *u.comparisonWorkbook}, nil
+	case "reportWorkbook":
+		if u.reportWorkbook == nil {
+			return nil, fmt.Errorf("field \"reportWorkbook\" is required")
+		}
+		return struct {
+			Type           string          `json:"type"`
+			ReportWorkbook WorkbookContent `json:"reportWorkbook"`
+		}{Type: "reportWorkbook", ReportWorkbook: *u.reportWorkbook}, nil
 	}
 }
 
@@ -731,6 +937,10 @@ func (u *UnifiedWorkbookContent) UnmarshalJSON(data []byte) error {
 		if u.comparisonWorkbook == nil {
 			return fmt.Errorf("field \"comparisonWorkbook\" is required")
 		}
+	case "reportWorkbook":
+		if u.reportWorkbook == nil {
+			return fmt.Errorf("field \"reportWorkbook\" is required")
+		}
 	}
 	return nil
 }
@@ -751,7 +961,7 @@ func (u *UnifiedWorkbookContent) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UnifiedWorkbookContent) AcceptFuncs(workbookFunc func(WorkbookContent) error, comparisonWorkbookFunc func(api1.ComparisonWorkbookContent) error, unknownFunc func(string) error) error {
+func (u *UnifiedWorkbookContent) AcceptFuncs(workbookFunc func(WorkbookContent) error, comparisonWorkbookFunc func(api1.ComparisonWorkbookContent) error, reportWorkbookFunc func(WorkbookContent) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -768,6 +978,11 @@ func (u *UnifiedWorkbookContent) AcceptFuncs(workbookFunc func(WorkbookContent) 
 			return fmt.Errorf("field \"comparisonWorkbook\" is required")
 		}
 		return comparisonWorkbookFunc(*u.comparisonWorkbook)
+	case "reportWorkbook":
+		if u.reportWorkbook == nil {
+			return fmt.Errorf("field \"reportWorkbook\" is required")
+		}
+		return reportWorkbookFunc(*u.reportWorkbook)
 	}
 }
 
@@ -776,6 +991,10 @@ func (u *UnifiedWorkbookContent) WorkbookNoopSuccess(_ WorkbookContent) error {
 }
 
 func (u *UnifiedWorkbookContent) ComparisonWorkbookNoopSuccess(_ api1.ComparisonWorkbookContent) error {
+	return nil
+}
+
+func (u *UnifiedWorkbookContent) ReportWorkbookNoopSuccess(_ WorkbookContent) error {
 	return nil
 }
 
@@ -800,12 +1019,18 @@ func (u *UnifiedWorkbookContent) Accept(v UnifiedWorkbookContentVisitor) error {
 			return fmt.Errorf("field \"comparisonWorkbook\" is required")
 		}
 		return v.VisitComparisonWorkbook(*u.comparisonWorkbook)
+	case "reportWorkbook":
+		if u.reportWorkbook == nil {
+			return fmt.Errorf("field \"reportWorkbook\" is required")
+		}
+		return v.VisitReportWorkbook(*u.reportWorkbook)
 	}
 }
 
 type UnifiedWorkbookContentVisitor interface {
 	VisitWorkbook(v WorkbookContent) error
 	VisitComparisonWorkbook(v api1.ComparisonWorkbookContent) error
+	VisitReportWorkbook(v WorkbookContent) error
 	VisitUnknown(typeName string) error
 }
 
@@ -826,12 +1051,18 @@ func (u *UnifiedWorkbookContent) AcceptWithContext(ctx context.Context, v Unifie
 			return fmt.Errorf("field \"comparisonWorkbook\" is required")
 		}
 		return v.VisitComparisonWorkbookWithContext(ctx, *u.comparisonWorkbook)
+	case "reportWorkbook":
+		if u.reportWorkbook == nil {
+			return fmt.Errorf("field \"reportWorkbook\" is required")
+		}
+		return v.VisitReportWorkbookWithContext(ctx, *u.reportWorkbook)
 	}
 }
 
 type UnifiedWorkbookContentVisitorWithContext interface {
 	VisitWorkbookWithContext(ctx context.Context, v WorkbookContent) error
 	VisitComparisonWorkbookWithContext(ctx context.Context, v api1.ComparisonWorkbookContent) error
+	VisitReportWorkbookWithContext(ctx context.Context, v WorkbookContent) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -841,6 +1072,441 @@ func NewUnifiedWorkbookContentFromWorkbook(v WorkbookContent) UnifiedWorkbookCon
 
 func NewUnifiedWorkbookContentFromComparisonWorkbook(v api1.ComparisonWorkbookContent) UnifiedWorkbookContent {
 	return UnifiedWorkbookContent{typ: "comparisonWorkbook", comparisonWorkbook: &v}
+}
+
+func NewUnifiedWorkbookContentFromReportWorkbook(v WorkbookContent) UnifiedWorkbookContent {
+	return UnifiedWorkbookContent{typ: "reportWorkbook", reportWorkbook: &v}
+}
+
+type WorkbookAlignmentStrategy struct {
+	typ          string
+	driverSeries *DriverSeriesAlignment
+	union        *UnionAlignment
+	intersect    *IntersectAlignment
+}
+
+type workbookAlignmentStrategyDeserializer struct {
+	Type         string                 `json:"type"`
+	DriverSeries *DriverSeriesAlignment `json:"driverSeries"`
+	Union        *UnionAlignment        `json:"union"`
+	Intersect    *IntersectAlignment    `json:"intersect"`
+}
+
+func (u *workbookAlignmentStrategyDeserializer) toStruct() WorkbookAlignmentStrategy {
+	return WorkbookAlignmentStrategy{typ: u.Type, driverSeries: u.DriverSeries, union: u.Union, intersect: u.Intersect}
+}
+
+func (u *WorkbookAlignmentStrategy) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return nil, fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return struct {
+			Type         string                `json:"type"`
+			DriverSeries DriverSeriesAlignment `json:"driverSeries"`
+		}{Type: "driverSeries", DriverSeries: *u.driverSeries}, nil
+	case "union":
+		if u.union == nil {
+			return nil, fmt.Errorf("field \"union\" is required")
+		}
+		return struct {
+			Type  string         `json:"type"`
+			Union UnionAlignment `json:"union"`
+		}{Type: "union", Union: *u.union}, nil
+	case "intersect":
+		if u.intersect == nil {
+			return nil, fmt.Errorf("field \"intersect\" is required")
+		}
+		return struct {
+			Type      string             `json:"type"`
+			Intersect IntersectAlignment `json:"intersect"`
+		}{Type: "intersect", Intersect: *u.intersect}, nil
+	}
+}
+
+func (u WorkbookAlignmentStrategy) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *WorkbookAlignmentStrategy) UnmarshalJSON(data []byte) error {
+	var deser workbookAlignmentStrategyDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+	case "intersect":
+		if u.intersect == nil {
+			return fmt.Errorf("field \"intersect\" is required")
+		}
+	}
+	return nil
+}
+
+func (u WorkbookAlignmentStrategy) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *WorkbookAlignmentStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *WorkbookAlignmentStrategy) AcceptFuncs(driverSeriesFunc func(DriverSeriesAlignment) error, unionFunc func(UnionAlignment) error, intersectFunc func(IntersectAlignment) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in WorkbookAlignmentStrategy type")
+		}
+		return unknownFunc(u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return driverSeriesFunc(*u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+		return unionFunc(*u.union)
+	case "intersect":
+		if u.intersect == nil {
+			return fmt.Errorf("field \"intersect\" is required")
+		}
+		return intersectFunc(*u.intersect)
+	}
+}
+
+func (u *WorkbookAlignmentStrategy) DriverSeriesNoopSuccess(_ DriverSeriesAlignment) error {
+	return nil
+}
+
+func (u *WorkbookAlignmentStrategy) UnionNoopSuccess(_ UnionAlignment) error {
+	return nil
+}
+
+func (u *WorkbookAlignmentStrategy) IntersectNoopSuccess(_ IntersectAlignment) error {
+	return nil
+}
+
+func (u *WorkbookAlignmentStrategy) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *WorkbookAlignmentStrategy) Accept(v WorkbookAlignmentStrategyVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return v.VisitDriverSeries(*u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+		return v.VisitUnion(*u.union)
+	case "intersect":
+		if u.intersect == nil {
+			return fmt.Errorf("field \"intersect\" is required")
+		}
+		return v.VisitIntersect(*u.intersect)
+	}
+}
+
+type WorkbookAlignmentStrategyVisitor interface {
+	VisitDriverSeries(v DriverSeriesAlignment) error
+	VisitUnion(v UnionAlignment) error
+	VisitIntersect(v IntersectAlignment) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *WorkbookAlignmentStrategy) AcceptWithContext(ctx context.Context, v WorkbookAlignmentStrategyVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return v.VisitDriverSeriesWithContext(ctx, *u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+		return v.VisitUnionWithContext(ctx, *u.union)
+	case "intersect":
+		if u.intersect == nil {
+			return fmt.Errorf("field \"intersect\" is required")
+		}
+		return v.VisitIntersectWithContext(ctx, *u.intersect)
+	}
+}
+
+type WorkbookAlignmentStrategyVisitorWithContext interface {
+	VisitDriverSeriesWithContext(ctx context.Context, v DriverSeriesAlignment) error
+	VisitUnionWithContext(ctx context.Context, v UnionAlignment) error
+	VisitIntersectWithContext(ctx context.Context, v IntersectAlignment) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewWorkbookAlignmentStrategyFromDriverSeries(v DriverSeriesAlignment) WorkbookAlignmentStrategy {
+	return WorkbookAlignmentStrategy{typ: "driverSeries", driverSeries: &v}
+}
+
+func NewWorkbookAlignmentStrategyFromUnion(v UnionAlignment) WorkbookAlignmentStrategy {
+	return WorkbookAlignmentStrategy{typ: "union", union: &v}
+}
+
+func NewWorkbookAlignmentStrategyFromIntersect(v IntersectAlignment) WorkbookAlignmentStrategy {
+	return WorkbookAlignmentStrategy{typ: "intersect", intersect: &v}
+}
+
+/*
+How traces originating from this input are colored. Modeled as a
+union so individual modes can carry their own configuration in the
+future without a breaking change.
+*/
+type WorkbookDataScopeInputColorMode struct {
+	typ       string
+	byChannel *ByChannelColorMode
+	bySource  *BySourceColorMode
+	bySeries  *BySeriesColorMode
+}
+
+type workbookDataScopeInputColorModeDeserializer struct {
+	Type      string              `json:"type"`
+	ByChannel *ByChannelColorMode `json:"byChannel"`
+	BySource  *BySourceColorMode  `json:"bySource"`
+	BySeries  *BySeriesColorMode  `json:"bySeries"`
+}
+
+func (u *workbookDataScopeInputColorModeDeserializer) toStruct() WorkbookDataScopeInputColorMode {
+	return WorkbookDataScopeInputColorMode{typ: u.Type, byChannel: u.ByChannel, bySource: u.BySource, bySeries: u.BySeries}
+}
+
+func (u *WorkbookDataScopeInputColorMode) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "byChannel":
+		if u.byChannel == nil {
+			return nil, fmt.Errorf("field \"byChannel\" is required")
+		}
+		return struct {
+			Type      string             `json:"type"`
+			ByChannel ByChannelColorMode `json:"byChannel"`
+		}{Type: "byChannel", ByChannel: *u.byChannel}, nil
+	case "bySource":
+		if u.bySource == nil {
+			return nil, fmt.Errorf("field \"bySource\" is required")
+		}
+		return struct {
+			Type     string            `json:"type"`
+			BySource BySourceColorMode `json:"bySource"`
+		}{Type: "bySource", BySource: *u.bySource}, nil
+	case "bySeries":
+		if u.bySeries == nil {
+			return nil, fmt.Errorf("field \"bySeries\" is required")
+		}
+		return struct {
+			Type     string            `json:"type"`
+			BySeries BySeriesColorMode `json:"bySeries"`
+		}{Type: "bySeries", BySeries: *u.bySeries}, nil
+	}
+}
+
+func (u WorkbookDataScopeInputColorMode) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *WorkbookDataScopeInputColorMode) UnmarshalJSON(data []byte) error {
+	var deser workbookDataScopeInputColorModeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "byChannel":
+		if u.byChannel == nil {
+			return fmt.Errorf("field \"byChannel\" is required")
+		}
+	case "bySource":
+		if u.bySource == nil {
+			return fmt.Errorf("field \"bySource\" is required")
+		}
+	case "bySeries":
+		if u.bySeries == nil {
+			return fmt.Errorf("field \"bySeries\" is required")
+		}
+	}
+	return nil
+}
+
+func (u WorkbookDataScopeInputColorMode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *WorkbookDataScopeInputColorMode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *WorkbookDataScopeInputColorMode) AcceptFuncs(byChannelFunc func(ByChannelColorMode) error, bySourceFunc func(BySourceColorMode) error, bySeriesFunc func(BySeriesColorMode) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in WorkbookDataScopeInputColorMode type")
+		}
+		return unknownFunc(u.typ)
+	case "byChannel":
+		if u.byChannel == nil {
+			return fmt.Errorf("field \"byChannel\" is required")
+		}
+		return byChannelFunc(*u.byChannel)
+	case "bySource":
+		if u.bySource == nil {
+			return fmt.Errorf("field \"bySource\" is required")
+		}
+		return bySourceFunc(*u.bySource)
+	case "bySeries":
+		if u.bySeries == nil {
+			return fmt.Errorf("field \"bySeries\" is required")
+		}
+		return bySeriesFunc(*u.bySeries)
+	}
+}
+
+func (u *WorkbookDataScopeInputColorMode) ByChannelNoopSuccess(_ ByChannelColorMode) error {
+	return nil
+}
+
+func (u *WorkbookDataScopeInputColorMode) BySourceNoopSuccess(_ BySourceColorMode) error {
+	return nil
+}
+
+func (u *WorkbookDataScopeInputColorMode) BySeriesNoopSuccess(_ BySeriesColorMode) error {
+	return nil
+}
+
+func (u *WorkbookDataScopeInputColorMode) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *WorkbookDataScopeInputColorMode) Accept(v WorkbookDataScopeInputColorModeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "byChannel":
+		if u.byChannel == nil {
+			return fmt.Errorf("field \"byChannel\" is required")
+		}
+		return v.VisitByChannel(*u.byChannel)
+	case "bySource":
+		if u.bySource == nil {
+			return fmt.Errorf("field \"bySource\" is required")
+		}
+		return v.VisitBySource(*u.bySource)
+	case "bySeries":
+		if u.bySeries == nil {
+			return fmt.Errorf("field \"bySeries\" is required")
+		}
+		return v.VisitBySeries(*u.bySeries)
+	}
+}
+
+type WorkbookDataScopeInputColorModeVisitor interface {
+	VisitByChannel(v ByChannelColorMode) error
+	VisitBySource(v BySourceColorMode) error
+	VisitBySeries(v BySeriesColorMode) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *WorkbookDataScopeInputColorMode) AcceptWithContext(ctx context.Context, v WorkbookDataScopeInputColorModeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "byChannel":
+		if u.byChannel == nil {
+			return fmt.Errorf("field \"byChannel\" is required")
+		}
+		return v.VisitByChannelWithContext(ctx, *u.byChannel)
+	case "bySource":
+		if u.bySource == nil {
+			return fmt.Errorf("field \"bySource\" is required")
+		}
+		return v.VisitBySourceWithContext(ctx, *u.bySource)
+	case "bySeries":
+		if u.bySeries == nil {
+			return fmt.Errorf("field \"bySeries\" is required")
+		}
+		return v.VisitBySeriesWithContext(ctx, *u.bySeries)
+	}
+}
+
+type WorkbookDataScopeInputColorModeVisitorWithContext interface {
+	VisitByChannelWithContext(ctx context.Context, v ByChannelColorMode) error
+	VisitBySourceWithContext(ctx context.Context, v BySourceColorMode) error
+	VisitBySeriesWithContext(ctx context.Context, v BySeriesColorMode) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewWorkbookDataScopeInputColorModeFromByChannel(v ByChannelColorMode) WorkbookDataScopeInputColorMode {
+	return WorkbookDataScopeInputColorMode{typ: "byChannel", byChannel: &v}
+}
+
+func NewWorkbookDataScopeInputColorModeFromBySource(v BySourceColorMode) WorkbookDataScopeInputColorMode {
+	return WorkbookDataScopeInputColorMode{typ: "bySource", bySource: &v}
+}
+
+func NewWorkbookDataScopeInputColorModeFromBySeries(v BySeriesColorMode) WorkbookDataScopeInputColorMode {
+	return WorkbookDataScopeInputColorMode{typ: "bySeries", bySeries: &v}
 }
 
 type WorkbookDataScopeInputs struct {
@@ -976,6 +1642,180 @@ type WorkbookDataScopeInputsVisitorWithContext interface {
 
 func NewWorkbookDataScopeInputsFromV1(v WorkbookDataScopeInputsV1) WorkbookDataScopeInputs {
 	return WorkbookDataScopeInputs{typ: "v1", v1: &v}
+}
+
+type WorkbookFillStrategy struct {
+	typ         string
+	forwardFill *api.UserDuration
+	linear      *api.UserDuration
+}
+
+type workbookFillStrategyDeserializer struct {
+	Type        string            `json:"type"`
+	ForwardFill *api.UserDuration `json:"forwardFill"`
+	Linear      *api.UserDuration `json:"linear"`
+}
+
+func (u *workbookFillStrategyDeserializer) toStruct() WorkbookFillStrategy {
+	return WorkbookFillStrategy{typ: u.Type, forwardFill: u.ForwardFill, linear: u.Linear}
+}
+
+func (u *WorkbookFillStrategy) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return nil, fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return struct {
+			Type        string           `json:"type"`
+			ForwardFill api.UserDuration `json:"forwardFill"`
+		}{Type: "forwardFill", ForwardFill: *u.forwardFill}, nil
+	case "linear":
+		if u.linear == nil {
+			return nil, fmt.Errorf("field \"linear\" is required")
+		}
+		return struct {
+			Type   string           `json:"type"`
+			Linear api.UserDuration `json:"linear"`
+		}{Type: "linear", Linear: *u.linear}, nil
+	}
+}
+
+func (u WorkbookFillStrategy) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *WorkbookFillStrategy) UnmarshalJSON(data []byte) error {
+	var deser workbookFillStrategyDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+	case "linear":
+		if u.linear == nil {
+			return fmt.Errorf("field \"linear\" is required")
+		}
+	}
+	return nil
+}
+
+func (u WorkbookFillStrategy) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *WorkbookFillStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *WorkbookFillStrategy) AcceptFuncs(forwardFillFunc func(api.UserDuration) error, linearFunc func(api.UserDuration) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in WorkbookFillStrategy type")
+		}
+		return unknownFunc(u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return forwardFillFunc(*u.forwardFill)
+	case "linear":
+		if u.linear == nil {
+			return fmt.Errorf("field \"linear\" is required")
+		}
+		return linearFunc(*u.linear)
+	}
+}
+
+func (u *WorkbookFillStrategy) ForwardFillNoopSuccess(_ api.UserDuration) error {
+	return nil
+}
+
+func (u *WorkbookFillStrategy) LinearNoopSuccess(_ api.UserDuration) error {
+	return nil
+}
+
+func (u *WorkbookFillStrategy) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *WorkbookFillStrategy) Accept(v WorkbookFillStrategyVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return v.VisitForwardFill(*u.forwardFill)
+	case "linear":
+		if u.linear == nil {
+			return fmt.Errorf("field \"linear\" is required")
+		}
+		return v.VisitLinear(*u.linear)
+	}
+}
+
+type WorkbookFillStrategyVisitor interface {
+	VisitForwardFill(v api.UserDuration) error
+	VisitLinear(v api.UserDuration) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *WorkbookFillStrategy) AcceptWithContext(ctx context.Context, v WorkbookFillStrategyVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return v.VisitForwardFillWithContext(ctx, *u.forwardFill)
+	case "linear":
+		if u.linear == nil {
+			return fmt.Errorf("field \"linear\" is required")
+		}
+		return v.VisitLinearWithContext(ctx, *u.linear)
+	}
+}
+
+type WorkbookFillStrategyVisitorWithContext interface {
+	VisitForwardFillWithContext(ctx context.Context, v api.UserDuration) error
+	VisitLinearWithContext(ctx context.Context, v api.UserDuration) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewWorkbookFillStrategyFromForwardFill(v api.UserDuration) WorkbookFillStrategy {
+	return WorkbookFillStrategy{typ: "forwardFill", forwardFill: &v}
+}
+
+func NewWorkbookFillStrategyFromLinear(v api.UserDuration) WorkbookFillStrategy {
+	return WorkbookFillStrategy{typ: "linear", linear: &v}
 }
 
 type WorkbookInputs struct {
@@ -1246,6 +2086,220 @@ type WorkbookOffsetsVisitorWithContext interface {
 
 func NewWorkbookOffsetsFromV1(v WorkbookOffsetsV1) WorkbookOffsets {
 	return WorkbookOffsets{typ: "v1", v1: &v}
+}
+
+// Workbook-level display format for relative timestamps.
+type WorkbookRelativeTimestampFormat struct {
+	typ              string
+	inherit          *InheritRelativeTimestampFormat
+	temporalSubunits *api2.TemporalSubunitsRelativeTimestampFormat
+	totalSeconds     *api2.TotalSecondsRelativeTimestampFormat
+}
+
+type workbookRelativeTimestampFormatDeserializer struct {
+	Type             string                                        `json:"type"`
+	Inherit          *InheritRelativeTimestampFormat               `json:"inherit"`
+	TemporalSubunits *api2.TemporalSubunitsRelativeTimestampFormat `json:"temporalSubunits"`
+	TotalSeconds     *api2.TotalSecondsRelativeTimestampFormat     `json:"totalSeconds"`
+}
+
+func (u *workbookRelativeTimestampFormatDeserializer) toStruct() WorkbookRelativeTimestampFormat {
+	return WorkbookRelativeTimestampFormat{typ: u.Type, inherit: u.Inherit, temporalSubunits: u.TemporalSubunits, totalSeconds: u.TotalSeconds}
+}
+
+func (u *WorkbookRelativeTimestampFormat) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "inherit":
+		if u.inherit == nil {
+			return nil, fmt.Errorf("field \"inherit\" is required")
+		}
+		return struct {
+			Type    string                         `json:"type"`
+			Inherit InheritRelativeTimestampFormat `json:"inherit"`
+		}{Type: "inherit", Inherit: *u.inherit}, nil
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return nil, fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+		return struct {
+			Type             string                                       `json:"type"`
+			TemporalSubunits api2.TemporalSubunitsRelativeTimestampFormat `json:"temporalSubunits"`
+		}{Type: "temporalSubunits", TemporalSubunits: *u.temporalSubunits}, nil
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return nil, fmt.Errorf("field \"totalSeconds\" is required")
+		}
+		return struct {
+			Type         string                                   `json:"type"`
+			TotalSeconds api2.TotalSecondsRelativeTimestampFormat `json:"totalSeconds"`
+		}{Type: "totalSeconds", TotalSeconds: *u.totalSeconds}, nil
+	}
+}
+
+func (u WorkbookRelativeTimestampFormat) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *WorkbookRelativeTimestampFormat) UnmarshalJSON(data []byte) error {
+	var deser workbookRelativeTimestampFormatDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "inherit":
+		if u.inherit == nil {
+			return fmt.Errorf("field \"inherit\" is required")
+		}
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return fmt.Errorf("field \"totalSeconds\" is required")
+		}
+	}
+	return nil
+}
+
+func (u WorkbookRelativeTimestampFormat) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *WorkbookRelativeTimestampFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *WorkbookRelativeTimestampFormat) AcceptFuncs(inheritFunc func(InheritRelativeTimestampFormat) error, temporalSubunitsFunc func(api2.TemporalSubunitsRelativeTimestampFormat) error, totalSecondsFunc func(api2.TotalSecondsRelativeTimestampFormat) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in WorkbookRelativeTimestampFormat type")
+		}
+		return unknownFunc(u.typ)
+	case "inherit":
+		if u.inherit == nil {
+			return fmt.Errorf("field \"inherit\" is required")
+		}
+		return inheritFunc(*u.inherit)
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+		return temporalSubunitsFunc(*u.temporalSubunits)
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return fmt.Errorf("field \"totalSeconds\" is required")
+		}
+		return totalSecondsFunc(*u.totalSeconds)
+	}
+}
+
+func (u *WorkbookRelativeTimestampFormat) InheritNoopSuccess(_ InheritRelativeTimestampFormat) error {
+	return nil
+}
+
+func (u *WorkbookRelativeTimestampFormat) TemporalSubunitsNoopSuccess(_ api2.TemporalSubunitsRelativeTimestampFormat) error {
+	return nil
+}
+
+func (u *WorkbookRelativeTimestampFormat) TotalSecondsNoopSuccess(_ api2.TotalSecondsRelativeTimestampFormat) error {
+	return nil
+}
+
+func (u *WorkbookRelativeTimestampFormat) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *WorkbookRelativeTimestampFormat) Accept(v WorkbookRelativeTimestampFormatVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "inherit":
+		if u.inherit == nil {
+			return fmt.Errorf("field \"inherit\" is required")
+		}
+		return v.VisitInherit(*u.inherit)
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+		return v.VisitTemporalSubunits(*u.temporalSubunits)
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return fmt.Errorf("field \"totalSeconds\" is required")
+		}
+		return v.VisitTotalSeconds(*u.totalSeconds)
+	}
+}
+
+type WorkbookRelativeTimestampFormatVisitor interface {
+	VisitInherit(v InheritRelativeTimestampFormat) error
+	VisitTemporalSubunits(v api2.TemporalSubunitsRelativeTimestampFormat) error
+	VisitTotalSeconds(v api2.TotalSecondsRelativeTimestampFormat) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *WorkbookRelativeTimestampFormat) AcceptWithContext(ctx context.Context, v WorkbookRelativeTimestampFormatVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "inherit":
+		if u.inherit == nil {
+			return fmt.Errorf("field \"inherit\" is required")
+		}
+		return v.VisitInheritWithContext(ctx, *u.inherit)
+	case "temporalSubunits":
+		if u.temporalSubunits == nil {
+			return fmt.Errorf("field \"temporalSubunits\" is required")
+		}
+		return v.VisitTemporalSubunitsWithContext(ctx, *u.temporalSubunits)
+	case "totalSeconds":
+		if u.totalSeconds == nil {
+			return fmt.Errorf("field \"totalSeconds\" is required")
+		}
+		return v.VisitTotalSecondsWithContext(ctx, *u.totalSeconds)
+	}
+}
+
+type WorkbookRelativeTimestampFormatVisitorWithContext interface {
+	VisitInheritWithContext(ctx context.Context, v InheritRelativeTimestampFormat) error
+	VisitTemporalSubunitsWithContext(ctx context.Context, v api2.TemporalSubunitsRelativeTimestampFormat) error
+	VisitTotalSecondsWithContext(ctx context.Context, v api2.TotalSecondsRelativeTimestampFormat) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewWorkbookRelativeTimestampFormatFromInherit(v InheritRelativeTimestampFormat) WorkbookRelativeTimestampFormat {
+	return WorkbookRelativeTimestampFormat{typ: "inherit", inherit: &v}
+}
+
+func NewWorkbookRelativeTimestampFormatFromTemporalSubunits(v api2.TemporalSubunitsRelativeTimestampFormat) WorkbookRelativeTimestampFormat {
+	return WorkbookRelativeTimestampFormat{typ: "temporalSubunits", temporalSubunits: &v}
+}
+
+func NewWorkbookRelativeTimestampFormatFromTotalSeconds(v api2.TotalSecondsRelativeTimestampFormat) WorkbookRelativeTimestampFormat {
+	return WorkbookRelativeTimestampFormat{typ: "totalSeconds", totalSeconds: &v}
 }
 
 type WorkbookTimeSettings struct {

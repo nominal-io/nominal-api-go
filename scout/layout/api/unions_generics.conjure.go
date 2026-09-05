@@ -9,6 +9,120 @@ import (
 	"fmt"
 )
 
+type CanvasConnectionWithT[T any] CanvasConnection
+
+func (u *CanvasConnectionWithT[T]) Accept(ctx context.Context, v CanvasConnectionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *CanvasConnectionWithT[T]) AcceptFuncs(v1Func func(CanvasConnectionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *CanvasConnectionWithT[T]) V1NoopSuccess(CanvasConnectionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CanvasConnectionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type CanvasConnectionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v CanvasConnectionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type CanvasConnectionStrokeStyleWithT[T any] CanvasConnectionStrokeStyle
+
+func (u *CanvasConnectionStrokeStyleWithT[T]) Accept(ctx context.Context, v CanvasConnectionStrokeStyleVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "solid":
+		if u.solid == nil {
+			return result, fmt.Errorf("field \"solid\" is required")
+		}
+		return v.VisitSolid(ctx, *u.solid)
+	case "dash":
+		if u.dash == nil {
+			return result, fmt.Errorf("field \"dash\" is required")
+		}
+		return v.VisitDash(ctx, *u.dash)
+	}
+}
+
+func (u *CanvasConnectionStrokeStyleWithT[T]) AcceptFuncs(solidFunc func(SolidStrokeStyle) (T, error), dashFunc func(DashStrokeStyle) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "solid":
+		if u.solid == nil {
+			return result, fmt.Errorf("field \"solid\" is required")
+		}
+		return solidFunc(*u.solid)
+	case "dash":
+		if u.dash == nil {
+			return result, fmt.Errorf("field \"dash\" is required")
+		}
+		return dashFunc(*u.dash)
+	}
+}
+
+func (u *CanvasConnectionStrokeStyleWithT[T]) SolidNoopSuccess(SolidStrokeStyle) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CanvasConnectionStrokeStyleWithT[T]) DashNoopSuccess(DashStrokeStyle) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CanvasConnectionStrokeStyleWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type CanvasConnectionStrokeStyleVisitorWithT[T any] interface {
+	VisitSolid(ctx context.Context, v SolidStrokeStyle) (T, error)
+	VisitDash(ctx context.Context, v DashStrokeStyle) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type CanvasObjectWithT[T any] CanvasObject
 
 func (u *CanvasObjectWithT[T]) Accept(ctx context.Context, v CanvasObjectVisitorWithT[T]) (T, error) {
@@ -24,10 +138,15 @@ func (u *CanvasObjectWithT[T]) Accept(ctx context.Context, v CanvasObjectVisitor
 			return result, fmt.Errorf("field \"panel\" is required")
 		}
 		return v.VisitPanel(ctx, *u.panel)
+	case "connection":
+		if u.connection == nil {
+			return result, fmt.Errorf("field \"connection\" is required")
+		}
+		return v.VisitConnection(ctx, *u.connection)
 	}
 }
 
-func (u *CanvasObjectWithT[T]) AcceptFuncs(panelFunc func(CanvasPanel) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *CanvasObjectWithT[T]) AcceptFuncs(panelFunc func(CanvasPanel) (T, error), connectionFunc func(CanvasConnection) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -40,10 +159,20 @@ func (u *CanvasObjectWithT[T]) AcceptFuncs(panelFunc func(CanvasPanel) (T, error
 			return result, fmt.Errorf("field \"panel\" is required")
 		}
 		return panelFunc(*u.panel)
+	case "connection":
+		if u.connection == nil {
+			return result, fmt.Errorf("field \"connection\" is required")
+		}
+		return connectionFunc(*u.connection)
 	}
 }
 
 func (u *CanvasObjectWithT[T]) PanelNoopSuccess(CanvasPanel) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CanvasObjectWithT[T]) ConnectionNoopSuccess(CanvasConnection) (T, error) {
 	var result T
 	return result, nil
 }
@@ -55,6 +184,7 @@ func (u *CanvasObjectWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type CanvasObjectVisitorWithT[T any] interface {
 	VisitPanel(ctx context.Context, v CanvasPanel) (T, error)
+	VisitConnection(ctx context.Context, v CanvasConnection) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -104,6 +234,55 @@ func (u *ChartPanelWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type ChartPanelVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v ChartPanelV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type DocumentNodeObjectWithT[T any] DocumentNodeObject
+
+func (u *DocumentNodeObjectWithT[T]) Accept(ctx context.Context, v DocumentNodeObjectVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "panel":
+		if u.panel == nil {
+			return result, fmt.Errorf("field \"panel\" is required")
+		}
+		return v.VisitPanel(ctx, *u.panel)
+	}
+}
+
+func (u *DocumentNodeObjectWithT[T]) AcceptFuncs(panelFunc func(DocumentPanel) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "panel":
+		if u.panel == nil {
+			return result, fmt.Errorf("field \"panel\" is required")
+		}
+		return panelFunc(*u.panel)
+	}
+}
+
+func (u *DocumentNodeObjectWithT[T]) PanelNoopSuccess(DocumentPanel) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DocumentNodeObjectWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type DocumentNodeObjectVisitorWithT[T any] interface {
+	VisitPanel(ctx context.Context, v DocumentPanel) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -196,10 +375,20 @@ func (u *PanelWithT[T]) Accept(ctx context.Context, v PanelVisitorWithT[T]) (T, 
 			return result, fmt.Errorf("field \"canvas\" is required")
 		}
 		return v.VisitCanvas(ctx, *u.canvas)
+	case "document":
+		if u.document == nil {
+			return result, fmt.Errorf("field \"document\" is required")
+		}
+		return v.VisitDocument(ctx, *u.document)
+	case "analyst":
+		if u.analyst == nil {
+			return result, fmt.Errorf("field \"analyst\" is required")
+		}
+		return v.VisitAnalyst(ctx, *u.analyst)
 	}
 }
 
-func (u *PanelWithT[T]) AcceptFuncs(vizFunc func(VizPanel) (T, error), chartFunc func(ChartPanel) (T, error), emptyFunc func(EmptyPanel) (T, error), splitFunc func(SplitPanel) (T, error), tabbedFunc func(TabbedPanel) (T, error), canvasFunc func(CanvasLayout) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *PanelWithT[T]) AcceptFuncs(vizFunc func(VizPanel) (T, error), chartFunc func(ChartPanel) (T, error), emptyFunc func(EmptyPanel) (T, error), splitFunc func(SplitPanel) (T, error), tabbedFunc func(TabbedPanel) (T, error), canvasFunc func(CanvasLayout) (T, error), documentFunc func(DocumentLayout) (T, error), analystFunc func(AnalystLayout) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -237,6 +426,16 @@ func (u *PanelWithT[T]) AcceptFuncs(vizFunc func(VizPanel) (T, error), chartFunc
 			return result, fmt.Errorf("field \"canvas\" is required")
 		}
 		return canvasFunc(*u.canvas)
+	case "document":
+		if u.document == nil {
+			return result, fmt.Errorf("field \"document\" is required")
+		}
+		return documentFunc(*u.document)
+	case "analyst":
+		if u.analyst == nil {
+			return result, fmt.Errorf("field \"analyst\" is required")
+		}
+		return analystFunc(*u.analyst)
 	}
 }
 
@@ -270,6 +469,16 @@ func (u *PanelWithT[T]) CanvasNoopSuccess(CanvasLayout) (T, error) {
 	return result, nil
 }
 
+func (u *PanelWithT[T]) DocumentNoopSuccess(DocumentLayout) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PanelWithT[T]) AnalystNoopSuccess(AnalystLayout) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *PanelWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -282,6 +491,8 @@ type PanelVisitorWithT[T any] interface {
 	VisitSplit(ctx context.Context, v SplitPanel) (T, error)
 	VisitTabbed(ctx context.Context, v TabbedPanel) (T, error)
 	VisitCanvas(ctx context.Context, v CanvasLayout) (T, error)
+	VisitDocument(ctx context.Context, v DocumentLayout) (T, error)
+	VisitAnalyst(ctx context.Context, v AnalystLayout) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

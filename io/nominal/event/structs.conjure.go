@@ -539,11 +539,13 @@ type CreateEvent struct {
 	Duration  api2.Duration `json:"duration"`
 	Name      string        `json:"name"`
 	// If not provided, will default to an empty string.
-	Description *string                                `json:"description,omitempty"`
-	Type        EventType                              `json:"type"`
-	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
-	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
-	Disposition *EventDisposition                      `json:"disposition,omitempty"`
+	Description *string     `json:"description,omitempty"`
+	Type        EventType   `json:"type"`
+	Labels      []api.Label `json:"labels" safelogging:"@Unsafe"`
+	// Deprecated: use typedProperties
+	Properties      map[api.PropertyName]api.PropertyValue      `json:"properties"`
+	TypedProperties map[api.PropertyName]api.TypedPropertyValue `json:"typedProperties"`
+	Disposition     *EventDisposition                           `json:"disposition,omitempty"`
 }
 
 func (o CreateEvent) MarshalJSON() ([]byte, error) {
@@ -558,6 +560,9 @@ func (o CreateEvent) MarshalJSON() ([]byte, error) {
 	}
 	if o.Properties == nil {
 		o.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if o.TypedProperties == nil {
+		o.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
 	}
 	type _tmpCreateEvent CreateEvent
 	return safejson.Marshal(_tmpCreateEvent(o))
@@ -580,6 +585,9 @@ func (o *CreateEvent) UnmarshalJSON(data []byte) error {
 	}
 	if rawCreateEvent.Properties == nil {
 		rawCreateEvent.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if rawCreateEvent.TypedProperties == nil {
+		rawCreateEvent.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
 	}
 	*o = CreateEvent(rawCreateEvent)
 	return nil
@@ -715,15 +723,17 @@ type Event struct {
 	// A set of asset rids associated with the event.
 	AssetRids []api1.AssetRid `json:"assetRids" safelogging:"@Safe"`
 	// A set of origins associated with the event.
-	Origins     []EventOrigin                          `json:"origins"`
-	Timestamp   api.Timestamp                          `json:"timestamp" safelogging:"@Safe"`
-	Duration    api2.Duration                          `json:"duration"`
-	Name        string                                 `json:"name"`
-	Description string                                 `json:"description"`
-	Type        EventType                              `json:"type"`
-	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
-	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
-	IsArchived  bool                                   `json:"isArchived"`
+	Origins     []EventOrigin `json:"origins"`
+	Timestamp   api.Timestamp `json:"timestamp" safelogging:"@Safe"`
+	Duration    api2.Duration `json:"duration"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Type        EventType     `json:"type"`
+	Labels      []api.Label   `json:"labels" safelogging:"@Unsafe"`
+	// Deprecated: use typedProperties
+	Properties      map[api.PropertyName]api.PropertyValue      `json:"properties"`
+	TypedProperties map[api.PropertyName]api.TypedPropertyValue `json:"typedProperties"`
+	IsArchived      bool                                        `json:"isArchived"`
 	/*
 	   The user who created the event.
 	   This field may be missing for legacy events.
@@ -744,6 +754,9 @@ func (o Event) MarshalJSON() ([]byte, error) {
 	}
 	if o.Properties == nil {
 		o.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if o.TypedProperties == nil {
+		o.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
 	}
 	type _tmpEvent Event
 	return safejson.Marshal(_tmpEvent(o))
@@ -766,6 +779,9 @@ func (o *Event) UnmarshalJSON(data []byte) error {
 	}
 	if rawEvent.Properties == nil {
 		rawEvent.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if rawEvent.TypedProperties == nil {
+		rawEvent.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
 	}
 	*o = Event(rawEvent)
 	return nil
@@ -1300,14 +1316,16 @@ type UpdateEvent struct {
 	   If provided, will replace the existing asset rids.
 	   If provided, must contain at least one asset rid.
 	*/
-	AssetRids   *[]api1.AssetRid                        `json:"assetRids,omitempty" safelogging:"@Safe"`
-	Timestamp   *api.Timestamp                          `json:"timestamp,omitempty"`
-	Duration    *api2.Duration                          `json:"duration,omitempty"`
-	Name        *string                                 `json:"name,omitempty"`
-	Description *string                                 `json:"description,omitempty"`
-	Type        *EventType                              `json:"type,omitempty"`
-	Labels      *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
-	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
+	AssetRids   *[]api1.AssetRid `json:"assetRids,omitempty" safelogging:"@Safe"`
+	Timestamp   *api.Timestamp   `json:"timestamp,omitempty"`
+	Duration    *api2.Duration   `json:"duration,omitempty"`
+	Name        *string          `json:"name,omitempty"`
+	Description *string          `json:"description,omitempty"`
+	Type        *EventType       `json:"type,omitempty"`
+	Labels      *[]api.Label     `json:"labels,omitempty" safelogging:"@Unsafe"`
+	// Deprecated: use typedProperties
+	Properties      *map[api.PropertyName]api.PropertyValue      `json:"properties,omitempty"`
+	TypedProperties *map[api.PropertyName]api.TypedPropertyValue `json:"typedProperties,omitempty"`
 }
 
 func (o UpdateEvent) MarshalYAML() (interface{}, error) {
@@ -1333,14 +1351,16 @@ type UpdateEventRequest struct {
 	   If provided, will replace the existing asset rids.
 	   If provided, must contain at least one asset rid.
 	*/
-	AssetRids   *[]api1.AssetRid                        `json:"assetRids,omitempty" safelogging:"@Safe"`
-	Timestamp   *api.Timestamp                          `json:"timestamp,omitempty"`
-	Duration    *api2.Duration                          `json:"duration,omitempty"`
-	Name        *string                                 `json:"name,omitempty"`
-	Description *string                                 `json:"description,omitempty"`
-	Type        *EventType                              `json:"type,omitempty"`
-	Labels      *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
-	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
+	AssetRids   *[]api1.AssetRid `json:"assetRids,omitempty" safelogging:"@Safe"`
+	Timestamp   *api.Timestamp   `json:"timestamp,omitempty"`
+	Duration    *api2.Duration   `json:"duration,omitempty"`
+	Name        *string          `json:"name,omitempty"`
+	Description *string          `json:"description,omitempty"`
+	Type        *EventType       `json:"type,omitempty"`
+	Labels      *[]api.Label     `json:"labels,omitempty" safelogging:"@Unsafe"`
+	// Deprecated: use typedProperties
+	Properties      *map[api.PropertyName]api.PropertyValue      `json:"properties,omitempty"`
+	TypedProperties *map[api.PropertyName]api.TypedPropertyValue `json:"typedProperties,omitempty"`
 }
 
 func (o UpdateEventRequest) MarshalYAML() (interface{}, error) {

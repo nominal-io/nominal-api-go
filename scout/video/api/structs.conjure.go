@@ -14,6 +14,188 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
+/*
+Request to update one or more video dataset files (start-time alignment, rescaling, and/or title).
+Exactly one of datasetRid or channelSeries must be set. Prefer datasetRid: it addresses the files
+directly, deriving each file's backing series from its own segments, so callers never resupply
+channel identity. channelSeries remains supported for backwards compatibility and additionally
+validates that every file backs the given channel. At most 100 files may be updated per request.
+*/
+type BatchUpdateVideoChannelDatasetFilesRequest struct {
+	ChannelSeries *VideoChannelSeries `json:"channelSeries,omitempty"`
+	/*
+	   The dataset owning the files to update. Every requested file must belong to this dataset and be
+	   a video file (back a video series); enforces write data permission on the dataset.
+	*/
+	DatasetRid *rids.DatasetRid                `json:"datasetRid,omitempty" safelogging:"@Safe"`
+	Updates    []VideoChannelDatasetFileUpdate `json:"updates"`
+}
+
+func (o BatchUpdateVideoChannelDatasetFilesRequest) MarshalJSON() ([]byte, error) {
+	if o.Updates == nil {
+		o.Updates = make([]VideoChannelDatasetFileUpdate, 0)
+	}
+	type _tmpBatchUpdateVideoChannelDatasetFilesRequest BatchUpdateVideoChannelDatasetFilesRequest
+	return safejson.Marshal(_tmpBatchUpdateVideoChannelDatasetFilesRequest(o))
+}
+
+func (o *BatchUpdateVideoChannelDatasetFilesRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchUpdateVideoChannelDatasetFilesRequest BatchUpdateVideoChannelDatasetFilesRequest
+	var rawBatchUpdateVideoChannelDatasetFilesRequest _tmpBatchUpdateVideoChannelDatasetFilesRequest
+	if err := safejson.Unmarshal(data, &rawBatchUpdateVideoChannelDatasetFilesRequest); err != nil {
+		return err
+	}
+	if rawBatchUpdateVideoChannelDatasetFilesRequest.Updates == nil {
+		rawBatchUpdateVideoChannelDatasetFilesRequest.Updates = make([]VideoChannelDatasetFileUpdate, 0)
+	}
+	*o = BatchUpdateVideoChannelDatasetFilesRequest(rawBatchUpdateVideoChannelDatasetFilesRequest)
+	return nil
+}
+
+func (o BatchUpdateVideoChannelDatasetFilesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchUpdateVideoChannelDatasetFilesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BatchUpdateVideoChannelDatasetFilesResponse struct {
+	DatasetFiles []VideoChannelDatasetFile `json:"datasetFiles"`
+}
+
+func (o BatchUpdateVideoChannelDatasetFilesResponse) MarshalJSON() ([]byte, error) {
+	if o.DatasetFiles == nil {
+		o.DatasetFiles = make([]VideoChannelDatasetFile, 0)
+	}
+	type _tmpBatchUpdateVideoChannelDatasetFilesResponse BatchUpdateVideoChannelDatasetFilesResponse
+	return safejson.Marshal(_tmpBatchUpdateVideoChannelDatasetFilesResponse(o))
+}
+
+func (o *BatchUpdateVideoChannelDatasetFilesResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchUpdateVideoChannelDatasetFilesResponse BatchUpdateVideoChannelDatasetFilesResponse
+	var rawBatchUpdateVideoChannelDatasetFilesResponse _tmpBatchUpdateVideoChannelDatasetFilesResponse
+	if err := safejson.Unmarshal(data, &rawBatchUpdateVideoChannelDatasetFilesResponse); err != nil {
+		return err
+	}
+	if rawBatchUpdateVideoChannelDatasetFilesResponse.DatasetFiles == nil {
+		rawBatchUpdateVideoChannelDatasetFilesResponse.DatasetFiles = make([]VideoChannelDatasetFile, 0)
+	}
+	*o = BatchUpdateVideoChannelDatasetFilesResponse(rawBatchUpdateVideoChannelDatasetFilesResponse)
+	return nil
+}
+
+func (o BatchUpdateVideoChannelDatasetFilesResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchUpdateVideoChannelDatasetFilesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Request to update metadata for multiple files within a single video. All files must belong to the provided
+video, and the batch may include at most 100 files.
+*/
+type BatchUpdateVideoFilesRequest struct {
+	VideoRid rids.VideoRid     `json:"videoRid" safelogging:"@Safe"`
+	Updates  []VideoFileUpdate `json:"updates"`
+}
+
+func (o BatchUpdateVideoFilesRequest) MarshalJSON() ([]byte, error) {
+	if o.Updates == nil {
+		o.Updates = make([]VideoFileUpdate, 0)
+	}
+	type _tmpBatchUpdateVideoFilesRequest BatchUpdateVideoFilesRequest
+	return safejson.Marshal(_tmpBatchUpdateVideoFilesRequest(o))
+}
+
+func (o *BatchUpdateVideoFilesRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchUpdateVideoFilesRequest BatchUpdateVideoFilesRequest
+	var rawBatchUpdateVideoFilesRequest _tmpBatchUpdateVideoFilesRequest
+	if err := safejson.Unmarshal(data, &rawBatchUpdateVideoFilesRequest); err != nil {
+		return err
+	}
+	if rawBatchUpdateVideoFilesRequest.Updates == nil {
+		rawBatchUpdateVideoFilesRequest.Updates = make([]VideoFileUpdate, 0)
+	}
+	*o = BatchUpdateVideoFilesRequest(rawBatchUpdateVideoFilesRequest)
+	return nil
+}
+
+func (o BatchUpdateVideoFilesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchUpdateVideoFilesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type BatchUpdateVideoFilesResponse struct {
+	Files []VideoFile `json:"files"`
+}
+
+func (o BatchUpdateVideoFilesResponse) MarshalJSON() ([]byte, error) {
+	if o.Files == nil {
+		o.Files = make([]VideoFile, 0)
+	}
+	type _tmpBatchUpdateVideoFilesResponse BatchUpdateVideoFilesResponse
+	return safejson.Marshal(_tmpBatchUpdateVideoFilesResponse(o))
+}
+
+func (o *BatchUpdateVideoFilesResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchUpdateVideoFilesResponse BatchUpdateVideoFilesResponse
+	var rawBatchUpdateVideoFilesResponse _tmpBatchUpdateVideoFilesResponse
+	if err := safejson.Unmarshal(data, &rawBatchUpdateVideoFilesResponse); err != nil {
+		return err
+	}
+	if rawBatchUpdateVideoFilesResponse.Files == nil {
+		rawBatchUpdateVideoFilesResponse.Files = make([]VideoFile, 0)
+	}
+	*o = BatchUpdateVideoFilesResponse(rawBatchUpdateVideoFilesResponse)
+	return nil
+}
+
+func (o BatchUpdateVideoFilesResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchUpdateVideoFilesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Safe
 type Bounds struct {
 	Start api.Timestamp `json:"start" safelogging:"@Safe"`
@@ -241,6 +423,49 @@ func (o *CreateSegmentsV2Response) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Request to create live stream segments for channel-based ingestion. Internal use only.
+type CreateStreamSegmentsV2Request struct {
+	Requests   []CreateSegment `json:"requests"`
+	SeriesUuid uuid.UUID       `json:"seriesUuid"`
+}
+
+func (o CreateStreamSegmentsV2Request) MarshalJSON() ([]byte, error) {
+	if o.Requests == nil {
+		o.Requests = make([]CreateSegment, 0)
+	}
+	type _tmpCreateStreamSegmentsV2Request CreateStreamSegmentsV2Request
+	return safejson.Marshal(_tmpCreateStreamSegmentsV2Request(o))
+}
+
+func (o *CreateStreamSegmentsV2Request) UnmarshalJSON(data []byte) error {
+	type _tmpCreateStreamSegmentsV2Request CreateStreamSegmentsV2Request
+	var rawCreateStreamSegmentsV2Request _tmpCreateStreamSegmentsV2Request
+	if err := safejson.Unmarshal(data, &rawCreateStreamSegmentsV2Request); err != nil {
+		return err
+	}
+	if rawCreateStreamSegmentsV2Request.Requests == nil {
+		rawCreateStreamSegmentsV2Request.Requests = make([]CreateSegment, 0)
+	}
+	*o = CreateStreamSegmentsV2Request(rawCreateStreamSegmentsV2Request)
+	return nil
+}
+
+func (o CreateStreamSegmentsV2Request) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CreateStreamSegmentsV2Request) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Request to create and persist a video file
 type CreateVideoFileRequest struct {
 	Title          string                  `json:"title"`
@@ -352,6 +577,27 @@ func (o EndStreamResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *EndStreamResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Request to end the active stream session for a channel-backed live video series.
+type EndStreamV2Request struct {
+	ChannelSeries VideoChannelSeries `json:"channelSeries"`
+}
+
+func (o EndStreamV2Request) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EndStreamV2Request) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -510,6 +756,27 @@ func (o *GenerateWhepStreamResponse) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Request to generate a WHEP stream for a channel-backed live video series.
+type GenerateWhepStreamV2Request struct {
+	ChannelSeries VideoChannelSeries `json:"channelSeries"`
+}
+
+func (o GenerateWhepStreamV2Request) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GenerateWhepStreamV2Request) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Response with WHIP URL and ICE servers for publishing
 type GenerateWhipStreamResponse struct {
 	StreamId   string      `json:"streamId"`
@@ -547,6 +814,27 @@ func (o GenerateWhipStreamResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *GenerateWhipStreamResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Request to generate a WHIP stream for a channel-backed live video series.
+type GenerateWhipStreamV2Request struct {
+	ChannelSeries VideoChannelSeries `json:"channelSeries"`
+}
+
+func (o GenerateWhipStreamV2Request) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GenerateWhipStreamV2Request) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -724,6 +1012,31 @@ func (o *GetSegmentAtOrAfterTimestampRequest) UnmarshalYAML(unmarshal func(inter
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Request to get a segment containing the given timestamp, or the closest segment starting after it,
+for a video channel series (identified by channel + tags).
+*/
+type GetSegmentAtOrAfterTimestampV2Request struct {
+	ChannelSeries VideoChannelSeries `json:"channelSeries"`
+	Timestamp     api.Timestamp      `json:"timestamp" safelogging:"@Safe"`
+}
+
+func (o GetSegmentAtOrAfterTimestampV2Request) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetSegmentAtOrAfterTimestampV2Request) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type GetSegmentByTimestampRequest struct {
 	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
 	/*
@@ -851,9 +1164,38 @@ func (o *GetSegmentSummariesInBoundsRequest) UnmarshalYAML(unmarshal func(interf
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// safelogging:@Safe
+// Request to get channel-backed video stream sessions within bounds.
+// safelogging:@Unsafe
+type GetStreamsInBoundsForChannelRequest struct {
+	ChannelSeries VideoChannelSeries `json:"channelSeries"`
+	Bounds        Bounds             `json:"bounds" safelogging:"@Safe"`
+	// Defaults to 100. Will throw if larger than 1_000.
+	PageSize *int       `json:"pageSize,omitempty"`
+	Token    *api.Token `json:"token,omitempty" safelogging:"@Unsafe"`
+}
+
+func (o GetStreamsInBoundsForChannelRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetStreamsInBoundsForChannelRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
 type GetStreamsInBoundsRequest struct {
 	Bounds Bounds `json:"bounds" safelogging:"@Safe"`
+	// Defaults to 100. Will throw if larger than 1_000.
+	PageSize *int       `json:"pageSize,omitempty"`
+	Token    *api.Token `json:"token,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o GetStreamsInBoundsRequest) MarshalYAML() (interface{}, error) {
@@ -872,8 +1214,10 @@ func (o *GetStreamsInBoundsRequest) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type GetStreamsInBoundsResponse struct {
-	Streams []VideoStream `json:"streams"`
+	Streams       []VideoStream `json:"streams"`
+	NextPageToken *api.Token    `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o GetStreamsInBoundsResponse) MarshalJSON() ([]byte, error) {
@@ -906,6 +1250,49 @@ func (o GetStreamsInBoundsResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *GetStreamsInBoundsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type GetStreamsInBoundsV2Response struct {
+	Streams       []VideoStreamV2 `json:"streams"`
+	NextPageToken *api.Token      `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+}
+
+func (o GetStreamsInBoundsV2Response) MarshalJSON() ([]byte, error) {
+	if o.Streams == nil {
+		o.Streams = make([]VideoStreamV2, 0)
+	}
+	type _tmpGetStreamsInBoundsV2Response GetStreamsInBoundsV2Response
+	return safejson.Marshal(_tmpGetStreamsInBoundsV2Response(o))
+}
+
+func (o *GetStreamsInBoundsV2Response) UnmarshalJSON(data []byte) error {
+	type _tmpGetStreamsInBoundsV2Response GetStreamsInBoundsV2Response
+	var rawGetStreamsInBoundsV2Response _tmpGetStreamsInBoundsV2Response
+	if err := safejson.Unmarshal(data, &rawGetStreamsInBoundsV2Response); err != nil {
+		return err
+	}
+	if rawGetStreamsInBoundsV2Response.Streams == nil {
+		rawGetStreamsInBoundsV2Response.Streams = make([]VideoStreamV2, 0)
+	}
+	*o = GetStreamsInBoundsV2Response(rawGetStreamsInBoundsV2Response)
+	return nil
+}
+
+func (o GetStreamsInBoundsV2Response) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetStreamsInBoundsV2Response) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1041,8 +1428,9 @@ func (o *IceServer) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type IngestError struct {
-	ErrorType ErrorType `json:"errorType" safelogging:"@Safe"`
-	Message   string    `json:"message"`
+	ErrorType       ErrorType `json:"errorType" safelogging:"@Safe"`
+	Message         string    `json:"message"`
+	ErrorInstanceId *string   `json:"errorInstanceId,omitempty"`
 }
 
 func (o IngestError) MarshalYAML() (interface{}, error) {
@@ -1119,6 +1507,79 @@ func (o ListFilesInVideoResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ListFilesInVideoResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Request to list the dataset files backing a video channel series.
+Uses channel + tags to resolve to video series metadata. Bounds are optional; when omitted
+all dataset files for the channel are returned.
+*/
+// safelogging:@Unsafe
+type ListVideoChannelDatasetFilesRequest struct {
+	ChannelSeries VideoChannelSeries `json:"channelSeries"`
+	Bounds        *Bounds            `json:"bounds,omitempty"`
+	// Defaults to 100. Will throw if larger than 1_000.
+	PageSize *int       `json:"pageSize,omitempty"`
+	Token    *api.Token `json:"token,omitempty" safelogging:"@Unsafe"`
+}
+
+func (o ListVideoChannelDatasetFilesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ListVideoChannelDatasetFilesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type ListVideoChannelDatasetFilesResponse struct {
+	DatasetFiles  []VideoChannelDatasetFile `json:"datasetFiles"`
+	NextPageToken *api.Token                `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+}
+
+func (o ListVideoChannelDatasetFilesResponse) MarshalJSON() ([]byte, error) {
+	if o.DatasetFiles == nil {
+		o.DatasetFiles = make([]VideoChannelDatasetFile, 0)
+	}
+	type _tmpListVideoChannelDatasetFilesResponse ListVideoChannelDatasetFilesResponse
+	return safejson.Marshal(_tmpListVideoChannelDatasetFilesResponse(o))
+}
+
+func (o *ListVideoChannelDatasetFilesResponse) UnmarshalJSON(data []byte) error {
+	type _tmpListVideoChannelDatasetFilesResponse ListVideoChannelDatasetFilesResponse
+	var rawListVideoChannelDatasetFilesResponse _tmpListVideoChannelDatasetFilesResponse
+	if err := safejson.Unmarshal(data, &rawListVideoChannelDatasetFilesResponse); err != nil {
+		return err
+	}
+	if rawListVideoChannelDatasetFilesResponse.DatasetFiles == nil {
+		rawListVideoChannelDatasetFilesResponse.DatasetFiles = make([]VideoChannelDatasetFile, 0)
+	}
+	*o = ListVideoChannelDatasetFilesResponse(rawListVideoChannelDatasetFilesResponse)
+	return nil
+}
+
+func (o ListVideoChannelDatasetFilesResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ListVideoChannelDatasetFilesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1670,6 +2131,70 @@ func (o *VideoAssetChannel) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+A dataset file backing a video channel, with the min and max absolute timestamps of the
+segments it contributes to the channel.
+*/
+type VideoChannelDatasetFile struct {
+	DatasetFileId uuid.UUID     `json:"datasetFileId"`
+	Start         api.Timestamp `json:"start" safelogging:"@Safe"`
+	End           api.Timestamp `json:"end" safelogging:"@Safe"`
+}
+
+func (o VideoChannelDatasetFile) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoChannelDatasetFile) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+An update to apply to a single video dataset file backing a channel. Only the provided fields are
+changed; at least one must be set. When both start and scaleParameter are set, the file is rescaled
+first (around its current start) and then shifted to the new start.
+*/
+type VideoChannelDatasetFileUpdate struct {
+	DatasetFileId uuid.UUID `json:"datasetFileId"`
+	/*
+	   New absolute start timestamp for the file. The file's earliest segment is shifted to this
+	   timestamp and every other segment in the file is shifted by the same offset.
+	*/
+	Start *api.Timestamp `json:"start,omitempty"`
+	// New name (title) for the dataset file.
+	Title *string `json:"title,omitempty"`
+	/*
+	   Rescales the file's frame timestamps around its start (e.g. a corrected true frame rate, an
+	   absolute ending timestamp, or a direct scale factor). The file's cached segment metadata
+	   (scale factor, frame rate) is recomputed.
+	*/
+	ScaleParameter *ScaleParameter `json:"scaleParameter,omitempty"`
+}
+
+func (o VideoChannelDatasetFileUpdate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoChannelDatasetFileUpdate) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Aggregated segment metadata for a video channel series
 type VideoChannelSegmentsMetadata struct {
 	NumFrames            int           `json:"numFrames"`
@@ -1822,6 +2347,28 @@ func (o *VideoFileSegmentsMetadata) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Metadata update for a single video file in a batch update.
+type VideoFileUpdate struct {
+	VideoFileRid rids.VideoFileRid      `json:"videoFileRid" safelogging:"@Safe"`
+	Request      UpdateVideoFileRequest `json:"request"`
+}
+
+func (o VideoFileUpdate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoFileUpdate) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type VideoOriginMetadata struct {
 	// Deprecated: deprecated in favor of per-file VideoFileOriginMetadata. Will be removed after April 15th.
 	VideoSources []api.Handle `json:"videoSources"`
@@ -1886,6 +2433,32 @@ func (o VideoStream) MarshalYAML() (interface{}, error) {
 }
 
 func (o *VideoStream) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Metadata for a single channel-backed video stream session.
+type VideoStreamV2 struct {
+	StreamId     string             `json:"streamId"`
+	StreamStatus string             `json:"streamStatus"`
+	CreatedAt    datetime.DateTime  `json:"createdAt"`
+	UpdatedAt    datetime.DateTime  `json:"updatedAt"`
+	Start        *datetime.DateTime `json:"start,omitempty"`
+	End          *datetime.DateTime `json:"end,omitempty"`
+}
+
+func (o VideoStreamV2) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoStreamV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

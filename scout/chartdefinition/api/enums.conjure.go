@@ -369,6 +369,75 @@ func (e *Geo3dDefaultModel) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type Geo3dModelAxis struct {
+	val Geo3dModelAxis_Value
+}
+
+type Geo3dModelAxis_Value string
+
+const (
+	Geo3dModelAxis_X       Geo3dModelAxis_Value = "X"
+	Geo3dModelAxis_Y       Geo3dModelAxis_Value = "Y"
+	Geo3dModelAxis_Z       Geo3dModelAxis_Value = "Z"
+	Geo3dModelAxis_NEG_X   Geo3dModelAxis_Value = "NEG_X"
+	Geo3dModelAxis_NEG_Y   Geo3dModelAxis_Value = "NEG_Y"
+	Geo3dModelAxis_NEG_Z   Geo3dModelAxis_Value = "NEG_Z"
+	Geo3dModelAxis_UNKNOWN Geo3dModelAxis_Value = "UNKNOWN"
+)
+
+// Geo3dModelAxis_Values returns all known variants of Geo3dModelAxis.
+func Geo3dModelAxis_Values() []Geo3dModelAxis_Value {
+	return []Geo3dModelAxis_Value{Geo3dModelAxis_X, Geo3dModelAxis_Y, Geo3dModelAxis_Z, Geo3dModelAxis_NEG_X, Geo3dModelAxis_NEG_Y, Geo3dModelAxis_NEG_Z}
+}
+
+func New_Geo3dModelAxis(value Geo3dModelAxis_Value) Geo3dModelAxis {
+	return Geo3dModelAxis{val: value}
+}
+
+// IsUnknown returns false for all known variants of Geo3dModelAxis and true otherwise.
+func (e Geo3dModelAxis) IsUnknown() bool {
+	switch e.val {
+	case Geo3dModelAxis_X, Geo3dModelAxis_Y, Geo3dModelAxis_Z, Geo3dModelAxis_NEG_X, Geo3dModelAxis_NEG_Y, Geo3dModelAxis_NEG_Z:
+		return false
+	}
+	return true
+}
+
+func (e Geo3dModelAxis) Value() Geo3dModelAxis_Value {
+	if e.IsUnknown() {
+		return Geo3dModelAxis_UNKNOWN
+	}
+	return e.val
+}
+
+func (e Geo3dModelAxis) String() string {
+	return string(e.val)
+}
+
+func (e Geo3dModelAxis) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *Geo3dModelAxis) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_Geo3dModelAxis(Geo3dModelAxis_Value(v))
+	case "X":
+		*e = New_Geo3dModelAxis(Geo3dModelAxis_X)
+	case "Y":
+		*e = New_Geo3dModelAxis(Geo3dModelAxis_Y)
+	case "Z":
+		*e = New_Geo3dModelAxis(Geo3dModelAxis_Z)
+	case "NEG_X":
+		*e = New_Geo3dModelAxis(Geo3dModelAxis_NEG_X)
+	case "NEG_Y":
+		*e = New_Geo3dModelAxis(Geo3dModelAxis_NEG_Y)
+	case "NEG_Z":
+		*e = New_Geo3dModelAxis(Geo3dModelAxis_NEG_Z)
+	}
+	return nil
+}
+
 // A standard tileset to overlay on the base map.
 type GeoAdditionalTileset struct {
 	val GeoAdditionalTileset_Value
@@ -423,6 +492,66 @@ func (e *GeoAdditionalTileset) UnmarshalText(data []byte) error {
 		*e = New_GeoAdditionalTileset(GeoAdditionalTileset_VFR)
 	case "BATHYMETRY":
 		*e = New_GeoAdditionalTileset(GeoAdditionalTileset_BATHYMETRY)
+	}
+	return nil
+}
+
+type GeoArrowStyle struct {
+	val GeoArrowStyle_Value
+}
+
+type GeoArrowStyle_Value string
+
+const (
+	GeoArrowStyle_SOLID   GeoArrowStyle_Value = "SOLID"
+	GeoArrowStyle_HOLLOW  GeoArrowStyle_Value = "HOLLOW"
+	GeoArrowStyle_NONE    GeoArrowStyle_Value = "NONE"
+	GeoArrowStyle_UNKNOWN GeoArrowStyle_Value = "UNKNOWN"
+)
+
+// GeoArrowStyle_Values returns all known variants of GeoArrowStyle.
+func GeoArrowStyle_Values() []GeoArrowStyle_Value {
+	return []GeoArrowStyle_Value{GeoArrowStyle_SOLID, GeoArrowStyle_HOLLOW, GeoArrowStyle_NONE}
+}
+
+func New_GeoArrowStyle(value GeoArrowStyle_Value) GeoArrowStyle {
+	return GeoArrowStyle{val: value}
+}
+
+// IsUnknown returns false for all known variants of GeoArrowStyle and true otherwise.
+func (e GeoArrowStyle) IsUnknown() bool {
+	switch e.val {
+	case GeoArrowStyle_SOLID, GeoArrowStyle_HOLLOW, GeoArrowStyle_NONE:
+		return false
+	}
+	return true
+}
+
+func (e GeoArrowStyle) Value() GeoArrowStyle_Value {
+	if e.IsUnknown() {
+		return GeoArrowStyle_UNKNOWN
+	}
+	return e.val
+}
+
+func (e GeoArrowStyle) String() string {
+	return string(e.val)
+}
+
+func (e GeoArrowStyle) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *GeoArrowStyle) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_GeoArrowStyle(GeoArrowStyle_Value(v))
+	case "SOLID":
+		*e = New_GeoArrowStyle(GeoArrowStyle_SOLID)
+	case "HOLLOW":
+		*e = New_GeoArrowStyle(GeoArrowStyle_HOLLOW)
+	case "NONE":
+		*e = New_GeoArrowStyle(GeoArrowStyle_NONE)
 	}
 	return nil
 }
@@ -609,6 +738,121 @@ func (e *GeoLineStyle) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type GeoOverlaySourceFormat struct {
+	val GeoOverlaySourceFormat_Value
+}
+
+type GeoOverlaySourceFormat_Value string
+
+const (
+	GeoOverlaySourceFormat_KML     GeoOverlaySourceFormat_Value = "KML"
+	GeoOverlaySourceFormat_UNKNOWN GeoOverlaySourceFormat_Value = "UNKNOWN"
+)
+
+// GeoOverlaySourceFormat_Values returns all known variants of GeoOverlaySourceFormat.
+func GeoOverlaySourceFormat_Values() []GeoOverlaySourceFormat_Value {
+	return []GeoOverlaySourceFormat_Value{GeoOverlaySourceFormat_KML}
+}
+
+func New_GeoOverlaySourceFormat(value GeoOverlaySourceFormat_Value) GeoOverlaySourceFormat {
+	return GeoOverlaySourceFormat{val: value}
+}
+
+// IsUnknown returns false for all known variants of GeoOverlaySourceFormat and true otherwise.
+func (e GeoOverlaySourceFormat) IsUnknown() bool {
+	switch e.val {
+	case GeoOverlaySourceFormat_KML:
+		return false
+	}
+	return true
+}
+
+func (e GeoOverlaySourceFormat) Value() GeoOverlaySourceFormat_Value {
+	if e.IsUnknown() {
+		return GeoOverlaySourceFormat_UNKNOWN
+	}
+	return e.val
+}
+
+func (e GeoOverlaySourceFormat) String() string {
+	return string(e.val)
+}
+
+func (e GeoOverlaySourceFormat) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *GeoOverlaySourceFormat) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_GeoOverlaySourceFormat(GeoOverlaySourceFormat_Value(v))
+	case "KML":
+		*e = New_GeoOverlaySourceFormat(GeoOverlaySourceFormat_KML)
+	}
+	return nil
+}
+
+// Unit system used for distance measurements.
+type GeoUnitSystem struct {
+	val GeoUnitSystem_Value
+}
+
+type GeoUnitSystem_Value string
+
+const (
+	GeoUnitSystem_METRIC         GeoUnitSystem_Value = "METRIC"
+	GeoUnitSystem_IMPERIAL       GeoUnitSystem_Value = "IMPERIAL"
+	GeoUnitSystem_NAUTICAL_MILES GeoUnitSystem_Value = "NAUTICAL_MILES"
+	GeoUnitSystem_UNKNOWN        GeoUnitSystem_Value = "UNKNOWN"
+)
+
+// GeoUnitSystem_Values returns all known variants of GeoUnitSystem.
+func GeoUnitSystem_Values() []GeoUnitSystem_Value {
+	return []GeoUnitSystem_Value{GeoUnitSystem_METRIC, GeoUnitSystem_IMPERIAL, GeoUnitSystem_NAUTICAL_MILES}
+}
+
+func New_GeoUnitSystem(value GeoUnitSystem_Value) GeoUnitSystem {
+	return GeoUnitSystem{val: value}
+}
+
+// IsUnknown returns false for all known variants of GeoUnitSystem and true otherwise.
+func (e GeoUnitSystem) IsUnknown() bool {
+	switch e.val {
+	case GeoUnitSystem_METRIC, GeoUnitSystem_IMPERIAL, GeoUnitSystem_NAUTICAL_MILES:
+		return false
+	}
+	return true
+}
+
+func (e GeoUnitSystem) Value() GeoUnitSystem_Value {
+	if e.IsUnknown() {
+		return GeoUnitSystem_UNKNOWN
+	}
+	return e.val
+}
+
+func (e GeoUnitSystem) String() string {
+	return string(e.val)
+}
+
+func (e GeoUnitSystem) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *GeoUnitSystem) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_GeoUnitSystem(GeoUnitSystem_Value(v))
+	case "METRIC":
+		*e = New_GeoUnitSystem(GeoUnitSystem_METRIC)
+	case "IMPERIAL":
+		*e = New_GeoUnitSystem(GeoUnitSystem_IMPERIAL)
+	case "NAUTICAL_MILES":
+		*e = New_GeoUnitSystem(GeoUnitSystem_NAUTICAL_MILES)
+	}
+	return nil
+}
+
 /*
 The order in which the histogram should be sorted.
 Default is VALUE_ASCENDING.
@@ -672,6 +916,67 @@ func (e *HistogramSortOrder) UnmarshalText(data []byte) error {
 		*e = New_HistogramSortOrder(HistogramSortOrder_FREQUENCY_ASCENDING)
 	case "FREQUENCY_DESCENDING":
 		*e = New_HistogramSortOrder(HistogramSortOrder_FREQUENCY_DESCENDING)
+	}
+	return nil
+}
+
+/*
+How the image is scaled inside its container. CONTAIN fits the
+image without cropping; COVER fills the container, cropping if needed.
+*/
+type ImageObjectFit struct {
+	val ImageObjectFit_Value
+}
+
+type ImageObjectFit_Value string
+
+const (
+	ImageObjectFit_CONTAIN ImageObjectFit_Value = "CONTAIN"
+	ImageObjectFit_COVER   ImageObjectFit_Value = "COVER"
+	ImageObjectFit_UNKNOWN ImageObjectFit_Value = "UNKNOWN"
+)
+
+// ImageObjectFit_Values returns all known variants of ImageObjectFit.
+func ImageObjectFit_Values() []ImageObjectFit_Value {
+	return []ImageObjectFit_Value{ImageObjectFit_CONTAIN, ImageObjectFit_COVER}
+}
+
+func New_ImageObjectFit(value ImageObjectFit_Value) ImageObjectFit {
+	return ImageObjectFit{val: value}
+}
+
+// IsUnknown returns false for all known variants of ImageObjectFit and true otherwise.
+func (e ImageObjectFit) IsUnknown() bool {
+	switch e.val {
+	case ImageObjectFit_CONTAIN, ImageObjectFit_COVER:
+		return false
+	}
+	return true
+}
+
+func (e ImageObjectFit) Value() ImageObjectFit_Value {
+	if e.IsUnknown() {
+		return ImageObjectFit_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ImageObjectFit) String() string {
+	return string(e.val)
+}
+
+func (e ImageObjectFit) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ImageObjectFit) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ImageObjectFit(ImageObjectFit_Value(v))
+	case "CONTAIN":
+		*e = New_ImageObjectFit(ImageObjectFit_CONTAIN)
+	case "COVER":
+		*e = New_ImageObjectFit(ImageObjectFit_COVER)
 	}
 	return nil
 }
@@ -910,6 +1215,66 @@ func (e *OverlayScope) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type PeakDetectionMode struct {
+	val PeakDetectionMode_Value
+}
+
+type PeakDetectionMode_Value string
+
+const (
+	PeakDetectionMode_POSITIVE PeakDetectionMode_Value = "POSITIVE"
+	PeakDetectionMode_NEGATIVE PeakDetectionMode_Value = "NEGATIVE"
+	PeakDetectionMode_MEAN     PeakDetectionMode_Value = "MEAN"
+	PeakDetectionMode_UNKNOWN  PeakDetectionMode_Value = "UNKNOWN"
+)
+
+// PeakDetectionMode_Values returns all known variants of PeakDetectionMode.
+func PeakDetectionMode_Values() []PeakDetectionMode_Value {
+	return []PeakDetectionMode_Value{PeakDetectionMode_POSITIVE, PeakDetectionMode_NEGATIVE, PeakDetectionMode_MEAN}
+}
+
+func New_PeakDetectionMode(value PeakDetectionMode_Value) PeakDetectionMode {
+	return PeakDetectionMode{val: value}
+}
+
+// IsUnknown returns false for all known variants of PeakDetectionMode and true otherwise.
+func (e PeakDetectionMode) IsUnknown() bool {
+	switch e.val {
+	case PeakDetectionMode_POSITIVE, PeakDetectionMode_NEGATIVE, PeakDetectionMode_MEAN:
+		return false
+	}
+	return true
+}
+
+func (e PeakDetectionMode) Value() PeakDetectionMode_Value {
+	if e.IsUnknown() {
+		return PeakDetectionMode_UNKNOWN
+	}
+	return e.val
+}
+
+func (e PeakDetectionMode) String() string {
+	return string(e.val)
+}
+
+func (e PeakDetectionMode) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *PeakDetectionMode) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_PeakDetectionMode(PeakDetectionMode_Value(v))
+	case "POSITIVE":
+		*e = New_PeakDetectionMode(PeakDetectionMode_POSITIVE)
+	case "NEGATIVE":
+		*e = New_PeakDetectionMode(PeakDetectionMode_NEGATIVE)
+	case "MEAN":
+		*e = New_PeakDetectionMode(PeakDetectionMode_MEAN)
+	}
+	return nil
+}
+
 type PlotlyPreset struct {
 	val PlotlyPreset_Value
 }
@@ -1021,6 +1386,72 @@ func (e *Position) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type PsdDisplayMode struct {
+	val PsdDisplayMode_Value
+}
+
+type PsdDisplayMode_Value string
+
+const (
+	PsdDisplayMode_AVERAGE          PsdDisplayMode_Value = "AVERAGE"
+	PsdDisplayMode_MAX              PsdDisplayMode_Value = "MAX"
+	PsdDisplayMode_MIN              PsdDisplayMode_Value = "MIN"
+	PsdDisplayMode_MIN_MAX_ENVELOPE PsdDisplayMode_Value = "MIN_MAX_ENVELOPE"
+	PsdDisplayMode_NONE             PsdDisplayMode_Value = "NONE"
+	PsdDisplayMode_UNKNOWN          PsdDisplayMode_Value = "UNKNOWN"
+)
+
+// PsdDisplayMode_Values returns all known variants of PsdDisplayMode.
+func PsdDisplayMode_Values() []PsdDisplayMode_Value {
+	return []PsdDisplayMode_Value{PsdDisplayMode_AVERAGE, PsdDisplayMode_MAX, PsdDisplayMode_MIN, PsdDisplayMode_MIN_MAX_ENVELOPE, PsdDisplayMode_NONE}
+}
+
+func New_PsdDisplayMode(value PsdDisplayMode_Value) PsdDisplayMode {
+	return PsdDisplayMode{val: value}
+}
+
+// IsUnknown returns false for all known variants of PsdDisplayMode and true otherwise.
+func (e PsdDisplayMode) IsUnknown() bool {
+	switch e.val {
+	case PsdDisplayMode_AVERAGE, PsdDisplayMode_MAX, PsdDisplayMode_MIN, PsdDisplayMode_MIN_MAX_ENVELOPE, PsdDisplayMode_NONE:
+		return false
+	}
+	return true
+}
+
+func (e PsdDisplayMode) Value() PsdDisplayMode_Value {
+	if e.IsUnknown() {
+		return PsdDisplayMode_UNKNOWN
+	}
+	return e.val
+}
+
+func (e PsdDisplayMode) String() string {
+	return string(e.val)
+}
+
+func (e PsdDisplayMode) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *PsdDisplayMode) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_PsdDisplayMode(PsdDisplayMode_Value(v))
+	case "AVERAGE":
+		*e = New_PsdDisplayMode(PsdDisplayMode_AVERAGE)
+	case "MAX":
+		*e = New_PsdDisplayMode(PsdDisplayMode_MAX)
+	case "MIN":
+		*e = New_PsdDisplayMode(PsdDisplayMode_MIN)
+	case "MIN_MAX_ENVELOPE":
+		*e = New_PsdDisplayMode(PsdDisplayMode_MIN_MAX_ENVELOPE)
+	case "NONE":
+		*e = New_PsdDisplayMode(PsdDisplayMode_NONE)
+	}
+	return nil
+}
+
 type Scatter3dDecimationStrategy struct {
 	val Scatter3dDecimationStrategy_Value
 }
@@ -1074,6 +1505,420 @@ func (e *Scatter3dDecimationStrategy) UnmarshalText(data []byte) error {
 		*e = New_Scatter3dDecimationStrategy(Scatter3dDecimationStrategy_SPATIAL)
 	case "TEMPORAL":
 		*e = New_Scatter3dDecimationStrategy(Scatter3dDecimationStrategy_TEMPORAL)
+	}
+	return nil
+}
+
+// Cardinal axis used for gradient coloring.
+type SpatialColorAxis struct {
+	val SpatialColorAxis_Value
+}
+
+type SpatialColorAxis_Value string
+
+const (
+	SpatialColorAxis_X       SpatialColorAxis_Value = "X"
+	SpatialColorAxis_Y       SpatialColorAxis_Value = "Y"
+	SpatialColorAxis_Z       SpatialColorAxis_Value = "Z"
+	SpatialColorAxis_UNKNOWN SpatialColorAxis_Value = "UNKNOWN"
+)
+
+// SpatialColorAxis_Values returns all known variants of SpatialColorAxis.
+func SpatialColorAxis_Values() []SpatialColorAxis_Value {
+	return []SpatialColorAxis_Value{SpatialColorAxis_X, SpatialColorAxis_Y, SpatialColorAxis_Z}
+}
+
+func New_SpatialColorAxis(value SpatialColorAxis_Value) SpatialColorAxis {
+	return SpatialColorAxis{val: value}
+}
+
+// IsUnknown returns false for all known variants of SpatialColorAxis and true otherwise.
+func (e SpatialColorAxis) IsUnknown() bool {
+	switch e.val {
+	case SpatialColorAxis_X, SpatialColorAxis_Y, SpatialColorAxis_Z:
+		return false
+	}
+	return true
+}
+
+func (e SpatialColorAxis) Value() SpatialColorAxis_Value {
+	if e.IsUnknown() {
+		return SpatialColorAxis_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SpatialColorAxis) String() string {
+	return string(e.val)
+}
+
+func (e SpatialColorAxis) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SpatialColorAxis) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SpatialColorAxis(SpatialColorAxis_Value(v))
+	case "X":
+		*e = New_SpatialColorAxis(SpatialColorAxis_X)
+	case "Y":
+		*e = New_SpatialColorAxis(SpatialColorAxis_Y)
+	case "Z":
+		*e = New_SpatialColorAxis(SpatialColorAxis_Z)
+	}
+	return nil
+}
+
+// Named perceptually uniform scales (matplotlib-style set plus TURBO).
+type SpatialColorMap struct {
+	val SpatialColorMap_Value
+}
+
+type SpatialColorMap_Value string
+
+const (
+	SpatialColorMap_MAGMA   SpatialColorMap_Value = "MAGMA"
+	SpatialColorMap_INFERNO SpatialColorMap_Value = "INFERNO"
+	SpatialColorMap_PLASMA  SpatialColorMap_Value = "PLASMA"
+	SpatialColorMap_VIRIDIS SpatialColorMap_Value = "VIRIDIS"
+	SpatialColorMap_CIVIDIS SpatialColorMap_Value = "CIVIDIS"
+	SpatialColorMap_TURBO   SpatialColorMap_Value = "TURBO"
+	SpatialColorMap_UNKNOWN SpatialColorMap_Value = "UNKNOWN"
+)
+
+// SpatialColorMap_Values returns all known variants of SpatialColorMap.
+func SpatialColorMap_Values() []SpatialColorMap_Value {
+	return []SpatialColorMap_Value{SpatialColorMap_MAGMA, SpatialColorMap_INFERNO, SpatialColorMap_PLASMA, SpatialColorMap_VIRIDIS, SpatialColorMap_CIVIDIS, SpatialColorMap_TURBO}
+}
+
+func New_SpatialColorMap(value SpatialColorMap_Value) SpatialColorMap {
+	return SpatialColorMap{val: value}
+}
+
+// IsUnknown returns false for all known variants of SpatialColorMap and true otherwise.
+func (e SpatialColorMap) IsUnknown() bool {
+	switch e.val {
+	case SpatialColorMap_MAGMA, SpatialColorMap_INFERNO, SpatialColorMap_PLASMA, SpatialColorMap_VIRIDIS, SpatialColorMap_CIVIDIS, SpatialColorMap_TURBO:
+		return false
+	}
+	return true
+}
+
+func (e SpatialColorMap) Value() SpatialColorMap_Value {
+	if e.IsUnknown() {
+		return SpatialColorMap_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SpatialColorMap) String() string {
+	return string(e.val)
+}
+
+func (e SpatialColorMap) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SpatialColorMap) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SpatialColorMap(SpatialColorMap_Value(v))
+	case "MAGMA":
+		*e = New_SpatialColorMap(SpatialColorMap_MAGMA)
+	case "INFERNO":
+		*e = New_SpatialColorMap(SpatialColorMap_INFERNO)
+	case "PLASMA":
+		*e = New_SpatialColorMap(SpatialColorMap_PLASMA)
+	case "VIRIDIS":
+		*e = New_SpatialColorMap(SpatialColorMap_VIRIDIS)
+	case "CIVIDIS":
+		*e = New_SpatialColorMap(SpatialColorMap_CIVIDIS)
+	case "TURBO":
+		*e = New_SpatialColorMap(SpatialColorMap_TURBO)
+	}
+	return nil
+}
+
+// Whether the gradient ramp spans one model or the whole scene.
+type SpatialGradientExtents struct {
+	val SpatialGradientExtents_Value
+}
+
+type SpatialGradientExtents_Value string
+
+const (
+	SpatialGradientExtents_LOCAL   SpatialGradientExtents_Value = "LOCAL"
+	SpatialGradientExtents_GLOBAL  SpatialGradientExtents_Value = "GLOBAL"
+	SpatialGradientExtents_UNKNOWN SpatialGradientExtents_Value = "UNKNOWN"
+)
+
+// SpatialGradientExtents_Values returns all known variants of SpatialGradientExtents.
+func SpatialGradientExtents_Values() []SpatialGradientExtents_Value {
+	return []SpatialGradientExtents_Value{SpatialGradientExtents_LOCAL, SpatialGradientExtents_GLOBAL}
+}
+
+func New_SpatialGradientExtents(value SpatialGradientExtents_Value) SpatialGradientExtents {
+	return SpatialGradientExtents{val: value}
+}
+
+// IsUnknown returns false for all known variants of SpatialGradientExtents and true otherwise.
+func (e SpatialGradientExtents) IsUnknown() bool {
+	switch e.val {
+	case SpatialGradientExtents_LOCAL, SpatialGradientExtents_GLOBAL:
+		return false
+	}
+	return true
+}
+
+func (e SpatialGradientExtents) Value() SpatialGradientExtents_Value {
+	if e.IsUnknown() {
+		return SpatialGradientExtents_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SpatialGradientExtents) String() string {
+	return string(e.val)
+}
+
+func (e SpatialGradientExtents) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SpatialGradientExtents) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SpatialGradientExtents(SpatialGradientExtents_Value(v))
+	case "LOCAL":
+		*e = New_SpatialGradientExtents(SpatialGradientExtents_LOCAL)
+	case "GLOBAL":
+		*e = New_SpatialGradientExtents(SpatialGradientExtents_GLOBAL)
+	}
+	return nil
+}
+
+// One of the baked matcaps in the volumesight atlas.
+type SpatialMatcap struct {
+	val SpatialMatcap_Value
+}
+
+type SpatialMatcap_Value string
+
+const (
+	SpatialMatcap_SOAP          SpatialMatcap_Value = "SOAP"
+	SpatialMatcap_SILVER        SpatialMatcap_Value = "SILVER"
+	SpatialMatcap_GOLD          SpatialMatcap_Value = "GOLD"
+	SpatialMatcap_PLASTIC       SpatialMatcap_Value = "PLASTIC"
+	SpatialMatcap_TILE          SpatialMatcap_Value = "TILE"
+	SpatialMatcap_VIOLET_CHROME SpatialMatcap_Value = "VIOLET_CHROME"
+	SpatialMatcap_TRAFFIC_CONE  SpatialMatcap_Value = "TRAFFIC_CONE"
+	SpatialMatcap_EMERALD       SpatialMatcap_Value = "EMERALD"
+	SpatialMatcap_AMETHYST      SpatialMatcap_Value = "AMETHYST"
+	SpatialMatcap_BLUE_PAINT    SpatialMatcap_Value = "BLUE_PAINT"
+	SpatialMatcap_RED_CAR       SpatialMatcap_Value = "RED_CAR"
+	SpatialMatcap_BEETLE        SpatialMatcap_Value = "BEETLE"
+	SpatialMatcap_BUBBLE        SpatialMatcap_Value = "BUBBLE"
+	SpatialMatcap_PEARL         SpatialMatcap_Value = "PEARL"
+	SpatialMatcap_WAX           SpatialMatcap_Value = "WAX"
+	SpatialMatcap_MARBLE        SpatialMatcap_Value = "MARBLE"
+	SpatialMatcap_UNKNOWN       SpatialMatcap_Value = "UNKNOWN"
+)
+
+// SpatialMatcap_Values returns all known variants of SpatialMatcap.
+func SpatialMatcap_Values() []SpatialMatcap_Value {
+	return []SpatialMatcap_Value{SpatialMatcap_SOAP, SpatialMatcap_SILVER, SpatialMatcap_GOLD, SpatialMatcap_PLASTIC, SpatialMatcap_TILE, SpatialMatcap_VIOLET_CHROME, SpatialMatcap_TRAFFIC_CONE, SpatialMatcap_EMERALD, SpatialMatcap_AMETHYST, SpatialMatcap_BLUE_PAINT, SpatialMatcap_RED_CAR, SpatialMatcap_BEETLE, SpatialMatcap_BUBBLE, SpatialMatcap_PEARL, SpatialMatcap_WAX, SpatialMatcap_MARBLE}
+}
+
+func New_SpatialMatcap(value SpatialMatcap_Value) SpatialMatcap {
+	return SpatialMatcap{val: value}
+}
+
+// IsUnknown returns false for all known variants of SpatialMatcap and true otherwise.
+func (e SpatialMatcap) IsUnknown() bool {
+	switch e.val {
+	case SpatialMatcap_SOAP, SpatialMatcap_SILVER, SpatialMatcap_GOLD, SpatialMatcap_PLASTIC, SpatialMatcap_TILE, SpatialMatcap_VIOLET_CHROME, SpatialMatcap_TRAFFIC_CONE, SpatialMatcap_EMERALD, SpatialMatcap_AMETHYST, SpatialMatcap_BLUE_PAINT, SpatialMatcap_RED_CAR, SpatialMatcap_BEETLE, SpatialMatcap_BUBBLE, SpatialMatcap_PEARL, SpatialMatcap_WAX, SpatialMatcap_MARBLE:
+		return false
+	}
+	return true
+}
+
+func (e SpatialMatcap) Value() SpatialMatcap_Value {
+	if e.IsUnknown() {
+		return SpatialMatcap_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SpatialMatcap) String() string {
+	return string(e.val)
+}
+
+func (e SpatialMatcap) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SpatialMatcap) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SpatialMatcap(SpatialMatcap_Value(v))
+	case "SOAP":
+		*e = New_SpatialMatcap(SpatialMatcap_SOAP)
+	case "SILVER":
+		*e = New_SpatialMatcap(SpatialMatcap_SILVER)
+	case "GOLD":
+		*e = New_SpatialMatcap(SpatialMatcap_GOLD)
+	case "PLASTIC":
+		*e = New_SpatialMatcap(SpatialMatcap_PLASTIC)
+	case "TILE":
+		*e = New_SpatialMatcap(SpatialMatcap_TILE)
+	case "VIOLET_CHROME":
+		*e = New_SpatialMatcap(SpatialMatcap_VIOLET_CHROME)
+	case "TRAFFIC_CONE":
+		*e = New_SpatialMatcap(SpatialMatcap_TRAFFIC_CONE)
+	case "EMERALD":
+		*e = New_SpatialMatcap(SpatialMatcap_EMERALD)
+	case "AMETHYST":
+		*e = New_SpatialMatcap(SpatialMatcap_AMETHYST)
+	case "BLUE_PAINT":
+		*e = New_SpatialMatcap(SpatialMatcap_BLUE_PAINT)
+	case "RED_CAR":
+		*e = New_SpatialMatcap(SpatialMatcap_RED_CAR)
+	case "BEETLE":
+		*e = New_SpatialMatcap(SpatialMatcap_BEETLE)
+	case "BUBBLE":
+		*e = New_SpatialMatcap(SpatialMatcap_BUBBLE)
+	case "PEARL":
+		*e = New_SpatialMatcap(SpatialMatcap_PEARL)
+	case "WAX":
+		*e = New_SpatialMatcap(SpatialMatcap_WAX)
+	case "MARBLE":
+		*e = New_SpatialMatcap(SpatialMatcap_MARBLE)
+	}
+	return nil
+}
+
+// Shape rendered for each point in the cloud.
+type SpatialSplatMode struct {
+	val SpatialSplatMode_Value
+}
+
+type SpatialSplatMode_Value string
+
+const (
+	SpatialSplatMode_BALL      SpatialSplatMode_Value = "BALL"
+	SpatialSplatMode_PARABOLIC SpatialSplatMode_Value = "PARABOLIC"
+	SpatialSplatMode_DISC      SpatialSplatMode_Value = "DISC"
+	SpatialSplatMode_UNKNOWN   SpatialSplatMode_Value = "UNKNOWN"
+)
+
+// SpatialSplatMode_Values returns all known variants of SpatialSplatMode.
+func SpatialSplatMode_Values() []SpatialSplatMode_Value {
+	return []SpatialSplatMode_Value{SpatialSplatMode_BALL, SpatialSplatMode_PARABOLIC, SpatialSplatMode_DISC}
+}
+
+func New_SpatialSplatMode(value SpatialSplatMode_Value) SpatialSplatMode {
+	return SpatialSplatMode{val: value}
+}
+
+// IsUnknown returns false for all known variants of SpatialSplatMode and true otherwise.
+func (e SpatialSplatMode) IsUnknown() bool {
+	switch e.val {
+	case SpatialSplatMode_BALL, SpatialSplatMode_PARABOLIC, SpatialSplatMode_DISC:
+		return false
+	}
+	return true
+}
+
+func (e SpatialSplatMode) Value() SpatialSplatMode_Value {
+	if e.IsUnknown() {
+		return SpatialSplatMode_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SpatialSplatMode) String() string {
+	return string(e.val)
+}
+
+func (e SpatialSplatMode) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SpatialSplatMode) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SpatialSplatMode(SpatialSplatMode_Value(v))
+	case "BALL":
+		*e = New_SpatialSplatMode(SpatialSplatMode_BALL)
+	case "PARABOLIC":
+		*e = New_SpatialSplatMode(SpatialSplatMode_PARABOLIC)
+	case "DISC":
+		*e = New_SpatialSplatMode(SpatialSplatMode_DISC)
+	}
+	return nil
+}
+
+// Unit that the per-point time attribute is stored in.
+type SpatialTimeUnit struct {
+	val SpatialTimeUnit_Value
+}
+
+type SpatialTimeUnit_Value string
+
+const (
+	SpatialTimeUnit_NS      SpatialTimeUnit_Value = "NS"
+	SpatialTimeUnit_US      SpatialTimeUnit_Value = "US"
+	SpatialTimeUnit_MS      SpatialTimeUnit_Value = "MS"
+	SpatialTimeUnit_S       SpatialTimeUnit_Value = "S"
+	SpatialTimeUnit_UNKNOWN SpatialTimeUnit_Value = "UNKNOWN"
+)
+
+// SpatialTimeUnit_Values returns all known variants of SpatialTimeUnit.
+func SpatialTimeUnit_Values() []SpatialTimeUnit_Value {
+	return []SpatialTimeUnit_Value{SpatialTimeUnit_NS, SpatialTimeUnit_US, SpatialTimeUnit_MS, SpatialTimeUnit_S}
+}
+
+func New_SpatialTimeUnit(value SpatialTimeUnit_Value) SpatialTimeUnit {
+	return SpatialTimeUnit{val: value}
+}
+
+// IsUnknown returns false for all known variants of SpatialTimeUnit and true otherwise.
+func (e SpatialTimeUnit) IsUnknown() bool {
+	switch e.val {
+	case SpatialTimeUnit_NS, SpatialTimeUnit_US, SpatialTimeUnit_MS, SpatialTimeUnit_S:
+		return false
+	}
+	return true
+}
+
+func (e SpatialTimeUnit) Value() SpatialTimeUnit_Value {
+	if e.IsUnknown() {
+		return SpatialTimeUnit_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SpatialTimeUnit) String() string {
+	return string(e.val)
+}
+
+func (e SpatialTimeUnit) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SpatialTimeUnit) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SpatialTimeUnit(SpatialTimeUnit_Value(v))
+	case "NS":
+		*e = New_SpatialTimeUnit(SpatialTimeUnit_NS)
+	case "US":
+		*e = New_SpatialTimeUnit(SpatialTimeUnit_US)
+	case "MS":
+		*e = New_SpatialTimeUnit(SpatialTimeUnit_MS)
+	case "S":
+		*e = New_SpatialTimeUnit(SpatialTimeUnit_S)
 	}
 	return nil
 }

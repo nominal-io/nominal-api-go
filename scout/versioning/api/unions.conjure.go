@@ -14,15 +14,17 @@ import (
 type CompactionStrategy struct {
 	typ           string
 	olderThanDays *int
+	keepNewestN   *int
 }
 
 type compactionStrategyDeserializer struct {
 	Type          string `json:"type"`
 	OlderThanDays *int   `json:"olderThanDays"`
+	KeepNewestN   *int   `json:"keepNewestN"`
 }
 
 func (u *compactionStrategyDeserializer) toStruct() CompactionStrategy {
-	return CompactionStrategy{typ: u.Type, olderThanDays: u.OlderThanDays}
+	return CompactionStrategy{typ: u.Type, olderThanDays: u.OlderThanDays, keepNewestN: u.KeepNewestN}
 }
 
 func (u *CompactionStrategy) toSerializer() (interface{}, error) {
@@ -37,6 +39,14 @@ func (u *CompactionStrategy) toSerializer() (interface{}, error) {
 			Type          string `json:"type"`
 			OlderThanDays int    `json:"olderThanDays"`
 		}{Type: "olderThanDays", OlderThanDays: *u.olderThanDays}, nil
+	case "keepNewestN":
+		if u.keepNewestN == nil {
+			return nil, fmt.Errorf("field \"keepNewestN\" is required")
+		}
+		return struct {
+			Type        string `json:"type"`
+			KeepNewestN int    `json:"keepNewestN"`
+		}{Type: "keepNewestN", KeepNewestN: *u.keepNewestN}, nil
 	}
 }
 
@@ -59,6 +69,10 @@ func (u *CompactionStrategy) UnmarshalJSON(data []byte) error {
 		if u.olderThanDays == nil {
 			return fmt.Errorf("field \"olderThanDays\" is required")
 		}
+	case "keepNewestN":
+		if u.keepNewestN == nil {
+			return fmt.Errorf("field \"keepNewestN\" is required")
+		}
 	}
 	return nil
 }
@@ -79,7 +93,7 @@ func (u *CompactionStrategy) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *CompactionStrategy) AcceptFuncs(olderThanDaysFunc func(int) error, unknownFunc func(string) error) error {
+func (u *CompactionStrategy) AcceptFuncs(olderThanDaysFunc func(int) error, keepNewestNFunc func(int) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -91,10 +105,19 @@ func (u *CompactionStrategy) AcceptFuncs(olderThanDaysFunc func(int) error, unkn
 			return fmt.Errorf("field \"olderThanDays\" is required")
 		}
 		return olderThanDaysFunc(*u.olderThanDays)
+	case "keepNewestN":
+		if u.keepNewestN == nil {
+			return fmt.Errorf("field \"keepNewestN\" is required")
+		}
+		return keepNewestNFunc(*u.keepNewestN)
 	}
 }
 
 func (u *CompactionStrategy) OlderThanDaysNoopSuccess(_ int) error {
+	return nil
+}
+
+func (u *CompactionStrategy) KeepNewestNNoopSuccess(_ int) error {
 	return nil
 }
 
@@ -114,11 +137,17 @@ func (u *CompactionStrategy) Accept(v CompactionStrategyVisitor) error {
 			return fmt.Errorf("field \"olderThanDays\" is required")
 		}
 		return v.VisitOlderThanDays(*u.olderThanDays)
+	case "keepNewestN":
+		if u.keepNewestN == nil {
+			return fmt.Errorf("field \"keepNewestN\" is required")
+		}
+		return v.VisitKeepNewestN(*u.keepNewestN)
 	}
 }
 
 type CompactionStrategyVisitor interface {
 	VisitOlderThanDays(v int) error
+	VisitKeepNewestN(v int) error
 	VisitUnknown(typeName string) error
 }
 
@@ -134,14 +163,24 @@ func (u *CompactionStrategy) AcceptWithContext(ctx context.Context, v Compaction
 			return fmt.Errorf("field \"olderThanDays\" is required")
 		}
 		return v.VisitOlderThanDaysWithContext(ctx, *u.olderThanDays)
+	case "keepNewestN":
+		if u.keepNewestN == nil {
+			return fmt.Errorf("field \"keepNewestN\" is required")
+		}
+		return v.VisitKeepNewestNWithContext(ctx, *u.keepNewestN)
 	}
 }
 
 type CompactionStrategyVisitorWithContext interface {
 	VisitOlderThanDaysWithContext(ctx context.Context, v int) error
+	VisitKeepNewestNWithContext(ctx context.Context, v int) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
 func NewCompactionStrategyFromOlderThanDays(v int) CompactionStrategy {
 	return CompactionStrategy{typ: "olderThanDays", olderThanDays: &v}
+}
+
+func NewCompactionStrategyFromKeepNewestN(v int) CompactionStrategy {
+	return CompactionStrategy{typ: "keepNewestN", keepNewestN: &v}
 }
