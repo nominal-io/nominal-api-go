@@ -4,10 +4,12 @@ package api
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
+	api3 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/event"
 	api1 "github.com/nominal-io/nominal-api-go/scout/api"
-	api3 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
-	api4 "github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
+	api5 "github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
+	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
@@ -37,6 +39,49 @@ func (o *AssetDataScopeInputValue) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A data scope input value resolving to an explicit list of assets.
+// safelogging:@Safe
+type AssetListDataScopeInputValue struct {
+	AssetRids []api.AssetRid `json:"assetRids" safelogging:"@Safe"`
+}
+
+func (o AssetListDataScopeInputValue) MarshalJSON() ([]byte, error) {
+	if o.AssetRids == nil {
+		o.AssetRids = make([]api.AssetRid, 0)
+	}
+	type _tmpAssetListDataScopeInputValue AssetListDataScopeInputValue
+	return safejson.Marshal(_tmpAssetListDataScopeInputValue(o))
+}
+
+func (o *AssetListDataScopeInputValue) UnmarshalJSON(data []byte) error {
+	type _tmpAssetListDataScopeInputValue AssetListDataScopeInputValue
+	var rawAssetListDataScopeInputValue _tmpAssetListDataScopeInputValue
+	if err := safejson.Unmarshal(data, &rawAssetListDataScopeInputValue); err != nil {
+		return err
+	}
+	if rawAssetListDataScopeInputValue.AssetRids == nil {
+		rawAssetListDataScopeInputValue.AssetRids = make([]api.AssetRid, 0)
+	}
+	*o = AssetListDataScopeInputValue(rawAssetListDataScopeInputValue)
+	return nil
+}
+
+func (o AssetListDataScopeInputValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AssetListDataScopeInputValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // An offset that can be applied to an asset.
 type AssetOffset struct {
 	Offset      *Offset                            `json:"offset,omitempty"`
@@ -52,6 +97,30 @@ func (o AssetOffset) MarshalYAML() (interface{}, error) {
 }
 
 func (o *AssetOffset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A data scope input value resolving to the assets matching a
+search query.
+*/
+type AssetQueryDataScopeInputValue struct {
+	Query api11.ResourceSearchQuery `json:"query"`
+}
+
+func (o AssetQueryDataScopeInputValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AssetQueryDataScopeInputValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -80,6 +149,72 @@ func (o *AssetSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Every trace of the same channel shares that channel's own color
+across all of the input's sources.
+*/
+type ByChannelColorMode struct{}
+
+func (o ByChannelColorMode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ByChannelColorMode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Every individual trace (channel × source) gets its own color from
+the palette rotation. This is the original, default rendering.
+*/
+type BySeriesColorMode struct{}
+
+func (o BySeriesColorMode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BySeriesColorMode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Every trace from the same asset/run shares one color across all
+channels and panels.
+*/
+type BySourceColorMode struct{}
+
+func (o BySourceColorMode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BySourceColorMode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Safe
 type CheckAlertReference struct {
 	CheckAlertRid api.CheckAlertRid `json:"checkAlertRid" safelogging:"@Safe"`
@@ -94,6 +229,70 @@ func (o CheckAlertReference) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CheckAlertReference) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A data scope input value resolving to an explicit list of datasets,
+without an intermediating run or asset.
+*/
+// safelogging:@Safe
+type DatasetListDataScopeInputValue struct {
+	DatasetRids []rids.DatasetRid `json:"datasetRids" safelogging:"@Safe"`
+}
+
+func (o DatasetListDataScopeInputValue) MarshalJSON() ([]byte, error) {
+	if o.DatasetRids == nil {
+		o.DatasetRids = make([]rids.DatasetRid, 0)
+	}
+	type _tmpDatasetListDataScopeInputValue DatasetListDataScopeInputValue
+	return safejson.Marshal(_tmpDatasetListDataScopeInputValue(o))
+}
+
+func (o *DatasetListDataScopeInputValue) UnmarshalJSON(data []byte) error {
+	type _tmpDatasetListDataScopeInputValue DatasetListDataScopeInputValue
+	var rawDatasetListDataScopeInputValue _tmpDatasetListDataScopeInputValue
+	if err := safejson.Unmarshal(data, &rawDatasetListDataScopeInputValue); err != nil {
+		return err
+	}
+	if rawDatasetListDataScopeInputValue.DatasetRids == nil {
+		rawDatasetListDataScopeInputValue.DatasetRids = make([]rids.DatasetRid, 0)
+	}
+	*o = DatasetListDataScopeInputValue(rawDatasetListDataScopeInputValue)
+	return nil
+}
+
+func (o DatasetListDataScopeInputValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DatasetListDataScopeInputValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type DriverSeriesAlignment struct{}
+
+func (o DriverSeriesAlignment) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DriverSeriesAlignment) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -147,6 +346,68 @@ func (o *EventReference) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Inherit the user-level relative timestamp display format.
+type InheritRelativeTimestampFormat struct{}
+
+func (o InheritRelativeTimestampFormat) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *InheritRelativeTimestampFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type InputOffset struct {
+	// An offset applied to every child of a dataScope input.
+	Offset *Offset `json:"offset,omitempty"`
+	// Additive offsets to specific assets
+	Assets *map[api.AssetRid]AssetOffset `json:"assets,omitempty"`
+	// Additive offsets to specific runs
+	Runs *map[api2.RunRid]RunOffset `json:"runs,omitempty"`
+}
+
+func (o InputOffset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *InputOffset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type IntersectAlignment struct{}
+
+func (o IntersectAlignment) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *IntersectAlignment) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // An offset that is defined relative to a target run.
 type RunAlignment struct {
 	AlignTo      RunAlignTo  `json:"alignTo"`
@@ -191,6 +452,49 @@ func (o *RunDataScopeInputValue) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A data scope input value resolving to an explicit list of runs.
+// safelogging:@Safe
+type RunListDataScopeInputValue struct {
+	RunRids []api2.RunRid `json:"runRids" safelogging:"@Safe"`
+}
+
+func (o RunListDataScopeInputValue) MarshalJSON() ([]byte, error) {
+	if o.RunRids == nil {
+		o.RunRids = make([]api2.RunRid, 0)
+	}
+	type _tmpRunListDataScopeInputValue RunListDataScopeInputValue
+	return safejson.Marshal(_tmpRunListDataScopeInputValue(o))
+}
+
+func (o *RunListDataScopeInputValue) UnmarshalJSON(data []byte) error {
+	type _tmpRunListDataScopeInputValue RunListDataScopeInputValue
+	var rawRunListDataScopeInputValue _tmpRunListDataScopeInputValue
+	if err := safejson.Unmarshal(data, &rawRunListDataScopeInputValue); err != nil {
+		return err
+	}
+	if rawRunListDataScopeInputValue.RunRids == nil {
+		rawRunListDataScopeInputValue.RunRids = make([]api2.RunRid, 0)
+	}
+	*o = RunListDataScopeInputValue(rawRunListDataScopeInputValue)
+	return nil
+}
+
+func (o RunListDataScopeInputValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RunListDataScopeInputValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // An offset that can be applied to a run.
 type RunOffset struct {
 	Offset *Offset                       `json:"offset,omitempty"`
@@ -206,6 +510,30 @@ func (o RunOffset) MarshalYAML() (interface{}, error) {
 }
 
 func (o *RunOffset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A data scope input value resolving to the runs matching a
+search query.
+*/
+type RunQueryDataScopeInputValue struct {
+	Query api11.ResourceSearchQuery `json:"query"`
+}
+
+func (o RunQueryDataScopeInputValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RunQueryDataScopeInputValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -314,21 +642,73 @@ func (o *TagStringLiteral) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A time range input that can be applied to panel(s)
+type TimeRangeInput struct {
+	// The label of the input for display purposes.
+	Label     *string    `json:"label,omitempty"`
+	TimeRange api3.Range `json:"timeRange" safelogging:"@Safe"`
+	// The type of time range to use for the input.
+	TimeRangeType WorkbookTimeRangeType `json:"timeRangeType"`
+}
+
+func (o TimeRangeInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TimeRangeInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UnionAlignment struct{}
+
+func (o UnionAlignment) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UnionAlignment) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type WorkbookContent struct {
-	ChannelVariables api3.WorkbookChannelVariableMap `json:"channelVariables"`
+	ChannelVariables api4.WorkbookChannelVariableMap `json:"channelVariables"`
 	Inputs           *WorkbookInputs                 `json:"inputs,omitempty"`
 	// map of visualizations. Previously termed "charts"
-	Charts          api4.WorkbookVizDefinitionMap `json:"charts"`
+	Charts          api5.WorkbookVizDefinitionMap `json:"charts"`
 	Settings        *WorkbookSettings             `json:"settings,omitempty"`
 	DataScopeInputs *WorkbookDataScopeInputs      `json:"dataScopeInputs,omitempty"`
+	TimeRangeInputs *map[uuid.UUID]TimeRangeInput `json:"timeRangeInputs,omitempty"`
+	ReportContent   *string                       `json:"reportContent,omitempty"`
+	/*
+	   Schema version this content was last written with, as a semver
+	   string. Used by the client to gate load-time content migrations:
+	   migrations introduced after this version are applied on read.
+	   Absent for content written before versioning was introduced.
+	*/
+	Version *string `json:"version,omitempty"`
 }
 
 func (o WorkbookContent) MarshalJSON() ([]byte, error) {
 	if o.ChannelVariables == nil {
-		o.ChannelVariables = make(map[api3.ChannelVariableName]api3.ChannelVariable)
+		o.ChannelVariables = make(map[api4.ChannelVariableName]api4.ChannelVariable)
 	}
 	if o.Charts == nil {
-		o.Charts = make(map[api.VizId]api4.VizDefinition)
+		o.Charts = make(map[api.VizId]api5.VizDefinition)
 	}
 	type _tmpWorkbookContent WorkbookContent
 	return safejson.Marshal(_tmpWorkbookContent(o))
@@ -341,10 +721,10 @@ func (o *WorkbookContent) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawWorkbookContent.ChannelVariables == nil {
-		rawWorkbookContent.ChannelVariables = make(map[api3.ChannelVariableName]api3.ChannelVariable)
+		rawWorkbookContent.ChannelVariables = make(map[api4.ChannelVariableName]api4.ChannelVariable)
 	}
 	if rawWorkbookContent.Charts == nil {
-		rawWorkbookContent.Charts = make(map[api.VizId]api4.VizDefinition)
+		rawWorkbookContent.Charts = make(map[api.VizId]api5.VizDefinition)
 	}
 	*o = WorkbookContent(rawWorkbookContent)
 	return nil
@@ -372,8 +752,21 @@ The variable name is the map key.
 */
 // safelogging:@Unsafe
 type WorkbookDataScopeInput struct {
+	// Deprecated: Deprecated in favor of label.
 	Name  WorkbookDataScopeInputName `json:"name" safelogging:"@Unsafe"`
+	Label *string                    `json:"label,omitempty"`
 	Value DataScopeInputValue        `json:"value"`
+	/*
+	   How traces from this input are colored. Absent means bySeries
+	   (palette rotation, the original behaviour) for backward
+	   compatibility.
+	*/
+	ColorMode *WorkbookDataScopeInputColorMode `json:"colorMode,omitempty"`
+	/*
+	   Structural dataset alignment applied before any input time shift.
+	   Absent means the input uses the dataset's source timestamps.
+	*/
+	Alignment *api11.DatasetAnchor `json:"alignment,omitempty"`
 }
 
 func (o WorkbookDataScopeInput) MarshalYAML() (interface{}, error) {
@@ -505,8 +898,11 @@ func (o *WorkbookInputsV1) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type WorkbookOffsetsV1 struct {
-	Runs   map[api2.RunRid]RunOffset    `json:"runs"`
-	Assets map[api.AssetRid]AssetOffset `json:"assets"`
+	// Deprecated - use dataScope inputs
+	Runs map[api2.RunRid]RunOffset `json:"runs"`
+	// Deprecated - use dataScope inputs
+	Assets map[api.AssetRid]AssetOffset              `json:"assets"`
+	Inputs *map[WorkbookDataScopeInputId]InputOffset `json:"inputs,omitempty"`
 }
 
 func (o WorkbookOffsetsV1) MarshalJSON() ([]byte, error) {
@@ -568,7 +964,11 @@ type WorkbookSettings struct {
 	   Default staleness configuration for new time series panels in the workbook.
 	   When set, new time series panels will use this instead of the 1-second default.
 	*/
-	DefaultStalenessConfiguration *api4.StalenessConfiguration `json:"defaultStalenessConfiguration,omitempty"`
+	DefaultStalenessConfiguration *api5.StalenessConfiguration `json:"defaultStalenessConfiguration,omitempty"`
+	// Workbook-wide fill strategy for compute requests. When unset, compute falls back to its default.
+	FillStrategy *WorkbookFillStrategy `json:"fillStrategy,omitempty"`
+	// Workbook-wide alignment strategy for compute requests. When unset, compute falls back to its default.
+	AlignmentStrategy *WorkbookAlignmentStrategy `json:"alignmentStrategy,omitempty"`
 }
 
 func (o WorkbookSettings) MarshalYAML() (interface{}, error) {
@@ -599,6 +999,8 @@ type WorkbookTimeSettingsV1 struct {
 	*/
 	IsGlobalTime  bool                 `json:"isGlobalTime"`
 	TabTimeRanges map[string]TimeRange `json:"tabTimeRanges"`
+	// Relative timestamp display preference. Missing values inherit the user's preference.
+	RelativeTimestampFormat *WorkbookRelativeTimestampFormat `json:"relativeTimestampFormat,omitempty"`
 }
 
 func (o WorkbookTimeSettingsV1) MarshalJSON() ([]byte, error) {

@@ -9,10 +9,12 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/event"
-	api1 "github.com/nominal-io/nominal-api-go/scout/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/nominal-io/nominal-api-go/scout/run/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/versioning/api"
 )
 
 type AssetMetricColumnTimeRangeWithT[T any] AssetMetricColumnTimeRange
@@ -243,6 +245,392 @@ type MetricColumnsVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type ProcedureExecutionSearchQueryWithT[T any] ProcedureExecutionSearchQuery
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) Accept(ctx context.Context, v ProcedureExecutionSearchQueryVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return result, fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchText(ctx, *u.searchText)
+	case "label":
+		if u.label == nil {
+			return result, fmt.Errorf("field \"label\" is required")
+		}
+		return v.VisitLabel(ctx, *u.label)
+	case "property":
+		if u.property == nil {
+			return result, fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitProperty(ctx, *u.property)
+	case "and":
+		if u.and == nil {
+			return result, fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAnd(ctx, *u.and)
+	case "or":
+		if u.or == nil {
+			return result, fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOr(ctx, *u.or)
+	case "workspace":
+		if u.workspace == nil {
+			return result, fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspace(ctx, *u.workspace)
+	case "procedureRid":
+		if u.procedureRid == nil {
+			return result, fmt.Errorf("field \"procedureRid\" is required")
+		}
+		return v.VisitProcedureRid(ctx, *u.procedureRid)
+	case "commitId":
+		if u.commitId == nil {
+			return result, fmt.Errorf("field \"commitId\" is required")
+		}
+		return v.VisitCommitId(ctx, *u.commitId)
+	case "createdBy":
+		if u.createdBy == nil {
+			return result, fmt.Errorf("field \"createdBy\" is required")
+		}
+		return v.VisitCreatedBy(ctx, *u.createdBy)
+	case "progressStatus":
+		if u.progressStatus == nil {
+			return result, fmt.Errorf("field \"progressStatus\" is required")
+		}
+		return v.VisitProgressStatus(ctx, *u.progressStatus)
+	case "assetsFilter":
+		if u.assetsFilter == nil {
+			return result, fmt.Errorf("field \"assetsFilter\" is required")
+		}
+		return v.VisitAssetsFilter(ctx, *u.assetsFilter)
+	case "isArchived":
+		if u.isArchived == nil {
+			return result, fmt.Errorf("field \"isArchived\" is required")
+		}
+		return v.VisitIsArchived(ctx, *u.isArchived)
+	}
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), labelFunc func(api1.Label) (T, error), propertyFunc func(api1.Property) (T, error), andFunc func([]ProcedureExecutionSearchQuery) (T, error), orFunc func([]ProcedureExecutionSearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), procedureRidFunc func(rids.ProcedureRid) (T, error), commitIdFunc func(api2.CommitId) (T, error), createdByFunc func(api3.UserRid) (T, error), progressStatusFunc func(ProcedureExecutionProgressStatus) (T, error), assetsFilterFunc func(ProcedureExecutionAssetsFilter) (T, error), isArchivedFunc func(bool) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return result, fmt.Errorf("field \"searchText\" is required")
+		}
+		return searchTextFunc(*u.searchText)
+	case "label":
+		if u.label == nil {
+			return result, fmt.Errorf("field \"label\" is required")
+		}
+		return labelFunc(*u.label)
+	case "property":
+		if u.property == nil {
+			return result, fmt.Errorf("field \"property\" is required")
+		}
+		return propertyFunc(*u.property)
+	case "and":
+		if u.and == nil {
+			return result, fmt.Errorf("field \"and\" is required")
+		}
+		return andFunc(*u.and)
+	case "or":
+		if u.or == nil {
+			return result, fmt.Errorf("field \"or\" is required")
+		}
+		return orFunc(*u.or)
+	case "workspace":
+		if u.workspace == nil {
+			return result, fmt.Errorf("field \"workspace\" is required")
+		}
+		return workspaceFunc(*u.workspace)
+	case "procedureRid":
+		if u.procedureRid == nil {
+			return result, fmt.Errorf("field \"procedureRid\" is required")
+		}
+		return procedureRidFunc(*u.procedureRid)
+	case "commitId":
+		if u.commitId == nil {
+			return result, fmt.Errorf("field \"commitId\" is required")
+		}
+		return commitIdFunc(*u.commitId)
+	case "createdBy":
+		if u.createdBy == nil {
+			return result, fmt.Errorf("field \"createdBy\" is required")
+		}
+		return createdByFunc(*u.createdBy)
+	case "progressStatus":
+		if u.progressStatus == nil {
+			return result, fmt.Errorf("field \"progressStatus\" is required")
+		}
+		return progressStatusFunc(*u.progressStatus)
+	case "assetsFilter":
+		if u.assetsFilter == nil {
+			return result, fmt.Errorf("field \"assetsFilter\" is required")
+		}
+		return assetsFilterFunc(*u.assetsFilter)
+	case "isArchived":
+		if u.isArchived == nil {
+			return result, fmt.Errorf("field \"isArchived\" is required")
+		}
+		return isArchivedFunc(*u.isArchived)
+	}
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) SearchTextNoopSuccess(string) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) LabelNoopSuccess(api1.Label) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) PropertyNoopSuccess(api1.Property) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) AndNoopSuccess([]ProcedureExecutionSearchQuery) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) OrNoopSuccess([]ProcedureExecutionSearchQuery) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) WorkspaceNoopSuccess(rids.WorkspaceRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) ProcedureRidNoopSuccess(rids.ProcedureRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) CommitIdNoopSuccess(api2.CommitId) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) CreatedByNoopSuccess(api3.UserRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) ProgressStatusNoopSuccess(ProcedureExecutionProgressStatus) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) AssetsFilterNoopSuccess(ProcedureExecutionAssetsFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) IsArchivedNoopSuccess(bool) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureExecutionSearchQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ProcedureExecutionSearchQueryVisitorWithT[T any] interface {
+	VisitSearchText(ctx context.Context, v string) (T, error)
+	VisitLabel(ctx context.Context, v api1.Label) (T, error)
+	VisitProperty(ctx context.Context, v api1.Property) (T, error)
+	VisitAnd(ctx context.Context, v []ProcedureExecutionSearchQuery) (T, error)
+	VisitOr(ctx context.Context, v []ProcedureExecutionSearchQuery) (T, error)
+	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
+	VisitProcedureRid(ctx context.Context, v rids.ProcedureRid) (T, error)
+	VisitCommitId(ctx context.Context, v api2.CommitId) (T, error)
+	VisitCreatedBy(ctx context.Context, v api3.UserRid) (T, error)
+	VisitProgressStatus(ctx context.Context, v ProcedureExecutionProgressStatus) (T, error)
+	VisitAssetsFilter(ctx context.Context, v ProcedureExecutionAssetsFilter) (T, error)
+	VisitIsArchived(ctx context.Context, v bool) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type ProcedureSearchQueryWithT[T any] ProcedureSearchQuery
+
+func (u *ProcedureSearchQueryWithT[T]) Accept(ctx context.Context, v ProcedureSearchQueryVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return result, fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchText(ctx, *u.searchText)
+	case "label":
+		if u.label == nil {
+			return result, fmt.Errorf("field \"label\" is required")
+		}
+		return v.VisitLabel(ctx, *u.label)
+	case "property":
+		if u.property == nil {
+			return result, fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitProperty(ctx, *u.property)
+	case "and":
+		if u.and == nil {
+			return result, fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAnd(ctx, *u.and)
+	case "or":
+		if u.or == nil {
+			return result, fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOr(ctx, *u.or)
+	case "workspace":
+		if u.workspace == nil {
+			return result, fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspace(ctx, *u.workspace)
+	case "createdBy":
+		if u.createdBy == nil {
+			return result, fmt.Errorf("field \"createdBy\" is required")
+		}
+		return v.VisitCreatedBy(ctx, *u.createdBy)
+	case "isArchived":
+		if u.isArchived == nil {
+			return result, fmt.Errorf("field \"isArchived\" is required")
+		}
+		return v.VisitIsArchived(ctx, *u.isArchived)
+	}
+}
+
+func (u *ProcedureSearchQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), labelFunc func(api1.Label) (T, error), propertyFunc func(api1.Property) (T, error), andFunc func([]ProcedureSearchQuery) (T, error), orFunc func([]ProcedureSearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), createdByFunc func(api3.UserRid) (T, error), isArchivedFunc func(bool) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return result, fmt.Errorf("field \"searchText\" is required")
+		}
+		return searchTextFunc(*u.searchText)
+	case "label":
+		if u.label == nil {
+			return result, fmt.Errorf("field \"label\" is required")
+		}
+		return labelFunc(*u.label)
+	case "property":
+		if u.property == nil {
+			return result, fmt.Errorf("field \"property\" is required")
+		}
+		return propertyFunc(*u.property)
+	case "and":
+		if u.and == nil {
+			return result, fmt.Errorf("field \"and\" is required")
+		}
+		return andFunc(*u.and)
+	case "or":
+		if u.or == nil {
+			return result, fmt.Errorf("field \"or\" is required")
+		}
+		return orFunc(*u.or)
+	case "workspace":
+		if u.workspace == nil {
+			return result, fmt.Errorf("field \"workspace\" is required")
+		}
+		return workspaceFunc(*u.workspace)
+	case "createdBy":
+		if u.createdBy == nil {
+			return result, fmt.Errorf("field \"createdBy\" is required")
+		}
+		return createdByFunc(*u.createdBy)
+	case "isArchived":
+		if u.isArchived == nil {
+			return result, fmt.Errorf("field \"isArchived\" is required")
+		}
+		return isArchivedFunc(*u.isArchived)
+	}
+}
+
+func (u *ProcedureSearchQueryWithT[T]) SearchTextNoopSuccess(string) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureSearchQueryWithT[T]) LabelNoopSuccess(api1.Label) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureSearchQueryWithT[T]) PropertyNoopSuccess(api1.Property) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureSearchQueryWithT[T]) AndNoopSuccess([]ProcedureSearchQuery) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureSearchQueryWithT[T]) OrNoopSuccess([]ProcedureSearchQuery) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureSearchQueryWithT[T]) WorkspaceNoopSuccess(rids.WorkspaceRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureSearchQueryWithT[T]) CreatedByNoopSuccess(api3.UserRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureSearchQueryWithT[T]) IsArchivedNoopSuccess(bool) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ProcedureSearchQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ProcedureSearchQueryVisitorWithT[T any] interface {
+	VisitSearchText(ctx context.Context, v string) (T, error)
+	VisitLabel(ctx context.Context, v api1.Label) (T, error)
+	VisitProperty(ctx context.Context, v api1.Property) (T, error)
+	VisitAnd(ctx context.Context, v []ProcedureSearchQuery) (T, error)
+	VisitOr(ctx context.Context, v []ProcedureSearchQuery) (T, error)
+	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
+	VisitCreatedBy(ctx context.Context, v api3.UserRid) (T, error)
+	VisitIsArchived(ctx context.Context, v bool) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type SearchSavedViewsQueryWithT[T any] SearchSavedViewsQuery
 
 func (u *SearchSavedViewsQueryWithT[T]) Accept(ctx context.Context, v SearchSavedViewsQueryVisitorWithT[T]) (T, error) {
@@ -407,10 +795,20 @@ func (u *SearchStateWithT[T]) Accept(ctx context.Context, v SearchStateVisitorWi
 			return result, fmt.Errorf("field \"template\" is required")
 		}
 		return v.VisitTemplate(ctx, *u.template)
+	case "procedure":
+		if u.procedure == nil {
+			return result, fmt.Errorf("field \"procedure\" is required")
+		}
+		return v.VisitProcedure(ctx, *u.procedure)
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return result, fmt.Errorf("field \"procedureExecution\" is required")
+		}
+		return v.VisitProcedureExecution(ctx, *u.procedureExecution)
 	}
 }
 
-func (u *SearchStateWithT[T]) AcceptFuncs(assetFunc func(AssetSearchState) (T, error), runFunc func(RunSearchState) (T, error), checklistFunc func(ChecklistSearchState) (T, error), workbookFunc func(WorkbookSearchState) (T, error), templateFunc func(TemplateSearchState) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchStateWithT[T]) AcceptFuncs(assetFunc func(AssetSearchState) (T, error), runFunc func(RunSearchState) (T, error), checklistFunc func(ChecklistSearchState) (T, error), workbookFunc func(WorkbookSearchState) (T, error), templateFunc func(TemplateSearchState) (T, error), procedureFunc func(ProcedureSearchState) (T, error), procedureExecutionFunc func(ProcedureExecutionSearchState) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -443,6 +841,16 @@ func (u *SearchStateWithT[T]) AcceptFuncs(assetFunc func(AssetSearchState) (T, e
 			return result, fmt.Errorf("field \"template\" is required")
 		}
 		return templateFunc(*u.template)
+	case "procedure":
+		if u.procedure == nil {
+			return result, fmt.Errorf("field \"procedure\" is required")
+		}
+		return procedureFunc(*u.procedure)
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return result, fmt.Errorf("field \"procedureExecution\" is required")
+		}
+		return procedureExecutionFunc(*u.procedureExecution)
 	}
 }
 
@@ -471,6 +879,16 @@ func (u *SearchStateWithT[T]) TemplateNoopSuccess(TemplateSearchState) (T, error
 	return result, nil
 }
 
+func (u *SearchStateWithT[T]) ProcedureNoopSuccess(ProcedureSearchState) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchStateWithT[T]) ProcedureExecutionNoopSuccess(ProcedureExecutionSearchState) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchStateWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -482,6 +900,8 @@ type SearchStateVisitorWithT[T any] interface {
 	VisitChecklist(ctx context.Context, v ChecklistSearchState) (T, error)
 	VisitWorkbook(ctx context.Context, v WorkbookSearchState) (T, error)
 	VisitTemplate(ctx context.Context, v TemplateSearchState) (T, error)
+	VisitProcedure(ctx context.Context, v ProcedureSearchState) (T, error)
+	VisitProcedureExecution(ctx context.Context, v ProcedureExecutionSearchState) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -557,7 +977,7 @@ func (u *UpdateColorWithT[T]) Accept(ctx context.Context, v UpdateColorVisitorWi
 	}
 }
 
-func (u *UpdateColorWithT[T]) AcceptFuncs(colorFunc func(api1.Color) (T, error), clearColorFunc func(api2.Empty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UpdateColorWithT[T]) AcceptFuncs(colorFunc func(api4.Color) (T, error), clearColorFunc func(api1.Empty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -578,12 +998,12 @@ func (u *UpdateColorWithT[T]) AcceptFuncs(colorFunc func(api1.Color) (T, error),
 	}
 }
 
-func (u *UpdateColorWithT[T]) ColorNoopSuccess(api1.Color) (T, error) {
+func (u *UpdateColorWithT[T]) ColorNoopSuccess(api4.Color) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *UpdateColorWithT[T]) ClearColorNoopSuccess(api2.Empty) (T, error) {
+func (u *UpdateColorWithT[T]) ClearColorNoopSuccess(api1.Empty) (T, error) {
 	var result T
 	return result, nil
 }
@@ -594,8 +1014,8 @@ func (u *UpdateColorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type UpdateColorVisitorWithT[T any] interface {
-	VisitColor(ctx context.Context, v api1.Color) (T, error)
-	VisitClearColor(ctx context.Context, v api2.Empty) (T, error)
+	VisitColor(ctx context.Context, v api4.Color) (T, error)
+	VisitClearColor(ctx context.Context, v api1.Empty) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -622,7 +1042,7 @@ func (u *UpdateSymbolWithT[T]) Accept(ctx context.Context, v UpdateSymbolVisitor
 	}
 }
 
-func (u *UpdateSymbolWithT[T]) AcceptFuncs(symbolFunc func(api1.Symbol) (T, error), clearSymbolFunc func(api2.Empty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UpdateSymbolWithT[T]) AcceptFuncs(symbolFunc func(api4.Symbol) (T, error), clearSymbolFunc func(api1.Empty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -643,12 +1063,12 @@ func (u *UpdateSymbolWithT[T]) AcceptFuncs(symbolFunc func(api1.Symbol) (T, erro
 	}
 }
 
-func (u *UpdateSymbolWithT[T]) SymbolNoopSuccess(api1.Symbol) (T, error) {
+func (u *UpdateSymbolWithT[T]) SymbolNoopSuccess(api4.Symbol) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *UpdateSymbolWithT[T]) ClearSymbolNoopSuccess(api2.Empty) (T, error) {
+func (u *UpdateSymbolWithT[T]) ClearSymbolNoopSuccess(api1.Empty) (T, error) {
 	var result T
 	return result, nil
 }
@@ -659,7 +1079,7 @@ func (u *UpdateSymbolWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type UpdateSymbolVisitorWithT[T any] interface {
-	VisitSymbol(ctx context.Context, v api1.Symbol) (T, error)
-	VisitClearSymbol(ctx context.Context, v api2.Empty) (T, error)
+	VisitSymbol(ctx context.Context, v api4.Symbol) (T, error)
+	VisitClearSymbol(ctx context.Context, v api1.Empty) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

@@ -21,6 +21,7 @@ type LocatorTemplate struct {
 	bigQuery       *BigQueryLocatorTemplate
 	api            *ApiLocatorTemplate
 	video          *VideoLocatorTemplate
+	spatial        *SpatialLocatorTemplate
 }
 
 type locatorTemplateDeserializer struct {
@@ -34,10 +35,11 @@ type locatorTemplateDeserializer struct {
 	BigQuery       *BigQueryLocatorTemplate       `json:"bigQuery"`
 	Api            *ApiLocatorTemplate            `json:"api"`
 	Video          *VideoLocatorTemplate          `json:"video"`
+	Spatial        *SpatialLocatorTemplate        `json:"spatial"`
 }
 
 func (u *locatorTemplateDeserializer) toStruct() LocatorTemplate {
-	return LocatorTemplate{typ: u.Type, timescaleDb: u.TimescaleDb, influx: u.Influx, influx1: u.Influx1, nominal: u.Nominal, timestream: u.Timestream, visualCrossing: u.VisualCrossing, bigQuery: u.BigQuery, api: u.Api, video: u.Video}
+	return LocatorTemplate{typ: u.Type, timescaleDb: u.TimescaleDb, influx: u.Influx, influx1: u.Influx1, nominal: u.Nominal, timestream: u.Timestream, visualCrossing: u.VisualCrossing, bigQuery: u.BigQuery, api: u.Api, video: u.Video, spatial: u.Spatial}
 }
 
 func (u *LocatorTemplate) toSerializer() (interface{}, error) {
@@ -116,6 +118,14 @@ func (u *LocatorTemplate) toSerializer() (interface{}, error) {
 			Type  string               `json:"type"`
 			Video VideoLocatorTemplate `json:"video"`
 		}{Type: "video", Video: *u.video}, nil
+	case "spatial":
+		if u.spatial == nil {
+			return nil, fmt.Errorf("field \"spatial\" is required")
+		}
+		return struct {
+			Type    string                 `json:"type"`
+			Spatial SpatialLocatorTemplate `json:"spatial"`
+		}{Type: "spatial", Spatial: *u.spatial}, nil
 	}
 }
 
@@ -170,6 +180,10 @@ func (u *LocatorTemplate) UnmarshalJSON(data []byte) error {
 		if u.video == nil {
 			return fmt.Errorf("field \"video\" is required")
 		}
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
 	}
 	return nil
 }
@@ -190,7 +204,7 @@ func (u *LocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *LocatorTemplate) AcceptFuncs(timescaleDbFunc func(TimescaleDbLocatorTemplate) error, influxFunc func(Influx2LocatorTemplate) error, influx1Func func(Influx1LocatorTemplate) error, nominalFunc func(NominalLocatorTemplate) error, timestreamFunc func(TimestreamLocatorTemplate) error, visualCrossingFunc func(VisualCrossingLocatorTemplate) error, bigQueryFunc func(BigQueryLocatorTemplate) error, apiFunc func(ApiLocatorTemplate) error, videoFunc func(VideoLocatorTemplate) error, unknownFunc func(string) error) error {
+func (u *LocatorTemplate) AcceptFuncs(timescaleDbFunc func(TimescaleDbLocatorTemplate) error, influxFunc func(Influx2LocatorTemplate) error, influx1Func func(Influx1LocatorTemplate) error, nominalFunc func(NominalLocatorTemplate) error, timestreamFunc func(TimestreamLocatorTemplate) error, visualCrossingFunc func(VisualCrossingLocatorTemplate) error, bigQueryFunc func(BigQueryLocatorTemplate) error, apiFunc func(ApiLocatorTemplate) error, videoFunc func(VideoLocatorTemplate) error, spatialFunc func(SpatialLocatorTemplate) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -242,6 +256,11 @@ func (u *LocatorTemplate) AcceptFuncs(timescaleDbFunc func(TimescaleDbLocatorTem
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return videoFunc(*u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return spatialFunc(*u.spatial)
 	}
 }
 
@@ -278,6 +297,10 @@ func (u *LocatorTemplate) ApiNoopSuccess(_ ApiLocatorTemplate) error {
 }
 
 func (u *LocatorTemplate) VideoNoopSuccess(_ VideoLocatorTemplate) error {
+	return nil
+}
+
+func (u *LocatorTemplate) SpatialNoopSuccess(_ SpatialLocatorTemplate) error {
 	return nil
 }
 
@@ -337,6 +360,11 @@ func (u *LocatorTemplate) Accept(v LocatorTemplateVisitor) error {
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideo(*u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatial(*u.spatial)
 	}
 }
 
@@ -350,6 +378,7 @@ type LocatorTemplateVisitor interface {
 	VisitBigQuery(v BigQueryLocatorTemplate) error
 	VisitApi(v ApiLocatorTemplate) error
 	VisitVideo(v VideoLocatorTemplate) error
+	VisitSpatial(v SpatialLocatorTemplate) error
 	VisitUnknown(typeName string) error
 }
 
@@ -405,6 +434,11 @@ func (u *LocatorTemplate) AcceptWithContext(ctx context.Context, v LocatorTempla
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideoWithContext(ctx, *u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatialWithContext(ctx, *u.spatial)
 	}
 }
 
@@ -418,6 +452,7 @@ type LocatorTemplateVisitorWithContext interface {
 	VisitBigQueryWithContext(ctx context.Context, v BigQueryLocatorTemplate) error
 	VisitApiWithContext(ctx context.Context, v ApiLocatorTemplate) error
 	VisitVideoWithContext(ctx context.Context, v VideoLocatorTemplate) error
+	VisitSpatialWithContext(ctx context.Context, v SpatialLocatorTemplate) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -455,4 +490,8 @@ func NewLocatorTemplateFromApi(v ApiLocatorTemplate) LocatorTemplate {
 
 func NewLocatorTemplateFromVideo(v VideoLocatorTemplate) LocatorTemplate {
 	return LocatorTemplate{typ: "video", video: &v}
+}
+
+func NewLocatorTemplateFromSpatial(v SpatialLocatorTemplate) LocatorTemplate {
+	return LocatorTemplate{typ: "spatial", spatial: &v}
 }

@@ -221,13 +221,99 @@ func (o *EnsureWorkspaceServiceAccountCreatedRequest) UnmarshalYAML(unmarshal fu
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Request to fetch logs for all containers in a completed extractor job's pod.
+// Machine-readable extractor failure, resolved from the extractor's termination-log JSON, the image's exit-code mapping, or a platform-owned fallback.
+// safelogging:@Unsafe
+type ExtractorError struct {
+	// Failure code. Either a reserved platform-owned code (e.g. IMAGE_PULL_FAILED, EXTRACTOR_OOM_KILLED) or an extractor-defined code outside that reserved namespace.
+	Code string `json:"code" safelogging:"@Safe"`
+	// Human-readable failure message; may be extractor-authored.
+	Message string `json:"message" safelogging:"@Unsafe"`
+	// Whether the platform may retry the ingest for this failure.
+	Retryable bool `json:"retryable" safelogging:"@Safe"`
+	// Optional extractor-supplied key/value context (e.g. byte offset).
+	Details map[string]ExtractorErrorDetailValue `json:"details"`
+}
+
+func (o ExtractorError) MarshalJSON() ([]byte, error) {
+	if o.Details == nil {
+		o.Details = make(map[string]ExtractorErrorDetailValue)
+	}
+	type _tmpExtractorError ExtractorError
+	return safejson.Marshal(_tmpExtractorError(o))
+}
+
+func (o *ExtractorError) UnmarshalJSON(data []byte) error {
+	type _tmpExtractorError ExtractorError
+	var rawExtractorError _tmpExtractorError
+	if err := safejson.Unmarshal(data, &rawExtractorError); err != nil {
+		return err
+	}
+	if rawExtractorError.Details == nil {
+		rawExtractorError.Details = make(map[string]ExtractorErrorDetailValue)
+	}
+	*o = ExtractorError(rawExtractorError)
+	return nil
+}
+
+func (o ExtractorError) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ExtractorError) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Request to fetch logs for all containers in a running or completed extractor job's pod.
 type FetchExtractorJobLogsRequest struct {
-	WorkspaceRid  rids.WorkspaceRid             `json:"workspaceRid" safelogging:"@Safe"`
-	LogDatasetRid rids.DatasetRid               `json:"logDatasetRid" safelogging:"@Safe"`
-	IngestJobUuid uuid.UUID                     `json:"ingestJobUuid"`
-	BearerToken   bearertoken.Token             `json:"bearerToken"`
-	ExtractorRid  api.ContainerizedExtractorRid `json:"extractorRid" safelogging:"@Safe"`
+	WorkspaceRid  rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
+	LogDatasetRid rids.DatasetRid   `json:"logDatasetRid" safelogging:"@Safe"`
+	/*
+	   The ingest job uuid written into the log dataset (the `ingest_job_uuid` log column),
+	   used to correlate extractor logs with the rest of the ingest pipeline. For v2 ingest
+	   transforms this is the parent ingest job uuid, which differs from the K8s job key
+	   (see `extractorJobUuid`) because a MULTI parent job can run several transforms.
+	*/
+	IngestJobUuid uuid.UUID `json:"ingestJobUuid"`
+	/*
+	   The uuid the extractor's K8s job and pods are labelled with (`nominal.io/job-rid`),
+	   used to locate the pods whose logs are fetched. Defaults to `ingestJobUuid` when
+	   absent. For v2 ingest transforms this is the transform uuid, since that — not the
+	   parent ingest job uuid — keys the K8s job.
+	*/
+	ExtractorJobUuid *uuid.UUID                    `json:"extractorJobUuid,omitempty"`
+	BearerToken      bearertoken.Token             `json:"bearerToken"`
+	ExtractorRid     api.ContainerizedExtractorRid `json:"extractorRid" safelogging:"@Safe"`
+	// Count of log lines already written, keyed by `<podName>/<containerName>`.
+	LogCursors map[string]int `json:"logCursors"`
+}
+
+func (o FetchExtractorJobLogsRequest) MarshalJSON() ([]byte, error) {
+	if o.LogCursors == nil {
+		o.LogCursors = make(map[string]int)
+	}
+	type _tmpFetchExtractorJobLogsRequest FetchExtractorJobLogsRequest
+	return safejson.Marshal(_tmpFetchExtractorJobLogsRequest(o))
+}
+
+func (o *FetchExtractorJobLogsRequest) UnmarshalJSON(data []byte) error {
+	type _tmpFetchExtractorJobLogsRequest FetchExtractorJobLogsRequest
+	var rawFetchExtractorJobLogsRequest _tmpFetchExtractorJobLogsRequest
+	if err := safejson.Unmarshal(data, &rawFetchExtractorJobLogsRequest); err != nil {
+		return err
+	}
+	if rawFetchExtractorJobLogsRequest.LogCursors == nil {
+		rawFetchExtractorJobLogsRequest.LogCursors = make(map[string]int)
+	}
+	*o = FetchExtractorJobLogsRequest(rawFetchExtractorJobLogsRequest)
+	return nil
 }
 
 func (o FetchExtractorJobLogsRequest) MarshalYAML() (interface{}, error) {
@@ -246,7 +332,31 @@ func (o *FetchExtractorJobLogsRequest) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type FetchExtractorJobLogsResponse struct{}
+type FetchExtractorJobLogsResponse struct {
+	// Updated `logCursors` to pass to the next fetch for this job.
+	LogCursors map[string]int `json:"logCursors"`
+}
+
+func (o FetchExtractorJobLogsResponse) MarshalJSON() ([]byte, error) {
+	if o.LogCursors == nil {
+		o.LogCursors = make(map[string]int)
+	}
+	type _tmpFetchExtractorJobLogsResponse FetchExtractorJobLogsResponse
+	return safejson.Marshal(_tmpFetchExtractorJobLogsResponse(o))
+}
+
+func (o *FetchExtractorJobLogsResponse) UnmarshalJSON(data []byte) error {
+	type _tmpFetchExtractorJobLogsResponse FetchExtractorJobLogsResponse
+	var rawFetchExtractorJobLogsResponse _tmpFetchExtractorJobLogsResponse
+	if err := safejson.Unmarshal(data, &rawFetchExtractorJobLogsResponse); err != nil {
+		return err
+	}
+	if rawFetchExtractorJobLogsResponse.LogCursors == nil {
+		rawFetchExtractorJobLogsResponse.LogCursors = make(map[string]int)
+	}
+	*o = FetchExtractorJobLogsResponse(rawFetchExtractorJobLogsResponse)
+	return nil
+}
 
 func (o FetchExtractorJobLogsResponse) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
@@ -267,6 +377,29 @@ func (o *FetchExtractorJobLogsResponse) UnmarshalYAML(unmarshal func(interface{}
 type GetExtractorJobStateRequest struct {
 	WorkspaceRid  rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
 	IngestJobUuid uuid.UUID         `json:"ingestJobUuid"`
+	// Exit-code mappings from the extractor's active image, used as a fallback error tier when the container emits no structured termination-log document.
+	ExitCodeMappings []api.ExitCodeMapping `json:"exitCodeMappings"`
+}
+
+func (o GetExtractorJobStateRequest) MarshalJSON() ([]byte, error) {
+	if o.ExitCodeMappings == nil {
+		o.ExitCodeMappings = make([]api.ExitCodeMapping, 0)
+	}
+	type _tmpGetExtractorJobStateRequest GetExtractorJobStateRequest
+	return safejson.Marshal(_tmpGetExtractorJobStateRequest(o))
+}
+
+func (o *GetExtractorJobStateRequest) UnmarshalJSON(data []byte) error {
+	type _tmpGetExtractorJobStateRequest GetExtractorJobStateRequest
+	var rawGetExtractorJobStateRequest _tmpGetExtractorJobStateRequest
+	if err := safejson.Unmarshal(data, &rawGetExtractorJobStateRequest); err != nil {
+		return err
+	}
+	if rawGetExtractorJobStateRequest.ExitCodeMappings == nil {
+		rawGetExtractorJobStateRequest.ExitCodeMappings = make([]api.ExitCodeMapping, 0)
+	}
+	*o = GetExtractorJobStateRequest(rawGetExtractorJobStateRequest)
+	return nil
 }
 
 func (o GetExtractorJobStateRequest) MarshalYAML() (interface{}, error) {
@@ -288,6 +421,8 @@ func (o *GetExtractorJobStateRequest) UnmarshalYAML(unmarshal func(interface{}) 
 type GetExtractorJobStateResponse struct {
 	State   ExtractorJobState `json:"state"`
 	Message *string           `json:"message,omitempty"`
+	// Machine-readable failure detail when state is FAILED. Present alongside the human-readable `message`; populated by the termination-log resolver. Absent on success and on legacy callers that only set `message`.
+	Error *ExtractorError `json:"error,omitempty"`
 }
 
 func (o GetExtractorJobStateResponse) MarshalYAML() (interface{}, error) {
@@ -308,6 +443,11 @@ func (o *GetExtractorJobStateResponse) UnmarshalYAML(unmarshal func(interface{})
 
 type IngestDataflashRequest struct {
 	Locator ObjectLocator `json:"locator"`
+	/*
+	   If true, skips dataflash records whose timestamp cannot be represented (corrupted/out-of-range)
+	   instead of failing the entire ingest. If not provided, defaults to false.
+	*/
+	IgnoreInvalidTimestamps *bool `json:"ignoreInvalidTimestamps,omitempty"`
 }
 
 func (o IngestDataflashRequest) MarshalYAML() (interface{}, error) {
@@ -420,6 +560,11 @@ type IngestMcapProtobufResponse struct {
 	   only a single file is supported, the list type is used for future compatibility.
 	*/
 	ParquetObjectLocators []ObjectLocator `json:"parquetObjectLocators"`
+	/*
+	   Azure or S3-style blob locator of avro file when avro processing is configured.
+	   This field is only set when the workflow is configured to write avro stream.
+	*/
+	AvroLocator *ObjectLocator `json:"avroLocator,omitempty"`
 }
 
 func (o IngestMcapProtobufResponse) MarshalJSON() ([]byte, error) {

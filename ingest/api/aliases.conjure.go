@@ -119,6 +119,58 @@ type EnvironmentVariable string // safelogging:@Unsafe
 // The expected suffix of the file. For example, "parquet", "json", "csv", etc.
 type FileSuffix string // safelogging:@Safe
 
+/*
+Unique resource identifier for an Ingest Automation, a server-side workflow that carries a
+single upload from resource creation through ingest to a seeded workbook.
+*/
+type IngestAutomationRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a IngestAutomationRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a IngestAutomationRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *IngestAutomationRid) UnmarshalText(data []byte) error {
+	var rawIngestAutomationRid rid.ResourceIdentifier
+	if err := rawIngestAutomationRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = IngestAutomationRid(rawIngestAutomationRid)
+	return nil
+}
+
+func (a IngestAutomationRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *IngestAutomationRid) UnmarshalJSON(data []byte) error {
+	var rawIngestAutomationRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawIngestAutomationRid); err != nil {
+		return err
+	}
+	*a = IngestAutomationRid(rawIngestAutomationRid)
+	return nil
+}
+
+func (a IngestAutomationRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *IngestAutomationRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
 // Unique resource identifier for an Ingest Job.
 type IngestJobRid rid.ResourceIdentifier // safelogging:@Safe
 
@@ -161,6 +213,55 @@ func (a IngestJobRid) MarshalYAML() (interface{}, error) {
 }
 
 func (a *IngestJobRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+// Unique resource identifier for an Ingest Transform, a single unit of work within an Ingest Job.
+type IngestTransformRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a IngestTransformRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a IngestTransformRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *IngestTransformRid) UnmarshalText(data []byte) error {
+	var rawIngestTransformRid rid.ResourceIdentifier
+	if err := rawIngestTransformRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = IngestTransformRid(rawIngestTransformRid)
+	return nil
+}
+
+func (a IngestTransformRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *IngestTransformRid) UnmarshalJSON(data []byte) error {
+	var rawIngestTransformRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawIngestTransformRid); err != nil {
+		return err
+	}
+	*a = IngestTransformRid(rawIngestTransformRid)
+	return nil
+}
+
+func (a IngestTransformRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *IngestTransformRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

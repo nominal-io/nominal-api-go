@@ -9,6 +9,7 @@ import (
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
+	"github.com/nominal-io/nominal-api-go/scout/catalog"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-client/httpclient"
 	"github.com/palantir/pkg/bearertoken"
 	"github.com/palantir/pkg/rid"
@@ -241,10 +242,184 @@ func (c *containerizedExtractorServiceClientWithTokenProvider) UnarchiveContaine
 	return c.client.UnarchiveContainerizedExtractor(ctx, bearertoken.Token(token), extractorRidArg)
 }
 
+/*
+Creates and reports on ingest automations: server-side workflows that take an upload (one or
+more files) through asset/dataset/data-scope/run creation, ingest, and channel availability. Backs
+the upload wizard's "Quick look" mode; the frontend creates the accompanying workbook. All
+endpoints validate that the target workspace is the sandbox workspace while the feature is
+gated. Resources are created as the requesting user.
+*/
+type IngestAutomationServiceClient interface {
+	/*
+	   Creates the automation and starts its workflow, returning immediately. Poll
+	   getIngestAutomation for progress. Throws WorkspaceNotSandbox outside the sandbox
+	   workspace while the feature is gated.
+	*/
+	CreateIngestAutomation(ctx context.Context, authHeader bearertoken.Token, requestArg CreateIngestAutomationRequest) (IngestAutomation, error)
+	// Returns the automation's current status and the RIDs of every resource created so far.
+	GetIngestAutomation(ctx context.Context, authHeader bearertoken.Token, ridArg IngestAutomationRid) (IngestAutomation, error)
+}
+
+type ingestAutomationServiceClient struct {
+	client httpclient.Client
+}
+
+func NewIngestAutomationServiceClient(client httpclient.Client) IngestAutomationServiceClient {
+	return &ingestAutomationServiceClient{client: client}
+}
+
+func (c *ingestAutomationServiceClient) CreateIngestAutomation(ctx context.Context, authHeader bearertoken.Token, requestArg CreateIngestAutomationRequest) (IngestAutomation, error) {
+	var returnVal *IngestAutomation
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateIngestAutomation"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-automations"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(IngestAutomation), werror.WrapWithContextParams(ctx, err, "createIngestAutomation failed")
+	}
+	if returnVal == nil {
+		return *new(IngestAutomation), werror.ErrorWithContextParams(ctx, "createIngestAutomation response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *ingestAutomationServiceClient) GetIngestAutomation(ctx context.Context, authHeader bearertoken.Token, ridArg IngestAutomationRid) (IngestAutomation, error) {
+	var returnVal *IngestAutomation
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIngestAutomation"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-automations/%s", url.PathEscape(fmt.Sprint(ridArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(IngestAutomation), werror.WrapWithContextParams(ctx, err, "getIngestAutomation failed")
+	}
+	if returnVal == nil {
+		return *new(IngestAutomation), werror.ErrorWithContextParams(ctx, "getIngestAutomation response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+/*
+Creates and reports on ingest automations: server-side workflows that take an upload (one or
+more files) through asset/dataset/data-scope/run creation, ingest, and channel availability. Backs
+the upload wizard's "Quick look" mode; the frontend creates the accompanying workbook. All
+endpoints validate that the target workspace is the sandbox workspace while the feature is
+gated. Resources are created as the requesting user.
+*/
+type IngestAutomationServiceClientWithAuth interface {
+	/*
+	   Creates the automation and starts its workflow, returning immediately. Poll
+	   getIngestAutomation for progress. Throws WorkspaceNotSandbox outside the sandbox
+	   workspace while the feature is gated.
+	*/
+	CreateIngestAutomation(ctx context.Context, requestArg CreateIngestAutomationRequest) (IngestAutomation, error)
+	// Returns the automation's current status and the RIDs of every resource created so far.
+	GetIngestAutomation(ctx context.Context, ridArg IngestAutomationRid) (IngestAutomation, error)
+}
+
+func NewIngestAutomationServiceClientWithAuth(client IngestAutomationServiceClient, authHeader bearertoken.Token) IngestAutomationServiceClientWithAuth {
+	return &ingestAutomationServiceClientWithAuth{client: client, authHeader: authHeader}
+}
+
+type ingestAutomationServiceClientWithAuth struct {
+	client     IngestAutomationServiceClient
+	authHeader bearertoken.Token
+}
+
+func (c *ingestAutomationServiceClientWithAuth) CreateIngestAutomation(ctx context.Context, requestArg CreateIngestAutomationRequest) (IngestAutomation, error) {
+	return c.client.CreateIngestAutomation(ctx, c.authHeader, requestArg)
+}
+
+func (c *ingestAutomationServiceClientWithAuth) GetIngestAutomation(ctx context.Context, ridArg IngestAutomationRid) (IngestAutomation, error) {
+	return c.client.GetIngestAutomation(ctx, c.authHeader, ridArg)
+}
+
+func NewIngestAutomationServiceClientWithTokenProvider(client IngestAutomationServiceClient, tokenProvider httpclient.TokenProvider) IngestAutomationServiceClientWithAuth {
+	return &ingestAutomationServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
+}
+
+type ingestAutomationServiceClientWithTokenProvider struct {
+	client        IngestAutomationServiceClient
+	tokenProvider httpclient.TokenProvider
+}
+
+func (c *ingestAutomationServiceClientWithTokenProvider) CreateIngestAutomation(ctx context.Context, requestArg CreateIngestAutomationRequest) (IngestAutomation, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(IngestAutomation), err
+	}
+	return c.client.CreateIngestAutomation(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *ingestAutomationServiceClientWithTokenProvider) GetIngestAutomation(ctx context.Context, ridArg IngestAutomationRid) (IngestAutomation, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(IngestAutomation), err
+	}
+	return c.client.GetIngestAutomation(ctx, bearertoken.Token(token), ridArg)
+}
+
 // Public API for querying ingest jobs.
 type IngestJobServiceClient interface {
 	// Returns a single ingest job by RID. Does not include the full ingest request details.
 	GetIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (IngestJob, error)
+	/*
+	   Returns a single ingest transform by RID. The caller must be authorized to read the dataset
+	   produced by the transform's parent ingest job; a transform whose parent job is not visible to
+	   the caller is reported as IngestTransformNotFound rather than leaking its existence.
+	*/
+	GetIngestTransform(ctx context.Context, authHeader bearertoken.Token, ingestTransformRidArg IngestTransformRid) (IngestTransform, error)
+	/*
+	   Returns pre-signed download URIs for a transform's input file(s), keyed on the transform rather
+	   than on a produced dataset file, so the inputs of a transform that produced no file — one that is
+	   still running, or that failed — remain downloadable. Counterpart to the catalog's
+	   getOriginFileUris, which requires a dataset file to key on.
+
+	   The caller must be authorized to read data on the parent ingest job's dataset; a transform whose
+	   parent job is not visible to the caller is reported as IngestTransformNotFound.
+
+	   Only inputs residing in object storage this deployment can sign for are returned, so the result
+	   may be shorter than `sourcePaths` on the same transform: an input still awaiting its copy into
+	   the uploads bucket (a GCS object, a caller-supplied presigned URL, or a File Store revision) has
+	   no signable location yet and is omitted. An unrecognized stored payload yields an empty list.
+	*/
+	GetIngestTransformOriginFileUris(ctx context.Context, authHeader bearertoken.Token, ingestTransformRidArg IngestTransformRid) ([]catalog.OriginFileUri, error)
+	/*
+	   Returns a paginated list of the transforms belonging to a single ingest job, oldest-first and
+	   optionally filtered by status. The caller must be authorized to read the parent job's dataset;
+	   a job that is not visible to the caller is reported as IngestJobNotFound.
+	*/
+	SearchIngestTransforms(ctx context.Context, authHeader bearertoken.Token, requestArg SearchIngestTransformsRequest) (SearchIngestTransformsResponse, error)
+	// Returns a paginated list of ingest jobs, optionally filtered by dataset.
+	SearchIngestJobs(ctx context.Context, authHeader bearertoken.Token, requestArg SearchIngestJobsRequest) (SearchIngestJobsResponse, error)
+	/*
+	   Returns the number of ingest jobs matching the filter, applying the same visibility rules as
+	   searchIngestJobs: jobs without a persisted dataset are excluded, and only jobs whose dataset
+	   the caller is authorized to read are counted. Intended for cheap polling (e.g. an active-job
+	   indicator) instead of paginating searchIngestJobs just to count results. Throws
+	   INVALID_ARGUMENT when the filter matches jobs across more distinct datasets than can be
+	   authorized in one request; narrow the filter in that case.
+	*/
+	CountIngestJobs(ctx context.Context, authHeader bearertoken.Token, requestArg CountIngestJobsRequest) (CountIngestJobsResponse, error)
+	/*
+	   Cancels an ingest job. Jobs that have not yet started running (SUBMITTED, QUEUED) are
+	   transitioned directly to CANCELLED. Jobs that are IN_PROGRESS have their underlying
+	   Temporal workflow cancelled; the workflow is responsible for transitioning the job to
+	   CANCELLED and tearing down in-flight work. Cancelling a job that is already in a terminal
+	   state (COMPLETED, FAILED, CANCELLED) throws IngestJobNotCancellable.
+	*/
+	CancelIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (IngestJob, error)
+	/*
+	   Cancels multiple ingest jobs in a single call. Each job is processed independently and
+	   best-effort: a job that cannot be cancelled (already terminal, missing, or not authorized for
+	   the caller) yields a `failed` result rather than aborting the batch. Per-job cancellation
+	   semantics match cancelIngestJob. At most 100 jobs may be requested per call.
+	*/
+	BatchCancelIngestJobs(ctx context.Context, authHeader bearertoken.Token, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error)
 }
 
 type ingestJobServiceClient struct {
@@ -272,10 +447,186 @@ func (c *ingestJobServiceClient) GetIngestJob(ctx context.Context, authHeader be
 	return *returnVal, nil
 }
 
+func (c *ingestJobServiceClient) GetIngestTransform(ctx context.Context, authHeader bearertoken.Token, ingestTransformRidArg IngestTransformRid) (IngestTransform, error) {
+	var returnVal *IngestTransform
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIngestTransform"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-transform/%s", url.PathEscape(fmt.Sprint(ingestTransformRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return *new(IngestTransform), werror.WrapWithContextParams(ctx, err, "getIngestTransform failed")
+	}
+	if returnVal == nil {
+		return *new(IngestTransform), werror.ErrorWithContextParams(ctx, "getIngestTransform response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *ingestJobServiceClient) GetIngestTransformOriginFileUris(ctx context.Context, authHeader bearertoken.Token, ingestTransformRidArg IngestTransformRid) ([]catalog.OriginFileUri, error) {
+	var returnVal []catalog.OriginFileUri
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIngestTransformOriginFileUris"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-transform/%s/origin-uris", url.PathEscape(fmt.Sprint(ingestTransformRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Get(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "getIngestTransformOriginFileUris failed")
+	}
+	if returnVal == nil {
+		return nil, werror.ErrorWithContextParams(ctx, "getIngestTransformOriginFileUris response cannot be nil")
+	}
+	return returnVal, nil
+}
+
+func (c *ingestJobServiceClient) SearchIngestTransforms(ctx context.Context, authHeader bearertoken.Token, requestArg SearchIngestTransformsRequest) (SearchIngestTransformsResponse, error) {
+	var returnVal *SearchIngestTransformsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchIngestTransforms"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-transforms/search"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchIngestTransformsResponse), werror.WrapWithContextParams(ctx, err, "searchIngestTransforms failed")
+	}
+	if returnVal == nil {
+		return *new(SearchIngestTransformsResponse), werror.ErrorWithContextParams(ctx, "searchIngestTransforms response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *ingestJobServiceClient) SearchIngestJobs(ctx context.Context, authHeader bearertoken.Token, requestArg SearchIngestJobsRequest) (SearchIngestJobsResponse, error) {
+	var returnVal *SearchIngestJobsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchIngestJobs"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-jobs/search"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(SearchIngestJobsResponse), werror.WrapWithContextParams(ctx, err, "searchIngestJobs failed")
+	}
+	if returnVal == nil {
+		return *new(SearchIngestJobsResponse), werror.ErrorWithContextParams(ctx, "searchIngestJobs response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *ingestJobServiceClient) CountIngestJobs(ctx context.Context, authHeader bearertoken.Token, requestArg CountIngestJobsRequest) (CountIngestJobsResponse, error) {
+	var returnVal *CountIngestJobsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CountIngestJobs"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-jobs/count"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(CountIngestJobsResponse), werror.WrapWithContextParams(ctx, err, "countIngestJobs failed")
+	}
+	if returnVal == nil {
+		return *new(CountIngestJobsResponse), werror.ErrorWithContextParams(ctx, "countIngestJobs response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *ingestJobServiceClient) CancelIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (IngestJob, error) {
+	var returnVal *IngestJob
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CancelIngestJob"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-job/%s/cancel", url.PathEscape(fmt.Sprint(ingestJobRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(IngestJob), werror.WrapWithContextParams(ctx, err, "cancelIngestJob failed")
+	}
+	if returnVal == nil {
+		return *new(IngestJob), werror.ErrorWithContextParams(ctx, "cancelIngestJob response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *ingestJobServiceClient) BatchCancelIngestJobs(ctx context.Context, authHeader bearertoken.Token, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error) {
+	var returnVal *BatchCancelIngestJobsResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchCancelIngestJobs"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-jobs/cancel"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(BatchCancelIngestJobsResponse), werror.WrapWithContextParams(ctx, err, "batchCancelIngestJobs failed")
+	}
+	if returnVal == nil {
+		return *new(BatchCancelIngestJobsResponse), werror.ErrorWithContextParams(ctx, "batchCancelIngestJobs response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 // Public API for querying ingest jobs.
 type IngestJobServiceClientWithAuth interface {
 	// Returns a single ingest job by RID. Does not include the full ingest request details.
 	GetIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error)
+	/*
+	   Returns a single ingest transform by RID. The caller must be authorized to read the dataset
+	   produced by the transform's parent ingest job; a transform whose parent job is not visible to
+	   the caller is reported as IngestTransformNotFound rather than leaking its existence.
+	*/
+	GetIngestTransform(ctx context.Context, ingestTransformRidArg IngestTransformRid) (IngestTransform, error)
+	/*
+	   Returns pre-signed download URIs for a transform's input file(s), keyed on the transform rather
+	   than on a produced dataset file, so the inputs of a transform that produced no file — one that is
+	   still running, or that failed — remain downloadable. Counterpart to the catalog's
+	   getOriginFileUris, which requires a dataset file to key on.
+
+	   The caller must be authorized to read data on the parent ingest job's dataset; a transform whose
+	   parent job is not visible to the caller is reported as IngestTransformNotFound.
+
+	   Only inputs residing in object storage this deployment can sign for are returned, so the result
+	   may be shorter than `sourcePaths` on the same transform: an input still awaiting its copy into
+	   the uploads bucket (a GCS object, a caller-supplied presigned URL, or a File Store revision) has
+	   no signable location yet and is omitted. An unrecognized stored payload yields an empty list.
+	*/
+	GetIngestTransformOriginFileUris(ctx context.Context, ingestTransformRidArg IngestTransformRid) ([]catalog.OriginFileUri, error)
+	/*
+	   Returns a paginated list of the transforms belonging to a single ingest job, oldest-first and
+	   optionally filtered by status. The caller must be authorized to read the parent job's dataset;
+	   a job that is not visible to the caller is reported as IngestJobNotFound.
+	*/
+	SearchIngestTransforms(ctx context.Context, requestArg SearchIngestTransformsRequest) (SearchIngestTransformsResponse, error)
+	// Returns a paginated list of ingest jobs, optionally filtered by dataset.
+	SearchIngestJobs(ctx context.Context, requestArg SearchIngestJobsRequest) (SearchIngestJobsResponse, error)
+	/*
+	   Returns the number of ingest jobs matching the filter, applying the same visibility rules as
+	   searchIngestJobs: jobs without a persisted dataset are excluded, and only jobs whose dataset
+	   the caller is authorized to read are counted. Intended for cheap polling (e.g. an active-job
+	   indicator) instead of paginating searchIngestJobs just to count results. Throws
+	   INVALID_ARGUMENT when the filter matches jobs across more distinct datasets than can be
+	   authorized in one request; narrow the filter in that case.
+	*/
+	CountIngestJobs(ctx context.Context, requestArg CountIngestJobsRequest) (CountIngestJobsResponse, error)
+	/*
+	   Cancels an ingest job. Jobs that have not yet started running (SUBMITTED, QUEUED) are
+	   transitioned directly to CANCELLED. Jobs that are IN_PROGRESS have their underlying
+	   Temporal workflow cancelled; the workflow is responsible for transitioning the job to
+	   CANCELLED and tearing down in-flight work. Cancelling a job that is already in a terminal
+	   state (COMPLETED, FAILED, CANCELLED) throws IngestJobNotCancellable.
+	*/
+	CancelIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error)
+	/*
+	   Cancels multiple ingest jobs in a single call. Each job is processed independently and
+	   best-effort: a job that cannot be cancelled (already terminal, missing, or not authorized for
+	   the caller) yields a `failed` result rather than aborting the batch. Per-job cancellation
+	   semantics match cancelIngestJob. At most 100 jobs may be requested per call.
+	*/
+	BatchCancelIngestJobs(ctx context.Context, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error)
 }
 
 func NewIngestJobServiceClientWithAuth(client IngestJobServiceClient, authHeader bearertoken.Token) IngestJobServiceClientWithAuth {
@@ -289,6 +640,34 @@ type ingestJobServiceClientWithAuth struct {
 
 func (c *ingestJobServiceClientWithAuth) GetIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error) {
 	return c.client.GetIngestJob(ctx, c.authHeader, ingestJobRidArg)
+}
+
+func (c *ingestJobServiceClientWithAuth) GetIngestTransform(ctx context.Context, ingestTransformRidArg IngestTransformRid) (IngestTransform, error) {
+	return c.client.GetIngestTransform(ctx, c.authHeader, ingestTransformRidArg)
+}
+
+func (c *ingestJobServiceClientWithAuth) GetIngestTransformOriginFileUris(ctx context.Context, ingestTransformRidArg IngestTransformRid) ([]catalog.OriginFileUri, error) {
+	return c.client.GetIngestTransformOriginFileUris(ctx, c.authHeader, ingestTransformRidArg)
+}
+
+func (c *ingestJobServiceClientWithAuth) SearchIngestTransforms(ctx context.Context, requestArg SearchIngestTransformsRequest) (SearchIngestTransformsResponse, error) {
+	return c.client.SearchIngestTransforms(ctx, c.authHeader, requestArg)
+}
+
+func (c *ingestJobServiceClientWithAuth) SearchIngestJobs(ctx context.Context, requestArg SearchIngestJobsRequest) (SearchIngestJobsResponse, error) {
+	return c.client.SearchIngestJobs(ctx, c.authHeader, requestArg)
+}
+
+func (c *ingestJobServiceClientWithAuth) CountIngestJobs(ctx context.Context, requestArg CountIngestJobsRequest) (CountIngestJobsResponse, error) {
+	return c.client.CountIngestJobs(ctx, c.authHeader, requestArg)
+}
+
+func (c *ingestJobServiceClientWithAuth) CancelIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error) {
+	return c.client.CancelIngestJob(ctx, c.authHeader, ingestJobRidArg)
+}
+
+func (c *ingestJobServiceClientWithAuth) BatchCancelIngestJobs(ctx context.Context, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error) {
+	return c.client.BatchCancelIngestJobs(ctx, c.authHeader, requestArg)
 }
 
 func NewIngestJobServiceClientWithTokenProvider(client IngestJobServiceClient, tokenProvider httpclient.TokenProvider) IngestJobServiceClientWithAuth {
@@ -308,6 +687,62 @@ func (c *ingestJobServiceClientWithTokenProvider) GetIngestJob(ctx context.Conte
 	return c.client.GetIngestJob(ctx, bearertoken.Token(token), ingestJobRidArg)
 }
 
+func (c *ingestJobServiceClientWithTokenProvider) GetIngestTransform(ctx context.Context, ingestTransformRidArg IngestTransformRid) (IngestTransform, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(IngestTransform), err
+	}
+	return c.client.GetIngestTransform(ctx, bearertoken.Token(token), ingestTransformRidArg)
+}
+
+func (c *ingestJobServiceClientWithTokenProvider) GetIngestTransformOriginFileUris(ctx context.Context, ingestTransformRidArg IngestTransformRid) ([]catalog.OriginFileUri, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c.client.GetIngestTransformOriginFileUris(ctx, bearertoken.Token(token), ingestTransformRidArg)
+}
+
+func (c *ingestJobServiceClientWithTokenProvider) SearchIngestTransforms(ctx context.Context, requestArg SearchIngestTransformsRequest) (SearchIngestTransformsResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(SearchIngestTransformsResponse), err
+	}
+	return c.client.SearchIngestTransforms(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *ingestJobServiceClientWithTokenProvider) SearchIngestJobs(ctx context.Context, requestArg SearchIngestJobsRequest) (SearchIngestJobsResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(SearchIngestJobsResponse), err
+	}
+	return c.client.SearchIngestJobs(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *ingestJobServiceClientWithTokenProvider) CountIngestJobs(ctx context.Context, requestArg CountIngestJobsRequest) (CountIngestJobsResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(CountIngestJobsResponse), err
+	}
+	return c.client.CountIngestJobs(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *ingestJobServiceClientWithTokenProvider) CancelIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(IngestJob), err
+	}
+	return c.client.CancelIngestJob(ctx, bearertoken.Token(token), ingestJobRidArg)
+}
+
+func (c *ingestJobServiceClientWithTokenProvider) BatchCancelIngestJobs(ctx context.Context, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(BatchCancelIngestJobsResponse), err
+	}
+	return c.client.BatchCancelIngestJobs(ctx, bearertoken.Token(token), requestArg)
+}
+
 // The Ingest Service handles the data ingestion into Nominal/Clickhouse.
 type IngestServiceClient interface {
 	/*
@@ -319,6 +754,9 @@ type IngestServiceClient interface {
 	/*
 	   Triggers an ingest job using an existing ingest job RID.
 	   Returns the same response format as the /ingest endpoint.
+
+	   Only a job that has finished can be re-run: re-running one still in flight races or duplicates
+	   the run already in progress. Cancel it first.
 	*/
 	RerunIngest(ctx context.Context, authHeader bearertoken.Token, requestArg RerunIngestRequest) (IngestResponse, error)
 	// Creates a run and ingests data sources to be added to the run.
@@ -467,6 +905,9 @@ type IngestServiceClientWithAuth interface {
 	/*
 	   Triggers an ingest job using an existing ingest job RID.
 	   Returns the same response format as the /ingest endpoint.
+
+	   Only a job that has finished can be re-run: re-running one still in flight races or duplicates
+	   the run already in progress. Cancel it first.
 	*/
 	RerunIngest(ctx context.Context, requestArg RerunIngestRequest) (IngestResponse, error)
 	// Creates a run and ingests data sources to be added to the run.
@@ -717,95 +1158,4 @@ func (c *internalIngestJobServiceClientWithTokenProvider) UpdateIngestJobStatus(
 		return *new(IngestJobStatus), err
 	}
 	return c.client.UpdateIngestJobStatus(ctx, bearertoken.Token(token), ingestJobRidArg, statusArg)
-}
-
-type StreamingSessionServiceClient interface {
-	Resolve(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error)
-	Heartbeat(ctx context.Context, authHeader bearertoken.Token, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error
-}
-
-type streamingSessionServiceClient struct {
-	client httpclient.Client
-}
-
-func NewStreamingSessionServiceClient(client httpclient.Client) StreamingSessionServiceClient {
-	return &streamingSessionServiceClient{client: client}
-}
-
-func (c *streamingSessionServiceClient) Resolve(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error) {
-	var returnVal *ResolveStreamingSessionResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("Resolve"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/internal/streaming-session/dataset/%s/resolve", url.PathEscape(fmt.Sprint(datasetRidArg))))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(ResolveStreamingSessionResponse), werror.WrapWithContextParams(ctx, err, "resolve failed")
-	}
-	if returnVal == nil {
-		return *new(ResolveStreamingSessionResponse), werror.ErrorWithContextParams(ctx, "resolve response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *streamingSessionServiceClient) Heartbeat(ctx context.Context, authHeader bearertoken.Token, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error {
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("Heartbeat"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/internal/streaming-session/%s/heartbeat", url.PathEscape(fmt.Sprint(sessionRidArg))))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Put(ctx, requestParams...); err != nil {
-		return werror.WrapWithContextParams(ctx, err, "heartbeat failed")
-	}
-	return nil
-}
-
-type StreamingSessionServiceClientWithAuth interface {
-	Resolve(ctx context.Context, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error)
-	Heartbeat(ctx context.Context, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error
-}
-
-func NewStreamingSessionServiceClientWithAuth(client StreamingSessionServiceClient, authHeader bearertoken.Token) StreamingSessionServiceClientWithAuth {
-	return &streamingSessionServiceClientWithAuth{client: client, authHeader: authHeader}
-}
-
-type streamingSessionServiceClientWithAuth struct {
-	client     StreamingSessionServiceClient
-	authHeader bearertoken.Token
-}
-
-func (c *streamingSessionServiceClientWithAuth) Resolve(ctx context.Context, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error) {
-	return c.client.Resolve(ctx, c.authHeader, datasetRidArg, requestArg)
-}
-
-func (c *streamingSessionServiceClientWithAuth) Heartbeat(ctx context.Context, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error {
-	return c.client.Heartbeat(ctx, c.authHeader, sessionRidArg, requestArg)
-}
-
-func NewStreamingSessionServiceClientWithTokenProvider(client StreamingSessionServiceClient, tokenProvider httpclient.TokenProvider) StreamingSessionServiceClientWithAuth {
-	return &streamingSessionServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
-}
-
-type streamingSessionServiceClientWithTokenProvider struct {
-	client        StreamingSessionServiceClient
-	tokenProvider httpclient.TokenProvider
-}
-
-func (c *streamingSessionServiceClientWithTokenProvider) Resolve(ctx context.Context, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error) {
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return *new(ResolveStreamingSessionResponse), err
-	}
-	return c.client.Resolve(ctx, bearertoken.Token(token), datasetRidArg, requestArg)
-}
-
-func (c *streamingSessionServiceClientWithTokenProvider) Heartbeat(ctx context.Context, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error {
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return err
-	}
-	return c.client.Heartbeat(ctx, bearertoken.Token(token), sessionRidArg, requestArg)
 }

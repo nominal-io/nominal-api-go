@@ -21,6 +21,7 @@ type DataSource struct {
 	connection *ConnectionRid
 	logSet     *LogSetRid
 	video      *rids.VideoRid
+	spatial    *rids.SpatialRid
 }
 
 type dataSourceDeserializer struct {
@@ -29,10 +30,11 @@ type dataSourceDeserializer struct {
 	Connection *ConnectionRid   `json:"connection"`
 	LogSet     *LogSetRid       `json:"logSet"`
 	Video      *rids.VideoRid   `json:"video"`
+	Spatial    *rids.SpatialRid `json:"spatial"`
 }
 
 func (u *dataSourceDeserializer) toStruct() DataSource {
-	return DataSource{typ: u.Type, dataset: u.Dataset, connection: u.Connection, logSet: u.LogSet, video: u.Video}
+	return DataSource{typ: u.Type, dataset: u.Dataset, connection: u.Connection, logSet: u.LogSet, video: u.Video, spatial: u.Spatial}
 }
 
 func (u *DataSource) toSerializer() (interface{}, error) {
@@ -71,6 +73,14 @@ func (u *DataSource) toSerializer() (interface{}, error) {
 			Type  string        `json:"type"`
 			Video rids.VideoRid `json:"video"`
 		}{Type: "video", Video: *u.video}, nil
+	case "spatial":
+		if u.spatial == nil {
+			return nil, fmt.Errorf("field \"spatial\" is required")
+		}
+		return struct {
+			Type    string          `json:"type"`
+			Spatial rids.SpatialRid `json:"spatial"`
+		}{Type: "spatial", Spatial: *u.spatial}, nil
 	}
 }
 
@@ -105,6 +115,10 @@ func (u *DataSource) UnmarshalJSON(data []byte) error {
 		if u.video == nil {
 			return fmt.Errorf("field \"video\" is required")
 		}
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
 	}
 	return nil
 }
@@ -125,7 +139,7 @@ func (u *DataSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *DataSource) AcceptFuncs(datasetFunc func(rids.DatasetRid) error, connectionFunc func(ConnectionRid) error, logSetFunc func(LogSetRid) error, videoFunc func(rids.VideoRid) error, unknownFunc func(string) error) error {
+func (u *DataSource) AcceptFuncs(datasetFunc func(rids.DatasetRid) error, connectionFunc func(ConnectionRid) error, logSetFunc func(LogSetRid) error, videoFunc func(rids.VideoRid) error, spatialFunc func(rids.SpatialRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -152,6 +166,11 @@ func (u *DataSource) AcceptFuncs(datasetFunc func(rids.DatasetRid) error, connec
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return videoFunc(*u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return spatialFunc(*u.spatial)
 	}
 }
 
@@ -168,6 +187,10 @@ func (u *DataSource) LogSetNoopSuccess(_ LogSetRid) error {
 }
 
 func (u *DataSource) VideoNoopSuccess(_ rids.VideoRid) error {
+	return nil
+}
+
+func (u *DataSource) SpatialNoopSuccess(_ rids.SpatialRid) error {
 	return nil
 }
 
@@ -202,6 +225,11 @@ func (u *DataSource) Accept(v DataSourceVisitor) error {
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideo(*u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatial(*u.spatial)
 	}
 }
 
@@ -210,6 +238,7 @@ type DataSourceVisitor interface {
 	VisitConnection(v ConnectionRid) error
 	VisitLogSet(v LogSetRid) error
 	VisitVideo(v rids.VideoRid) error
+	VisitSpatial(v rids.SpatialRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -240,6 +269,11 @@ func (u *DataSource) AcceptWithContext(ctx context.Context, v DataSourceVisitorW
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideoWithContext(ctx, *u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatialWithContext(ctx, *u.spatial)
 	}
 }
 
@@ -248,6 +282,7 @@ type DataSourceVisitorWithContext interface {
 	VisitConnectionWithContext(ctx context.Context, v ConnectionRid) error
 	VisitLogSetWithContext(ctx context.Context, v LogSetRid) error
 	VisitVideoWithContext(ctx context.Context, v rids.VideoRid) error
+	VisitSpatialWithContext(ctx context.Context, v rids.SpatialRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -265,6 +300,10 @@ func NewDataSourceFromLogSet(v LogSetRid) DataSource {
 
 func NewDataSourceFromVideo(v rids.VideoRid) DataSource {
 	return DataSource{typ: "video", video: &v}
+}
+
+func NewDataSourceFromSpatial(v rids.SpatialRid) DataSource {
+	return DataSource{typ: "spatial", spatial: &v}
 }
 
 type SearchQuery struct {
@@ -285,6 +324,8 @@ type SearchQuery struct {
 	property               *api1.Property
 	propertyKey            *api1.PropertyName
 	properties             *api.PropertiesFilter
+	numericProperty        *api1.NumericPropertyPredicate
+	numericPropertyRange   *api1.NumericPropertyRangePredicate
 	dataSourceSeriesTag    *DataSourceSeriesTag
 	dataSourceRefName      *api2.DataSourceRefName
 	dataSource             *DataSource
@@ -296,41 +337,47 @@ type SearchQuery struct {
 	or                     *[]SearchQuery
 	not                    *SearchQuery
 	workspace              *rids.WorkspaceRid
+	lockStatus             *LockStatus
+	datasetRids            *[]rids.DatasetRid
 }
 
 type searchQueryDeserializer struct {
-	Type                   string                  `json:"type"`
-	StartTimeInclusive     *UtcTimestamp           `json:"startTimeInclusive"`
-	StartTime              *TimeframeFilter        `json:"startTime"`
-	EndTimeInclusive       *UtcTimestamp           `json:"endTimeInclusive"`
-	EndTime                *TimeframeFilter        `json:"endTime"`
-	TimeRange              *TimeRangeFilter        `json:"timeRange"`
-	CreatedAt              *TimeframeFilter        `json:"createdAt"`
-	ExactMatch             *string                 `json:"exactMatch"`
-	SearchText             *string                 `json:"searchText"`
-	Asset                  *api.AssetRid           `json:"asset"`
-	Assets                 *AssetsFilter           `json:"assets"`
-	IsSingleAsset          *bool                   `json:"isSingleAsset"`
-	Label                  *api1.Label             `json:"label"`
-	Labels                 *api.LabelsFilter       `json:"labels"`
-	Property               *api1.Property          `json:"property"`
-	PropertyKey            *api1.PropertyName      `json:"propertyKey"`
-	Properties             *api.PropertiesFilter   `json:"properties"`
-	DataSourceSeriesTag    *DataSourceSeriesTag    `json:"dataSourceSeriesTag"`
-	DataSourceRefName      *api2.DataSourceRefName `json:"dataSourceRefName"`
-	DataSource             *DataSource             `json:"dataSource"`
-	RunNumber              *safelong.SafeLong      `json:"runNumber"`
-	RunPrefix              *string                 `json:"runPrefix"`
-	CheckAlertStatesFilter *CheckAlertStatesFilter `json:"checkAlertStatesFilter"`
-	Archived               *bool                   `json:"archived"`
-	And                    *[]SearchQuery          `json:"and"`
-	Or                     *[]SearchQuery          `json:"or"`
-	Not                    *SearchQuery            `json:"not"`
-	Workspace              *rids.WorkspaceRid      `json:"workspace"`
+	Type                   string                              `json:"type"`
+	StartTimeInclusive     *UtcTimestamp                       `json:"startTimeInclusive"`
+	StartTime              *TimeframeFilter                    `json:"startTime"`
+	EndTimeInclusive       *UtcTimestamp                       `json:"endTimeInclusive"`
+	EndTime                *TimeframeFilter                    `json:"endTime"`
+	TimeRange              *TimeRangeFilter                    `json:"timeRange"`
+	CreatedAt              *TimeframeFilter                    `json:"createdAt"`
+	ExactMatch             *string                             `json:"exactMatch"`
+	SearchText             *string                             `json:"searchText"`
+	Asset                  *api.AssetRid                       `json:"asset"`
+	Assets                 *AssetsFilter                       `json:"assets"`
+	IsSingleAsset          *bool                               `json:"isSingleAsset"`
+	Label                  *api1.Label                         `json:"label"`
+	Labels                 *api.LabelsFilter                   `json:"labels"`
+	Property               *api1.Property                      `json:"property"`
+	PropertyKey            *api1.PropertyName                  `json:"propertyKey"`
+	Properties             *api.PropertiesFilter               `json:"properties"`
+	NumericProperty        *api1.NumericPropertyPredicate      `json:"numericProperty"`
+	NumericPropertyRange   *api1.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+	DataSourceSeriesTag    *DataSourceSeriesTag                `json:"dataSourceSeriesTag"`
+	DataSourceRefName      *api2.DataSourceRefName             `json:"dataSourceRefName"`
+	DataSource             *DataSource                         `json:"dataSource"`
+	RunNumber              *safelong.SafeLong                  `json:"runNumber"`
+	RunPrefix              *string                             `json:"runPrefix"`
+	CheckAlertStatesFilter *CheckAlertStatesFilter             `json:"checkAlertStatesFilter"`
+	Archived               *bool                               `json:"archived"`
+	And                    *[]SearchQuery                      `json:"and"`
+	Or                     *[]SearchQuery                      `json:"or"`
+	Not                    *SearchQuery                        `json:"not"`
+	Workspace              *rids.WorkspaceRid                  `json:"workspace"`
+	LockStatus             *LockStatus                         `json:"lockStatus"`
+	DatasetRids            *[]rids.DatasetRid                  `json:"datasetRids"`
 }
 
 func (u *searchQueryDeserializer) toStruct() SearchQuery {
-	return SearchQuery{typ: u.Type, startTimeInclusive: u.StartTimeInclusive, startTime: u.StartTime, endTimeInclusive: u.EndTimeInclusive, endTime: u.EndTime, timeRange: u.TimeRange, createdAt: u.CreatedAt, exactMatch: u.ExactMatch, searchText: u.SearchText, asset: u.Asset, assets: u.Assets, isSingleAsset: u.IsSingleAsset, label: u.Label, labels: u.Labels, property: u.Property, propertyKey: u.PropertyKey, properties: u.Properties, dataSourceSeriesTag: u.DataSourceSeriesTag, dataSourceRefName: u.DataSourceRefName, dataSource: u.DataSource, runNumber: u.RunNumber, runPrefix: u.RunPrefix, checkAlertStatesFilter: u.CheckAlertStatesFilter, archived: u.Archived, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace}
+	return SearchQuery{typ: u.Type, startTimeInclusive: u.StartTimeInclusive, startTime: u.StartTime, endTimeInclusive: u.EndTimeInclusive, endTime: u.EndTime, timeRange: u.TimeRange, createdAt: u.CreatedAt, exactMatch: u.ExactMatch, searchText: u.SearchText, asset: u.Asset, assets: u.Assets, isSingleAsset: u.IsSingleAsset, label: u.Label, labels: u.Labels, property: u.Property, propertyKey: u.PropertyKey, properties: u.Properties, numericProperty: u.NumericProperty, numericPropertyRange: u.NumericPropertyRange, dataSourceSeriesTag: u.DataSourceSeriesTag, dataSourceRefName: u.DataSourceRefName, dataSource: u.DataSource, runNumber: u.RunNumber, runPrefix: u.RunPrefix, checkAlertStatesFilter: u.CheckAlertStatesFilter, archived: u.Archived, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, lockStatus: u.LockStatus, datasetRids: u.DatasetRids}
 }
 
 func (u *SearchQuery) toSerializer() (interface{}, error) {
@@ -465,6 +512,22 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type       string               `json:"type"`
 			Properties api.PropertiesFilter `json:"properties"`
 		}{Type: "properties", Properties: *u.properties}, nil
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return nil, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return struct {
+			Type            string                        `json:"type"`
+			NumericProperty api1.NumericPropertyPredicate `json:"numericProperty"`
+		}{Type: "numericProperty", NumericProperty: *u.numericProperty}, nil
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return nil, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return struct {
+			Type                 string                             `json:"type"`
+			NumericPropertyRange api1.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+		}{Type: "numericPropertyRange", NumericPropertyRange: *u.numericPropertyRange}, nil
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return nil, fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -553,6 +616,22 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type      string            `json:"type"`
 			Workspace rids.WorkspaceRid `json:"workspace"`
 		}{Type: "workspace", Workspace: *u.workspace}, nil
+	case "lockStatus":
+		if u.lockStatus == nil {
+			return nil, fmt.Errorf("field \"lockStatus\" is required")
+		}
+		return struct {
+			Type       string     `json:"type"`
+			LockStatus LockStatus `json:"lockStatus"`
+		}{Type: "lockStatus", LockStatus: *u.lockStatus}, nil
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return nil, fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return struct {
+			Type        string            `json:"type"`
+			DatasetRids []rids.DatasetRid `json:"datasetRids"`
+		}{Type: "datasetRids", DatasetRids: *u.datasetRids}, nil
 	}
 }
 
@@ -635,6 +714,14 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
 		}
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -679,6 +766,14 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
 		}
+	case "lockStatus":
+		if u.lockStatus == nil {
+			return fmt.Errorf("field \"lockStatus\" is required")
+		}
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return fmt.Errorf("field \"datasetRids\" is required")
+		}
 	}
 	return nil
 }
@@ -699,7 +794,7 @@ func (u *SearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) error, startTimeFunc func(TimeframeFilter) error, endTimeInclusiveFunc func(UtcTimestamp) error, endTimeFunc func(TimeframeFilter) error, timeRangeFunc func(TimeRangeFilter) error, createdAtFunc func(TimeframeFilter) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, assetFunc func(api.AssetRid) error, assetsFunc func(AssetsFilter) error, isSingleAssetFunc func(bool) error, labelFunc func(api1.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api1.Property) error, propertyKeyFunc func(api1.PropertyName) error, propertiesFunc func(api.PropertiesFilter) error, dataSourceSeriesTagFunc func(DataSourceSeriesTag) error, dataSourceRefNameFunc func(api2.DataSourceRefName) error, dataSourceFunc func(DataSource) error, runNumberFunc func(safelong.SafeLong) error, runPrefixFunc func(string) error, checkAlertStatesFilterFunc func(CheckAlertStatesFilter) error, archivedFunc func(bool) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) error, startTimeFunc func(TimeframeFilter) error, endTimeInclusiveFunc func(UtcTimestamp) error, endTimeFunc func(TimeframeFilter) error, timeRangeFunc func(TimeRangeFilter) error, createdAtFunc func(TimeframeFilter) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, assetFunc func(api.AssetRid) error, assetsFunc func(AssetsFilter) error, isSingleAssetFunc func(bool) error, labelFunc func(api1.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api1.Property) error, propertyKeyFunc func(api1.PropertyName) error, propertiesFunc func(api.PropertiesFilter) error, numericPropertyFunc func(api1.NumericPropertyPredicate) error, numericPropertyRangeFunc func(api1.NumericPropertyRangePredicate) error, dataSourceSeriesTagFunc func(DataSourceSeriesTag) error, dataSourceRefNameFunc func(api2.DataSourceRefName) error, dataSourceFunc func(DataSource) error, runNumberFunc func(safelong.SafeLong) error, runPrefixFunc func(string) error, checkAlertStatesFilterFunc func(CheckAlertStatesFilter) error, archivedFunc func(bool) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, lockStatusFunc func(LockStatus) error, datasetRidsFunc func([]rids.DatasetRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -786,6 +881,16 @@ func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) erro
 			return fmt.Errorf("field \"properties\" is required")
 		}
 		return propertiesFunc(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return numericPropertyRangeFunc(*u.numericPropertyRange)
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -841,6 +946,16 @@ func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) erro
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return workspaceFunc(*u.workspace)
+	case "lockStatus":
+		if u.lockStatus == nil {
+			return fmt.Errorf("field \"lockStatus\" is required")
+		}
+		return lockStatusFunc(*u.lockStatus)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return datasetRidsFunc(*u.datasetRids)
 	}
 }
 
@@ -908,6 +1023,14 @@ func (u *SearchQuery) PropertiesNoopSuccess(_ api.PropertiesFilter) error {
 	return nil
 }
 
+func (u *SearchQuery) NumericPropertyNoopSuccess(_ api1.NumericPropertyPredicate) error {
+	return nil
+}
+
+func (u *SearchQuery) NumericPropertyRangeNoopSuccess(_ api1.NumericPropertyRangePredicate) error {
+	return nil
+}
+
 func (u *SearchQuery) DataSourceSeriesTagNoopSuccess(_ DataSourceSeriesTag) error {
 	return nil
 }
@@ -949,6 +1072,14 @@ func (u *SearchQuery) NotNoopSuccess(_ SearchQuery) error {
 }
 
 func (u *SearchQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
+	return nil
+}
+
+func (u *SearchQuery) LockStatusNoopSuccess(_ LockStatus) error {
+	return nil
+}
+
+func (u *SearchQuery) DatasetRidsNoopSuccess(_ []rids.DatasetRid) error {
 	return nil
 }
 
@@ -1043,6 +1174,16 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"properties\" is required")
 		}
 		return v.VisitProperties(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRange(*u.numericPropertyRange)
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -1098,6 +1239,16 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspace(*u.workspace)
+	case "lockStatus":
+		if u.lockStatus == nil {
+			return fmt.Errorf("field \"lockStatus\" is required")
+		}
+		return v.VisitLockStatus(*u.lockStatus)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return v.VisitDatasetRids(*u.datasetRids)
 	}
 }
 
@@ -1118,6 +1269,8 @@ type SearchQueryVisitor interface {
 	VisitProperty(v api1.Property) error
 	VisitPropertyKey(v api1.PropertyName) error
 	VisitProperties(v api.PropertiesFilter) error
+	VisitNumericProperty(v api1.NumericPropertyPredicate) error
+	VisitNumericPropertyRange(v api1.NumericPropertyRangePredicate) error
 	VisitDataSourceSeriesTag(v DataSourceSeriesTag) error
 	VisitDataSourceRefName(v api2.DataSourceRefName) error
 	VisitDataSource(v DataSource) error
@@ -1129,6 +1282,8 @@ type SearchQueryVisitor interface {
 	VisitOr(v []SearchQuery) error
 	VisitNot(v SearchQuery) error
 	VisitWorkspace(v rids.WorkspaceRid) error
+	VisitLockStatus(v LockStatus) error
+	VisitDatasetRids(v []rids.DatasetRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1219,6 +1374,16 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"properties\" is required")
 		}
 		return v.VisitPropertiesWithContext(ctx, *u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericPropertyWithContext(ctx, *u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRangeWithContext(ctx, *u.numericPropertyRange)
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -1274,6 +1439,16 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
+	case "lockStatus":
+		if u.lockStatus == nil {
+			return fmt.Errorf("field \"lockStatus\" is required")
+		}
+		return v.VisitLockStatusWithContext(ctx, *u.lockStatus)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return v.VisitDatasetRidsWithContext(ctx, *u.datasetRids)
 	}
 }
 
@@ -1294,6 +1469,8 @@ type SearchQueryVisitorWithContext interface {
 	VisitPropertyWithContext(ctx context.Context, v api1.Property) error
 	VisitPropertyKeyWithContext(ctx context.Context, v api1.PropertyName) error
 	VisitPropertiesWithContext(ctx context.Context, v api.PropertiesFilter) error
+	VisitNumericPropertyWithContext(ctx context.Context, v api1.NumericPropertyPredicate) error
+	VisitNumericPropertyRangeWithContext(ctx context.Context, v api1.NumericPropertyRangePredicate) error
 	VisitDataSourceSeriesTagWithContext(ctx context.Context, v DataSourceSeriesTag) error
 	VisitDataSourceRefNameWithContext(ctx context.Context, v api2.DataSourceRefName) error
 	VisitDataSourceWithContext(ctx context.Context, v DataSource) error
@@ -1305,6 +1482,8 @@ type SearchQueryVisitorWithContext interface {
 	VisitOrWithContext(ctx context.Context, v []SearchQuery) error
 	VisitNotWithContext(ctx context.Context, v SearchQuery) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
+	VisitLockStatusWithContext(ctx context.Context, v LockStatus) error
+	VisitDatasetRidsWithContext(ctx context.Context, v []rids.DatasetRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1372,6 +1551,14 @@ func NewSearchQueryFromProperties(v api.PropertiesFilter) SearchQuery {
 	return SearchQuery{typ: "properties", properties: &v}
 }
 
+func NewSearchQueryFromNumericProperty(v api1.NumericPropertyPredicate) SearchQuery {
+	return SearchQuery{typ: "numericProperty", numericProperty: &v}
+}
+
+func NewSearchQueryFromNumericPropertyRange(v api1.NumericPropertyRangePredicate) SearchQuery {
+	return SearchQuery{typ: "numericPropertyRange", numericPropertyRange: &v}
+}
+
 func NewSearchQueryFromDataSourceSeriesTag(v DataSourceSeriesTag) SearchQuery {
 	return SearchQuery{typ: "dataSourceSeriesTag", dataSourceSeriesTag: &v}
 }
@@ -1416,20 +1603,30 @@ func NewSearchQueryFromWorkspace(v rids.WorkspaceRid) SearchQuery {
 	return SearchQuery{typ: "workspace", workspace: &v}
 }
 
+func NewSearchQueryFromLockStatus(v LockStatus) SearchQuery {
+	return SearchQuery{typ: "lockStatus", lockStatus: &v}
+}
+
+func NewSearchQueryFromDatasetRids(v []rids.DatasetRid) SearchQuery {
+	return SearchQuery{typ: "datasetRids", datasetRids: &v}
+}
+
 type SortKey struct {
-	typ      string
-	field    *SortField
-	property *SortProperty
+	typ             string
+	field           *SortField
+	property        *SortProperty
+	numericProperty *SortProperty
 }
 
 type sortKeyDeserializer struct {
-	Type     string        `json:"type"`
-	Field    *SortField    `json:"field"`
-	Property *SortProperty `json:"property"`
+	Type            string        `json:"type"`
+	Field           *SortField    `json:"field"`
+	Property        *SortProperty `json:"property"`
+	NumericProperty *SortProperty `json:"numericProperty"`
 }
 
 func (u *sortKeyDeserializer) toStruct() SortKey {
-	return SortKey{typ: u.Type, field: u.Field, property: u.Property}
+	return SortKey{typ: u.Type, field: u.Field, property: u.Property, numericProperty: u.NumericProperty}
 }
 
 func (u *SortKey) toSerializer() (interface{}, error) {
@@ -1452,6 +1649,14 @@ func (u *SortKey) toSerializer() (interface{}, error) {
 			Type     string       `json:"type"`
 			Property SortProperty `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return nil, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return struct {
+			Type            string       `json:"type"`
+			NumericProperty SortProperty `json:"numericProperty"`
+		}{Type: "numericProperty", NumericProperty: *u.numericProperty}, nil
 	}
 }
 
@@ -1478,6 +1683,10 @@ func (u *SortKey) UnmarshalJSON(data []byte) error {
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
 	}
 	return nil
 }
@@ -1498,7 +1707,7 @@ func (u *SortKey) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SortKey) AcceptFuncs(fieldFunc func(SortField) error, propertyFunc func(SortProperty) error, unknownFunc func(string) error) error {
+func (u *SortKey) AcceptFuncs(fieldFunc func(SortField) error, propertyFunc func(SortProperty) error, numericPropertyFunc func(SortProperty) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1515,6 +1724,11 @@ func (u *SortKey) AcceptFuncs(fieldFunc func(SortField) error, propertyFunc func
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
 	}
 }
 
@@ -1523,6 +1737,10 @@ func (u *SortKey) FieldNoopSuccess(_ SortField) error {
 }
 
 func (u *SortKey) PropertyNoopSuccess(_ SortProperty) error {
+	return nil
+}
+
+func (u *SortKey) NumericPropertyNoopSuccess(_ SortProperty) error {
 	return nil
 }
 
@@ -1547,12 +1765,18 @@ func (u *SortKey) Accept(v SortKeyVisitor) error {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(*u.numericProperty)
 	}
 }
 
 type SortKeyVisitor interface {
 	VisitField(v SortField) error
 	VisitProperty(v SortProperty) error
+	VisitNumericProperty(v SortProperty) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1573,12 +1797,18 @@ func (u *SortKey) AcceptWithContext(ctx context.Context, v SortKeyVisitorWithCon
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericPropertyWithContext(ctx, *u.numericProperty)
 	}
 }
 
 type SortKeyVisitorWithContext interface {
 	VisitFieldWithContext(ctx context.Context, v SortField) error
 	VisitPropertyWithContext(ctx context.Context, v SortProperty) error
+	VisitNumericPropertyWithContext(ctx context.Context, v SortProperty) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1588,6 +1818,10 @@ func NewSortKeyFromField(v SortField) SortKey {
 
 func NewSortKeyFromProperty(v SortProperty) SortKey {
 	return SortKey{typ: "property", property: &v}
+}
+
+func NewSortKeyFromNumericProperty(v SortProperty) SortKey {
+	return SortKey{typ: "numericProperty", numericProperty: &v}
 }
 
 type TimeframeFilter struct {

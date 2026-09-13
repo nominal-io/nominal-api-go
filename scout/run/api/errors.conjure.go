@@ -1862,6 +1862,183 @@ func (e *RunPropertiesHaveNullValues) UnmarshalJSON(data []byte) error {
 }
 
 // safelogging:@Safe
+type runsLocked struct {
+	RunRids []RunRid `json:"runRids" safelogging:"@Safe"`
+}
+
+func (o runsLocked) MarshalJSON() ([]byte, error) {
+	if o.RunRids == nil {
+		o.RunRids = make([]RunRid, 0)
+	}
+	type _tmprunsLocked runsLocked
+	return safejson.Marshal(_tmprunsLocked(o))
+}
+
+func (o *runsLocked) UnmarshalJSON(data []byte) error {
+	type _tmprunsLocked runsLocked
+	var rawrunsLocked _tmprunsLocked
+	if err := safejson.Unmarshal(data, &rawrunsLocked); err != nil {
+		return err
+	}
+	if rawrunsLocked.RunRids == nil {
+		rawrunsLocked.RunRids = make([]RunRid, 0)
+	}
+	*o = runsLocked(rawrunsLocked)
+	return nil
+}
+
+func (o runsLocked) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *runsLocked) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewRunsLocked returns new instance of RunsLocked error.
+func NewRunsLocked(runRidsArg []RunRid) *RunsLocked {
+	return &RunsLocked{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), runsLocked: runsLocked{RunRids: runRidsArg}}
+}
+
+// WrapWithRunsLocked returns new instance of RunsLocked error wrapping an existing error.
+func WrapWithRunsLocked(err error, runRidsArg []RunRid) *RunsLocked {
+	return &RunsLocked{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, runsLocked: runsLocked{RunRids: runRidsArg}}
+}
+
+// RunsLocked is an error type.
+/*
+A run under a retention lock is immutable. The runs named here must be unlocked before
+any of their metadata, data sources, or attachments can be updated. Batch updates are
+rejected in full rather than partially applied, so this lists every locked run in the
+request.
+*/
+type RunsLocked struct {
+	errorInstanceID uuid.UUID
+	runsLocked
+	cause error
+	stack werror.StackTrace
+}
+
+// IsRunsLocked returns true if err is an instance of RunsLocked.
+func IsRunsLocked(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*RunsLocked)
+	return ok
+}
+
+func (e *RunsLocked) Error() string {
+	return fmt.Sprintf("CONFLICT Scout:RunsLocked (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *RunsLocked) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *RunsLocked) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *RunsLocked) Message() string {
+	return "CONFLICT Scout:RunsLocked"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *RunsLocked) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *RunsLocked) Code() errors.ErrorCode {
+	return errors.Conflict
+}
+
+// Name returns an error name identifying error type.
+func (e *RunsLocked) Name() string {
+	return "Scout:RunsLocked"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *RunsLocked) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *RunsLocked) Parameters() map[string]interface{} {
+	return map[string]interface{}{"runRids": e.RunRids}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *RunsLocked) safeParams() map[string]interface{} {
+	return map[string]interface{}{"runRids": e.RunRids, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *RunsLocked) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *RunsLocked) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *RunsLocked) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e RunsLocked) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.runsLocked)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "Scout:RunsLocked", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *RunsLocked) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters runsLocked
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.runsLocked = parameters
+	return nil
+}
+
+// safelogging:@Safe
 type unspecifiedAssetForMultiAssetRun struct {
 	RunRid RunRid `json:"runRid" safelogging:"@Safe"`
 }
@@ -2024,5 +2201,6 @@ func init() {
 	conjureerrors.RegisterErrorType("Scout:RunNotFound", reflect.TypeOf(RunNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:RunNotFoundById", reflect.TypeOf(RunNotFoundById{}))
 	conjureerrors.RegisterErrorType("Scout:RunPropertiesHaveNullValues", reflect.TypeOf(RunPropertiesHaveNullValues{}))
+	conjureerrors.RegisterErrorType("Scout:RunsLocked", reflect.TypeOf(RunsLocked{}))
 	conjureerrors.RegisterErrorType("Scout:UnspecifiedAssetForMultiAssetRun", reflect.TypeOf(UnspecifiedAssetForMultiAssetRun{}))
 }

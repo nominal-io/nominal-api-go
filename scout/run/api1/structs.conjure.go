@@ -101,19 +101,21 @@ func (o *GetRunsByAssetResponse) UnmarshalYAML(unmarshal func(interface{}) error
 
 // safelogging:@Unsafe
 type Run struct {
-	Rid         api2.RunRid                              `json:"rid" safelogging:"@Safe"`
-	RunNumber   safelong.SafeLong                        `json:"runNumber"`
-	RunPrefix   *string                                  `json:"runPrefix,omitempty"`
-	Title       string                                   `json:"title"`
-	Description string                                   `json:"description"`
-	AuthorRid   *api3.UserRid                            `json:"authorRid,omitempty" safelogging:"@Safe"`
-	StartTime   api2.UtcTimestamp                        `json:"startTime"`
-	EndTime     *api2.UtcTimestamp                       `json:"endTime,omitempty"`
-	Properties  map[api4.PropertyName]api4.PropertyValue `json:"properties"`
-	Labels      []api4.Label                             `json:"labels" safelogging:"@Unsafe"`
-	Links       []api2.Link                              `json:"links"`
-	CreatedAt   datetime.DateTime                        `json:"createdAt"`
-	UpdatedAt   datetime.DateTime                        `json:"updatedAt"`
+	Rid         api2.RunRid        `json:"rid" safelogging:"@Safe"`
+	RunNumber   safelong.SafeLong  `json:"runNumber"`
+	RunPrefix   *string            `json:"runPrefix,omitempty"`
+	Title       string             `json:"title"`
+	Description string             `json:"description"`
+	AuthorRid   *api3.UserRid      `json:"authorRid,omitempty" safelogging:"@Safe"`
+	StartTime   api2.UtcTimestamp  `json:"startTime"`
+	EndTime     *api2.UtcTimestamp `json:"endTime,omitempty"`
+	// Deprecated: use typedProperties
+	Properties      map[api4.PropertyName]api4.PropertyValue      `json:"properties"`
+	TypedProperties map[api4.PropertyName]api4.TypedPropertyValue `json:"typedProperties"`
+	Labels          []api4.Label                                  `json:"labels" safelogging:"@Unsafe"`
+	Links           []api2.Link                                   `json:"links"`
+	CreatedAt       datetime.DateTime                             `json:"createdAt"`
+	UpdatedAt       datetime.DateTime                             `json:"updatedAt"`
 	// Map from asset RIDs to their data scopes
 	AssetDataScopesMap map[api3.AssetRid]DataScopes `json:"assetDataScopesMap"`
 	// Deprecated: Use assetDataScopesMap instead. Will be empty for multi-asset runs.
@@ -125,11 +127,16 @@ type Run struct {
 	Asset      *api3.AssetRid  `json:"asset,omitempty" safelogging:"@Safe"`
 	Assets     []api3.AssetRid `json:"assets" safelogging:"@Safe"`
 	IsArchived bool            `json:"isArchived"`
+	// When absent, defaults to UNLOCKED for back-compat.
+	LockStatus *api2.LockStatus `json:"lockStatus,omitempty"`
 }
 
 func (o Run) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
 		o.Properties = make(map[api4.PropertyName]api4.PropertyValue)
+	}
+	if o.TypedProperties == nil {
+		o.TypedProperties = make(map[api4.PropertyName]api4.TypedPropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api4.Label, 0)
@@ -164,6 +171,9 @@ func (o *Run) UnmarshalJSON(data []byte) error {
 	}
 	if rawRun.Properties == nil {
 		rawRun.Properties = make(map[api4.PropertyName]api4.PropertyValue)
+	}
+	if rawRun.TypedProperties == nil {
+		rawRun.TypedProperties = make(map[api4.PropertyName]api4.TypedPropertyValue)
 	}
 	if rawRun.Labels == nil {
 		rawRun.Labels = make([]api4.Label, 0)
@@ -254,6 +264,11 @@ func (o *RunWithDataReviewSummary) UnmarshalYAML(unmarshal func(interface{}) err
 type SearchRunsResponse struct {
 	Results       []Run       `json:"results"`
 	NextPageToken *api4.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+	/*
+	   The number of runs matching the query, workspace, and archived filters. Present only when
+	   includeMatchCount was set to true on the request.
+	*/
+	TotalCount *int `json:"totalCount,omitempty"`
 }
 
 func (o SearchRunsResponse) MarshalJSON() ([]byte, error) {

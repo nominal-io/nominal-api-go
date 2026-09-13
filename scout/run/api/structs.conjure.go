@@ -364,16 +364,18 @@ func (o *CreateRunDataSource) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 // safelogging:@Unsafe
 type CreateRunRequest struct {
-	Title       string                                         `json:"title"`
-	Description string                                         `json:"description"`
-	StartTime   UtcTimestamp                                   `json:"startTime"`
-	EndTime     *UtcTimestamp                                  `json:"endTime,omitempty"`
-	Properties  map[api.PropertyName]api.PropertyValue         `json:"properties"`
-	Labels      []api.Label                                    `json:"labels" safelogging:"@Unsafe"`
-	Links       []Link                                         `json:"links"`
-	RunPrefix   *string                                        `json:"runPrefix,omitempty"`
-	DataSources map[api3.DataSourceRefName]CreateRunDataSource `json:"dataSources"`
-	Attachments []rids.AttachmentRid                           `json:"attachments" safelogging:"@Safe"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	StartTime   UtcTimestamp  `json:"startTime"`
+	EndTime     *UtcTimestamp `json:"endTime,omitempty"`
+	// Deprecated: use typedProperties
+	Properties      map[api.PropertyName]api.PropertyValue         `json:"properties"`
+	TypedProperties map[api.PropertyName]api.TypedPropertyValue    `json:"typedProperties"`
+	Labels          []api.Label                                    `json:"labels" safelogging:"@Unsafe"`
+	Links           []Link                                         `json:"links"`
+	RunPrefix       *string                                        `json:"runPrefix,omitempty"`
+	DataSources     map[api3.DataSourceRefName]CreateRunDataSource `json:"dataSources"`
+	Attachments     []rids.AttachmentRid                           `json:"attachments" safelogging:"@Safe"`
 	// Deprecated: Use assets
 	Asset  *api1.AssetRid  `json:"asset,omitempty" safelogging:"@Safe"`
 	Assets []api1.AssetRid `json:"assets" safelogging:"@Safe"`
@@ -389,6 +391,9 @@ type CreateRunRequest struct {
 func (o CreateRunRequest) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
 		o.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if o.TypedProperties == nil {
+		o.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api.Label, 0)
@@ -417,6 +422,9 @@ func (o *CreateRunRequest) UnmarshalJSON(data []byte) error {
 	}
 	if rawCreateRunRequest.Properties == nil {
 		rawCreateRunRequest.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if rawCreateRunRequest.TypedProperties == nil {
+		rawCreateRunRequest.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
 	}
 	if rawCreateRunRequest.Labels == nil {
 		rawCreateRunRequest.Labels = make([]api.Label, 0)
@@ -570,7 +578,6 @@ func (o *DataSourceSeriesTag) UnmarshalYAML(unmarshal func(interface{}) error) e
 type Duration struct {
 	Seconds safelong.SafeLong `json:"seconds"`
 	Nanos   safelong.SafeLong `json:"nanos"`
-	Picos   *int              `json:"picos,omitempty"`
 }
 
 func (o Duration) MarshalYAML() (interface{}, error) {
@@ -887,6 +894,12 @@ type SearchRunsRequest struct {
 	   Deprecated: use archived filter in search query instead.
 	*/
 	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
+	/*
+	   When true, the response populates totalCount with the number of runs matching the query. Defaults to
+	   false. Computing the count is an additional query whose cost grows with the size of the matching set, so
+	   only set this when the count is needed.
+	*/
+	IncludeMatchCount *bool `json:"includeMatchCount,omitempty"`
 }
 
 func (o SearchRunsRequest) MarshalYAML() (interface{}, error) {
@@ -905,12 +918,38 @@ func (o *SearchRunsRequest) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type SortKeyWithDirection struct {
+	SortKey      SortKey `json:"sortKey"`
+	IsDescending bool    `json:"isDescending"`
+}
+
+func (o SortKeyWithDirection) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SortKeyWithDirection) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type SortOptions struct {
 	IsDescending bool `json:"isDescending"`
 	// Deprecated: use SortKey with SortField union type instead
 	Field *SortField `json:"field,omitempty"`
 	// Field to sort by. Includes both field and property-based sorting.
 	SortKey *SortKey `json:"sortKey,omitempty"`
+	/*
+	   Optional secondary sort keys for tiebreaking. Applied in order after the primary sortKey.
+	   Each entry specifies its own sort key and direction. If empty or absent, ties are broken by UUID only.
+	*/
+	AdditionalSortKeys *[]SortKeyWithDirection `json:"additionalSortKeys,omitempty"`
 }
 
 func (o SortOptions) MarshalYAML() (interface{}, error) {
@@ -1096,10 +1135,12 @@ type UpdateRunRequest struct {
 	// If strictOverwrite is false, will only update the startTime if it is before the existing startTime.
 	StartTime *UtcTimestamp `json:"startTime,omitempty"`
 	// If strictOverwrite is false, will only update the endTime if it is after the existing endTime.
-	EndTime    *UtcTimestamp                           `json:"endTime,omitempty"`
-	Properties *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
-	Labels     *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
-	Links      *[]Link                                 `json:"links,omitempty"`
+	EndTime *UtcTimestamp `json:"endTime,omitempty"`
+	// Deprecated: use typedProperties
+	Properties      *map[api.PropertyName]api.PropertyValue      `json:"properties,omitempty"`
+	TypedProperties *map[api.PropertyName]api.TypedPropertyValue `json:"typedProperties,omitempty"`
+	Labels          *[]api.Label                                 `json:"labels,omitempty" safelogging:"@Unsafe"`
+	Links           *[]Link                                      `json:"links,omitempty"`
 	// Pass in an empty string to remove the run prefix.
 	RunPrefix   *string                                         `json:"runPrefix,omitempty"`
 	DataSources *map[api3.DataSourceRefName]CreateRunDataSource `json:"dataSources,omitempty"`

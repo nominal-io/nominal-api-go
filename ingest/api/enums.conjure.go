@@ -6,6 +6,67 @@ import (
 	"strings"
 )
 
+/*
+NOT_FOUND: the job does not exist, or the caller is not authorized to cancel it.
+NOT_CANCELLABLE: the job is already in a terminal state (COMPLETED or FAILED).
+*/
+type CancelIngestJobFailureReason struct {
+	val CancelIngestJobFailureReason_Value
+}
+
+type CancelIngestJobFailureReason_Value string
+
+const (
+	CancelIngestJobFailureReason_NOT_FOUND       CancelIngestJobFailureReason_Value = "NOT_FOUND"
+	CancelIngestJobFailureReason_NOT_CANCELLABLE CancelIngestJobFailureReason_Value = "NOT_CANCELLABLE"
+	CancelIngestJobFailureReason_UNKNOWN         CancelIngestJobFailureReason_Value = "UNKNOWN"
+)
+
+// CancelIngestJobFailureReason_Values returns all known variants of CancelIngestJobFailureReason.
+func CancelIngestJobFailureReason_Values() []CancelIngestJobFailureReason_Value {
+	return []CancelIngestJobFailureReason_Value{CancelIngestJobFailureReason_NOT_FOUND, CancelIngestJobFailureReason_NOT_CANCELLABLE}
+}
+
+func New_CancelIngestJobFailureReason(value CancelIngestJobFailureReason_Value) CancelIngestJobFailureReason {
+	return CancelIngestJobFailureReason{val: value}
+}
+
+// IsUnknown returns false for all known variants of CancelIngestJobFailureReason and true otherwise.
+func (e CancelIngestJobFailureReason) IsUnknown() bool {
+	switch e.val {
+	case CancelIngestJobFailureReason_NOT_FOUND, CancelIngestJobFailureReason_NOT_CANCELLABLE:
+		return false
+	}
+	return true
+}
+
+func (e CancelIngestJobFailureReason) Value() CancelIngestJobFailureReason_Value {
+	if e.IsUnknown() {
+		return CancelIngestJobFailureReason_UNKNOWN
+	}
+	return e.val
+}
+
+func (e CancelIngestJobFailureReason) String() string {
+	return string(e.val)
+}
+
+func (e CancelIngestJobFailureReason) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *CancelIngestJobFailureReason) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_CancelIngestJobFailureReason(CancelIngestJobFailureReason_Value(v))
+	case "NOT_FOUND":
+		*e = New_CancelIngestJobFailureReason(CancelIngestJobFailureReason_NOT_FOUND)
+	case "NOT_CANCELLABLE":
+		*e = New_CancelIngestJobFailureReason(CancelIngestJobFailureReason_NOT_CANCELLABLE)
+	}
+	return nil
+}
+
 type FileOutputFormat struct {
 	val FileOutputFormat_Value
 }
@@ -71,6 +132,198 @@ func (e *FileOutputFormat) UnmarshalText(data []byte) error {
 		*e = New_FileOutputFormat(FileOutputFormat_JSON_L)
 	case "MANIFEST":
 		*e = New_FileOutputFormat(FileOutputFormat_MANIFEST)
+	}
+	return nil
+}
+
+/*
+Progress of an ingest automation, in execution order. Statuses map one-to-one onto the
+client's progress checklist. Resources created before a FAILED terminal state persist
+(the flow is intentionally non-atomic, matching the existing ingest flow).
+*/
+type IngestAutomationStatus struct {
+	val IngestAutomationStatus_Value
+}
+
+type IngestAutomationStatus_Value string
+
+const (
+	IngestAutomationStatus_CREATING_RESOURCES IngestAutomationStatus_Value = "CREATING_RESOURCES"
+	IngestAutomationStatus_INGESTING          IngestAutomationStatus_Value = "INGESTING"
+	IngestAutomationStatus_AWAITING_CHANNELS  IngestAutomationStatus_Value = "AWAITING_CHANNELS"
+	IngestAutomationStatus_COMPLETED          IngestAutomationStatus_Value = "COMPLETED"
+	IngestAutomationStatus_FAILED             IngestAutomationStatus_Value = "FAILED"
+	IngestAutomationStatus_UNKNOWN            IngestAutomationStatus_Value = "UNKNOWN"
+)
+
+// IngestAutomationStatus_Values returns all known variants of IngestAutomationStatus.
+func IngestAutomationStatus_Values() []IngestAutomationStatus_Value {
+	return []IngestAutomationStatus_Value{IngestAutomationStatus_CREATING_RESOURCES, IngestAutomationStatus_INGESTING, IngestAutomationStatus_AWAITING_CHANNELS, IngestAutomationStatus_COMPLETED, IngestAutomationStatus_FAILED}
+}
+
+func New_IngestAutomationStatus(value IngestAutomationStatus_Value) IngestAutomationStatus {
+	return IngestAutomationStatus{val: value}
+}
+
+// IsUnknown returns false for all known variants of IngestAutomationStatus and true otherwise.
+func (e IngestAutomationStatus) IsUnknown() bool {
+	switch e.val {
+	case IngestAutomationStatus_CREATING_RESOURCES, IngestAutomationStatus_INGESTING, IngestAutomationStatus_AWAITING_CHANNELS, IngestAutomationStatus_COMPLETED, IngestAutomationStatus_FAILED:
+		return false
+	}
+	return true
+}
+
+func (e IngestAutomationStatus) Value() IngestAutomationStatus_Value {
+	if e.IsUnknown() {
+		return IngestAutomationStatus_UNKNOWN
+	}
+	return e.val
+}
+
+func (e IngestAutomationStatus) String() string {
+	return string(e.val)
+}
+
+func (e IngestAutomationStatus) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *IngestAutomationStatus) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_IngestAutomationStatus(IngestAutomationStatus_Value(v))
+	case "CREATING_RESOURCES":
+		*e = New_IngestAutomationStatus(IngestAutomationStatus_CREATING_RESOURCES)
+	case "INGESTING":
+		*e = New_IngestAutomationStatus(IngestAutomationStatus_INGESTING)
+	case "AWAITING_CHANNELS":
+		*e = New_IngestAutomationStatus(IngestAutomationStatus_AWAITING_CHANNELS)
+	case "COMPLETED":
+		*e = New_IngestAutomationStatus(IngestAutomationStatus_COMPLETED)
+	case "FAILED":
+		*e = New_IngestAutomationStatus(IngestAutomationStatus_FAILED)
+	}
+	return nil
+}
+
+// The individual workflow steps, used to report where a FAILED automation stopped.
+type IngestAutomationStep struct {
+	val IngestAutomationStep_Value
+}
+
+type IngestAutomationStep_Value string
+
+const (
+	IngestAutomationStep_CREATE_RESOURCES IngestAutomationStep_Value = "CREATE_RESOURCES"
+	IngestAutomationStep_SUBMIT_INGEST    IngestAutomationStep_Value = "SUBMIT_INGEST"
+	IngestAutomationStep_AWAIT_INGEST     IngestAutomationStep_Value = "AWAIT_INGEST"
+	IngestAutomationStep_AWAIT_CHANNELS   IngestAutomationStep_Value = "AWAIT_CHANNELS"
+	IngestAutomationStep_UNKNOWN          IngestAutomationStep_Value = "UNKNOWN"
+)
+
+// IngestAutomationStep_Values returns all known variants of IngestAutomationStep.
+func IngestAutomationStep_Values() []IngestAutomationStep_Value {
+	return []IngestAutomationStep_Value{IngestAutomationStep_CREATE_RESOURCES, IngestAutomationStep_SUBMIT_INGEST, IngestAutomationStep_AWAIT_INGEST, IngestAutomationStep_AWAIT_CHANNELS}
+}
+
+func New_IngestAutomationStep(value IngestAutomationStep_Value) IngestAutomationStep {
+	return IngestAutomationStep{val: value}
+}
+
+// IsUnknown returns false for all known variants of IngestAutomationStep and true otherwise.
+func (e IngestAutomationStep) IsUnknown() bool {
+	switch e.val {
+	case IngestAutomationStep_CREATE_RESOURCES, IngestAutomationStep_SUBMIT_INGEST, IngestAutomationStep_AWAIT_INGEST, IngestAutomationStep_AWAIT_CHANNELS:
+		return false
+	}
+	return true
+}
+
+func (e IngestAutomationStep) Value() IngestAutomationStep_Value {
+	if e.IsUnknown() {
+		return IngestAutomationStep_UNKNOWN
+	}
+	return e.val
+}
+
+func (e IngestAutomationStep) String() string {
+	return string(e.val)
+}
+
+func (e IngestAutomationStep) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *IngestAutomationStep) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_IngestAutomationStep(IngestAutomationStep_Value(v))
+	case "CREATE_RESOURCES":
+		*e = New_IngestAutomationStep(IngestAutomationStep_CREATE_RESOURCES)
+	case "SUBMIT_INGEST":
+		*e = New_IngestAutomationStep(IngestAutomationStep_SUBMIT_INGEST)
+	case "AWAIT_INGEST":
+		*e = New_IngestAutomationStep(IngestAutomationStep_AWAIT_INGEST)
+	case "AWAIT_CHANNELS":
+		*e = New_IngestAutomationStep(IngestAutomationStep_AWAIT_CHANNELS)
+	}
+	return nil
+}
+
+type IngestJobSortKey struct {
+	val IngestJobSortKey_Value
+}
+
+type IngestJobSortKey_Value string
+
+const (
+	IngestJobSortKey_CREATED_AT IngestJobSortKey_Value = "CREATED_AT"
+	IngestJobSortKey_STATUS     IngestJobSortKey_Value = "STATUS"
+	IngestJobSortKey_UNKNOWN    IngestJobSortKey_Value = "UNKNOWN"
+)
+
+// IngestJobSortKey_Values returns all known variants of IngestJobSortKey.
+func IngestJobSortKey_Values() []IngestJobSortKey_Value {
+	return []IngestJobSortKey_Value{IngestJobSortKey_CREATED_AT, IngestJobSortKey_STATUS}
+}
+
+func New_IngestJobSortKey(value IngestJobSortKey_Value) IngestJobSortKey {
+	return IngestJobSortKey{val: value}
+}
+
+// IsUnknown returns false for all known variants of IngestJobSortKey and true otherwise.
+func (e IngestJobSortKey) IsUnknown() bool {
+	switch e.val {
+	case IngestJobSortKey_CREATED_AT, IngestJobSortKey_STATUS:
+		return false
+	}
+	return true
+}
+
+func (e IngestJobSortKey) Value() IngestJobSortKey_Value {
+	if e.IsUnknown() {
+		return IngestJobSortKey_UNKNOWN
+	}
+	return e.val
+}
+
+func (e IngestJobSortKey) String() string {
+	return string(e.val)
+}
+
+func (e IngestJobSortKey) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *IngestJobSortKey) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_IngestJobSortKey(IngestJobSortKey_Value(v))
+	case "CREATED_AT":
+		*e = New_IngestJobSortKey(IngestJobSortKey_CREATED_AT)
+	case "STATUS":
+		*e = New_IngestJobSortKey(IngestJobSortKey_STATUS)
 	}
 	return nil
 }
@@ -204,6 +457,135 @@ func (e *IngestStatus) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type IngestTransformStatus struct {
+	val IngestTransformStatus_Value
+}
+
+type IngestTransformStatus_Value string
+
+const (
+	IngestTransformStatus_QUEUED      IngestTransformStatus_Value = "QUEUED"
+	IngestTransformStatus_IN_PROGRESS IngestTransformStatus_Value = "IN_PROGRESS"
+	IngestTransformStatus_COMPLETED   IngestTransformStatus_Value = "COMPLETED"
+	IngestTransformStatus_FAILED      IngestTransformStatus_Value = "FAILED"
+	IngestTransformStatus_UNKNOWN     IngestTransformStatus_Value = "UNKNOWN"
+)
+
+// IngestTransformStatus_Values returns all known variants of IngestTransformStatus.
+func IngestTransformStatus_Values() []IngestTransformStatus_Value {
+	return []IngestTransformStatus_Value{IngestTransformStatus_QUEUED, IngestTransformStatus_IN_PROGRESS, IngestTransformStatus_COMPLETED, IngestTransformStatus_FAILED}
+}
+
+func New_IngestTransformStatus(value IngestTransformStatus_Value) IngestTransformStatus {
+	return IngestTransformStatus{val: value}
+}
+
+// IsUnknown returns false for all known variants of IngestTransformStatus and true otherwise.
+func (e IngestTransformStatus) IsUnknown() bool {
+	switch e.val {
+	case IngestTransformStatus_QUEUED, IngestTransformStatus_IN_PROGRESS, IngestTransformStatus_COMPLETED, IngestTransformStatus_FAILED:
+		return false
+	}
+	return true
+}
+
+func (e IngestTransformStatus) Value() IngestTransformStatus_Value {
+	if e.IsUnknown() {
+		return IngestTransformStatus_UNKNOWN
+	}
+	return e.val
+}
+
+func (e IngestTransformStatus) String() string {
+	return string(e.val)
+}
+
+func (e IngestTransformStatus) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *IngestTransformStatus) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_IngestTransformStatus(IngestTransformStatus_Value(v))
+	case "QUEUED":
+		*e = New_IngestTransformStatus(IngestTransformStatus_QUEUED)
+	case "IN_PROGRESS":
+		*e = New_IngestTransformStatus(IngestTransformStatus_IN_PROGRESS)
+	case "COMPLETED":
+		*e = New_IngestTransformStatus(IngestTransformStatus_COMPLETED)
+	case "FAILED":
+		*e = New_IngestTransformStatus(IngestTransformStatus_FAILED)
+	}
+	return nil
+}
+
+type IngestTransformType struct {
+	val IngestTransformType_Value
+}
+
+type IngestTransformType_Value string
+
+const (
+	IngestTransformType_CONTAINERIZED   IngestTransformType_Value = "CONTAINERIZED"
+	IngestTransformType_MCAP            IngestTransformType_Value = "MCAP"
+	IngestTransformType_DATAFLASH       IngestTransformType_Value = "DATAFLASH"
+	IngestTransformType_PARQUET_ARCHIVE IngestTransformType_Value = "PARQUET_ARCHIVE"
+	IngestTransformType_FILE_COPY       IngestTransformType_Value = "FILE_COPY"
+	IngestTransformType_UNKNOWN         IngestTransformType_Value = "UNKNOWN"
+)
+
+// IngestTransformType_Values returns all known variants of IngestTransformType.
+func IngestTransformType_Values() []IngestTransformType_Value {
+	return []IngestTransformType_Value{IngestTransformType_CONTAINERIZED, IngestTransformType_MCAP, IngestTransformType_DATAFLASH, IngestTransformType_PARQUET_ARCHIVE, IngestTransformType_FILE_COPY}
+}
+
+func New_IngestTransformType(value IngestTransformType_Value) IngestTransformType {
+	return IngestTransformType{val: value}
+}
+
+// IsUnknown returns false for all known variants of IngestTransformType and true otherwise.
+func (e IngestTransformType) IsUnknown() bool {
+	switch e.val {
+	case IngestTransformType_CONTAINERIZED, IngestTransformType_MCAP, IngestTransformType_DATAFLASH, IngestTransformType_PARQUET_ARCHIVE, IngestTransformType_FILE_COPY:
+		return false
+	}
+	return true
+}
+
+func (e IngestTransformType) Value() IngestTransformType_Value {
+	if e.IsUnknown() {
+		return IngestTransformType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e IngestTransformType) String() string {
+	return string(e.val)
+}
+
+func (e IngestTransformType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *IngestTransformType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_IngestTransformType(IngestTransformType_Value(v))
+	case "CONTAINERIZED":
+		*e = New_IngestTransformType(IngestTransformType_CONTAINERIZED)
+	case "MCAP":
+		*e = New_IngestTransformType(IngestTransformType_MCAP)
+	case "DATAFLASH":
+		*e = New_IngestTransformType(IngestTransformType_DATAFLASH)
+	case "PARQUET_ARCHIVE":
+		*e = New_IngestTransformType(IngestTransformType_PARQUET_ARCHIVE)
+	case "FILE_COPY":
+		*e = New_IngestTransformType(IngestTransformType_FILE_COPY)
+	}
+	return nil
+}
+
 type IngestType struct {
 	val IngestType_Value
 }
@@ -218,12 +600,14 @@ const (
 	IngestType_CONTAINERIZED IngestType_Value = "CONTAINERIZED"
 	IngestType_VIDEO         IngestType_Value = "VIDEO"
 	IngestType_AVRO_STREAM   IngestType_Value = "AVRO_STREAM"
+	IngestType_POINT_CLOUD   IngestType_Value = "POINT_CLOUD"
+	IngestType_MULTI         IngestType_Value = "MULTI"
 	IngestType_UNKNOWN       IngestType_Value = "UNKNOWN"
 )
 
 // IngestType_Values returns all known variants of IngestType.
 func IngestType_Values() []IngestType_Value {
-	return []IngestType_Value{IngestType_TABULAR, IngestType_MCAP, IngestType_DATAFLASH, IngestType_JOURNAL_JSON, IngestType_CONTAINERIZED, IngestType_VIDEO, IngestType_AVRO_STREAM}
+	return []IngestType_Value{IngestType_TABULAR, IngestType_MCAP, IngestType_DATAFLASH, IngestType_JOURNAL_JSON, IngestType_CONTAINERIZED, IngestType_VIDEO, IngestType_AVRO_STREAM, IngestType_POINT_CLOUD, IngestType_MULTI}
 }
 
 func New_IngestType(value IngestType_Value) IngestType {
@@ -233,7 +617,7 @@ func New_IngestType(value IngestType_Value) IngestType {
 // IsUnknown returns false for all known variants of IngestType and true otherwise.
 func (e IngestType) IsUnknown() bool {
 	switch e.val {
-	case IngestType_TABULAR, IngestType_MCAP, IngestType_DATAFLASH, IngestType_JOURNAL_JSON, IngestType_CONTAINERIZED, IngestType_VIDEO, IngestType_AVRO_STREAM:
+	case IngestType_TABULAR, IngestType_MCAP, IngestType_DATAFLASH, IngestType_JOURNAL_JSON, IngestType_CONTAINERIZED, IngestType_VIDEO, IngestType_AVRO_STREAM, IngestType_POINT_CLOUD, IngestType_MULTI:
 		return false
 	}
 	return true
@@ -272,63 +656,68 @@ func (e *IngestType) UnmarshalText(data []byte) error {
 		*e = New_IngestType(IngestType_VIDEO)
 	case "AVRO_STREAM":
 		*e = New_IngestType(IngestType_AVRO_STREAM)
+	case "POINT_CLOUD":
+		*e = New_IngestType(IngestType_POINT_CLOUD)
+	case "MULTI":
+		*e = New_IngestType(IngestType_MULTI)
 	}
 	return nil
 }
 
-type StreamingSessionStatus struct {
-	val StreamingSessionStatus_Value
+// The object-storage destination an upload should be written to.
+type UploadDestination struct {
+	val UploadDestination_Value
 }
 
-type StreamingSessionStatus_Value string
+type UploadDestination_Value string
 
 const (
-	StreamingSessionStatus_IN_PROGRESS StreamingSessionStatus_Value = "IN_PROGRESS"
-	StreamingSessionStatus_COMPLETED   StreamingSessionStatus_Value = "COMPLETED"
-	StreamingSessionStatus_UNKNOWN     StreamingSessionStatus_Value = "UNKNOWN"
+	UploadDestination_UPLOADS    UploadDestination_Value = "UPLOADS"
+	UploadDestination_FILE_STORE UploadDestination_Value = "FILE_STORE"
+	UploadDestination_UNKNOWN    UploadDestination_Value = "UNKNOWN"
 )
 
-// StreamingSessionStatus_Values returns all known variants of StreamingSessionStatus.
-func StreamingSessionStatus_Values() []StreamingSessionStatus_Value {
-	return []StreamingSessionStatus_Value{StreamingSessionStatus_IN_PROGRESS, StreamingSessionStatus_COMPLETED}
+// UploadDestination_Values returns all known variants of UploadDestination.
+func UploadDestination_Values() []UploadDestination_Value {
+	return []UploadDestination_Value{UploadDestination_UPLOADS, UploadDestination_FILE_STORE}
 }
 
-func New_StreamingSessionStatus(value StreamingSessionStatus_Value) StreamingSessionStatus {
-	return StreamingSessionStatus{val: value}
+func New_UploadDestination(value UploadDestination_Value) UploadDestination {
+	return UploadDestination{val: value}
 }
 
-// IsUnknown returns false for all known variants of StreamingSessionStatus and true otherwise.
-func (e StreamingSessionStatus) IsUnknown() bool {
+// IsUnknown returns false for all known variants of UploadDestination and true otherwise.
+func (e UploadDestination) IsUnknown() bool {
 	switch e.val {
-	case StreamingSessionStatus_IN_PROGRESS, StreamingSessionStatus_COMPLETED:
+	case UploadDestination_UPLOADS, UploadDestination_FILE_STORE:
 		return false
 	}
 	return true
 }
 
-func (e StreamingSessionStatus) Value() StreamingSessionStatus_Value {
+func (e UploadDestination) Value() UploadDestination_Value {
 	if e.IsUnknown() {
-		return StreamingSessionStatus_UNKNOWN
+		return UploadDestination_UNKNOWN
 	}
 	return e.val
 }
 
-func (e StreamingSessionStatus) String() string {
+func (e UploadDestination) String() string {
 	return string(e.val)
 }
 
-func (e StreamingSessionStatus) MarshalText() ([]byte, error) {
+func (e UploadDestination) MarshalText() ([]byte, error) {
 	return []byte(e.val), nil
 }
 
-func (e *StreamingSessionStatus) UnmarshalText(data []byte) error {
+func (e *UploadDestination) UnmarshalText(data []byte) error {
 	switch v := strings.ToUpper(string(data)); v {
 	default:
-		*e = New_StreamingSessionStatus(StreamingSessionStatus_Value(v))
-	case "IN_PROGRESS":
-		*e = New_StreamingSessionStatus(StreamingSessionStatus_IN_PROGRESS)
-	case "COMPLETED":
-		*e = New_StreamingSessionStatus(StreamingSessionStatus_COMPLETED)
+		*e = New_UploadDestination(UploadDestination_Value(v))
+	case "UPLOADS":
+		*e = New_UploadDestination(UploadDestination_UPLOADS)
+	case "FILE_STORE":
+		*e = New_UploadDestination(UploadDestination_FILE_STORE)
 	}
 	return nil
 }

@@ -200,7 +200,16 @@ func (o *CreateSecureWebhookIntegrationResponse) UnmarshalYAML(unmarshal func(in
 }
 
 type CreateSimpleWebhookDetails struct {
+	// Webhook URL (must be HTTPS in production)
 	Webhook string `json:"webhook"`
+	// Optional secret for HMAC-SHA256 signing (recommended)
+	Secret *string `json:"secret,omitempty"`
+	// Content-Type for requests (default: application/json)
+	ContentType *WebhookContentType `json:"contentType,omitempty"`
+	// HTTP request timeout in seconds (default: 30, max: 120)
+	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
+	// Additional headers to include in all requests
+	CustomHeaders *map[string]string `json:"customHeaders,omitempty"`
 }
 
 func (o CreateSimpleWebhookDetails) MarshalYAML() (interface{}, error) {
@@ -316,6 +325,12 @@ type NotificationConfiguration struct {
 	AppendedWorkbookRid *api.NotebookRid `json:"appendedWorkbookRid,omitempty" safelogging:"@Safe"`
 	// 20 tags max, 50 characters max each. Tags are used to filter messages in Opsgenie. For other integrations, tags are ignored.
 	Tags []string `json:"tags"`
+	/*
+	   If provided, all notifications for this channel are suppressed until the specified time.
+	   The streaming checklist continues to evaluate, but no notifications are sent.
+	   Once the time has passed, notifications resume automatically.
+	*/
+	MuteUntil *datetime.DateTime `json:"muteUntil,omitempty"`
 }
 
 func (o NotificationConfiguration) MarshalJSON() ([]byte, error) {
@@ -639,7 +654,16 @@ func (o *SendSecureWebhookMessageResponse) UnmarshalYAML(unmarshal func(interfac
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type SimpleWebhookIntegration struct{}
+type SimpleWebhookIntegration struct {
+	// Optional RID of secret containing HMAC-SHA256 signing key
+	HmacSecretRid *rid.ResourceIdentifier `json:"hmacSecretRid,omitempty"`
+	// Content-Type for requests (default: application/json)
+	ContentType *WebhookContentType `json:"contentType,omitempty"`
+	// HTTP request timeout in seconds (default: 30, max: 120)
+	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
+	// Additional headers to include in all requests
+	CustomHeaders *map[string]string `json:"customHeaders,omitempty"`
+}
 
 func (o SimpleWebhookIntegration) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
@@ -842,7 +866,16 @@ func (o *UpdateSecureWebhookIntegrationDetails) UnmarshalYAML(unmarshal func(int
 }
 
 type UpdateSimpleWebhookDetails struct {
+	// Webhook URL (must be HTTPS in production)
 	Webhook string `json:"webhook"`
+	// Optional secret for HMAC-SHA256 signing
+	Secret *string `json:"secret,omitempty"`
+	// Content-Type for requests
+	ContentType *WebhookContentType `json:"contentType,omitempty"`
+	// HTTP request timeout in seconds
+	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
+	// Additional headers to include in all requests
+	CustomHeaders *map[string]string `json:"customHeaders,omitempty"`
 }
 
 func (o UpdateSimpleWebhookDetails) MarshalYAML() (interface{}, error) {

@@ -24,10 +24,15 @@ func (u *CompactionStrategyWithT[T]) Accept(ctx context.Context, v CompactionStr
 			return result, fmt.Errorf("field \"olderThanDays\" is required")
 		}
 		return v.VisitOlderThanDays(ctx, *u.olderThanDays)
+	case "keepNewestN":
+		if u.keepNewestN == nil {
+			return result, fmt.Errorf("field \"keepNewestN\" is required")
+		}
+		return v.VisitKeepNewestN(ctx, *u.keepNewestN)
 	}
 }
 
-func (u *CompactionStrategyWithT[T]) AcceptFuncs(olderThanDaysFunc func(int) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *CompactionStrategyWithT[T]) AcceptFuncs(olderThanDaysFunc func(int) (T, error), keepNewestNFunc func(int) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -40,10 +45,20 @@ func (u *CompactionStrategyWithT[T]) AcceptFuncs(olderThanDaysFunc func(int) (T,
 			return result, fmt.Errorf("field \"olderThanDays\" is required")
 		}
 		return olderThanDaysFunc(*u.olderThanDays)
+	case "keepNewestN":
+		if u.keepNewestN == nil {
+			return result, fmt.Errorf("field \"keepNewestN\" is required")
+		}
+		return keepNewestNFunc(*u.keepNewestN)
 	}
 }
 
 func (u *CompactionStrategyWithT[T]) OlderThanDaysNoopSuccess(int) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CompactionStrategyWithT[T]) KeepNewestNNoopSuccess(int) (T, error) {
 	var result T
 	return result, nil
 }
@@ -55,5 +70,6 @@ func (u *CompactionStrategyWithT[T]) ErrorOnUnknown(typeName string) (T, error) 
 
 type CompactionStrategyVisitorWithT[T any] interface {
 	VisitOlderThanDays(ctx context.Context, v int) (T, error)
+	VisitKeepNewestN(ctx context.Context, v int) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

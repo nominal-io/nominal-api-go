@@ -489,6 +489,306 @@ func (e *CannotReadNotebookRefNames) UnmarshalJSON(data []byte) error {
 }
 
 // safelogging:@Safe
+type demoWorkbookCannotBeUnlocked struct {
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
+}
+
+func (o demoWorkbookCannotBeUnlocked) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *demoWorkbookCannotBeUnlocked) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDemoWorkbookCannotBeUnlocked returns new instance of DemoWorkbookCannotBeUnlocked error.
+func NewDemoWorkbookCannotBeUnlocked(notebookRidArg api.NotebookRid) *DemoWorkbookCannotBeUnlocked {
+	return &DemoWorkbookCannotBeUnlocked{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), demoWorkbookCannotBeUnlocked: demoWorkbookCannotBeUnlocked{NotebookRid: notebookRidArg}}
+}
+
+// WrapWithDemoWorkbookCannotBeUnlocked returns new instance of DemoWorkbookCannotBeUnlocked error wrapping an existing error.
+func WrapWithDemoWorkbookCannotBeUnlocked(err error, notebookRidArg api.NotebookRid) *DemoWorkbookCannotBeUnlocked {
+	return &DemoWorkbookCannotBeUnlocked{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, demoWorkbookCannotBeUnlocked: demoWorkbookCannotBeUnlocked{NotebookRid: notebookRidArg}}
+}
+
+// DemoWorkbookCannotBeUnlocked is an error type.
+type DemoWorkbookCannotBeUnlocked struct {
+	errorInstanceID uuid.UUID
+	demoWorkbookCannotBeUnlocked
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDemoWorkbookCannotBeUnlocked returns true if err is an instance of DemoWorkbookCannotBeUnlocked.
+func IsDemoWorkbookCannotBeUnlocked(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DemoWorkbookCannotBeUnlocked)
+	return ok
+}
+
+func (e *DemoWorkbookCannotBeUnlocked) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:DemoWorkbookCannotBeUnlocked (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DemoWorkbookCannotBeUnlocked) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DemoWorkbookCannotBeUnlocked) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DemoWorkbookCannotBeUnlocked) Message() string {
+	return "INVALID_ARGUMENT Scout:DemoWorkbookCannotBeUnlocked"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DemoWorkbookCannotBeUnlocked) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DemoWorkbookCannotBeUnlocked) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *DemoWorkbookCannotBeUnlocked) Name() string {
+	return "Scout:DemoWorkbookCannotBeUnlocked"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DemoWorkbookCannotBeUnlocked) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DemoWorkbookCannotBeUnlocked) Parameters() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DemoWorkbookCannotBeUnlocked) safeParams() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookCannotBeUnlocked) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DemoWorkbookCannotBeUnlocked) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookCannotBeUnlocked) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DemoWorkbookCannotBeUnlocked) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.demoWorkbookCannotBeUnlocked)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:DemoWorkbookCannotBeUnlocked", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DemoWorkbookCannotBeUnlocked) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters demoWorkbookCannotBeUnlocked
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.demoWorkbookCannotBeUnlocked = parameters
+	return nil
+}
+
+// safelogging:@Safe
+type demoWorkbookCannotBeUnpublished struct {
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
+}
+
+func (o demoWorkbookCannotBeUnpublished) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *demoWorkbookCannotBeUnpublished) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDemoWorkbookCannotBeUnpublished returns new instance of DemoWorkbookCannotBeUnpublished error.
+func NewDemoWorkbookCannotBeUnpublished(notebookRidArg api.NotebookRid) *DemoWorkbookCannotBeUnpublished {
+	return &DemoWorkbookCannotBeUnpublished{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), demoWorkbookCannotBeUnpublished: demoWorkbookCannotBeUnpublished{NotebookRid: notebookRidArg}}
+}
+
+// WrapWithDemoWorkbookCannotBeUnpublished returns new instance of DemoWorkbookCannotBeUnpublished error wrapping an existing error.
+func WrapWithDemoWorkbookCannotBeUnpublished(err error, notebookRidArg api.NotebookRid) *DemoWorkbookCannotBeUnpublished {
+	return &DemoWorkbookCannotBeUnpublished{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, demoWorkbookCannotBeUnpublished: demoWorkbookCannotBeUnpublished{NotebookRid: notebookRidArg}}
+}
+
+// DemoWorkbookCannotBeUnpublished is an error type.
+type DemoWorkbookCannotBeUnpublished struct {
+	errorInstanceID uuid.UUID
+	demoWorkbookCannotBeUnpublished
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDemoWorkbookCannotBeUnpublished returns true if err is an instance of DemoWorkbookCannotBeUnpublished.
+func IsDemoWorkbookCannotBeUnpublished(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DemoWorkbookCannotBeUnpublished)
+	return ok
+}
+
+func (e *DemoWorkbookCannotBeUnpublished) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:DemoWorkbookCannotBeUnpublished (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DemoWorkbookCannotBeUnpublished) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DemoWorkbookCannotBeUnpublished) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DemoWorkbookCannotBeUnpublished) Message() string {
+	return "INVALID_ARGUMENT Scout:DemoWorkbookCannotBeUnpublished"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DemoWorkbookCannotBeUnpublished) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DemoWorkbookCannotBeUnpublished) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *DemoWorkbookCannotBeUnpublished) Name() string {
+	return "Scout:DemoWorkbookCannotBeUnpublished"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DemoWorkbookCannotBeUnpublished) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DemoWorkbookCannotBeUnpublished) Parameters() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DemoWorkbookCannotBeUnpublished) safeParams() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookCannotBeUnpublished) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DemoWorkbookCannotBeUnpublished) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookCannotBeUnpublished) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DemoWorkbookCannotBeUnpublished) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.demoWorkbookCannotBeUnpublished)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:DemoWorkbookCannotBeUnpublished", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DemoWorkbookCannotBeUnpublished) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters demoWorkbookCannotBeUnpublished
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.demoWorkbookCannotBeUnpublished = parameters
+	return nil
+}
+
+// safelogging:@Safe
 type notebookLocked struct {
 	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
 }
@@ -2031,6 +2331,156 @@ func (e *SnapshotNotFound) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type tooManyNotebooksRequested struct {
+	RequestedCount int `json:"requestedCount"`
+	AllowedCount   int `json:"allowedCount"`
+}
+
+func (o tooManyNotebooksRequested) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *tooManyNotebooksRequested) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewTooManyNotebooksRequested returns new instance of TooManyNotebooksRequested error.
+func NewTooManyNotebooksRequested(requestedCountArg int, allowedCountArg int) *TooManyNotebooksRequested {
+	return &TooManyNotebooksRequested{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooManyNotebooksRequested: tooManyNotebooksRequested{RequestedCount: requestedCountArg, AllowedCount: allowedCountArg}}
+}
+
+// WrapWithTooManyNotebooksRequested returns new instance of TooManyNotebooksRequested error wrapping an existing error.
+func WrapWithTooManyNotebooksRequested(err error, requestedCountArg int, allowedCountArg int) *TooManyNotebooksRequested {
+	return &TooManyNotebooksRequested{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooManyNotebooksRequested: tooManyNotebooksRequested{RequestedCount: requestedCountArg, AllowedCount: allowedCountArg}}
+}
+
+// TooManyNotebooksRequested is an error type.
+type TooManyNotebooksRequested struct {
+	errorInstanceID uuid.UUID
+	tooManyNotebooksRequested
+	cause error
+	stack werror.StackTrace
+}
+
+// IsTooManyNotebooksRequested returns true if err is an instance of TooManyNotebooksRequested.
+func IsTooManyNotebooksRequested(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*TooManyNotebooksRequested)
+	return ok
+}
+
+func (e *TooManyNotebooksRequested) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:TooManyNotebooksRequested (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *TooManyNotebooksRequested) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *TooManyNotebooksRequested) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *TooManyNotebooksRequested) Message() string {
+	return "INVALID_ARGUMENT Scout:TooManyNotebooksRequested"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *TooManyNotebooksRequested) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *TooManyNotebooksRequested) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *TooManyNotebooksRequested) Name() string {
+	return "Scout:TooManyNotebooksRequested"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *TooManyNotebooksRequested) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *TooManyNotebooksRequested) Parameters() map[string]interface{} {
+	return map[string]interface{}{"requestedCount": e.RequestedCount, "allowedCount": e.AllowedCount}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *TooManyNotebooksRequested) safeParams() map[string]interface{} {
+	return map[string]interface{}{"requestedCount": e.RequestedCount, "allowedCount": e.AllowedCount, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyNotebooksRequested) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *TooManyNotebooksRequested) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyNotebooksRequested) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e TooManyNotebooksRequested) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.tooManyNotebooksRequested)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:TooManyNotebooksRequested", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *TooManyNotebooksRequested) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters tooManyNotebooksRequested
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.tooManyNotebooksRequested = parameters
+	return nil
+}
+
 // safelogging:@Safe
 type updateNotebookTagsFailed struct {
 	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
@@ -2185,6 +2635,8 @@ func init() {
 	conjureerrors.RegisterErrorType("Scout:ArchiveNotebookFailed", reflect.TypeOf(ArchiveNotebookFailed{}))
 	conjureerrors.RegisterErrorType("Scout:AssetsNotFound", reflect.TypeOf(AssetsNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:CannotReadNotebookRefNames", reflect.TypeOf(CannotReadNotebookRefNames{}))
+	conjureerrors.RegisterErrorType("Scout:DemoWorkbookCannotBeUnlocked", reflect.TypeOf(DemoWorkbookCannotBeUnlocked{}))
+	conjureerrors.RegisterErrorType("Scout:DemoWorkbookCannotBeUnpublished", reflect.TypeOf(DemoWorkbookCannotBeUnpublished{}))
 	conjureerrors.RegisterErrorType("Scout:NotebookLocked", reflect.TypeOf(NotebookLocked{}))
 	conjureerrors.RegisterErrorType("Scout:NotebookNotFound", reflect.TypeOf(NotebookNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:NotebooksNotFound", reflect.TypeOf(NotebooksNotFound{}))
@@ -2195,5 +2647,6 @@ func init() {
 	conjureerrors.RegisterErrorType("Scout:SearchNotebooksFailed", reflect.TypeOf(SearchNotebooksFailed{}))
 	conjureerrors.RegisterErrorType("Scout:SearchNotebooksLimitExceeded", reflect.TypeOf(SearchNotebooksLimitExceeded{}))
 	conjureerrors.RegisterErrorType("Scout:SnapshotNotFound", reflect.TypeOf(SnapshotNotFound{}))
+	conjureerrors.RegisterErrorType("Scout:TooManyNotebooksRequested", reflect.TypeOf(TooManyNotebooksRequested{}))
 	conjureerrors.RegisterErrorType("Scout:UpdateNotebookTagsFailed", reflect.TypeOf(UpdateNotebookTagsFailed{}))
 }

@@ -8,22 +8,161 @@ import (
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
-	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
-	"github.com/nominal-io/nominal-api-go/scout/run/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
 
+/*
+Selects the workbooks an archive or unarchive request applies to. Only an explicit set of
+rids is supported today; a query variant can be added later without breaking callers.
+*/
+type NotebookArchiveTarget struct {
+	typ  string
+	rids *[]api.NotebookRid
+}
+
+type notebookArchiveTargetDeserializer struct {
+	Type string             `json:"type"`
+	Rids *[]api.NotebookRid `json:"rids"`
+}
+
+func (u *notebookArchiveTargetDeserializer) toStruct() NotebookArchiveTarget {
+	return NotebookArchiveTarget{typ: u.Type, rids: u.Rids}
+}
+
+func (u *NotebookArchiveTarget) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "rids":
+		if u.rids == nil {
+			return nil, fmt.Errorf("field \"rids\" is required")
+		}
+		return struct {
+			Type string            `json:"type"`
+			Rids []api.NotebookRid `json:"rids"`
+		}{Type: "rids", Rids: *u.rids}, nil
+	}
+}
+
+func (u NotebookArchiveTarget) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *NotebookArchiveTarget) UnmarshalJSON(data []byte) error {
+	var deser notebookArchiveTargetDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+	}
+	return nil
+}
+
+func (u NotebookArchiveTarget) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *NotebookArchiveTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *NotebookArchiveTarget) AcceptFuncs(ridsFunc func([]api.NotebookRid) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in NotebookArchiveTarget type")
+		}
+		return unknownFunc(u.typ)
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+		return ridsFunc(*u.rids)
+	}
+}
+
+func (u *NotebookArchiveTarget) RidsNoopSuccess(_ []api.NotebookRid) error {
+	return nil
+}
+
+func (u *NotebookArchiveTarget) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *NotebookArchiveTarget) Accept(v NotebookArchiveTargetVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+		return v.VisitRids(*u.rids)
+	}
+}
+
+type NotebookArchiveTargetVisitor interface {
+	VisitRids(v []api.NotebookRid) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *NotebookArchiveTarget) AcceptWithContext(ctx context.Context, v NotebookArchiveTargetVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+		return v.VisitRidsWithContext(ctx, *u.rids)
+	}
+}
+
+type NotebookArchiveTargetVisitorWithContext interface {
+	VisitRidsWithContext(ctx context.Context, v []api.NotebookRid) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewNotebookArchiveTargetFromRids(v []api.NotebookRid) NotebookArchiveTarget {
+	return NotebookArchiveTarget{typ: "rids", rids: &v}
+}
+
 type NotebookDataScope struct {
 	typ       string
-	runRids   *[]api.RunRid
-	assetRids *[]api1.AssetRid
+	runRids   *[]api1.RunRid
+	assetRids *[]api.AssetRid
 }
 
 type notebookDataScopeDeserializer struct {
-	Type      string           `json:"type"`
-	RunRids   *[]api.RunRid    `json:"runRids"`
-	AssetRids *[]api1.AssetRid `json:"assetRids"`
+	Type      string          `json:"type"`
+	RunRids   *[]api1.RunRid  `json:"runRids"`
+	AssetRids *[]api.AssetRid `json:"assetRids"`
 }
 
 func (u *notebookDataScopeDeserializer) toStruct() NotebookDataScope {
@@ -39,16 +178,16 @@ func (u *NotebookDataScope) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"runRids\" is required")
 		}
 		return struct {
-			Type    string       `json:"type"`
-			RunRids []api.RunRid `json:"runRids"`
+			Type    string        `json:"type"`
+			RunRids []api1.RunRid `json:"runRids"`
 		}{Type: "runRids", RunRids: *u.runRids}, nil
 	case "assetRids":
 		if u.assetRids == nil {
 			return nil, fmt.Errorf("field \"assetRids\" is required")
 		}
 		return struct {
-			Type      string          `json:"type"`
-			AssetRids []api1.AssetRid `json:"assetRids"`
+			Type      string         `json:"type"`
+			AssetRids []api.AssetRid `json:"assetRids"`
 		}{Type: "assetRids", AssetRids: *u.assetRids}, nil
 	}
 }
@@ -96,7 +235,7 @@ func (u *NotebookDataScope) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *NotebookDataScope) AcceptFuncs(runRidsFunc func([]api.RunRid) error, assetRidsFunc func([]api1.AssetRid) error, unknownFunc func(string) error) error {
+func (u *NotebookDataScope) AcceptFuncs(runRidsFunc func([]api1.RunRid) error, assetRidsFunc func([]api.AssetRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -116,11 +255,11 @@ func (u *NotebookDataScope) AcceptFuncs(runRidsFunc func([]api.RunRid) error, as
 	}
 }
 
-func (u *NotebookDataScope) RunRidsNoopSuccess(_ []api.RunRid) error {
+func (u *NotebookDataScope) RunRidsNoopSuccess(_ []api1.RunRid) error {
 	return nil
 }
 
-func (u *NotebookDataScope) AssetRidsNoopSuccess(_ []api1.AssetRid) error {
+func (u *NotebookDataScope) AssetRidsNoopSuccess(_ []api.AssetRid) error {
 	return nil
 }
 
@@ -149,8 +288,8 @@ func (u *NotebookDataScope) Accept(v NotebookDataScopeVisitor) error {
 }
 
 type NotebookDataScopeVisitor interface {
-	VisitRunRids(v []api.RunRid) error
-	VisitAssetRids(v []api1.AssetRid) error
+	VisitRunRids(v []api1.RunRid) error
+	VisitAssetRids(v []api.AssetRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -175,16 +314,16 @@ func (u *NotebookDataScope) AcceptWithContext(ctx context.Context, v NotebookDat
 }
 
 type NotebookDataScopeVisitorWithContext interface {
-	VisitRunRidsWithContext(ctx context.Context, v []api.RunRid) error
-	VisitAssetRidsWithContext(ctx context.Context, v []api1.AssetRid) error
+	VisitRunRidsWithContext(ctx context.Context, v []api1.RunRid) error
+	VisitAssetRidsWithContext(ctx context.Context, v []api.AssetRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewNotebookDataScopeFromRunRids(v []api.RunRid) NotebookDataScope {
+func NewNotebookDataScopeFromRunRids(v []api1.RunRid) NotebookDataScope {
 	return NotebookDataScope{typ: "runRids", runRids: &v}
 }
 
-func NewNotebookDataScopeFromAssetRids(v []api1.AssetRid) NotebookDataScope {
+func NewNotebookDataScopeFromAssetRids(v []api.AssetRid) NotebookDataScope {
 	return NotebookDataScope{typ: "assetRids", assetRids: &v}
 }
 
@@ -196,14 +335,14 @@ type SearchNotebooksQuery struct {
 	exactMatch          *string
 	searchText          *string
 	label               *api2.Label
-	labels              *api1.LabelsFilter
+	labels              *api.LabelsFilter
 	property            *api2.Property
-	properties          *api1.PropertiesFilter
-	assetRid            *api1.AssetRid
+	properties          *api.PropertiesFilter
+	assetRid            *api.AssetRid
 	assetRids           *AssetsFilter
-	exactAssetRids      *[]api1.AssetRid
-	authorRid           *api1.UserRid
-	runRid              *api.RunRid
+	exactAssetRids      *[]api.AssetRid
+	authorRid           *api.UserRid
+	runRid              *api1.RunRid
 	runRids             *RunsFilter
 	notebookType        *NotebookType
 	notebookTypes       *NotebookTypesFilter
@@ -211,7 +350,7 @@ type SearchNotebooksQuery struct {
 	archived            *bool
 	workspace           *rids.WorkspaceRid
 	authorIsCurrentUser *bool
-	authorRids          *[]api1.UserRid
+	authorRids          *[]api.UserRid
 }
 
 type searchNotebooksQueryDeserializer struct {
@@ -222,14 +361,14 @@ type searchNotebooksQueryDeserializer struct {
 	ExactMatch          *string                 `json:"exactMatch"`
 	SearchText          *string                 `json:"searchText"`
 	Label               *api2.Label             `json:"label"`
-	Labels              *api1.LabelsFilter      `json:"labels"`
+	Labels              *api.LabelsFilter       `json:"labels"`
 	Property            *api2.Property          `json:"property"`
-	Properties          *api1.PropertiesFilter  `json:"properties"`
-	AssetRid            *api1.AssetRid          `json:"assetRid"`
+	Properties          *api.PropertiesFilter   `json:"properties"`
+	AssetRid            *api.AssetRid           `json:"assetRid"`
 	AssetRids           *AssetsFilter           `json:"assetRids"`
-	ExactAssetRids      *[]api1.AssetRid        `json:"exactAssetRids"`
-	AuthorRid           *api1.UserRid           `json:"authorRid"`
-	RunRid              *api.RunRid             `json:"runRid"`
+	ExactAssetRids      *[]api.AssetRid         `json:"exactAssetRids"`
+	AuthorRid           *api.UserRid            `json:"authorRid"`
+	RunRid              *api1.RunRid            `json:"runRid"`
 	RunRids             *RunsFilter             `json:"runRids"`
 	NotebookType        *NotebookType           `json:"notebookType"`
 	NotebookTypes       *NotebookTypesFilter    `json:"notebookTypes"`
@@ -237,7 +376,7 @@ type searchNotebooksQueryDeserializer struct {
 	Archived            *bool                   `json:"archived"`
 	Workspace           *rids.WorkspaceRid      `json:"workspace"`
 	AuthorIsCurrentUser *bool                   `json:"authorIsCurrentUser"`
-	AuthorRids          *[]api1.UserRid         `json:"authorRids"`
+	AuthorRids          *[]api.UserRid          `json:"authorRids"`
 }
 
 func (u *searchNotebooksQueryDeserializer) toStruct() SearchNotebooksQuery {
@@ -301,8 +440,8 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"labels\" is required")
 		}
 		return struct {
-			Type   string            `json:"type"`
-			Labels api1.LabelsFilter `json:"labels"`
+			Type   string           `json:"type"`
+			Labels api.LabelsFilter `json:"labels"`
 		}{Type: "labels", Labels: *u.labels}, nil
 	case "property":
 		if u.property == nil {
@@ -317,16 +456,16 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"properties\" is required")
 		}
 		return struct {
-			Type       string                `json:"type"`
-			Properties api1.PropertiesFilter `json:"properties"`
+			Type       string               `json:"type"`
+			Properties api.PropertiesFilter `json:"properties"`
 		}{Type: "properties", Properties: *u.properties}, nil
 	case "assetRid":
 		if u.assetRid == nil {
 			return nil, fmt.Errorf("field \"assetRid\" is required")
 		}
 		return struct {
-			Type     string        `json:"type"`
-			AssetRid api1.AssetRid `json:"assetRid"`
+			Type     string       `json:"type"`
+			AssetRid api.AssetRid `json:"assetRid"`
 		}{Type: "assetRid", AssetRid: *u.assetRid}, nil
 	case "assetRids":
 		if u.assetRids == nil {
@@ -341,24 +480,24 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"exactAssetRids\" is required")
 		}
 		return struct {
-			Type           string          `json:"type"`
-			ExactAssetRids []api1.AssetRid `json:"exactAssetRids"`
+			Type           string         `json:"type"`
+			ExactAssetRids []api.AssetRid `json:"exactAssetRids"`
 		}{Type: "exactAssetRids", ExactAssetRids: *u.exactAssetRids}, nil
 	case "authorRid":
 		if u.authorRid == nil {
 			return nil, fmt.Errorf("field \"authorRid\" is required")
 		}
 		return struct {
-			Type      string       `json:"type"`
-			AuthorRid api1.UserRid `json:"authorRid"`
+			Type      string      `json:"type"`
+			AuthorRid api.UserRid `json:"authorRid"`
 		}{Type: "authorRid", AuthorRid: *u.authorRid}, nil
 	case "runRid":
 		if u.runRid == nil {
 			return nil, fmt.Errorf("field \"runRid\" is required")
 		}
 		return struct {
-			Type   string     `json:"type"`
-			RunRid api.RunRid `json:"runRid"`
+			Type   string      `json:"type"`
+			RunRid api1.RunRid `json:"runRid"`
 		}{Type: "runRid", RunRid: *u.runRid}, nil
 	case "runRids":
 		if u.runRids == nil {
@@ -421,8 +560,8 @@ func (u *SearchNotebooksQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"authorRids\" is required")
 		}
 		return struct {
-			Type       string         `json:"type"`
-			AuthorRids []api1.UserRid `json:"authorRids"`
+			Type       string        `json:"type"`
+			AuthorRids []api.UserRid `json:"authorRids"`
 		}{Type: "authorRids", AuthorRids: *u.authorRids}, nil
 	}
 }
@@ -550,7 +689,7 @@ func (u *SearchNotebooksQuery) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchNotebooksQuery) AcceptFuncs(andFunc func([]SearchNotebooksQuery) error, orFunc func([]SearchNotebooksQuery) error, notFunc func(SearchNotebooksQuery) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, labelFunc func(api2.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api2.Property) error, propertiesFunc func(api1.PropertiesFilter) error, assetRidFunc func(api1.AssetRid) error, assetRidsFunc func(AssetsFilter) error, exactAssetRidsFunc func([]api1.AssetRid) error, authorRidFunc func(api1.UserRid) error, runRidFunc func(api.RunRid) error, runRidsFunc func(RunsFilter) error, notebookTypeFunc func(NotebookType) error, notebookTypesFunc func(NotebookTypesFilter) error, draftStateFunc func(bool) error, archivedFunc func(bool) error, workspaceFunc func(rids.WorkspaceRid) error, authorIsCurrentUserFunc func(bool) error, authorRidsFunc func([]api1.UserRid) error, unknownFunc func(string) error) error {
+func (u *SearchNotebooksQuery) AcceptFuncs(andFunc func([]SearchNotebooksQuery) error, orFunc func([]SearchNotebooksQuery) error, notFunc func(SearchNotebooksQuery) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, labelFunc func(api2.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api2.Property) error, propertiesFunc func(api.PropertiesFilter) error, assetRidFunc func(api.AssetRid) error, assetRidsFunc func(AssetsFilter) error, exactAssetRidsFunc func([]api.AssetRid) error, authorRidFunc func(api.UserRid) error, runRidFunc func(api1.RunRid) error, runRidsFunc func(RunsFilter) error, notebookTypeFunc func(NotebookType) error, notebookTypesFunc func(NotebookTypesFilter) error, draftStateFunc func(bool) error, archivedFunc func(bool) error, workspaceFunc func(rids.WorkspaceRid) error, authorIsCurrentUserFunc func(bool) error, authorRidsFunc func([]api.UserRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -694,7 +833,7 @@ func (u *SearchNotebooksQuery) LabelNoopSuccess(_ api2.Label) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) LabelsNoopSuccess(_ api1.LabelsFilter) error {
+func (u *SearchNotebooksQuery) LabelsNoopSuccess(_ api.LabelsFilter) error {
 	return nil
 }
 
@@ -702,11 +841,11 @@ func (u *SearchNotebooksQuery) PropertyNoopSuccess(_ api2.Property) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) PropertiesNoopSuccess(_ api1.PropertiesFilter) error {
+func (u *SearchNotebooksQuery) PropertiesNoopSuccess(_ api.PropertiesFilter) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) AssetRidNoopSuccess(_ api1.AssetRid) error {
+func (u *SearchNotebooksQuery) AssetRidNoopSuccess(_ api.AssetRid) error {
 	return nil
 }
 
@@ -714,15 +853,15 @@ func (u *SearchNotebooksQuery) AssetRidsNoopSuccess(_ AssetsFilter) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) ExactAssetRidsNoopSuccess(_ []api1.AssetRid) error {
+func (u *SearchNotebooksQuery) ExactAssetRidsNoopSuccess(_ []api.AssetRid) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) AuthorRidNoopSuccess(_ api1.UserRid) error {
+func (u *SearchNotebooksQuery) AuthorRidNoopSuccess(_ api.UserRid) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) RunRidNoopSuccess(_ api.RunRid) error {
+func (u *SearchNotebooksQuery) RunRidNoopSuccess(_ api1.RunRid) error {
 	return nil
 }
 
@@ -754,7 +893,7 @@ func (u *SearchNotebooksQuery) AuthorIsCurrentUserNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *SearchNotebooksQuery) AuthorRidsNoopSuccess(_ []api1.UserRid) error {
+func (u *SearchNotebooksQuery) AuthorRidsNoopSuccess(_ []api.UserRid) error {
 	return nil
 }
 
@@ -889,14 +1028,14 @@ type SearchNotebooksQueryVisitor interface {
 	VisitExactMatch(v string) error
 	VisitSearchText(v string) error
 	VisitLabel(v api2.Label) error
-	VisitLabels(v api1.LabelsFilter) error
+	VisitLabels(v api.LabelsFilter) error
 	VisitProperty(v api2.Property) error
-	VisitProperties(v api1.PropertiesFilter) error
-	VisitAssetRid(v api1.AssetRid) error
+	VisitProperties(v api.PropertiesFilter) error
+	VisitAssetRid(v api.AssetRid) error
 	VisitAssetRids(v AssetsFilter) error
-	VisitExactAssetRids(v []api1.AssetRid) error
-	VisitAuthorRid(v api1.UserRid) error
-	VisitRunRid(v api.RunRid) error
+	VisitExactAssetRids(v []api.AssetRid) error
+	VisitAuthorRid(v api.UserRid) error
+	VisitRunRid(v api1.RunRid) error
 	VisitRunRids(v RunsFilter) error
 	VisitNotebookType(v NotebookType) error
 	VisitNotebookTypes(v NotebookTypesFilter) error
@@ -904,7 +1043,7 @@ type SearchNotebooksQueryVisitor interface {
 	VisitArchived(v bool) error
 	VisitWorkspace(v rids.WorkspaceRid) error
 	VisitAuthorIsCurrentUser(v bool) error
-	VisitAuthorRids(v []api1.UserRid) error
+	VisitAuthorRids(v []api.UserRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1035,14 +1174,14 @@ type SearchNotebooksQueryVisitorWithContext interface {
 	VisitExactMatchWithContext(ctx context.Context, v string) error
 	VisitSearchTextWithContext(ctx context.Context, v string) error
 	VisitLabelWithContext(ctx context.Context, v api2.Label) error
-	VisitLabelsWithContext(ctx context.Context, v api1.LabelsFilter) error
+	VisitLabelsWithContext(ctx context.Context, v api.LabelsFilter) error
 	VisitPropertyWithContext(ctx context.Context, v api2.Property) error
-	VisitPropertiesWithContext(ctx context.Context, v api1.PropertiesFilter) error
-	VisitAssetRidWithContext(ctx context.Context, v api1.AssetRid) error
+	VisitPropertiesWithContext(ctx context.Context, v api.PropertiesFilter) error
+	VisitAssetRidWithContext(ctx context.Context, v api.AssetRid) error
 	VisitAssetRidsWithContext(ctx context.Context, v AssetsFilter) error
-	VisitExactAssetRidsWithContext(ctx context.Context, v []api1.AssetRid) error
-	VisitAuthorRidWithContext(ctx context.Context, v api1.UserRid) error
-	VisitRunRidWithContext(ctx context.Context, v api.RunRid) error
+	VisitExactAssetRidsWithContext(ctx context.Context, v []api.AssetRid) error
+	VisitAuthorRidWithContext(ctx context.Context, v api.UserRid) error
+	VisitRunRidWithContext(ctx context.Context, v api1.RunRid) error
 	VisitRunRidsWithContext(ctx context.Context, v RunsFilter) error
 	VisitNotebookTypeWithContext(ctx context.Context, v NotebookType) error
 	VisitNotebookTypesWithContext(ctx context.Context, v NotebookTypesFilter) error
@@ -1050,7 +1189,7 @@ type SearchNotebooksQueryVisitorWithContext interface {
 	VisitArchivedWithContext(ctx context.Context, v bool) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
 	VisitAuthorIsCurrentUserWithContext(ctx context.Context, v bool) error
-	VisitAuthorRidsWithContext(ctx context.Context, v []api1.UserRid) error
+	VisitAuthorRidsWithContext(ctx context.Context, v []api.UserRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1078,7 +1217,7 @@ func NewSearchNotebooksQueryFromLabel(v api2.Label) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "label", label: &v}
 }
 
-func NewSearchNotebooksQueryFromLabels(v api1.LabelsFilter) SearchNotebooksQuery {
+func NewSearchNotebooksQueryFromLabels(v api.LabelsFilter) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "labels", labels: &v}
 }
 
@@ -1086,11 +1225,11 @@ func NewSearchNotebooksQueryFromProperty(v api2.Property) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "property", property: &v}
 }
 
-func NewSearchNotebooksQueryFromProperties(v api1.PropertiesFilter) SearchNotebooksQuery {
+func NewSearchNotebooksQueryFromProperties(v api.PropertiesFilter) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "properties", properties: &v}
 }
 
-func NewSearchNotebooksQueryFromAssetRid(v api1.AssetRid) SearchNotebooksQuery {
+func NewSearchNotebooksQueryFromAssetRid(v api.AssetRid) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "assetRid", assetRid: &v}
 }
 
@@ -1098,15 +1237,15 @@ func NewSearchNotebooksQueryFromAssetRids(v AssetsFilter) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "assetRids", assetRids: &v}
 }
 
-func NewSearchNotebooksQueryFromExactAssetRids(v []api1.AssetRid) SearchNotebooksQuery {
+func NewSearchNotebooksQueryFromExactAssetRids(v []api.AssetRid) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "exactAssetRids", exactAssetRids: &v}
 }
 
-func NewSearchNotebooksQueryFromAuthorRid(v api1.UserRid) SearchNotebooksQuery {
+func NewSearchNotebooksQueryFromAuthorRid(v api.UserRid) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "authorRid", authorRid: &v}
 }
 
-func NewSearchNotebooksQueryFromRunRid(v api.RunRid) SearchNotebooksQuery {
+func NewSearchNotebooksQueryFromRunRid(v api1.RunRid) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "runRid", runRid: &v}
 }
 
@@ -1138,6 +1277,6 @@ func NewSearchNotebooksQueryFromAuthorIsCurrentUser(v bool) SearchNotebooksQuery
 	return SearchNotebooksQuery{typ: "authorIsCurrentUser", authorIsCurrentUser: &v}
 }
 
-func NewSearchNotebooksQueryFromAuthorRids(v []api1.UserRid) SearchNotebooksQuery {
+func NewSearchNotebooksQueryFromAuthorRids(v []api.UserRid) SearchNotebooksQuery {
 	return SearchNotebooksQuery{typ: "authorRids", authorRids: &v}
 }

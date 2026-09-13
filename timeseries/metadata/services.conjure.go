@@ -44,6 +44,11 @@ type SeriesMetadataServiceClient interface {
 	*/
 	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api1.SeriesMetadataRid, requestArg api.UpdateSeriesMetadataRequest) (api.SeriesMetadata, error)
 	/*
+	   This endpoint lets an authorized workspace caller change how one nominal dataset channel is interpreted.
+	   This updates metadata and future series resolution. It does not rewrite historical point rows.
+	*/
+	ChangeDataType(ctx context.Context, authHeader bearertoken.Token, requestArg api.ChangeDataTypeRequest) (api.ChangeDataTypeResponse, error)
+	/*
 	   Batch creates series metadata for video channels if they don't exist.
 	   Idempotent - returns existing SeriesMetadataRid if already exists.
 	*/
@@ -163,6 +168,24 @@ func (c *seriesMetadataServiceClient) UpdateMetadata(ctx context.Context, authHe
 	return *returnVal, nil
 }
 
+func (c *seriesMetadataServiceClient) ChangeDataType(ctx context.Context, authHeader bearertoken.Token, requestArg api.ChangeDataTypeRequest) (api.ChangeDataTypeResponse, error) {
+	var returnVal *api.ChangeDataTypeResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("ChangeDataType"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/timeseries/archetype/v1/series-archetype/change-data-type"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.ChangeDataTypeResponse), werror.WrapWithContextParams(ctx, err, "changeDataType failed")
+	}
+	if returnVal == nil {
+		return *new(api.ChangeDataTypeResponse), werror.ErrorWithContextParams(ctx, "changeDataType response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *seriesMetadataServiceClient) BatchCreateVideoSeries(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchCreateVideoSeriesRequest) (api.BatchCreateVideoSeriesResponse, error) {
 	var returnVal *api.BatchCreateVideoSeriesResponse
 	var requestParams []httpclient.RequestParam
@@ -210,6 +233,11 @@ type SeriesMetadataServiceClientWithAuth interface {
 	*/
 	UpdateMetadata(ctx context.Context, ridArg api1.SeriesMetadataRid, requestArg api.UpdateSeriesMetadataRequest) (api.SeriesMetadata, error)
 	/*
+	   This endpoint lets an authorized workspace caller change how one nominal dataset channel is interpreted.
+	   This updates metadata and future series resolution. It does not rewrite historical point rows.
+	*/
+	ChangeDataType(ctx context.Context, requestArg api.ChangeDataTypeRequest) (api.ChangeDataTypeResponse, error)
+	/*
 	   Batch creates series metadata for video channels if they don't exist.
 	   Idempotent - returns existing SeriesMetadataRid if already exists.
 	*/
@@ -251,6 +279,10 @@ func (c *seriesMetadataServiceClientWithAuth) Get(ctx context.Context, ridArg ap
 
 func (c *seriesMetadataServiceClientWithAuth) UpdateMetadata(ctx context.Context, ridArg api1.SeriesMetadataRid, requestArg api.UpdateSeriesMetadataRequest) (api.SeriesMetadata, error) {
 	return c.client.UpdateMetadata(ctx, c.authHeader, ridArg, requestArg)
+}
+
+func (c *seriesMetadataServiceClientWithAuth) ChangeDataType(ctx context.Context, requestArg api.ChangeDataTypeRequest) (api.ChangeDataTypeResponse, error) {
+	return c.client.ChangeDataType(ctx, c.authHeader, requestArg)
 }
 
 func (c *seriesMetadataServiceClientWithAuth) BatchCreateVideoSeries(ctx context.Context, requestArg api.BatchCreateVideoSeriesRequest) (api.BatchCreateVideoSeriesResponse, error) {
@@ -320,6 +352,14 @@ func (c *seriesMetadataServiceClientWithTokenProvider) UpdateMetadata(ctx contex
 		return *new(api.SeriesMetadata), err
 	}
 	return c.client.UpdateMetadata(ctx, bearertoken.Token(token), ridArg, requestArg)
+}
+
+func (c *seriesMetadataServiceClientWithTokenProvider) ChangeDataType(ctx context.Context, requestArg api.ChangeDataTypeRequest) (api.ChangeDataTypeResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.ChangeDataTypeResponse), err
+	}
+	return c.client.ChangeDataType(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *seriesMetadataServiceClientWithTokenProvider) BatchCreateVideoSeries(ctx context.Context, requestArg api.BatchCreateVideoSeriesRequest) (api.BatchCreateVideoSeriesResponse, error) {

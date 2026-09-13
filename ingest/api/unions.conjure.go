@@ -7,8 +7,9 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
-	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
@@ -400,6 +401,363 @@ func NewAuthenticationFromUserAndPassword(v UserAndPasswordAuthentication) Authe
 
 func NewAuthenticationFromPublic(v PublicAuthentication) Authentication {
 	return Authentication{typ: "public", public: &v}
+}
+
+/*
+Describes how the numeric `timestamps` column in an Avro Stream file should be interpreted.
+The Avro schema models `timestamps` as an array of longs, so only numeric timestamp variants
+are supported (no ISO-8601 / custom string formats).
+*/
+type AvroNumericTimestampType struct {
+	typ      string
+	epoch    *EpochTimestamp
+	relative *RelativeTimestamp
+}
+
+type avroNumericTimestampTypeDeserializer struct {
+	Type     string             `json:"type"`
+	Epoch    *EpochTimestamp    `json:"epoch"`
+	Relative *RelativeTimestamp `json:"relative"`
+}
+
+func (u *avroNumericTimestampTypeDeserializer) toStruct() AvroNumericTimestampType {
+	return AvroNumericTimestampType{typ: u.Type, epoch: u.Epoch, relative: u.Relative}
+}
+
+func (u *AvroNumericTimestampType) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "epoch":
+		if u.epoch == nil {
+			return nil, fmt.Errorf("field \"epoch\" is required")
+		}
+		return struct {
+			Type  string         `json:"type"`
+			Epoch EpochTimestamp `json:"epoch"`
+		}{Type: "epoch", Epoch: *u.epoch}, nil
+	case "relative":
+		if u.relative == nil {
+			return nil, fmt.Errorf("field \"relative\" is required")
+		}
+		return struct {
+			Type     string            `json:"type"`
+			Relative RelativeTimestamp `json:"relative"`
+		}{Type: "relative", Relative: *u.relative}, nil
+	}
+}
+
+func (u AvroNumericTimestampType) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *AvroNumericTimestampType) UnmarshalJSON(data []byte) error {
+	var deser avroNumericTimestampTypeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "epoch":
+		if u.epoch == nil {
+			return fmt.Errorf("field \"epoch\" is required")
+		}
+	case "relative":
+		if u.relative == nil {
+			return fmt.Errorf("field \"relative\" is required")
+		}
+	}
+	return nil
+}
+
+func (u AvroNumericTimestampType) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *AvroNumericTimestampType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *AvroNumericTimestampType) AcceptFuncs(epochFunc func(EpochTimestamp) error, relativeFunc func(RelativeTimestamp) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in AvroNumericTimestampType type")
+		}
+		return unknownFunc(u.typ)
+	case "epoch":
+		if u.epoch == nil {
+			return fmt.Errorf("field \"epoch\" is required")
+		}
+		return epochFunc(*u.epoch)
+	case "relative":
+		if u.relative == nil {
+			return fmt.Errorf("field \"relative\" is required")
+		}
+		return relativeFunc(*u.relative)
+	}
+}
+
+func (u *AvroNumericTimestampType) EpochNoopSuccess(_ EpochTimestamp) error {
+	return nil
+}
+
+func (u *AvroNumericTimestampType) RelativeNoopSuccess(_ RelativeTimestamp) error {
+	return nil
+}
+
+func (u *AvroNumericTimestampType) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *AvroNumericTimestampType) Accept(v AvroNumericTimestampTypeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "epoch":
+		if u.epoch == nil {
+			return fmt.Errorf("field \"epoch\" is required")
+		}
+		return v.VisitEpoch(*u.epoch)
+	case "relative":
+		if u.relative == nil {
+			return fmt.Errorf("field \"relative\" is required")
+		}
+		return v.VisitRelative(*u.relative)
+	}
+}
+
+type AvroNumericTimestampTypeVisitor interface {
+	VisitEpoch(v EpochTimestamp) error
+	VisitRelative(v RelativeTimestamp) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *AvroNumericTimestampType) AcceptWithContext(ctx context.Context, v AvroNumericTimestampTypeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "epoch":
+		if u.epoch == nil {
+			return fmt.Errorf("field \"epoch\" is required")
+		}
+		return v.VisitEpochWithContext(ctx, *u.epoch)
+	case "relative":
+		if u.relative == nil {
+			return fmt.Errorf("field \"relative\" is required")
+		}
+		return v.VisitRelativeWithContext(ctx, *u.relative)
+	}
+}
+
+type AvroNumericTimestampTypeVisitorWithContext interface {
+	VisitEpochWithContext(ctx context.Context, v EpochTimestamp) error
+	VisitRelativeWithContext(ctx context.Context, v RelativeTimestamp) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewAvroNumericTimestampTypeFromEpoch(v EpochTimestamp) AvroNumericTimestampType {
+	return AvroNumericTimestampType{typ: "epoch", epoch: &v}
+}
+
+func NewAvroNumericTimestampTypeFromRelative(v RelativeTimestamp) AvroNumericTimestampType {
+	return AvroNumericTimestampType{typ: "relative", relative: &v}
+}
+
+/*
+`cancelled` carries the resulting job (including the idempotent already-cancelled case);
+`failed` describes why the job could not be cancelled.
+*/
+type CancelIngestJobOutcome struct {
+	typ       string
+	cancelled *IngestJob
+	failed    *CancelIngestJobFailure
+}
+
+type cancelIngestJobOutcomeDeserializer struct {
+	Type      string                  `json:"type"`
+	Cancelled *IngestJob              `json:"cancelled"`
+	Failed    *CancelIngestJobFailure `json:"failed"`
+}
+
+func (u *cancelIngestJobOutcomeDeserializer) toStruct() CancelIngestJobOutcome {
+	return CancelIngestJobOutcome{typ: u.Type, cancelled: u.Cancelled, failed: u.Failed}
+}
+
+func (u *CancelIngestJobOutcome) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "cancelled":
+		if u.cancelled == nil {
+			return nil, fmt.Errorf("field \"cancelled\" is required")
+		}
+		return struct {
+			Type      string    `json:"type"`
+			Cancelled IngestJob `json:"cancelled"`
+		}{Type: "cancelled", Cancelled: *u.cancelled}, nil
+	case "failed":
+		if u.failed == nil {
+			return nil, fmt.Errorf("field \"failed\" is required")
+		}
+		return struct {
+			Type   string                 `json:"type"`
+			Failed CancelIngestJobFailure `json:"failed"`
+		}{Type: "failed", Failed: *u.failed}, nil
+	}
+}
+
+func (u CancelIngestJobOutcome) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *CancelIngestJobOutcome) UnmarshalJSON(data []byte) error {
+	var deser cancelIngestJobOutcomeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "cancelled":
+		if u.cancelled == nil {
+			return fmt.Errorf("field \"cancelled\" is required")
+		}
+	case "failed":
+		if u.failed == nil {
+			return fmt.Errorf("field \"failed\" is required")
+		}
+	}
+	return nil
+}
+
+func (u CancelIngestJobOutcome) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *CancelIngestJobOutcome) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *CancelIngestJobOutcome) AcceptFuncs(cancelledFunc func(IngestJob) error, failedFunc func(CancelIngestJobFailure) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in CancelIngestJobOutcome type")
+		}
+		return unknownFunc(u.typ)
+	case "cancelled":
+		if u.cancelled == nil {
+			return fmt.Errorf("field \"cancelled\" is required")
+		}
+		return cancelledFunc(*u.cancelled)
+	case "failed":
+		if u.failed == nil {
+			return fmt.Errorf("field \"failed\" is required")
+		}
+		return failedFunc(*u.failed)
+	}
+}
+
+func (u *CancelIngestJobOutcome) CancelledNoopSuccess(_ IngestJob) error {
+	return nil
+}
+
+func (u *CancelIngestJobOutcome) FailedNoopSuccess(_ CancelIngestJobFailure) error {
+	return nil
+}
+
+func (u *CancelIngestJobOutcome) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *CancelIngestJobOutcome) Accept(v CancelIngestJobOutcomeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "cancelled":
+		if u.cancelled == nil {
+			return fmt.Errorf("field \"cancelled\" is required")
+		}
+		return v.VisitCancelled(*u.cancelled)
+	case "failed":
+		if u.failed == nil {
+			return fmt.Errorf("field \"failed\" is required")
+		}
+		return v.VisitFailed(*u.failed)
+	}
+}
+
+type CancelIngestJobOutcomeVisitor interface {
+	VisitCancelled(v IngestJob) error
+	VisitFailed(v CancelIngestJobFailure) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *CancelIngestJobOutcome) AcceptWithContext(ctx context.Context, v CancelIngestJobOutcomeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "cancelled":
+		if u.cancelled == nil {
+			return fmt.Errorf("field \"cancelled\" is required")
+		}
+		return v.VisitCancelledWithContext(ctx, *u.cancelled)
+	case "failed":
+		if u.failed == nil {
+			return fmt.Errorf("field \"failed\" is required")
+		}
+		return v.VisitFailedWithContext(ctx, *u.failed)
+	}
+}
+
+type CancelIngestJobOutcomeVisitorWithContext interface {
+	VisitCancelledWithContext(ctx context.Context, v IngestJob) error
+	VisitFailedWithContext(ctx context.Context, v CancelIngestJobFailure) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewCancelIngestJobOutcomeFromCancelled(v IngestJob) CancelIngestJobOutcome {
+	return CancelIngestJobOutcome{typ: "cancelled", cancelled: &v}
+}
+
+func NewCancelIngestJobOutcomeFromFailed(v CancelIngestJobFailure) CancelIngestJobOutcome {
+	return CancelIngestJobOutcome{typ: "failed", failed: &v}
 }
 
 type DatasetIngestTarget struct {
@@ -1237,16 +1595,18 @@ type IngestDetails struct {
 	typ     string
 	dataset *IngestDatasetFileDetails
 	video   *IngestVideoFileDetails
+	spatial *IngestSpatialDetails
 }
 
 type ingestDetailsDeserializer struct {
 	Type    string                    `json:"type"`
 	Dataset *IngestDatasetFileDetails `json:"dataset"`
 	Video   *IngestVideoFileDetails   `json:"video"`
+	Spatial *IngestSpatialDetails     `json:"spatial"`
 }
 
 func (u *ingestDetailsDeserializer) toStruct() IngestDetails {
-	return IngestDetails{typ: u.Type, dataset: u.Dataset, video: u.Video}
+	return IngestDetails{typ: u.Type, dataset: u.Dataset, video: u.Video, spatial: u.Spatial}
 }
 
 func (u *IngestDetails) toSerializer() (interface{}, error) {
@@ -1269,6 +1629,14 @@ func (u *IngestDetails) toSerializer() (interface{}, error) {
 			Type  string                 `json:"type"`
 			Video IngestVideoFileDetails `json:"video"`
 		}{Type: "video", Video: *u.video}, nil
+	case "spatial":
+		if u.spatial == nil {
+			return nil, fmt.Errorf("field \"spatial\" is required")
+		}
+		return struct {
+			Type    string               `json:"type"`
+			Spatial IngestSpatialDetails `json:"spatial"`
+		}{Type: "spatial", Spatial: *u.spatial}, nil
 	}
 }
 
@@ -1295,6 +1663,10 @@ func (u *IngestDetails) UnmarshalJSON(data []byte) error {
 		if u.video == nil {
 			return fmt.Errorf("field \"video\" is required")
 		}
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
 	}
 	return nil
 }
@@ -1315,7 +1687,7 @@ func (u *IngestDetails) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *IngestDetails) AcceptFuncs(datasetFunc func(IngestDatasetFileDetails) error, videoFunc func(IngestVideoFileDetails) error, unknownFunc func(string) error) error {
+func (u *IngestDetails) AcceptFuncs(datasetFunc func(IngestDatasetFileDetails) error, videoFunc func(IngestVideoFileDetails) error, spatialFunc func(IngestSpatialDetails) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1332,6 +1704,11 @@ func (u *IngestDetails) AcceptFuncs(datasetFunc func(IngestDatasetFileDetails) e
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return videoFunc(*u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return spatialFunc(*u.spatial)
 	}
 }
 
@@ -1340,6 +1717,10 @@ func (u *IngestDetails) DatasetNoopSuccess(_ IngestDatasetFileDetails) error {
 }
 
 func (u *IngestDetails) VideoNoopSuccess(_ IngestVideoFileDetails) error {
+	return nil
+}
+
+func (u *IngestDetails) SpatialNoopSuccess(_ IngestSpatialDetails) error {
 	return nil
 }
 
@@ -1364,12 +1745,18 @@ func (u *IngestDetails) Accept(v IngestDetailsVisitor) error {
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideo(*u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatial(*u.spatial)
 	}
 }
 
 type IngestDetailsVisitor interface {
 	VisitDataset(v IngestDatasetFileDetails) error
 	VisitVideo(v IngestVideoFileDetails) error
+	VisitSpatial(v IngestSpatialDetails) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1390,12 +1777,18 @@ func (u *IngestDetails) AcceptWithContext(ctx context.Context, v IngestDetailsVi
 			return fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideoWithContext(ctx, *u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatialWithContext(ctx, *u.spatial)
 	}
 }
 
 type IngestDetailsVisitorWithContext interface {
 	VisitDatasetWithContext(ctx context.Context, v IngestDatasetFileDetails) error
 	VisitVideoWithContext(ctx context.Context, v IngestVideoFileDetails) error
+	VisitSpatialWithContext(ctx context.Context, v IngestSpatialDetails) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1405,6 +1798,10 @@ func NewIngestDetailsFromDataset(v IngestDatasetFileDetails) IngestDetails {
 
 func NewIngestDetailsFromVideo(v IngestVideoFileDetails) IngestDetails {
 	return IngestDetails{typ: "video", video: &v}
+}
+
+func NewIngestDetailsFromSpatial(v IngestSpatialDetails) IngestDetails {
+	return IngestDetails{typ: "spatial", spatial: &v}
 }
 
 type IngestJobRequest struct {
@@ -1542,6 +1939,496 @@ func NewIngestJobRequestFromIngestRequest(v IngestRequest) IngestJobRequest {
 	return IngestJobRequest{typ: "ingestRequest", ingestRequest: &v}
 }
 
+/*
+Filter for ingest-job search. A filter type that is not provided defaults to matching all jobs.
+Jobs without a persisted dataset UUID are not returned.
+*/
+type IngestJobSearchFilter struct {
+	typ                      string
+	datasetRids              *[]rids.DatasetRid
+	createdByRids            *[]api.UserRid
+	statuses                 *[]IngestJobStatus
+	searchText               *string
+	startTimeRange           *IngestJobStartTimeRange
+	and                      *[]IngestJobSearchFilter
+	or                       *[]IngestJobSearchFilter
+	not                      *IngestJobSearchFilter
+	workspace                *rids.WorkspaceRid
+	triggeringIngestRuleRids *[]rids.DriveIngestRuleRid
+}
+
+type ingestJobSearchFilterDeserializer struct {
+	Type                     string                     `json:"type"`
+	DatasetRids              *[]rids.DatasetRid         `json:"datasetRids"`
+	CreatedByRids            *[]api.UserRid             `json:"createdByRids"`
+	Statuses                 *[]IngestJobStatus         `json:"statuses"`
+	SearchText               *string                    `json:"searchText"`
+	StartTimeRange           *IngestJobStartTimeRange   `json:"startTimeRange"`
+	And                      *[]IngestJobSearchFilter   `json:"and"`
+	Or                       *[]IngestJobSearchFilter   `json:"or"`
+	Not                      *IngestJobSearchFilter     `json:"not"`
+	Workspace                *rids.WorkspaceRid         `json:"workspace"`
+	TriggeringIngestRuleRids *[]rids.DriveIngestRuleRid `json:"triggeringIngestRuleRids"`
+}
+
+func (u *ingestJobSearchFilterDeserializer) toStruct() IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: u.Type, datasetRids: u.DatasetRids, createdByRids: u.CreatedByRids, statuses: u.Statuses, searchText: u.SearchText, startTimeRange: u.StartTimeRange, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, triggeringIngestRuleRids: u.TriggeringIngestRuleRids}
+}
+
+func (u *IngestJobSearchFilter) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return nil, fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return struct {
+			Type        string            `json:"type"`
+			DatasetRids []rids.DatasetRid `json:"datasetRids"`
+		}{Type: "datasetRids", DatasetRids: *u.datasetRids}, nil
+	case "createdByRids":
+		if u.createdByRids == nil {
+			return nil, fmt.Errorf("field \"createdByRids\" is required")
+		}
+		return struct {
+			Type          string        `json:"type"`
+			CreatedByRids []api.UserRid `json:"createdByRids"`
+		}{Type: "createdByRids", CreatedByRids: *u.createdByRids}, nil
+	case "statuses":
+		if u.statuses == nil {
+			return nil, fmt.Errorf("field \"statuses\" is required")
+		}
+		return struct {
+			Type     string            `json:"type"`
+			Statuses []IngestJobStatus `json:"statuses"`
+		}{Type: "statuses", Statuses: *u.statuses}, nil
+	case "searchText":
+		if u.searchText == nil {
+			return nil, fmt.Errorf("field \"searchText\" is required")
+		}
+		return struct {
+			Type       string `json:"type"`
+			SearchText string `json:"searchText"`
+		}{Type: "searchText", SearchText: *u.searchText}, nil
+	case "startTimeRange":
+		if u.startTimeRange == nil {
+			return nil, fmt.Errorf("field \"startTimeRange\" is required")
+		}
+		return struct {
+			Type           string                  `json:"type"`
+			StartTimeRange IngestJobStartTimeRange `json:"startTimeRange"`
+		}{Type: "startTimeRange", StartTimeRange: *u.startTimeRange}, nil
+	case "and":
+		if u.and == nil {
+			return nil, fmt.Errorf("field \"and\" is required")
+		}
+		return struct {
+			Type string                  `json:"type"`
+			And  []IngestJobSearchFilter `json:"and"`
+		}{Type: "and", And: *u.and}, nil
+	case "or":
+		if u.or == nil {
+			return nil, fmt.Errorf("field \"or\" is required")
+		}
+		return struct {
+			Type string                  `json:"type"`
+			Or   []IngestJobSearchFilter `json:"or"`
+		}{Type: "or", Or: *u.or}, nil
+	case "not":
+		if u.not == nil {
+			return nil, fmt.Errorf("field \"not\" is required")
+		}
+		return struct {
+			Type string                `json:"type"`
+			Not  IngestJobSearchFilter `json:"not"`
+		}{Type: "not", Not: *u.not}, nil
+	case "workspace":
+		if u.workspace == nil {
+			return nil, fmt.Errorf("field \"workspace\" is required")
+		}
+		return struct {
+			Type      string            `json:"type"`
+			Workspace rids.WorkspaceRid `json:"workspace"`
+		}{Type: "workspace", Workspace: *u.workspace}, nil
+	case "triggeringIngestRuleRids":
+		if u.triggeringIngestRuleRids == nil {
+			return nil, fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
+		}
+		return struct {
+			Type                     string                    `json:"type"`
+			TriggeringIngestRuleRids []rids.DriveIngestRuleRid `json:"triggeringIngestRuleRids"`
+		}{Type: "triggeringIngestRuleRids", TriggeringIngestRuleRids: *u.triggeringIngestRuleRids}, nil
+	}
+}
+
+func (u IngestJobSearchFilter) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *IngestJobSearchFilter) UnmarshalJSON(data []byte) error {
+	var deser ingestJobSearchFilterDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return fmt.Errorf("field \"datasetRids\" is required")
+		}
+	case "createdByRids":
+		if u.createdByRids == nil {
+			return fmt.Errorf("field \"createdByRids\" is required")
+		}
+	case "statuses":
+		if u.statuses == nil {
+			return fmt.Errorf("field \"statuses\" is required")
+		}
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+	case "startTimeRange":
+		if u.startTimeRange == nil {
+			return fmt.Errorf("field \"startTimeRange\" is required")
+		}
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+	case "triggeringIngestRuleRids":
+		if u.triggeringIngestRuleRids == nil {
+			return fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
+		}
+	}
+	return nil
+}
+
+func (u IngestJobSearchFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *IngestJobSearchFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *IngestJobSearchFilter) AcceptFuncs(datasetRidsFunc func([]rids.DatasetRid) error, createdByRidsFunc func([]api.UserRid) error, statusesFunc func([]IngestJobStatus) error, searchTextFunc func(string) error, startTimeRangeFunc func(IngestJobStartTimeRange) error, andFunc func([]IngestJobSearchFilter) error, orFunc func([]IngestJobSearchFilter) error, notFunc func(IngestJobSearchFilter) error, workspaceFunc func(rids.WorkspaceRid) error, triggeringIngestRuleRidsFunc func([]rids.DriveIngestRuleRid) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in IngestJobSearchFilter type")
+		}
+		return unknownFunc(u.typ)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return datasetRidsFunc(*u.datasetRids)
+	case "createdByRids":
+		if u.createdByRids == nil {
+			return fmt.Errorf("field \"createdByRids\" is required")
+		}
+		return createdByRidsFunc(*u.createdByRids)
+	case "statuses":
+		if u.statuses == nil {
+			return fmt.Errorf("field \"statuses\" is required")
+		}
+		return statusesFunc(*u.statuses)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return searchTextFunc(*u.searchText)
+	case "startTimeRange":
+		if u.startTimeRange == nil {
+			return fmt.Errorf("field \"startTimeRange\" is required")
+		}
+		return startTimeRangeFunc(*u.startTimeRange)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return andFunc(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return orFunc(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return workspaceFunc(*u.workspace)
+	case "triggeringIngestRuleRids":
+		if u.triggeringIngestRuleRids == nil {
+			return fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
+		}
+		return triggeringIngestRuleRidsFunc(*u.triggeringIngestRuleRids)
+	}
+}
+
+func (u *IngestJobSearchFilter) DatasetRidsNoopSuccess(_ []rids.DatasetRid) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) CreatedByRidsNoopSuccess(_ []api.UserRid) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) StatusesNoopSuccess(_ []IngestJobStatus) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) SearchTextNoopSuccess(_ string) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) StartTimeRangeNoopSuccess(_ IngestJobStartTimeRange) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) AndNoopSuccess(_ []IngestJobSearchFilter) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) OrNoopSuccess(_ []IngestJobSearchFilter) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) NotNoopSuccess(_ IngestJobSearchFilter) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) TriggeringIngestRuleRidsNoopSuccess(_ []rids.DriveIngestRuleRid) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *IngestJobSearchFilter) Accept(v IngestJobSearchFilterVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return v.VisitDatasetRids(*u.datasetRids)
+	case "createdByRids":
+		if u.createdByRids == nil {
+			return fmt.Errorf("field \"createdByRids\" is required")
+		}
+		return v.VisitCreatedByRids(*u.createdByRids)
+	case "statuses":
+		if u.statuses == nil {
+			return fmt.Errorf("field \"statuses\" is required")
+		}
+		return v.VisitStatuses(*u.statuses)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchText(*u.searchText)
+	case "startTimeRange":
+		if u.startTimeRange == nil {
+			return fmt.Errorf("field \"startTimeRange\" is required")
+		}
+		return v.VisitStartTimeRange(*u.startTimeRange)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAnd(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOr(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(*u.not)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspace(*u.workspace)
+	case "triggeringIngestRuleRids":
+		if u.triggeringIngestRuleRids == nil {
+			return fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
+		}
+		return v.VisitTriggeringIngestRuleRids(*u.triggeringIngestRuleRids)
+	}
+}
+
+type IngestJobSearchFilterVisitor interface {
+	VisitDatasetRids(v []rids.DatasetRid) error
+	VisitCreatedByRids(v []api.UserRid) error
+	VisitStatuses(v []IngestJobStatus) error
+	VisitSearchText(v string) error
+	VisitStartTimeRange(v IngestJobStartTimeRange) error
+	VisitAnd(v []IngestJobSearchFilter) error
+	VisitOr(v []IngestJobSearchFilter) error
+	VisitNot(v IngestJobSearchFilter) error
+	VisitWorkspace(v rids.WorkspaceRid) error
+	VisitTriggeringIngestRuleRids(v []rids.DriveIngestRuleRid) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *IngestJobSearchFilter) AcceptWithContext(ctx context.Context, v IngestJobSearchFilterVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return v.VisitDatasetRidsWithContext(ctx, *u.datasetRids)
+	case "createdByRids":
+		if u.createdByRids == nil {
+			return fmt.Errorf("field \"createdByRids\" is required")
+		}
+		return v.VisitCreatedByRidsWithContext(ctx, *u.createdByRids)
+	case "statuses":
+		if u.statuses == nil {
+			return fmt.Errorf("field \"statuses\" is required")
+		}
+		return v.VisitStatusesWithContext(ctx, *u.statuses)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchTextWithContext(ctx, *u.searchText)
+	case "startTimeRange":
+		if u.startTimeRange == nil {
+			return fmt.Errorf("field \"startTimeRange\" is required")
+		}
+		return v.VisitStartTimeRangeWithContext(ctx, *u.startTimeRange)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAndWithContext(ctx, *u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOrWithContext(ctx, *u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNotWithContext(ctx, *u.not)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
+	case "triggeringIngestRuleRids":
+		if u.triggeringIngestRuleRids == nil {
+			return fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
+		}
+		return v.VisitTriggeringIngestRuleRidsWithContext(ctx, *u.triggeringIngestRuleRids)
+	}
+}
+
+type IngestJobSearchFilterVisitorWithContext interface {
+	VisitDatasetRidsWithContext(ctx context.Context, v []rids.DatasetRid) error
+	VisitCreatedByRidsWithContext(ctx context.Context, v []api.UserRid) error
+	VisitStatusesWithContext(ctx context.Context, v []IngestJobStatus) error
+	VisitSearchTextWithContext(ctx context.Context, v string) error
+	VisitStartTimeRangeWithContext(ctx context.Context, v IngestJobStartTimeRange) error
+	VisitAndWithContext(ctx context.Context, v []IngestJobSearchFilter) error
+	VisitOrWithContext(ctx context.Context, v []IngestJobSearchFilter) error
+	VisitNotWithContext(ctx context.Context, v IngestJobSearchFilter) error
+	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
+	VisitTriggeringIngestRuleRidsWithContext(ctx context.Context, v []rids.DriveIngestRuleRid) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewIngestJobSearchFilterFromDatasetRids(v []rids.DatasetRid) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "datasetRids", datasetRids: &v}
+}
+
+func NewIngestJobSearchFilterFromCreatedByRids(v []api.UserRid) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "createdByRids", createdByRids: &v}
+}
+
+func NewIngestJobSearchFilterFromStatuses(v []IngestJobStatus) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "statuses", statuses: &v}
+}
+
+func NewIngestJobSearchFilterFromSearchText(v string) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "searchText", searchText: &v}
+}
+
+func NewIngestJobSearchFilterFromStartTimeRange(v IngestJobStartTimeRange) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "startTimeRange", startTimeRange: &v}
+}
+
+func NewIngestJobSearchFilterFromAnd(v []IngestJobSearchFilter) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "and", and: &v}
+}
+
+func NewIngestJobSearchFilterFromOr(v []IngestJobSearchFilter) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "or", or: &v}
+}
+
+func NewIngestJobSearchFilterFromNot(v IngestJobSearchFilter) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "not", not: &v}
+}
+
+func NewIngestJobSearchFilterFromWorkspace(v rids.WorkspaceRid) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "workspace", workspace: &v}
+}
+
+func NewIngestJobSearchFilterFromTriggeringIngestRuleRids(v []rids.DriveIngestRuleRid) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "triggeringIngestRuleRids", triggeringIngestRuleRids: &v}
+}
+
 type IngestOptions struct {
 	typ                    string
 	dataflash              *DataflashOpts
@@ -1553,6 +2440,7 @@ type IngestOptions struct {
 	videoV2                *VideoOptsV2
 	containerized          *ContainerizedOpts
 	avroStream             *AvroStreamOpts
+	pointCloud             *PointCloudOpts
 }
 
 type ingestOptionsDeserializer struct {
@@ -1566,10 +2454,11 @@ type ingestOptionsDeserializer struct {
 	VideoV2                *VideoOptsV2                `json:"videoV2"`
 	Containerized          *ContainerizedOpts          `json:"containerized"`
 	AvroStream             *AvroStreamOpts             `json:"avroStream"`
+	PointCloud             *PointCloudOpts             `json:"pointCloud"`
 }
 
 func (u *ingestOptionsDeserializer) toStruct() IngestOptions {
-	return IngestOptions{typ: u.Type, dataflash: u.Dataflash, mcapProtobufTimeseries: u.McapProtobufTimeseries, journalJson: u.JournalJson, csv: u.Csv, parquet: u.Parquet, video: u.Video, videoV2: u.VideoV2, containerized: u.Containerized, avroStream: u.AvroStream}
+	return IngestOptions{typ: u.Type, dataflash: u.Dataflash, mcapProtobufTimeseries: u.McapProtobufTimeseries, journalJson: u.JournalJson, csv: u.Csv, parquet: u.Parquet, video: u.Video, videoV2: u.VideoV2, containerized: u.Containerized, avroStream: u.AvroStream, pointCloud: u.PointCloud}
 }
 
 func (u *IngestOptions) toSerializer() (interface{}, error) {
@@ -1648,6 +2537,14 @@ func (u *IngestOptions) toSerializer() (interface{}, error) {
 			Type       string         `json:"type"`
 			AvroStream AvroStreamOpts `json:"avroStream"`
 		}{Type: "avroStream", AvroStream: *u.avroStream}, nil
+	case "pointCloud":
+		if u.pointCloud == nil {
+			return nil, fmt.Errorf("field \"pointCloud\" is required")
+		}
+		return struct {
+			Type       string         `json:"type"`
+			PointCloud PointCloudOpts `json:"pointCloud"`
+		}{Type: "pointCloud", PointCloud: *u.pointCloud}, nil
 	}
 }
 
@@ -1702,6 +2599,10 @@ func (u *IngestOptions) UnmarshalJSON(data []byte) error {
 		if u.avroStream == nil {
 			return fmt.Errorf("field \"avroStream\" is required")
 		}
+	case "pointCloud":
+		if u.pointCloud == nil {
+			return fmt.Errorf("field \"pointCloud\" is required")
+		}
 	}
 	return nil
 }
@@ -1722,7 +2623,7 @@ func (u *IngestOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *IngestOptions) AcceptFuncs(dataflashFunc func(DataflashOpts) error, mcapProtobufTimeseriesFunc func(McapProtobufTimeseriesOpts) error, journalJsonFunc func(JournalJsonOpts) error, csvFunc func(CsvOpts) error, parquetFunc func(ParquetOpts) error, videoFunc func(VideoOpts) error, videoV2Func func(VideoOptsV2) error, containerizedFunc func(ContainerizedOpts) error, avroStreamFunc func(AvroStreamOpts) error, unknownFunc func(string) error) error {
+func (u *IngestOptions) AcceptFuncs(dataflashFunc func(DataflashOpts) error, mcapProtobufTimeseriesFunc func(McapProtobufTimeseriesOpts) error, journalJsonFunc func(JournalJsonOpts) error, csvFunc func(CsvOpts) error, parquetFunc func(ParquetOpts) error, videoFunc func(VideoOpts) error, videoV2Func func(VideoOptsV2) error, containerizedFunc func(ContainerizedOpts) error, avroStreamFunc func(AvroStreamOpts) error, pointCloudFunc func(PointCloudOpts) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1774,6 +2675,11 @@ func (u *IngestOptions) AcceptFuncs(dataflashFunc func(DataflashOpts) error, mca
 			return fmt.Errorf("field \"avroStream\" is required")
 		}
 		return avroStreamFunc(*u.avroStream)
+	case "pointCloud":
+		if u.pointCloud == nil {
+			return fmt.Errorf("field \"pointCloud\" is required")
+		}
+		return pointCloudFunc(*u.pointCloud)
 	}
 }
 
@@ -1810,6 +2716,10 @@ func (u *IngestOptions) ContainerizedNoopSuccess(_ ContainerizedOpts) error {
 }
 
 func (u *IngestOptions) AvroStreamNoopSuccess(_ AvroStreamOpts) error {
+	return nil
+}
+
+func (u *IngestOptions) PointCloudNoopSuccess(_ PointCloudOpts) error {
 	return nil
 }
 
@@ -1869,6 +2779,11 @@ func (u *IngestOptions) Accept(v IngestOptionsVisitor) error {
 			return fmt.Errorf("field \"avroStream\" is required")
 		}
 		return v.VisitAvroStream(*u.avroStream)
+	case "pointCloud":
+		if u.pointCloud == nil {
+			return fmt.Errorf("field \"pointCloud\" is required")
+		}
+		return v.VisitPointCloud(*u.pointCloud)
 	}
 }
 
@@ -1882,6 +2797,7 @@ type IngestOptionsVisitor interface {
 	VisitVideoV2(v VideoOptsV2) error
 	VisitContainerized(v ContainerizedOpts) error
 	VisitAvroStream(v AvroStreamOpts) error
+	VisitPointCloud(v PointCloudOpts) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1937,6 +2853,11 @@ func (u *IngestOptions) AcceptWithContext(ctx context.Context, v IngestOptionsVi
 			return fmt.Errorf("field \"avroStream\" is required")
 		}
 		return v.VisitAvroStreamWithContext(ctx, *u.avroStream)
+	case "pointCloud":
+		if u.pointCloud == nil {
+			return fmt.Errorf("field \"pointCloud\" is required")
+		}
+		return v.VisitPointCloudWithContext(ctx, *u.pointCloud)
 	}
 }
 
@@ -1950,6 +2871,7 @@ type IngestOptionsVisitorWithContext interface {
 	VisitVideoV2WithContext(ctx context.Context, v VideoOptsV2) error
 	VisitContainerizedWithContext(ctx context.Context, v ContainerizedOpts) error
 	VisitAvroStreamWithContext(ctx context.Context, v AvroStreamOpts) error
+	VisitPointCloudWithContext(ctx context.Context, v PointCloudOpts) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1989,11 +2911,16 @@ func NewIngestOptionsFromAvroStream(v AvroStreamOpts) IngestOptions {
 	return IngestOptions{typ: "avroStream", avroStream: &v}
 }
 
+func NewIngestOptionsFromPointCloud(v PointCloudOpts) IngestOptions {
+	return IngestOptions{typ: "pointCloud", pointCloud: &v}
+}
+
 type IngestSource struct {
 	typ           string
 	s3            *S3IngestSource
 	gcs           *GcsIngestSource
 	presignedFile *PresignedFileIngestSource
+	fileStore     *FileStoreIngestSource
 }
 
 type ingestSourceDeserializer struct {
@@ -2001,10 +2928,11 @@ type ingestSourceDeserializer struct {
 	S3            *S3IngestSource            `json:"s3"`
 	Gcs           *GcsIngestSource           `json:"gcs"`
 	PresignedFile *PresignedFileIngestSource `json:"presignedFile"`
+	FileStore     *FileStoreIngestSource     `json:"fileStore"`
 }
 
 func (u *ingestSourceDeserializer) toStruct() IngestSource {
-	return IngestSource{typ: u.Type, s3: u.S3, gcs: u.Gcs, presignedFile: u.PresignedFile}
+	return IngestSource{typ: u.Type, s3: u.S3, gcs: u.Gcs, presignedFile: u.PresignedFile, fileStore: u.FileStore}
 }
 
 func (u *IngestSource) toSerializer() (interface{}, error) {
@@ -2035,6 +2963,14 @@ func (u *IngestSource) toSerializer() (interface{}, error) {
 			Type          string                    `json:"type"`
 			PresignedFile PresignedFileIngestSource `json:"presignedFile"`
 		}{Type: "presignedFile", PresignedFile: *u.presignedFile}, nil
+	case "fileStore":
+		if u.fileStore == nil {
+			return nil, fmt.Errorf("field \"fileStore\" is required")
+		}
+		return struct {
+			Type      string                `json:"type"`
+			FileStore FileStoreIngestSource `json:"fileStore"`
+		}{Type: "fileStore", FileStore: *u.fileStore}, nil
 	}
 }
 
@@ -2065,6 +3001,10 @@ func (u *IngestSource) UnmarshalJSON(data []byte) error {
 		if u.presignedFile == nil {
 			return fmt.Errorf("field \"presignedFile\" is required")
 		}
+	case "fileStore":
+		if u.fileStore == nil {
+			return fmt.Errorf("field \"fileStore\" is required")
+		}
 	}
 	return nil
 }
@@ -2085,7 +3025,7 @@ func (u *IngestSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *IngestSource) AcceptFuncs(s3Func func(S3IngestSource) error, gcsFunc func(GcsIngestSource) error, presignedFileFunc func(PresignedFileIngestSource) error, unknownFunc func(string) error) error {
+func (u *IngestSource) AcceptFuncs(s3Func func(S3IngestSource) error, gcsFunc func(GcsIngestSource) error, presignedFileFunc func(PresignedFileIngestSource) error, fileStoreFunc func(FileStoreIngestSource) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2107,6 +3047,11 @@ func (u *IngestSource) AcceptFuncs(s3Func func(S3IngestSource) error, gcsFunc fu
 			return fmt.Errorf("field \"presignedFile\" is required")
 		}
 		return presignedFileFunc(*u.presignedFile)
+	case "fileStore":
+		if u.fileStore == nil {
+			return fmt.Errorf("field \"fileStore\" is required")
+		}
+		return fileStoreFunc(*u.fileStore)
 	}
 }
 
@@ -2119,6 +3064,10 @@ func (u *IngestSource) GcsNoopSuccess(_ GcsIngestSource) error {
 }
 
 func (u *IngestSource) PresignedFileNoopSuccess(_ PresignedFileIngestSource) error {
+	return nil
+}
+
+func (u *IngestSource) FileStoreNoopSuccess(_ FileStoreIngestSource) error {
 	return nil
 }
 
@@ -2148,6 +3097,11 @@ func (u *IngestSource) Accept(v IngestSourceVisitor) error {
 			return fmt.Errorf("field \"presignedFile\" is required")
 		}
 		return v.VisitPresignedFile(*u.presignedFile)
+	case "fileStore":
+		if u.fileStore == nil {
+			return fmt.Errorf("field \"fileStore\" is required")
+		}
+		return v.VisitFileStore(*u.fileStore)
 	}
 }
 
@@ -2155,6 +3109,7 @@ type IngestSourceVisitor interface {
 	VisitS3(v S3IngestSource) error
 	VisitGcs(v GcsIngestSource) error
 	VisitPresignedFile(v PresignedFileIngestSource) error
+	VisitFileStore(v FileStoreIngestSource) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2180,6 +3135,11 @@ func (u *IngestSource) AcceptWithContext(ctx context.Context, v IngestSourceVisi
 			return fmt.Errorf("field \"presignedFile\" is required")
 		}
 		return v.VisitPresignedFileWithContext(ctx, *u.presignedFile)
+	case "fileStore":
+		if u.fileStore == nil {
+			return fmt.Errorf("field \"fileStore\" is required")
+		}
+		return v.VisitFileStoreWithContext(ctx, *u.fileStore)
 	}
 }
 
@@ -2187,6 +3147,7 @@ type IngestSourceVisitorWithContext interface {
 	VisitS3WithContext(ctx context.Context, v S3IngestSource) error
 	VisitGcsWithContext(ctx context.Context, v GcsIngestSource) error
 	VisitPresignedFileWithContext(ctx context.Context, v PresignedFileIngestSource) error
+	VisitFileStoreWithContext(ctx context.Context, v FileStoreIngestSource) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -2200,6 +3161,146 @@ func NewIngestSourceFromGcs(v GcsIngestSource) IngestSource {
 
 func NewIngestSourceFromPresignedFile(v PresignedFileIngestSource) IngestSource {
 	return IngestSource{typ: "presignedFile", presignedFile: &v}
+}
+
+func NewIngestSourceFromFileStore(v FileStoreIngestSource) IngestSource {
+	return IngestSource{typ: "fileStore", fileStore: &v}
+}
+
+// What caused an ingest job to be created.
+type IngestTriggerer struct {
+	typ        string
+	ingestRule *IngestRuleTriggerer
+}
+
+type ingestTriggererDeserializer struct {
+	Type       string               `json:"type"`
+	IngestRule *IngestRuleTriggerer `json:"ingestRule"`
+}
+
+func (u *ingestTriggererDeserializer) toStruct() IngestTriggerer {
+	return IngestTriggerer{typ: u.Type, ingestRule: u.IngestRule}
+}
+
+func (u *IngestTriggerer) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "ingestRule":
+		if u.ingestRule == nil {
+			return nil, fmt.Errorf("field \"ingestRule\" is required")
+		}
+		return struct {
+			Type       string              `json:"type"`
+			IngestRule IngestRuleTriggerer `json:"ingestRule"`
+		}{Type: "ingestRule", IngestRule: *u.ingestRule}, nil
+	}
+}
+
+func (u IngestTriggerer) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *IngestTriggerer) UnmarshalJSON(data []byte) error {
+	var deser ingestTriggererDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "ingestRule":
+		if u.ingestRule == nil {
+			return fmt.Errorf("field \"ingestRule\" is required")
+		}
+	}
+	return nil
+}
+
+func (u IngestTriggerer) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *IngestTriggerer) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *IngestTriggerer) AcceptFuncs(ingestRuleFunc func(IngestRuleTriggerer) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in IngestTriggerer type")
+		}
+		return unknownFunc(u.typ)
+	case "ingestRule":
+		if u.ingestRule == nil {
+			return fmt.Errorf("field \"ingestRule\" is required")
+		}
+		return ingestRuleFunc(*u.ingestRule)
+	}
+}
+
+func (u *IngestTriggerer) IngestRuleNoopSuccess(_ IngestRuleTriggerer) error {
+	return nil
+}
+
+func (u *IngestTriggerer) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *IngestTriggerer) Accept(v IngestTriggererVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "ingestRule":
+		if u.ingestRule == nil {
+			return fmt.Errorf("field \"ingestRule\" is required")
+		}
+		return v.VisitIngestRule(*u.ingestRule)
+	}
+}
+
+type IngestTriggererVisitor interface {
+	VisitIngestRule(v IngestRuleTriggerer) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *IngestTriggerer) AcceptWithContext(ctx context.Context, v IngestTriggererVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "ingestRule":
+		if u.ingestRule == nil {
+			return fmt.Errorf("field \"ingestRule\" is required")
+		}
+		return v.VisitIngestRuleWithContext(ctx, *u.ingestRule)
+	}
+}
+
+type IngestTriggererVisitorWithContext interface {
+	VisitIngestRuleWithContext(ctx context.Context, v IngestRuleTriggerer) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewIngestTriggererFromIngestRule(v IngestRuleTriggerer) IngestTriggerer {
+	return IngestTriggerer{typ: "ingestRule", ingestRule: &v}
 }
 
 type McapChannelConfigType struct {
@@ -2339,16 +3440,16 @@ func NewMcapChannelConfigTypeFromVideo(v McapVideoChannelConfig) McapChannelConf
 
 type McapChannels struct {
 	typ     string
-	all     *api.Empty
-	include *[]api.McapChannelLocator
-	exclude *[]api.McapChannelLocator
+	all     *api1.Empty
+	include *[]api1.McapChannelLocator
+	exclude *[]api1.McapChannelLocator
 }
 
 type mcapChannelsDeserializer struct {
-	Type    string                    `json:"type"`
-	All     *api.Empty                `json:"all"`
-	Include *[]api.McapChannelLocator `json:"include"`
-	Exclude *[]api.McapChannelLocator `json:"exclude"`
+	Type    string                     `json:"type"`
+	All     *api1.Empty                `json:"all"`
+	Include *[]api1.McapChannelLocator `json:"include"`
+	Exclude *[]api1.McapChannelLocator `json:"exclude"`
 }
 
 func (u *mcapChannelsDeserializer) toStruct() McapChannels {
@@ -2364,24 +3465,24 @@ func (u *McapChannels) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"all\" is required")
 		}
 		return struct {
-			Type string    `json:"type"`
-			All  api.Empty `json:"all"`
+			Type string     `json:"type"`
+			All  api1.Empty `json:"all"`
 		}{Type: "all", All: *u.all}, nil
 	case "include":
 		if u.include == nil {
 			return nil, fmt.Errorf("field \"include\" is required")
 		}
 		return struct {
-			Type    string                   `json:"type"`
-			Include []api.McapChannelLocator `json:"include"`
+			Type    string                    `json:"type"`
+			Include []api1.McapChannelLocator `json:"include"`
 		}{Type: "include", Include: *u.include}, nil
 	case "exclude":
 		if u.exclude == nil {
 			return nil, fmt.Errorf("field \"exclude\" is required")
 		}
 		return struct {
-			Type    string                   `json:"type"`
-			Exclude []api.McapChannelLocator `json:"exclude"`
+			Type    string                    `json:"type"`
+			Exclude []api1.McapChannelLocator `json:"exclude"`
 		}{Type: "exclude", Exclude: *u.exclude}, nil
 	}
 }
@@ -2433,7 +3534,7 @@ func (u *McapChannels) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *McapChannels) AcceptFuncs(allFunc func(api.Empty) error, includeFunc func([]api.McapChannelLocator) error, excludeFunc func([]api.McapChannelLocator) error, unknownFunc func(string) error) error {
+func (u *McapChannels) AcceptFuncs(allFunc func(api1.Empty) error, includeFunc func([]api1.McapChannelLocator) error, excludeFunc func([]api1.McapChannelLocator) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2458,15 +3559,15 @@ func (u *McapChannels) AcceptFuncs(allFunc func(api.Empty) error, includeFunc fu
 	}
 }
 
-func (u *McapChannels) AllNoopSuccess(_ api.Empty) error {
+func (u *McapChannels) AllNoopSuccess(_ api1.Empty) error {
 	return nil
 }
 
-func (u *McapChannels) IncludeNoopSuccess(_ []api.McapChannelLocator) error {
+func (u *McapChannels) IncludeNoopSuccess(_ []api1.McapChannelLocator) error {
 	return nil
 }
 
-func (u *McapChannels) ExcludeNoopSuccess(_ []api.McapChannelLocator) error {
+func (u *McapChannels) ExcludeNoopSuccess(_ []api1.McapChannelLocator) error {
 	return nil
 }
 
@@ -2500,9 +3601,9 @@ func (u *McapChannels) Accept(v McapChannelsVisitor) error {
 }
 
 type McapChannelsVisitor interface {
-	VisitAll(v api.Empty) error
-	VisitInclude(v []api.McapChannelLocator) error
-	VisitExclude(v []api.McapChannelLocator) error
+	VisitAll(v api1.Empty) error
+	VisitInclude(v []api1.McapChannelLocator) error
+	VisitExclude(v []api1.McapChannelLocator) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2532,21 +3633,21 @@ func (u *McapChannels) AcceptWithContext(ctx context.Context, v McapChannelsVisi
 }
 
 type McapChannelsVisitorWithContext interface {
-	VisitAllWithContext(ctx context.Context, v api.Empty) error
-	VisitIncludeWithContext(ctx context.Context, v []api.McapChannelLocator) error
-	VisitExcludeWithContext(ctx context.Context, v []api.McapChannelLocator) error
+	VisitAllWithContext(ctx context.Context, v api1.Empty) error
+	VisitIncludeWithContext(ctx context.Context, v []api1.McapChannelLocator) error
+	VisitExcludeWithContext(ctx context.Context, v []api1.McapChannelLocator) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewMcapChannelsFromAll(v api.Empty) McapChannels {
+func NewMcapChannelsFromAll(v api1.Empty) McapChannels {
 	return McapChannels{typ: "all", all: &v}
 }
 
-func NewMcapChannelsFromInclude(v []api.McapChannelLocator) McapChannels {
+func NewMcapChannelsFromInclude(v []api1.McapChannelLocator) McapChannels {
 	return McapChannels{typ: "include", include: &v}
 }
 
-func NewMcapChannelsFromExclude(v []api.McapChannelLocator) McapChannels {
+func NewMcapChannelsFromExclude(v []api1.McapChannelLocator) McapChannels {
 	return McapChannels{typ: "exclude", exclude: &v}
 }
 
@@ -2726,14 +3827,14 @@ func NewMcapDestinationFromDatasetRid(v rid.ResourceIdentifier) McapDestination 
 
 type McapSource struct {
 	typ           string
-	singleChannel *api.McapChannelLocator
+	singleChannel *api1.McapChannelLocator
 	mcapFile      *IngestSource
 }
 
 type mcapSourceDeserializer struct {
-	Type          string                  `json:"type"`
-	SingleChannel *api.McapChannelLocator `json:"singleChannel"`
-	McapFile      *IngestSource           `json:"mcapFile"`
+	Type          string                   `json:"type"`
+	SingleChannel *api1.McapChannelLocator `json:"singleChannel"`
+	McapFile      *IngestSource            `json:"mcapFile"`
 }
 
 func (u *mcapSourceDeserializer) toStruct() McapSource {
@@ -2749,8 +3850,8 @@ func (u *McapSource) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"singleChannel\" is required")
 		}
 		return struct {
-			Type          string                 `json:"type"`
-			SingleChannel api.McapChannelLocator `json:"singleChannel"`
+			Type          string                  `json:"type"`
+			SingleChannel api1.McapChannelLocator `json:"singleChannel"`
 		}{Type: "singleChannel", SingleChannel: *u.singleChannel}, nil
 	case "mcapFile":
 		if u.mcapFile == nil {
@@ -2806,7 +3907,7 @@ func (u *McapSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *McapSource) AcceptFuncs(singleChannelFunc func(api.McapChannelLocator) error, mcapFileFunc func(IngestSource) error, unknownFunc func(string) error) error {
+func (u *McapSource) AcceptFuncs(singleChannelFunc func(api1.McapChannelLocator) error, mcapFileFunc func(IngestSource) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2826,7 +3927,7 @@ func (u *McapSource) AcceptFuncs(singleChannelFunc func(api.McapChannelLocator) 
 	}
 }
 
-func (u *McapSource) SingleChannelNoopSuccess(_ api.McapChannelLocator) error {
+func (u *McapSource) SingleChannelNoopSuccess(_ api1.McapChannelLocator) error {
 	return nil
 }
 
@@ -2859,7 +3960,7 @@ func (u *McapSource) Accept(v McapSourceVisitor) error {
 }
 
 type McapSourceVisitor interface {
-	VisitSingleChannel(v api.McapChannelLocator) error
+	VisitSingleChannel(v api1.McapChannelLocator) error
 	VisitMcapFile(v IngestSource) error
 	VisitUnknown(typeName string) error
 }
@@ -2885,12 +3986,12 @@ func (u *McapSource) AcceptWithContext(ctx context.Context, v McapSourceVisitorW
 }
 
 type McapSourceVisitorWithContext interface {
-	VisitSingleChannelWithContext(ctx context.Context, v api.McapChannelLocator) error
+	VisitSingleChannelWithContext(ctx context.Context, v api1.McapChannelLocator) error
 	VisitMcapFileWithContext(ctx context.Context, v IngestSource) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewMcapSourceFromSingleChannel(v api.McapChannelLocator) McapSource {
+func NewMcapSourceFromSingleChannel(v api1.McapChannelLocator) McapSource {
 	return McapSource{typ: "singleChannel", singleChannel: &v}
 }
 
@@ -3032,6 +4133,180 @@ type McapTimestampTypeVisitorWithContext interface {
 
 func NewMcapTimestampTypeFromLogTime(v LogTime) McapTimestampType {
 	return McapTimestampType{typ: "logTime", logTime: &v}
+}
+
+type PointCloudIngestTarget struct {
+	typ      string
+	new      *NewPointCloudIngestDestination
+	existing *ExistingSpatialIngestDestination
+}
+
+type pointCloudIngestTargetDeserializer struct {
+	Type     string                            `json:"type"`
+	New      *NewPointCloudIngestDestination   `json:"new"`
+	Existing *ExistingSpatialIngestDestination `json:"existing"`
+}
+
+func (u *pointCloudIngestTargetDeserializer) toStruct() PointCloudIngestTarget {
+	return PointCloudIngestTarget{typ: u.Type, new: u.New, existing: u.Existing}
+}
+
+func (u *PointCloudIngestTarget) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "new":
+		if u.new == nil {
+			return nil, fmt.Errorf("field \"new\" is required")
+		}
+		return struct {
+			Type string                         `json:"type"`
+			New  NewPointCloudIngestDestination `json:"new"`
+		}{Type: "new", New: *u.new}, nil
+	case "existing":
+		if u.existing == nil {
+			return nil, fmt.Errorf("field \"existing\" is required")
+		}
+		return struct {
+			Type     string                           `json:"type"`
+			Existing ExistingSpatialIngestDestination `json:"existing"`
+		}{Type: "existing", Existing: *u.existing}, nil
+	}
+}
+
+func (u PointCloudIngestTarget) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *PointCloudIngestTarget) UnmarshalJSON(data []byte) error {
+	var deser pointCloudIngestTargetDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "new":
+		if u.new == nil {
+			return fmt.Errorf("field \"new\" is required")
+		}
+	case "existing":
+		if u.existing == nil {
+			return fmt.Errorf("field \"existing\" is required")
+		}
+	}
+	return nil
+}
+
+func (u PointCloudIngestTarget) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *PointCloudIngestTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *PointCloudIngestTarget) AcceptFuncs(newFunc func(NewPointCloudIngestDestination) error, existingFunc func(ExistingSpatialIngestDestination) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in PointCloudIngestTarget type")
+		}
+		return unknownFunc(u.typ)
+	case "new":
+		if u.new == nil {
+			return fmt.Errorf("field \"new\" is required")
+		}
+		return newFunc(*u.new)
+	case "existing":
+		if u.existing == nil {
+			return fmt.Errorf("field \"existing\" is required")
+		}
+		return existingFunc(*u.existing)
+	}
+}
+
+func (u *PointCloudIngestTarget) NewNoopSuccess(_ NewPointCloudIngestDestination) error {
+	return nil
+}
+
+func (u *PointCloudIngestTarget) ExistingNoopSuccess(_ ExistingSpatialIngestDestination) error {
+	return nil
+}
+
+func (u *PointCloudIngestTarget) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *PointCloudIngestTarget) Accept(v PointCloudIngestTargetVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "new":
+		if u.new == nil {
+			return fmt.Errorf("field \"new\" is required")
+		}
+		return v.VisitNew(*u.new)
+	case "existing":
+		if u.existing == nil {
+			return fmt.Errorf("field \"existing\" is required")
+		}
+		return v.VisitExisting(*u.existing)
+	}
+}
+
+type PointCloudIngestTargetVisitor interface {
+	VisitNew(v NewPointCloudIngestDestination) error
+	VisitExisting(v ExistingSpatialIngestDestination) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *PointCloudIngestTarget) AcceptWithContext(ctx context.Context, v PointCloudIngestTargetVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "new":
+		if u.new == nil {
+			return fmt.Errorf("field \"new\" is required")
+		}
+		return v.VisitNewWithContext(ctx, *u.new)
+	case "existing":
+		if u.existing == nil {
+			return fmt.Errorf("field \"existing\" is required")
+		}
+		return v.VisitExistingWithContext(ctx, *u.existing)
+	}
+}
+
+type PointCloudIngestTargetVisitorWithContext interface {
+	VisitNewWithContext(ctx context.Context, v NewPointCloudIngestDestination) error
+	VisitExistingWithContext(ctx context.Context, v ExistingSpatialIngestDestination) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewPointCloudIngestTargetFromNew(v NewPointCloudIngestDestination) PointCloudIngestTarget {
+	return PointCloudIngestTarget{typ: "new", new: &v}
+}
+
+func NewPointCloudIngestTargetFromExisting(v ExistingSpatialIngestDestination) PointCloudIngestTarget {
+	return PointCloudIngestTarget{typ: "existing", existing: &v}
 }
 
 type ScaleParameter struct {
@@ -3250,8 +4525,8 @@ func NewScaleParameterFromScaleFactor(v float64) ScaleParameter {
 type SearchContainerizedExtractorsQuery struct {
 	typ        string
 	searchText *string
-	label      *api.Label
-	property   *api.Property
+	label      *api1.Label
+	property   *api1.Property
 	and        *[]SearchContainerizedExtractorsQuery
 	or         *[]SearchContainerizedExtractorsQuery
 	workspace  *rids.WorkspaceRid
@@ -3260,8 +4535,8 @@ type SearchContainerizedExtractorsQuery struct {
 type searchContainerizedExtractorsQueryDeserializer struct {
 	Type       string                                `json:"type"`
 	SearchText *string                               `json:"searchText"`
-	Label      *api.Label                            `json:"label"`
-	Property   *api.Property                         `json:"property"`
+	Label      *api1.Label                           `json:"label"`
+	Property   *api1.Property                        `json:"property"`
 	And        *[]SearchContainerizedExtractorsQuery `json:"and"`
 	Or         *[]SearchContainerizedExtractorsQuery `json:"or"`
 	Workspace  *rids.WorkspaceRid                    `json:"workspace"`
@@ -3288,16 +4563,16 @@ func (u *SearchContainerizedExtractorsQuery) toSerializer() (interface{}, error)
 			return nil, fmt.Errorf("field \"label\" is required")
 		}
 		return struct {
-			Type  string    `json:"type"`
-			Label api.Label `json:"label"`
+			Type  string     `json:"type"`
+			Label api1.Label `json:"label"`
 		}{Type: "label", Label: *u.label}, nil
 	case "property":
 		if u.property == nil {
 			return nil, fmt.Errorf("field \"property\" is required")
 		}
 		return struct {
-			Type     string       `json:"type"`
-			Property api.Property `json:"property"`
+			Type     string        `json:"type"`
+			Property api1.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
 	case "and":
 		if u.and == nil {
@@ -3385,7 +4660,7 @@ func (u *SearchContainerizedExtractorsQuery) UnmarshalYAML(unmarshal func(interf
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchContainerizedExtractorsQuery) AcceptFuncs(searchTextFunc func(string) error, labelFunc func(api.Label) error, propertyFunc func(api.Property) error, andFunc func([]SearchContainerizedExtractorsQuery) error, orFunc func([]SearchContainerizedExtractorsQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *SearchContainerizedExtractorsQuery) AcceptFuncs(searchTextFunc func(string) error, labelFunc func(api1.Label) error, propertyFunc func(api1.Property) error, andFunc func([]SearchContainerizedExtractorsQuery) error, orFunc func([]SearchContainerizedExtractorsQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -3429,11 +4704,11 @@ func (u *SearchContainerizedExtractorsQuery) SearchTextNoopSuccess(_ string) err
 	return nil
 }
 
-func (u *SearchContainerizedExtractorsQuery) LabelNoopSuccess(_ api.Label) error {
+func (u *SearchContainerizedExtractorsQuery) LabelNoopSuccess(_ api1.Label) error {
 	return nil
 }
 
-func (u *SearchContainerizedExtractorsQuery) PropertyNoopSuccess(_ api.Property) error {
+func (u *SearchContainerizedExtractorsQuery) PropertyNoopSuccess(_ api1.Property) error {
 	return nil
 }
 
@@ -3495,8 +4770,8 @@ func (u *SearchContainerizedExtractorsQuery) Accept(v SearchContainerizedExtract
 
 type SearchContainerizedExtractorsQueryVisitor interface {
 	VisitSearchText(v string) error
-	VisitLabel(v api.Label) error
-	VisitProperty(v api.Property) error
+	VisitLabel(v api1.Label) error
+	VisitProperty(v api1.Property) error
 	VisitAnd(v []SearchContainerizedExtractorsQuery) error
 	VisitOr(v []SearchContainerizedExtractorsQuery) error
 	VisitWorkspace(v rids.WorkspaceRid) error
@@ -3545,8 +4820,8 @@ func (u *SearchContainerizedExtractorsQuery) AcceptWithContext(ctx context.Conte
 
 type SearchContainerizedExtractorsQueryVisitorWithContext interface {
 	VisitSearchTextWithContext(ctx context.Context, v string) error
-	VisitLabelWithContext(ctx context.Context, v api.Label) error
-	VisitPropertyWithContext(ctx context.Context, v api.Property) error
+	VisitLabelWithContext(ctx context.Context, v api1.Label) error
+	VisitPropertyWithContext(ctx context.Context, v api1.Property) error
 	VisitAndWithContext(ctx context.Context, v []SearchContainerizedExtractorsQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchContainerizedExtractorsQuery) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
@@ -3557,11 +4832,11 @@ func NewSearchContainerizedExtractorsQueryFromSearchText(v string) SearchContain
 	return SearchContainerizedExtractorsQuery{typ: "searchText", searchText: &v}
 }
 
-func NewSearchContainerizedExtractorsQueryFromLabel(v api.Label) SearchContainerizedExtractorsQuery {
+func NewSearchContainerizedExtractorsQueryFromLabel(v api1.Label) SearchContainerizedExtractorsQuery {
 	return SearchContainerizedExtractorsQuery{typ: "label", label: &v}
 }
 
-func NewSearchContainerizedExtractorsQueryFromProperty(v api.Property) SearchContainerizedExtractorsQuery {
+func NewSearchContainerizedExtractorsQueryFromProperty(v api1.Property) SearchContainerizedExtractorsQuery {
 	return SearchContainerizedExtractorsQuery{typ: "property", property: &v}
 }
 
@@ -3577,227 +4852,14 @@ func NewSearchContainerizedExtractorsQueryFromWorkspace(v rids.WorkspaceRid) Sea
 	return SearchContainerizedExtractorsQuery{typ: "workspace", workspace: &v}
 }
 
-type StreamingSessionSource struct {
-	typ           string
-	mesh          *MeshStreamingSessionSource
-	dataConnector *DataConnectorStreamingSessionSource
-	custom        *CustomStreamingSessionSource
-}
-
-type streamingSessionSourceDeserializer struct {
-	Type          string                               `json:"type"`
-	Mesh          *MeshStreamingSessionSource          `json:"mesh"`
-	DataConnector *DataConnectorStreamingSessionSource `json:"dataConnector"`
-	Custom        *CustomStreamingSessionSource        `json:"custom"`
-}
-
-func (u *streamingSessionSourceDeserializer) toStruct() StreamingSessionSource {
-	return StreamingSessionSource{typ: u.Type, mesh: u.Mesh, dataConnector: u.DataConnector, custom: u.Custom}
-}
-
-func (u *StreamingSessionSource) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "mesh":
-		if u.mesh == nil {
-			return nil, fmt.Errorf("field \"mesh\" is required")
-		}
-		return struct {
-			Type string                     `json:"type"`
-			Mesh MeshStreamingSessionSource `json:"mesh"`
-		}{Type: "mesh", Mesh: *u.mesh}, nil
-	case "dataConnector":
-		if u.dataConnector == nil {
-			return nil, fmt.Errorf("field \"dataConnector\" is required")
-		}
-		return struct {
-			Type          string                              `json:"type"`
-			DataConnector DataConnectorStreamingSessionSource `json:"dataConnector"`
-		}{Type: "dataConnector", DataConnector: *u.dataConnector}, nil
-	case "custom":
-		if u.custom == nil {
-			return nil, fmt.Errorf("field \"custom\" is required")
-		}
-		return struct {
-			Type   string                       `json:"type"`
-			Custom CustomStreamingSessionSource `json:"custom"`
-		}{Type: "custom", Custom: *u.custom}, nil
-	}
-}
-
-func (u StreamingSessionSource) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *StreamingSessionSource) UnmarshalJSON(data []byte) error {
-	var deser streamingSessionSourceDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "mesh":
-		if u.mesh == nil {
-			return fmt.Errorf("field \"mesh\" is required")
-		}
-	case "dataConnector":
-		if u.dataConnector == nil {
-			return fmt.Errorf("field \"dataConnector\" is required")
-		}
-	case "custom":
-		if u.custom == nil {
-			return fmt.Errorf("field \"custom\" is required")
-		}
-	}
-	return nil
-}
-
-func (u StreamingSessionSource) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *StreamingSessionSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *StreamingSessionSource) AcceptFuncs(meshFunc func(MeshStreamingSessionSource) error, dataConnectorFunc func(DataConnectorStreamingSessionSource) error, customFunc func(CustomStreamingSessionSource) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in StreamingSessionSource type")
-		}
-		return unknownFunc(u.typ)
-	case "mesh":
-		if u.mesh == nil {
-			return fmt.Errorf("field \"mesh\" is required")
-		}
-		return meshFunc(*u.mesh)
-	case "dataConnector":
-		if u.dataConnector == nil {
-			return fmt.Errorf("field \"dataConnector\" is required")
-		}
-		return dataConnectorFunc(*u.dataConnector)
-	case "custom":
-		if u.custom == nil {
-			return fmt.Errorf("field \"custom\" is required")
-		}
-		return customFunc(*u.custom)
-	}
-}
-
-func (u *StreamingSessionSource) MeshNoopSuccess(_ MeshStreamingSessionSource) error {
-	return nil
-}
-
-func (u *StreamingSessionSource) DataConnectorNoopSuccess(_ DataConnectorStreamingSessionSource) error {
-	return nil
-}
-
-func (u *StreamingSessionSource) CustomNoopSuccess(_ CustomStreamingSessionSource) error {
-	return nil
-}
-
-func (u *StreamingSessionSource) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *StreamingSessionSource) Accept(v StreamingSessionSourceVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
-	case "mesh":
-		if u.mesh == nil {
-			return fmt.Errorf("field \"mesh\" is required")
-		}
-		return v.VisitMesh(*u.mesh)
-	case "dataConnector":
-		if u.dataConnector == nil {
-			return fmt.Errorf("field \"dataConnector\" is required")
-		}
-		return v.VisitDataConnector(*u.dataConnector)
-	case "custom":
-		if u.custom == nil {
-			return fmt.Errorf("field \"custom\" is required")
-		}
-		return v.VisitCustom(*u.custom)
-	}
-}
-
-type StreamingSessionSourceVisitor interface {
-	VisitMesh(v MeshStreamingSessionSource) error
-	VisitDataConnector(v DataConnectorStreamingSessionSource) error
-	VisitCustom(v CustomStreamingSessionSource) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *StreamingSessionSource) AcceptWithContext(ctx context.Context, v StreamingSessionSourceVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "mesh":
-		if u.mesh == nil {
-			return fmt.Errorf("field \"mesh\" is required")
-		}
-		return v.VisitMeshWithContext(ctx, *u.mesh)
-	case "dataConnector":
-		if u.dataConnector == nil {
-			return fmt.Errorf("field \"dataConnector\" is required")
-		}
-		return v.VisitDataConnectorWithContext(ctx, *u.dataConnector)
-	case "custom":
-		if u.custom == nil {
-			return fmt.Errorf("field \"custom\" is required")
-		}
-		return v.VisitCustomWithContext(ctx, *u.custom)
-	}
-}
-
-type StreamingSessionSourceVisitorWithContext interface {
-	VisitMeshWithContext(ctx context.Context, v MeshStreamingSessionSource) error
-	VisitDataConnectorWithContext(ctx context.Context, v DataConnectorStreamingSessionSource) error
-	VisitCustomWithContext(ctx context.Context, v CustomStreamingSessionSource) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewStreamingSessionSourceFromMesh(v MeshStreamingSessionSource) StreamingSessionSource {
-	return StreamingSessionSource{typ: "mesh", mesh: &v}
-}
-
-func NewStreamingSessionSourceFromDataConnector(v DataConnectorStreamingSessionSource) StreamingSessionSource {
-	return StreamingSessionSource{typ: "dataConnector", dataConnector: &v}
-}
-
-func NewStreamingSessionSourceFromCustom(v CustomStreamingSessionSource) StreamingSessionSource {
-	return StreamingSessionSource{typ: "custom", custom: &v}
-}
-
 type TimeOffsetSpec struct {
 	typ   string
-	nanos *api1.Duration
+	nanos *api2.Duration
 }
 
 type timeOffsetSpecDeserializer struct {
 	Type  string         `json:"type"`
-	Nanos *api1.Duration `json:"nanos"`
+	Nanos *api2.Duration `json:"nanos"`
 }
 
 func (u *timeOffsetSpecDeserializer) toStruct() TimeOffsetSpec {
@@ -3814,7 +4876,7 @@ func (u *TimeOffsetSpec) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type  string        `json:"type"`
-			Nanos api1.Duration `json:"nanos"`
+			Nanos api2.Duration `json:"nanos"`
 		}{Type: "nanos", Nanos: *u.nanos}, nil
 	}
 }
@@ -3858,7 +4920,7 @@ func (u *TimeOffsetSpec) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *TimeOffsetSpec) AcceptFuncs(nanosFunc func(api1.Duration) error, unknownFunc func(string) error) error {
+func (u *TimeOffsetSpec) AcceptFuncs(nanosFunc func(api2.Duration) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -3873,7 +4935,7 @@ func (u *TimeOffsetSpec) AcceptFuncs(nanosFunc func(api1.Duration) error, unknow
 	}
 }
 
-func (u *TimeOffsetSpec) NanosNoopSuccess(_ api1.Duration) error {
+func (u *TimeOffsetSpec) NanosNoopSuccess(_ api2.Duration) error {
 	return nil
 }
 
@@ -3897,7 +4959,7 @@ func (u *TimeOffsetSpec) Accept(v TimeOffsetSpecVisitor) error {
 }
 
 type TimeOffsetSpecVisitor interface {
-	VisitNanos(v api1.Duration) error
+	VisitNanos(v api2.Duration) error
 	VisitUnknown(typeName string) error
 }
 
@@ -3917,11 +4979,11 @@ func (u *TimeOffsetSpec) AcceptWithContext(ctx context.Context, v TimeOffsetSpec
 }
 
 type TimeOffsetSpecVisitorWithContext interface {
-	VisitNanosWithContext(ctx context.Context, v api1.Duration) error
+	VisitNanosWithContext(ctx context.Context, v api2.Duration) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewTimeOffsetSpecFromNanos(v api1.Duration) TimeOffsetSpec {
+func NewTimeOffsetSpecFromNanos(v api2.Duration) TimeOffsetSpec {
 	return TimeOffsetSpec{typ: "nanos", nanos: &v}
 }
 

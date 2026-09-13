@@ -64,10 +64,15 @@ func (u *LocatorTemplateWithT[T]) Accept(ctx context.Context, v LocatorTemplateV
 			return result, fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideo(ctx, *u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return result, fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatial(ctx, *u.spatial)
 	}
 }
 
-func (u *LocatorTemplateWithT[T]) AcceptFuncs(timescaleDbFunc func(TimescaleDbLocatorTemplate) (T, error), influxFunc func(Influx2LocatorTemplate) (T, error), influx1Func func(Influx1LocatorTemplate) (T, error), nominalFunc func(NominalLocatorTemplate) (T, error), timestreamFunc func(TimestreamLocatorTemplate) (T, error), visualCrossingFunc func(VisualCrossingLocatorTemplate) (T, error), bigQueryFunc func(BigQueryLocatorTemplate) (T, error), apiFunc func(ApiLocatorTemplate) (T, error), videoFunc func(VideoLocatorTemplate) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *LocatorTemplateWithT[T]) AcceptFuncs(timescaleDbFunc func(TimescaleDbLocatorTemplate) (T, error), influxFunc func(Influx2LocatorTemplate) (T, error), influx1Func func(Influx1LocatorTemplate) (T, error), nominalFunc func(NominalLocatorTemplate) (T, error), timestreamFunc func(TimestreamLocatorTemplate) (T, error), visualCrossingFunc func(VisualCrossingLocatorTemplate) (T, error), bigQueryFunc func(BigQueryLocatorTemplate) (T, error), apiFunc func(ApiLocatorTemplate) (T, error), videoFunc func(VideoLocatorTemplate) (T, error), spatialFunc func(SpatialLocatorTemplate) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -120,6 +125,11 @@ func (u *LocatorTemplateWithT[T]) AcceptFuncs(timescaleDbFunc func(TimescaleDbLo
 			return result, fmt.Errorf("field \"video\" is required")
 		}
 		return videoFunc(*u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return result, fmt.Errorf("field \"spatial\" is required")
+		}
+		return spatialFunc(*u.spatial)
 	}
 }
 
@@ -168,6 +178,11 @@ func (u *LocatorTemplateWithT[T]) VideoNoopSuccess(VideoLocatorTemplate) (T, err
 	return result, nil
 }
 
+func (u *LocatorTemplateWithT[T]) SpatialNoopSuccess(SpatialLocatorTemplate) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *LocatorTemplateWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -183,5 +198,6 @@ type LocatorTemplateVisitorWithT[T any] interface {
 	VisitBigQuery(ctx context.Context, v BigQueryLocatorTemplate) (T, error)
 	VisitApi(ctx context.Context, v ApiLocatorTemplate) (T, error)
 	VisitVideo(ctx context.Context, v VideoLocatorTemplate) (T, error)
+	VisitSpatial(ctx context.Context, v SpatialLocatorTemplate) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

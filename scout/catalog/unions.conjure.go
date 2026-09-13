@@ -499,23 +499,25 @@ func NewHandleFromS3(v S3Handle) Handle {
 }
 
 type SearchDatasetFilesQuery struct {
-	typ       string
-	timeRange *TimeRangeFilter
-	fileTags  *map[api.TagName]api.TagValue
-	and       *[]SearchDatasetFilesQuery
-	or        *[]SearchDatasetFilesQuery
+	typ             string
+	timeRange       *TimeRangeFilter
+	uploadedAtRange *UploadedAtFilter
+	fileTags        *map[api.TagName]api.TagValue
+	and             *[]SearchDatasetFilesQuery
+	or              *[]SearchDatasetFilesQuery
 }
 
 type searchDatasetFilesQueryDeserializer struct {
-	Type      string                        `json:"type"`
-	TimeRange *TimeRangeFilter              `json:"timeRange"`
-	FileTags  *map[api.TagName]api.TagValue `json:"fileTags"`
-	And       *[]SearchDatasetFilesQuery    `json:"and"`
-	Or        *[]SearchDatasetFilesQuery    `json:"or"`
+	Type            string                        `json:"type"`
+	TimeRange       *TimeRangeFilter              `json:"timeRange"`
+	UploadedAtRange *UploadedAtFilter             `json:"uploadedAtRange"`
+	FileTags        *map[api.TagName]api.TagValue `json:"fileTags"`
+	And             *[]SearchDatasetFilesQuery    `json:"and"`
+	Or              *[]SearchDatasetFilesQuery    `json:"or"`
 }
 
 func (u *searchDatasetFilesQueryDeserializer) toStruct() SearchDatasetFilesQuery {
-	return SearchDatasetFilesQuery{typ: u.Type, timeRange: u.TimeRange, fileTags: u.FileTags, and: u.And, or: u.Or}
+	return SearchDatasetFilesQuery{typ: u.Type, timeRange: u.TimeRange, uploadedAtRange: u.UploadedAtRange, fileTags: u.FileTags, and: u.And, or: u.Or}
 }
 
 func (u *SearchDatasetFilesQuery) toSerializer() (interface{}, error) {
@@ -530,6 +532,14 @@ func (u *SearchDatasetFilesQuery) toSerializer() (interface{}, error) {
 			Type      string          `json:"type"`
 			TimeRange TimeRangeFilter `json:"timeRange"`
 		}{Type: "timeRange", TimeRange: *u.timeRange}, nil
+	case "uploadedAtRange":
+		if u.uploadedAtRange == nil {
+			return nil, fmt.Errorf("field \"uploadedAtRange\" is required")
+		}
+		return struct {
+			Type            string           `json:"type"`
+			UploadedAtRange UploadedAtFilter `json:"uploadedAtRange"`
+		}{Type: "uploadedAtRange", UploadedAtRange: *u.uploadedAtRange}, nil
 	case "fileTags":
 		if u.fileTags == nil {
 			return nil, fmt.Errorf("field \"fileTags\" is required")
@@ -576,6 +586,10 @@ func (u *SearchDatasetFilesQuery) UnmarshalJSON(data []byte) error {
 		if u.timeRange == nil {
 			return fmt.Errorf("field \"timeRange\" is required")
 		}
+	case "uploadedAtRange":
+		if u.uploadedAtRange == nil {
+			return fmt.Errorf("field \"uploadedAtRange\" is required")
+		}
 	case "fileTags":
 		if u.fileTags == nil {
 			return fmt.Errorf("field \"fileTags\" is required")
@@ -608,7 +622,7 @@ func (u *SearchDatasetFilesQuery) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchDatasetFilesQuery) AcceptFuncs(timeRangeFunc func(TimeRangeFilter) error, fileTagsFunc func(map[api.TagName]api.TagValue) error, andFunc func([]SearchDatasetFilesQuery) error, orFunc func([]SearchDatasetFilesQuery) error, unknownFunc func(string) error) error {
+func (u *SearchDatasetFilesQuery) AcceptFuncs(timeRangeFunc func(TimeRangeFilter) error, uploadedAtRangeFunc func(UploadedAtFilter) error, fileTagsFunc func(map[api.TagName]api.TagValue) error, andFunc func([]SearchDatasetFilesQuery) error, orFunc func([]SearchDatasetFilesQuery) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -620,6 +634,11 @@ func (u *SearchDatasetFilesQuery) AcceptFuncs(timeRangeFunc func(TimeRangeFilter
 			return fmt.Errorf("field \"timeRange\" is required")
 		}
 		return timeRangeFunc(*u.timeRange)
+	case "uploadedAtRange":
+		if u.uploadedAtRange == nil {
+			return fmt.Errorf("field \"uploadedAtRange\" is required")
+		}
+		return uploadedAtRangeFunc(*u.uploadedAtRange)
 	case "fileTags":
 		if u.fileTags == nil {
 			return fmt.Errorf("field \"fileTags\" is required")
@@ -639,6 +658,10 @@ func (u *SearchDatasetFilesQuery) AcceptFuncs(timeRangeFunc func(TimeRangeFilter
 }
 
 func (u *SearchDatasetFilesQuery) TimeRangeNoopSuccess(_ TimeRangeFilter) error {
+	return nil
+}
+
+func (u *SearchDatasetFilesQuery) UploadedAtRangeNoopSuccess(_ UploadedAtFilter) error {
 	return nil
 }
 
@@ -670,6 +693,11 @@ func (u *SearchDatasetFilesQuery) Accept(v SearchDatasetFilesQueryVisitor) error
 			return fmt.Errorf("field \"timeRange\" is required")
 		}
 		return v.VisitTimeRange(*u.timeRange)
+	case "uploadedAtRange":
+		if u.uploadedAtRange == nil {
+			return fmt.Errorf("field \"uploadedAtRange\" is required")
+		}
+		return v.VisitUploadedAtRange(*u.uploadedAtRange)
 	case "fileTags":
 		if u.fileTags == nil {
 			return fmt.Errorf("field \"fileTags\" is required")
@@ -690,6 +718,7 @@ func (u *SearchDatasetFilesQuery) Accept(v SearchDatasetFilesQueryVisitor) error
 
 type SearchDatasetFilesQueryVisitor interface {
 	VisitTimeRange(v TimeRangeFilter) error
+	VisitUploadedAtRange(v UploadedAtFilter) error
 	VisitFileTags(v map[api.TagName]api.TagValue) error
 	VisitAnd(v []SearchDatasetFilesQuery) error
 	VisitOr(v []SearchDatasetFilesQuery) error
@@ -708,6 +737,11 @@ func (u *SearchDatasetFilesQuery) AcceptWithContext(ctx context.Context, v Searc
 			return fmt.Errorf("field \"timeRange\" is required")
 		}
 		return v.VisitTimeRangeWithContext(ctx, *u.timeRange)
+	case "uploadedAtRange":
+		if u.uploadedAtRange == nil {
+			return fmt.Errorf("field \"uploadedAtRange\" is required")
+		}
+		return v.VisitUploadedAtRangeWithContext(ctx, *u.uploadedAtRange)
 	case "fileTags":
 		if u.fileTags == nil {
 			return fmt.Errorf("field \"fileTags\" is required")
@@ -728,6 +762,7 @@ func (u *SearchDatasetFilesQuery) AcceptWithContext(ctx context.Context, v Searc
 
 type SearchDatasetFilesQueryVisitorWithContext interface {
 	VisitTimeRangeWithContext(ctx context.Context, v TimeRangeFilter) error
+	VisitUploadedAtRangeWithContext(ctx context.Context, v UploadedAtFilter) error
 	VisitFileTagsWithContext(ctx context.Context, v map[api.TagName]api.TagValue) error
 	VisitAndWithContext(ctx context.Context, v []SearchDatasetFilesQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchDatasetFilesQuery) error
@@ -736,6 +771,10 @@ type SearchDatasetFilesQueryVisitorWithContext interface {
 
 func NewSearchDatasetFilesQueryFromTimeRange(v TimeRangeFilter) SearchDatasetFilesQuery {
 	return SearchDatasetFilesQuery{typ: "timeRange", timeRange: &v}
+}
+
+func NewSearchDatasetFilesQueryFromUploadedAtRange(v UploadedAtFilter) SearchDatasetFilesQuery {
+	return SearchDatasetFilesQuery{typ: "uploadedAtRange", uploadedAtRange: &v}
 }
 
 func NewSearchDatasetFilesQueryFromFileTags(v map[api.TagName]api.TagValue) SearchDatasetFilesQuery {
@@ -756,32 +795,38 @@ type SearchDatasetsQuery struct {
 	exactMatch              *string
 	label                   *api.Label
 	properties              *api.Property
+	numericProperty         *api.NumericPropertyPredicate
+	numericPropertyRange    *api.NumericPropertyRangePredicate
 	ingestStatus            *IngestStatus
 	ingestedBeforeInclusive *datetime.DateTime
 	ingestedAfterInclusive  *datetime.DateTime
 	archiveStatus           *bool
+	derived                 *bool
 	and                     *[]SearchDatasetsQuery
 	or                      *[]SearchDatasetsQuery
 	workspace               *rids.WorkspaceRid
 }
 
 type searchDatasetsQueryDeserializer struct {
-	Type                    string                 `json:"type"`
-	SearchText              *string                `json:"searchText"`
-	ExactMatch              *string                `json:"exactMatch"`
-	Label                   *api.Label             `json:"label"`
-	Properties              *api.Property          `json:"properties"`
-	IngestStatus            *IngestStatus          `json:"ingestStatus"`
-	IngestedBeforeInclusive *datetime.DateTime     `json:"ingestedBeforeInclusive"`
-	IngestedAfterInclusive  *datetime.DateTime     `json:"ingestedAfterInclusive"`
-	ArchiveStatus           *bool                  `json:"archiveStatus"`
-	And                     *[]SearchDatasetsQuery `json:"and"`
-	Or                      *[]SearchDatasetsQuery `json:"or"`
-	Workspace               *rids.WorkspaceRid     `json:"workspace"`
+	Type                    string                             `json:"type"`
+	SearchText              *string                            `json:"searchText"`
+	ExactMatch              *string                            `json:"exactMatch"`
+	Label                   *api.Label                         `json:"label"`
+	Properties              *api.Property                      `json:"properties"`
+	NumericProperty         *api.NumericPropertyPredicate      `json:"numericProperty"`
+	NumericPropertyRange    *api.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+	IngestStatus            *IngestStatus                      `json:"ingestStatus"`
+	IngestedBeforeInclusive *datetime.DateTime                 `json:"ingestedBeforeInclusive"`
+	IngestedAfterInclusive  *datetime.DateTime                 `json:"ingestedAfterInclusive"`
+	ArchiveStatus           *bool                              `json:"archiveStatus"`
+	Derived                 *bool                              `json:"derived"`
+	And                     *[]SearchDatasetsQuery             `json:"and"`
+	Or                      *[]SearchDatasetsQuery             `json:"or"`
+	Workspace               *rids.WorkspaceRid                 `json:"workspace"`
 }
 
 func (u *searchDatasetsQueryDeserializer) toStruct() SearchDatasetsQuery {
-	return SearchDatasetsQuery{typ: u.Type, searchText: u.SearchText, exactMatch: u.ExactMatch, label: u.Label, properties: u.Properties, ingestStatus: u.IngestStatus, ingestedBeforeInclusive: u.IngestedBeforeInclusive, ingestedAfterInclusive: u.IngestedAfterInclusive, archiveStatus: u.ArchiveStatus, and: u.And, or: u.Or, workspace: u.Workspace}
+	return SearchDatasetsQuery{typ: u.Type, searchText: u.SearchText, exactMatch: u.ExactMatch, label: u.Label, properties: u.Properties, numericProperty: u.NumericProperty, numericPropertyRange: u.NumericPropertyRange, ingestStatus: u.IngestStatus, ingestedBeforeInclusive: u.IngestedBeforeInclusive, ingestedAfterInclusive: u.IngestedAfterInclusive, archiveStatus: u.ArchiveStatus, derived: u.Derived, and: u.And, or: u.Or, workspace: u.Workspace}
 }
 
 func (u *SearchDatasetsQuery) toSerializer() (interface{}, error) {
@@ -820,6 +865,22 @@ func (u *SearchDatasetsQuery) toSerializer() (interface{}, error) {
 			Type       string       `json:"type"`
 			Properties api.Property `json:"properties"`
 		}{Type: "properties", Properties: *u.properties}, nil
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return nil, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return struct {
+			Type            string                       `json:"type"`
+			NumericProperty api.NumericPropertyPredicate `json:"numericProperty"`
+		}{Type: "numericProperty", NumericProperty: *u.numericProperty}, nil
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return nil, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return struct {
+			Type                 string                            `json:"type"`
+			NumericPropertyRange api.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+		}{Type: "numericPropertyRange", NumericPropertyRange: *u.numericPropertyRange}, nil
 	case "ingestStatus":
 		if u.ingestStatus == nil {
 			return nil, fmt.Errorf("field \"ingestStatus\" is required")
@@ -852,6 +913,14 @@ func (u *SearchDatasetsQuery) toSerializer() (interface{}, error) {
 			Type          string `json:"type"`
 			ArchiveStatus bool   `json:"archiveStatus"`
 		}{Type: "archiveStatus", ArchiveStatus: *u.archiveStatus}, nil
+	case "derived":
+		if u.derived == nil {
+			return nil, fmt.Errorf("field \"derived\" is required")
+		}
+		return struct {
+			Type    string `json:"type"`
+			Derived bool   `json:"derived"`
+		}{Type: "derived", Derived: *u.derived}, nil
 	case "and":
 		if u.and == nil {
 			return nil, fmt.Errorf("field \"and\" is required")
@@ -910,6 +979,14 @@ func (u *SearchDatasetsQuery) UnmarshalJSON(data []byte) error {
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
 		}
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
 	case "ingestStatus":
 		if u.ingestStatus == nil {
 			return fmt.Errorf("field \"ingestStatus\" is required")
@@ -925,6 +1002,10 @@ func (u *SearchDatasetsQuery) UnmarshalJSON(data []byte) error {
 	case "archiveStatus":
 		if u.archiveStatus == nil {
 			return fmt.Errorf("field \"archiveStatus\" is required")
+		}
+	case "derived":
+		if u.derived == nil {
+			return fmt.Errorf("field \"derived\" is required")
 		}
 	case "and":
 		if u.and == nil {
@@ -958,7 +1039,7 @@ func (u *SearchDatasetsQuery) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchDatasetsQuery) AcceptFuncs(searchTextFunc func(string) error, exactMatchFunc func(string) error, labelFunc func(api.Label) error, propertiesFunc func(api.Property) error, ingestStatusFunc func(IngestStatus) error, ingestedBeforeInclusiveFunc func(datetime.DateTime) error, ingestedAfterInclusiveFunc func(datetime.DateTime) error, archiveStatusFunc func(bool) error, andFunc func([]SearchDatasetsQuery) error, orFunc func([]SearchDatasetsQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *SearchDatasetsQuery) AcceptFuncs(searchTextFunc func(string) error, exactMatchFunc func(string) error, labelFunc func(api.Label) error, propertiesFunc func(api.Property) error, numericPropertyFunc func(api.NumericPropertyPredicate) error, numericPropertyRangeFunc func(api.NumericPropertyRangePredicate) error, ingestStatusFunc func(IngestStatus) error, ingestedBeforeInclusiveFunc func(datetime.DateTime) error, ingestedAfterInclusiveFunc func(datetime.DateTime) error, archiveStatusFunc func(bool) error, derivedFunc func(bool) error, andFunc func([]SearchDatasetsQuery) error, orFunc func([]SearchDatasetsQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -985,6 +1066,16 @@ func (u *SearchDatasetsQuery) AcceptFuncs(searchTextFunc func(string) error, exa
 			return fmt.Errorf("field \"properties\" is required")
 		}
 		return propertiesFunc(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return numericPropertyRangeFunc(*u.numericPropertyRange)
 	case "ingestStatus":
 		if u.ingestStatus == nil {
 			return fmt.Errorf("field \"ingestStatus\" is required")
@@ -1005,6 +1096,11 @@ func (u *SearchDatasetsQuery) AcceptFuncs(searchTextFunc func(string) error, exa
 			return fmt.Errorf("field \"archiveStatus\" is required")
 		}
 		return archiveStatusFunc(*u.archiveStatus)
+	case "derived":
+		if u.derived == nil {
+			return fmt.Errorf("field \"derived\" is required")
+		}
+		return derivedFunc(*u.derived)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -1039,6 +1135,14 @@ func (u *SearchDatasetsQuery) PropertiesNoopSuccess(_ api.Property) error {
 	return nil
 }
 
+func (u *SearchDatasetsQuery) NumericPropertyNoopSuccess(_ api.NumericPropertyPredicate) error {
+	return nil
+}
+
+func (u *SearchDatasetsQuery) NumericPropertyRangeNoopSuccess(_ api.NumericPropertyRangePredicate) error {
+	return nil
+}
+
 func (u *SearchDatasetsQuery) IngestStatusNoopSuccess(_ IngestStatus) error {
 	return nil
 }
@@ -1052,6 +1156,10 @@ func (u *SearchDatasetsQuery) IngestedAfterInclusiveNoopSuccess(_ datetime.DateT
 }
 
 func (u *SearchDatasetsQuery) ArchiveStatusNoopSuccess(_ bool) error {
+	return nil
+}
+
+func (u *SearchDatasetsQuery) DerivedNoopSuccess(_ bool) error {
 	return nil
 }
 
@@ -1098,6 +1206,16 @@ func (u *SearchDatasetsQuery) Accept(v SearchDatasetsQueryVisitor) error {
 			return fmt.Errorf("field \"properties\" is required")
 		}
 		return v.VisitProperties(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRange(*u.numericPropertyRange)
 	case "ingestStatus":
 		if u.ingestStatus == nil {
 			return fmt.Errorf("field \"ingestStatus\" is required")
@@ -1118,6 +1236,11 @@ func (u *SearchDatasetsQuery) Accept(v SearchDatasetsQueryVisitor) error {
 			return fmt.Errorf("field \"archiveStatus\" is required")
 		}
 		return v.VisitArchiveStatus(*u.archiveStatus)
+	case "derived":
+		if u.derived == nil {
+			return fmt.Errorf("field \"derived\" is required")
+		}
+		return v.VisitDerived(*u.derived)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -1141,10 +1264,13 @@ type SearchDatasetsQueryVisitor interface {
 	VisitExactMatch(v string) error
 	VisitLabel(v api.Label) error
 	VisitProperties(v api.Property) error
+	VisitNumericProperty(v api.NumericPropertyPredicate) error
+	VisitNumericPropertyRange(v api.NumericPropertyRangePredicate) error
 	VisitIngestStatus(v IngestStatus) error
 	VisitIngestedBeforeInclusive(v datetime.DateTime) error
 	VisitIngestedAfterInclusive(v datetime.DateTime) error
 	VisitArchiveStatus(v bool) error
+	VisitDerived(v bool) error
 	VisitAnd(v []SearchDatasetsQuery) error
 	VisitOr(v []SearchDatasetsQuery) error
 	VisitWorkspace(v rids.WorkspaceRid) error
@@ -1178,6 +1304,16 @@ func (u *SearchDatasetsQuery) AcceptWithContext(ctx context.Context, v SearchDat
 			return fmt.Errorf("field \"properties\" is required")
 		}
 		return v.VisitPropertiesWithContext(ctx, *u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericPropertyWithContext(ctx, *u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRangeWithContext(ctx, *u.numericPropertyRange)
 	case "ingestStatus":
 		if u.ingestStatus == nil {
 			return fmt.Errorf("field \"ingestStatus\" is required")
@@ -1198,6 +1334,11 @@ func (u *SearchDatasetsQuery) AcceptWithContext(ctx context.Context, v SearchDat
 			return fmt.Errorf("field \"archiveStatus\" is required")
 		}
 		return v.VisitArchiveStatusWithContext(ctx, *u.archiveStatus)
+	case "derived":
+		if u.derived == nil {
+			return fmt.Errorf("field \"derived\" is required")
+		}
+		return v.VisitDerivedWithContext(ctx, *u.derived)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -1221,10 +1362,13 @@ type SearchDatasetsQueryVisitorWithContext interface {
 	VisitExactMatchWithContext(ctx context.Context, v string) error
 	VisitLabelWithContext(ctx context.Context, v api.Label) error
 	VisitPropertiesWithContext(ctx context.Context, v api.Property) error
+	VisitNumericPropertyWithContext(ctx context.Context, v api.NumericPropertyPredicate) error
+	VisitNumericPropertyRangeWithContext(ctx context.Context, v api.NumericPropertyRangePredicate) error
 	VisitIngestStatusWithContext(ctx context.Context, v IngestStatus) error
 	VisitIngestedBeforeInclusiveWithContext(ctx context.Context, v datetime.DateTime) error
 	VisitIngestedAfterInclusiveWithContext(ctx context.Context, v datetime.DateTime) error
 	VisitArchiveStatusWithContext(ctx context.Context, v bool) error
+	VisitDerivedWithContext(ctx context.Context, v bool) error
 	VisitAndWithContext(ctx context.Context, v []SearchDatasetsQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchDatasetsQuery) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
@@ -1247,6 +1391,14 @@ func NewSearchDatasetsQueryFromProperties(v api.Property) SearchDatasetsQuery {
 	return SearchDatasetsQuery{typ: "properties", properties: &v}
 }
 
+func NewSearchDatasetsQueryFromNumericProperty(v api.NumericPropertyPredicate) SearchDatasetsQuery {
+	return SearchDatasetsQuery{typ: "numericProperty", numericProperty: &v}
+}
+
+func NewSearchDatasetsQueryFromNumericPropertyRange(v api.NumericPropertyRangePredicate) SearchDatasetsQuery {
+	return SearchDatasetsQuery{typ: "numericPropertyRange", numericPropertyRange: &v}
+}
+
 func NewSearchDatasetsQueryFromIngestStatus(v IngestStatus) SearchDatasetsQuery {
 	return SearchDatasetsQuery{typ: "ingestStatus", ingestStatus: &v}
 }
@@ -1261,6 +1413,10 @@ func NewSearchDatasetsQueryFromIngestedAfterInclusive(v datetime.DateTime) Searc
 
 func NewSearchDatasetsQueryFromArchiveStatus(v bool) SearchDatasetsQuery {
 	return SearchDatasetsQuery{typ: "archiveStatus", archiveStatus: &v}
+}
+
+func NewSearchDatasetsQueryFromDerived(v bool) SearchDatasetsQuery {
+	return SearchDatasetsQuery{typ: "derived", derived: &v}
 }
 
 func NewSearchDatasetsQueryFromAnd(v []SearchDatasetsQuery) SearchDatasetsQuery {

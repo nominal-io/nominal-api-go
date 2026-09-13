@@ -15,12 +15,13 @@ type SortField_Value string
 const (
 	SortField_CREATED_AT SortField_Value = "CREATED_AT"
 	SortField_LAST_USED  SortField_Value = "LAST_USED"
+	SortField_UPDATED_AT SortField_Value = "UPDATED_AT"
 	SortField_UNKNOWN    SortField_Value = "UNKNOWN"
 )
 
 // SortField_Values returns all known variants of SortField.
 func SortField_Values() []SortField_Value {
-	return []SortField_Value{SortField_CREATED_AT, SortField_LAST_USED}
+	return []SortField_Value{SortField_CREATED_AT, SortField_LAST_USED, SortField_UPDATED_AT}
 }
 
 func New_SortField(value SortField_Value) SortField {
@@ -30,7 +31,7 @@ func New_SortField(value SortField_Value) SortField {
 // IsUnknown returns false for all known variants of SortField and true otherwise.
 func (e SortField) IsUnknown() bool {
 	switch e.val {
-	case SortField_CREATED_AT, SortField_LAST_USED:
+	case SortField_CREATED_AT, SortField_LAST_USED, SortField_UPDATED_AT:
 		return false
 	}
 	return true
@@ -59,6 +60,8 @@ func (e *SortField) UnmarshalText(data []byte) error {
 		*e = New_SortField(SortField_CREATED_AT)
 	case "LAST_USED":
 		*e = New_SortField(SortField_LAST_USED)
+	case "UPDATED_AT":
+		*e = New_SortField(SortField_UPDATED_AT)
 	}
 	return nil
 }

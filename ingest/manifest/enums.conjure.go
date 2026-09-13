@@ -6,6 +6,70 @@ import (
 	"strings"
 )
 
+// Time unit for a numeric epoch timestamp in a manifest output.
+type ManifestEpochTimeUnit struct {
+	val ManifestEpochTimeUnit_Value
+}
+
+type ManifestEpochTimeUnit_Value string
+
+const (
+	ManifestEpochTimeUnit_SECONDS      ManifestEpochTimeUnit_Value = "SECONDS"
+	ManifestEpochTimeUnit_MILLISECONDS ManifestEpochTimeUnit_Value = "MILLISECONDS"
+	ManifestEpochTimeUnit_MICROSECONDS ManifestEpochTimeUnit_Value = "MICROSECONDS"
+	ManifestEpochTimeUnit_NANOSECONDS  ManifestEpochTimeUnit_Value = "NANOSECONDS"
+	ManifestEpochTimeUnit_UNKNOWN      ManifestEpochTimeUnit_Value = "UNKNOWN"
+)
+
+// ManifestEpochTimeUnit_Values returns all known variants of ManifestEpochTimeUnit.
+func ManifestEpochTimeUnit_Values() []ManifestEpochTimeUnit_Value {
+	return []ManifestEpochTimeUnit_Value{ManifestEpochTimeUnit_SECONDS, ManifestEpochTimeUnit_MILLISECONDS, ManifestEpochTimeUnit_MICROSECONDS, ManifestEpochTimeUnit_NANOSECONDS}
+}
+
+func New_ManifestEpochTimeUnit(value ManifestEpochTimeUnit_Value) ManifestEpochTimeUnit {
+	return ManifestEpochTimeUnit{val: value}
+}
+
+// IsUnknown returns false for all known variants of ManifestEpochTimeUnit and true otherwise.
+func (e ManifestEpochTimeUnit) IsUnknown() bool {
+	switch e.val {
+	case ManifestEpochTimeUnit_SECONDS, ManifestEpochTimeUnit_MILLISECONDS, ManifestEpochTimeUnit_MICROSECONDS, ManifestEpochTimeUnit_NANOSECONDS:
+		return false
+	}
+	return true
+}
+
+func (e ManifestEpochTimeUnit) Value() ManifestEpochTimeUnit_Value {
+	if e.IsUnknown() {
+		return ManifestEpochTimeUnit_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ManifestEpochTimeUnit) String() string {
+	return string(e.val)
+}
+
+func (e ManifestEpochTimeUnit) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ManifestEpochTimeUnit) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ManifestEpochTimeUnit(ManifestEpochTimeUnit_Value(v))
+	case "SECONDS":
+		*e = New_ManifestEpochTimeUnit(ManifestEpochTimeUnit_SECONDS)
+	case "MILLISECONDS":
+		*e = New_ManifestEpochTimeUnit(ManifestEpochTimeUnit_MILLISECONDS)
+	case "MICROSECONDS":
+		*e = New_ManifestEpochTimeUnit(ManifestEpochTimeUnit_MICROSECONDS)
+	case "NANOSECONDS":
+		*e = New_ManifestEpochTimeUnit(ManifestEpochTimeUnit_NANOSECONDS)
+	}
+	return nil
+}
+
 // Supported ingest types for containerized extractor outputs.
 type ManifestIngestType struct {
 	val ManifestIngestType_Value

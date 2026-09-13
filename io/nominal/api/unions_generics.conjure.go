@@ -58,6 +58,87 @@ type HandleVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type InProgressDetailsWithT[T any] InProgressDetails
+
+func (u *InProgressDetailsWithT[T]) Accept(ctx context.Context, v InProgressDetailsVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "queued":
+		if u.queued == nil {
+			return result, fmt.Errorf("field \"queued\" is required")
+		}
+		return v.VisitQueued(ctx, *u.queued)
+	case "parsing":
+		if u.parsing == nil {
+			return result, fmt.Errorf("field \"parsing\" is required")
+		}
+		return v.VisitParsing(ctx, *u.parsing)
+	case "ingesting":
+		if u.ingesting == nil {
+			return result, fmt.Errorf("field \"ingesting\" is required")
+		}
+		return v.VisitIngesting(ctx, *u.ingesting)
+	}
+}
+
+func (u *InProgressDetailsWithT[T]) AcceptFuncs(queuedFunc func(Queued) (T, error), parsingFunc func(Parsing) (T, error), ingestingFunc func(Ingesting) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "queued":
+		if u.queued == nil {
+			return result, fmt.Errorf("field \"queued\" is required")
+		}
+		return queuedFunc(*u.queued)
+	case "parsing":
+		if u.parsing == nil {
+			return result, fmt.Errorf("field \"parsing\" is required")
+		}
+		return parsingFunc(*u.parsing)
+	case "ingesting":
+		if u.ingesting == nil {
+			return result, fmt.Errorf("field \"ingesting\" is required")
+		}
+		return ingestingFunc(*u.ingesting)
+	}
+}
+
+func (u *InProgressDetailsWithT[T]) QueuedNoopSuccess(Queued) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *InProgressDetailsWithT[T]) ParsingNoopSuccess(Parsing) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *InProgressDetailsWithT[T]) IngestingNoopSuccess(Ingesting) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *InProgressDetailsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type InProgressDetailsVisitorWithT[T any] interface {
+	VisitQueued(ctx context.Context, v Queued) (T, error)
+	VisitParsing(ctx context.Context, v Parsing) (T, error)
+	VisitIngesting(ctx context.Context, v Ingesting) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type IngestStatusV2WithT[T any] IngestStatusV2
 
 func (u *IngestStatusV2WithT[T]) Accept(ctx context.Context, v IngestStatusV2VisitorWithT[T]) (T, error) {
@@ -93,10 +174,25 @@ func (u *IngestStatusV2WithT[T]) Accept(ctx context.Context, v IngestStatusV2Vis
 			return result, fmt.Errorf("field \"deleted\" is required")
 		}
 		return v.VisitDeleted(ctx, *u.deleted)
+	case "queued":
+		if u.queued == nil {
+			return result, fmt.Errorf("field \"queued\" is required")
+		}
+		return v.VisitQueued(ctx, *u.queued)
+	case "parsing":
+		if u.parsing == nil {
+			return result, fmt.Errorf("field \"parsing\" is required")
+		}
+		return v.VisitParsing(ctx, *u.parsing)
+	case "ingesting":
+		if u.ingesting == nil {
+			return result, fmt.Errorf("field \"ingesting\" is required")
+		}
+		return v.VisitIngesting(ctx, *u.ingesting)
 	}
 }
 
-func (u *IngestStatusV2WithT[T]) AcceptFuncs(successFunc func(SuccessResult) (T, error), errorFunc func(ErrorResult) (T, error), inProgressFunc func(InProgressResult) (T, error), deletionInProgressFunc func(DeletionInProgress) (T, error), deletedFunc func(Deleted) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IngestStatusV2WithT[T]) AcceptFuncs(successFunc func(SuccessResult) (T, error), errorFunc func(ErrorResult) (T, error), inProgressFunc func(InProgressResult) (T, error), deletionInProgressFunc func(DeletionInProgress) (T, error), deletedFunc func(Deleted) (T, error), queuedFunc func(Queued) (T, error), parsingFunc func(Parsing) (T, error), ingestingFunc func(Ingesting) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -129,6 +225,21 @@ func (u *IngestStatusV2WithT[T]) AcceptFuncs(successFunc func(SuccessResult) (T,
 			return result, fmt.Errorf("field \"deleted\" is required")
 		}
 		return deletedFunc(*u.deleted)
+	case "queued":
+		if u.queued == nil {
+			return result, fmt.Errorf("field \"queued\" is required")
+		}
+		return queuedFunc(*u.queued)
+	case "parsing":
+		if u.parsing == nil {
+			return result, fmt.Errorf("field \"parsing\" is required")
+		}
+		return parsingFunc(*u.parsing)
+	case "ingesting":
+		if u.ingesting == nil {
+			return result, fmt.Errorf("field \"ingesting\" is required")
+		}
+		return ingestingFunc(*u.ingesting)
 	}
 }
 
@@ -157,6 +268,21 @@ func (u *IngestStatusV2WithT[T]) DeletedNoopSuccess(Deleted) (T, error) {
 	return result, nil
 }
 
+func (u *IngestStatusV2WithT[T]) QueuedNoopSuccess(Queued) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestStatusV2WithT[T]) ParsingNoopSuccess(Parsing) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestStatusV2WithT[T]) IngestingNoopSuccess(Ingesting) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *IngestStatusV2WithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -168,6 +294,9 @@ type IngestStatusV2VisitorWithT[T any] interface {
 	VisitInProgress(ctx context.Context, v InProgressResult) (T, error)
 	VisitDeletionInProgress(ctx context.Context, v DeletionInProgress) (T, error)
 	VisitDeleted(ctx context.Context, v Deleted) (T, error)
+	VisitQueued(ctx context.Context, v Queued) (T, error)
+	VisitParsing(ctx context.Context, v Parsing) (T, error)
+	VisitIngesting(ctx context.Context, v Ingesting) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -233,5 +362,70 @@ func (u *McapChannelLocatorWithT[T]) ErrorOnUnknown(typeName string) (T, error) 
 type McapChannelLocatorVisitorWithT[T any] interface {
 	VisitTopic(ctx context.Context, v McapChannelTopic) (T, error)
 	VisitId(ctx context.Context, v McapChannelId) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type TypedPropertyValueWithT[T any] TypedPropertyValue
+
+func (u *TypedPropertyValueWithT[T]) Accept(ctx context.Context, v TypedPropertyValueVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "stringValue":
+		if u.stringValue == nil {
+			return result, fmt.Errorf("field \"stringValue\" is required")
+		}
+		return v.VisitStringValue(ctx, *u.stringValue)
+	case "numericValue":
+		if u.numericValue == nil {
+			return result, fmt.Errorf("field \"numericValue\" is required")
+		}
+		return v.VisitNumericValue(ctx, *u.numericValue)
+	}
+}
+
+func (u *TypedPropertyValueWithT[T]) AcceptFuncs(stringValueFunc func(PropertyValue) (T, error), numericValueFunc func(float64) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "stringValue":
+		if u.stringValue == nil {
+			return result, fmt.Errorf("field \"stringValue\" is required")
+		}
+		return stringValueFunc(*u.stringValue)
+	case "numericValue":
+		if u.numericValue == nil {
+			return result, fmt.Errorf("field \"numericValue\" is required")
+		}
+		return numericValueFunc(*u.numericValue)
+	}
+}
+
+func (u *TypedPropertyValueWithT[T]) StringValueNoopSuccess(PropertyValue) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *TypedPropertyValueWithT[T]) NumericValueNoopSuccess(float64) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *TypedPropertyValueWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type TypedPropertyValueVisitorWithT[T any] interface {
+	VisitStringValue(ctx context.Context, v PropertyValue) (T, error)
+	VisitNumericValue(ctx context.Context, v float64) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
