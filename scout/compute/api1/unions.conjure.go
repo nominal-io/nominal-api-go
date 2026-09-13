@@ -6,12 +6,226 @@ import (
 	"context"
 	"fmt"
 
-	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api3 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
+
+type AggregationBuilder struct {
+	typ           string
+	rollingTime   *RollingTimeAggregationBuilder
+	rollingPoints *RollingPointsAggregationBuilder
+	groupBy       *GroupByAggregationBuilder
+}
+
+type aggregationBuilderDeserializer struct {
+	Type          string                           `json:"type"`
+	RollingTime   *RollingTimeAggregationBuilder   `json:"rollingTime"`
+	RollingPoints *RollingPointsAggregationBuilder `json:"rollingPoints"`
+	GroupBy       *GroupByAggregationBuilder       `json:"groupBy"`
+}
+
+func (u *aggregationBuilderDeserializer) toStruct() AggregationBuilder {
+	return AggregationBuilder{typ: u.Type, rollingTime: u.RollingTime, rollingPoints: u.RollingPoints, groupBy: u.GroupBy}
+}
+
+func (u *AggregationBuilder) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "rollingTime":
+		if u.rollingTime == nil {
+			return nil, fmt.Errorf("field \"rollingTime\" is required")
+		}
+		return struct {
+			Type        string                        `json:"type"`
+			RollingTime RollingTimeAggregationBuilder `json:"rollingTime"`
+		}{Type: "rollingTime", RollingTime: *u.rollingTime}, nil
+	case "rollingPoints":
+		if u.rollingPoints == nil {
+			return nil, fmt.Errorf("field \"rollingPoints\" is required")
+		}
+		return struct {
+			Type          string                          `json:"type"`
+			RollingPoints RollingPointsAggregationBuilder `json:"rollingPoints"`
+		}{Type: "rollingPoints", RollingPoints: *u.rollingPoints}, nil
+	case "groupBy":
+		if u.groupBy == nil {
+			return nil, fmt.Errorf("field \"groupBy\" is required")
+		}
+		return struct {
+			Type    string                    `json:"type"`
+			GroupBy GroupByAggregationBuilder `json:"groupBy"`
+		}{Type: "groupBy", GroupBy: *u.groupBy}, nil
+	}
+}
+
+func (u AggregationBuilder) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *AggregationBuilder) UnmarshalJSON(data []byte) error {
+	var deser aggregationBuilderDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "rollingTime":
+		if u.rollingTime == nil {
+			return fmt.Errorf("field \"rollingTime\" is required")
+		}
+	case "rollingPoints":
+		if u.rollingPoints == nil {
+			return fmt.Errorf("field \"rollingPoints\" is required")
+		}
+	case "groupBy":
+		if u.groupBy == nil {
+			return fmt.Errorf("field \"groupBy\" is required")
+		}
+	}
+	return nil
+}
+
+func (u AggregationBuilder) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *AggregationBuilder) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *AggregationBuilder) AcceptFuncs(rollingTimeFunc func(RollingTimeAggregationBuilder) error, rollingPointsFunc func(RollingPointsAggregationBuilder) error, groupByFunc func(GroupByAggregationBuilder) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in AggregationBuilder type")
+		}
+		return unknownFunc(u.typ)
+	case "rollingTime":
+		if u.rollingTime == nil {
+			return fmt.Errorf("field \"rollingTime\" is required")
+		}
+		return rollingTimeFunc(*u.rollingTime)
+	case "rollingPoints":
+		if u.rollingPoints == nil {
+			return fmt.Errorf("field \"rollingPoints\" is required")
+		}
+		return rollingPointsFunc(*u.rollingPoints)
+	case "groupBy":
+		if u.groupBy == nil {
+			return fmt.Errorf("field \"groupBy\" is required")
+		}
+		return groupByFunc(*u.groupBy)
+	}
+}
+
+func (u *AggregationBuilder) RollingTimeNoopSuccess(_ RollingTimeAggregationBuilder) error {
+	return nil
+}
+
+func (u *AggregationBuilder) RollingPointsNoopSuccess(_ RollingPointsAggregationBuilder) error {
+	return nil
+}
+
+func (u *AggregationBuilder) GroupByNoopSuccess(_ GroupByAggregationBuilder) error {
+	return nil
+}
+
+func (u *AggregationBuilder) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *AggregationBuilder) Accept(v AggregationBuilderVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "rollingTime":
+		if u.rollingTime == nil {
+			return fmt.Errorf("field \"rollingTime\" is required")
+		}
+		return v.VisitRollingTime(*u.rollingTime)
+	case "rollingPoints":
+		if u.rollingPoints == nil {
+			return fmt.Errorf("field \"rollingPoints\" is required")
+		}
+		return v.VisitRollingPoints(*u.rollingPoints)
+	case "groupBy":
+		if u.groupBy == nil {
+			return fmt.Errorf("field \"groupBy\" is required")
+		}
+		return v.VisitGroupBy(*u.groupBy)
+	}
+}
+
+type AggregationBuilderVisitor interface {
+	VisitRollingTime(v RollingTimeAggregationBuilder) error
+	VisitRollingPoints(v RollingPointsAggregationBuilder) error
+	VisitGroupBy(v GroupByAggregationBuilder) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *AggregationBuilder) AcceptWithContext(ctx context.Context, v AggregationBuilderVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "rollingTime":
+		if u.rollingTime == nil {
+			return fmt.Errorf("field \"rollingTime\" is required")
+		}
+		return v.VisitRollingTimeWithContext(ctx, *u.rollingTime)
+	case "rollingPoints":
+		if u.rollingPoints == nil {
+			return fmt.Errorf("field \"rollingPoints\" is required")
+		}
+		return v.VisitRollingPointsWithContext(ctx, *u.rollingPoints)
+	case "groupBy":
+		if u.groupBy == nil {
+			return fmt.Errorf("field \"groupBy\" is required")
+		}
+		return v.VisitGroupByWithContext(ctx, *u.groupBy)
+	}
+}
+
+type AggregationBuilderVisitorWithContext interface {
+	VisitRollingTimeWithContext(ctx context.Context, v RollingTimeAggregationBuilder) error
+	VisitRollingPointsWithContext(ctx context.Context, v RollingPointsAggregationBuilder) error
+	VisitGroupByWithContext(ctx context.Context, v GroupByAggregationBuilder) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewAggregationBuilderFromRollingTime(v RollingTimeAggregationBuilder) AggregationBuilder {
+	return AggregationBuilder{typ: "rollingTime", rollingTime: &v}
+}
+
+func NewAggregationBuilderFromRollingPoints(v RollingPointsAggregationBuilder) AggregationBuilder {
+	return AggregationBuilder{typ: "rollingPoints", rollingPoints: &v}
+}
+
+func NewAggregationBuilderFromGroupBy(v GroupByAggregationBuilder) AggregationBuilder {
+	return AggregationBuilder{typ: "groupBy", groupBy: &v}
+}
 
 type ArraySeries struct {
 	typ       string
@@ -195,7 +409,6 @@ type BooleanSeries struct {
 	notEqualTo           *NotEqualToSeries
 	greaterThanOrEqualTo *GreaterThanOrEqualToSeries
 	lessThanOrEqualTo    *LessThanOrEqualToSeries
-	not                  *NotSeries
 	and                  *AndSeries
 	or                   *OrSeries
 }
@@ -208,13 +421,12 @@ type booleanSeriesDeserializer struct {
 	NotEqualTo           *NotEqualToSeries           `json:"notEqualTo"`
 	GreaterThanOrEqualTo *GreaterThanOrEqualToSeries `json:"greaterThanOrEqualTo"`
 	LessThanOrEqualTo    *LessThanOrEqualToSeries    `json:"lessThanOrEqualTo"`
-	Not                  *NotSeries                  `json:"not"`
 	And                  *AndSeries                  `json:"and"`
 	Or                   *OrSeries                   `json:"or"`
 }
 
 func (u *booleanSeriesDeserializer) toStruct() BooleanSeries {
-	return BooleanSeries{typ: u.Type, greaterThan: u.GreaterThan, lessThan: u.LessThan, equalTo: u.EqualTo, notEqualTo: u.NotEqualTo, greaterThanOrEqualTo: u.GreaterThanOrEqualTo, lessThanOrEqualTo: u.LessThanOrEqualTo, not: u.Not, and: u.And, or: u.Or}
+	return BooleanSeries{typ: u.Type, greaterThan: u.GreaterThan, lessThan: u.LessThan, equalTo: u.EqualTo, notEqualTo: u.NotEqualTo, greaterThanOrEqualTo: u.GreaterThanOrEqualTo, lessThanOrEqualTo: u.LessThanOrEqualTo, and: u.And, or: u.Or}
 }
 
 func (u *BooleanSeries) toSerializer() (interface{}, error) {
@@ -269,14 +481,6 @@ func (u *BooleanSeries) toSerializer() (interface{}, error) {
 			Type              string                  `json:"type"`
 			LessThanOrEqualTo LessThanOrEqualToSeries `json:"lessThanOrEqualTo"`
 		}{Type: "lessThanOrEqualTo", LessThanOrEqualTo: *u.lessThanOrEqualTo}, nil
-	case "not":
-		if u.not == nil {
-			return nil, fmt.Errorf("field \"not\" is required")
-		}
-		return struct {
-			Type string    `json:"type"`
-			Not  NotSeries `json:"not"`
-		}{Type: "not", Not: *u.not}, nil
 	case "and":
 		if u.and == nil {
 			return nil, fmt.Errorf("field \"and\" is required")
@@ -335,10 +539,6 @@ func (u *BooleanSeries) UnmarshalJSON(data []byte) error {
 		if u.lessThanOrEqualTo == nil {
 			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
 		}
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -367,7 +567,7 @@ func (u *BooleanSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *BooleanSeries) AcceptFuncs(greaterThanFunc func(GreaterThanSeries) error, lessThanFunc func(LessThanSeries) error, equalToFunc func(EqualToSeries) error, notEqualToFunc func(NotEqualToSeries) error, greaterThanOrEqualToFunc func(GreaterThanOrEqualToSeries) error, lessThanOrEqualToFunc func(LessThanOrEqualToSeries) error, notFunc func(NotSeries) error, andFunc func(AndSeries) error, orFunc func(OrSeries) error, unknownFunc func(string) error) error {
+func (u *BooleanSeries) AcceptFuncs(greaterThanFunc func(GreaterThanSeries) error, lessThanFunc func(LessThanSeries) error, equalToFunc func(EqualToSeries) error, notEqualToFunc func(NotEqualToSeries) error, greaterThanOrEqualToFunc func(GreaterThanOrEqualToSeries) error, lessThanOrEqualToFunc func(LessThanOrEqualToSeries) error, andFunc func(AndSeries) error, orFunc func(OrSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -404,11 +604,6 @@ func (u *BooleanSeries) AcceptFuncs(greaterThanFunc func(GreaterThanSeries) erro
 			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
 		}
 		return lessThanOrEqualToFunc(*u.lessThanOrEqualTo)
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-		return notFunc(*u.not)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -443,10 +638,6 @@ func (u *BooleanSeries) GreaterThanOrEqualToNoopSuccess(_ GreaterThanOrEqualToSe
 }
 
 func (u *BooleanSeries) LessThanOrEqualToNoopSuccess(_ LessThanOrEqualToSeries) error {
-	return nil
-}
-
-func (u *BooleanSeries) NotNoopSuccess(_ NotSeries) error {
 	return nil
 }
 
@@ -499,11 +690,6 @@ func (u *BooleanSeries) Accept(v BooleanSeriesVisitor) error {
 			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
 		}
 		return v.VisitLessThanOrEqualTo(*u.lessThanOrEqualTo)
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-		return v.VisitNot(*u.not)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -524,7 +710,6 @@ type BooleanSeriesVisitor interface {
 	VisitNotEqualTo(v NotEqualToSeries) error
 	VisitGreaterThanOrEqualTo(v GreaterThanOrEqualToSeries) error
 	VisitLessThanOrEqualTo(v LessThanOrEqualToSeries) error
-	VisitNot(v NotSeries) error
 	VisitAnd(v AndSeries) error
 	VisitOr(v OrSeries) error
 	VisitUnknown(typeName string) error
@@ -567,11 +752,6 @@ func (u *BooleanSeries) AcceptWithContext(ctx context.Context, v BooleanSeriesVi
 			return fmt.Errorf("field \"lessThanOrEqualTo\" is required")
 		}
 		return v.VisitLessThanOrEqualToWithContext(ctx, *u.lessThanOrEqualTo)
-	case "not":
-		if u.not == nil {
-			return fmt.Errorf("field \"not\" is required")
-		}
-		return v.VisitNotWithContext(ctx, *u.not)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -592,7 +772,6 @@ type BooleanSeriesVisitorWithContext interface {
 	VisitNotEqualToWithContext(ctx context.Context, v NotEqualToSeries) error
 	VisitGreaterThanOrEqualToWithContext(ctx context.Context, v GreaterThanOrEqualToSeries) error
 	VisitLessThanOrEqualToWithContext(ctx context.Context, v LessThanOrEqualToSeries) error
-	VisitNotWithContext(ctx context.Context, v NotSeries) error
 	VisitAndWithContext(ctx context.Context, v AndSeries) error
 	VisitOrWithContext(ctx context.Context, v OrSeries) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
@@ -620,10 +799,6 @@ func NewBooleanSeriesFromGreaterThanOrEqualTo(v GreaterThanOrEqualToSeries) Bool
 
 func NewBooleanSeriesFromLessThanOrEqualTo(v LessThanOrEqualToSeries) BooleanSeries {
 	return BooleanSeries{typ: "lessThanOrEqualTo", lessThanOrEqualTo: &v}
-}
-
-func NewBooleanSeriesFromNot(v NotSeries) BooleanSeries {
-	return BooleanSeries{typ: "not", not: &v}
 }
 
 func NewBooleanSeriesFromAnd(v AndSeries) BooleanSeries {
@@ -914,6 +1089,7 @@ type ComputableNode struct {
 	frequency    *FrequencyDomain
 	frequencyV2  *FrequencyDomainV2
 	histogram    *Histogram
+	curveV2      *CurveFitV2
 	curve        *CurveFit
 	multivariate *SummarizeMultivariate
 }
@@ -928,12 +1104,13 @@ type computableNodeDeserializer struct {
 	Frequency    *FrequencyDomain       `json:"frequency"`
 	FrequencyV2  *FrequencyDomainV2     `json:"frequencyV2"`
 	Histogram    *Histogram             `json:"histogram"`
+	CurveV2      *CurveFitV2            `json:"curveV2"`
 	Curve        *CurveFit              `json:"curve"`
 	Multivariate *SummarizeMultivariate `json:"multivariate"`
 }
 
 func (u *computableNodeDeserializer) toStruct() ComputableNode {
-	return ComputableNode{typ: u.Type, ranges: u.Ranges, series: u.Series, value: u.Value, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, frequency: u.Frequency, frequencyV2: u.FrequencyV2, histogram: u.Histogram, curve: u.Curve, multivariate: u.Multivariate}
+	return ComputableNode{typ: u.Type, ranges: u.Ranges, series: u.Series, value: u.Value, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, frequency: u.Frequency, frequencyV2: u.FrequencyV2, histogram: u.Histogram, curveV2: u.CurveV2, curve: u.Curve, multivariate: u.Multivariate}
 }
 
 func (u *ComputableNode) toSerializer() (interface{}, error) {
@@ -1004,6 +1181,14 @@ func (u *ComputableNode) toSerializer() (interface{}, error) {
 			Type      string    `json:"type"`
 			Histogram Histogram `json:"histogram"`
 		}{Type: "histogram", Histogram: *u.histogram}, nil
+	case "curveV2":
+		if u.curveV2 == nil {
+			return nil, fmt.Errorf("field \"curveV2\" is required")
+		}
+		return struct {
+			Type    string     `json:"type"`
+			CurveV2 CurveFitV2 `json:"curveV2"`
+		}{Type: "curveV2", CurveV2: *u.curveV2}, nil
 	case "curve":
 		if u.curve == nil {
 			return nil, fmt.Errorf("field \"curve\" is required")
@@ -1070,6 +1255,10 @@ func (u *ComputableNode) UnmarshalJSON(data []byte) error {
 		if u.histogram == nil {
 			return fmt.Errorf("field \"histogram\" is required")
 		}
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
 	case "curve":
 		if u.curve == nil {
 			return fmt.Errorf("field \"curve\" is required")
@@ -1098,7 +1287,7 @@ func (u *ComputableNode) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRanges) error, seriesFunc func(SummarizeSeries) error, valueFunc func(SelectValue) error, cartesianFunc func(SummarizeCartesian) error, cartesian3dFunc func(SummarizeCartesian3d) error, frequencyFunc func(FrequencyDomain) error, frequencyV2Func func(FrequencyDomainV2) error, histogramFunc func(Histogram) error, curveFunc func(CurveFit) error, multivariateFunc func(SummarizeMultivariate) error, unknownFunc func(string) error) error {
+func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRanges) error, seriesFunc func(SummarizeSeries) error, valueFunc func(SelectValue) error, cartesianFunc func(SummarizeCartesian) error, cartesian3dFunc func(SummarizeCartesian3d) error, frequencyFunc func(FrequencyDomain) error, frequencyV2Func func(FrequencyDomainV2) error, histogramFunc func(Histogram) error, curveV2Func func(CurveFitV2) error, curveFunc func(CurveFit) error, multivariateFunc func(SummarizeMultivariate) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1145,6 +1334,11 @@ func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRanges) error, ser
 			return fmt.Errorf("field \"histogram\" is required")
 		}
 		return histogramFunc(*u.histogram)
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
+		return curveV2Func(*u.curveV2)
 	case "curve":
 		if u.curve == nil {
 			return fmt.Errorf("field \"curve\" is required")
@@ -1187,6 +1381,10 @@ func (u *ComputableNode) FrequencyV2NoopSuccess(_ FrequencyDomainV2) error {
 }
 
 func (u *ComputableNode) HistogramNoopSuccess(_ Histogram) error {
+	return nil
+}
+
+func (u *ComputableNode) CurveV2NoopSuccess(_ CurveFitV2) error {
 	return nil
 }
 
@@ -1249,6 +1447,11 @@ func (u *ComputableNode) Accept(v ComputableNodeVisitor) error {
 			return fmt.Errorf("field \"histogram\" is required")
 		}
 		return v.VisitHistogram(*u.histogram)
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
+		return v.VisitCurveV2(*u.curveV2)
 	case "curve":
 		if u.curve == nil {
 			return fmt.Errorf("field \"curve\" is required")
@@ -1271,6 +1474,7 @@ type ComputableNodeVisitor interface {
 	VisitFrequency(v FrequencyDomain) error
 	VisitFrequencyV2(v FrequencyDomainV2) error
 	VisitHistogram(v Histogram) error
+	VisitCurveV2(v CurveFitV2) error
 	VisitCurve(v CurveFit) error
 	VisitMultivariate(v SummarizeMultivariate) error
 	VisitUnknown(typeName string) error
@@ -1323,6 +1527,11 @@ func (u *ComputableNode) AcceptWithContext(ctx context.Context, v ComputableNode
 			return fmt.Errorf("field \"histogram\" is required")
 		}
 		return v.VisitHistogramWithContext(ctx, *u.histogram)
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
+		return v.VisitCurveV2WithContext(ctx, *u.curveV2)
 	case "curve":
 		if u.curve == nil {
 			return fmt.Errorf("field \"curve\" is required")
@@ -1345,6 +1554,7 @@ type ComputableNodeVisitorWithContext interface {
 	VisitFrequencyWithContext(ctx context.Context, v FrequencyDomain) error
 	VisitFrequencyV2WithContext(ctx context.Context, v FrequencyDomainV2) error
 	VisitHistogramWithContext(ctx context.Context, v Histogram) error
+	VisitCurveV2WithContext(ctx context.Context, v CurveFitV2) error
 	VisitCurveWithContext(ctx context.Context, v CurveFit) error
 	VisitMultivariateWithContext(ctx context.Context, v SummarizeMultivariate) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
@@ -1382,6 +1592,10 @@ func NewComputableNodeFromHistogram(v Histogram) ComputableNode {
 	return ComputableNode{typ: "histogram", histogram: &v}
 }
 
+func NewComputableNodeFromCurveV2(v CurveFitV2) ComputableNode {
+	return ComputableNode{typ: "curveV2", curveV2: &v}
+}
+
 func NewComputableNodeFromCurve(v CurveFit) ComputableNode {
 	return ComputableNode{typ: "curve", curve: &v}
 }
@@ -1392,7 +1606,6 @@ func NewComputableNodeFromMultivariate(v SummarizeMultivariate) ComputableNode {
 
 type ComputeNode struct {
 	typ      string
-	boolean  *BooleanSeries
 	enum     *EnumSeries
 	numeric  *NumericSeries
 	log      *LogSeries
@@ -1400,12 +1613,13 @@ type ComputeNode struct {
 	array    *ArraySeries
 	struct_  *StructSeries
 	curveFit *CurveFit
+	curveV2  *CurveFitV2
+	video    *api.Reference
 	raw      *api.Reference
 }
 
 type computeNodeDeserializer struct {
 	Type     string         `json:"type"`
-	Boolean  *BooleanSeries `json:"boolean"`
 	Enum     *EnumSeries    `json:"enum"`
 	Numeric  *NumericSeries `json:"numeric"`
 	Log      *LogSeries     `json:"log"`
@@ -1413,25 +1627,19 @@ type computeNodeDeserializer struct {
 	Array    *ArraySeries   `json:"array"`
 	Struct   *StructSeries  `json:"struct"`
 	CurveFit *CurveFit      `json:"curveFit"`
+	CurveV2  *CurveFitV2    `json:"curveV2"`
+	Video    *api.Reference `json:"video"`
 	Raw      *api.Reference `json:"raw"`
 }
 
 func (u *computeNodeDeserializer) toStruct() ComputeNode {
-	return ComputeNode{typ: u.Type, boolean: u.Boolean, enum: u.Enum, numeric: u.Numeric, log: u.Log, ranges: u.Ranges, array: u.Array, struct_: u.Struct, curveFit: u.CurveFit, raw: u.Raw}
+	return ComputeNode{typ: u.Type, enum: u.Enum, numeric: u.Numeric, log: u.Log, ranges: u.Ranges, array: u.Array, struct_: u.Struct, curveFit: u.CurveFit, curveV2: u.CurveV2, video: u.Video, raw: u.Raw}
 }
 
 func (u *ComputeNode) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "boolean":
-		if u.boolean == nil {
-			return nil, fmt.Errorf("field \"boolean\" is required")
-		}
-		return struct {
-			Type    string        `json:"type"`
-			Boolean BooleanSeries `json:"boolean"`
-		}{Type: "boolean", Boolean: *u.boolean}, nil
 	case "enum":
 		if u.enum == nil {
 			return nil, fmt.Errorf("field \"enum\" is required")
@@ -1488,6 +1696,22 @@ func (u *ComputeNode) toSerializer() (interface{}, error) {
 			Type     string   `json:"type"`
 			CurveFit CurveFit `json:"curveFit"`
 		}{Type: "curveFit", CurveFit: *u.curveFit}, nil
+	case "curveV2":
+		if u.curveV2 == nil {
+			return nil, fmt.Errorf("field \"curveV2\" is required")
+		}
+		return struct {
+			Type    string     `json:"type"`
+			CurveV2 CurveFitV2 `json:"curveV2"`
+		}{Type: "curveV2", CurveV2: *u.curveV2}, nil
+	case "video":
+		if u.video == nil {
+			return nil, fmt.Errorf("field \"video\" is required")
+		}
+		return struct {
+			Type  string        `json:"type"`
+			Video api.Reference `json:"video"`
+		}{Type: "video", Video: *u.video}, nil
 	case "raw":
 		if u.raw == nil {
 			return nil, fmt.Errorf("field \"raw\" is required")
@@ -1514,10 +1738,6 @@ func (u *ComputeNode) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -1546,6 +1766,14 @@ func (u *ComputeNode) UnmarshalJSON(data []byte) error {
 		if u.curveFit == nil {
 			return fmt.Errorf("field \"curveFit\" is required")
 		}
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -1570,18 +1798,13 @@ func (u *ComputeNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ComputeNode) AcceptFuncs(booleanFunc func(BooleanSeries) error, enumFunc func(EnumSeries) error, numericFunc func(NumericSeries) error, logFunc func(LogSeries) error, rangesFunc func(RangeSeries) error, arrayFunc func(ArraySeries) error, struct_Func func(StructSeries) error, curveFitFunc func(CurveFit) error, rawFunc func(api.Reference) error, unknownFunc func(string) error) error {
+func (u *ComputeNode) AcceptFuncs(enumFunc func(EnumSeries) error, numericFunc func(NumericSeries) error, logFunc func(LogSeries) error, rangesFunc func(RangeSeries) error, arrayFunc func(ArraySeries) error, struct_Func func(StructSeries) error, curveFitFunc func(CurveFit) error, curveV2Func func(CurveFitV2) error, videoFunc func(api.Reference) error, rawFunc func(api.Reference) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in ComputeNode type")
 		}
 		return unknownFunc(u.typ)
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
-		return booleanFunc(*u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -1617,16 +1840,22 @@ func (u *ComputeNode) AcceptFuncs(booleanFunc func(BooleanSeries) error, enumFun
 			return fmt.Errorf("field \"curveFit\" is required")
 		}
 		return curveFitFunc(*u.curveFit)
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
+		return curveV2Func(*u.curveV2)
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
+		return videoFunc(*u.video)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return rawFunc(*u.raw)
 	}
-}
-
-func (u *ComputeNode) BooleanNoopSuccess(_ BooleanSeries) error {
-	return nil
 }
 
 func (u *ComputeNode) EnumNoopSuccess(_ EnumSeries) error {
@@ -1657,6 +1886,14 @@ func (u *ComputeNode) CurveFitNoopSuccess(_ CurveFit) error {
 	return nil
 }
 
+func (u *ComputeNode) CurveV2NoopSuccess(_ CurveFitV2) error {
+	return nil
+}
+
+func (u *ComputeNode) VideoNoopSuccess(_ api.Reference) error {
+	return nil
+}
+
 func (u *ComputeNode) RawNoopSuccess(_ api.Reference) error {
 	return nil
 }
@@ -1672,11 +1909,6 @@ func (u *ComputeNode) Accept(v ComputeNodeVisitor) error {
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
-		return v.VisitBoolean(*u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -1712,6 +1944,16 @@ func (u *ComputeNode) Accept(v ComputeNodeVisitor) error {
 			return fmt.Errorf("field \"curveFit\" is required")
 		}
 		return v.VisitCurveFit(*u.curveFit)
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
+		return v.VisitCurveV2(*u.curveV2)
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
+		return v.VisitVideo(*u.video)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -1721,7 +1963,6 @@ func (u *ComputeNode) Accept(v ComputeNodeVisitor) error {
 }
 
 type ComputeNodeVisitor interface {
-	VisitBoolean(v BooleanSeries) error
 	VisitEnum(v EnumSeries) error
 	VisitNumeric(v NumericSeries) error
 	VisitLog(v LogSeries) error
@@ -1729,6 +1970,8 @@ type ComputeNodeVisitor interface {
 	VisitArray(v ArraySeries) error
 	VisitStruct(v StructSeries) error
 	VisitCurveFit(v CurveFit) error
+	VisitCurveV2(v CurveFitV2) error
+	VisitVideo(v api.Reference) error
 	VisitRaw(v api.Reference) error
 	VisitUnknown(typeName string) error
 }
@@ -1740,11 +1983,6 @@ func (u *ComputeNode) AcceptWithContext(ctx context.Context, v ComputeNodeVisito
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
-		return v.VisitBooleanWithContext(ctx, *u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -1780,6 +2018,16 @@ func (u *ComputeNode) AcceptWithContext(ctx context.Context, v ComputeNodeVisito
 			return fmt.Errorf("field \"curveFit\" is required")
 		}
 		return v.VisitCurveFitWithContext(ctx, *u.curveFit)
+	case "curveV2":
+		if u.curveV2 == nil {
+			return fmt.Errorf("field \"curveV2\" is required")
+		}
+		return v.VisitCurveV2WithContext(ctx, *u.curveV2)
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
+		return v.VisitVideoWithContext(ctx, *u.video)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
@@ -1789,7 +2037,6 @@ func (u *ComputeNode) AcceptWithContext(ctx context.Context, v ComputeNodeVisito
 }
 
 type ComputeNodeVisitorWithContext interface {
-	VisitBooleanWithContext(ctx context.Context, v BooleanSeries) error
 	VisitEnumWithContext(ctx context.Context, v EnumSeries) error
 	VisitNumericWithContext(ctx context.Context, v NumericSeries) error
 	VisitLogWithContext(ctx context.Context, v LogSeries) error
@@ -1797,12 +2044,10 @@ type ComputeNodeVisitorWithContext interface {
 	VisitArrayWithContext(ctx context.Context, v ArraySeries) error
 	VisitStructWithContext(ctx context.Context, v StructSeries) error
 	VisitCurveFitWithContext(ctx context.Context, v CurveFit) error
+	VisitCurveV2WithContext(ctx context.Context, v CurveFitV2) error
+	VisitVideoWithContext(ctx context.Context, v api.Reference) error
 	VisitRawWithContext(ctx context.Context, v api.Reference) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewComputeNodeFromBoolean(v BooleanSeries) ComputeNode {
-	return ComputeNode{typ: "boolean", boolean: &v}
 }
 
 func NewComputeNodeFromEnum(v EnumSeries) ComputeNode {
@@ -1831,6 +2076,14 @@ func NewComputeNodeFromStruct(v StructSeries) ComputeNode {
 
 func NewComputeNodeFromCurveFit(v CurveFit) ComputeNode {
 	return ComputeNode{typ: "curveFit", curveFit: &v}
+}
+
+func NewComputeNodeFromCurveV2(v CurveFitV2) ComputeNode {
+	return ComputeNode{typ: "curveV2", curveV2: &v}
+}
+
+func NewComputeNodeFromVideo(v api.Reference) ComputeNode {
+	return ComputeNode{typ: "video", video: &v}
 }
 
 func NewComputeNodeFromRaw(v api.Reference) ComputeNode {
@@ -2012,6 +2265,1279 @@ func NewCurveFitPlotTypeFromScatter(v ScatterCurveFit) CurveFitPlotType {
 }
 
 /*
+The series a curve is fit against (the `y` of the fit). Modeled as a union so additional target
+types can be added in the future; today the only arm is a numeric series.
+*/
+type CurveFitTarget struct {
+	typ     string
+	numeric *CurveFitSeriesVariable
+}
+
+type curveFitTargetDeserializer struct {
+	Type    string                  `json:"type"`
+	Numeric *CurveFitSeriesVariable `json:"numeric"`
+}
+
+func (u *curveFitTargetDeserializer) toStruct() CurveFitTarget {
+	return CurveFitTarget{typ: u.Type, numeric: u.Numeric}
+}
+
+func (u *CurveFitTarget) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return nil, fmt.Errorf("field \"numeric\" is required")
+		}
+		return struct {
+			Type    string                 `json:"type"`
+			Numeric CurveFitSeriesVariable `json:"numeric"`
+		}{Type: "numeric", Numeric: *u.numeric}, nil
+	}
+}
+
+func (u CurveFitTarget) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *CurveFitTarget) UnmarshalJSON(data []byte) error {
+	var deser curveFitTargetDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+	}
+	return nil
+}
+
+func (u CurveFitTarget) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *CurveFitTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *CurveFitTarget) AcceptFuncs(numericFunc func(CurveFitSeriesVariable) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in CurveFitTarget type")
+		}
+		return unknownFunc(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return numericFunc(*u.numeric)
+	}
+}
+
+func (u *CurveFitTarget) NumericNoopSuccess(_ CurveFitSeriesVariable) error {
+	return nil
+}
+
+func (u *CurveFitTarget) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *CurveFitTarget) Accept(v CurveFitTargetVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumeric(*u.numeric)
+	}
+}
+
+type CurveFitTargetVisitor interface {
+	VisitNumeric(v CurveFitSeriesVariable) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *CurveFitTarget) AcceptWithContext(ctx context.Context, v CurveFitTargetVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumericWithContext(ctx, *u.numeric)
+	}
+}
+
+type CurveFitTargetVisitorWithContext interface {
+	VisitNumericWithContext(ctx context.Context, v CurveFitSeriesVariable) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewCurveFitTargetFromNumeric(v CurveFitSeriesVariable) CurveFitTarget {
+	return CurveFitTarget{typ: "numeric", numeric: &v}
+}
+
+type CurveFitV2Details struct {
+	typ         string
+	exponential *BuiltInCurveFit
+	logarithmic *BuiltInCurveFit
+	polynomial  *PolynomialCurveFit
+	power       *BuiltInCurveFit
+	custom      *CustomCurveFit
+}
+
+type curveFitV2DetailsDeserializer struct {
+	Type        string              `json:"type"`
+	Exponential *BuiltInCurveFit    `json:"exponential"`
+	Logarithmic *BuiltInCurveFit    `json:"logarithmic"`
+	Polynomial  *PolynomialCurveFit `json:"polynomial"`
+	Power       *BuiltInCurveFit    `json:"power"`
+	Custom      *CustomCurveFit     `json:"custom"`
+}
+
+func (u *curveFitV2DetailsDeserializer) toStruct() CurveFitV2Details {
+	return CurveFitV2Details{typ: u.Type, exponential: u.Exponential, logarithmic: u.Logarithmic, polynomial: u.Polynomial, power: u.Power, custom: u.Custom}
+}
+
+func (u *CurveFitV2Details) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "exponential":
+		if u.exponential == nil {
+			return nil, fmt.Errorf("field \"exponential\" is required")
+		}
+		return struct {
+			Type        string          `json:"type"`
+			Exponential BuiltInCurveFit `json:"exponential"`
+		}{Type: "exponential", Exponential: *u.exponential}, nil
+	case "logarithmic":
+		if u.logarithmic == nil {
+			return nil, fmt.Errorf("field \"logarithmic\" is required")
+		}
+		return struct {
+			Type        string          `json:"type"`
+			Logarithmic BuiltInCurveFit `json:"logarithmic"`
+		}{Type: "logarithmic", Logarithmic: *u.logarithmic}, nil
+	case "polynomial":
+		if u.polynomial == nil {
+			return nil, fmt.Errorf("field \"polynomial\" is required")
+		}
+		return struct {
+			Type       string             `json:"type"`
+			Polynomial PolynomialCurveFit `json:"polynomial"`
+		}{Type: "polynomial", Polynomial: *u.polynomial}, nil
+	case "power":
+		if u.power == nil {
+			return nil, fmt.Errorf("field \"power\" is required")
+		}
+		return struct {
+			Type  string          `json:"type"`
+			Power BuiltInCurveFit `json:"power"`
+		}{Type: "power", Power: *u.power}, nil
+	case "custom":
+		if u.custom == nil {
+			return nil, fmt.Errorf("field \"custom\" is required")
+		}
+		return struct {
+			Type   string         `json:"type"`
+			Custom CustomCurveFit `json:"custom"`
+		}{Type: "custom", Custom: *u.custom}, nil
+	}
+}
+
+func (u CurveFitV2Details) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *CurveFitV2Details) UnmarshalJSON(data []byte) error {
+	var deser curveFitV2DetailsDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "exponential":
+		if u.exponential == nil {
+			return fmt.Errorf("field \"exponential\" is required")
+		}
+	case "logarithmic":
+		if u.logarithmic == nil {
+			return fmt.Errorf("field \"logarithmic\" is required")
+		}
+	case "polynomial":
+		if u.polynomial == nil {
+			return fmt.Errorf("field \"polynomial\" is required")
+		}
+	case "power":
+		if u.power == nil {
+			return fmt.Errorf("field \"power\" is required")
+		}
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+	}
+	return nil
+}
+
+func (u CurveFitV2Details) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *CurveFitV2Details) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *CurveFitV2Details) AcceptFuncs(exponentialFunc func(BuiltInCurveFit) error, logarithmicFunc func(BuiltInCurveFit) error, polynomialFunc func(PolynomialCurveFit) error, powerFunc func(BuiltInCurveFit) error, customFunc func(CustomCurveFit) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in CurveFitV2Details type")
+		}
+		return unknownFunc(u.typ)
+	case "exponential":
+		if u.exponential == nil {
+			return fmt.Errorf("field \"exponential\" is required")
+		}
+		return exponentialFunc(*u.exponential)
+	case "logarithmic":
+		if u.logarithmic == nil {
+			return fmt.Errorf("field \"logarithmic\" is required")
+		}
+		return logarithmicFunc(*u.logarithmic)
+	case "polynomial":
+		if u.polynomial == nil {
+			return fmt.Errorf("field \"polynomial\" is required")
+		}
+		return polynomialFunc(*u.polynomial)
+	case "power":
+		if u.power == nil {
+			return fmt.Errorf("field \"power\" is required")
+		}
+		return powerFunc(*u.power)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return customFunc(*u.custom)
+	}
+}
+
+func (u *CurveFitV2Details) ExponentialNoopSuccess(_ BuiltInCurveFit) error {
+	return nil
+}
+
+func (u *CurveFitV2Details) LogarithmicNoopSuccess(_ BuiltInCurveFit) error {
+	return nil
+}
+
+func (u *CurveFitV2Details) PolynomialNoopSuccess(_ PolynomialCurveFit) error {
+	return nil
+}
+
+func (u *CurveFitV2Details) PowerNoopSuccess(_ BuiltInCurveFit) error {
+	return nil
+}
+
+func (u *CurveFitV2Details) CustomNoopSuccess(_ CustomCurveFit) error {
+	return nil
+}
+
+func (u *CurveFitV2Details) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *CurveFitV2Details) Accept(v CurveFitV2DetailsVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "exponential":
+		if u.exponential == nil {
+			return fmt.Errorf("field \"exponential\" is required")
+		}
+		return v.VisitExponential(*u.exponential)
+	case "logarithmic":
+		if u.logarithmic == nil {
+			return fmt.Errorf("field \"logarithmic\" is required")
+		}
+		return v.VisitLogarithmic(*u.logarithmic)
+	case "polynomial":
+		if u.polynomial == nil {
+			return fmt.Errorf("field \"polynomial\" is required")
+		}
+		return v.VisitPolynomial(*u.polynomial)
+	case "power":
+		if u.power == nil {
+			return fmt.Errorf("field \"power\" is required")
+		}
+		return v.VisitPower(*u.power)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustom(*u.custom)
+	}
+}
+
+type CurveFitV2DetailsVisitor interface {
+	VisitExponential(v BuiltInCurveFit) error
+	VisitLogarithmic(v BuiltInCurveFit) error
+	VisitPolynomial(v PolynomialCurveFit) error
+	VisitPower(v BuiltInCurveFit) error
+	VisitCustom(v CustomCurveFit) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *CurveFitV2Details) AcceptWithContext(ctx context.Context, v CurveFitV2DetailsVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "exponential":
+		if u.exponential == nil {
+			return fmt.Errorf("field \"exponential\" is required")
+		}
+		return v.VisitExponentialWithContext(ctx, *u.exponential)
+	case "logarithmic":
+		if u.logarithmic == nil {
+			return fmt.Errorf("field \"logarithmic\" is required")
+		}
+		return v.VisitLogarithmicWithContext(ctx, *u.logarithmic)
+	case "polynomial":
+		if u.polynomial == nil {
+			return fmt.Errorf("field \"polynomial\" is required")
+		}
+		return v.VisitPolynomialWithContext(ctx, *u.polynomial)
+	case "power":
+		if u.power == nil {
+			return fmt.Errorf("field \"power\" is required")
+		}
+		return v.VisitPowerWithContext(ctx, *u.power)
+	case "custom":
+		if u.custom == nil {
+			return fmt.Errorf("field \"custom\" is required")
+		}
+		return v.VisitCustomWithContext(ctx, *u.custom)
+	}
+}
+
+type CurveFitV2DetailsVisitorWithContext interface {
+	VisitExponentialWithContext(ctx context.Context, v BuiltInCurveFit) error
+	VisitLogarithmicWithContext(ctx context.Context, v BuiltInCurveFit) error
+	VisitPolynomialWithContext(ctx context.Context, v PolynomialCurveFit) error
+	VisitPowerWithContext(ctx context.Context, v BuiltInCurveFit) error
+	VisitCustomWithContext(ctx context.Context, v CustomCurveFit) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewCurveFitV2DetailsFromExponential(v BuiltInCurveFit) CurveFitV2Details {
+	return CurveFitV2Details{typ: "exponential", exponential: &v}
+}
+
+func NewCurveFitV2DetailsFromLogarithmic(v BuiltInCurveFit) CurveFitV2Details {
+	return CurveFitV2Details{typ: "logarithmic", logarithmic: &v}
+}
+
+func NewCurveFitV2DetailsFromPolynomial(v PolynomialCurveFit) CurveFitV2Details {
+	return CurveFitV2Details{typ: "polynomial", polynomial: &v}
+}
+
+func NewCurveFitV2DetailsFromPower(v BuiltInCurveFit) CurveFitV2Details {
+	return CurveFitV2Details{typ: "power", power: &v}
+}
+
+func NewCurveFitV2DetailsFromCustom(v CustomCurveFit) CurveFitV2Details {
+	return CurveFitV2Details{typ: "custom", custom: &v}
+}
+
+/*
+A series a curve fit reads from: another numeric series, or the target's own sample timestamps.
+Used both as the named formula inputs of a custom fit and as the independent (`x`) axis of a
+built-in fit.
+*/
+type CurveFitVariable struct {
+	typ     string
+	numeric *CurveFitSeriesVariable
+	time    *api.CurveFitTimeVariable
+}
+
+type curveFitVariableDeserializer struct {
+	Type    string                    `json:"type"`
+	Numeric *CurveFitSeriesVariable   `json:"numeric"`
+	Time    *api.CurveFitTimeVariable `json:"time"`
+}
+
+func (u *curveFitVariableDeserializer) toStruct() CurveFitVariable {
+	return CurveFitVariable{typ: u.Type, numeric: u.Numeric, time: u.Time}
+}
+
+func (u *CurveFitVariable) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return nil, fmt.Errorf("field \"numeric\" is required")
+		}
+		return struct {
+			Type    string                 `json:"type"`
+			Numeric CurveFitSeriesVariable `json:"numeric"`
+		}{Type: "numeric", Numeric: *u.numeric}, nil
+	case "time":
+		if u.time == nil {
+			return nil, fmt.Errorf("field \"time\" is required")
+		}
+		return struct {
+			Type string                   `json:"type"`
+			Time api.CurveFitTimeVariable `json:"time"`
+		}{Type: "time", Time: *u.time}, nil
+	}
+}
+
+func (u CurveFitVariable) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *CurveFitVariable) UnmarshalJSON(data []byte) error {
+	var deser curveFitVariableDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+	case "time":
+		if u.time == nil {
+			return fmt.Errorf("field \"time\" is required")
+		}
+	}
+	return nil
+}
+
+func (u CurveFitVariable) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *CurveFitVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *CurveFitVariable) AcceptFuncs(numericFunc func(CurveFitSeriesVariable) error, timeFunc func(api.CurveFitTimeVariable) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in CurveFitVariable type")
+		}
+		return unknownFunc(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return numericFunc(*u.numeric)
+	case "time":
+		if u.time == nil {
+			return fmt.Errorf("field \"time\" is required")
+		}
+		return timeFunc(*u.time)
+	}
+}
+
+func (u *CurveFitVariable) NumericNoopSuccess(_ CurveFitSeriesVariable) error {
+	return nil
+}
+
+func (u *CurveFitVariable) TimeNoopSuccess(_ api.CurveFitTimeVariable) error {
+	return nil
+}
+
+func (u *CurveFitVariable) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *CurveFitVariable) Accept(v CurveFitVariableVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumeric(*u.numeric)
+	case "time":
+		if u.time == nil {
+			return fmt.Errorf("field \"time\" is required")
+		}
+		return v.VisitTime(*u.time)
+	}
+}
+
+type CurveFitVariableVisitor interface {
+	VisitNumeric(v CurveFitSeriesVariable) error
+	VisitTime(v api.CurveFitTimeVariable) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *CurveFitVariable) AcceptWithContext(ctx context.Context, v CurveFitVariableVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumericWithContext(ctx, *u.numeric)
+	case "time":
+		if u.time == nil {
+			return fmt.Errorf("field \"time\" is required")
+		}
+		return v.VisitTimeWithContext(ctx, *u.time)
+	}
+}
+
+type CurveFitVariableVisitorWithContext interface {
+	VisitNumericWithContext(ctx context.Context, v CurveFitSeriesVariable) error
+	VisitTimeWithContext(ctx context.Context, v api.CurveFitTimeVariable) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewCurveFitVariableFromNumeric(v CurveFitSeriesVariable) CurveFitVariable {
+	return CurveFitVariable{typ: "numeric", numeric: &v}
+}
+
+func NewCurveFitVariableFromTime(v api.CurveFitTimeVariable) CurveFitVariable {
+	return CurveFitVariable{typ: "time", time: &v}
+}
+
+/*
+A logical bundle of named series. For the time being, columns are each a time series (series name + tags).
+A dataset is either rooted in persisted data (asset or dataset) or defined as a transformation of another dataset.
+*/
+type Dataset struct {
+	typ           string
+	asset         *api.Asset
+	run           *api.Run
+	saved         *api.SavedDataset
+	search        *SearchDataset
+	combine       *CombinedDataset
+	tag           *TaggedDataset
+	filter        *FilteredDataset
+	timeShift     *TimeShiftedDataset
+	alignByAnchor *AnchorAlignedDataset
+	withSeries    *WithSeriesDataset
+	reference     *api.DatasetReference
+}
+
+type datasetDeserializer struct {
+	Type          string                `json:"type"`
+	Asset         *api.Asset            `json:"asset"`
+	Run           *api.Run              `json:"run"`
+	Saved         *api.SavedDataset     `json:"saved"`
+	Search        *SearchDataset        `json:"search"`
+	Combine       *CombinedDataset      `json:"combine"`
+	Tag           *TaggedDataset        `json:"tag"`
+	Filter        *FilteredDataset      `json:"filter"`
+	TimeShift     *TimeShiftedDataset   `json:"timeShift"`
+	AlignByAnchor *AnchorAlignedDataset `json:"alignByAnchor"`
+	WithSeries    *WithSeriesDataset    `json:"withSeries"`
+	Reference     *api.DatasetReference `json:"reference"`
+}
+
+func (u *datasetDeserializer) toStruct() Dataset {
+	return Dataset{typ: u.Type, asset: u.Asset, run: u.Run, saved: u.Saved, search: u.Search, combine: u.Combine, tag: u.Tag, filter: u.Filter, timeShift: u.TimeShift, alignByAnchor: u.AlignByAnchor, withSeries: u.WithSeries, reference: u.Reference}
+}
+
+func (u *Dataset) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "asset":
+		if u.asset == nil {
+			return nil, fmt.Errorf("field \"asset\" is required")
+		}
+		return struct {
+			Type  string    `json:"type"`
+			Asset api.Asset `json:"asset"`
+		}{Type: "asset", Asset: *u.asset}, nil
+	case "run":
+		if u.run == nil {
+			return nil, fmt.Errorf("field \"run\" is required")
+		}
+		return struct {
+			Type string  `json:"type"`
+			Run  api.Run `json:"run"`
+		}{Type: "run", Run: *u.run}, nil
+	case "saved":
+		if u.saved == nil {
+			return nil, fmt.Errorf("field \"saved\" is required")
+		}
+		return struct {
+			Type  string           `json:"type"`
+			Saved api.SavedDataset `json:"saved"`
+		}{Type: "saved", Saved: *u.saved}, nil
+	case "search":
+		if u.search == nil {
+			return nil, fmt.Errorf("field \"search\" is required")
+		}
+		return struct {
+			Type   string        `json:"type"`
+			Search SearchDataset `json:"search"`
+		}{Type: "search", Search: *u.search}, nil
+	case "combine":
+		if u.combine == nil {
+			return nil, fmt.Errorf("field \"combine\" is required")
+		}
+		return struct {
+			Type    string          `json:"type"`
+			Combine CombinedDataset `json:"combine"`
+		}{Type: "combine", Combine: *u.combine}, nil
+	case "tag":
+		if u.tag == nil {
+			return nil, fmt.Errorf("field \"tag\" is required")
+		}
+		return struct {
+			Type string        `json:"type"`
+			Tag  TaggedDataset `json:"tag"`
+		}{Type: "tag", Tag: *u.tag}, nil
+	case "filter":
+		if u.filter == nil {
+			return nil, fmt.Errorf("field \"filter\" is required")
+		}
+		return struct {
+			Type   string          `json:"type"`
+			Filter FilteredDataset `json:"filter"`
+		}{Type: "filter", Filter: *u.filter}, nil
+	case "timeShift":
+		if u.timeShift == nil {
+			return nil, fmt.Errorf("field \"timeShift\" is required")
+		}
+		return struct {
+			Type      string             `json:"type"`
+			TimeShift TimeShiftedDataset `json:"timeShift"`
+		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
+	case "alignByAnchor":
+		if u.alignByAnchor == nil {
+			return nil, fmt.Errorf("field \"alignByAnchor\" is required")
+		}
+		return struct {
+			Type          string               `json:"type"`
+			AlignByAnchor AnchorAlignedDataset `json:"alignByAnchor"`
+		}{Type: "alignByAnchor", AlignByAnchor: *u.alignByAnchor}, nil
+	case "withSeries":
+		if u.withSeries == nil {
+			return nil, fmt.Errorf("field \"withSeries\" is required")
+		}
+		return struct {
+			Type       string            `json:"type"`
+			WithSeries WithSeriesDataset `json:"withSeries"`
+		}{Type: "withSeries", WithSeries: *u.withSeries}, nil
+	case "reference":
+		if u.reference == nil {
+			return nil, fmt.Errorf("field \"reference\" is required")
+		}
+		return struct {
+			Type      string               `json:"type"`
+			Reference api.DatasetReference `json:"reference"`
+		}{Type: "reference", Reference: *u.reference}, nil
+	}
+}
+
+func (u Dataset) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *Dataset) UnmarshalJSON(data []byte) error {
+	var deser datasetDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+	case "run":
+		if u.run == nil {
+			return fmt.Errorf("field \"run\" is required")
+		}
+	case "saved":
+		if u.saved == nil {
+			return fmt.Errorf("field \"saved\" is required")
+		}
+	case "search":
+		if u.search == nil {
+			return fmt.Errorf("field \"search\" is required")
+		}
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+	case "tag":
+		if u.tag == nil {
+			return fmt.Errorf("field \"tag\" is required")
+		}
+	case "filter":
+		if u.filter == nil {
+			return fmt.Errorf("field \"filter\" is required")
+		}
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+	case "alignByAnchor":
+		if u.alignByAnchor == nil {
+			return fmt.Errorf("field \"alignByAnchor\" is required")
+		}
+	case "withSeries":
+		if u.withSeries == nil {
+			return fmt.Errorf("field \"withSeries\" is required")
+		}
+	case "reference":
+		if u.reference == nil {
+			return fmt.Errorf("field \"reference\" is required")
+		}
+	}
+	return nil
+}
+
+func (u Dataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *Dataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *Dataset) AcceptFuncs(assetFunc func(api.Asset) error, runFunc func(api.Run) error, savedFunc func(api.SavedDataset) error, searchFunc func(SearchDataset) error, combineFunc func(CombinedDataset) error, tagFunc func(TaggedDataset) error, filterFunc func(FilteredDataset) error, timeShiftFunc func(TimeShiftedDataset) error, alignByAnchorFunc func(AnchorAlignedDataset) error, withSeriesFunc func(WithSeriesDataset) error, referenceFunc func(api.DatasetReference) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in Dataset type")
+		}
+		return unknownFunc(u.typ)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return assetFunc(*u.asset)
+	case "run":
+		if u.run == nil {
+			return fmt.Errorf("field \"run\" is required")
+		}
+		return runFunc(*u.run)
+	case "saved":
+		if u.saved == nil {
+			return fmt.Errorf("field \"saved\" is required")
+		}
+		return savedFunc(*u.saved)
+	case "search":
+		if u.search == nil {
+			return fmt.Errorf("field \"search\" is required")
+		}
+		return searchFunc(*u.search)
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+		return combineFunc(*u.combine)
+	case "tag":
+		if u.tag == nil {
+			return fmt.Errorf("field \"tag\" is required")
+		}
+		return tagFunc(*u.tag)
+	case "filter":
+		if u.filter == nil {
+			return fmt.Errorf("field \"filter\" is required")
+		}
+		return filterFunc(*u.filter)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return timeShiftFunc(*u.timeShift)
+	case "alignByAnchor":
+		if u.alignByAnchor == nil {
+			return fmt.Errorf("field \"alignByAnchor\" is required")
+		}
+		return alignByAnchorFunc(*u.alignByAnchor)
+	case "withSeries":
+		if u.withSeries == nil {
+			return fmt.Errorf("field \"withSeries\" is required")
+		}
+		return withSeriesFunc(*u.withSeries)
+	case "reference":
+		if u.reference == nil {
+			return fmt.Errorf("field \"reference\" is required")
+		}
+		return referenceFunc(*u.reference)
+	}
+}
+
+func (u *Dataset) AssetNoopSuccess(_ api.Asset) error {
+	return nil
+}
+
+func (u *Dataset) RunNoopSuccess(_ api.Run) error {
+	return nil
+}
+
+func (u *Dataset) SavedNoopSuccess(_ api.SavedDataset) error {
+	return nil
+}
+
+func (u *Dataset) SearchNoopSuccess(_ SearchDataset) error {
+	return nil
+}
+
+func (u *Dataset) CombineNoopSuccess(_ CombinedDataset) error {
+	return nil
+}
+
+func (u *Dataset) TagNoopSuccess(_ TaggedDataset) error {
+	return nil
+}
+
+func (u *Dataset) FilterNoopSuccess(_ FilteredDataset) error {
+	return nil
+}
+
+func (u *Dataset) TimeShiftNoopSuccess(_ TimeShiftedDataset) error {
+	return nil
+}
+
+func (u *Dataset) AlignByAnchorNoopSuccess(_ AnchorAlignedDataset) error {
+	return nil
+}
+
+func (u *Dataset) WithSeriesNoopSuccess(_ WithSeriesDataset) error {
+	return nil
+}
+
+func (u *Dataset) ReferenceNoopSuccess(_ api.DatasetReference) error {
+	return nil
+}
+
+func (u *Dataset) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *Dataset) Accept(v DatasetVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAsset(*u.asset)
+	case "run":
+		if u.run == nil {
+			return fmt.Errorf("field \"run\" is required")
+		}
+		return v.VisitRun(*u.run)
+	case "saved":
+		if u.saved == nil {
+			return fmt.Errorf("field \"saved\" is required")
+		}
+		return v.VisitSaved(*u.saved)
+	case "search":
+		if u.search == nil {
+			return fmt.Errorf("field \"search\" is required")
+		}
+		return v.VisitSearch(*u.search)
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+		return v.VisitCombine(*u.combine)
+	case "tag":
+		if u.tag == nil {
+			return fmt.Errorf("field \"tag\" is required")
+		}
+		return v.VisitTag(*u.tag)
+	case "filter":
+		if u.filter == nil {
+			return fmt.Errorf("field \"filter\" is required")
+		}
+		return v.VisitFilter(*u.filter)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return v.VisitTimeShift(*u.timeShift)
+	case "alignByAnchor":
+		if u.alignByAnchor == nil {
+			return fmt.Errorf("field \"alignByAnchor\" is required")
+		}
+		return v.VisitAlignByAnchor(*u.alignByAnchor)
+	case "withSeries":
+		if u.withSeries == nil {
+			return fmt.Errorf("field \"withSeries\" is required")
+		}
+		return v.VisitWithSeries(*u.withSeries)
+	case "reference":
+		if u.reference == nil {
+			return fmt.Errorf("field \"reference\" is required")
+		}
+		return v.VisitReference(*u.reference)
+	}
+}
+
+type DatasetVisitor interface {
+	VisitAsset(v api.Asset) error
+	VisitRun(v api.Run) error
+	VisitSaved(v api.SavedDataset) error
+	VisitSearch(v SearchDataset) error
+	VisitCombine(v CombinedDataset) error
+	VisitTag(v TaggedDataset) error
+	VisitFilter(v FilteredDataset) error
+	VisitTimeShift(v TimeShiftedDataset) error
+	VisitAlignByAnchor(v AnchorAlignedDataset) error
+	VisitWithSeries(v WithSeriesDataset) error
+	VisitReference(v api.DatasetReference) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *Dataset) AcceptWithContext(ctx context.Context, v DatasetVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "asset":
+		if u.asset == nil {
+			return fmt.Errorf("field \"asset\" is required")
+		}
+		return v.VisitAssetWithContext(ctx, *u.asset)
+	case "run":
+		if u.run == nil {
+			return fmt.Errorf("field \"run\" is required")
+		}
+		return v.VisitRunWithContext(ctx, *u.run)
+	case "saved":
+		if u.saved == nil {
+			return fmt.Errorf("field \"saved\" is required")
+		}
+		return v.VisitSavedWithContext(ctx, *u.saved)
+	case "search":
+		if u.search == nil {
+			return fmt.Errorf("field \"search\" is required")
+		}
+		return v.VisitSearchWithContext(ctx, *u.search)
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+		return v.VisitCombineWithContext(ctx, *u.combine)
+	case "tag":
+		if u.tag == nil {
+			return fmt.Errorf("field \"tag\" is required")
+		}
+		return v.VisitTagWithContext(ctx, *u.tag)
+	case "filter":
+		if u.filter == nil {
+			return fmt.Errorf("field \"filter\" is required")
+		}
+		return v.VisitFilterWithContext(ctx, *u.filter)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
+	case "alignByAnchor":
+		if u.alignByAnchor == nil {
+			return fmt.Errorf("field \"alignByAnchor\" is required")
+		}
+		return v.VisitAlignByAnchorWithContext(ctx, *u.alignByAnchor)
+	case "withSeries":
+		if u.withSeries == nil {
+			return fmt.Errorf("field \"withSeries\" is required")
+		}
+		return v.VisitWithSeriesWithContext(ctx, *u.withSeries)
+	case "reference":
+		if u.reference == nil {
+			return fmt.Errorf("field \"reference\" is required")
+		}
+		return v.VisitReferenceWithContext(ctx, *u.reference)
+	}
+}
+
+type DatasetVisitorWithContext interface {
+	VisitAssetWithContext(ctx context.Context, v api.Asset) error
+	VisitRunWithContext(ctx context.Context, v api.Run) error
+	VisitSavedWithContext(ctx context.Context, v api.SavedDataset) error
+	VisitSearchWithContext(ctx context.Context, v SearchDataset) error
+	VisitCombineWithContext(ctx context.Context, v CombinedDataset) error
+	VisitTagWithContext(ctx context.Context, v TaggedDataset) error
+	VisitFilterWithContext(ctx context.Context, v FilteredDataset) error
+	VisitTimeShiftWithContext(ctx context.Context, v TimeShiftedDataset) error
+	VisitAlignByAnchorWithContext(ctx context.Context, v AnchorAlignedDataset) error
+	VisitWithSeriesWithContext(ctx context.Context, v WithSeriesDataset) error
+	VisitReferenceWithContext(ctx context.Context, v api.DatasetReference) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewDatasetFromAsset(v api.Asset) Dataset {
+	return Dataset{typ: "asset", asset: &v}
+}
+
+func NewDatasetFromRun(v api.Run) Dataset {
+	return Dataset{typ: "run", run: &v}
+}
+
+func NewDatasetFromSaved(v api.SavedDataset) Dataset {
+	return Dataset{typ: "saved", saved: &v}
+}
+
+func NewDatasetFromSearch(v SearchDataset) Dataset {
+	return Dataset{typ: "search", search: &v}
+}
+
+func NewDatasetFromCombine(v CombinedDataset) Dataset {
+	return Dataset{typ: "combine", combine: &v}
+}
+
+func NewDatasetFromTag(v TaggedDataset) Dataset {
+	return Dataset{typ: "tag", tag: &v}
+}
+
+func NewDatasetFromFilter(v FilteredDataset) Dataset {
+	return Dataset{typ: "filter", filter: &v}
+}
+
+func NewDatasetFromTimeShift(v TimeShiftedDataset) Dataset {
+	return Dataset{typ: "timeShift", timeShift: &v}
+}
+
+func NewDatasetFromAlignByAnchor(v AnchorAlignedDataset) Dataset {
+	return Dataset{typ: "alignByAnchor", alignByAnchor: &v}
+}
+
+func NewDatasetFromWithSeries(v WithSeriesDataset) Dataset {
+	return Dataset{typ: "withSeries", withSeries: &v}
+}
+
+func NewDatasetFromReference(v api.DatasetReference) Dataset {
+	return Dataset{typ: "reference", reference: &v}
+}
+
+type DatasetAnchor struct {
+	typ string
+	run *IntervalAnchor
+}
+
+type datasetAnchorDeserializer struct {
+	Type string          `json:"type"`
+	Run  *IntervalAnchor `json:"run"`
+}
+
+func (u *datasetAnchorDeserializer) toStruct() DatasetAnchor {
+	return DatasetAnchor{typ: u.Type, run: u.Run}
+}
+
+func (u *DatasetAnchor) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "run":
+		if u.run == nil {
+			return nil, fmt.Errorf("field \"run\" is required")
+		}
+		return struct {
+			Type string         `json:"type"`
+			Run  IntervalAnchor `json:"run"`
+		}{Type: "run", Run: *u.run}, nil
+	}
+}
+
+func (u DatasetAnchor) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *DatasetAnchor) UnmarshalJSON(data []byte) error {
+	var deser datasetAnchorDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "run":
+		if u.run == nil {
+			return fmt.Errorf("field \"run\" is required")
+		}
+	}
+	return nil
+}
+
+func (u DatasetAnchor) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *DatasetAnchor) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *DatasetAnchor) AcceptFuncs(runFunc func(IntervalAnchor) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in DatasetAnchor type")
+		}
+		return unknownFunc(u.typ)
+	case "run":
+		if u.run == nil {
+			return fmt.Errorf("field \"run\" is required")
+		}
+		return runFunc(*u.run)
+	}
+}
+
+func (u *DatasetAnchor) RunNoopSuccess(_ IntervalAnchor) error {
+	return nil
+}
+
+func (u *DatasetAnchor) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *DatasetAnchor) Accept(v DatasetAnchorVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "run":
+		if u.run == nil {
+			return fmt.Errorf("field \"run\" is required")
+		}
+		return v.VisitRun(*u.run)
+	}
+}
+
+type DatasetAnchorVisitor interface {
+	VisitRun(v IntervalAnchor) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *DatasetAnchor) AcceptWithContext(ctx context.Context, v DatasetAnchorVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "run":
+		if u.run == nil {
+			return fmt.Errorf("field \"run\" is required")
+		}
+		return v.VisitRunWithContext(ctx, *u.run)
+	}
+}
+
+type DatasetAnchorVisitorWithContext interface {
+	VisitRunWithContext(ctx context.Context, v IntervalAnchor) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewDatasetAnchorFromRun(v IntervalAnchor) DatasetAnchor {
+	return DatasetAnchor{typ: "run", run: &v}
+}
+
+/*
 Represents a derived series within a compute graph.
 This is a series that is derived from a function within a module.
 */
@@ -2150,6 +3676,7 @@ func NewDerivedSeriesFromFunction(v FunctionDerivedSeries) DerivedSeries {
 	return DerivedSeries{typ: "function", function: &v}
 }
 
+// A duration constant that can be a literal value or a named variable reference.
 type DurationConstant struct {
 	typ      string
 	literal  *api1.Duration
@@ -2325,21 +3852,33 @@ func NewDurationConstantFromVariable(v api.VariableName) DurationConstant {
 }
 
 type Enum1dArraySeries struct {
-	typ     string
-	channel *api.ChannelSeries
-	raw     *api.Reference
-	derived *DerivedSeries
+	typ               string
+	channel           *api.ChannelSeries
+	raw               *api.Reference
+	derived           *DerivedSeries
+	selectEnum1dArray *SelectSeries
+	extractFromStruct *ExtractEnum1dArrayFromStructSeries
+	toStartOfInterval *Enum1dArrayToStartOfIntervalSeries
+	timeShift         *Enum1dArrayTimeShiftSeries
+	filterByTag       *Enum1dArrayTagFilterSeries
+	selectTags        *Enum1dArraySelectTagsSeries
 }
 
 type enum1dArraySeriesDeserializer struct {
-	Type    string             `json:"type"`
-	Channel *api.ChannelSeries `json:"channel"`
-	Raw     *api.Reference     `json:"raw"`
-	Derived *DerivedSeries     `json:"derived"`
+	Type              string                              `json:"type"`
+	Channel           *api.ChannelSeries                  `json:"channel"`
+	Raw               *api.Reference                      `json:"raw"`
+	Derived           *DerivedSeries                      `json:"derived"`
+	SelectEnum1dArray *SelectSeries                       `json:"selectEnum1dArray"`
+	ExtractFromStruct *ExtractEnum1dArrayFromStructSeries `json:"extractFromStruct"`
+	ToStartOfInterval *Enum1dArrayToStartOfIntervalSeries `json:"toStartOfInterval"`
+	TimeShift         *Enum1dArrayTimeShiftSeries         `json:"timeShift"`
+	FilterByTag       *Enum1dArrayTagFilterSeries         `json:"filterByTag"`
+	SelectTags        *Enum1dArraySelectTagsSeries        `json:"selectTags"`
 }
 
 func (u *enum1dArraySeriesDeserializer) toStruct() Enum1dArraySeries {
-	return Enum1dArraySeries{typ: u.Type, channel: u.Channel, raw: u.Raw, derived: u.Derived}
+	return Enum1dArraySeries{typ: u.Type, channel: u.Channel, raw: u.Raw, derived: u.Derived, selectEnum1dArray: u.SelectEnum1dArray, extractFromStruct: u.ExtractFromStruct, toStartOfInterval: u.ToStartOfInterval, timeShift: u.TimeShift, filterByTag: u.FilterByTag, selectTags: u.SelectTags}
 }
 
 func (u *Enum1dArraySeries) toSerializer() (interface{}, error) {
@@ -2370,6 +3909,54 @@ func (u *Enum1dArraySeries) toSerializer() (interface{}, error) {
 			Type    string        `json:"type"`
 			Derived DerivedSeries `json:"derived"`
 		}{Type: "derived", Derived: *u.derived}, nil
+	case "selectEnum1dArray":
+		if u.selectEnum1dArray == nil {
+			return nil, fmt.Errorf("field \"selectEnum1dArray\" is required")
+		}
+		return struct {
+			Type              string       `json:"type"`
+			SelectEnum1dArray SelectSeries `json:"selectEnum1dArray"`
+		}{Type: "selectEnum1dArray", SelectEnum1dArray: *u.selectEnum1dArray}, nil
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return nil, fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return struct {
+			Type              string                             `json:"type"`
+			ExtractFromStruct ExtractEnum1dArrayFromStructSeries `json:"extractFromStruct"`
+		}{Type: "extractFromStruct", ExtractFromStruct: *u.extractFromStruct}, nil
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return nil, fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return struct {
+			Type              string                             `json:"type"`
+			ToStartOfInterval Enum1dArrayToStartOfIntervalSeries `json:"toStartOfInterval"`
+		}{Type: "toStartOfInterval", ToStartOfInterval: *u.toStartOfInterval}, nil
+	case "timeShift":
+		if u.timeShift == nil {
+			return nil, fmt.Errorf("field \"timeShift\" is required")
+		}
+		return struct {
+			Type      string                     `json:"type"`
+			TimeShift Enum1dArrayTimeShiftSeries `json:"timeShift"`
+		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return nil, fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return struct {
+			Type        string                     `json:"type"`
+			FilterByTag Enum1dArrayTagFilterSeries `json:"filterByTag"`
+		}{Type: "filterByTag", FilterByTag: *u.filterByTag}, nil
+	case "selectTags":
+		if u.selectTags == nil {
+			return nil, fmt.Errorf("field \"selectTags\" is required")
+		}
+		return struct {
+			Type       string                      `json:"type"`
+			SelectTags Enum1dArraySelectTagsSeries `json:"selectTags"`
+		}{Type: "selectTags", SelectTags: *u.selectTags}, nil
 	}
 }
 
@@ -2400,6 +3987,30 @@ func (u *Enum1dArraySeries) UnmarshalJSON(data []byte) error {
 		if u.derived == nil {
 			return fmt.Errorf("field \"derived\" is required")
 		}
+	case "selectEnum1dArray":
+		if u.selectEnum1dArray == nil {
+			return fmt.Errorf("field \"selectEnum1dArray\" is required")
+		}
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
 	}
 	return nil
 }
@@ -2420,7 +4031,7 @@ func (u *Enum1dArraySeries) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Enum1dArraySeries) AcceptFuncs(channelFunc func(api.ChannelSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, unknownFunc func(string) error) error {
+func (u *Enum1dArraySeries) AcceptFuncs(channelFunc func(api.ChannelSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, selectEnum1dArrayFunc func(SelectSeries) error, extractFromStructFunc func(ExtractEnum1dArrayFromStructSeries) error, toStartOfIntervalFunc func(Enum1dArrayToStartOfIntervalSeries) error, timeShiftFunc func(Enum1dArrayTimeShiftSeries) error, filterByTagFunc func(Enum1dArrayTagFilterSeries) error, selectTagsFunc func(Enum1dArraySelectTagsSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2442,6 +4053,36 @@ func (u *Enum1dArraySeries) AcceptFuncs(channelFunc func(api.ChannelSeries) erro
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return derivedFunc(*u.derived)
+	case "selectEnum1dArray":
+		if u.selectEnum1dArray == nil {
+			return fmt.Errorf("field \"selectEnum1dArray\" is required")
+		}
+		return selectEnum1dArrayFunc(*u.selectEnum1dArray)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return extractFromStructFunc(*u.extractFromStruct)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return toStartOfIntervalFunc(*u.toStartOfInterval)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return timeShiftFunc(*u.timeShift)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return filterByTagFunc(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return selectTagsFunc(*u.selectTags)
 	}
 }
 
@@ -2454,6 +4095,30 @@ func (u *Enum1dArraySeries) RawNoopSuccess(_ api.Reference) error {
 }
 
 func (u *Enum1dArraySeries) DerivedNoopSuccess(_ DerivedSeries) error {
+	return nil
+}
+
+func (u *Enum1dArraySeries) SelectEnum1dArrayNoopSuccess(_ SelectSeries) error {
+	return nil
+}
+
+func (u *Enum1dArraySeries) ExtractFromStructNoopSuccess(_ ExtractEnum1dArrayFromStructSeries) error {
+	return nil
+}
+
+func (u *Enum1dArraySeries) ToStartOfIntervalNoopSuccess(_ Enum1dArrayToStartOfIntervalSeries) error {
+	return nil
+}
+
+func (u *Enum1dArraySeries) TimeShiftNoopSuccess(_ Enum1dArrayTimeShiftSeries) error {
+	return nil
+}
+
+func (u *Enum1dArraySeries) FilterByTagNoopSuccess(_ Enum1dArrayTagFilterSeries) error {
+	return nil
+}
+
+func (u *Enum1dArraySeries) SelectTagsNoopSuccess(_ Enum1dArraySelectTagsSeries) error {
 	return nil
 }
 
@@ -2483,6 +4148,36 @@ func (u *Enum1dArraySeries) Accept(v Enum1dArraySeriesVisitor) error {
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerived(*u.derived)
+	case "selectEnum1dArray":
+		if u.selectEnum1dArray == nil {
+			return fmt.Errorf("field \"selectEnum1dArray\" is required")
+		}
+		return v.VisitSelectEnum1dArray(*u.selectEnum1dArray)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return v.VisitExtractFromStruct(*u.extractFromStruct)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfInterval(*u.toStartOfInterval)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return v.VisitTimeShift(*u.timeShift)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTag(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTags(*u.selectTags)
 	}
 }
 
@@ -2490,6 +4185,12 @@ type Enum1dArraySeriesVisitor interface {
 	VisitChannel(v api.ChannelSeries) error
 	VisitRaw(v api.Reference) error
 	VisitDerived(v DerivedSeries) error
+	VisitSelectEnum1dArray(v SelectSeries) error
+	VisitExtractFromStruct(v ExtractEnum1dArrayFromStructSeries) error
+	VisitToStartOfInterval(v Enum1dArrayToStartOfIntervalSeries) error
+	VisitTimeShift(v Enum1dArrayTimeShiftSeries) error
+	VisitFilterByTag(v Enum1dArrayTagFilterSeries) error
+	VisitSelectTags(v Enum1dArraySelectTagsSeries) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2515,6 +4216,36 @@ func (u *Enum1dArraySeries) AcceptWithContext(ctx context.Context, v Enum1dArray
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerivedWithContext(ctx, *u.derived)
+	case "selectEnum1dArray":
+		if u.selectEnum1dArray == nil {
+			return fmt.Errorf("field \"selectEnum1dArray\" is required")
+		}
+		return v.VisitSelectEnum1dArrayWithContext(ctx, *u.selectEnum1dArray)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return v.VisitExtractFromStructWithContext(ctx, *u.extractFromStruct)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfIntervalWithContext(ctx, *u.toStartOfInterval)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTagWithContext(ctx, *u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTagsWithContext(ctx, *u.selectTags)
 	}
 }
 
@@ -2522,6 +4253,12 @@ type Enum1dArraySeriesVisitorWithContext interface {
 	VisitChannelWithContext(ctx context.Context, v api.ChannelSeries) error
 	VisitRawWithContext(ctx context.Context, v api.Reference) error
 	VisitDerivedWithContext(ctx context.Context, v DerivedSeries) error
+	VisitSelectEnum1dArrayWithContext(ctx context.Context, v SelectSeries) error
+	VisitExtractFromStructWithContext(ctx context.Context, v ExtractEnum1dArrayFromStructSeries) error
+	VisitToStartOfIntervalWithContext(ctx context.Context, v Enum1dArrayToStartOfIntervalSeries) error
+	VisitTimeShiftWithContext(ctx context.Context, v Enum1dArrayTimeShiftSeries) error
+	VisitFilterByTagWithContext(ctx context.Context, v Enum1dArrayTagFilterSeries) error
+	VisitSelectTagsWithContext(ctx context.Context, v Enum1dArraySelectTagsSeries) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -2537,42 +4274,86 @@ func NewEnum1dArraySeriesFromDerived(v DerivedSeries) Enum1dArraySeries {
 	return Enum1dArraySeries{typ: "derived", derived: &v}
 }
 
+func NewEnum1dArraySeriesFromSelectEnum1dArray(v SelectSeries) Enum1dArraySeries {
+	return Enum1dArraySeries{typ: "selectEnum1dArray", selectEnum1dArray: &v}
+}
+
+func NewEnum1dArraySeriesFromExtractFromStruct(v ExtractEnum1dArrayFromStructSeries) Enum1dArraySeries {
+	return Enum1dArraySeries{typ: "extractFromStruct", extractFromStruct: &v}
+}
+
+func NewEnum1dArraySeriesFromToStartOfInterval(v Enum1dArrayToStartOfIntervalSeries) Enum1dArraySeries {
+	return Enum1dArraySeries{typ: "toStartOfInterval", toStartOfInterval: &v}
+}
+
+func NewEnum1dArraySeriesFromTimeShift(v Enum1dArrayTimeShiftSeries) Enum1dArraySeries {
+	return Enum1dArraySeries{typ: "timeShift", timeShift: &v}
+}
+
+func NewEnum1dArraySeriesFromFilterByTag(v Enum1dArrayTagFilterSeries) Enum1dArraySeries {
+	return Enum1dArraySeries{typ: "filterByTag", filterByTag: &v}
+}
+
+func NewEnum1dArraySeriesFromSelectTags(v Enum1dArraySelectTagsSeries) Enum1dArraySeries {
+	return Enum1dArraySeries{typ: "selectTags", selectTags: &v}
+}
+
 type EnumSeries struct {
-	typ                  string
-	aggregate            *AggregateEnumSeries
-	raw                  *api.Reference
-	channel              *api.ChannelSeries
-	derived              *DerivedSeries
-	resample             *EnumResampleSeries
-	timeRangeFilter      *EnumTimeRangeFilterSeries
-	timeShift            *EnumTimeShiftSeries
-	union                *EnumUnionSeries
-	filterTransformation *EnumFilterTransformationSeries
-	valueMap             *ValueMapSeries
-	select1dArrayIndex   *SelectIndexFrom1dEnumArraySeries
-	extractFromStruct    *ExtractEnumFromStructSeries
-	eventAggregation     *EventsEnumSeries
+	typ                       string
+	aggregate                 *AggregateEnumSeries
+	raw                       *api.Reference
+	channel                   *api.ChannelSeries
+	derived                   *DerivedSeries
+	resample                  *EnumResampleSeries
+	resampleV2                *EnumResampleSeriesV2
+	nthPointDownsample        *EnumNthPointDownsampleSeries
+	timeRangeFilter           *EnumTimeRangeFilterSeries
+	timeShift                 *EnumTimeShiftSeries
+	timeShiftV2               *EnumTimeShiftSeriesV2
+	union                     *EnumUnionSeries
+	filterTransformation      *EnumFilterTransformationSeries
+	valueMap                  *ValueMapSeries
+	select1dArrayIndex        *SelectIndexFrom1dEnumArraySeries
+	extractFromStruct         *ExtractEnumFromStructSeries
+	eventAggregation          *EventsEnumSeries
+	enumAggregation           *EnumAggregation
+	selectEnum                *SelectSeries
+	selectCategoricalProperty *SelectProperty
+	filterByTag               *EnumTagFilterSeries
+	selectTags                *EnumSelectTagsSeries
+	scalarUdf                 *ScalarUdfSeries
+	toStartOfInterval         *EnumToStartOfIntervalSeries
 }
 
 type enumSeriesDeserializer struct {
-	Type                 string                            `json:"type"`
-	Aggregate            *AggregateEnumSeries              `json:"aggregate"`
-	Raw                  *api.Reference                    `json:"raw"`
-	Channel              *api.ChannelSeries                `json:"channel"`
-	Derived              *DerivedSeries                    `json:"derived"`
-	Resample             *EnumResampleSeries               `json:"resample"`
-	TimeRangeFilter      *EnumTimeRangeFilterSeries        `json:"timeRangeFilter"`
-	TimeShift            *EnumTimeShiftSeries              `json:"timeShift"`
-	Union                *EnumUnionSeries                  `json:"union"`
-	FilterTransformation *EnumFilterTransformationSeries   `json:"filterTransformation"`
-	ValueMap             *ValueMapSeries                   `json:"valueMap"`
-	Select1dArrayIndex   *SelectIndexFrom1dEnumArraySeries `json:"select1dArrayIndex"`
-	ExtractFromStruct    *ExtractEnumFromStructSeries      `json:"extractFromStruct"`
-	EventAggregation     *EventsEnumSeries                 `json:"eventAggregation"`
+	Type                      string                            `json:"type"`
+	Aggregate                 *AggregateEnumSeries              `json:"aggregate"`
+	Raw                       *api.Reference                    `json:"raw"`
+	Channel                   *api.ChannelSeries                `json:"channel"`
+	Derived                   *DerivedSeries                    `json:"derived"`
+	Resample                  *EnumResampleSeries               `json:"resample"`
+	ResampleV2                *EnumResampleSeriesV2             `json:"resampleV2"`
+	NthPointDownsample        *EnumNthPointDownsampleSeries     `json:"nthPointDownsample"`
+	TimeRangeFilter           *EnumTimeRangeFilterSeries        `json:"timeRangeFilter"`
+	TimeShift                 *EnumTimeShiftSeries              `json:"timeShift"`
+	TimeShiftV2               *EnumTimeShiftSeriesV2            `json:"timeShiftV2"`
+	Union                     *EnumUnionSeries                  `json:"union"`
+	FilterTransformation      *EnumFilterTransformationSeries   `json:"filterTransformation"`
+	ValueMap                  *ValueMapSeries                   `json:"valueMap"`
+	Select1dArrayIndex        *SelectIndexFrom1dEnumArraySeries `json:"select1dArrayIndex"`
+	ExtractFromStruct         *ExtractEnumFromStructSeries      `json:"extractFromStruct"`
+	EventAggregation          *EventsEnumSeries                 `json:"eventAggregation"`
+	EnumAggregation           *EnumAggregation                  `json:"enumAggregation"`
+	SelectEnum                *SelectSeries                     `json:"selectEnum"`
+	SelectCategoricalProperty *SelectProperty                   `json:"selectCategoricalProperty"`
+	FilterByTag               *EnumTagFilterSeries              `json:"filterByTag"`
+	SelectTags                *EnumSelectTagsSeries             `json:"selectTags"`
+	ScalarUdf                 *ScalarUdfSeries                  `json:"scalarUdf"`
+	ToStartOfInterval         *EnumToStartOfIntervalSeries      `json:"toStartOfInterval"`
 }
 
 func (u *enumSeriesDeserializer) toStruct() EnumSeries {
-	return EnumSeries{typ: u.Type, aggregate: u.Aggregate, raw: u.Raw, channel: u.Channel, derived: u.Derived, resample: u.Resample, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, union: u.Union, filterTransformation: u.FilterTransformation, valueMap: u.ValueMap, select1dArrayIndex: u.Select1dArrayIndex, extractFromStruct: u.ExtractFromStruct, eventAggregation: u.EventAggregation}
+	return EnumSeries{typ: u.Type, aggregate: u.Aggregate, raw: u.Raw, channel: u.Channel, derived: u.Derived, resample: u.Resample, resampleV2: u.ResampleV2, nthPointDownsample: u.NthPointDownsample, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, timeShiftV2: u.TimeShiftV2, union: u.Union, filterTransformation: u.FilterTransformation, valueMap: u.ValueMap, select1dArrayIndex: u.Select1dArrayIndex, extractFromStruct: u.ExtractFromStruct, eventAggregation: u.EventAggregation, enumAggregation: u.EnumAggregation, selectEnum: u.SelectEnum, selectCategoricalProperty: u.SelectCategoricalProperty, filterByTag: u.FilterByTag, selectTags: u.SelectTags, scalarUdf: u.ScalarUdf, toStartOfInterval: u.ToStartOfInterval}
 }
 
 func (u *EnumSeries) toSerializer() (interface{}, error) {
@@ -2619,6 +4400,22 @@ func (u *EnumSeries) toSerializer() (interface{}, error) {
 			Type     string             `json:"type"`
 			Resample EnumResampleSeries `json:"resample"`
 		}{Type: "resample", Resample: *u.resample}, nil
+	case "resampleV2":
+		if u.resampleV2 == nil {
+			return nil, fmt.Errorf("field \"resampleV2\" is required")
+		}
+		return struct {
+			Type       string               `json:"type"`
+			ResampleV2 EnumResampleSeriesV2 `json:"resampleV2"`
+		}{Type: "resampleV2", ResampleV2: *u.resampleV2}, nil
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return nil, fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return struct {
+			Type               string                       `json:"type"`
+			NthPointDownsample EnumNthPointDownsampleSeries `json:"nthPointDownsample"`
+		}{Type: "nthPointDownsample", NthPointDownsample: *u.nthPointDownsample}, nil
 	case "timeRangeFilter":
 		if u.timeRangeFilter == nil {
 			return nil, fmt.Errorf("field \"timeRangeFilter\" is required")
@@ -2635,6 +4432,14 @@ func (u *EnumSeries) toSerializer() (interface{}, error) {
 			Type      string              `json:"type"`
 			TimeShift EnumTimeShiftSeries `json:"timeShift"`
 		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
+	case "timeShiftV2":
+		if u.timeShiftV2 == nil {
+			return nil, fmt.Errorf("field \"timeShiftV2\" is required")
+		}
+		return struct {
+			Type        string                `json:"type"`
+			TimeShiftV2 EnumTimeShiftSeriesV2 `json:"timeShiftV2"`
+		}{Type: "timeShiftV2", TimeShiftV2: *u.timeShiftV2}, nil
 	case "union":
 		if u.union == nil {
 			return nil, fmt.Errorf("field \"union\" is required")
@@ -2683,6 +4488,62 @@ func (u *EnumSeries) toSerializer() (interface{}, error) {
 			Type             string           `json:"type"`
 			EventAggregation EventsEnumSeries `json:"eventAggregation"`
 		}{Type: "eventAggregation", EventAggregation: *u.eventAggregation}, nil
+	case "enumAggregation":
+		if u.enumAggregation == nil {
+			return nil, fmt.Errorf("field \"enumAggregation\" is required")
+		}
+		return struct {
+			Type            string          `json:"type"`
+			EnumAggregation EnumAggregation `json:"enumAggregation"`
+		}{Type: "enumAggregation", EnumAggregation: *u.enumAggregation}, nil
+	case "selectEnum":
+		if u.selectEnum == nil {
+			return nil, fmt.Errorf("field \"selectEnum\" is required")
+		}
+		return struct {
+			Type       string       `json:"type"`
+			SelectEnum SelectSeries `json:"selectEnum"`
+		}{Type: "selectEnum", SelectEnum: *u.selectEnum}, nil
+	case "selectCategoricalProperty":
+		if u.selectCategoricalProperty == nil {
+			return nil, fmt.Errorf("field \"selectCategoricalProperty\" is required")
+		}
+		return struct {
+			Type                      string         `json:"type"`
+			SelectCategoricalProperty SelectProperty `json:"selectCategoricalProperty"`
+		}{Type: "selectCategoricalProperty", SelectCategoricalProperty: *u.selectCategoricalProperty}, nil
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return nil, fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return struct {
+			Type        string              `json:"type"`
+			FilterByTag EnumTagFilterSeries `json:"filterByTag"`
+		}{Type: "filterByTag", FilterByTag: *u.filterByTag}, nil
+	case "selectTags":
+		if u.selectTags == nil {
+			return nil, fmt.Errorf("field \"selectTags\" is required")
+		}
+		return struct {
+			Type       string               `json:"type"`
+			SelectTags EnumSelectTagsSeries `json:"selectTags"`
+		}{Type: "selectTags", SelectTags: *u.selectTags}, nil
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return nil, fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return struct {
+			Type      string          `json:"type"`
+			ScalarUdf ScalarUdfSeries `json:"scalarUdf"`
+		}{Type: "scalarUdf", ScalarUdf: *u.scalarUdf}, nil
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return nil, fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return struct {
+			Type              string                      `json:"type"`
+			ToStartOfInterval EnumToStartOfIntervalSeries `json:"toStartOfInterval"`
+		}{Type: "toStartOfInterval", ToStartOfInterval: *u.toStartOfInterval}, nil
 	}
 }
 
@@ -2721,6 +4582,14 @@ func (u *EnumSeries) UnmarshalJSON(data []byte) error {
 		if u.resample == nil {
 			return fmt.Errorf("field \"resample\" is required")
 		}
+	case "resampleV2":
+		if u.resampleV2 == nil {
+			return fmt.Errorf("field \"resampleV2\" is required")
+		}
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
 	case "timeRangeFilter":
 		if u.timeRangeFilter == nil {
 			return fmt.Errorf("field \"timeRangeFilter\" is required")
@@ -2728,6 +4597,10 @@ func (u *EnumSeries) UnmarshalJSON(data []byte) error {
 	case "timeShift":
 		if u.timeShift == nil {
 			return fmt.Errorf("field \"timeShift\" is required")
+		}
+	case "timeShiftV2":
+		if u.timeShiftV2 == nil {
+			return fmt.Errorf("field \"timeShiftV2\" is required")
 		}
 	case "union":
 		if u.union == nil {
@@ -2753,6 +4626,34 @@ func (u *EnumSeries) UnmarshalJSON(data []byte) error {
 		if u.eventAggregation == nil {
 			return fmt.Errorf("field \"eventAggregation\" is required")
 		}
+	case "enumAggregation":
+		if u.enumAggregation == nil {
+			return fmt.Errorf("field \"enumAggregation\" is required")
+		}
+	case "selectEnum":
+		if u.selectEnum == nil {
+			return fmt.Errorf("field \"selectEnum\" is required")
+		}
+	case "selectCategoricalProperty":
+		if u.selectCategoricalProperty == nil {
+			return fmt.Errorf("field \"selectCategoricalProperty\" is required")
+		}
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
 	}
 	return nil
 }
@@ -2773,7 +4674,7 @@ func (u *EnumSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *EnumSeries) AcceptFuncs(aggregateFunc func(AggregateEnumSeries) error, rawFunc func(api.Reference) error, channelFunc func(api.ChannelSeries) error, derivedFunc func(DerivedSeries) error, resampleFunc func(EnumResampleSeries) error, timeRangeFilterFunc func(EnumTimeRangeFilterSeries) error, timeShiftFunc func(EnumTimeShiftSeries) error, unionFunc func(EnumUnionSeries) error, filterTransformationFunc func(EnumFilterTransformationSeries) error, valueMapFunc func(ValueMapSeries) error, select1dArrayIndexFunc func(SelectIndexFrom1dEnumArraySeries) error, extractFromStructFunc func(ExtractEnumFromStructSeries) error, eventAggregationFunc func(EventsEnumSeries) error, unknownFunc func(string) error) error {
+func (u *EnumSeries) AcceptFuncs(aggregateFunc func(AggregateEnumSeries) error, rawFunc func(api.Reference) error, channelFunc func(api.ChannelSeries) error, derivedFunc func(DerivedSeries) error, resampleFunc func(EnumResampleSeries) error, resampleV2Func func(EnumResampleSeriesV2) error, nthPointDownsampleFunc func(EnumNthPointDownsampleSeries) error, timeRangeFilterFunc func(EnumTimeRangeFilterSeries) error, timeShiftFunc func(EnumTimeShiftSeries) error, timeShiftV2Func func(EnumTimeShiftSeriesV2) error, unionFunc func(EnumUnionSeries) error, filterTransformationFunc func(EnumFilterTransformationSeries) error, valueMapFunc func(ValueMapSeries) error, select1dArrayIndexFunc func(SelectIndexFrom1dEnumArraySeries) error, extractFromStructFunc func(ExtractEnumFromStructSeries) error, eventAggregationFunc func(EventsEnumSeries) error, enumAggregationFunc func(EnumAggregation) error, selectEnumFunc func(SelectSeries) error, selectCategoricalPropertyFunc func(SelectProperty) error, filterByTagFunc func(EnumTagFilterSeries) error, selectTagsFunc func(EnumSelectTagsSeries) error, scalarUdfFunc func(ScalarUdfSeries) error, toStartOfIntervalFunc func(EnumToStartOfIntervalSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2805,6 +4706,16 @@ func (u *EnumSeries) AcceptFuncs(aggregateFunc func(AggregateEnumSeries) error, 
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return resampleFunc(*u.resample)
+	case "resampleV2":
+		if u.resampleV2 == nil {
+			return fmt.Errorf("field \"resampleV2\" is required")
+		}
+		return resampleV2Func(*u.resampleV2)
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return nthPointDownsampleFunc(*u.nthPointDownsample)
 	case "timeRangeFilter":
 		if u.timeRangeFilter == nil {
 			return fmt.Errorf("field \"timeRangeFilter\" is required")
@@ -2815,6 +4726,11 @@ func (u *EnumSeries) AcceptFuncs(aggregateFunc func(AggregateEnumSeries) error, 
 			return fmt.Errorf("field \"timeShift\" is required")
 		}
 		return timeShiftFunc(*u.timeShift)
+	case "timeShiftV2":
+		if u.timeShiftV2 == nil {
+			return fmt.Errorf("field \"timeShiftV2\" is required")
+		}
+		return timeShiftV2Func(*u.timeShiftV2)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -2845,6 +4761,41 @@ func (u *EnumSeries) AcceptFuncs(aggregateFunc func(AggregateEnumSeries) error, 
 			return fmt.Errorf("field \"eventAggregation\" is required")
 		}
 		return eventAggregationFunc(*u.eventAggregation)
+	case "enumAggregation":
+		if u.enumAggregation == nil {
+			return fmt.Errorf("field \"enumAggregation\" is required")
+		}
+		return enumAggregationFunc(*u.enumAggregation)
+	case "selectEnum":
+		if u.selectEnum == nil {
+			return fmt.Errorf("field \"selectEnum\" is required")
+		}
+		return selectEnumFunc(*u.selectEnum)
+	case "selectCategoricalProperty":
+		if u.selectCategoricalProperty == nil {
+			return fmt.Errorf("field \"selectCategoricalProperty\" is required")
+		}
+		return selectCategoricalPropertyFunc(*u.selectCategoricalProperty)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return filterByTagFunc(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return selectTagsFunc(*u.selectTags)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return scalarUdfFunc(*u.scalarUdf)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return toStartOfIntervalFunc(*u.toStartOfInterval)
 	}
 }
 
@@ -2868,11 +4819,23 @@ func (u *EnumSeries) ResampleNoopSuccess(_ EnumResampleSeries) error {
 	return nil
 }
 
+func (u *EnumSeries) ResampleV2NoopSuccess(_ EnumResampleSeriesV2) error {
+	return nil
+}
+
+func (u *EnumSeries) NthPointDownsampleNoopSuccess(_ EnumNthPointDownsampleSeries) error {
+	return nil
+}
+
 func (u *EnumSeries) TimeRangeFilterNoopSuccess(_ EnumTimeRangeFilterSeries) error {
 	return nil
 }
 
 func (u *EnumSeries) TimeShiftNoopSuccess(_ EnumTimeShiftSeries) error {
+	return nil
+}
+
+func (u *EnumSeries) TimeShiftV2NoopSuccess(_ EnumTimeShiftSeriesV2) error {
 	return nil
 }
 
@@ -2897,6 +4860,34 @@ func (u *EnumSeries) ExtractFromStructNoopSuccess(_ ExtractEnumFromStructSeries)
 }
 
 func (u *EnumSeries) EventAggregationNoopSuccess(_ EventsEnumSeries) error {
+	return nil
+}
+
+func (u *EnumSeries) EnumAggregationNoopSuccess(_ EnumAggregation) error {
+	return nil
+}
+
+func (u *EnumSeries) SelectEnumNoopSuccess(_ SelectSeries) error {
+	return nil
+}
+
+func (u *EnumSeries) SelectCategoricalPropertyNoopSuccess(_ SelectProperty) error {
+	return nil
+}
+
+func (u *EnumSeries) FilterByTagNoopSuccess(_ EnumTagFilterSeries) error {
+	return nil
+}
+
+func (u *EnumSeries) SelectTagsNoopSuccess(_ EnumSelectTagsSeries) error {
+	return nil
+}
+
+func (u *EnumSeries) ScalarUdfNoopSuccess(_ ScalarUdfSeries) error {
+	return nil
+}
+
+func (u *EnumSeries) ToStartOfIntervalNoopSuccess(_ EnumToStartOfIntervalSeries) error {
 	return nil
 }
 
@@ -2936,6 +4927,16 @@ func (u *EnumSeries) Accept(v EnumSeriesVisitor) error {
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return v.VisitResample(*u.resample)
+	case "resampleV2":
+		if u.resampleV2 == nil {
+			return fmt.Errorf("field \"resampleV2\" is required")
+		}
+		return v.VisitResampleV2(*u.resampleV2)
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return v.VisitNthPointDownsample(*u.nthPointDownsample)
 	case "timeRangeFilter":
 		if u.timeRangeFilter == nil {
 			return fmt.Errorf("field \"timeRangeFilter\" is required")
@@ -2946,6 +4947,11 @@ func (u *EnumSeries) Accept(v EnumSeriesVisitor) error {
 			return fmt.Errorf("field \"timeShift\" is required")
 		}
 		return v.VisitTimeShift(*u.timeShift)
+	case "timeShiftV2":
+		if u.timeShiftV2 == nil {
+			return fmt.Errorf("field \"timeShiftV2\" is required")
+		}
+		return v.VisitTimeShiftV2(*u.timeShiftV2)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -2976,6 +4982,41 @@ func (u *EnumSeries) Accept(v EnumSeriesVisitor) error {
 			return fmt.Errorf("field \"eventAggregation\" is required")
 		}
 		return v.VisitEventAggregation(*u.eventAggregation)
+	case "enumAggregation":
+		if u.enumAggregation == nil {
+			return fmt.Errorf("field \"enumAggregation\" is required")
+		}
+		return v.VisitEnumAggregation(*u.enumAggregation)
+	case "selectEnum":
+		if u.selectEnum == nil {
+			return fmt.Errorf("field \"selectEnum\" is required")
+		}
+		return v.VisitSelectEnum(*u.selectEnum)
+	case "selectCategoricalProperty":
+		if u.selectCategoricalProperty == nil {
+			return fmt.Errorf("field \"selectCategoricalProperty\" is required")
+		}
+		return v.VisitSelectCategoricalProperty(*u.selectCategoricalProperty)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTag(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTags(*u.selectTags)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return v.VisitScalarUdf(*u.scalarUdf)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfInterval(*u.toStartOfInterval)
 	}
 }
 
@@ -2985,14 +5026,24 @@ type EnumSeriesVisitor interface {
 	VisitChannel(v api.ChannelSeries) error
 	VisitDerived(v DerivedSeries) error
 	VisitResample(v EnumResampleSeries) error
+	VisitResampleV2(v EnumResampleSeriesV2) error
+	VisitNthPointDownsample(v EnumNthPointDownsampleSeries) error
 	VisitTimeRangeFilter(v EnumTimeRangeFilterSeries) error
 	VisitTimeShift(v EnumTimeShiftSeries) error
+	VisitTimeShiftV2(v EnumTimeShiftSeriesV2) error
 	VisitUnion(v EnumUnionSeries) error
 	VisitFilterTransformation(v EnumFilterTransformationSeries) error
 	VisitValueMap(v ValueMapSeries) error
 	VisitSelect1dArrayIndex(v SelectIndexFrom1dEnumArraySeries) error
 	VisitExtractFromStruct(v ExtractEnumFromStructSeries) error
 	VisitEventAggregation(v EventsEnumSeries) error
+	VisitEnumAggregation(v EnumAggregation) error
+	VisitSelectEnum(v SelectSeries) error
+	VisitSelectCategoricalProperty(v SelectProperty) error
+	VisitFilterByTag(v EnumTagFilterSeries) error
+	VisitSelectTags(v EnumSelectTagsSeries) error
+	VisitScalarUdf(v ScalarUdfSeries) error
+	VisitToStartOfInterval(v EnumToStartOfIntervalSeries) error
 	VisitUnknown(typeName string) error
 }
 
@@ -3028,6 +5079,16 @@ func (u *EnumSeries) AcceptWithContext(ctx context.Context, v EnumSeriesVisitorW
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return v.VisitResampleWithContext(ctx, *u.resample)
+	case "resampleV2":
+		if u.resampleV2 == nil {
+			return fmt.Errorf("field \"resampleV2\" is required")
+		}
+		return v.VisitResampleV2WithContext(ctx, *u.resampleV2)
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return v.VisitNthPointDownsampleWithContext(ctx, *u.nthPointDownsample)
 	case "timeRangeFilter":
 		if u.timeRangeFilter == nil {
 			return fmt.Errorf("field \"timeRangeFilter\" is required")
@@ -3038,6 +5099,11 @@ func (u *EnumSeries) AcceptWithContext(ctx context.Context, v EnumSeriesVisitorW
 			return fmt.Errorf("field \"timeShift\" is required")
 		}
 		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
+	case "timeShiftV2":
+		if u.timeShiftV2 == nil {
+			return fmt.Errorf("field \"timeShiftV2\" is required")
+		}
+		return v.VisitTimeShiftV2WithContext(ctx, *u.timeShiftV2)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -3068,6 +5134,41 @@ func (u *EnumSeries) AcceptWithContext(ctx context.Context, v EnumSeriesVisitorW
 			return fmt.Errorf("field \"eventAggregation\" is required")
 		}
 		return v.VisitEventAggregationWithContext(ctx, *u.eventAggregation)
+	case "enumAggregation":
+		if u.enumAggregation == nil {
+			return fmt.Errorf("field \"enumAggregation\" is required")
+		}
+		return v.VisitEnumAggregationWithContext(ctx, *u.enumAggregation)
+	case "selectEnum":
+		if u.selectEnum == nil {
+			return fmt.Errorf("field \"selectEnum\" is required")
+		}
+		return v.VisitSelectEnumWithContext(ctx, *u.selectEnum)
+	case "selectCategoricalProperty":
+		if u.selectCategoricalProperty == nil {
+			return fmt.Errorf("field \"selectCategoricalProperty\" is required")
+		}
+		return v.VisitSelectCategoricalPropertyWithContext(ctx, *u.selectCategoricalProperty)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTagWithContext(ctx, *u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTagsWithContext(ctx, *u.selectTags)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return v.VisitScalarUdfWithContext(ctx, *u.scalarUdf)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfIntervalWithContext(ctx, *u.toStartOfInterval)
 	}
 }
 
@@ -3077,14 +5178,24 @@ type EnumSeriesVisitorWithContext interface {
 	VisitChannelWithContext(ctx context.Context, v api.ChannelSeries) error
 	VisitDerivedWithContext(ctx context.Context, v DerivedSeries) error
 	VisitResampleWithContext(ctx context.Context, v EnumResampleSeries) error
+	VisitResampleV2WithContext(ctx context.Context, v EnumResampleSeriesV2) error
+	VisitNthPointDownsampleWithContext(ctx context.Context, v EnumNthPointDownsampleSeries) error
 	VisitTimeRangeFilterWithContext(ctx context.Context, v EnumTimeRangeFilterSeries) error
 	VisitTimeShiftWithContext(ctx context.Context, v EnumTimeShiftSeries) error
+	VisitTimeShiftV2WithContext(ctx context.Context, v EnumTimeShiftSeriesV2) error
 	VisitUnionWithContext(ctx context.Context, v EnumUnionSeries) error
 	VisitFilterTransformationWithContext(ctx context.Context, v EnumFilterTransformationSeries) error
 	VisitValueMapWithContext(ctx context.Context, v ValueMapSeries) error
 	VisitSelect1dArrayIndexWithContext(ctx context.Context, v SelectIndexFrom1dEnumArraySeries) error
 	VisitExtractFromStructWithContext(ctx context.Context, v ExtractEnumFromStructSeries) error
 	VisitEventAggregationWithContext(ctx context.Context, v EventsEnumSeries) error
+	VisitEnumAggregationWithContext(ctx context.Context, v EnumAggregation) error
+	VisitSelectEnumWithContext(ctx context.Context, v SelectSeries) error
+	VisitSelectCategoricalPropertyWithContext(ctx context.Context, v SelectProperty) error
+	VisitFilterByTagWithContext(ctx context.Context, v EnumTagFilterSeries) error
+	VisitSelectTagsWithContext(ctx context.Context, v EnumSelectTagsSeries) error
+	VisitScalarUdfWithContext(ctx context.Context, v ScalarUdfSeries) error
+	VisitToStartOfIntervalWithContext(ctx context.Context, v EnumToStartOfIntervalSeries) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -3108,12 +5219,24 @@ func NewEnumSeriesFromResample(v EnumResampleSeries) EnumSeries {
 	return EnumSeries{typ: "resample", resample: &v}
 }
 
+func NewEnumSeriesFromResampleV2(v EnumResampleSeriesV2) EnumSeries {
+	return EnumSeries{typ: "resampleV2", resampleV2: &v}
+}
+
+func NewEnumSeriesFromNthPointDownsample(v EnumNthPointDownsampleSeries) EnumSeries {
+	return EnumSeries{typ: "nthPointDownsample", nthPointDownsample: &v}
+}
+
 func NewEnumSeriesFromTimeRangeFilter(v EnumTimeRangeFilterSeries) EnumSeries {
 	return EnumSeries{typ: "timeRangeFilter", timeRangeFilter: &v}
 }
 
 func NewEnumSeriesFromTimeShift(v EnumTimeShiftSeries) EnumSeries {
 	return EnumSeries{typ: "timeShift", timeShift: &v}
+}
+
+func NewEnumSeriesFromTimeShiftV2(v EnumTimeShiftSeriesV2) EnumSeries {
+	return EnumSeries{typ: "timeShiftV2", timeShiftV2: &v}
 }
 
 func NewEnumSeriesFromUnion(v EnumUnionSeries) EnumSeries {
@@ -3138,6 +5261,306 @@ func NewEnumSeriesFromExtractFromStruct(v ExtractEnumFromStructSeries) EnumSerie
 
 func NewEnumSeriesFromEventAggregation(v EventsEnumSeries) EnumSeries {
 	return EnumSeries{typ: "eventAggregation", eventAggregation: &v}
+}
+
+func NewEnumSeriesFromEnumAggregation(v EnumAggregation) EnumSeries {
+	return EnumSeries{typ: "enumAggregation", enumAggregation: &v}
+}
+
+func NewEnumSeriesFromSelectEnum(v SelectSeries) EnumSeries {
+	return EnumSeries{typ: "selectEnum", selectEnum: &v}
+}
+
+func NewEnumSeriesFromSelectCategoricalProperty(v SelectProperty) EnumSeries {
+	return EnumSeries{typ: "selectCategoricalProperty", selectCategoricalProperty: &v}
+}
+
+func NewEnumSeriesFromFilterByTag(v EnumTagFilterSeries) EnumSeries {
+	return EnumSeries{typ: "filterByTag", filterByTag: &v}
+}
+
+func NewEnumSeriesFromSelectTags(v EnumSelectTagsSeries) EnumSeries {
+	return EnumSeries{typ: "selectTags", selectTags: &v}
+}
+
+func NewEnumSeriesFromScalarUdf(v ScalarUdfSeries) EnumSeries {
+	return EnumSeries{typ: "scalarUdf", scalarUdf: &v}
+}
+
+func NewEnumSeriesFromToStartOfInterval(v EnumToStartOfIntervalSeries) EnumSeries {
+	return EnumSeries{typ: "toStartOfInterval", toStartOfInterval: &v}
+}
+
+// How far forward in time a sample's value may be carried.
+type FillLimit struct {
+	typ      string
+	duration *DurationConstant
+}
+
+type fillLimitDeserializer struct {
+	Type     string            `json:"type"`
+	Duration *DurationConstant `json:"duration"`
+}
+
+func (u *fillLimitDeserializer) toStruct() FillLimit {
+	return FillLimit{typ: u.Type, duration: u.Duration}
+}
+
+func (u *FillLimit) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "duration":
+		if u.duration == nil {
+			return nil, fmt.Errorf("field \"duration\" is required")
+		}
+		return struct {
+			Type     string           `json:"type"`
+			Duration DurationConstant `json:"duration"`
+		}{Type: "duration", Duration: *u.duration}, nil
+	}
+}
+
+func (u FillLimit) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *FillLimit) UnmarshalJSON(data []byte) error {
+	var deser fillLimitDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "duration":
+		if u.duration == nil {
+			return fmt.Errorf("field \"duration\" is required")
+		}
+	}
+	return nil
+}
+
+func (u FillLimit) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *FillLimit) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *FillLimit) AcceptFuncs(durationFunc func(DurationConstant) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in FillLimit type")
+		}
+		return unknownFunc(u.typ)
+	case "duration":
+		if u.duration == nil {
+			return fmt.Errorf("field \"duration\" is required")
+		}
+		return durationFunc(*u.duration)
+	}
+}
+
+func (u *FillLimit) DurationNoopSuccess(_ DurationConstant) error {
+	return nil
+}
+
+func (u *FillLimit) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *FillLimit) Accept(v FillLimitVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "duration":
+		if u.duration == nil {
+			return fmt.Errorf("field \"duration\" is required")
+		}
+		return v.VisitDuration(*u.duration)
+	}
+}
+
+type FillLimitVisitor interface {
+	VisitDuration(v DurationConstant) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *FillLimit) AcceptWithContext(ctx context.Context, v FillLimitVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "duration":
+		if u.duration == nil {
+			return fmt.Errorf("field \"duration\" is required")
+		}
+		return v.VisitDurationWithContext(ctx, *u.duration)
+	}
+}
+
+type FillLimitVisitorWithContext interface {
+	VisitDurationWithContext(ctx context.Context, v DurationConstant) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewFillLimitFromDuration(v DurationConstant) FillLimit {
+	return FillLimit{typ: "duration", duration: &v}
+}
+
+// Default strategy for filling gaps when aligning multi-input series.
+type FillStrategy struct {
+	typ         string
+	forwardFill *ForwardFill
+}
+
+type fillStrategyDeserializer struct {
+	Type        string       `json:"type"`
+	ForwardFill *ForwardFill `json:"forwardFill"`
+}
+
+func (u *fillStrategyDeserializer) toStruct() FillStrategy {
+	return FillStrategy{typ: u.Type, forwardFill: u.ForwardFill}
+}
+
+func (u *FillStrategy) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return nil, fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return struct {
+			Type        string      `json:"type"`
+			ForwardFill ForwardFill `json:"forwardFill"`
+		}{Type: "forwardFill", ForwardFill: *u.forwardFill}, nil
+	}
+}
+
+func (u FillStrategy) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *FillStrategy) UnmarshalJSON(data []byte) error {
+	var deser fillStrategyDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+	}
+	return nil
+}
+
+func (u FillStrategy) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *FillStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *FillStrategy) AcceptFuncs(forwardFillFunc func(ForwardFill) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in FillStrategy type")
+		}
+		return unknownFunc(u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return forwardFillFunc(*u.forwardFill)
+	}
+}
+
+func (u *FillStrategy) ForwardFillNoopSuccess(_ ForwardFill) error {
+	return nil
+}
+
+func (u *FillStrategy) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *FillStrategy) Accept(v FillStrategyVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return v.VisitForwardFill(*u.forwardFill)
+	}
+}
+
+type FillStrategyVisitor interface {
+	VisitForwardFill(v ForwardFill) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *FillStrategy) AcceptWithContext(ctx context.Context, v FillStrategyVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return v.VisitForwardFillWithContext(ctx, *u.forwardFill)
+	}
+}
+
+type FillStrategyVisitorWithContext interface {
+	VisitForwardFillWithContext(ctx context.Context, v ForwardFill) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewFillStrategyFromForwardFill(v ForwardFill) FillStrategy {
+	return FillStrategy{typ: "forwardFill", forwardFill: &v}
 }
 
 type FrequencyDomain struct {
@@ -4088,28 +6511,425 @@ func NewInterpolationConfigurationFromForwardFillInterpolation(v ForwardFillInte
 	return InterpolationConfiguration{typ: "forwardFillInterpolation", forwardFillInterpolation: &v}
 }
 
+// Selects which boundary of an interval to use as its anchor.
+type IntervalAnchor struct {
+	typ             string
+	intervalStart   *api.IntervalStartTimeShift
+	intervalEnd     *api.IntervalEndTimeShift
+	eventInInterval *EventTimeShift
+}
+
+type intervalAnchorDeserializer struct {
+	Type            string                      `json:"type"`
+	IntervalStart   *api.IntervalStartTimeShift `json:"intervalStart"`
+	IntervalEnd     *api.IntervalEndTimeShift   `json:"intervalEnd"`
+	EventInInterval *EventTimeShift             `json:"eventInInterval"`
+}
+
+func (u *intervalAnchorDeserializer) toStruct() IntervalAnchor {
+	return IntervalAnchor{typ: u.Type, intervalStart: u.IntervalStart, intervalEnd: u.IntervalEnd, eventInInterval: u.EventInInterval}
+}
+
+func (u *IntervalAnchor) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "intervalStart":
+		if u.intervalStart == nil {
+			return nil, fmt.Errorf("field \"intervalStart\" is required")
+		}
+		return struct {
+			Type          string                     `json:"type"`
+			IntervalStart api.IntervalStartTimeShift `json:"intervalStart"`
+		}{Type: "intervalStart", IntervalStart: *u.intervalStart}, nil
+	case "intervalEnd":
+		if u.intervalEnd == nil {
+			return nil, fmt.Errorf("field \"intervalEnd\" is required")
+		}
+		return struct {
+			Type        string                   `json:"type"`
+			IntervalEnd api.IntervalEndTimeShift `json:"intervalEnd"`
+		}{Type: "intervalEnd", IntervalEnd: *u.intervalEnd}, nil
+	case "eventInInterval":
+		if u.eventInInterval == nil {
+			return nil, fmt.Errorf("field \"eventInInterval\" is required")
+		}
+		return struct {
+			Type            string         `json:"type"`
+			EventInInterval EventTimeShift `json:"eventInInterval"`
+		}{Type: "eventInInterval", EventInInterval: *u.eventInInterval}, nil
+	}
+}
+
+func (u IntervalAnchor) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *IntervalAnchor) UnmarshalJSON(data []byte) error {
+	var deser intervalAnchorDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "intervalStart":
+		if u.intervalStart == nil {
+			return fmt.Errorf("field \"intervalStart\" is required")
+		}
+	case "intervalEnd":
+		if u.intervalEnd == nil {
+			return fmt.Errorf("field \"intervalEnd\" is required")
+		}
+	case "eventInInterval":
+		if u.eventInInterval == nil {
+			return fmt.Errorf("field \"eventInInterval\" is required")
+		}
+	}
+	return nil
+}
+
+func (u IntervalAnchor) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *IntervalAnchor) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *IntervalAnchor) AcceptFuncs(intervalStartFunc func(api.IntervalStartTimeShift) error, intervalEndFunc func(api.IntervalEndTimeShift) error, eventInIntervalFunc func(EventTimeShift) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in IntervalAnchor type")
+		}
+		return unknownFunc(u.typ)
+	case "intervalStart":
+		if u.intervalStart == nil {
+			return fmt.Errorf("field \"intervalStart\" is required")
+		}
+		return intervalStartFunc(*u.intervalStart)
+	case "intervalEnd":
+		if u.intervalEnd == nil {
+			return fmt.Errorf("field \"intervalEnd\" is required")
+		}
+		return intervalEndFunc(*u.intervalEnd)
+	case "eventInInterval":
+		if u.eventInInterval == nil {
+			return fmt.Errorf("field \"eventInInterval\" is required")
+		}
+		return eventInIntervalFunc(*u.eventInInterval)
+	}
+}
+
+func (u *IntervalAnchor) IntervalStartNoopSuccess(_ api.IntervalStartTimeShift) error {
+	return nil
+}
+
+func (u *IntervalAnchor) IntervalEndNoopSuccess(_ api.IntervalEndTimeShift) error {
+	return nil
+}
+
+func (u *IntervalAnchor) EventInIntervalNoopSuccess(_ EventTimeShift) error {
+	return nil
+}
+
+func (u *IntervalAnchor) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *IntervalAnchor) Accept(v IntervalAnchorVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "intervalStart":
+		if u.intervalStart == nil {
+			return fmt.Errorf("field \"intervalStart\" is required")
+		}
+		return v.VisitIntervalStart(*u.intervalStart)
+	case "intervalEnd":
+		if u.intervalEnd == nil {
+			return fmt.Errorf("field \"intervalEnd\" is required")
+		}
+		return v.VisitIntervalEnd(*u.intervalEnd)
+	case "eventInInterval":
+		if u.eventInInterval == nil {
+			return fmt.Errorf("field \"eventInInterval\" is required")
+		}
+		return v.VisitEventInInterval(*u.eventInInterval)
+	}
+}
+
+type IntervalAnchorVisitor interface {
+	VisitIntervalStart(v api.IntervalStartTimeShift) error
+	VisitIntervalEnd(v api.IntervalEndTimeShift) error
+	VisitEventInInterval(v EventTimeShift) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *IntervalAnchor) AcceptWithContext(ctx context.Context, v IntervalAnchorVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "intervalStart":
+		if u.intervalStart == nil {
+			return fmt.Errorf("field \"intervalStart\" is required")
+		}
+		return v.VisitIntervalStartWithContext(ctx, *u.intervalStart)
+	case "intervalEnd":
+		if u.intervalEnd == nil {
+			return fmt.Errorf("field \"intervalEnd\" is required")
+		}
+		return v.VisitIntervalEndWithContext(ctx, *u.intervalEnd)
+	case "eventInInterval":
+		if u.eventInInterval == nil {
+			return fmt.Errorf("field \"eventInInterval\" is required")
+		}
+		return v.VisitEventInIntervalWithContext(ctx, *u.eventInInterval)
+	}
+}
+
+type IntervalAnchorVisitorWithContext interface {
+	VisitIntervalStartWithContext(ctx context.Context, v api.IntervalStartTimeShift) error
+	VisitIntervalEndWithContext(ctx context.Context, v api.IntervalEndTimeShift) error
+	VisitEventInIntervalWithContext(ctx context.Context, v EventTimeShift) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewIntervalAnchorFromIntervalStart(v api.IntervalStartTimeShift) IntervalAnchor {
+	return IntervalAnchor{typ: "intervalStart", intervalStart: &v}
+}
+
+func NewIntervalAnchorFromIntervalEnd(v api.IntervalEndTimeShift) IntervalAnchor {
+	return IntervalAnchor{typ: "intervalEnd", intervalEnd: &v}
+}
+
+func NewIntervalAnchorFromEventInInterval(v EventTimeShift) IntervalAnchor {
+	return IntervalAnchor{typ: "eventInInterval", eventInInterval: &v}
+}
+
+// Where the intervals come from and how each is labeled.
+type IntervalSource struct {
+	typ    string
+	events *EventIntervalSource
+	ranges *RangeIntervalSource
+}
+
+type intervalSourceDeserializer struct {
+	Type   string               `json:"type"`
+	Events *EventIntervalSource `json:"events"`
+	Ranges *RangeIntervalSource `json:"ranges"`
+}
+
+func (u *intervalSourceDeserializer) toStruct() IntervalSource {
+	return IntervalSource{typ: u.Type, events: u.Events, ranges: u.Ranges}
+}
+
+func (u *IntervalSource) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "events":
+		if u.events == nil {
+			return nil, fmt.Errorf("field \"events\" is required")
+		}
+		return struct {
+			Type   string              `json:"type"`
+			Events EventIntervalSource `json:"events"`
+		}{Type: "events", Events: *u.events}, nil
+	case "ranges":
+		if u.ranges == nil {
+			return nil, fmt.Errorf("field \"ranges\" is required")
+		}
+		return struct {
+			Type   string              `json:"type"`
+			Ranges RangeIntervalSource `json:"ranges"`
+		}{Type: "ranges", Ranges: *u.ranges}, nil
+	}
+}
+
+func (u IntervalSource) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *IntervalSource) UnmarshalJSON(data []byte) error {
+	var deser intervalSourceDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "events":
+		if u.events == nil {
+			return fmt.Errorf("field \"events\" is required")
+		}
+	case "ranges":
+		if u.ranges == nil {
+			return fmt.Errorf("field \"ranges\" is required")
+		}
+	}
+	return nil
+}
+
+func (u IntervalSource) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *IntervalSource) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *IntervalSource) AcceptFuncs(eventsFunc func(EventIntervalSource) error, rangesFunc func(RangeIntervalSource) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in IntervalSource type")
+		}
+		return unknownFunc(u.typ)
+	case "events":
+		if u.events == nil {
+			return fmt.Errorf("field \"events\" is required")
+		}
+		return eventsFunc(*u.events)
+	case "ranges":
+		if u.ranges == nil {
+			return fmt.Errorf("field \"ranges\" is required")
+		}
+		return rangesFunc(*u.ranges)
+	}
+}
+
+func (u *IntervalSource) EventsNoopSuccess(_ EventIntervalSource) error {
+	return nil
+}
+
+func (u *IntervalSource) RangesNoopSuccess(_ RangeIntervalSource) error {
+	return nil
+}
+
+func (u *IntervalSource) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *IntervalSource) Accept(v IntervalSourceVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "events":
+		if u.events == nil {
+			return fmt.Errorf("field \"events\" is required")
+		}
+		return v.VisitEvents(*u.events)
+	case "ranges":
+		if u.ranges == nil {
+			return fmt.Errorf("field \"ranges\" is required")
+		}
+		return v.VisitRanges(*u.ranges)
+	}
+}
+
+type IntervalSourceVisitor interface {
+	VisitEvents(v EventIntervalSource) error
+	VisitRanges(v RangeIntervalSource) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *IntervalSource) AcceptWithContext(ctx context.Context, v IntervalSourceVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "events":
+		if u.events == nil {
+			return fmt.Errorf("field \"events\" is required")
+		}
+		return v.VisitEventsWithContext(ctx, *u.events)
+	case "ranges":
+		if u.ranges == nil {
+			return fmt.Errorf("field \"ranges\" is required")
+		}
+		return v.VisitRangesWithContext(ctx, *u.ranges)
+	}
+}
+
+type IntervalSourceVisitorWithContext interface {
+	VisitEventsWithContext(ctx context.Context, v EventIntervalSource) error
+	VisitRangesWithContext(ctx context.Context, v RangeIntervalSource) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewIntervalSourceFromEvents(v EventIntervalSource) IntervalSource {
+	return IntervalSource{typ: "events", events: &v}
+}
+
+func NewIntervalSourceFromRanges(v RangeIntervalSource) IntervalSource {
+	return IntervalSource{typ: "ranges", ranges: &v}
+}
+
 type LogSeries struct {
-	typ       string
-	raw       *api.Reference
-	channel   *api.ChannelSeries
-	derived   *DerivedSeries
-	union     *LogUnionSeries
-	filter    *LogFilterSeries
-	timeShift *LogTimeShiftSeries
+	typ               string
+	raw               *api.Reference
+	channel           *api.ChannelSeries
+	derived           *DerivedSeries
+	selectLogs        *SelectSeries
+	union             *LogUnionSeries
+	filter            *LogFilterSeries
+	timeShift         *LogTimeShiftSeries
+	toStartOfInterval *LogToStartOfIntervalSeries
+	filterByTag       *LogTagFilterSeries
+	selectTags        *LogSelectTagsSeries
 }
 
 type logSeriesDeserializer struct {
-	Type      string              `json:"type"`
-	Raw       *api.Reference      `json:"raw"`
-	Channel   *api.ChannelSeries  `json:"channel"`
-	Derived   *DerivedSeries      `json:"derived"`
-	Union     *LogUnionSeries     `json:"union"`
-	Filter    *LogFilterSeries    `json:"filter"`
-	TimeShift *LogTimeShiftSeries `json:"timeShift"`
+	Type              string                      `json:"type"`
+	Raw               *api.Reference              `json:"raw"`
+	Channel           *api.ChannelSeries          `json:"channel"`
+	Derived           *DerivedSeries              `json:"derived"`
+	SelectLogs        *SelectSeries               `json:"selectLogs"`
+	Union             *LogUnionSeries             `json:"union"`
+	Filter            *LogFilterSeries            `json:"filter"`
+	TimeShift         *LogTimeShiftSeries         `json:"timeShift"`
+	ToStartOfInterval *LogToStartOfIntervalSeries `json:"toStartOfInterval"`
+	FilterByTag       *LogTagFilterSeries         `json:"filterByTag"`
+	SelectTags        *LogSelectTagsSeries        `json:"selectTags"`
 }
 
 func (u *logSeriesDeserializer) toStruct() LogSeries {
-	return LogSeries{typ: u.Type, raw: u.Raw, channel: u.Channel, derived: u.Derived, union: u.Union, filter: u.Filter, timeShift: u.TimeShift}
+	return LogSeries{typ: u.Type, raw: u.Raw, channel: u.Channel, derived: u.Derived, selectLogs: u.SelectLogs, union: u.Union, filter: u.Filter, timeShift: u.TimeShift, toStartOfInterval: u.ToStartOfInterval, filterByTag: u.FilterByTag, selectTags: u.SelectTags}
 }
 
 func (u *LogSeries) toSerializer() (interface{}, error) {
@@ -4140,6 +6960,14 @@ func (u *LogSeries) toSerializer() (interface{}, error) {
 			Type    string        `json:"type"`
 			Derived DerivedSeries `json:"derived"`
 		}{Type: "derived", Derived: *u.derived}, nil
+	case "selectLogs":
+		if u.selectLogs == nil {
+			return nil, fmt.Errorf("field \"selectLogs\" is required")
+		}
+		return struct {
+			Type       string       `json:"type"`
+			SelectLogs SelectSeries `json:"selectLogs"`
+		}{Type: "selectLogs", SelectLogs: *u.selectLogs}, nil
 	case "union":
 		if u.union == nil {
 			return nil, fmt.Errorf("field \"union\" is required")
@@ -4164,6 +6992,30 @@ func (u *LogSeries) toSerializer() (interface{}, error) {
 			Type      string             `json:"type"`
 			TimeShift LogTimeShiftSeries `json:"timeShift"`
 		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return nil, fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return struct {
+			Type              string                     `json:"type"`
+			ToStartOfInterval LogToStartOfIntervalSeries `json:"toStartOfInterval"`
+		}{Type: "toStartOfInterval", ToStartOfInterval: *u.toStartOfInterval}, nil
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return nil, fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return struct {
+			Type        string             `json:"type"`
+			FilterByTag LogTagFilterSeries `json:"filterByTag"`
+		}{Type: "filterByTag", FilterByTag: *u.filterByTag}, nil
+	case "selectTags":
+		if u.selectTags == nil {
+			return nil, fmt.Errorf("field \"selectTags\" is required")
+		}
+		return struct {
+			Type       string              `json:"type"`
+			SelectTags LogSelectTagsSeries `json:"selectTags"`
+		}{Type: "selectTags", SelectTags: *u.selectTags}, nil
 	}
 }
 
@@ -4194,6 +7046,10 @@ func (u *LogSeries) UnmarshalJSON(data []byte) error {
 		if u.derived == nil {
 			return fmt.Errorf("field \"derived\" is required")
 		}
+	case "selectLogs":
+		if u.selectLogs == nil {
+			return fmt.Errorf("field \"selectLogs\" is required")
+		}
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -4205,6 +7061,18 @@ func (u *LogSeries) UnmarshalJSON(data []byte) error {
 	case "timeShift":
 		if u.timeShift == nil {
 			return fmt.Errorf("field \"timeShift\" is required")
+		}
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
 		}
 	}
 	return nil
@@ -4226,7 +7094,7 @@ func (u *LogSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *LogSeries) AcceptFuncs(rawFunc func(api.Reference) error, channelFunc func(api.ChannelSeries) error, derivedFunc func(DerivedSeries) error, unionFunc func(LogUnionSeries) error, filterFunc func(LogFilterSeries) error, timeShiftFunc func(LogTimeShiftSeries) error, unknownFunc func(string) error) error {
+func (u *LogSeries) AcceptFuncs(rawFunc func(api.Reference) error, channelFunc func(api.ChannelSeries) error, derivedFunc func(DerivedSeries) error, selectLogsFunc func(SelectSeries) error, unionFunc func(LogUnionSeries) error, filterFunc func(LogFilterSeries) error, timeShiftFunc func(LogTimeShiftSeries) error, toStartOfIntervalFunc func(LogToStartOfIntervalSeries) error, filterByTagFunc func(LogTagFilterSeries) error, selectTagsFunc func(LogSelectTagsSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -4248,6 +7116,11 @@ func (u *LogSeries) AcceptFuncs(rawFunc func(api.Reference) error, channelFunc f
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return derivedFunc(*u.derived)
+	case "selectLogs":
+		if u.selectLogs == nil {
+			return fmt.Errorf("field \"selectLogs\" is required")
+		}
+		return selectLogsFunc(*u.selectLogs)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -4263,6 +7136,21 @@ func (u *LogSeries) AcceptFuncs(rawFunc func(api.Reference) error, channelFunc f
 			return fmt.Errorf("field \"timeShift\" is required")
 		}
 		return timeShiftFunc(*u.timeShift)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return toStartOfIntervalFunc(*u.toStartOfInterval)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return filterByTagFunc(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return selectTagsFunc(*u.selectTags)
 	}
 }
 
@@ -4278,6 +7166,10 @@ func (u *LogSeries) DerivedNoopSuccess(_ DerivedSeries) error {
 	return nil
 }
 
+func (u *LogSeries) SelectLogsNoopSuccess(_ SelectSeries) error {
+	return nil
+}
+
 func (u *LogSeries) UnionNoopSuccess(_ LogUnionSeries) error {
 	return nil
 }
@@ -4287,6 +7179,18 @@ func (u *LogSeries) FilterNoopSuccess(_ LogFilterSeries) error {
 }
 
 func (u *LogSeries) TimeShiftNoopSuccess(_ LogTimeShiftSeries) error {
+	return nil
+}
+
+func (u *LogSeries) ToStartOfIntervalNoopSuccess(_ LogToStartOfIntervalSeries) error {
+	return nil
+}
+
+func (u *LogSeries) FilterByTagNoopSuccess(_ LogTagFilterSeries) error {
+	return nil
+}
+
+func (u *LogSeries) SelectTagsNoopSuccess(_ LogSelectTagsSeries) error {
 	return nil
 }
 
@@ -4316,6 +7220,11 @@ func (u *LogSeries) Accept(v LogSeriesVisitor) error {
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerived(*u.derived)
+	case "selectLogs":
+		if u.selectLogs == nil {
+			return fmt.Errorf("field \"selectLogs\" is required")
+		}
+		return v.VisitSelectLogs(*u.selectLogs)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -4331,6 +7240,21 @@ func (u *LogSeries) Accept(v LogSeriesVisitor) error {
 			return fmt.Errorf("field \"timeShift\" is required")
 		}
 		return v.VisitTimeShift(*u.timeShift)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfInterval(*u.toStartOfInterval)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTag(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTags(*u.selectTags)
 	}
 }
 
@@ -4338,9 +7262,13 @@ type LogSeriesVisitor interface {
 	VisitRaw(v api.Reference) error
 	VisitChannel(v api.ChannelSeries) error
 	VisitDerived(v DerivedSeries) error
+	VisitSelectLogs(v SelectSeries) error
 	VisitUnion(v LogUnionSeries) error
 	VisitFilter(v LogFilterSeries) error
 	VisitTimeShift(v LogTimeShiftSeries) error
+	VisitToStartOfInterval(v LogToStartOfIntervalSeries) error
+	VisitFilterByTag(v LogTagFilterSeries) error
+	VisitSelectTags(v LogSelectTagsSeries) error
 	VisitUnknown(typeName string) error
 }
 
@@ -4366,6 +7294,11 @@ func (u *LogSeries) AcceptWithContext(ctx context.Context, v LogSeriesVisitorWit
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerivedWithContext(ctx, *u.derived)
+	case "selectLogs":
+		if u.selectLogs == nil {
+			return fmt.Errorf("field \"selectLogs\" is required")
+		}
+		return v.VisitSelectLogsWithContext(ctx, *u.selectLogs)
 	case "union":
 		if u.union == nil {
 			return fmt.Errorf("field \"union\" is required")
@@ -4381,6 +7314,21 @@ func (u *LogSeries) AcceptWithContext(ctx context.Context, v LogSeriesVisitorWit
 			return fmt.Errorf("field \"timeShift\" is required")
 		}
 		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfIntervalWithContext(ctx, *u.toStartOfInterval)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTagWithContext(ctx, *u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTagsWithContext(ctx, *u.selectTags)
 	}
 }
 
@@ -4388,9 +7336,13 @@ type LogSeriesVisitorWithContext interface {
 	VisitRawWithContext(ctx context.Context, v api.Reference) error
 	VisitChannelWithContext(ctx context.Context, v api.ChannelSeries) error
 	VisitDerivedWithContext(ctx context.Context, v DerivedSeries) error
+	VisitSelectLogsWithContext(ctx context.Context, v SelectSeries) error
 	VisitUnionWithContext(ctx context.Context, v LogUnionSeries) error
 	VisitFilterWithContext(ctx context.Context, v LogFilterSeries) error
 	VisitTimeShiftWithContext(ctx context.Context, v LogTimeShiftSeries) error
+	VisitToStartOfIntervalWithContext(ctx context.Context, v LogToStartOfIntervalSeries) error
+	VisitFilterByTagWithContext(ctx context.Context, v LogTagFilterSeries) error
+	VisitSelectTagsWithContext(ctx context.Context, v LogSelectTagsSeries) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -4406,6 +7358,10 @@ func NewLogSeriesFromDerived(v DerivedSeries) LogSeries {
 	return LogSeries{typ: "derived", derived: &v}
 }
 
+func NewLogSeriesFromSelectLogs(v SelectSeries) LogSeries {
+	return LogSeries{typ: "selectLogs", selectLogs: &v}
+}
+
 func NewLogSeriesFromUnion(v LogUnionSeries) LogSeries {
 	return LogSeries{typ: "union", union: &v}
 }
@@ -4416,6 +7372,18 @@ func NewLogSeriesFromFilter(v LogFilterSeries) LogSeries {
 
 func NewLogSeriesFromTimeShift(v LogTimeShiftSeries) LogSeries {
 	return LogSeries{typ: "timeShift", timeShift: &v}
+}
+
+func NewLogSeriesFromToStartOfInterval(v LogToStartOfIntervalSeries) LogSeries {
+	return LogSeries{typ: "toStartOfInterval", toStartOfInterval: &v}
+}
+
+func NewLogSeriesFromFilterByTag(v LogTagFilterSeries) LogSeries {
+	return LogSeries{typ: "filterByTag", filterByTag: &v}
+}
+
+func NewLogSeriesFromSelectTags(v LogSelectTagsSeries) LogSeries {
+	return LogSeries{typ: "selectTags", selectTags: &v}
 }
 
 type MultivariateInput struct {
@@ -4593,21 +7561,33 @@ func NewMultivariateInputFromEnum(v MultivariateEnumInput) MultivariateInput {
 }
 
 type Numeric1dArraySeries struct {
-	typ     string
-	channel *api.ChannelSeries
-	raw     *api.Reference
-	derived *DerivedSeries
+	typ                  string
+	channel              *api.ChannelSeries
+	raw                  *api.Reference
+	derived              *DerivedSeries
+	selectNumeric1dArray *SelectSeries
+	extractFromStruct    *ExtractNumeric1dArrayFromStructSeries
+	toStartOfInterval    *Numeric1dArrayToStartOfIntervalSeries
+	timeShift            *Numeric1dArrayTimeShiftSeries
+	filterByTag          *Numeric1dArrayTagFilterSeries
+	selectTags           *Numeric1dArraySelectTagsSeries
 }
 
 type numeric1dArraySeriesDeserializer struct {
-	Type    string             `json:"type"`
-	Channel *api.ChannelSeries `json:"channel"`
-	Raw     *api.Reference     `json:"raw"`
-	Derived *DerivedSeries     `json:"derived"`
+	Type                 string                                 `json:"type"`
+	Channel              *api.ChannelSeries                     `json:"channel"`
+	Raw                  *api.Reference                         `json:"raw"`
+	Derived              *DerivedSeries                         `json:"derived"`
+	SelectNumeric1dArray *SelectSeries                          `json:"selectNumeric1dArray"`
+	ExtractFromStruct    *ExtractNumeric1dArrayFromStructSeries `json:"extractFromStruct"`
+	ToStartOfInterval    *Numeric1dArrayToStartOfIntervalSeries `json:"toStartOfInterval"`
+	TimeShift            *Numeric1dArrayTimeShiftSeries         `json:"timeShift"`
+	FilterByTag          *Numeric1dArrayTagFilterSeries         `json:"filterByTag"`
+	SelectTags           *Numeric1dArraySelectTagsSeries        `json:"selectTags"`
 }
 
 func (u *numeric1dArraySeriesDeserializer) toStruct() Numeric1dArraySeries {
-	return Numeric1dArraySeries{typ: u.Type, channel: u.Channel, raw: u.Raw, derived: u.Derived}
+	return Numeric1dArraySeries{typ: u.Type, channel: u.Channel, raw: u.Raw, derived: u.Derived, selectNumeric1dArray: u.SelectNumeric1dArray, extractFromStruct: u.ExtractFromStruct, toStartOfInterval: u.ToStartOfInterval, timeShift: u.TimeShift, filterByTag: u.FilterByTag, selectTags: u.SelectTags}
 }
 
 func (u *Numeric1dArraySeries) toSerializer() (interface{}, error) {
@@ -4638,6 +7618,54 @@ func (u *Numeric1dArraySeries) toSerializer() (interface{}, error) {
 			Type    string        `json:"type"`
 			Derived DerivedSeries `json:"derived"`
 		}{Type: "derived", Derived: *u.derived}, nil
+	case "selectNumeric1dArray":
+		if u.selectNumeric1dArray == nil {
+			return nil, fmt.Errorf("field \"selectNumeric1dArray\" is required")
+		}
+		return struct {
+			Type                 string       `json:"type"`
+			SelectNumeric1dArray SelectSeries `json:"selectNumeric1dArray"`
+		}{Type: "selectNumeric1dArray", SelectNumeric1dArray: *u.selectNumeric1dArray}, nil
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return nil, fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return struct {
+			Type              string                                `json:"type"`
+			ExtractFromStruct ExtractNumeric1dArrayFromStructSeries `json:"extractFromStruct"`
+		}{Type: "extractFromStruct", ExtractFromStruct: *u.extractFromStruct}, nil
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return nil, fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return struct {
+			Type              string                                `json:"type"`
+			ToStartOfInterval Numeric1dArrayToStartOfIntervalSeries `json:"toStartOfInterval"`
+		}{Type: "toStartOfInterval", ToStartOfInterval: *u.toStartOfInterval}, nil
+	case "timeShift":
+		if u.timeShift == nil {
+			return nil, fmt.Errorf("field \"timeShift\" is required")
+		}
+		return struct {
+			Type      string                        `json:"type"`
+			TimeShift Numeric1dArrayTimeShiftSeries `json:"timeShift"`
+		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return nil, fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return struct {
+			Type        string                        `json:"type"`
+			FilterByTag Numeric1dArrayTagFilterSeries `json:"filterByTag"`
+		}{Type: "filterByTag", FilterByTag: *u.filterByTag}, nil
+	case "selectTags":
+		if u.selectTags == nil {
+			return nil, fmt.Errorf("field \"selectTags\" is required")
+		}
+		return struct {
+			Type       string                         `json:"type"`
+			SelectTags Numeric1dArraySelectTagsSeries `json:"selectTags"`
+		}{Type: "selectTags", SelectTags: *u.selectTags}, nil
 	}
 }
 
@@ -4668,6 +7696,30 @@ func (u *Numeric1dArraySeries) UnmarshalJSON(data []byte) error {
 		if u.derived == nil {
 			return fmt.Errorf("field \"derived\" is required")
 		}
+	case "selectNumeric1dArray":
+		if u.selectNumeric1dArray == nil {
+			return fmt.Errorf("field \"selectNumeric1dArray\" is required")
+		}
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
 	}
 	return nil
 }
@@ -4688,7 +7740,7 @@ func (u *Numeric1dArraySeries) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Numeric1dArraySeries) AcceptFuncs(channelFunc func(api.ChannelSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, unknownFunc func(string) error) error {
+func (u *Numeric1dArraySeries) AcceptFuncs(channelFunc func(api.ChannelSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, selectNumeric1dArrayFunc func(SelectSeries) error, extractFromStructFunc func(ExtractNumeric1dArrayFromStructSeries) error, toStartOfIntervalFunc func(Numeric1dArrayToStartOfIntervalSeries) error, timeShiftFunc func(Numeric1dArrayTimeShiftSeries) error, filterByTagFunc func(Numeric1dArrayTagFilterSeries) error, selectTagsFunc func(Numeric1dArraySelectTagsSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -4710,6 +7762,36 @@ func (u *Numeric1dArraySeries) AcceptFuncs(channelFunc func(api.ChannelSeries) e
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return derivedFunc(*u.derived)
+	case "selectNumeric1dArray":
+		if u.selectNumeric1dArray == nil {
+			return fmt.Errorf("field \"selectNumeric1dArray\" is required")
+		}
+		return selectNumeric1dArrayFunc(*u.selectNumeric1dArray)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return extractFromStructFunc(*u.extractFromStruct)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return toStartOfIntervalFunc(*u.toStartOfInterval)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return timeShiftFunc(*u.timeShift)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return filterByTagFunc(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return selectTagsFunc(*u.selectTags)
 	}
 }
 
@@ -4722,6 +7804,30 @@ func (u *Numeric1dArraySeries) RawNoopSuccess(_ api.Reference) error {
 }
 
 func (u *Numeric1dArraySeries) DerivedNoopSuccess(_ DerivedSeries) error {
+	return nil
+}
+
+func (u *Numeric1dArraySeries) SelectNumeric1dArrayNoopSuccess(_ SelectSeries) error {
+	return nil
+}
+
+func (u *Numeric1dArraySeries) ExtractFromStructNoopSuccess(_ ExtractNumeric1dArrayFromStructSeries) error {
+	return nil
+}
+
+func (u *Numeric1dArraySeries) ToStartOfIntervalNoopSuccess(_ Numeric1dArrayToStartOfIntervalSeries) error {
+	return nil
+}
+
+func (u *Numeric1dArraySeries) TimeShiftNoopSuccess(_ Numeric1dArrayTimeShiftSeries) error {
+	return nil
+}
+
+func (u *Numeric1dArraySeries) FilterByTagNoopSuccess(_ Numeric1dArrayTagFilterSeries) error {
+	return nil
+}
+
+func (u *Numeric1dArraySeries) SelectTagsNoopSuccess(_ Numeric1dArraySelectTagsSeries) error {
 	return nil
 }
 
@@ -4751,6 +7857,36 @@ func (u *Numeric1dArraySeries) Accept(v Numeric1dArraySeriesVisitor) error {
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerived(*u.derived)
+	case "selectNumeric1dArray":
+		if u.selectNumeric1dArray == nil {
+			return fmt.Errorf("field \"selectNumeric1dArray\" is required")
+		}
+		return v.VisitSelectNumeric1dArray(*u.selectNumeric1dArray)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return v.VisitExtractFromStruct(*u.extractFromStruct)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfInterval(*u.toStartOfInterval)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return v.VisitTimeShift(*u.timeShift)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTag(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTags(*u.selectTags)
 	}
 }
 
@@ -4758,6 +7894,12 @@ type Numeric1dArraySeriesVisitor interface {
 	VisitChannel(v api.ChannelSeries) error
 	VisitRaw(v api.Reference) error
 	VisitDerived(v DerivedSeries) error
+	VisitSelectNumeric1dArray(v SelectSeries) error
+	VisitExtractFromStruct(v ExtractNumeric1dArrayFromStructSeries) error
+	VisitToStartOfInterval(v Numeric1dArrayToStartOfIntervalSeries) error
+	VisitTimeShift(v Numeric1dArrayTimeShiftSeries) error
+	VisitFilterByTag(v Numeric1dArrayTagFilterSeries) error
+	VisitSelectTags(v Numeric1dArraySelectTagsSeries) error
 	VisitUnknown(typeName string) error
 }
 
@@ -4783,6 +7925,36 @@ func (u *Numeric1dArraySeries) AcceptWithContext(ctx context.Context, v Numeric1
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerivedWithContext(ctx, *u.derived)
+	case "selectNumeric1dArray":
+		if u.selectNumeric1dArray == nil {
+			return fmt.Errorf("field \"selectNumeric1dArray\" is required")
+		}
+		return v.VisitSelectNumeric1dArrayWithContext(ctx, *u.selectNumeric1dArray)
+	case "extractFromStruct":
+		if u.extractFromStruct == nil {
+			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+		return v.VisitExtractFromStructWithContext(ctx, *u.extractFromStruct)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfIntervalWithContext(ctx, *u.toStartOfInterval)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTagWithContext(ctx, *u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTagsWithContext(ctx, *u.selectTags)
 	}
 }
 
@@ -4790,6 +7962,12 @@ type Numeric1dArraySeriesVisitorWithContext interface {
 	VisitChannelWithContext(ctx context.Context, v api.ChannelSeries) error
 	VisitRawWithContext(ctx context.Context, v api.Reference) error
 	VisitDerivedWithContext(ctx context.Context, v DerivedSeries) error
+	VisitSelectNumeric1dArrayWithContext(ctx context.Context, v SelectSeries) error
+	VisitExtractFromStructWithContext(ctx context.Context, v ExtractNumeric1dArrayFromStructSeries) error
+	VisitToStartOfIntervalWithContext(ctx context.Context, v Numeric1dArrayToStartOfIntervalSeries) error
+	VisitTimeShiftWithContext(ctx context.Context, v Numeric1dArrayTimeShiftSeries) error
+	VisitFilterByTagWithContext(ctx context.Context, v Numeric1dArrayTagFilterSeries) error
+	VisitSelectTagsWithContext(ctx context.Context, v Numeric1dArraySelectTagsSeries) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -4805,134 +7983,212 @@ func NewNumeric1dArraySeriesFromDerived(v DerivedSeries) Numeric1dArraySeries {
 	return Numeric1dArraySeries{typ: "derived", derived: &v}
 }
 
+func NewNumeric1dArraySeriesFromSelectNumeric1dArray(v SelectSeries) Numeric1dArraySeries {
+	return Numeric1dArraySeries{typ: "selectNumeric1dArray", selectNumeric1dArray: &v}
+}
+
+func NewNumeric1dArraySeriesFromExtractFromStruct(v ExtractNumeric1dArrayFromStructSeries) Numeric1dArraySeries {
+	return Numeric1dArraySeries{typ: "extractFromStruct", extractFromStruct: &v}
+}
+
+func NewNumeric1dArraySeriesFromToStartOfInterval(v Numeric1dArrayToStartOfIntervalSeries) Numeric1dArraySeries {
+	return Numeric1dArraySeries{typ: "toStartOfInterval", toStartOfInterval: &v}
+}
+
+func NewNumeric1dArraySeriesFromTimeShift(v Numeric1dArrayTimeShiftSeries) Numeric1dArraySeries {
+	return Numeric1dArraySeries{typ: "timeShift", timeShift: &v}
+}
+
+func NewNumeric1dArraySeriesFromFilterByTag(v Numeric1dArrayTagFilterSeries) Numeric1dArraySeries {
+	return Numeric1dArraySeries{typ: "filterByTag", filterByTag: &v}
+}
+
+func NewNumeric1dArraySeriesFromSelectTags(v Numeric1dArraySelectTagsSeries) Numeric1dArraySeries {
+	return Numeric1dArraySeries{typ: "selectTags", selectTags: &v}
+}
+
 type NumericSeries struct {
-	typ                  string
-	abs                  *Abs
-	negate               *Negate
-	cos                  *Cos
-	sin                  *Sin
-	tan                  *Tan
-	acos                 *Acos
-	asin                 *Asin
-	ln                   *Ln
-	log10                *Log10
-	sqrt                 *Sqrt
-	add                  *Add
-	subtract             *Subtract
-	multiply             *Multiply
-	divide               *Divide
-	floorDivide          *FloorDivide
-	power                *Power
-	modulo               *Modulo
-	atan2                *Atan2
-	max                  *MaxSeries
-	mean                 *MeanSeries
-	min                  *MinSeries
-	sum                  *SumSeries
-	union                *NumericUnionSeries
-	product              *ProductSeries
-	constant             *api.ConstantNumericSeries
-	aggregate            *AggregateNumericSeries
-	bitOperation         *BitOperationSeries
-	countDuplicate       *EnumCountDuplicateSeries
-	cumulativeSum        *CumulativeSumSeries
-	derivative           *DerivativeSeries
-	integral             *IntegralSeries
-	zScore               *ZscoreSeries
-	offset               *OffsetSeries
-	raw                  *api.Reference
-	channel              *api.ChannelSeries
-	derived              *DerivedSeries
-	resample             *NumericResampleSeries
-	rollingOperation     *RollingOperationSeries
-	signalFilter         *SignalFilterSeries
-	scale                *ScaleSeries
-	timeDifference       *TimeDifferenceSeries
-	absoluteTimestamp    *AbsoluteTimestampSeries
-	timeRangeFilter      *NumericTimeRangeFilterSeries
-	timeShift            *NumericTimeShiftSeries
-	unitConversion       *UnitConversionSeries
-	valueDifference      *ValueDifferenceSeries
-	filterTransformation *NumericFilterTransformationSeries
-	thresholdFilter      *NumericThresholdFilterSeries
-	approximateFilter    *NumericApproximateFilterSeries
-	select1dArrayIndex   *SelectIndexFrom1dNumericArraySeries
-	selectNewestPoints   *SelectNewestPointsSeries
-	aggregateUnderRanges *AggregateUnderRangesSeries
-	filterByExpression   *FilterByExpressionSeries
-	enumToNumeric        *EnumToNumericSeries
-	refprop              *RefpropSeries
-	extractFromStruct    *ExtractNumericFromStructSeries
-	arithmetic           *ArithmeticSeries
-	unaryArithmetic      *UnaryArithmeticSeries
-	binaryArithmetic     *BinaryArithmeticSeries
+	typ                         string
+	abs                         *Abs
+	negate                      *Negate
+	cos                         *Cos
+	sin                         *Sin
+	tan                         *Tan
+	acos                        *Acos
+	asin                        *Asin
+	ln                          *Ln
+	log10                       *Log10
+	sqrt                        *Sqrt
+	add                         *Add
+	subtract                    *Subtract
+	multiply                    *Multiply
+	divide                      *Divide
+	floorDivide                 *FloorDivide
+	power                       *Power
+	modulo                      *Modulo
+	atan2                       *Atan2
+	max                         *MaxSeries
+	mean                        *MeanSeries
+	min                         *MinSeries
+	sum                         *SumSeries
+	union                       *NumericUnionSeries
+	product                     *ProductSeries
+	constant                    *api.ConstantNumericSeries
+	selectNewestPoints          *SelectNewestPointsSeries
+	selectNumeric               *SelectSeries
+	selectNumericProperty       *SelectProperty
+	selectOldestPoints          *SelectOldestPointsSeries
+	bitAnd                      *BitAnd
+	bitOr                       *BitOr
+	bitXor                      *BitXor
+	bitShiftRight               *BitShiftRight
+	bitShiftLeft                *BitShiftLeft
+	bitTest                     *BitTest
+	ifElse                      *NumericIfElseSeries
+	numericAggregation          *NumericAggregation
+	countDuplicate              *EnumCountDuplicateSeries
+	cumulativeSum               *CumulativeSumSeries
+	derivative                  *DerivativeSeries
+	integral                    *IntegralSeries
+	zScore                      *ZscoreSeries
+	raw                         *api.Reference
+	derived                     *DerivedSeries
+	resample                    *NumericResampleSeries
+	resampleV2                  *NumericResampleSeriesV2
+	nthPointDownsample          *NumericNthPointDownsampleSeries
+	largestTriangleThreeBuckets *NumericLargestTriangleThreeBucketsSeries
+	signalFilter                *SignalFilterSeries
+	timeDifference              *TimeDifferenceSeries
+	absoluteTimestamp           *AbsoluteTimestampSeries
+	timeRangeFilter             *NumericTimeRangeFilterSeries
+	timeShift                   *NumericTimeShiftSeries
+	timeShiftV2                 *NumericTimeShiftSeriesV2
+	unitConversion              *UnitConversionSeries
+	valueDifference             *ValueDifferenceSeries
+	filterTransformation        *NumericFilterTransformationSeries
+	filterWhere                 *NumericFilterWhereSeries
+	thresholdFilter             *NumericThresholdFilterSeries
+	approximateFilter           *NumericApproximateFilterSeries
+	dropNan                     *NumericNanFilter
+	select1dArrayIndex          *SelectIndexFrom1dNumericArraySeries
+	aggregateUnderRanges        *AggregateUnderRangesSeries
+	rangeDuration               *RangeDurationSeries
+	groupWithinRangesV2         *GroupWithinRangesSeriesV2
+	filterByExpression          *FilterByExpressionSeries
+	scalarUdf                   *ScalarUdfSeries
+	enumToNumeric               *EnumToNumericSeries
+	contains                    *ContainsSeries
+	refprop                     *RefpropSeries
+	refpropV2                   *RefpropSeriesV2
+	extractFromStruct           *ExtractNumericFromStructSeries
+	tagByIntervals              *TagByIntervalsSeries
+	filterByTag                 *NumericTagFilterSeries
+	selectTags                  *NumericSelectTagsSeries
+	toStartOfInterval           *NumericToStartOfIntervalSeries
+	phaseUnwrap                 *PhaseUnwrapSeries
+	aggregate                   *AggregateNumericSeries
+	rollingOperation            *RollingOperationSeries
+	bitOperation                *BitOperationSeries
+	channel                     *api.ChannelSeries
+	offset                      *OffsetSeries
+	scale                       *ScaleSeries
+	arithmetic                  *ArithmeticSeries
+	unaryArithmetic             *UnaryArithmeticSeries
+	binaryArithmetic            *BinaryArithmeticSeries
 }
 
 type numericSeriesDeserializer struct {
-	Type                 string                               `json:"type"`
-	Abs                  *Abs                                 `json:"abs"`
-	Negate               *Negate                              `json:"negate"`
-	Cos                  *Cos                                 `json:"cos"`
-	Sin                  *Sin                                 `json:"sin"`
-	Tan                  *Tan                                 `json:"tan"`
-	Acos                 *Acos                                `json:"acos"`
-	Asin                 *Asin                                `json:"asin"`
-	Ln                   *Ln                                  `json:"ln"`
-	Log10                *Log10                               `json:"log10"`
-	Sqrt                 *Sqrt                                `json:"sqrt"`
-	Add                  *Add                                 `json:"add"`
-	Subtract             *Subtract                            `json:"subtract"`
-	Multiply             *Multiply                            `json:"multiply"`
-	Divide               *Divide                              `json:"divide"`
-	FloorDivide          *FloorDivide                         `json:"floorDivide"`
-	Power                *Power                               `json:"power"`
-	Modulo               *Modulo                              `json:"modulo"`
-	Atan2                *Atan2                               `json:"atan2"`
-	Max                  *MaxSeries                           `json:"max"`
-	Mean                 *MeanSeries                          `json:"mean"`
-	Min                  *MinSeries                           `json:"min"`
-	Sum                  *SumSeries                           `json:"sum"`
-	Union                *NumericUnionSeries                  `json:"union"`
-	Product              *ProductSeries                       `json:"product"`
-	Constant             *api.ConstantNumericSeries           `json:"constant"`
-	Aggregate            *AggregateNumericSeries              `json:"aggregate"`
-	BitOperation         *BitOperationSeries                  `json:"bitOperation"`
-	CountDuplicate       *EnumCountDuplicateSeries            `json:"countDuplicate"`
-	CumulativeSum        *CumulativeSumSeries                 `json:"cumulativeSum"`
-	Derivative           *DerivativeSeries                    `json:"derivative"`
-	Integral             *IntegralSeries                      `json:"integral"`
-	ZScore               *ZscoreSeries                        `json:"zScore"`
-	Offset               *OffsetSeries                        `json:"offset"`
-	Raw                  *api.Reference                       `json:"raw"`
-	Channel              *api.ChannelSeries                   `json:"channel"`
-	Derived              *DerivedSeries                       `json:"derived"`
-	Resample             *NumericResampleSeries               `json:"resample"`
-	RollingOperation     *RollingOperationSeries              `json:"rollingOperation"`
-	SignalFilter         *SignalFilterSeries                  `json:"signalFilter"`
-	Scale                *ScaleSeries                         `json:"scale"`
-	TimeDifference       *TimeDifferenceSeries                `json:"timeDifference"`
-	AbsoluteTimestamp    *AbsoluteTimestampSeries             `json:"absoluteTimestamp"`
-	TimeRangeFilter      *NumericTimeRangeFilterSeries        `json:"timeRangeFilter"`
-	TimeShift            *NumericTimeShiftSeries              `json:"timeShift"`
-	UnitConversion       *UnitConversionSeries                `json:"unitConversion"`
-	ValueDifference      *ValueDifferenceSeries               `json:"valueDifference"`
-	FilterTransformation *NumericFilterTransformationSeries   `json:"filterTransformation"`
-	ThresholdFilter      *NumericThresholdFilterSeries        `json:"thresholdFilter"`
-	ApproximateFilter    *NumericApproximateFilterSeries      `json:"approximateFilter"`
-	Select1dArrayIndex   *SelectIndexFrom1dNumericArraySeries `json:"select1dArrayIndex"`
-	SelectNewestPoints   *SelectNewestPointsSeries            `json:"selectNewestPoints"`
-	AggregateUnderRanges *AggregateUnderRangesSeries          `json:"aggregateUnderRanges"`
-	FilterByExpression   *FilterByExpressionSeries            `json:"filterByExpression"`
-	EnumToNumeric        *EnumToNumericSeries                 `json:"enumToNumeric"`
-	Refprop              *RefpropSeries                       `json:"refprop"`
-	ExtractFromStruct    *ExtractNumericFromStructSeries      `json:"extractFromStruct"`
-	Arithmetic           *ArithmeticSeries                    `json:"arithmetic"`
-	UnaryArithmetic      *UnaryArithmeticSeries               `json:"unaryArithmetic"`
-	BinaryArithmetic     *BinaryArithmeticSeries              `json:"binaryArithmetic"`
+	Type                        string                                    `json:"type"`
+	Abs                         *Abs                                      `json:"abs"`
+	Negate                      *Negate                                   `json:"negate"`
+	Cos                         *Cos                                      `json:"cos"`
+	Sin                         *Sin                                      `json:"sin"`
+	Tan                         *Tan                                      `json:"tan"`
+	Acos                        *Acos                                     `json:"acos"`
+	Asin                        *Asin                                     `json:"asin"`
+	Ln                          *Ln                                       `json:"ln"`
+	Log10                       *Log10                                    `json:"log10"`
+	Sqrt                        *Sqrt                                     `json:"sqrt"`
+	Add                         *Add                                      `json:"add"`
+	Subtract                    *Subtract                                 `json:"subtract"`
+	Multiply                    *Multiply                                 `json:"multiply"`
+	Divide                      *Divide                                   `json:"divide"`
+	FloorDivide                 *FloorDivide                              `json:"floorDivide"`
+	Power                       *Power                                    `json:"power"`
+	Modulo                      *Modulo                                   `json:"modulo"`
+	Atan2                       *Atan2                                    `json:"atan2"`
+	Max                         *MaxSeries                                `json:"max"`
+	Mean                        *MeanSeries                               `json:"mean"`
+	Min                         *MinSeries                                `json:"min"`
+	Sum                         *SumSeries                                `json:"sum"`
+	Union                       *NumericUnionSeries                       `json:"union"`
+	Product                     *ProductSeries                            `json:"product"`
+	Constant                    *api.ConstantNumericSeries                `json:"constant"`
+	SelectNewestPoints          *SelectNewestPointsSeries                 `json:"selectNewestPoints"`
+	SelectNumeric               *SelectSeries                             `json:"selectNumeric"`
+	SelectNumericProperty       *SelectProperty                           `json:"selectNumericProperty"`
+	SelectOldestPoints          *SelectOldestPointsSeries                 `json:"selectOldestPoints"`
+	BitAnd                      *BitAnd                                   `json:"bitAnd"`
+	BitOr                       *BitOr                                    `json:"bitOr"`
+	BitXor                      *BitXor                                   `json:"bitXor"`
+	BitShiftRight               *BitShiftRight                            `json:"bitShiftRight"`
+	BitShiftLeft                *BitShiftLeft                             `json:"bitShiftLeft"`
+	BitTest                     *BitTest                                  `json:"bitTest"`
+	IfElse                      *NumericIfElseSeries                      `json:"ifElse"`
+	NumericAggregation          *NumericAggregation                       `json:"numericAggregation"`
+	CountDuplicate              *EnumCountDuplicateSeries                 `json:"countDuplicate"`
+	CumulativeSum               *CumulativeSumSeries                      `json:"cumulativeSum"`
+	Derivative                  *DerivativeSeries                         `json:"derivative"`
+	Integral                    *IntegralSeries                           `json:"integral"`
+	ZScore                      *ZscoreSeries                             `json:"zScore"`
+	Raw                         *api.Reference                            `json:"raw"`
+	Derived                     *DerivedSeries                            `json:"derived"`
+	Resample                    *NumericResampleSeries                    `json:"resample"`
+	ResampleV2                  *NumericResampleSeriesV2                  `json:"resampleV2"`
+	NthPointDownsample          *NumericNthPointDownsampleSeries          `json:"nthPointDownsample"`
+	LargestTriangleThreeBuckets *NumericLargestTriangleThreeBucketsSeries `json:"largestTriangleThreeBuckets"`
+	SignalFilter                *SignalFilterSeries                       `json:"signalFilter"`
+	TimeDifference              *TimeDifferenceSeries                     `json:"timeDifference"`
+	AbsoluteTimestamp           *AbsoluteTimestampSeries                  `json:"absoluteTimestamp"`
+	TimeRangeFilter             *NumericTimeRangeFilterSeries             `json:"timeRangeFilter"`
+	TimeShift                   *NumericTimeShiftSeries                   `json:"timeShift"`
+	TimeShiftV2                 *NumericTimeShiftSeriesV2                 `json:"timeShiftV2"`
+	UnitConversion              *UnitConversionSeries                     `json:"unitConversion"`
+	ValueDifference             *ValueDifferenceSeries                    `json:"valueDifference"`
+	FilterTransformation        *NumericFilterTransformationSeries        `json:"filterTransformation"`
+	FilterWhere                 *NumericFilterWhereSeries                 `json:"filterWhere"`
+	ThresholdFilter             *NumericThresholdFilterSeries             `json:"thresholdFilter"`
+	ApproximateFilter           *NumericApproximateFilterSeries           `json:"approximateFilter"`
+	DropNan                     *NumericNanFilter                         `json:"dropNan"`
+	Select1dArrayIndex          *SelectIndexFrom1dNumericArraySeries      `json:"select1dArrayIndex"`
+	AggregateUnderRanges        *AggregateUnderRangesSeries               `json:"aggregateUnderRanges"`
+	RangeDuration               *RangeDurationSeries                      `json:"rangeDuration"`
+	GroupWithinRangesV2         *GroupWithinRangesSeriesV2                `json:"groupWithinRangesV2"`
+	FilterByExpression          *FilterByExpressionSeries                 `json:"filterByExpression"`
+	ScalarUdf                   *ScalarUdfSeries                          `json:"scalarUdf"`
+	EnumToNumeric               *EnumToNumericSeries                      `json:"enumToNumeric"`
+	Contains                    *ContainsSeries                           `json:"contains"`
+	Refprop                     *RefpropSeries                            `json:"refprop"`
+	RefpropV2                   *RefpropSeriesV2                          `json:"refpropV2"`
+	ExtractFromStruct           *ExtractNumericFromStructSeries           `json:"extractFromStruct"`
+	TagByIntervals              *TagByIntervalsSeries                     `json:"tagByIntervals"`
+	FilterByTag                 *NumericTagFilterSeries                   `json:"filterByTag"`
+	SelectTags                  *NumericSelectTagsSeries                  `json:"selectTags"`
+	ToStartOfInterval           *NumericToStartOfIntervalSeries           `json:"toStartOfInterval"`
+	PhaseUnwrap                 *PhaseUnwrapSeries                        `json:"phaseUnwrap"`
+	Aggregate                   *AggregateNumericSeries                   `json:"aggregate"`
+	RollingOperation            *RollingOperationSeries                   `json:"rollingOperation"`
+	BitOperation                *BitOperationSeries                       `json:"bitOperation"`
+	Channel                     *api.ChannelSeries                        `json:"channel"`
+	Offset                      *OffsetSeries                             `json:"offset"`
+	Scale                       *ScaleSeries                              `json:"scale"`
+	Arithmetic                  *ArithmeticSeries                         `json:"arithmetic"`
+	UnaryArithmetic             *UnaryArithmeticSeries                    `json:"unaryArithmetic"`
+	BinaryArithmetic            *BinaryArithmeticSeries                   `json:"binaryArithmetic"`
 }
 
 func (u *numericSeriesDeserializer) toStruct() NumericSeries {
-	return NumericSeries{typ: u.Type, abs: u.Abs, negate: u.Negate, cos: u.Cos, sin: u.Sin, tan: u.Tan, acos: u.Acos, asin: u.Asin, ln: u.Ln, log10: u.Log10, sqrt: u.Sqrt, add: u.Add, subtract: u.Subtract, multiply: u.Multiply, divide: u.Divide, floorDivide: u.FloorDivide, power: u.Power, modulo: u.Modulo, atan2: u.Atan2, max: u.Max, mean: u.Mean, min: u.Min, sum: u.Sum, union: u.Union, product: u.Product, constant: u.Constant, aggregate: u.Aggregate, bitOperation: u.BitOperation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, zScore: u.ZScore, offset: u.Offset, raw: u.Raw, channel: u.Channel, derived: u.Derived, resample: u.Resample, rollingOperation: u.RollingOperation, signalFilter: u.SignalFilter, scale: u.Scale, timeDifference: u.TimeDifference, absoluteTimestamp: u.AbsoluteTimestamp, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, unitConversion: u.UnitConversion, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, thresholdFilter: u.ThresholdFilter, approximateFilter: u.ApproximateFilter, select1dArrayIndex: u.Select1dArrayIndex, selectNewestPoints: u.SelectNewestPoints, aggregateUnderRanges: u.AggregateUnderRanges, filterByExpression: u.FilterByExpression, enumToNumeric: u.EnumToNumeric, refprop: u.Refprop, extractFromStruct: u.ExtractFromStruct, arithmetic: u.Arithmetic, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic}
+	return NumericSeries{typ: u.Type, abs: u.Abs, negate: u.Negate, cos: u.Cos, sin: u.Sin, tan: u.Tan, acos: u.Acos, asin: u.Asin, ln: u.Ln, log10: u.Log10, sqrt: u.Sqrt, add: u.Add, subtract: u.Subtract, multiply: u.Multiply, divide: u.Divide, floorDivide: u.FloorDivide, power: u.Power, modulo: u.Modulo, atan2: u.Atan2, max: u.Max, mean: u.Mean, min: u.Min, sum: u.Sum, union: u.Union, product: u.Product, constant: u.Constant, selectNewestPoints: u.SelectNewestPoints, selectNumeric: u.SelectNumeric, selectNumericProperty: u.SelectNumericProperty, selectOldestPoints: u.SelectOldestPoints, bitAnd: u.BitAnd, bitOr: u.BitOr, bitXor: u.BitXor, bitShiftRight: u.BitShiftRight, bitShiftLeft: u.BitShiftLeft, bitTest: u.BitTest, ifElse: u.IfElse, numericAggregation: u.NumericAggregation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, zScore: u.ZScore, raw: u.Raw, derived: u.Derived, resample: u.Resample, resampleV2: u.ResampleV2, nthPointDownsample: u.NthPointDownsample, largestTriangleThreeBuckets: u.LargestTriangleThreeBuckets, signalFilter: u.SignalFilter, timeDifference: u.TimeDifference, absoluteTimestamp: u.AbsoluteTimestamp, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, timeShiftV2: u.TimeShiftV2, unitConversion: u.UnitConversion, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, filterWhere: u.FilterWhere, thresholdFilter: u.ThresholdFilter, approximateFilter: u.ApproximateFilter, dropNan: u.DropNan, select1dArrayIndex: u.Select1dArrayIndex, aggregateUnderRanges: u.AggregateUnderRanges, rangeDuration: u.RangeDuration, groupWithinRangesV2: u.GroupWithinRangesV2, filterByExpression: u.FilterByExpression, scalarUdf: u.ScalarUdf, enumToNumeric: u.EnumToNumeric, contains: u.Contains, refprop: u.Refprop, refpropV2: u.RefpropV2, extractFromStruct: u.ExtractFromStruct, tagByIntervals: u.TagByIntervals, filterByTag: u.FilterByTag, selectTags: u.SelectTags, toStartOfInterval: u.ToStartOfInterval, phaseUnwrap: u.PhaseUnwrap, aggregate: u.Aggregate, rollingOperation: u.RollingOperation, bitOperation: u.BitOperation, channel: u.Channel, offset: u.Offset, scale: u.Scale, arithmetic: u.Arithmetic, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic}
 }
 
 func (u *NumericSeries) toSerializer() (interface{}, error) {
@@ -5139,22 +8395,102 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type     string                    `json:"type"`
 			Constant api.ConstantNumericSeries `json:"constant"`
 		}{Type: "constant", Constant: *u.constant}, nil
-	case "aggregate":
-		if u.aggregate == nil {
-			return nil, fmt.Errorf("field \"aggregate\" is required")
+	case "selectNewestPoints":
+		if u.selectNewestPoints == nil {
+			return nil, fmt.Errorf("field \"selectNewestPoints\" is required")
 		}
 		return struct {
-			Type      string                 `json:"type"`
-			Aggregate AggregateNumericSeries `json:"aggregate"`
-		}{Type: "aggregate", Aggregate: *u.aggregate}, nil
-	case "bitOperation":
-		if u.bitOperation == nil {
-			return nil, fmt.Errorf("field \"bitOperation\" is required")
+			Type               string                   `json:"type"`
+			SelectNewestPoints SelectNewestPointsSeries `json:"selectNewestPoints"`
+		}{Type: "selectNewestPoints", SelectNewestPoints: *u.selectNewestPoints}, nil
+	case "selectNumeric":
+		if u.selectNumeric == nil {
+			return nil, fmt.Errorf("field \"selectNumeric\" is required")
 		}
 		return struct {
-			Type         string             `json:"type"`
-			BitOperation BitOperationSeries `json:"bitOperation"`
-		}{Type: "bitOperation", BitOperation: *u.bitOperation}, nil
+			Type          string       `json:"type"`
+			SelectNumeric SelectSeries `json:"selectNumeric"`
+		}{Type: "selectNumeric", SelectNumeric: *u.selectNumeric}, nil
+	case "selectNumericProperty":
+		if u.selectNumericProperty == nil {
+			return nil, fmt.Errorf("field \"selectNumericProperty\" is required")
+		}
+		return struct {
+			Type                  string         `json:"type"`
+			SelectNumericProperty SelectProperty `json:"selectNumericProperty"`
+		}{Type: "selectNumericProperty", SelectNumericProperty: *u.selectNumericProperty}, nil
+	case "selectOldestPoints":
+		if u.selectOldestPoints == nil {
+			return nil, fmt.Errorf("field \"selectOldestPoints\" is required")
+		}
+		return struct {
+			Type               string                   `json:"type"`
+			SelectOldestPoints SelectOldestPointsSeries `json:"selectOldestPoints"`
+		}{Type: "selectOldestPoints", SelectOldestPoints: *u.selectOldestPoints}, nil
+	case "bitAnd":
+		if u.bitAnd == nil {
+			return nil, fmt.Errorf("field \"bitAnd\" is required")
+		}
+		return struct {
+			Type   string `json:"type"`
+			BitAnd BitAnd `json:"bitAnd"`
+		}{Type: "bitAnd", BitAnd: *u.bitAnd}, nil
+	case "bitOr":
+		if u.bitOr == nil {
+			return nil, fmt.Errorf("field \"bitOr\" is required")
+		}
+		return struct {
+			Type  string `json:"type"`
+			BitOr BitOr  `json:"bitOr"`
+		}{Type: "bitOr", BitOr: *u.bitOr}, nil
+	case "bitXor":
+		if u.bitXor == nil {
+			return nil, fmt.Errorf("field \"bitXor\" is required")
+		}
+		return struct {
+			Type   string `json:"type"`
+			BitXor BitXor `json:"bitXor"`
+		}{Type: "bitXor", BitXor: *u.bitXor}, nil
+	case "bitShiftRight":
+		if u.bitShiftRight == nil {
+			return nil, fmt.Errorf("field \"bitShiftRight\" is required")
+		}
+		return struct {
+			Type          string        `json:"type"`
+			BitShiftRight BitShiftRight `json:"bitShiftRight"`
+		}{Type: "bitShiftRight", BitShiftRight: *u.bitShiftRight}, nil
+	case "bitShiftLeft":
+		if u.bitShiftLeft == nil {
+			return nil, fmt.Errorf("field \"bitShiftLeft\" is required")
+		}
+		return struct {
+			Type         string       `json:"type"`
+			BitShiftLeft BitShiftLeft `json:"bitShiftLeft"`
+		}{Type: "bitShiftLeft", BitShiftLeft: *u.bitShiftLeft}, nil
+	case "bitTest":
+		if u.bitTest == nil {
+			return nil, fmt.Errorf("field \"bitTest\" is required")
+		}
+		return struct {
+			Type    string  `json:"type"`
+			BitTest BitTest `json:"bitTest"`
+		}{Type: "bitTest", BitTest: *u.bitTest}, nil
+	case "ifElse":
+		if u.ifElse == nil {
+			return nil, fmt.Errorf("field \"ifElse\" is required")
+		}
+		return struct {
+			Type   string              `json:"type"`
+			IfElse NumericIfElseSeries `json:"ifElse"`
+		}{Type: "ifElse", IfElse: *u.ifElse}, nil
+	case "numericAggregation":
+		if u.numericAggregation == nil {
+			return nil, fmt.Errorf("field \"numericAggregation\" is required")
+		}
+		return struct {
+			Type               string             `json:"type"`
+			NumericAggregation NumericAggregation `json:"numericAggregation"`
+		}{Type: "numericAggregation", NumericAggregation: *u.numericAggregation}, nil
 	case "countDuplicate":
 		if u.countDuplicate == nil {
 			return nil, fmt.Errorf("field \"countDuplicate\" is required")
@@ -5195,14 +8531,6 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type   string       `json:"type"`
 			ZScore ZscoreSeries `json:"zScore"`
 		}{Type: "zScore", ZScore: *u.zScore}, nil
-	case "offset":
-		if u.offset == nil {
-			return nil, fmt.Errorf("field \"offset\" is required")
-		}
-		return struct {
-			Type   string       `json:"type"`
-			Offset OffsetSeries `json:"offset"`
-		}{Type: "offset", Offset: *u.offset}, nil
 	case "raw":
 		if u.raw == nil {
 			return nil, fmt.Errorf("field \"raw\" is required")
@@ -5211,14 +8539,6 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type string        `json:"type"`
 			Raw  api.Reference `json:"raw"`
 		}{Type: "raw", Raw: *u.raw}, nil
-	case "channel":
-		if u.channel == nil {
-			return nil, fmt.Errorf("field \"channel\" is required")
-		}
-		return struct {
-			Type    string            `json:"type"`
-			Channel api.ChannelSeries `json:"channel"`
-		}{Type: "channel", Channel: *u.channel}, nil
 	case "derived":
 		if u.derived == nil {
 			return nil, fmt.Errorf("field \"derived\" is required")
@@ -5235,14 +8555,30 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type     string                `json:"type"`
 			Resample NumericResampleSeries `json:"resample"`
 		}{Type: "resample", Resample: *u.resample}, nil
-	case "rollingOperation":
-		if u.rollingOperation == nil {
-			return nil, fmt.Errorf("field \"rollingOperation\" is required")
+	case "resampleV2":
+		if u.resampleV2 == nil {
+			return nil, fmt.Errorf("field \"resampleV2\" is required")
 		}
 		return struct {
-			Type             string                 `json:"type"`
-			RollingOperation RollingOperationSeries `json:"rollingOperation"`
-		}{Type: "rollingOperation", RollingOperation: *u.rollingOperation}, nil
+			Type       string                  `json:"type"`
+			ResampleV2 NumericResampleSeriesV2 `json:"resampleV2"`
+		}{Type: "resampleV2", ResampleV2: *u.resampleV2}, nil
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return nil, fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return struct {
+			Type               string                          `json:"type"`
+			NthPointDownsample NumericNthPointDownsampleSeries `json:"nthPointDownsample"`
+		}{Type: "nthPointDownsample", NthPointDownsample: *u.nthPointDownsample}, nil
+	case "largestTriangleThreeBuckets":
+		if u.largestTriangleThreeBuckets == nil {
+			return nil, fmt.Errorf("field \"largestTriangleThreeBuckets\" is required")
+		}
+		return struct {
+			Type                        string                                   `json:"type"`
+			LargestTriangleThreeBuckets NumericLargestTriangleThreeBucketsSeries `json:"largestTriangleThreeBuckets"`
+		}{Type: "largestTriangleThreeBuckets", LargestTriangleThreeBuckets: *u.largestTriangleThreeBuckets}, nil
 	case "signalFilter":
 		if u.signalFilter == nil {
 			return nil, fmt.Errorf("field \"signalFilter\" is required")
@@ -5251,14 +8587,6 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type         string             `json:"type"`
 			SignalFilter SignalFilterSeries `json:"signalFilter"`
 		}{Type: "signalFilter", SignalFilter: *u.signalFilter}, nil
-	case "scale":
-		if u.scale == nil {
-			return nil, fmt.Errorf("field \"scale\" is required")
-		}
-		return struct {
-			Type  string      `json:"type"`
-			Scale ScaleSeries `json:"scale"`
-		}{Type: "scale", Scale: *u.scale}, nil
 	case "timeDifference":
 		if u.timeDifference == nil {
 			return nil, fmt.Errorf("field \"timeDifference\" is required")
@@ -5291,6 +8619,14 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type      string                 `json:"type"`
 			TimeShift NumericTimeShiftSeries `json:"timeShift"`
 		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
+	case "timeShiftV2":
+		if u.timeShiftV2 == nil {
+			return nil, fmt.Errorf("field \"timeShiftV2\" is required")
+		}
+		return struct {
+			Type        string                   `json:"type"`
+			TimeShiftV2 NumericTimeShiftSeriesV2 `json:"timeShiftV2"`
+		}{Type: "timeShiftV2", TimeShiftV2: *u.timeShiftV2}, nil
 	case "unitConversion":
 		if u.unitConversion == nil {
 			return nil, fmt.Errorf("field \"unitConversion\" is required")
@@ -5315,6 +8651,14 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type                 string                            `json:"type"`
 			FilterTransformation NumericFilterTransformationSeries `json:"filterTransformation"`
 		}{Type: "filterTransformation", FilterTransformation: *u.filterTransformation}, nil
+	case "filterWhere":
+		if u.filterWhere == nil {
+			return nil, fmt.Errorf("field \"filterWhere\" is required")
+		}
+		return struct {
+			Type        string                   `json:"type"`
+			FilterWhere NumericFilterWhereSeries `json:"filterWhere"`
+		}{Type: "filterWhere", FilterWhere: *u.filterWhere}, nil
 	case "thresholdFilter":
 		if u.thresholdFilter == nil {
 			return nil, fmt.Errorf("field \"thresholdFilter\" is required")
@@ -5331,6 +8675,14 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type              string                         `json:"type"`
 			ApproximateFilter NumericApproximateFilterSeries `json:"approximateFilter"`
 		}{Type: "approximateFilter", ApproximateFilter: *u.approximateFilter}, nil
+	case "dropNan":
+		if u.dropNan == nil {
+			return nil, fmt.Errorf("field \"dropNan\" is required")
+		}
+		return struct {
+			Type    string           `json:"type"`
+			DropNan NumericNanFilter `json:"dropNan"`
+		}{Type: "dropNan", DropNan: *u.dropNan}, nil
 	case "select1dArrayIndex":
 		if u.select1dArrayIndex == nil {
 			return nil, fmt.Errorf("field \"select1dArrayIndex\" is required")
@@ -5339,14 +8691,6 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type               string                              `json:"type"`
 			Select1dArrayIndex SelectIndexFrom1dNumericArraySeries `json:"select1dArrayIndex"`
 		}{Type: "select1dArrayIndex", Select1dArrayIndex: *u.select1dArrayIndex}, nil
-	case "selectNewestPoints":
-		if u.selectNewestPoints == nil {
-			return nil, fmt.Errorf("field \"selectNewestPoints\" is required")
-		}
-		return struct {
-			Type               string                   `json:"type"`
-			SelectNewestPoints SelectNewestPointsSeries `json:"selectNewestPoints"`
-		}{Type: "selectNewestPoints", SelectNewestPoints: *u.selectNewestPoints}, nil
 	case "aggregateUnderRanges":
 		if u.aggregateUnderRanges == nil {
 			return nil, fmt.Errorf("field \"aggregateUnderRanges\" is required")
@@ -5355,6 +8699,22 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type                 string                     `json:"type"`
 			AggregateUnderRanges AggregateUnderRangesSeries `json:"aggregateUnderRanges"`
 		}{Type: "aggregateUnderRanges", AggregateUnderRanges: *u.aggregateUnderRanges}, nil
+	case "rangeDuration":
+		if u.rangeDuration == nil {
+			return nil, fmt.Errorf("field \"rangeDuration\" is required")
+		}
+		return struct {
+			Type          string              `json:"type"`
+			RangeDuration RangeDurationSeries `json:"rangeDuration"`
+		}{Type: "rangeDuration", RangeDuration: *u.rangeDuration}, nil
+	case "groupWithinRangesV2":
+		if u.groupWithinRangesV2 == nil {
+			return nil, fmt.Errorf("field \"groupWithinRangesV2\" is required")
+		}
+		return struct {
+			Type                string                    `json:"type"`
+			GroupWithinRangesV2 GroupWithinRangesSeriesV2 `json:"groupWithinRangesV2"`
+		}{Type: "groupWithinRangesV2", GroupWithinRangesV2: *u.groupWithinRangesV2}, nil
 	case "filterByExpression":
 		if u.filterByExpression == nil {
 			return nil, fmt.Errorf("field \"filterByExpression\" is required")
@@ -5363,6 +8723,14 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type               string                   `json:"type"`
 			FilterByExpression FilterByExpressionSeries `json:"filterByExpression"`
 		}{Type: "filterByExpression", FilterByExpression: *u.filterByExpression}, nil
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return nil, fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return struct {
+			Type      string          `json:"type"`
+			ScalarUdf ScalarUdfSeries `json:"scalarUdf"`
+		}{Type: "scalarUdf", ScalarUdf: *u.scalarUdf}, nil
 	case "enumToNumeric":
 		if u.enumToNumeric == nil {
 			return nil, fmt.Errorf("field \"enumToNumeric\" is required")
@@ -5371,6 +8739,14 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type          string              `json:"type"`
 			EnumToNumeric EnumToNumericSeries `json:"enumToNumeric"`
 		}{Type: "enumToNumeric", EnumToNumeric: *u.enumToNumeric}, nil
+	case "contains":
+		if u.contains == nil {
+			return nil, fmt.Errorf("field \"contains\" is required")
+		}
+		return struct {
+			Type     string         `json:"type"`
+			Contains ContainsSeries `json:"contains"`
+		}{Type: "contains", Contains: *u.contains}, nil
 	case "refprop":
 		if u.refprop == nil {
 			return nil, fmt.Errorf("field \"refprop\" is required")
@@ -5379,6 +8755,14 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type    string        `json:"type"`
 			Refprop RefpropSeries `json:"refprop"`
 		}{Type: "refprop", Refprop: *u.refprop}, nil
+	case "refpropV2":
+		if u.refpropV2 == nil {
+			return nil, fmt.Errorf("field \"refpropV2\" is required")
+		}
+		return struct {
+			Type      string          `json:"type"`
+			RefpropV2 RefpropSeriesV2 `json:"refpropV2"`
+		}{Type: "refpropV2", RefpropV2: *u.refpropV2}, nil
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return nil, fmt.Errorf("field \"extractFromStruct\" is required")
@@ -5387,6 +8771,94 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type              string                         `json:"type"`
 			ExtractFromStruct ExtractNumericFromStructSeries `json:"extractFromStruct"`
 		}{Type: "extractFromStruct", ExtractFromStruct: *u.extractFromStruct}, nil
+	case "tagByIntervals":
+		if u.tagByIntervals == nil {
+			return nil, fmt.Errorf("field \"tagByIntervals\" is required")
+		}
+		return struct {
+			Type           string               `json:"type"`
+			TagByIntervals TagByIntervalsSeries `json:"tagByIntervals"`
+		}{Type: "tagByIntervals", TagByIntervals: *u.tagByIntervals}, nil
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return nil, fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return struct {
+			Type        string                 `json:"type"`
+			FilterByTag NumericTagFilterSeries `json:"filterByTag"`
+		}{Type: "filterByTag", FilterByTag: *u.filterByTag}, nil
+	case "selectTags":
+		if u.selectTags == nil {
+			return nil, fmt.Errorf("field \"selectTags\" is required")
+		}
+		return struct {
+			Type       string                  `json:"type"`
+			SelectTags NumericSelectTagsSeries `json:"selectTags"`
+		}{Type: "selectTags", SelectTags: *u.selectTags}, nil
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return nil, fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return struct {
+			Type              string                         `json:"type"`
+			ToStartOfInterval NumericToStartOfIntervalSeries `json:"toStartOfInterval"`
+		}{Type: "toStartOfInterval", ToStartOfInterval: *u.toStartOfInterval}, nil
+	case "phaseUnwrap":
+		if u.phaseUnwrap == nil {
+			return nil, fmt.Errorf("field \"phaseUnwrap\" is required")
+		}
+		return struct {
+			Type        string            `json:"type"`
+			PhaseUnwrap PhaseUnwrapSeries `json:"phaseUnwrap"`
+		}{Type: "phaseUnwrap", PhaseUnwrap: *u.phaseUnwrap}, nil
+	case "aggregate":
+		if u.aggregate == nil {
+			return nil, fmt.Errorf("field \"aggregate\" is required")
+		}
+		return struct {
+			Type      string                 `json:"type"`
+			Aggregate AggregateNumericSeries `json:"aggregate"`
+		}{Type: "aggregate", Aggregate: *u.aggregate}, nil
+	case "rollingOperation":
+		if u.rollingOperation == nil {
+			return nil, fmt.Errorf("field \"rollingOperation\" is required")
+		}
+		return struct {
+			Type             string                 `json:"type"`
+			RollingOperation RollingOperationSeries `json:"rollingOperation"`
+		}{Type: "rollingOperation", RollingOperation: *u.rollingOperation}, nil
+	case "bitOperation":
+		if u.bitOperation == nil {
+			return nil, fmt.Errorf("field \"bitOperation\" is required")
+		}
+		return struct {
+			Type         string             `json:"type"`
+			BitOperation BitOperationSeries `json:"bitOperation"`
+		}{Type: "bitOperation", BitOperation: *u.bitOperation}, nil
+	case "channel":
+		if u.channel == nil {
+			return nil, fmt.Errorf("field \"channel\" is required")
+		}
+		return struct {
+			Type    string            `json:"type"`
+			Channel api.ChannelSeries `json:"channel"`
+		}{Type: "channel", Channel: *u.channel}, nil
+	case "offset":
+		if u.offset == nil {
+			return nil, fmt.Errorf("field \"offset\" is required")
+		}
+		return struct {
+			Type   string       `json:"type"`
+			Offset OffsetSeries `json:"offset"`
+		}{Type: "offset", Offset: *u.offset}, nil
+	case "scale":
+		if u.scale == nil {
+			return nil, fmt.Errorf("field \"scale\" is required")
+		}
+		return struct {
+			Type  string      `json:"type"`
+			Scale ScaleSeries `json:"scale"`
+		}{Type: "scale", Scale: *u.scale}, nil
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return nil, fmt.Errorf("field \"arithmetic\" is required")
@@ -5529,13 +9001,53 @@ func (u *NumericSeries) UnmarshalJSON(data []byte) error {
 		if u.constant == nil {
 			return fmt.Errorf("field \"constant\" is required")
 		}
-	case "aggregate":
-		if u.aggregate == nil {
-			return fmt.Errorf("field \"aggregate\" is required")
+	case "selectNewestPoints":
+		if u.selectNewestPoints == nil {
+			return fmt.Errorf("field \"selectNewestPoints\" is required")
 		}
-	case "bitOperation":
-		if u.bitOperation == nil {
-			return fmt.Errorf("field \"bitOperation\" is required")
+	case "selectNumeric":
+		if u.selectNumeric == nil {
+			return fmt.Errorf("field \"selectNumeric\" is required")
+		}
+	case "selectNumericProperty":
+		if u.selectNumericProperty == nil {
+			return fmt.Errorf("field \"selectNumericProperty\" is required")
+		}
+	case "selectOldestPoints":
+		if u.selectOldestPoints == nil {
+			return fmt.Errorf("field \"selectOldestPoints\" is required")
+		}
+	case "bitAnd":
+		if u.bitAnd == nil {
+			return fmt.Errorf("field \"bitAnd\" is required")
+		}
+	case "bitOr":
+		if u.bitOr == nil {
+			return fmt.Errorf("field \"bitOr\" is required")
+		}
+	case "bitXor":
+		if u.bitXor == nil {
+			return fmt.Errorf("field \"bitXor\" is required")
+		}
+	case "bitShiftRight":
+		if u.bitShiftRight == nil {
+			return fmt.Errorf("field \"bitShiftRight\" is required")
+		}
+	case "bitShiftLeft":
+		if u.bitShiftLeft == nil {
+			return fmt.Errorf("field \"bitShiftLeft\" is required")
+		}
+	case "bitTest":
+		if u.bitTest == nil {
+			return fmt.Errorf("field \"bitTest\" is required")
+		}
+	case "ifElse":
+		if u.ifElse == nil {
+			return fmt.Errorf("field \"ifElse\" is required")
+		}
+	case "numericAggregation":
+		if u.numericAggregation == nil {
+			return fmt.Errorf("field \"numericAggregation\" is required")
 		}
 	case "countDuplicate":
 		if u.countDuplicate == nil {
@@ -5557,17 +9069,9 @@ func (u *NumericSeries) UnmarshalJSON(data []byte) error {
 		if u.zScore == nil {
 			return fmt.Errorf("field \"zScore\" is required")
 		}
-	case "offset":
-		if u.offset == nil {
-			return fmt.Errorf("field \"offset\" is required")
-		}
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
-		}
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
 		}
 	case "derived":
 		if u.derived == nil {
@@ -5577,17 +9081,21 @@ func (u *NumericSeries) UnmarshalJSON(data []byte) error {
 		if u.resample == nil {
 			return fmt.Errorf("field \"resample\" is required")
 		}
-	case "rollingOperation":
-		if u.rollingOperation == nil {
-			return fmt.Errorf("field \"rollingOperation\" is required")
+	case "resampleV2":
+		if u.resampleV2 == nil {
+			return fmt.Errorf("field \"resampleV2\" is required")
+		}
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+	case "largestTriangleThreeBuckets":
+		if u.largestTriangleThreeBuckets == nil {
+			return fmt.Errorf("field \"largestTriangleThreeBuckets\" is required")
 		}
 	case "signalFilter":
 		if u.signalFilter == nil {
 			return fmt.Errorf("field \"signalFilter\" is required")
-		}
-	case "scale":
-		if u.scale == nil {
-			return fmt.Errorf("field \"scale\" is required")
 		}
 	case "timeDifference":
 		if u.timeDifference == nil {
@@ -5605,6 +9113,10 @@ func (u *NumericSeries) UnmarshalJSON(data []byte) error {
 		if u.timeShift == nil {
 			return fmt.Errorf("field \"timeShift\" is required")
 		}
+	case "timeShiftV2":
+		if u.timeShiftV2 == nil {
+			return fmt.Errorf("field \"timeShiftV2\" is required")
+		}
 	case "unitConversion":
 		if u.unitConversion == nil {
 			return fmt.Errorf("field \"unitConversion\" is required")
@@ -5617,6 +9129,10 @@ func (u *NumericSeries) UnmarshalJSON(data []byte) error {
 		if u.filterTransformation == nil {
 			return fmt.Errorf("field \"filterTransformation\" is required")
 		}
+	case "filterWhere":
+		if u.filterWhere == nil {
+			return fmt.Errorf("field \"filterWhere\" is required")
+		}
 	case "thresholdFilter":
 		if u.thresholdFilter == nil {
 			return fmt.Errorf("field \"thresholdFilter\" is required")
@@ -5625,33 +9141,97 @@ func (u *NumericSeries) UnmarshalJSON(data []byte) error {
 		if u.approximateFilter == nil {
 			return fmt.Errorf("field \"approximateFilter\" is required")
 		}
+	case "dropNan":
+		if u.dropNan == nil {
+			return fmt.Errorf("field \"dropNan\" is required")
+		}
 	case "select1dArrayIndex":
 		if u.select1dArrayIndex == nil {
 			return fmt.Errorf("field \"select1dArrayIndex\" is required")
-		}
-	case "selectNewestPoints":
-		if u.selectNewestPoints == nil {
-			return fmt.Errorf("field \"selectNewestPoints\" is required")
 		}
 	case "aggregateUnderRanges":
 		if u.aggregateUnderRanges == nil {
 			return fmt.Errorf("field \"aggregateUnderRanges\" is required")
 		}
+	case "rangeDuration":
+		if u.rangeDuration == nil {
+			return fmt.Errorf("field \"rangeDuration\" is required")
+		}
+	case "groupWithinRangesV2":
+		if u.groupWithinRangesV2 == nil {
+			return fmt.Errorf("field \"groupWithinRangesV2\" is required")
+		}
 	case "filterByExpression":
 		if u.filterByExpression == nil {
 			return fmt.Errorf("field \"filterByExpression\" is required")
+		}
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
 		}
 	case "enumToNumeric":
 		if u.enumToNumeric == nil {
 			return fmt.Errorf("field \"enumToNumeric\" is required")
 		}
+	case "contains":
+		if u.contains == nil {
+			return fmt.Errorf("field \"contains\" is required")
+		}
 	case "refprop":
 		if u.refprop == nil {
 			return fmt.Errorf("field \"refprop\" is required")
 		}
+	case "refpropV2":
+		if u.refpropV2 == nil {
+			return fmt.Errorf("field \"refpropV2\" is required")
+		}
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+	case "tagByIntervals":
+		if u.tagByIntervals == nil {
+			return fmt.Errorf("field \"tagByIntervals\" is required")
+		}
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+	case "phaseUnwrap":
+		if u.phaseUnwrap == nil {
+			return fmt.Errorf("field \"phaseUnwrap\" is required")
+		}
+	case "aggregate":
+		if u.aggregate == nil {
+			return fmt.Errorf("field \"aggregate\" is required")
+		}
+	case "rollingOperation":
+		if u.rollingOperation == nil {
+			return fmt.Errorf("field \"rollingOperation\" is required")
+		}
+	case "bitOperation":
+		if u.bitOperation == nil {
+			return fmt.Errorf("field \"bitOperation\" is required")
+		}
+	case "channel":
+		if u.channel == nil {
+			return fmt.Errorf("field \"channel\" is required")
+		}
+	case "offset":
+		if u.offset == nil {
+			return fmt.Errorf("field \"offset\" is required")
+		}
+	case "scale":
+		if u.scale == nil {
+			return fmt.Errorf("field \"scale\" is required")
 		}
 	case "arithmetic":
 		if u.arithmetic == nil {
@@ -5685,7 +9265,7 @@ func (u *NumericSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Negate) error, cosFunc func(Cos) error, sinFunc func(Sin) error, tanFunc func(Tan) error, acosFunc func(Acos) error, asinFunc func(Asin) error, lnFunc func(Ln) error, log10Func func(Log10) error, sqrtFunc func(Sqrt) error, addFunc func(Add) error, subtractFunc func(Subtract) error, multiplyFunc func(Multiply) error, divideFunc func(Divide) error, floorDivideFunc func(FloorDivide) error, powerFunc func(Power) error, moduloFunc func(Modulo) error, atan2Func func(Atan2) error, maxFunc func(MaxSeries) error, meanFunc func(MeanSeries) error, minFunc func(MinSeries) error, sumFunc func(SumSeries) error, unionFunc func(NumericUnionSeries) error, productFunc func(ProductSeries) error, constantFunc func(api.ConstantNumericSeries) error, aggregateFunc func(AggregateNumericSeries) error, bitOperationFunc func(BitOperationSeries) error, countDuplicateFunc func(EnumCountDuplicateSeries) error, cumulativeSumFunc func(CumulativeSumSeries) error, derivativeFunc func(DerivativeSeries) error, integralFunc func(IntegralSeries) error, zScoreFunc func(ZscoreSeries) error, offsetFunc func(OffsetSeries) error, rawFunc func(api.Reference) error, channelFunc func(api.ChannelSeries) error, derivedFunc func(DerivedSeries) error, resampleFunc func(NumericResampleSeries) error, rollingOperationFunc func(RollingOperationSeries) error, signalFilterFunc func(SignalFilterSeries) error, scaleFunc func(ScaleSeries) error, timeDifferenceFunc func(TimeDifferenceSeries) error, absoluteTimestampFunc func(AbsoluteTimestampSeries) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeries) error, timeShiftFunc func(NumericTimeShiftSeries) error, unitConversionFunc func(UnitConversionSeries) error, valueDifferenceFunc func(ValueDifferenceSeries) error, filterTransformationFunc func(NumericFilterTransformationSeries) error, thresholdFilterFunc func(NumericThresholdFilterSeries) error, approximateFilterFunc func(NumericApproximateFilterSeries) error, select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) error, selectNewestPointsFunc func(SelectNewestPointsSeries) error, aggregateUnderRangesFunc func(AggregateUnderRangesSeries) error, filterByExpressionFunc func(FilterByExpressionSeries) error, enumToNumericFunc func(EnumToNumericSeries) error, refpropFunc func(RefpropSeries) error, extractFromStructFunc func(ExtractNumericFromStructSeries) error, arithmeticFunc func(ArithmeticSeries) error, unaryArithmeticFunc func(UnaryArithmeticSeries) error, binaryArithmeticFunc func(BinaryArithmeticSeries) error, unknownFunc func(string) error) error {
+func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Negate) error, cosFunc func(Cos) error, sinFunc func(Sin) error, tanFunc func(Tan) error, acosFunc func(Acos) error, asinFunc func(Asin) error, lnFunc func(Ln) error, log10Func func(Log10) error, sqrtFunc func(Sqrt) error, addFunc func(Add) error, subtractFunc func(Subtract) error, multiplyFunc func(Multiply) error, divideFunc func(Divide) error, floorDivideFunc func(FloorDivide) error, powerFunc func(Power) error, moduloFunc func(Modulo) error, atan2Func func(Atan2) error, maxFunc func(MaxSeries) error, meanFunc func(MeanSeries) error, minFunc func(MinSeries) error, sumFunc func(SumSeries) error, unionFunc func(NumericUnionSeries) error, productFunc func(ProductSeries) error, constantFunc func(api.ConstantNumericSeries) error, selectNewestPointsFunc func(SelectNewestPointsSeries) error, selectNumericFunc func(SelectSeries) error, selectNumericPropertyFunc func(SelectProperty) error, selectOldestPointsFunc func(SelectOldestPointsSeries) error, bitAndFunc func(BitAnd) error, bitOrFunc func(BitOr) error, bitXorFunc func(BitXor) error, bitShiftRightFunc func(BitShiftRight) error, bitShiftLeftFunc func(BitShiftLeft) error, bitTestFunc func(BitTest) error, ifElseFunc func(NumericIfElseSeries) error, numericAggregationFunc func(NumericAggregation) error, countDuplicateFunc func(EnumCountDuplicateSeries) error, cumulativeSumFunc func(CumulativeSumSeries) error, derivativeFunc func(DerivativeSeries) error, integralFunc func(IntegralSeries) error, zScoreFunc func(ZscoreSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, resampleFunc func(NumericResampleSeries) error, resampleV2Func func(NumericResampleSeriesV2) error, nthPointDownsampleFunc func(NumericNthPointDownsampleSeries) error, largestTriangleThreeBucketsFunc func(NumericLargestTriangleThreeBucketsSeries) error, signalFilterFunc func(SignalFilterSeries) error, timeDifferenceFunc func(TimeDifferenceSeries) error, absoluteTimestampFunc func(AbsoluteTimestampSeries) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeries) error, timeShiftFunc func(NumericTimeShiftSeries) error, timeShiftV2Func func(NumericTimeShiftSeriesV2) error, unitConversionFunc func(UnitConversionSeries) error, valueDifferenceFunc func(ValueDifferenceSeries) error, filterTransformationFunc func(NumericFilterTransformationSeries) error, filterWhereFunc func(NumericFilterWhereSeries) error, thresholdFilterFunc func(NumericThresholdFilterSeries) error, approximateFilterFunc func(NumericApproximateFilterSeries) error, dropNanFunc func(NumericNanFilter) error, select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) error, aggregateUnderRangesFunc func(AggregateUnderRangesSeries) error, rangeDurationFunc func(RangeDurationSeries) error, groupWithinRangesV2Func func(GroupWithinRangesSeriesV2) error, filterByExpressionFunc func(FilterByExpressionSeries) error, scalarUdfFunc func(ScalarUdfSeries) error, enumToNumericFunc func(EnumToNumericSeries) error, containsFunc func(ContainsSeries) error, refpropFunc func(RefpropSeries) error, refpropV2Func func(RefpropSeriesV2) error, extractFromStructFunc func(ExtractNumericFromStructSeries) error, tagByIntervalsFunc func(TagByIntervalsSeries) error, filterByTagFunc func(NumericTagFilterSeries) error, selectTagsFunc func(NumericSelectTagsSeries) error, toStartOfIntervalFunc func(NumericToStartOfIntervalSeries) error, phaseUnwrapFunc func(PhaseUnwrapSeries) error, aggregateFunc func(AggregateNumericSeries) error, rollingOperationFunc func(RollingOperationSeries) error, bitOperationFunc func(BitOperationSeries) error, channelFunc func(api.ChannelSeries) error, offsetFunc func(OffsetSeries) error, scaleFunc func(ScaleSeries) error, arithmeticFunc func(ArithmeticSeries) error, unaryArithmeticFunc func(UnaryArithmeticSeries) error, binaryArithmeticFunc func(BinaryArithmeticSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -5817,16 +9397,66 @@ func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Neg
 			return fmt.Errorf("field \"constant\" is required")
 		}
 		return constantFunc(*u.constant)
-	case "aggregate":
-		if u.aggregate == nil {
-			return fmt.Errorf("field \"aggregate\" is required")
+	case "selectNewestPoints":
+		if u.selectNewestPoints == nil {
+			return fmt.Errorf("field \"selectNewestPoints\" is required")
 		}
-		return aggregateFunc(*u.aggregate)
-	case "bitOperation":
-		if u.bitOperation == nil {
-			return fmt.Errorf("field \"bitOperation\" is required")
+		return selectNewestPointsFunc(*u.selectNewestPoints)
+	case "selectNumeric":
+		if u.selectNumeric == nil {
+			return fmt.Errorf("field \"selectNumeric\" is required")
 		}
-		return bitOperationFunc(*u.bitOperation)
+		return selectNumericFunc(*u.selectNumeric)
+	case "selectNumericProperty":
+		if u.selectNumericProperty == nil {
+			return fmt.Errorf("field \"selectNumericProperty\" is required")
+		}
+		return selectNumericPropertyFunc(*u.selectNumericProperty)
+	case "selectOldestPoints":
+		if u.selectOldestPoints == nil {
+			return fmt.Errorf("field \"selectOldestPoints\" is required")
+		}
+		return selectOldestPointsFunc(*u.selectOldestPoints)
+	case "bitAnd":
+		if u.bitAnd == nil {
+			return fmt.Errorf("field \"bitAnd\" is required")
+		}
+		return bitAndFunc(*u.bitAnd)
+	case "bitOr":
+		if u.bitOr == nil {
+			return fmt.Errorf("field \"bitOr\" is required")
+		}
+		return bitOrFunc(*u.bitOr)
+	case "bitXor":
+		if u.bitXor == nil {
+			return fmt.Errorf("field \"bitXor\" is required")
+		}
+		return bitXorFunc(*u.bitXor)
+	case "bitShiftRight":
+		if u.bitShiftRight == nil {
+			return fmt.Errorf("field \"bitShiftRight\" is required")
+		}
+		return bitShiftRightFunc(*u.bitShiftRight)
+	case "bitShiftLeft":
+		if u.bitShiftLeft == nil {
+			return fmt.Errorf("field \"bitShiftLeft\" is required")
+		}
+		return bitShiftLeftFunc(*u.bitShiftLeft)
+	case "bitTest":
+		if u.bitTest == nil {
+			return fmt.Errorf("field \"bitTest\" is required")
+		}
+		return bitTestFunc(*u.bitTest)
+	case "ifElse":
+		if u.ifElse == nil {
+			return fmt.Errorf("field \"ifElse\" is required")
+		}
+		return ifElseFunc(*u.ifElse)
+	case "numericAggregation":
+		if u.numericAggregation == nil {
+			return fmt.Errorf("field \"numericAggregation\" is required")
+		}
+		return numericAggregationFunc(*u.numericAggregation)
 	case "countDuplicate":
 		if u.countDuplicate == nil {
 			return fmt.Errorf("field \"countDuplicate\" is required")
@@ -5852,21 +9482,11 @@ func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Neg
 			return fmt.Errorf("field \"zScore\" is required")
 		}
 		return zScoreFunc(*u.zScore)
-	case "offset":
-		if u.offset == nil {
-			return fmt.Errorf("field \"offset\" is required")
-		}
-		return offsetFunc(*u.offset)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return rawFunc(*u.raw)
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
-		}
-		return channelFunc(*u.channel)
 	case "derived":
 		if u.derived == nil {
 			return fmt.Errorf("field \"derived\" is required")
@@ -5877,21 +9497,26 @@ func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Neg
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return resampleFunc(*u.resample)
-	case "rollingOperation":
-		if u.rollingOperation == nil {
-			return fmt.Errorf("field \"rollingOperation\" is required")
+	case "resampleV2":
+		if u.resampleV2 == nil {
+			return fmt.Errorf("field \"resampleV2\" is required")
 		}
-		return rollingOperationFunc(*u.rollingOperation)
+		return resampleV2Func(*u.resampleV2)
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return nthPointDownsampleFunc(*u.nthPointDownsample)
+	case "largestTriangleThreeBuckets":
+		if u.largestTriangleThreeBuckets == nil {
+			return fmt.Errorf("field \"largestTriangleThreeBuckets\" is required")
+		}
+		return largestTriangleThreeBucketsFunc(*u.largestTriangleThreeBuckets)
 	case "signalFilter":
 		if u.signalFilter == nil {
 			return fmt.Errorf("field \"signalFilter\" is required")
 		}
 		return signalFilterFunc(*u.signalFilter)
-	case "scale":
-		if u.scale == nil {
-			return fmt.Errorf("field \"scale\" is required")
-		}
-		return scaleFunc(*u.scale)
 	case "timeDifference":
 		if u.timeDifference == nil {
 			return fmt.Errorf("field \"timeDifference\" is required")
@@ -5912,6 +9537,11 @@ func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Neg
 			return fmt.Errorf("field \"timeShift\" is required")
 		}
 		return timeShiftFunc(*u.timeShift)
+	case "timeShiftV2":
+		if u.timeShiftV2 == nil {
+			return fmt.Errorf("field \"timeShiftV2\" is required")
+		}
+		return timeShiftV2Func(*u.timeShiftV2)
 	case "unitConversion":
 		if u.unitConversion == nil {
 			return fmt.Errorf("field \"unitConversion\" is required")
@@ -5927,6 +9557,11 @@ func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Neg
 			return fmt.Errorf("field \"filterTransformation\" is required")
 		}
 		return filterTransformationFunc(*u.filterTransformation)
+	case "filterWhere":
+		if u.filterWhere == nil {
+			return fmt.Errorf("field \"filterWhere\" is required")
+		}
+		return filterWhereFunc(*u.filterWhere)
 	case "thresholdFilter":
 		if u.thresholdFilter == nil {
 			return fmt.Errorf("field \"thresholdFilter\" is required")
@@ -5937,41 +9572,121 @@ func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Neg
 			return fmt.Errorf("field \"approximateFilter\" is required")
 		}
 		return approximateFilterFunc(*u.approximateFilter)
+	case "dropNan":
+		if u.dropNan == nil {
+			return fmt.Errorf("field \"dropNan\" is required")
+		}
+		return dropNanFunc(*u.dropNan)
 	case "select1dArrayIndex":
 		if u.select1dArrayIndex == nil {
 			return fmt.Errorf("field \"select1dArrayIndex\" is required")
 		}
 		return select1dArrayIndexFunc(*u.select1dArrayIndex)
-	case "selectNewestPoints":
-		if u.selectNewestPoints == nil {
-			return fmt.Errorf("field \"selectNewestPoints\" is required")
-		}
-		return selectNewestPointsFunc(*u.selectNewestPoints)
 	case "aggregateUnderRanges":
 		if u.aggregateUnderRanges == nil {
 			return fmt.Errorf("field \"aggregateUnderRanges\" is required")
 		}
 		return aggregateUnderRangesFunc(*u.aggregateUnderRanges)
+	case "rangeDuration":
+		if u.rangeDuration == nil {
+			return fmt.Errorf("field \"rangeDuration\" is required")
+		}
+		return rangeDurationFunc(*u.rangeDuration)
+	case "groupWithinRangesV2":
+		if u.groupWithinRangesV2 == nil {
+			return fmt.Errorf("field \"groupWithinRangesV2\" is required")
+		}
+		return groupWithinRangesV2Func(*u.groupWithinRangesV2)
 	case "filterByExpression":
 		if u.filterByExpression == nil {
 			return fmt.Errorf("field \"filterByExpression\" is required")
 		}
 		return filterByExpressionFunc(*u.filterByExpression)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return scalarUdfFunc(*u.scalarUdf)
 	case "enumToNumeric":
 		if u.enumToNumeric == nil {
 			return fmt.Errorf("field \"enumToNumeric\" is required")
 		}
 		return enumToNumericFunc(*u.enumToNumeric)
+	case "contains":
+		if u.contains == nil {
+			return fmt.Errorf("field \"contains\" is required")
+		}
+		return containsFunc(*u.contains)
 	case "refprop":
 		if u.refprop == nil {
 			return fmt.Errorf("field \"refprop\" is required")
 		}
 		return refpropFunc(*u.refprop)
+	case "refpropV2":
+		if u.refpropV2 == nil {
+			return fmt.Errorf("field \"refpropV2\" is required")
+		}
+		return refpropV2Func(*u.refpropV2)
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return extractFromStructFunc(*u.extractFromStruct)
+	case "tagByIntervals":
+		if u.tagByIntervals == nil {
+			return fmt.Errorf("field \"tagByIntervals\" is required")
+		}
+		return tagByIntervalsFunc(*u.tagByIntervals)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return filterByTagFunc(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return selectTagsFunc(*u.selectTags)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return toStartOfIntervalFunc(*u.toStartOfInterval)
+	case "phaseUnwrap":
+		if u.phaseUnwrap == nil {
+			return fmt.Errorf("field \"phaseUnwrap\" is required")
+		}
+		return phaseUnwrapFunc(*u.phaseUnwrap)
+	case "aggregate":
+		if u.aggregate == nil {
+			return fmt.Errorf("field \"aggregate\" is required")
+		}
+		return aggregateFunc(*u.aggregate)
+	case "rollingOperation":
+		if u.rollingOperation == nil {
+			return fmt.Errorf("field \"rollingOperation\" is required")
+		}
+		return rollingOperationFunc(*u.rollingOperation)
+	case "bitOperation":
+		if u.bitOperation == nil {
+			return fmt.Errorf("field \"bitOperation\" is required")
+		}
+		return bitOperationFunc(*u.bitOperation)
+	case "channel":
+		if u.channel == nil {
+			return fmt.Errorf("field \"channel\" is required")
+		}
+		return channelFunc(*u.channel)
+	case "offset":
+		if u.offset == nil {
+			return fmt.Errorf("field \"offset\" is required")
+		}
+		return offsetFunc(*u.offset)
+	case "scale":
+		if u.scale == nil {
+			return fmt.Errorf("field \"scale\" is required")
+		}
+		return scaleFunc(*u.scale)
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return fmt.Errorf("field \"arithmetic\" is required")
@@ -6090,11 +9805,51 @@ func (u *NumericSeries) ConstantNoopSuccess(_ api.ConstantNumericSeries) error {
 	return nil
 }
 
-func (u *NumericSeries) AggregateNoopSuccess(_ AggregateNumericSeries) error {
+func (u *NumericSeries) SelectNewestPointsNoopSuccess(_ SelectNewestPointsSeries) error {
 	return nil
 }
 
-func (u *NumericSeries) BitOperationNoopSuccess(_ BitOperationSeries) error {
+func (u *NumericSeries) SelectNumericNoopSuccess(_ SelectSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) SelectNumericPropertyNoopSuccess(_ SelectProperty) error {
+	return nil
+}
+
+func (u *NumericSeries) SelectOldestPointsNoopSuccess(_ SelectOldestPointsSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) BitAndNoopSuccess(_ BitAnd) error {
+	return nil
+}
+
+func (u *NumericSeries) BitOrNoopSuccess(_ BitOr) error {
+	return nil
+}
+
+func (u *NumericSeries) BitXorNoopSuccess(_ BitXor) error {
+	return nil
+}
+
+func (u *NumericSeries) BitShiftRightNoopSuccess(_ BitShiftRight) error {
+	return nil
+}
+
+func (u *NumericSeries) BitShiftLeftNoopSuccess(_ BitShiftLeft) error {
+	return nil
+}
+
+func (u *NumericSeries) BitTestNoopSuccess(_ BitTest) error {
+	return nil
+}
+
+func (u *NumericSeries) IfElseNoopSuccess(_ NumericIfElseSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) NumericAggregationNoopSuccess(_ NumericAggregation) error {
 	return nil
 }
 
@@ -6118,15 +9873,7 @@ func (u *NumericSeries) ZScoreNoopSuccess(_ ZscoreSeries) error {
 	return nil
 }
 
-func (u *NumericSeries) OffsetNoopSuccess(_ OffsetSeries) error {
-	return nil
-}
-
 func (u *NumericSeries) RawNoopSuccess(_ api.Reference) error {
-	return nil
-}
-
-func (u *NumericSeries) ChannelNoopSuccess(_ api.ChannelSeries) error {
 	return nil
 }
 
@@ -6138,15 +9885,19 @@ func (u *NumericSeries) ResampleNoopSuccess(_ NumericResampleSeries) error {
 	return nil
 }
 
-func (u *NumericSeries) RollingOperationNoopSuccess(_ RollingOperationSeries) error {
+func (u *NumericSeries) ResampleV2NoopSuccess(_ NumericResampleSeriesV2) error {
+	return nil
+}
+
+func (u *NumericSeries) NthPointDownsampleNoopSuccess(_ NumericNthPointDownsampleSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) LargestTriangleThreeBucketsNoopSuccess(_ NumericLargestTriangleThreeBucketsSeries) error {
 	return nil
 }
 
 func (u *NumericSeries) SignalFilterNoopSuccess(_ SignalFilterSeries) error {
-	return nil
-}
-
-func (u *NumericSeries) ScaleNoopSuccess(_ ScaleSeries) error {
 	return nil
 }
 
@@ -6166,6 +9917,10 @@ func (u *NumericSeries) TimeShiftNoopSuccess(_ NumericTimeShiftSeries) error {
 	return nil
 }
 
+func (u *NumericSeries) TimeShiftV2NoopSuccess(_ NumericTimeShiftSeriesV2) error {
+	return nil
+}
+
 func (u *NumericSeries) UnitConversionNoopSuccess(_ UnitConversionSeries) error {
 	return nil
 }
@@ -6178,6 +9933,10 @@ func (u *NumericSeries) FilterTransformationNoopSuccess(_ NumericFilterTransform
 	return nil
 }
 
+func (u *NumericSeries) FilterWhereNoopSuccess(_ NumericFilterWhereSeries) error {
+	return nil
+}
+
 func (u *NumericSeries) ThresholdFilterNoopSuccess(_ NumericThresholdFilterSeries) error {
 	return nil
 }
@@ -6186,11 +9945,11 @@ func (u *NumericSeries) ApproximateFilterNoopSuccess(_ NumericApproximateFilterS
 	return nil
 }
 
-func (u *NumericSeries) Select1dArrayIndexNoopSuccess(_ SelectIndexFrom1dNumericArraySeries) error {
+func (u *NumericSeries) DropNanNoopSuccess(_ NumericNanFilter) error {
 	return nil
 }
 
-func (u *NumericSeries) SelectNewestPointsNoopSuccess(_ SelectNewestPointsSeries) error {
+func (u *NumericSeries) Select1dArrayIndexNoopSuccess(_ SelectIndexFrom1dNumericArraySeries) error {
 	return nil
 }
 
@@ -6198,7 +9957,19 @@ func (u *NumericSeries) AggregateUnderRangesNoopSuccess(_ AggregateUnderRangesSe
 	return nil
 }
 
+func (u *NumericSeries) RangeDurationNoopSuccess(_ RangeDurationSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) GroupWithinRangesV2NoopSuccess(_ GroupWithinRangesSeriesV2) error {
+	return nil
+}
+
 func (u *NumericSeries) FilterByExpressionNoopSuccess(_ FilterByExpressionSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) ScalarUdfNoopSuccess(_ ScalarUdfSeries) error {
 	return nil
 }
 
@@ -6206,11 +9977,63 @@ func (u *NumericSeries) EnumToNumericNoopSuccess(_ EnumToNumericSeries) error {
 	return nil
 }
 
+func (u *NumericSeries) ContainsNoopSuccess(_ ContainsSeries) error {
+	return nil
+}
+
 func (u *NumericSeries) RefpropNoopSuccess(_ RefpropSeries) error {
 	return nil
 }
 
+func (u *NumericSeries) RefpropV2NoopSuccess(_ RefpropSeriesV2) error {
+	return nil
+}
+
 func (u *NumericSeries) ExtractFromStructNoopSuccess(_ ExtractNumericFromStructSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) TagByIntervalsNoopSuccess(_ TagByIntervalsSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) FilterByTagNoopSuccess(_ NumericTagFilterSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) SelectTagsNoopSuccess(_ NumericSelectTagsSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) ToStartOfIntervalNoopSuccess(_ NumericToStartOfIntervalSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) PhaseUnwrapNoopSuccess(_ PhaseUnwrapSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) AggregateNoopSuccess(_ AggregateNumericSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) RollingOperationNoopSuccess(_ RollingOperationSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) BitOperationNoopSuccess(_ BitOperationSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) ChannelNoopSuccess(_ api.ChannelSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) OffsetNoopSuccess(_ OffsetSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) ScaleNoopSuccess(_ ScaleSeries) error {
 	return nil
 }
 
@@ -6362,16 +10185,66 @@ func (u *NumericSeries) Accept(v NumericSeriesVisitor) error {
 			return fmt.Errorf("field \"constant\" is required")
 		}
 		return v.VisitConstant(*u.constant)
-	case "aggregate":
-		if u.aggregate == nil {
-			return fmt.Errorf("field \"aggregate\" is required")
+	case "selectNewestPoints":
+		if u.selectNewestPoints == nil {
+			return fmt.Errorf("field \"selectNewestPoints\" is required")
 		}
-		return v.VisitAggregate(*u.aggregate)
-	case "bitOperation":
-		if u.bitOperation == nil {
-			return fmt.Errorf("field \"bitOperation\" is required")
+		return v.VisitSelectNewestPoints(*u.selectNewestPoints)
+	case "selectNumeric":
+		if u.selectNumeric == nil {
+			return fmt.Errorf("field \"selectNumeric\" is required")
 		}
-		return v.VisitBitOperation(*u.bitOperation)
+		return v.VisitSelectNumeric(*u.selectNumeric)
+	case "selectNumericProperty":
+		if u.selectNumericProperty == nil {
+			return fmt.Errorf("field \"selectNumericProperty\" is required")
+		}
+		return v.VisitSelectNumericProperty(*u.selectNumericProperty)
+	case "selectOldestPoints":
+		if u.selectOldestPoints == nil {
+			return fmt.Errorf("field \"selectOldestPoints\" is required")
+		}
+		return v.VisitSelectOldestPoints(*u.selectOldestPoints)
+	case "bitAnd":
+		if u.bitAnd == nil {
+			return fmt.Errorf("field \"bitAnd\" is required")
+		}
+		return v.VisitBitAnd(*u.bitAnd)
+	case "bitOr":
+		if u.bitOr == nil {
+			return fmt.Errorf("field \"bitOr\" is required")
+		}
+		return v.VisitBitOr(*u.bitOr)
+	case "bitXor":
+		if u.bitXor == nil {
+			return fmt.Errorf("field \"bitXor\" is required")
+		}
+		return v.VisitBitXor(*u.bitXor)
+	case "bitShiftRight":
+		if u.bitShiftRight == nil {
+			return fmt.Errorf("field \"bitShiftRight\" is required")
+		}
+		return v.VisitBitShiftRight(*u.bitShiftRight)
+	case "bitShiftLeft":
+		if u.bitShiftLeft == nil {
+			return fmt.Errorf("field \"bitShiftLeft\" is required")
+		}
+		return v.VisitBitShiftLeft(*u.bitShiftLeft)
+	case "bitTest":
+		if u.bitTest == nil {
+			return fmt.Errorf("field \"bitTest\" is required")
+		}
+		return v.VisitBitTest(*u.bitTest)
+	case "ifElse":
+		if u.ifElse == nil {
+			return fmt.Errorf("field \"ifElse\" is required")
+		}
+		return v.VisitIfElse(*u.ifElse)
+	case "numericAggregation":
+		if u.numericAggregation == nil {
+			return fmt.Errorf("field \"numericAggregation\" is required")
+		}
+		return v.VisitNumericAggregation(*u.numericAggregation)
 	case "countDuplicate":
 		if u.countDuplicate == nil {
 			return fmt.Errorf("field \"countDuplicate\" is required")
@@ -6397,21 +10270,11 @@ func (u *NumericSeries) Accept(v NumericSeriesVisitor) error {
 			return fmt.Errorf("field \"zScore\" is required")
 		}
 		return v.VisitZScore(*u.zScore)
-	case "offset":
-		if u.offset == nil {
-			return fmt.Errorf("field \"offset\" is required")
-		}
-		return v.VisitOffset(*u.offset)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRaw(*u.raw)
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
-		}
-		return v.VisitChannel(*u.channel)
 	case "derived":
 		if u.derived == nil {
 			return fmt.Errorf("field \"derived\" is required")
@@ -6422,21 +10285,26 @@ func (u *NumericSeries) Accept(v NumericSeriesVisitor) error {
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return v.VisitResample(*u.resample)
-	case "rollingOperation":
-		if u.rollingOperation == nil {
-			return fmt.Errorf("field \"rollingOperation\" is required")
+	case "resampleV2":
+		if u.resampleV2 == nil {
+			return fmt.Errorf("field \"resampleV2\" is required")
 		}
-		return v.VisitRollingOperation(*u.rollingOperation)
+		return v.VisitResampleV2(*u.resampleV2)
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return v.VisitNthPointDownsample(*u.nthPointDownsample)
+	case "largestTriangleThreeBuckets":
+		if u.largestTriangleThreeBuckets == nil {
+			return fmt.Errorf("field \"largestTriangleThreeBuckets\" is required")
+		}
+		return v.VisitLargestTriangleThreeBuckets(*u.largestTriangleThreeBuckets)
 	case "signalFilter":
 		if u.signalFilter == nil {
 			return fmt.Errorf("field \"signalFilter\" is required")
 		}
 		return v.VisitSignalFilter(*u.signalFilter)
-	case "scale":
-		if u.scale == nil {
-			return fmt.Errorf("field \"scale\" is required")
-		}
-		return v.VisitScale(*u.scale)
 	case "timeDifference":
 		if u.timeDifference == nil {
 			return fmt.Errorf("field \"timeDifference\" is required")
@@ -6457,6 +10325,11 @@ func (u *NumericSeries) Accept(v NumericSeriesVisitor) error {
 			return fmt.Errorf("field \"timeShift\" is required")
 		}
 		return v.VisitTimeShift(*u.timeShift)
+	case "timeShiftV2":
+		if u.timeShiftV2 == nil {
+			return fmt.Errorf("field \"timeShiftV2\" is required")
+		}
+		return v.VisitTimeShiftV2(*u.timeShiftV2)
 	case "unitConversion":
 		if u.unitConversion == nil {
 			return fmt.Errorf("field \"unitConversion\" is required")
@@ -6472,6 +10345,11 @@ func (u *NumericSeries) Accept(v NumericSeriesVisitor) error {
 			return fmt.Errorf("field \"filterTransformation\" is required")
 		}
 		return v.VisitFilterTransformation(*u.filterTransformation)
+	case "filterWhere":
+		if u.filterWhere == nil {
+			return fmt.Errorf("field \"filterWhere\" is required")
+		}
+		return v.VisitFilterWhere(*u.filterWhere)
 	case "thresholdFilter":
 		if u.thresholdFilter == nil {
 			return fmt.Errorf("field \"thresholdFilter\" is required")
@@ -6482,41 +10360,121 @@ func (u *NumericSeries) Accept(v NumericSeriesVisitor) error {
 			return fmt.Errorf("field \"approximateFilter\" is required")
 		}
 		return v.VisitApproximateFilter(*u.approximateFilter)
+	case "dropNan":
+		if u.dropNan == nil {
+			return fmt.Errorf("field \"dropNan\" is required")
+		}
+		return v.VisitDropNan(*u.dropNan)
 	case "select1dArrayIndex":
 		if u.select1dArrayIndex == nil {
 			return fmt.Errorf("field \"select1dArrayIndex\" is required")
 		}
 		return v.VisitSelect1dArrayIndex(*u.select1dArrayIndex)
-	case "selectNewestPoints":
-		if u.selectNewestPoints == nil {
-			return fmt.Errorf("field \"selectNewestPoints\" is required")
-		}
-		return v.VisitSelectNewestPoints(*u.selectNewestPoints)
 	case "aggregateUnderRanges":
 		if u.aggregateUnderRanges == nil {
 			return fmt.Errorf("field \"aggregateUnderRanges\" is required")
 		}
 		return v.VisitAggregateUnderRanges(*u.aggregateUnderRanges)
+	case "rangeDuration":
+		if u.rangeDuration == nil {
+			return fmt.Errorf("field \"rangeDuration\" is required")
+		}
+		return v.VisitRangeDuration(*u.rangeDuration)
+	case "groupWithinRangesV2":
+		if u.groupWithinRangesV2 == nil {
+			return fmt.Errorf("field \"groupWithinRangesV2\" is required")
+		}
+		return v.VisitGroupWithinRangesV2(*u.groupWithinRangesV2)
 	case "filterByExpression":
 		if u.filterByExpression == nil {
 			return fmt.Errorf("field \"filterByExpression\" is required")
 		}
 		return v.VisitFilterByExpression(*u.filterByExpression)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return v.VisitScalarUdf(*u.scalarUdf)
 	case "enumToNumeric":
 		if u.enumToNumeric == nil {
 			return fmt.Errorf("field \"enumToNumeric\" is required")
 		}
 		return v.VisitEnumToNumeric(*u.enumToNumeric)
+	case "contains":
+		if u.contains == nil {
+			return fmt.Errorf("field \"contains\" is required")
+		}
+		return v.VisitContains(*u.contains)
 	case "refprop":
 		if u.refprop == nil {
 			return fmt.Errorf("field \"refprop\" is required")
 		}
 		return v.VisitRefprop(*u.refprop)
+	case "refpropV2":
+		if u.refpropV2 == nil {
+			return fmt.Errorf("field \"refpropV2\" is required")
+		}
+		return v.VisitRefpropV2(*u.refpropV2)
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStruct(*u.extractFromStruct)
+	case "tagByIntervals":
+		if u.tagByIntervals == nil {
+			return fmt.Errorf("field \"tagByIntervals\" is required")
+		}
+		return v.VisitTagByIntervals(*u.tagByIntervals)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTag(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTags(*u.selectTags)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfInterval(*u.toStartOfInterval)
+	case "phaseUnwrap":
+		if u.phaseUnwrap == nil {
+			return fmt.Errorf("field \"phaseUnwrap\" is required")
+		}
+		return v.VisitPhaseUnwrap(*u.phaseUnwrap)
+	case "aggregate":
+		if u.aggregate == nil {
+			return fmt.Errorf("field \"aggregate\" is required")
+		}
+		return v.VisitAggregate(*u.aggregate)
+	case "rollingOperation":
+		if u.rollingOperation == nil {
+			return fmt.Errorf("field \"rollingOperation\" is required")
+		}
+		return v.VisitRollingOperation(*u.rollingOperation)
+	case "bitOperation":
+		if u.bitOperation == nil {
+			return fmt.Errorf("field \"bitOperation\" is required")
+		}
+		return v.VisitBitOperation(*u.bitOperation)
+	case "channel":
+		if u.channel == nil {
+			return fmt.Errorf("field \"channel\" is required")
+		}
+		return v.VisitChannel(*u.channel)
+	case "offset":
+		if u.offset == nil {
+			return fmt.Errorf("field \"offset\" is required")
+		}
+		return v.VisitOffset(*u.offset)
+	case "scale":
+		if u.scale == nil {
+			return fmt.Errorf("field \"scale\" is required")
+		}
+		return v.VisitScale(*u.scale)
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return fmt.Errorf("field \"arithmetic\" is required")
@@ -6561,37 +10519,64 @@ type NumericSeriesVisitor interface {
 	VisitUnion(v NumericUnionSeries) error
 	VisitProduct(v ProductSeries) error
 	VisitConstant(v api.ConstantNumericSeries) error
-	VisitAggregate(v AggregateNumericSeries) error
-	VisitBitOperation(v BitOperationSeries) error
+	VisitSelectNewestPoints(v SelectNewestPointsSeries) error
+	VisitSelectNumeric(v SelectSeries) error
+	VisitSelectNumericProperty(v SelectProperty) error
+	VisitSelectOldestPoints(v SelectOldestPointsSeries) error
+	VisitBitAnd(v BitAnd) error
+	VisitBitOr(v BitOr) error
+	VisitBitXor(v BitXor) error
+	VisitBitShiftRight(v BitShiftRight) error
+	VisitBitShiftLeft(v BitShiftLeft) error
+	VisitBitTest(v BitTest) error
+	VisitIfElse(v NumericIfElseSeries) error
+	VisitNumericAggregation(v NumericAggregation) error
 	VisitCountDuplicate(v EnumCountDuplicateSeries) error
 	VisitCumulativeSum(v CumulativeSumSeries) error
 	VisitDerivative(v DerivativeSeries) error
 	VisitIntegral(v IntegralSeries) error
 	VisitZScore(v ZscoreSeries) error
-	VisitOffset(v OffsetSeries) error
 	VisitRaw(v api.Reference) error
-	VisitChannel(v api.ChannelSeries) error
 	VisitDerived(v DerivedSeries) error
 	VisitResample(v NumericResampleSeries) error
-	VisitRollingOperation(v RollingOperationSeries) error
+	VisitResampleV2(v NumericResampleSeriesV2) error
+	VisitNthPointDownsample(v NumericNthPointDownsampleSeries) error
+	VisitLargestTriangleThreeBuckets(v NumericLargestTriangleThreeBucketsSeries) error
 	VisitSignalFilter(v SignalFilterSeries) error
-	VisitScale(v ScaleSeries) error
 	VisitTimeDifference(v TimeDifferenceSeries) error
 	VisitAbsoluteTimestamp(v AbsoluteTimestampSeries) error
 	VisitTimeRangeFilter(v NumericTimeRangeFilterSeries) error
 	VisitTimeShift(v NumericTimeShiftSeries) error
+	VisitTimeShiftV2(v NumericTimeShiftSeriesV2) error
 	VisitUnitConversion(v UnitConversionSeries) error
 	VisitValueDifference(v ValueDifferenceSeries) error
 	VisitFilterTransformation(v NumericFilterTransformationSeries) error
+	VisitFilterWhere(v NumericFilterWhereSeries) error
 	VisitThresholdFilter(v NumericThresholdFilterSeries) error
 	VisitApproximateFilter(v NumericApproximateFilterSeries) error
+	VisitDropNan(v NumericNanFilter) error
 	VisitSelect1dArrayIndex(v SelectIndexFrom1dNumericArraySeries) error
-	VisitSelectNewestPoints(v SelectNewestPointsSeries) error
 	VisitAggregateUnderRanges(v AggregateUnderRangesSeries) error
+	VisitRangeDuration(v RangeDurationSeries) error
+	VisitGroupWithinRangesV2(v GroupWithinRangesSeriesV2) error
 	VisitFilterByExpression(v FilterByExpressionSeries) error
+	VisitScalarUdf(v ScalarUdfSeries) error
 	VisitEnumToNumeric(v EnumToNumericSeries) error
+	VisitContains(v ContainsSeries) error
 	VisitRefprop(v RefpropSeries) error
+	VisitRefpropV2(v RefpropSeriesV2) error
 	VisitExtractFromStruct(v ExtractNumericFromStructSeries) error
+	VisitTagByIntervals(v TagByIntervalsSeries) error
+	VisitFilterByTag(v NumericTagFilterSeries) error
+	VisitSelectTags(v NumericSelectTagsSeries) error
+	VisitToStartOfInterval(v NumericToStartOfIntervalSeries) error
+	VisitPhaseUnwrap(v PhaseUnwrapSeries) error
+	VisitAggregate(v AggregateNumericSeries) error
+	VisitRollingOperation(v RollingOperationSeries) error
+	VisitBitOperation(v BitOperationSeries) error
+	VisitChannel(v api.ChannelSeries) error
+	VisitOffset(v OffsetSeries) error
+	VisitScale(v ScaleSeries) error
 	VisitArithmetic(v ArithmeticSeries) error
 	VisitUnaryArithmetic(v UnaryArithmeticSeries) error
 	VisitBinaryArithmetic(v BinaryArithmeticSeries) error
@@ -6730,16 +10715,66 @@ func (u *NumericSeries) AcceptWithContext(ctx context.Context, v NumericSeriesVi
 			return fmt.Errorf("field \"constant\" is required")
 		}
 		return v.VisitConstantWithContext(ctx, *u.constant)
-	case "aggregate":
-		if u.aggregate == nil {
-			return fmt.Errorf("field \"aggregate\" is required")
+	case "selectNewestPoints":
+		if u.selectNewestPoints == nil {
+			return fmt.Errorf("field \"selectNewestPoints\" is required")
 		}
-		return v.VisitAggregateWithContext(ctx, *u.aggregate)
-	case "bitOperation":
-		if u.bitOperation == nil {
-			return fmt.Errorf("field \"bitOperation\" is required")
+		return v.VisitSelectNewestPointsWithContext(ctx, *u.selectNewestPoints)
+	case "selectNumeric":
+		if u.selectNumeric == nil {
+			return fmt.Errorf("field \"selectNumeric\" is required")
 		}
-		return v.VisitBitOperationWithContext(ctx, *u.bitOperation)
+		return v.VisitSelectNumericWithContext(ctx, *u.selectNumeric)
+	case "selectNumericProperty":
+		if u.selectNumericProperty == nil {
+			return fmt.Errorf("field \"selectNumericProperty\" is required")
+		}
+		return v.VisitSelectNumericPropertyWithContext(ctx, *u.selectNumericProperty)
+	case "selectOldestPoints":
+		if u.selectOldestPoints == nil {
+			return fmt.Errorf("field \"selectOldestPoints\" is required")
+		}
+		return v.VisitSelectOldestPointsWithContext(ctx, *u.selectOldestPoints)
+	case "bitAnd":
+		if u.bitAnd == nil {
+			return fmt.Errorf("field \"bitAnd\" is required")
+		}
+		return v.VisitBitAndWithContext(ctx, *u.bitAnd)
+	case "bitOr":
+		if u.bitOr == nil {
+			return fmt.Errorf("field \"bitOr\" is required")
+		}
+		return v.VisitBitOrWithContext(ctx, *u.bitOr)
+	case "bitXor":
+		if u.bitXor == nil {
+			return fmt.Errorf("field \"bitXor\" is required")
+		}
+		return v.VisitBitXorWithContext(ctx, *u.bitXor)
+	case "bitShiftRight":
+		if u.bitShiftRight == nil {
+			return fmt.Errorf("field \"bitShiftRight\" is required")
+		}
+		return v.VisitBitShiftRightWithContext(ctx, *u.bitShiftRight)
+	case "bitShiftLeft":
+		if u.bitShiftLeft == nil {
+			return fmt.Errorf("field \"bitShiftLeft\" is required")
+		}
+		return v.VisitBitShiftLeftWithContext(ctx, *u.bitShiftLeft)
+	case "bitTest":
+		if u.bitTest == nil {
+			return fmt.Errorf("field \"bitTest\" is required")
+		}
+		return v.VisitBitTestWithContext(ctx, *u.bitTest)
+	case "ifElse":
+		if u.ifElse == nil {
+			return fmt.Errorf("field \"ifElse\" is required")
+		}
+		return v.VisitIfElseWithContext(ctx, *u.ifElse)
+	case "numericAggregation":
+		if u.numericAggregation == nil {
+			return fmt.Errorf("field \"numericAggregation\" is required")
+		}
+		return v.VisitNumericAggregationWithContext(ctx, *u.numericAggregation)
 	case "countDuplicate":
 		if u.countDuplicate == nil {
 			return fmt.Errorf("field \"countDuplicate\" is required")
@@ -6765,21 +10800,11 @@ func (u *NumericSeries) AcceptWithContext(ctx context.Context, v NumericSeriesVi
 			return fmt.Errorf("field \"zScore\" is required")
 		}
 		return v.VisitZScoreWithContext(ctx, *u.zScore)
-	case "offset":
-		if u.offset == nil {
-			return fmt.Errorf("field \"offset\" is required")
-		}
-		return v.VisitOffsetWithContext(ctx, *u.offset)
 	case "raw":
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRawWithContext(ctx, *u.raw)
-	case "channel":
-		if u.channel == nil {
-			return fmt.Errorf("field \"channel\" is required")
-		}
-		return v.VisitChannelWithContext(ctx, *u.channel)
 	case "derived":
 		if u.derived == nil {
 			return fmt.Errorf("field \"derived\" is required")
@@ -6790,21 +10815,26 @@ func (u *NumericSeries) AcceptWithContext(ctx context.Context, v NumericSeriesVi
 			return fmt.Errorf("field \"resample\" is required")
 		}
 		return v.VisitResampleWithContext(ctx, *u.resample)
-	case "rollingOperation":
-		if u.rollingOperation == nil {
-			return fmt.Errorf("field \"rollingOperation\" is required")
+	case "resampleV2":
+		if u.resampleV2 == nil {
+			return fmt.Errorf("field \"resampleV2\" is required")
 		}
-		return v.VisitRollingOperationWithContext(ctx, *u.rollingOperation)
+		return v.VisitResampleV2WithContext(ctx, *u.resampleV2)
+	case "nthPointDownsample":
+		if u.nthPointDownsample == nil {
+			return fmt.Errorf("field \"nthPointDownsample\" is required")
+		}
+		return v.VisitNthPointDownsampleWithContext(ctx, *u.nthPointDownsample)
+	case "largestTriangleThreeBuckets":
+		if u.largestTriangleThreeBuckets == nil {
+			return fmt.Errorf("field \"largestTriangleThreeBuckets\" is required")
+		}
+		return v.VisitLargestTriangleThreeBucketsWithContext(ctx, *u.largestTriangleThreeBuckets)
 	case "signalFilter":
 		if u.signalFilter == nil {
 			return fmt.Errorf("field \"signalFilter\" is required")
 		}
 		return v.VisitSignalFilterWithContext(ctx, *u.signalFilter)
-	case "scale":
-		if u.scale == nil {
-			return fmt.Errorf("field \"scale\" is required")
-		}
-		return v.VisitScaleWithContext(ctx, *u.scale)
 	case "timeDifference":
 		if u.timeDifference == nil {
 			return fmt.Errorf("field \"timeDifference\" is required")
@@ -6825,6 +10855,11 @@ func (u *NumericSeries) AcceptWithContext(ctx context.Context, v NumericSeriesVi
 			return fmt.Errorf("field \"timeShift\" is required")
 		}
 		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
+	case "timeShiftV2":
+		if u.timeShiftV2 == nil {
+			return fmt.Errorf("field \"timeShiftV2\" is required")
+		}
+		return v.VisitTimeShiftV2WithContext(ctx, *u.timeShiftV2)
 	case "unitConversion":
 		if u.unitConversion == nil {
 			return fmt.Errorf("field \"unitConversion\" is required")
@@ -6840,6 +10875,11 @@ func (u *NumericSeries) AcceptWithContext(ctx context.Context, v NumericSeriesVi
 			return fmt.Errorf("field \"filterTransformation\" is required")
 		}
 		return v.VisitFilterTransformationWithContext(ctx, *u.filterTransformation)
+	case "filterWhere":
+		if u.filterWhere == nil {
+			return fmt.Errorf("field \"filterWhere\" is required")
+		}
+		return v.VisitFilterWhereWithContext(ctx, *u.filterWhere)
 	case "thresholdFilter":
 		if u.thresholdFilter == nil {
 			return fmt.Errorf("field \"thresholdFilter\" is required")
@@ -6850,41 +10890,121 @@ func (u *NumericSeries) AcceptWithContext(ctx context.Context, v NumericSeriesVi
 			return fmt.Errorf("field \"approximateFilter\" is required")
 		}
 		return v.VisitApproximateFilterWithContext(ctx, *u.approximateFilter)
+	case "dropNan":
+		if u.dropNan == nil {
+			return fmt.Errorf("field \"dropNan\" is required")
+		}
+		return v.VisitDropNanWithContext(ctx, *u.dropNan)
 	case "select1dArrayIndex":
 		if u.select1dArrayIndex == nil {
 			return fmt.Errorf("field \"select1dArrayIndex\" is required")
 		}
 		return v.VisitSelect1dArrayIndexWithContext(ctx, *u.select1dArrayIndex)
-	case "selectNewestPoints":
-		if u.selectNewestPoints == nil {
-			return fmt.Errorf("field \"selectNewestPoints\" is required")
-		}
-		return v.VisitSelectNewestPointsWithContext(ctx, *u.selectNewestPoints)
 	case "aggregateUnderRanges":
 		if u.aggregateUnderRanges == nil {
 			return fmt.Errorf("field \"aggregateUnderRanges\" is required")
 		}
 		return v.VisitAggregateUnderRangesWithContext(ctx, *u.aggregateUnderRanges)
+	case "rangeDuration":
+		if u.rangeDuration == nil {
+			return fmt.Errorf("field \"rangeDuration\" is required")
+		}
+		return v.VisitRangeDurationWithContext(ctx, *u.rangeDuration)
+	case "groupWithinRangesV2":
+		if u.groupWithinRangesV2 == nil {
+			return fmt.Errorf("field \"groupWithinRangesV2\" is required")
+		}
+		return v.VisitGroupWithinRangesV2WithContext(ctx, *u.groupWithinRangesV2)
 	case "filterByExpression":
 		if u.filterByExpression == nil {
 			return fmt.Errorf("field \"filterByExpression\" is required")
 		}
 		return v.VisitFilterByExpressionWithContext(ctx, *u.filterByExpression)
+	case "scalarUdf":
+		if u.scalarUdf == nil {
+			return fmt.Errorf("field \"scalarUdf\" is required")
+		}
+		return v.VisitScalarUdfWithContext(ctx, *u.scalarUdf)
 	case "enumToNumeric":
 		if u.enumToNumeric == nil {
 			return fmt.Errorf("field \"enumToNumeric\" is required")
 		}
 		return v.VisitEnumToNumericWithContext(ctx, *u.enumToNumeric)
+	case "contains":
+		if u.contains == nil {
+			return fmt.Errorf("field \"contains\" is required")
+		}
+		return v.VisitContainsWithContext(ctx, *u.contains)
 	case "refprop":
 		if u.refprop == nil {
 			return fmt.Errorf("field \"refprop\" is required")
 		}
 		return v.VisitRefpropWithContext(ctx, *u.refprop)
+	case "refpropV2":
+		if u.refpropV2 == nil {
+			return fmt.Errorf("field \"refpropV2\" is required")
+		}
+		return v.VisitRefpropV2WithContext(ctx, *u.refpropV2)
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStructWithContext(ctx, *u.extractFromStruct)
+	case "tagByIntervals":
+		if u.tagByIntervals == nil {
+			return fmt.Errorf("field \"tagByIntervals\" is required")
+		}
+		return v.VisitTagByIntervalsWithContext(ctx, *u.tagByIntervals)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTagWithContext(ctx, *u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTagsWithContext(ctx, *u.selectTags)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfIntervalWithContext(ctx, *u.toStartOfInterval)
+	case "phaseUnwrap":
+		if u.phaseUnwrap == nil {
+			return fmt.Errorf("field \"phaseUnwrap\" is required")
+		}
+		return v.VisitPhaseUnwrapWithContext(ctx, *u.phaseUnwrap)
+	case "aggregate":
+		if u.aggregate == nil {
+			return fmt.Errorf("field \"aggregate\" is required")
+		}
+		return v.VisitAggregateWithContext(ctx, *u.aggregate)
+	case "rollingOperation":
+		if u.rollingOperation == nil {
+			return fmt.Errorf("field \"rollingOperation\" is required")
+		}
+		return v.VisitRollingOperationWithContext(ctx, *u.rollingOperation)
+	case "bitOperation":
+		if u.bitOperation == nil {
+			return fmt.Errorf("field \"bitOperation\" is required")
+		}
+		return v.VisitBitOperationWithContext(ctx, *u.bitOperation)
+	case "channel":
+		if u.channel == nil {
+			return fmt.Errorf("field \"channel\" is required")
+		}
+		return v.VisitChannelWithContext(ctx, *u.channel)
+	case "offset":
+		if u.offset == nil {
+			return fmt.Errorf("field \"offset\" is required")
+		}
+		return v.VisitOffsetWithContext(ctx, *u.offset)
+	case "scale":
+		if u.scale == nil {
+			return fmt.Errorf("field \"scale\" is required")
+		}
+		return v.VisitScaleWithContext(ctx, *u.scale)
 	case "arithmetic":
 		if u.arithmetic == nil {
 			return fmt.Errorf("field \"arithmetic\" is required")
@@ -6929,37 +11049,64 @@ type NumericSeriesVisitorWithContext interface {
 	VisitUnionWithContext(ctx context.Context, v NumericUnionSeries) error
 	VisitProductWithContext(ctx context.Context, v ProductSeries) error
 	VisitConstantWithContext(ctx context.Context, v api.ConstantNumericSeries) error
-	VisitAggregateWithContext(ctx context.Context, v AggregateNumericSeries) error
-	VisitBitOperationWithContext(ctx context.Context, v BitOperationSeries) error
+	VisitSelectNewestPointsWithContext(ctx context.Context, v SelectNewestPointsSeries) error
+	VisitSelectNumericWithContext(ctx context.Context, v SelectSeries) error
+	VisitSelectNumericPropertyWithContext(ctx context.Context, v SelectProperty) error
+	VisitSelectOldestPointsWithContext(ctx context.Context, v SelectOldestPointsSeries) error
+	VisitBitAndWithContext(ctx context.Context, v BitAnd) error
+	VisitBitOrWithContext(ctx context.Context, v BitOr) error
+	VisitBitXorWithContext(ctx context.Context, v BitXor) error
+	VisitBitShiftRightWithContext(ctx context.Context, v BitShiftRight) error
+	VisitBitShiftLeftWithContext(ctx context.Context, v BitShiftLeft) error
+	VisitBitTestWithContext(ctx context.Context, v BitTest) error
+	VisitIfElseWithContext(ctx context.Context, v NumericIfElseSeries) error
+	VisitNumericAggregationWithContext(ctx context.Context, v NumericAggregation) error
 	VisitCountDuplicateWithContext(ctx context.Context, v EnumCountDuplicateSeries) error
 	VisitCumulativeSumWithContext(ctx context.Context, v CumulativeSumSeries) error
 	VisitDerivativeWithContext(ctx context.Context, v DerivativeSeries) error
 	VisitIntegralWithContext(ctx context.Context, v IntegralSeries) error
 	VisitZScoreWithContext(ctx context.Context, v ZscoreSeries) error
-	VisitOffsetWithContext(ctx context.Context, v OffsetSeries) error
 	VisitRawWithContext(ctx context.Context, v api.Reference) error
-	VisitChannelWithContext(ctx context.Context, v api.ChannelSeries) error
 	VisitDerivedWithContext(ctx context.Context, v DerivedSeries) error
 	VisitResampleWithContext(ctx context.Context, v NumericResampleSeries) error
-	VisitRollingOperationWithContext(ctx context.Context, v RollingOperationSeries) error
+	VisitResampleV2WithContext(ctx context.Context, v NumericResampleSeriesV2) error
+	VisitNthPointDownsampleWithContext(ctx context.Context, v NumericNthPointDownsampleSeries) error
+	VisitLargestTriangleThreeBucketsWithContext(ctx context.Context, v NumericLargestTriangleThreeBucketsSeries) error
 	VisitSignalFilterWithContext(ctx context.Context, v SignalFilterSeries) error
-	VisitScaleWithContext(ctx context.Context, v ScaleSeries) error
 	VisitTimeDifferenceWithContext(ctx context.Context, v TimeDifferenceSeries) error
 	VisitAbsoluteTimestampWithContext(ctx context.Context, v AbsoluteTimestampSeries) error
 	VisitTimeRangeFilterWithContext(ctx context.Context, v NumericTimeRangeFilterSeries) error
 	VisitTimeShiftWithContext(ctx context.Context, v NumericTimeShiftSeries) error
+	VisitTimeShiftV2WithContext(ctx context.Context, v NumericTimeShiftSeriesV2) error
 	VisitUnitConversionWithContext(ctx context.Context, v UnitConversionSeries) error
 	VisitValueDifferenceWithContext(ctx context.Context, v ValueDifferenceSeries) error
 	VisitFilterTransformationWithContext(ctx context.Context, v NumericFilterTransformationSeries) error
+	VisitFilterWhereWithContext(ctx context.Context, v NumericFilterWhereSeries) error
 	VisitThresholdFilterWithContext(ctx context.Context, v NumericThresholdFilterSeries) error
 	VisitApproximateFilterWithContext(ctx context.Context, v NumericApproximateFilterSeries) error
+	VisitDropNanWithContext(ctx context.Context, v NumericNanFilter) error
 	VisitSelect1dArrayIndexWithContext(ctx context.Context, v SelectIndexFrom1dNumericArraySeries) error
-	VisitSelectNewestPointsWithContext(ctx context.Context, v SelectNewestPointsSeries) error
 	VisitAggregateUnderRangesWithContext(ctx context.Context, v AggregateUnderRangesSeries) error
+	VisitRangeDurationWithContext(ctx context.Context, v RangeDurationSeries) error
+	VisitGroupWithinRangesV2WithContext(ctx context.Context, v GroupWithinRangesSeriesV2) error
 	VisitFilterByExpressionWithContext(ctx context.Context, v FilterByExpressionSeries) error
+	VisitScalarUdfWithContext(ctx context.Context, v ScalarUdfSeries) error
 	VisitEnumToNumericWithContext(ctx context.Context, v EnumToNumericSeries) error
+	VisitContainsWithContext(ctx context.Context, v ContainsSeries) error
 	VisitRefpropWithContext(ctx context.Context, v RefpropSeries) error
+	VisitRefpropV2WithContext(ctx context.Context, v RefpropSeriesV2) error
 	VisitExtractFromStructWithContext(ctx context.Context, v ExtractNumericFromStructSeries) error
+	VisitTagByIntervalsWithContext(ctx context.Context, v TagByIntervalsSeries) error
+	VisitFilterByTagWithContext(ctx context.Context, v NumericTagFilterSeries) error
+	VisitSelectTagsWithContext(ctx context.Context, v NumericSelectTagsSeries) error
+	VisitToStartOfIntervalWithContext(ctx context.Context, v NumericToStartOfIntervalSeries) error
+	VisitPhaseUnwrapWithContext(ctx context.Context, v PhaseUnwrapSeries) error
+	VisitAggregateWithContext(ctx context.Context, v AggregateNumericSeries) error
+	VisitRollingOperationWithContext(ctx context.Context, v RollingOperationSeries) error
+	VisitBitOperationWithContext(ctx context.Context, v BitOperationSeries) error
+	VisitChannelWithContext(ctx context.Context, v api.ChannelSeries) error
+	VisitOffsetWithContext(ctx context.Context, v OffsetSeries) error
+	VisitScaleWithContext(ctx context.Context, v ScaleSeries) error
 	VisitArithmeticWithContext(ctx context.Context, v ArithmeticSeries) error
 	VisitUnaryArithmeticWithContext(ctx context.Context, v UnaryArithmeticSeries) error
 	VisitBinaryArithmeticWithContext(ctx context.Context, v BinaryArithmeticSeries) error
@@ -7066,12 +11213,52 @@ func NewNumericSeriesFromConstant(v api.ConstantNumericSeries) NumericSeries {
 	return NumericSeries{typ: "constant", constant: &v}
 }
 
-func NewNumericSeriesFromAggregate(v AggregateNumericSeries) NumericSeries {
-	return NumericSeries{typ: "aggregate", aggregate: &v}
+func NewNumericSeriesFromSelectNewestPoints(v SelectNewestPointsSeries) NumericSeries {
+	return NumericSeries{typ: "selectNewestPoints", selectNewestPoints: &v}
 }
 
-func NewNumericSeriesFromBitOperation(v BitOperationSeries) NumericSeries {
-	return NumericSeries{typ: "bitOperation", bitOperation: &v}
+func NewNumericSeriesFromSelectNumeric(v SelectSeries) NumericSeries {
+	return NumericSeries{typ: "selectNumeric", selectNumeric: &v}
+}
+
+func NewNumericSeriesFromSelectNumericProperty(v SelectProperty) NumericSeries {
+	return NumericSeries{typ: "selectNumericProperty", selectNumericProperty: &v}
+}
+
+func NewNumericSeriesFromSelectOldestPoints(v SelectOldestPointsSeries) NumericSeries {
+	return NumericSeries{typ: "selectOldestPoints", selectOldestPoints: &v}
+}
+
+func NewNumericSeriesFromBitAnd(v BitAnd) NumericSeries {
+	return NumericSeries{typ: "bitAnd", bitAnd: &v}
+}
+
+func NewNumericSeriesFromBitOr(v BitOr) NumericSeries {
+	return NumericSeries{typ: "bitOr", bitOr: &v}
+}
+
+func NewNumericSeriesFromBitXor(v BitXor) NumericSeries {
+	return NumericSeries{typ: "bitXor", bitXor: &v}
+}
+
+func NewNumericSeriesFromBitShiftRight(v BitShiftRight) NumericSeries {
+	return NumericSeries{typ: "bitShiftRight", bitShiftRight: &v}
+}
+
+func NewNumericSeriesFromBitShiftLeft(v BitShiftLeft) NumericSeries {
+	return NumericSeries{typ: "bitShiftLeft", bitShiftLeft: &v}
+}
+
+func NewNumericSeriesFromBitTest(v BitTest) NumericSeries {
+	return NumericSeries{typ: "bitTest", bitTest: &v}
+}
+
+func NewNumericSeriesFromIfElse(v NumericIfElseSeries) NumericSeries {
+	return NumericSeries{typ: "ifElse", ifElse: &v}
+}
+
+func NewNumericSeriesFromNumericAggregation(v NumericAggregation) NumericSeries {
+	return NumericSeries{typ: "numericAggregation", numericAggregation: &v}
 }
 
 func NewNumericSeriesFromCountDuplicate(v EnumCountDuplicateSeries) NumericSeries {
@@ -7094,16 +11281,8 @@ func NewNumericSeriesFromZScore(v ZscoreSeries) NumericSeries {
 	return NumericSeries{typ: "zScore", zScore: &v}
 }
 
-func NewNumericSeriesFromOffset(v OffsetSeries) NumericSeries {
-	return NumericSeries{typ: "offset", offset: &v}
-}
-
 func NewNumericSeriesFromRaw(v api.Reference) NumericSeries {
 	return NumericSeries{typ: "raw", raw: &v}
-}
-
-func NewNumericSeriesFromChannel(v api.ChannelSeries) NumericSeries {
-	return NumericSeries{typ: "channel", channel: &v}
 }
 
 func NewNumericSeriesFromDerived(v DerivedSeries) NumericSeries {
@@ -7114,16 +11293,20 @@ func NewNumericSeriesFromResample(v NumericResampleSeries) NumericSeries {
 	return NumericSeries{typ: "resample", resample: &v}
 }
 
-func NewNumericSeriesFromRollingOperation(v RollingOperationSeries) NumericSeries {
-	return NumericSeries{typ: "rollingOperation", rollingOperation: &v}
+func NewNumericSeriesFromResampleV2(v NumericResampleSeriesV2) NumericSeries {
+	return NumericSeries{typ: "resampleV2", resampleV2: &v}
+}
+
+func NewNumericSeriesFromNthPointDownsample(v NumericNthPointDownsampleSeries) NumericSeries {
+	return NumericSeries{typ: "nthPointDownsample", nthPointDownsample: &v}
+}
+
+func NewNumericSeriesFromLargestTriangleThreeBuckets(v NumericLargestTriangleThreeBucketsSeries) NumericSeries {
+	return NumericSeries{typ: "largestTriangleThreeBuckets", largestTriangleThreeBuckets: &v}
 }
 
 func NewNumericSeriesFromSignalFilter(v SignalFilterSeries) NumericSeries {
 	return NumericSeries{typ: "signalFilter", signalFilter: &v}
-}
-
-func NewNumericSeriesFromScale(v ScaleSeries) NumericSeries {
-	return NumericSeries{typ: "scale", scale: &v}
 }
 
 func NewNumericSeriesFromTimeDifference(v TimeDifferenceSeries) NumericSeries {
@@ -7142,6 +11325,10 @@ func NewNumericSeriesFromTimeShift(v NumericTimeShiftSeries) NumericSeries {
 	return NumericSeries{typ: "timeShift", timeShift: &v}
 }
 
+func NewNumericSeriesFromTimeShiftV2(v NumericTimeShiftSeriesV2) NumericSeries {
+	return NumericSeries{typ: "timeShiftV2", timeShiftV2: &v}
+}
+
 func NewNumericSeriesFromUnitConversion(v UnitConversionSeries) NumericSeries {
 	return NumericSeries{typ: "unitConversion", unitConversion: &v}
 }
@@ -7154,6 +11341,10 @@ func NewNumericSeriesFromFilterTransformation(v NumericFilterTransformationSerie
 	return NumericSeries{typ: "filterTransformation", filterTransformation: &v}
 }
 
+func NewNumericSeriesFromFilterWhere(v NumericFilterWhereSeries) NumericSeries {
+	return NumericSeries{typ: "filterWhere", filterWhere: &v}
+}
+
 func NewNumericSeriesFromThresholdFilter(v NumericThresholdFilterSeries) NumericSeries {
 	return NumericSeries{typ: "thresholdFilter", thresholdFilter: &v}
 }
@@ -7162,32 +11353,96 @@ func NewNumericSeriesFromApproximateFilter(v NumericApproximateFilterSeries) Num
 	return NumericSeries{typ: "approximateFilter", approximateFilter: &v}
 }
 
-func NewNumericSeriesFromSelect1dArrayIndex(v SelectIndexFrom1dNumericArraySeries) NumericSeries {
-	return NumericSeries{typ: "select1dArrayIndex", select1dArrayIndex: &v}
+func NewNumericSeriesFromDropNan(v NumericNanFilter) NumericSeries {
+	return NumericSeries{typ: "dropNan", dropNan: &v}
 }
 
-func NewNumericSeriesFromSelectNewestPoints(v SelectNewestPointsSeries) NumericSeries {
-	return NumericSeries{typ: "selectNewestPoints", selectNewestPoints: &v}
+func NewNumericSeriesFromSelect1dArrayIndex(v SelectIndexFrom1dNumericArraySeries) NumericSeries {
+	return NumericSeries{typ: "select1dArrayIndex", select1dArrayIndex: &v}
 }
 
 func NewNumericSeriesFromAggregateUnderRanges(v AggregateUnderRangesSeries) NumericSeries {
 	return NumericSeries{typ: "aggregateUnderRanges", aggregateUnderRanges: &v}
 }
 
+func NewNumericSeriesFromRangeDuration(v RangeDurationSeries) NumericSeries {
+	return NumericSeries{typ: "rangeDuration", rangeDuration: &v}
+}
+
+func NewNumericSeriesFromGroupWithinRangesV2(v GroupWithinRangesSeriesV2) NumericSeries {
+	return NumericSeries{typ: "groupWithinRangesV2", groupWithinRangesV2: &v}
+}
+
 func NewNumericSeriesFromFilterByExpression(v FilterByExpressionSeries) NumericSeries {
 	return NumericSeries{typ: "filterByExpression", filterByExpression: &v}
+}
+
+func NewNumericSeriesFromScalarUdf(v ScalarUdfSeries) NumericSeries {
+	return NumericSeries{typ: "scalarUdf", scalarUdf: &v}
 }
 
 func NewNumericSeriesFromEnumToNumeric(v EnumToNumericSeries) NumericSeries {
 	return NumericSeries{typ: "enumToNumeric", enumToNumeric: &v}
 }
 
+func NewNumericSeriesFromContains(v ContainsSeries) NumericSeries {
+	return NumericSeries{typ: "contains", contains: &v}
+}
+
 func NewNumericSeriesFromRefprop(v RefpropSeries) NumericSeries {
 	return NumericSeries{typ: "refprop", refprop: &v}
 }
 
+func NewNumericSeriesFromRefpropV2(v RefpropSeriesV2) NumericSeries {
+	return NumericSeries{typ: "refpropV2", refpropV2: &v}
+}
+
 func NewNumericSeriesFromExtractFromStruct(v ExtractNumericFromStructSeries) NumericSeries {
 	return NumericSeries{typ: "extractFromStruct", extractFromStruct: &v}
+}
+
+func NewNumericSeriesFromTagByIntervals(v TagByIntervalsSeries) NumericSeries {
+	return NumericSeries{typ: "tagByIntervals", tagByIntervals: &v}
+}
+
+func NewNumericSeriesFromFilterByTag(v NumericTagFilterSeries) NumericSeries {
+	return NumericSeries{typ: "filterByTag", filterByTag: &v}
+}
+
+func NewNumericSeriesFromSelectTags(v NumericSelectTagsSeries) NumericSeries {
+	return NumericSeries{typ: "selectTags", selectTags: &v}
+}
+
+func NewNumericSeriesFromToStartOfInterval(v NumericToStartOfIntervalSeries) NumericSeries {
+	return NumericSeries{typ: "toStartOfInterval", toStartOfInterval: &v}
+}
+
+func NewNumericSeriesFromPhaseUnwrap(v PhaseUnwrapSeries) NumericSeries {
+	return NumericSeries{typ: "phaseUnwrap", phaseUnwrap: &v}
+}
+
+func NewNumericSeriesFromAggregate(v AggregateNumericSeries) NumericSeries {
+	return NumericSeries{typ: "aggregate", aggregate: &v}
+}
+
+func NewNumericSeriesFromRollingOperation(v RollingOperationSeries) NumericSeries {
+	return NumericSeries{typ: "rollingOperation", rollingOperation: &v}
+}
+
+func NewNumericSeriesFromBitOperation(v BitOperationSeries) NumericSeries {
+	return NumericSeries{typ: "bitOperation", bitOperation: &v}
+}
+
+func NewNumericSeriesFromChannel(v api.ChannelSeries) NumericSeries {
+	return NumericSeries{typ: "channel", channel: &v}
+}
+
+func NewNumericSeriesFromOffset(v OffsetSeries) NumericSeries {
+	return NumericSeries{typ: "offset", offset: &v}
+}
+
+func NewNumericSeriesFromScale(v ScaleSeries) NumericSeries {
+	return NumericSeries{typ: "scale", scale: &v}
 }
 
 func NewNumericSeriesFromArithmetic(v ArithmeticSeries) NumericSeries {
@@ -7205,9 +11460,15 @@ func NewNumericSeriesFromBinaryArithmetic(v BinaryArithmeticSeries) NumericSerie
 type RangeSeries struct {
 	typ                          string
 	approximateThreshold         *ApproximateThresholdRanges
-	booleanToRanges              *BooleanToRanges
+	booleanRanges                *BooleanRanges
+	thresholdRangesV2            *ThresholdRangesV2
 	durationFilter               *DurationFilterRanges
+	durationFilterV2             *DurationFilterRangesV2
 	enumFilter                   *EnumFilterRanges
+	categoryFilterRangesV2       *CategoryFilterRangesV2
+	categoricalOnChangeRangesV2  *CategoricalOnChangeRangesV2
+	categoricalStaleRangesV2     *CategoricalStaleRangesV2
+	categoricalEqualityRangesV2  *CategoricalEqualityRangesV2
 	enumSeriesEqualityRangesNode *EnumSeriesEqualityRanges
 	eventsSearch                 *EventsSearchRanges
 	intersectRange               *IntersectRanges
@@ -7216,46 +11477,62 @@ type RangeSeries struct {
 	not                          *NotRanges
 	onChange                     *OnChangeRanges
 	peak                         *PeakRanges
+	extremaRangesV2              *ExtremaRangesV2
 	rangeNumericAggregation      *RangesNumericAggregation
 	raw                          *api.Reference
 	derived                      *DerivedSeries
 	seriesCrossoverRangesNode    *SeriesCrossoverRanges
 	seriesEqualityRangesNode     *SeriesEqualityRanges
+	numericEqualityRangesV2      *NumericEqualityRangesV2
 	stabilityDetection           *StabilityDetectionRanges
+	stabilityDetectionV2         *StabilityDetectionRangesV2
 	staleRange                   *StaleRanges
+	numericStaleRangesV2         *NumericStaleRangesV2
 	threshold                    *ThresholdingRanges
 	unionRange                   *UnionRanges
 	paddedRanges                 *PaddedRanges
+	paddedRangesV2               *PaddedRangesV2
 }
 
 type rangeSeriesDeserializer struct {
-	Type                         string                      `json:"type"`
-	ApproximateThreshold         *ApproximateThresholdRanges `json:"approximateThreshold"`
-	BooleanToRanges              *BooleanToRanges            `json:"booleanToRanges"`
-	DurationFilter               *DurationFilterRanges       `json:"durationFilter"`
-	EnumFilter                   *EnumFilterRanges           `json:"enumFilter"`
-	EnumSeriesEqualityRangesNode *EnumSeriesEqualityRanges   `json:"enumSeriesEqualityRangesNode"`
-	EventsSearch                 *EventsSearchRanges         `json:"eventsSearch"`
-	IntersectRange               *IntersectRanges            `json:"intersectRange"`
-	LiteralRanges                *api.LiteralRanges          `json:"literalRanges"`
-	MinMaxThreshold              *MinMaxThresholdRanges      `json:"minMaxThreshold"`
-	Not                          *NotRanges                  `json:"not"`
-	OnChange                     *OnChangeRanges             `json:"onChange"`
-	Peak                         *PeakRanges                 `json:"peak"`
-	RangeNumericAggregation      *RangesNumericAggregation   `json:"rangeNumericAggregation"`
-	Raw                          *api.Reference              `json:"raw"`
-	Derived                      *DerivedSeries              `json:"derived"`
-	SeriesCrossoverRangesNode    *SeriesCrossoverRanges      `json:"seriesCrossoverRangesNode"`
-	SeriesEqualityRangesNode     *SeriesEqualityRanges       `json:"seriesEqualityRangesNode"`
-	StabilityDetection           *StabilityDetectionRanges   `json:"stabilityDetection"`
-	StaleRange                   *StaleRanges                `json:"staleRange"`
-	Threshold                    *ThresholdingRanges         `json:"threshold"`
-	UnionRange                   *UnionRanges                `json:"unionRange"`
-	PaddedRanges                 *PaddedRanges               `json:"paddedRanges"`
+	Type                         string                       `json:"type"`
+	ApproximateThreshold         *ApproximateThresholdRanges  `json:"approximateThreshold"`
+	BooleanRanges                *BooleanRanges               `json:"booleanRanges"`
+	ThresholdRangesV2            *ThresholdRangesV2           `json:"thresholdRangesV2"`
+	DurationFilter               *DurationFilterRanges        `json:"durationFilter"`
+	DurationFilterV2             *DurationFilterRangesV2      `json:"durationFilterV2"`
+	EnumFilter                   *EnumFilterRanges            `json:"enumFilter"`
+	CategoryFilterRangesV2       *CategoryFilterRangesV2      `json:"categoryFilterRangesV2"`
+	CategoricalOnChangeRangesV2  *CategoricalOnChangeRangesV2 `json:"categoricalOnChangeRangesV2"`
+	CategoricalStaleRangesV2     *CategoricalStaleRangesV2    `json:"categoricalStaleRangesV2"`
+	CategoricalEqualityRangesV2  *CategoricalEqualityRangesV2 `json:"categoricalEqualityRangesV2"`
+	EnumSeriesEqualityRangesNode *EnumSeriesEqualityRanges    `json:"enumSeriesEqualityRangesNode"`
+	EventsSearch                 *EventsSearchRanges          `json:"eventsSearch"`
+	IntersectRange               *IntersectRanges             `json:"intersectRange"`
+	LiteralRanges                *api.LiteralRanges           `json:"literalRanges"`
+	MinMaxThreshold              *MinMaxThresholdRanges       `json:"minMaxThreshold"`
+	Not                          *NotRanges                   `json:"not"`
+	OnChange                     *OnChangeRanges              `json:"onChange"`
+	Peak                         *PeakRanges                  `json:"peak"`
+	ExtremaRangesV2              *ExtremaRangesV2             `json:"extremaRangesV2"`
+	RangeNumericAggregation      *RangesNumericAggregation    `json:"rangeNumericAggregation"`
+	Raw                          *api.Reference               `json:"raw"`
+	Derived                      *DerivedSeries               `json:"derived"`
+	SeriesCrossoverRangesNode    *SeriesCrossoverRanges       `json:"seriesCrossoverRangesNode"`
+	SeriesEqualityRangesNode     *SeriesEqualityRanges        `json:"seriesEqualityRangesNode"`
+	NumericEqualityRangesV2      *NumericEqualityRangesV2     `json:"numericEqualityRangesV2"`
+	StabilityDetection           *StabilityDetectionRanges    `json:"stabilityDetection"`
+	StabilityDetectionV2         *StabilityDetectionRangesV2  `json:"stabilityDetectionV2"`
+	StaleRange                   *StaleRanges                 `json:"staleRange"`
+	NumericStaleRangesV2         *NumericStaleRangesV2        `json:"numericStaleRangesV2"`
+	Threshold                    *ThresholdingRanges          `json:"threshold"`
+	UnionRange                   *UnionRanges                 `json:"unionRange"`
+	PaddedRanges                 *PaddedRanges                `json:"paddedRanges"`
+	PaddedRangesV2               *PaddedRangesV2              `json:"paddedRangesV2"`
 }
 
 func (u *rangeSeriesDeserializer) toStruct() RangeSeries {
-	return RangeSeries{typ: u.Type, approximateThreshold: u.ApproximateThreshold, booleanToRanges: u.BooleanToRanges, durationFilter: u.DurationFilter, enumFilter: u.EnumFilter, enumSeriesEqualityRangesNode: u.EnumSeriesEqualityRangesNode, eventsSearch: u.EventsSearch, intersectRange: u.IntersectRange, literalRanges: u.LiteralRanges, minMaxThreshold: u.MinMaxThreshold, not: u.Not, onChange: u.OnChange, peak: u.Peak, rangeNumericAggregation: u.RangeNumericAggregation, raw: u.Raw, derived: u.Derived, seriesCrossoverRangesNode: u.SeriesCrossoverRangesNode, seriesEqualityRangesNode: u.SeriesEqualityRangesNode, stabilityDetection: u.StabilityDetection, staleRange: u.StaleRange, threshold: u.Threshold, unionRange: u.UnionRange, paddedRanges: u.PaddedRanges}
+	return RangeSeries{typ: u.Type, approximateThreshold: u.ApproximateThreshold, booleanRanges: u.BooleanRanges, thresholdRangesV2: u.ThresholdRangesV2, durationFilter: u.DurationFilter, durationFilterV2: u.DurationFilterV2, enumFilter: u.EnumFilter, categoryFilterRangesV2: u.CategoryFilterRangesV2, categoricalOnChangeRangesV2: u.CategoricalOnChangeRangesV2, categoricalStaleRangesV2: u.CategoricalStaleRangesV2, categoricalEqualityRangesV2: u.CategoricalEqualityRangesV2, enumSeriesEqualityRangesNode: u.EnumSeriesEqualityRangesNode, eventsSearch: u.EventsSearch, intersectRange: u.IntersectRange, literalRanges: u.LiteralRanges, minMaxThreshold: u.MinMaxThreshold, not: u.Not, onChange: u.OnChange, peak: u.Peak, extremaRangesV2: u.ExtremaRangesV2, rangeNumericAggregation: u.RangeNumericAggregation, raw: u.Raw, derived: u.Derived, seriesCrossoverRangesNode: u.SeriesCrossoverRangesNode, seriesEqualityRangesNode: u.SeriesEqualityRangesNode, numericEqualityRangesV2: u.NumericEqualityRangesV2, stabilityDetection: u.StabilityDetection, stabilityDetectionV2: u.StabilityDetectionV2, staleRange: u.StaleRange, numericStaleRangesV2: u.NumericStaleRangesV2, threshold: u.Threshold, unionRange: u.UnionRange, paddedRanges: u.PaddedRanges, paddedRangesV2: u.PaddedRangesV2}
 }
 
 func (u *RangeSeries) toSerializer() (interface{}, error) {
@@ -7270,14 +11547,22 @@ func (u *RangeSeries) toSerializer() (interface{}, error) {
 			Type                 string                     `json:"type"`
 			ApproximateThreshold ApproximateThresholdRanges `json:"approximateThreshold"`
 		}{Type: "approximateThreshold", ApproximateThreshold: *u.approximateThreshold}, nil
-	case "booleanToRanges":
-		if u.booleanToRanges == nil {
-			return nil, fmt.Errorf("field \"booleanToRanges\" is required")
+	case "booleanRanges":
+		if u.booleanRanges == nil {
+			return nil, fmt.Errorf("field \"booleanRanges\" is required")
 		}
 		return struct {
-			Type            string          `json:"type"`
-			BooleanToRanges BooleanToRanges `json:"booleanToRanges"`
-		}{Type: "booleanToRanges", BooleanToRanges: *u.booleanToRanges}, nil
+			Type          string        `json:"type"`
+			BooleanRanges BooleanRanges `json:"booleanRanges"`
+		}{Type: "booleanRanges", BooleanRanges: *u.booleanRanges}, nil
+	case "thresholdRangesV2":
+		if u.thresholdRangesV2 == nil {
+			return nil, fmt.Errorf("field \"thresholdRangesV2\" is required")
+		}
+		return struct {
+			Type              string            `json:"type"`
+			ThresholdRangesV2 ThresholdRangesV2 `json:"thresholdRangesV2"`
+		}{Type: "thresholdRangesV2", ThresholdRangesV2: *u.thresholdRangesV2}, nil
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return nil, fmt.Errorf("field \"durationFilter\" is required")
@@ -7286,6 +11571,14 @@ func (u *RangeSeries) toSerializer() (interface{}, error) {
 			Type           string               `json:"type"`
 			DurationFilter DurationFilterRanges `json:"durationFilter"`
 		}{Type: "durationFilter", DurationFilter: *u.durationFilter}, nil
+	case "durationFilterV2":
+		if u.durationFilterV2 == nil {
+			return nil, fmt.Errorf("field \"durationFilterV2\" is required")
+		}
+		return struct {
+			Type             string                 `json:"type"`
+			DurationFilterV2 DurationFilterRangesV2 `json:"durationFilterV2"`
+		}{Type: "durationFilterV2", DurationFilterV2: *u.durationFilterV2}, nil
 	case "enumFilter":
 		if u.enumFilter == nil {
 			return nil, fmt.Errorf("field \"enumFilter\" is required")
@@ -7294,6 +11587,38 @@ func (u *RangeSeries) toSerializer() (interface{}, error) {
 			Type       string           `json:"type"`
 			EnumFilter EnumFilterRanges `json:"enumFilter"`
 		}{Type: "enumFilter", EnumFilter: *u.enumFilter}, nil
+	case "categoryFilterRangesV2":
+		if u.categoryFilterRangesV2 == nil {
+			return nil, fmt.Errorf("field \"categoryFilterRangesV2\" is required")
+		}
+		return struct {
+			Type                   string                 `json:"type"`
+			CategoryFilterRangesV2 CategoryFilterRangesV2 `json:"categoryFilterRangesV2"`
+		}{Type: "categoryFilterRangesV2", CategoryFilterRangesV2: *u.categoryFilterRangesV2}, nil
+	case "categoricalOnChangeRangesV2":
+		if u.categoricalOnChangeRangesV2 == nil {
+			return nil, fmt.Errorf("field \"categoricalOnChangeRangesV2\" is required")
+		}
+		return struct {
+			Type                        string                      `json:"type"`
+			CategoricalOnChangeRangesV2 CategoricalOnChangeRangesV2 `json:"categoricalOnChangeRangesV2"`
+		}{Type: "categoricalOnChangeRangesV2", CategoricalOnChangeRangesV2: *u.categoricalOnChangeRangesV2}, nil
+	case "categoricalStaleRangesV2":
+		if u.categoricalStaleRangesV2 == nil {
+			return nil, fmt.Errorf("field \"categoricalStaleRangesV2\" is required")
+		}
+		return struct {
+			Type                     string                   `json:"type"`
+			CategoricalStaleRangesV2 CategoricalStaleRangesV2 `json:"categoricalStaleRangesV2"`
+		}{Type: "categoricalStaleRangesV2", CategoricalStaleRangesV2: *u.categoricalStaleRangesV2}, nil
+	case "categoricalEqualityRangesV2":
+		if u.categoricalEqualityRangesV2 == nil {
+			return nil, fmt.Errorf("field \"categoricalEqualityRangesV2\" is required")
+		}
+		return struct {
+			Type                        string                      `json:"type"`
+			CategoricalEqualityRangesV2 CategoricalEqualityRangesV2 `json:"categoricalEqualityRangesV2"`
+		}{Type: "categoricalEqualityRangesV2", CategoricalEqualityRangesV2: *u.categoricalEqualityRangesV2}, nil
 	case "enumSeriesEqualityRangesNode":
 		if u.enumSeriesEqualityRangesNode == nil {
 			return nil, fmt.Errorf("field \"enumSeriesEqualityRangesNode\" is required")
@@ -7358,6 +11683,14 @@ func (u *RangeSeries) toSerializer() (interface{}, error) {
 			Type string     `json:"type"`
 			Peak PeakRanges `json:"peak"`
 		}{Type: "peak", Peak: *u.peak}, nil
+	case "extremaRangesV2":
+		if u.extremaRangesV2 == nil {
+			return nil, fmt.Errorf("field \"extremaRangesV2\" is required")
+		}
+		return struct {
+			Type            string          `json:"type"`
+			ExtremaRangesV2 ExtremaRangesV2 `json:"extremaRangesV2"`
+		}{Type: "extremaRangesV2", ExtremaRangesV2: *u.extremaRangesV2}, nil
 	case "rangeNumericAggregation":
 		if u.rangeNumericAggregation == nil {
 			return nil, fmt.Errorf("field \"rangeNumericAggregation\" is required")
@@ -7398,6 +11731,14 @@ func (u *RangeSeries) toSerializer() (interface{}, error) {
 			Type                     string               `json:"type"`
 			SeriesEqualityRangesNode SeriesEqualityRanges `json:"seriesEqualityRangesNode"`
 		}{Type: "seriesEqualityRangesNode", SeriesEqualityRangesNode: *u.seriesEqualityRangesNode}, nil
+	case "numericEqualityRangesV2":
+		if u.numericEqualityRangesV2 == nil {
+			return nil, fmt.Errorf("field \"numericEqualityRangesV2\" is required")
+		}
+		return struct {
+			Type                    string                  `json:"type"`
+			NumericEqualityRangesV2 NumericEqualityRangesV2 `json:"numericEqualityRangesV2"`
+		}{Type: "numericEqualityRangesV2", NumericEqualityRangesV2: *u.numericEqualityRangesV2}, nil
 	case "stabilityDetection":
 		if u.stabilityDetection == nil {
 			return nil, fmt.Errorf("field \"stabilityDetection\" is required")
@@ -7406,6 +11747,14 @@ func (u *RangeSeries) toSerializer() (interface{}, error) {
 			Type               string                   `json:"type"`
 			StabilityDetection StabilityDetectionRanges `json:"stabilityDetection"`
 		}{Type: "stabilityDetection", StabilityDetection: *u.stabilityDetection}, nil
+	case "stabilityDetectionV2":
+		if u.stabilityDetectionV2 == nil {
+			return nil, fmt.Errorf("field \"stabilityDetectionV2\" is required")
+		}
+		return struct {
+			Type                 string                     `json:"type"`
+			StabilityDetectionV2 StabilityDetectionRangesV2 `json:"stabilityDetectionV2"`
+		}{Type: "stabilityDetectionV2", StabilityDetectionV2: *u.stabilityDetectionV2}, nil
 	case "staleRange":
 		if u.staleRange == nil {
 			return nil, fmt.Errorf("field \"staleRange\" is required")
@@ -7414,6 +11763,14 @@ func (u *RangeSeries) toSerializer() (interface{}, error) {
 			Type       string      `json:"type"`
 			StaleRange StaleRanges `json:"staleRange"`
 		}{Type: "staleRange", StaleRange: *u.staleRange}, nil
+	case "numericStaleRangesV2":
+		if u.numericStaleRangesV2 == nil {
+			return nil, fmt.Errorf("field \"numericStaleRangesV2\" is required")
+		}
+		return struct {
+			Type                 string               `json:"type"`
+			NumericStaleRangesV2 NumericStaleRangesV2 `json:"numericStaleRangesV2"`
+		}{Type: "numericStaleRangesV2", NumericStaleRangesV2: *u.numericStaleRangesV2}, nil
 	case "threshold":
 		if u.threshold == nil {
 			return nil, fmt.Errorf("field \"threshold\" is required")
@@ -7438,6 +11795,14 @@ func (u *RangeSeries) toSerializer() (interface{}, error) {
 			Type         string       `json:"type"`
 			PaddedRanges PaddedRanges `json:"paddedRanges"`
 		}{Type: "paddedRanges", PaddedRanges: *u.paddedRanges}, nil
+	case "paddedRangesV2":
+		if u.paddedRangesV2 == nil {
+			return nil, fmt.Errorf("field \"paddedRangesV2\" is required")
+		}
+		return struct {
+			Type           string         `json:"type"`
+			PaddedRangesV2 PaddedRangesV2 `json:"paddedRangesV2"`
+		}{Type: "paddedRangesV2", PaddedRangesV2: *u.paddedRangesV2}, nil
 	}
 }
 
@@ -7460,17 +11825,41 @@ func (u *RangeSeries) UnmarshalJSON(data []byte) error {
 		if u.approximateThreshold == nil {
 			return fmt.Errorf("field \"approximateThreshold\" is required")
 		}
-	case "booleanToRanges":
-		if u.booleanToRanges == nil {
-			return fmt.Errorf("field \"booleanToRanges\" is required")
+	case "booleanRanges":
+		if u.booleanRanges == nil {
+			return fmt.Errorf("field \"booleanRanges\" is required")
+		}
+	case "thresholdRangesV2":
+		if u.thresholdRangesV2 == nil {
+			return fmt.Errorf("field \"thresholdRangesV2\" is required")
 		}
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
 		}
+	case "durationFilterV2":
+		if u.durationFilterV2 == nil {
+			return fmt.Errorf("field \"durationFilterV2\" is required")
+		}
 	case "enumFilter":
 		if u.enumFilter == nil {
 			return fmt.Errorf("field \"enumFilter\" is required")
+		}
+	case "categoryFilterRangesV2":
+		if u.categoryFilterRangesV2 == nil {
+			return fmt.Errorf("field \"categoryFilterRangesV2\" is required")
+		}
+	case "categoricalOnChangeRangesV2":
+		if u.categoricalOnChangeRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalOnChangeRangesV2\" is required")
+		}
+	case "categoricalStaleRangesV2":
+		if u.categoricalStaleRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalStaleRangesV2\" is required")
+		}
+	case "categoricalEqualityRangesV2":
+		if u.categoricalEqualityRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalEqualityRangesV2\" is required")
 		}
 	case "enumSeriesEqualityRangesNode":
 		if u.enumSeriesEqualityRangesNode == nil {
@@ -7504,6 +11893,10 @@ func (u *RangeSeries) UnmarshalJSON(data []byte) error {
 		if u.peak == nil {
 			return fmt.Errorf("field \"peak\" is required")
 		}
+	case "extremaRangesV2":
+		if u.extremaRangesV2 == nil {
+			return fmt.Errorf("field \"extremaRangesV2\" is required")
+		}
 	case "rangeNumericAggregation":
 		if u.rangeNumericAggregation == nil {
 			return fmt.Errorf("field \"rangeNumericAggregation\" is required")
@@ -7524,13 +11917,25 @@ func (u *RangeSeries) UnmarshalJSON(data []byte) error {
 		if u.seriesEqualityRangesNode == nil {
 			return fmt.Errorf("field \"seriesEqualityRangesNode\" is required")
 		}
+	case "numericEqualityRangesV2":
+		if u.numericEqualityRangesV2 == nil {
+			return fmt.Errorf("field \"numericEqualityRangesV2\" is required")
+		}
 	case "stabilityDetection":
 		if u.stabilityDetection == nil {
 			return fmt.Errorf("field \"stabilityDetection\" is required")
 		}
+	case "stabilityDetectionV2":
+		if u.stabilityDetectionV2 == nil {
+			return fmt.Errorf("field \"stabilityDetectionV2\" is required")
+		}
 	case "staleRange":
 		if u.staleRange == nil {
 			return fmt.Errorf("field \"staleRange\" is required")
+		}
+	case "numericStaleRangesV2":
+		if u.numericStaleRangesV2 == nil {
+			return fmt.Errorf("field \"numericStaleRangesV2\" is required")
 		}
 	case "threshold":
 		if u.threshold == nil {
@@ -7543,6 +11948,10 @@ func (u *RangeSeries) UnmarshalJSON(data []byte) error {
 	case "paddedRanges":
 		if u.paddedRanges == nil {
 			return fmt.Errorf("field \"paddedRanges\" is required")
+		}
+	case "paddedRangesV2":
+		if u.paddedRangesV2 == nil {
+			return fmt.Errorf("field \"paddedRangesV2\" is required")
 		}
 	}
 	return nil
@@ -7564,7 +11973,7 @@ func (u *RangeSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *RangeSeries) AcceptFuncs(approximateThresholdFunc func(ApproximateThresholdRanges) error, booleanToRangesFunc func(BooleanToRanges) error, durationFilterFunc func(DurationFilterRanges) error, enumFilterFunc func(EnumFilterRanges) error, enumSeriesEqualityRangesNodeFunc func(EnumSeriesEqualityRanges) error, eventsSearchFunc func(EventsSearchRanges) error, intersectRangeFunc func(IntersectRanges) error, literalRangesFunc func(api.LiteralRanges) error, minMaxThresholdFunc func(MinMaxThresholdRanges) error, notFunc func(NotRanges) error, onChangeFunc func(OnChangeRanges) error, peakFunc func(PeakRanges) error, rangeNumericAggregationFunc func(RangesNumericAggregation) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, seriesCrossoverRangesNodeFunc func(SeriesCrossoverRanges) error, seriesEqualityRangesNodeFunc func(SeriesEqualityRanges) error, stabilityDetectionFunc func(StabilityDetectionRanges) error, staleRangeFunc func(StaleRanges) error, thresholdFunc func(ThresholdingRanges) error, unionRangeFunc func(UnionRanges) error, paddedRangesFunc func(PaddedRanges) error, unknownFunc func(string) error) error {
+func (u *RangeSeries) AcceptFuncs(approximateThresholdFunc func(ApproximateThresholdRanges) error, booleanRangesFunc func(BooleanRanges) error, thresholdRangesV2Func func(ThresholdRangesV2) error, durationFilterFunc func(DurationFilterRanges) error, durationFilterV2Func func(DurationFilterRangesV2) error, enumFilterFunc func(EnumFilterRanges) error, categoryFilterRangesV2Func func(CategoryFilterRangesV2) error, categoricalOnChangeRangesV2Func func(CategoricalOnChangeRangesV2) error, categoricalStaleRangesV2Func func(CategoricalStaleRangesV2) error, categoricalEqualityRangesV2Func func(CategoricalEqualityRangesV2) error, enumSeriesEqualityRangesNodeFunc func(EnumSeriesEqualityRanges) error, eventsSearchFunc func(EventsSearchRanges) error, intersectRangeFunc func(IntersectRanges) error, literalRangesFunc func(api.LiteralRanges) error, minMaxThresholdFunc func(MinMaxThresholdRanges) error, notFunc func(NotRanges) error, onChangeFunc func(OnChangeRanges) error, peakFunc func(PeakRanges) error, extremaRangesV2Func func(ExtremaRangesV2) error, rangeNumericAggregationFunc func(RangesNumericAggregation) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, seriesCrossoverRangesNodeFunc func(SeriesCrossoverRanges) error, seriesEqualityRangesNodeFunc func(SeriesEqualityRanges) error, numericEqualityRangesV2Func func(NumericEqualityRangesV2) error, stabilityDetectionFunc func(StabilityDetectionRanges) error, stabilityDetectionV2Func func(StabilityDetectionRangesV2) error, staleRangeFunc func(StaleRanges) error, numericStaleRangesV2Func func(NumericStaleRangesV2) error, thresholdFunc func(ThresholdingRanges) error, unionRangeFunc func(UnionRanges) error, paddedRangesFunc func(PaddedRanges) error, paddedRangesV2Func func(PaddedRangesV2) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -7576,21 +11985,51 @@ func (u *RangeSeries) AcceptFuncs(approximateThresholdFunc func(ApproximateThres
 			return fmt.Errorf("field \"approximateThreshold\" is required")
 		}
 		return approximateThresholdFunc(*u.approximateThreshold)
-	case "booleanToRanges":
-		if u.booleanToRanges == nil {
-			return fmt.Errorf("field \"booleanToRanges\" is required")
+	case "booleanRanges":
+		if u.booleanRanges == nil {
+			return fmt.Errorf("field \"booleanRanges\" is required")
 		}
-		return booleanToRangesFunc(*u.booleanToRanges)
+		return booleanRangesFunc(*u.booleanRanges)
+	case "thresholdRangesV2":
+		if u.thresholdRangesV2 == nil {
+			return fmt.Errorf("field \"thresholdRangesV2\" is required")
+		}
+		return thresholdRangesV2Func(*u.thresholdRangesV2)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
 		}
 		return durationFilterFunc(*u.durationFilter)
+	case "durationFilterV2":
+		if u.durationFilterV2 == nil {
+			return fmt.Errorf("field \"durationFilterV2\" is required")
+		}
+		return durationFilterV2Func(*u.durationFilterV2)
 	case "enumFilter":
 		if u.enumFilter == nil {
 			return fmt.Errorf("field \"enumFilter\" is required")
 		}
 		return enumFilterFunc(*u.enumFilter)
+	case "categoryFilterRangesV2":
+		if u.categoryFilterRangesV2 == nil {
+			return fmt.Errorf("field \"categoryFilterRangesV2\" is required")
+		}
+		return categoryFilterRangesV2Func(*u.categoryFilterRangesV2)
+	case "categoricalOnChangeRangesV2":
+		if u.categoricalOnChangeRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalOnChangeRangesV2\" is required")
+		}
+		return categoricalOnChangeRangesV2Func(*u.categoricalOnChangeRangesV2)
+	case "categoricalStaleRangesV2":
+		if u.categoricalStaleRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalStaleRangesV2\" is required")
+		}
+		return categoricalStaleRangesV2Func(*u.categoricalStaleRangesV2)
+	case "categoricalEqualityRangesV2":
+		if u.categoricalEqualityRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalEqualityRangesV2\" is required")
+		}
+		return categoricalEqualityRangesV2Func(*u.categoricalEqualityRangesV2)
 	case "enumSeriesEqualityRangesNode":
 		if u.enumSeriesEqualityRangesNode == nil {
 			return fmt.Errorf("field \"enumSeriesEqualityRangesNode\" is required")
@@ -7631,6 +12070,11 @@ func (u *RangeSeries) AcceptFuncs(approximateThresholdFunc func(ApproximateThres
 			return fmt.Errorf("field \"peak\" is required")
 		}
 		return peakFunc(*u.peak)
+	case "extremaRangesV2":
+		if u.extremaRangesV2 == nil {
+			return fmt.Errorf("field \"extremaRangesV2\" is required")
+		}
+		return extremaRangesV2Func(*u.extremaRangesV2)
 	case "rangeNumericAggregation":
 		if u.rangeNumericAggregation == nil {
 			return fmt.Errorf("field \"rangeNumericAggregation\" is required")
@@ -7656,16 +12100,31 @@ func (u *RangeSeries) AcceptFuncs(approximateThresholdFunc func(ApproximateThres
 			return fmt.Errorf("field \"seriesEqualityRangesNode\" is required")
 		}
 		return seriesEqualityRangesNodeFunc(*u.seriesEqualityRangesNode)
+	case "numericEqualityRangesV2":
+		if u.numericEqualityRangesV2 == nil {
+			return fmt.Errorf("field \"numericEqualityRangesV2\" is required")
+		}
+		return numericEqualityRangesV2Func(*u.numericEqualityRangesV2)
 	case "stabilityDetection":
 		if u.stabilityDetection == nil {
 			return fmt.Errorf("field \"stabilityDetection\" is required")
 		}
 		return stabilityDetectionFunc(*u.stabilityDetection)
+	case "stabilityDetectionV2":
+		if u.stabilityDetectionV2 == nil {
+			return fmt.Errorf("field \"stabilityDetectionV2\" is required")
+		}
+		return stabilityDetectionV2Func(*u.stabilityDetectionV2)
 	case "staleRange":
 		if u.staleRange == nil {
 			return fmt.Errorf("field \"staleRange\" is required")
 		}
 		return staleRangeFunc(*u.staleRange)
+	case "numericStaleRangesV2":
+		if u.numericStaleRangesV2 == nil {
+			return fmt.Errorf("field \"numericStaleRangesV2\" is required")
+		}
+		return numericStaleRangesV2Func(*u.numericStaleRangesV2)
 	case "threshold":
 		if u.threshold == nil {
 			return fmt.Errorf("field \"threshold\" is required")
@@ -7681,6 +12140,11 @@ func (u *RangeSeries) AcceptFuncs(approximateThresholdFunc func(ApproximateThres
 			return fmt.Errorf("field \"paddedRanges\" is required")
 		}
 		return paddedRangesFunc(*u.paddedRanges)
+	case "paddedRangesV2":
+		if u.paddedRangesV2 == nil {
+			return fmt.Errorf("field \"paddedRangesV2\" is required")
+		}
+		return paddedRangesV2Func(*u.paddedRangesV2)
 	}
 }
 
@@ -7688,7 +12152,11 @@ func (u *RangeSeries) ApproximateThresholdNoopSuccess(_ ApproximateThresholdRang
 	return nil
 }
 
-func (u *RangeSeries) BooleanToRangesNoopSuccess(_ BooleanToRanges) error {
+func (u *RangeSeries) BooleanRangesNoopSuccess(_ BooleanRanges) error {
+	return nil
+}
+
+func (u *RangeSeries) ThresholdRangesV2NoopSuccess(_ ThresholdRangesV2) error {
 	return nil
 }
 
@@ -7696,7 +12164,27 @@ func (u *RangeSeries) DurationFilterNoopSuccess(_ DurationFilterRanges) error {
 	return nil
 }
 
+func (u *RangeSeries) DurationFilterV2NoopSuccess(_ DurationFilterRangesV2) error {
+	return nil
+}
+
 func (u *RangeSeries) EnumFilterNoopSuccess(_ EnumFilterRanges) error {
+	return nil
+}
+
+func (u *RangeSeries) CategoryFilterRangesV2NoopSuccess(_ CategoryFilterRangesV2) error {
+	return nil
+}
+
+func (u *RangeSeries) CategoricalOnChangeRangesV2NoopSuccess(_ CategoricalOnChangeRangesV2) error {
+	return nil
+}
+
+func (u *RangeSeries) CategoricalStaleRangesV2NoopSuccess(_ CategoricalStaleRangesV2) error {
+	return nil
+}
+
+func (u *RangeSeries) CategoricalEqualityRangesV2NoopSuccess(_ CategoricalEqualityRangesV2) error {
 	return nil
 }
 
@@ -7732,6 +12220,10 @@ func (u *RangeSeries) PeakNoopSuccess(_ PeakRanges) error {
 	return nil
 }
 
+func (u *RangeSeries) ExtremaRangesV2NoopSuccess(_ ExtremaRangesV2) error {
+	return nil
+}
+
 func (u *RangeSeries) RangeNumericAggregationNoopSuccess(_ RangesNumericAggregation) error {
 	return nil
 }
@@ -7752,11 +12244,23 @@ func (u *RangeSeries) SeriesEqualityRangesNodeNoopSuccess(_ SeriesEqualityRanges
 	return nil
 }
 
+func (u *RangeSeries) NumericEqualityRangesV2NoopSuccess(_ NumericEqualityRangesV2) error {
+	return nil
+}
+
 func (u *RangeSeries) StabilityDetectionNoopSuccess(_ StabilityDetectionRanges) error {
 	return nil
 }
 
+func (u *RangeSeries) StabilityDetectionV2NoopSuccess(_ StabilityDetectionRangesV2) error {
+	return nil
+}
+
 func (u *RangeSeries) StaleRangeNoopSuccess(_ StaleRanges) error {
+	return nil
+}
+
+func (u *RangeSeries) NumericStaleRangesV2NoopSuccess(_ NumericStaleRangesV2) error {
 	return nil
 }
 
@@ -7769,6 +12273,10 @@ func (u *RangeSeries) UnionRangeNoopSuccess(_ UnionRanges) error {
 }
 
 func (u *RangeSeries) PaddedRangesNoopSuccess(_ PaddedRanges) error {
+	return nil
+}
+
+func (u *RangeSeries) PaddedRangesV2NoopSuccess(_ PaddedRangesV2) error {
 	return nil
 }
 
@@ -7788,21 +12296,51 @@ func (u *RangeSeries) Accept(v RangeSeriesVisitor) error {
 			return fmt.Errorf("field \"approximateThreshold\" is required")
 		}
 		return v.VisitApproximateThreshold(*u.approximateThreshold)
-	case "booleanToRanges":
-		if u.booleanToRanges == nil {
-			return fmt.Errorf("field \"booleanToRanges\" is required")
+	case "booleanRanges":
+		if u.booleanRanges == nil {
+			return fmt.Errorf("field \"booleanRanges\" is required")
 		}
-		return v.VisitBooleanToRanges(*u.booleanToRanges)
+		return v.VisitBooleanRanges(*u.booleanRanges)
+	case "thresholdRangesV2":
+		if u.thresholdRangesV2 == nil {
+			return fmt.Errorf("field \"thresholdRangesV2\" is required")
+		}
+		return v.VisitThresholdRangesV2(*u.thresholdRangesV2)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
 		}
 		return v.VisitDurationFilter(*u.durationFilter)
+	case "durationFilterV2":
+		if u.durationFilterV2 == nil {
+			return fmt.Errorf("field \"durationFilterV2\" is required")
+		}
+		return v.VisitDurationFilterV2(*u.durationFilterV2)
 	case "enumFilter":
 		if u.enumFilter == nil {
 			return fmt.Errorf("field \"enumFilter\" is required")
 		}
 		return v.VisitEnumFilter(*u.enumFilter)
+	case "categoryFilterRangesV2":
+		if u.categoryFilterRangesV2 == nil {
+			return fmt.Errorf("field \"categoryFilterRangesV2\" is required")
+		}
+		return v.VisitCategoryFilterRangesV2(*u.categoryFilterRangesV2)
+	case "categoricalOnChangeRangesV2":
+		if u.categoricalOnChangeRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalOnChangeRangesV2\" is required")
+		}
+		return v.VisitCategoricalOnChangeRangesV2(*u.categoricalOnChangeRangesV2)
+	case "categoricalStaleRangesV2":
+		if u.categoricalStaleRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalStaleRangesV2\" is required")
+		}
+		return v.VisitCategoricalStaleRangesV2(*u.categoricalStaleRangesV2)
+	case "categoricalEqualityRangesV2":
+		if u.categoricalEqualityRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalEqualityRangesV2\" is required")
+		}
+		return v.VisitCategoricalEqualityRangesV2(*u.categoricalEqualityRangesV2)
 	case "enumSeriesEqualityRangesNode":
 		if u.enumSeriesEqualityRangesNode == nil {
 			return fmt.Errorf("field \"enumSeriesEqualityRangesNode\" is required")
@@ -7843,6 +12381,11 @@ func (u *RangeSeries) Accept(v RangeSeriesVisitor) error {
 			return fmt.Errorf("field \"peak\" is required")
 		}
 		return v.VisitPeak(*u.peak)
+	case "extremaRangesV2":
+		if u.extremaRangesV2 == nil {
+			return fmt.Errorf("field \"extremaRangesV2\" is required")
+		}
+		return v.VisitExtremaRangesV2(*u.extremaRangesV2)
 	case "rangeNumericAggregation":
 		if u.rangeNumericAggregation == nil {
 			return fmt.Errorf("field \"rangeNumericAggregation\" is required")
@@ -7868,16 +12411,31 @@ func (u *RangeSeries) Accept(v RangeSeriesVisitor) error {
 			return fmt.Errorf("field \"seriesEqualityRangesNode\" is required")
 		}
 		return v.VisitSeriesEqualityRangesNode(*u.seriesEqualityRangesNode)
+	case "numericEqualityRangesV2":
+		if u.numericEqualityRangesV2 == nil {
+			return fmt.Errorf("field \"numericEqualityRangesV2\" is required")
+		}
+		return v.VisitNumericEqualityRangesV2(*u.numericEqualityRangesV2)
 	case "stabilityDetection":
 		if u.stabilityDetection == nil {
 			return fmt.Errorf("field \"stabilityDetection\" is required")
 		}
 		return v.VisitStabilityDetection(*u.stabilityDetection)
+	case "stabilityDetectionV2":
+		if u.stabilityDetectionV2 == nil {
+			return fmt.Errorf("field \"stabilityDetectionV2\" is required")
+		}
+		return v.VisitStabilityDetectionV2(*u.stabilityDetectionV2)
 	case "staleRange":
 		if u.staleRange == nil {
 			return fmt.Errorf("field \"staleRange\" is required")
 		}
 		return v.VisitStaleRange(*u.staleRange)
+	case "numericStaleRangesV2":
+		if u.numericStaleRangesV2 == nil {
+			return fmt.Errorf("field \"numericStaleRangesV2\" is required")
+		}
+		return v.VisitNumericStaleRangesV2(*u.numericStaleRangesV2)
 	case "threshold":
 		if u.threshold == nil {
 			return fmt.Errorf("field \"threshold\" is required")
@@ -7893,14 +12451,25 @@ func (u *RangeSeries) Accept(v RangeSeriesVisitor) error {
 			return fmt.Errorf("field \"paddedRanges\" is required")
 		}
 		return v.VisitPaddedRanges(*u.paddedRanges)
+	case "paddedRangesV2":
+		if u.paddedRangesV2 == nil {
+			return fmt.Errorf("field \"paddedRangesV2\" is required")
+		}
+		return v.VisitPaddedRangesV2(*u.paddedRangesV2)
 	}
 }
 
 type RangeSeriesVisitor interface {
 	VisitApproximateThreshold(v ApproximateThresholdRanges) error
-	VisitBooleanToRanges(v BooleanToRanges) error
+	VisitBooleanRanges(v BooleanRanges) error
+	VisitThresholdRangesV2(v ThresholdRangesV2) error
 	VisitDurationFilter(v DurationFilterRanges) error
+	VisitDurationFilterV2(v DurationFilterRangesV2) error
 	VisitEnumFilter(v EnumFilterRanges) error
+	VisitCategoryFilterRangesV2(v CategoryFilterRangesV2) error
+	VisitCategoricalOnChangeRangesV2(v CategoricalOnChangeRangesV2) error
+	VisitCategoricalStaleRangesV2(v CategoricalStaleRangesV2) error
+	VisitCategoricalEqualityRangesV2(v CategoricalEqualityRangesV2) error
 	VisitEnumSeriesEqualityRangesNode(v EnumSeriesEqualityRanges) error
 	VisitEventsSearch(v EventsSearchRanges) error
 	VisitIntersectRange(v IntersectRanges) error
@@ -7909,16 +12478,21 @@ type RangeSeriesVisitor interface {
 	VisitNot(v NotRanges) error
 	VisitOnChange(v OnChangeRanges) error
 	VisitPeak(v PeakRanges) error
+	VisitExtremaRangesV2(v ExtremaRangesV2) error
 	VisitRangeNumericAggregation(v RangesNumericAggregation) error
 	VisitRaw(v api.Reference) error
 	VisitDerived(v DerivedSeries) error
 	VisitSeriesCrossoverRangesNode(v SeriesCrossoverRanges) error
 	VisitSeriesEqualityRangesNode(v SeriesEqualityRanges) error
+	VisitNumericEqualityRangesV2(v NumericEqualityRangesV2) error
 	VisitStabilityDetection(v StabilityDetectionRanges) error
+	VisitStabilityDetectionV2(v StabilityDetectionRangesV2) error
 	VisitStaleRange(v StaleRanges) error
+	VisitNumericStaleRangesV2(v NumericStaleRangesV2) error
 	VisitThreshold(v ThresholdingRanges) error
 	VisitUnionRange(v UnionRanges) error
 	VisitPaddedRanges(v PaddedRanges) error
+	VisitPaddedRangesV2(v PaddedRangesV2) error
 	VisitUnknown(typeName string) error
 }
 
@@ -7934,21 +12508,51 @@ func (u *RangeSeries) AcceptWithContext(ctx context.Context, v RangeSeriesVisito
 			return fmt.Errorf("field \"approximateThreshold\" is required")
 		}
 		return v.VisitApproximateThresholdWithContext(ctx, *u.approximateThreshold)
-	case "booleanToRanges":
-		if u.booleanToRanges == nil {
-			return fmt.Errorf("field \"booleanToRanges\" is required")
+	case "booleanRanges":
+		if u.booleanRanges == nil {
+			return fmt.Errorf("field \"booleanRanges\" is required")
 		}
-		return v.VisitBooleanToRangesWithContext(ctx, *u.booleanToRanges)
+		return v.VisitBooleanRangesWithContext(ctx, *u.booleanRanges)
+	case "thresholdRangesV2":
+		if u.thresholdRangesV2 == nil {
+			return fmt.Errorf("field \"thresholdRangesV2\" is required")
+		}
+		return v.VisitThresholdRangesV2WithContext(ctx, *u.thresholdRangesV2)
 	case "durationFilter":
 		if u.durationFilter == nil {
 			return fmt.Errorf("field \"durationFilter\" is required")
 		}
 		return v.VisitDurationFilterWithContext(ctx, *u.durationFilter)
+	case "durationFilterV2":
+		if u.durationFilterV2 == nil {
+			return fmt.Errorf("field \"durationFilterV2\" is required")
+		}
+		return v.VisitDurationFilterV2WithContext(ctx, *u.durationFilterV2)
 	case "enumFilter":
 		if u.enumFilter == nil {
 			return fmt.Errorf("field \"enumFilter\" is required")
 		}
 		return v.VisitEnumFilterWithContext(ctx, *u.enumFilter)
+	case "categoryFilterRangesV2":
+		if u.categoryFilterRangesV2 == nil {
+			return fmt.Errorf("field \"categoryFilterRangesV2\" is required")
+		}
+		return v.VisitCategoryFilterRangesV2WithContext(ctx, *u.categoryFilterRangesV2)
+	case "categoricalOnChangeRangesV2":
+		if u.categoricalOnChangeRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalOnChangeRangesV2\" is required")
+		}
+		return v.VisitCategoricalOnChangeRangesV2WithContext(ctx, *u.categoricalOnChangeRangesV2)
+	case "categoricalStaleRangesV2":
+		if u.categoricalStaleRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalStaleRangesV2\" is required")
+		}
+		return v.VisitCategoricalStaleRangesV2WithContext(ctx, *u.categoricalStaleRangesV2)
+	case "categoricalEqualityRangesV2":
+		if u.categoricalEqualityRangesV2 == nil {
+			return fmt.Errorf("field \"categoricalEqualityRangesV2\" is required")
+		}
+		return v.VisitCategoricalEqualityRangesV2WithContext(ctx, *u.categoricalEqualityRangesV2)
 	case "enumSeriesEqualityRangesNode":
 		if u.enumSeriesEqualityRangesNode == nil {
 			return fmt.Errorf("field \"enumSeriesEqualityRangesNode\" is required")
@@ -7989,6 +12593,11 @@ func (u *RangeSeries) AcceptWithContext(ctx context.Context, v RangeSeriesVisito
 			return fmt.Errorf("field \"peak\" is required")
 		}
 		return v.VisitPeakWithContext(ctx, *u.peak)
+	case "extremaRangesV2":
+		if u.extremaRangesV2 == nil {
+			return fmt.Errorf("field \"extremaRangesV2\" is required")
+		}
+		return v.VisitExtremaRangesV2WithContext(ctx, *u.extremaRangesV2)
 	case "rangeNumericAggregation":
 		if u.rangeNumericAggregation == nil {
 			return fmt.Errorf("field \"rangeNumericAggregation\" is required")
@@ -8014,16 +12623,31 @@ func (u *RangeSeries) AcceptWithContext(ctx context.Context, v RangeSeriesVisito
 			return fmt.Errorf("field \"seriesEqualityRangesNode\" is required")
 		}
 		return v.VisitSeriesEqualityRangesNodeWithContext(ctx, *u.seriesEqualityRangesNode)
+	case "numericEqualityRangesV2":
+		if u.numericEqualityRangesV2 == nil {
+			return fmt.Errorf("field \"numericEqualityRangesV2\" is required")
+		}
+		return v.VisitNumericEqualityRangesV2WithContext(ctx, *u.numericEqualityRangesV2)
 	case "stabilityDetection":
 		if u.stabilityDetection == nil {
 			return fmt.Errorf("field \"stabilityDetection\" is required")
 		}
 		return v.VisitStabilityDetectionWithContext(ctx, *u.stabilityDetection)
+	case "stabilityDetectionV2":
+		if u.stabilityDetectionV2 == nil {
+			return fmt.Errorf("field \"stabilityDetectionV2\" is required")
+		}
+		return v.VisitStabilityDetectionV2WithContext(ctx, *u.stabilityDetectionV2)
 	case "staleRange":
 		if u.staleRange == nil {
 			return fmt.Errorf("field \"staleRange\" is required")
 		}
 		return v.VisitStaleRangeWithContext(ctx, *u.staleRange)
+	case "numericStaleRangesV2":
+		if u.numericStaleRangesV2 == nil {
+			return fmt.Errorf("field \"numericStaleRangesV2\" is required")
+		}
+		return v.VisitNumericStaleRangesV2WithContext(ctx, *u.numericStaleRangesV2)
 	case "threshold":
 		if u.threshold == nil {
 			return fmt.Errorf("field \"threshold\" is required")
@@ -8039,14 +12663,25 @@ func (u *RangeSeries) AcceptWithContext(ctx context.Context, v RangeSeriesVisito
 			return fmt.Errorf("field \"paddedRanges\" is required")
 		}
 		return v.VisitPaddedRangesWithContext(ctx, *u.paddedRanges)
+	case "paddedRangesV2":
+		if u.paddedRangesV2 == nil {
+			return fmt.Errorf("field \"paddedRangesV2\" is required")
+		}
+		return v.VisitPaddedRangesV2WithContext(ctx, *u.paddedRangesV2)
 	}
 }
 
 type RangeSeriesVisitorWithContext interface {
 	VisitApproximateThresholdWithContext(ctx context.Context, v ApproximateThresholdRanges) error
-	VisitBooleanToRangesWithContext(ctx context.Context, v BooleanToRanges) error
+	VisitBooleanRangesWithContext(ctx context.Context, v BooleanRanges) error
+	VisitThresholdRangesV2WithContext(ctx context.Context, v ThresholdRangesV2) error
 	VisitDurationFilterWithContext(ctx context.Context, v DurationFilterRanges) error
+	VisitDurationFilterV2WithContext(ctx context.Context, v DurationFilterRangesV2) error
 	VisitEnumFilterWithContext(ctx context.Context, v EnumFilterRanges) error
+	VisitCategoryFilterRangesV2WithContext(ctx context.Context, v CategoryFilterRangesV2) error
+	VisitCategoricalOnChangeRangesV2WithContext(ctx context.Context, v CategoricalOnChangeRangesV2) error
+	VisitCategoricalStaleRangesV2WithContext(ctx context.Context, v CategoricalStaleRangesV2) error
+	VisitCategoricalEqualityRangesV2WithContext(ctx context.Context, v CategoricalEqualityRangesV2) error
 	VisitEnumSeriesEqualityRangesNodeWithContext(ctx context.Context, v EnumSeriesEqualityRanges) error
 	VisitEventsSearchWithContext(ctx context.Context, v EventsSearchRanges) error
 	VisitIntersectRangeWithContext(ctx context.Context, v IntersectRanges) error
@@ -8055,16 +12690,21 @@ type RangeSeriesVisitorWithContext interface {
 	VisitNotWithContext(ctx context.Context, v NotRanges) error
 	VisitOnChangeWithContext(ctx context.Context, v OnChangeRanges) error
 	VisitPeakWithContext(ctx context.Context, v PeakRanges) error
+	VisitExtremaRangesV2WithContext(ctx context.Context, v ExtremaRangesV2) error
 	VisitRangeNumericAggregationWithContext(ctx context.Context, v RangesNumericAggregation) error
 	VisitRawWithContext(ctx context.Context, v api.Reference) error
 	VisitDerivedWithContext(ctx context.Context, v DerivedSeries) error
 	VisitSeriesCrossoverRangesNodeWithContext(ctx context.Context, v SeriesCrossoverRanges) error
 	VisitSeriesEqualityRangesNodeWithContext(ctx context.Context, v SeriesEqualityRanges) error
+	VisitNumericEqualityRangesV2WithContext(ctx context.Context, v NumericEqualityRangesV2) error
 	VisitStabilityDetectionWithContext(ctx context.Context, v StabilityDetectionRanges) error
+	VisitStabilityDetectionV2WithContext(ctx context.Context, v StabilityDetectionRangesV2) error
 	VisitStaleRangeWithContext(ctx context.Context, v StaleRanges) error
+	VisitNumericStaleRangesV2WithContext(ctx context.Context, v NumericStaleRangesV2) error
 	VisitThresholdWithContext(ctx context.Context, v ThresholdingRanges) error
 	VisitUnionRangeWithContext(ctx context.Context, v UnionRanges) error
 	VisitPaddedRangesWithContext(ctx context.Context, v PaddedRanges) error
+	VisitPaddedRangesV2WithContext(ctx context.Context, v PaddedRangesV2) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -8072,16 +12712,40 @@ func NewRangeSeriesFromApproximateThreshold(v ApproximateThresholdRanges) RangeS
 	return RangeSeries{typ: "approximateThreshold", approximateThreshold: &v}
 }
 
-func NewRangeSeriesFromBooleanToRanges(v BooleanToRanges) RangeSeries {
-	return RangeSeries{typ: "booleanToRanges", booleanToRanges: &v}
+func NewRangeSeriesFromBooleanRanges(v BooleanRanges) RangeSeries {
+	return RangeSeries{typ: "booleanRanges", booleanRanges: &v}
+}
+
+func NewRangeSeriesFromThresholdRangesV2(v ThresholdRangesV2) RangeSeries {
+	return RangeSeries{typ: "thresholdRangesV2", thresholdRangesV2: &v}
 }
 
 func NewRangeSeriesFromDurationFilter(v DurationFilterRanges) RangeSeries {
 	return RangeSeries{typ: "durationFilter", durationFilter: &v}
 }
 
+func NewRangeSeriesFromDurationFilterV2(v DurationFilterRangesV2) RangeSeries {
+	return RangeSeries{typ: "durationFilterV2", durationFilterV2: &v}
+}
+
 func NewRangeSeriesFromEnumFilter(v EnumFilterRanges) RangeSeries {
 	return RangeSeries{typ: "enumFilter", enumFilter: &v}
+}
+
+func NewRangeSeriesFromCategoryFilterRangesV2(v CategoryFilterRangesV2) RangeSeries {
+	return RangeSeries{typ: "categoryFilterRangesV2", categoryFilterRangesV2: &v}
+}
+
+func NewRangeSeriesFromCategoricalOnChangeRangesV2(v CategoricalOnChangeRangesV2) RangeSeries {
+	return RangeSeries{typ: "categoricalOnChangeRangesV2", categoricalOnChangeRangesV2: &v}
+}
+
+func NewRangeSeriesFromCategoricalStaleRangesV2(v CategoricalStaleRangesV2) RangeSeries {
+	return RangeSeries{typ: "categoricalStaleRangesV2", categoricalStaleRangesV2: &v}
+}
+
+func NewRangeSeriesFromCategoricalEqualityRangesV2(v CategoricalEqualityRangesV2) RangeSeries {
+	return RangeSeries{typ: "categoricalEqualityRangesV2", categoricalEqualityRangesV2: &v}
 }
 
 func NewRangeSeriesFromEnumSeriesEqualityRangesNode(v EnumSeriesEqualityRanges) RangeSeries {
@@ -8116,6 +12780,10 @@ func NewRangeSeriesFromPeak(v PeakRanges) RangeSeries {
 	return RangeSeries{typ: "peak", peak: &v}
 }
 
+func NewRangeSeriesFromExtremaRangesV2(v ExtremaRangesV2) RangeSeries {
+	return RangeSeries{typ: "extremaRangesV2", extremaRangesV2: &v}
+}
+
 func NewRangeSeriesFromRangeNumericAggregation(v RangesNumericAggregation) RangeSeries {
 	return RangeSeries{typ: "rangeNumericAggregation", rangeNumericAggregation: &v}
 }
@@ -8136,12 +12804,24 @@ func NewRangeSeriesFromSeriesEqualityRangesNode(v SeriesEqualityRanges) RangeSer
 	return RangeSeries{typ: "seriesEqualityRangesNode", seriesEqualityRangesNode: &v}
 }
 
+func NewRangeSeriesFromNumericEqualityRangesV2(v NumericEqualityRangesV2) RangeSeries {
+	return RangeSeries{typ: "numericEqualityRangesV2", numericEqualityRangesV2: &v}
+}
+
 func NewRangeSeriesFromStabilityDetection(v StabilityDetectionRanges) RangeSeries {
 	return RangeSeries{typ: "stabilityDetection", stabilityDetection: &v}
 }
 
+func NewRangeSeriesFromStabilityDetectionV2(v StabilityDetectionRangesV2) RangeSeries {
+	return RangeSeries{typ: "stabilityDetectionV2", stabilityDetectionV2: &v}
+}
+
 func NewRangeSeriesFromStaleRange(v StaleRanges) RangeSeries {
 	return RangeSeries{typ: "staleRange", staleRange: &v}
+}
+
+func NewRangeSeriesFromNumericStaleRangesV2(v NumericStaleRangesV2) RangeSeries {
+	return RangeSeries{typ: "numericStaleRangesV2", numericStaleRangesV2: &v}
 }
 
 func NewRangeSeriesFromThreshold(v ThresholdingRanges) RangeSeries {
@@ -8154,6 +12834,593 @@ func NewRangeSeriesFromUnionRange(v UnionRanges) RangeSeries {
 
 func NewRangeSeriesFromPaddedRanges(v PaddedRanges) RangeSeries {
 	return RangeSeries{typ: "paddedRanges", paddedRanges: &v}
+}
+
+func NewRangeSeriesFromPaddedRangesV2(v PaddedRangesV2) RangeSeries {
+	return RangeSeries{typ: "paddedRangesV2", paddedRangesV2: &v}
+}
+
+// Predicate tree for filtering.
+type ResourceSearchQuery struct {
+	typ                  string
+	properties           *api2.PropertiesFilter
+	numericProperty      *api3.NumericPropertyPredicate
+	numericPropertyRange *api3.NumericPropertyRangePredicate
+	labels               *api2.LabelsFilter
+	workspace            *api.StringConstant
+	and                  *[]ResourceSearchQuery
+	or                   *[]ResourceSearchQuery
+	not                  *ResourceSearchQuery
+}
+
+type resourceSearchQueryDeserializer struct {
+	Type                 string                              `json:"type"`
+	Properties           *api2.PropertiesFilter              `json:"properties"`
+	NumericProperty      *api3.NumericPropertyPredicate      `json:"numericProperty"`
+	NumericPropertyRange *api3.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+	Labels               *api2.LabelsFilter                  `json:"labels"`
+	Workspace            *api.StringConstant                 `json:"workspace"`
+	And                  *[]ResourceSearchQuery              `json:"and"`
+	Or                   *[]ResourceSearchQuery              `json:"or"`
+	Not                  *ResourceSearchQuery                `json:"not"`
+}
+
+func (u *resourceSearchQueryDeserializer) toStruct() ResourceSearchQuery {
+	return ResourceSearchQuery{typ: u.Type, properties: u.Properties, numericProperty: u.NumericProperty, numericPropertyRange: u.NumericPropertyRange, labels: u.Labels, workspace: u.Workspace, and: u.And, or: u.Or, not: u.Not}
+}
+
+func (u *ResourceSearchQuery) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "properties":
+		if u.properties == nil {
+			return nil, fmt.Errorf("field \"properties\" is required")
+		}
+		return struct {
+			Type       string                `json:"type"`
+			Properties api2.PropertiesFilter `json:"properties"`
+		}{Type: "properties", Properties: *u.properties}, nil
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return nil, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return struct {
+			Type            string                        `json:"type"`
+			NumericProperty api3.NumericPropertyPredicate `json:"numericProperty"`
+		}{Type: "numericProperty", NumericProperty: *u.numericProperty}, nil
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return nil, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return struct {
+			Type                 string                             `json:"type"`
+			NumericPropertyRange api3.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+		}{Type: "numericPropertyRange", NumericPropertyRange: *u.numericPropertyRange}, nil
+	case "labels":
+		if u.labels == nil {
+			return nil, fmt.Errorf("field \"labels\" is required")
+		}
+		return struct {
+			Type   string            `json:"type"`
+			Labels api2.LabelsFilter `json:"labels"`
+		}{Type: "labels", Labels: *u.labels}, nil
+	case "workspace":
+		if u.workspace == nil {
+			return nil, fmt.Errorf("field \"workspace\" is required")
+		}
+		return struct {
+			Type      string             `json:"type"`
+			Workspace api.StringConstant `json:"workspace"`
+		}{Type: "workspace", Workspace: *u.workspace}, nil
+	case "and":
+		if u.and == nil {
+			return nil, fmt.Errorf("field \"and\" is required")
+		}
+		return struct {
+			Type string                `json:"type"`
+			And  []ResourceSearchQuery `json:"and"`
+		}{Type: "and", And: *u.and}, nil
+	case "or":
+		if u.or == nil {
+			return nil, fmt.Errorf("field \"or\" is required")
+		}
+		return struct {
+			Type string                `json:"type"`
+			Or   []ResourceSearchQuery `json:"or"`
+		}{Type: "or", Or: *u.or}, nil
+	case "not":
+		if u.not == nil {
+			return nil, fmt.Errorf("field \"not\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			Not  ResourceSearchQuery `json:"not"`
+		}{Type: "not", Not: *u.not}, nil
+	}
+}
+
+func (u ResourceSearchQuery) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ResourceSearchQuery) UnmarshalJSON(data []byte) error {
+	var deser resourceSearchQueryDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ResourceSearchQuery) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ResourceSearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ResourceSearchQuery) AcceptFuncs(propertiesFunc func(api2.PropertiesFilter) error, numericPropertyFunc func(api3.NumericPropertyPredicate) error, numericPropertyRangeFunc func(api3.NumericPropertyRangePredicate) error, labelsFunc func(api2.LabelsFilter) error, workspaceFunc func(api.StringConstant) error, andFunc func([]ResourceSearchQuery) error, orFunc func([]ResourceSearchQuery) error, notFunc func(ResourceSearchQuery) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ResourceSearchQuery type")
+		}
+		return unknownFunc(u.typ)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return propertiesFunc(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return numericPropertyRangeFunc(*u.numericPropertyRange)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return labelsFunc(*u.labels)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return workspaceFunc(*u.workspace)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return andFunc(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return orFunc(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
+	}
+}
+
+func (u *ResourceSearchQuery) PropertiesNoopSuccess(_ api2.PropertiesFilter) error {
+	return nil
+}
+
+func (u *ResourceSearchQuery) NumericPropertyNoopSuccess(_ api3.NumericPropertyPredicate) error {
+	return nil
+}
+
+func (u *ResourceSearchQuery) NumericPropertyRangeNoopSuccess(_ api3.NumericPropertyRangePredicate) error {
+	return nil
+}
+
+func (u *ResourceSearchQuery) LabelsNoopSuccess(_ api2.LabelsFilter) error {
+	return nil
+}
+
+func (u *ResourceSearchQuery) WorkspaceNoopSuccess(_ api.StringConstant) error {
+	return nil
+}
+
+func (u *ResourceSearchQuery) AndNoopSuccess(_ []ResourceSearchQuery) error {
+	return nil
+}
+
+func (u *ResourceSearchQuery) OrNoopSuccess(_ []ResourceSearchQuery) error {
+	return nil
+}
+
+func (u *ResourceSearchQuery) NotNoopSuccess(_ ResourceSearchQuery) error {
+	return nil
+}
+
+func (u *ResourceSearchQuery) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ResourceSearchQuery) Accept(v ResourceSearchQueryVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitProperties(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRange(*u.numericPropertyRange)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabels(*u.labels)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspace(*u.workspace)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAnd(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOr(*u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(*u.not)
+	}
+}
+
+type ResourceSearchQueryVisitor interface {
+	VisitProperties(v api2.PropertiesFilter) error
+	VisitNumericProperty(v api3.NumericPropertyPredicate) error
+	VisitNumericPropertyRange(v api3.NumericPropertyRangePredicate) error
+	VisitLabels(v api2.LabelsFilter) error
+	VisitWorkspace(v api.StringConstant) error
+	VisitAnd(v []ResourceSearchQuery) error
+	VisitOr(v []ResourceSearchQuery) error
+	VisitNot(v ResourceSearchQuery) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ResourceSearchQuery) AcceptWithContext(ctx context.Context, v ResourceSearchQueryVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "properties":
+		if u.properties == nil {
+			return fmt.Errorf("field \"properties\" is required")
+		}
+		return v.VisitPropertiesWithContext(ctx, *u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericPropertyWithContext(ctx, *u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRangeWithContext(ctx, *u.numericPropertyRange)
+	case "labels":
+		if u.labels == nil {
+			return fmt.Errorf("field \"labels\" is required")
+		}
+		return v.VisitLabelsWithContext(ctx, *u.labels)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAndWithContext(ctx, *u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOrWithContext(ctx, *u.or)
+	case "not":
+		if u.not == nil {
+			return fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNotWithContext(ctx, *u.not)
+	}
+}
+
+type ResourceSearchQueryVisitorWithContext interface {
+	VisitPropertiesWithContext(ctx context.Context, v api2.PropertiesFilter) error
+	VisitNumericPropertyWithContext(ctx context.Context, v api3.NumericPropertyPredicate) error
+	VisitNumericPropertyRangeWithContext(ctx context.Context, v api3.NumericPropertyRangePredicate) error
+	VisitLabelsWithContext(ctx context.Context, v api2.LabelsFilter) error
+	VisitWorkspaceWithContext(ctx context.Context, v api.StringConstant) error
+	VisitAndWithContext(ctx context.Context, v []ResourceSearchQuery) error
+	VisitOrWithContext(ctx context.Context, v []ResourceSearchQuery) error
+	VisitNotWithContext(ctx context.Context, v ResourceSearchQuery) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewResourceSearchQueryFromProperties(v api2.PropertiesFilter) ResourceSearchQuery {
+	return ResourceSearchQuery{typ: "properties", properties: &v}
+}
+
+func NewResourceSearchQueryFromNumericProperty(v api3.NumericPropertyPredicate) ResourceSearchQuery {
+	return ResourceSearchQuery{typ: "numericProperty", numericProperty: &v}
+}
+
+func NewResourceSearchQueryFromNumericPropertyRange(v api3.NumericPropertyRangePredicate) ResourceSearchQuery {
+	return ResourceSearchQuery{typ: "numericPropertyRange", numericPropertyRange: &v}
+}
+
+func NewResourceSearchQueryFromLabels(v api2.LabelsFilter) ResourceSearchQuery {
+	return ResourceSearchQuery{typ: "labels", labels: &v}
+}
+
+func NewResourceSearchQueryFromWorkspace(v api.StringConstant) ResourceSearchQuery {
+	return ResourceSearchQuery{typ: "workspace", workspace: &v}
+}
+
+func NewResourceSearchQueryFromAnd(v []ResourceSearchQuery) ResourceSearchQuery {
+	return ResourceSearchQuery{typ: "and", and: &v}
+}
+
+func NewResourceSearchQueryFromOr(v []ResourceSearchQuery) ResourceSearchQuery {
+	return ResourceSearchQuery{typ: "or", or: &v}
+}
+
+func NewResourceSearchQueryFromNot(v ResourceSearchQuery) ResourceSearchQuery {
+	return ResourceSearchQuery{typ: "not", not: &v}
+}
+
+type SearchTarget struct {
+	typ    string
+	assets *AssetsSearchTarget
+	runs   *RunsSearchTarget
+}
+
+type searchTargetDeserializer struct {
+	Type   string              `json:"type"`
+	Assets *AssetsSearchTarget `json:"assets"`
+	Runs   *RunsSearchTarget   `json:"runs"`
+}
+
+func (u *searchTargetDeserializer) toStruct() SearchTarget {
+	return SearchTarget{typ: u.Type, assets: u.Assets, runs: u.Runs}
+}
+
+func (u *SearchTarget) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "assets":
+		if u.assets == nil {
+			return nil, fmt.Errorf("field \"assets\" is required")
+		}
+		return struct {
+			Type   string             `json:"type"`
+			Assets AssetsSearchTarget `json:"assets"`
+		}{Type: "assets", Assets: *u.assets}, nil
+	case "runs":
+		if u.runs == nil {
+			return nil, fmt.Errorf("field \"runs\" is required")
+		}
+		return struct {
+			Type string           `json:"type"`
+			Runs RunsSearchTarget `json:"runs"`
+		}{Type: "runs", Runs: *u.runs}, nil
+	}
+}
+
+func (u SearchTarget) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *SearchTarget) UnmarshalJSON(data []byte) error {
+	var deser searchTargetDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
+	case "runs":
+		if u.runs == nil {
+			return fmt.Errorf("field \"runs\" is required")
+		}
+	}
+	return nil
+}
+
+func (u SearchTarget) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *SearchTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *SearchTarget) AcceptFuncs(assetsFunc func(AssetsSearchTarget) error, runsFunc func(RunsSearchTarget) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in SearchTarget type")
+		}
+		return unknownFunc(u.typ)
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
+		return assetsFunc(*u.assets)
+	case "runs":
+		if u.runs == nil {
+			return fmt.Errorf("field \"runs\" is required")
+		}
+		return runsFunc(*u.runs)
+	}
+}
+
+func (u *SearchTarget) AssetsNoopSuccess(_ AssetsSearchTarget) error {
+	return nil
+}
+
+func (u *SearchTarget) RunsNoopSuccess(_ RunsSearchTarget) error {
+	return nil
+}
+
+func (u *SearchTarget) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *SearchTarget) Accept(v SearchTargetVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
+		return v.VisitAssets(*u.assets)
+	case "runs":
+		if u.runs == nil {
+			return fmt.Errorf("field \"runs\" is required")
+		}
+		return v.VisitRuns(*u.runs)
+	}
+}
+
+type SearchTargetVisitor interface {
+	VisitAssets(v AssetsSearchTarget) error
+	VisitRuns(v RunsSearchTarget) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *SearchTarget) AcceptWithContext(ctx context.Context, v SearchTargetVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "assets":
+		if u.assets == nil {
+			return fmt.Errorf("field \"assets\" is required")
+		}
+		return v.VisitAssetsWithContext(ctx, *u.assets)
+	case "runs":
+		if u.runs == nil {
+			return fmt.Errorf("field \"runs\" is required")
+		}
+		return v.VisitRunsWithContext(ctx, *u.runs)
+	}
+}
+
+type SearchTargetVisitorWithContext interface {
+	VisitAssetsWithContext(ctx context.Context, v AssetsSearchTarget) error
+	VisitRunsWithContext(ctx context.Context, v RunsSearchTarget) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewSearchTargetFromAssets(v AssetsSearchTarget) SearchTarget {
+	return SearchTarget{typ: "assets", assets: &v}
+}
+
+func NewSearchTargetFromRuns(v RunsSearchTarget) SearchTarget {
+	return SearchTarget{typ: "runs", runs: &v}
 }
 
 type SelectValue struct {
@@ -8528,27 +13795,27 @@ func NewSelectValueFromNthRange(v NthRange) SelectValue {
 type Series struct {
 	typ     string
 	raw     *api.Reference
-	boolean *BooleanSeries
 	enum    *EnumSeries
 	numeric *NumericSeries
 	log     *LogSeries
 	array   *ArraySeries
 	struct_ *StructSeries
+	video   *api.Reference
 }
 
 type seriesDeserializer struct {
 	Type    string         `json:"type"`
 	Raw     *api.Reference `json:"raw"`
-	Boolean *BooleanSeries `json:"boolean"`
 	Enum    *EnumSeries    `json:"enum"`
 	Numeric *NumericSeries `json:"numeric"`
 	Log     *LogSeries     `json:"log"`
 	Array   *ArraySeries   `json:"array"`
 	Struct  *StructSeries  `json:"struct"`
+	Video   *api.Reference `json:"video"`
 }
 
 func (u *seriesDeserializer) toStruct() Series {
-	return Series{typ: u.Type, raw: u.Raw, boolean: u.Boolean, enum: u.Enum, numeric: u.Numeric, log: u.Log, array: u.Array, struct_: u.Struct}
+	return Series{typ: u.Type, raw: u.Raw, enum: u.Enum, numeric: u.Numeric, log: u.Log, array: u.Array, struct_: u.Struct, video: u.Video}
 }
 
 func (u *Series) toSerializer() (interface{}, error) {
@@ -8563,14 +13830,6 @@ func (u *Series) toSerializer() (interface{}, error) {
 			Type string        `json:"type"`
 			Raw  api.Reference `json:"raw"`
 		}{Type: "raw", Raw: *u.raw}, nil
-	case "boolean":
-		if u.boolean == nil {
-			return nil, fmt.Errorf("field \"boolean\" is required")
-		}
-		return struct {
-			Type    string        `json:"type"`
-			Boolean BooleanSeries `json:"boolean"`
-		}{Type: "boolean", Boolean: *u.boolean}, nil
 	case "enum":
 		if u.enum == nil {
 			return nil, fmt.Errorf("field \"enum\" is required")
@@ -8611,6 +13870,14 @@ func (u *Series) toSerializer() (interface{}, error) {
 			Type   string       `json:"type"`
 			Struct StructSeries `json:"struct"`
 		}{Type: "struct", Struct: *u.struct_}, nil
+	case "video":
+		if u.video == nil {
+			return nil, fmt.Errorf("field \"video\" is required")
+		}
+		return struct {
+			Type  string        `json:"type"`
+			Video api.Reference `json:"video"`
+		}{Type: "video", Video: *u.video}, nil
 	}
 }
 
@@ -8633,10 +13900,6 @@ func (u *Series) UnmarshalJSON(data []byte) error {
 		if u.raw == nil {
 			return fmt.Errorf("field \"raw\" is required")
 		}
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -8656,6 +13919,10 @@ func (u *Series) UnmarshalJSON(data []byte) error {
 	case "struct":
 		if u.struct_ == nil {
 			return fmt.Errorf("field \"struct\" is required")
+		}
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
 		}
 	}
 	return nil
@@ -8677,7 +13944,7 @@ func (u *Series) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Series) AcceptFuncs(rawFunc func(api.Reference) error, booleanFunc func(BooleanSeries) error, enumFunc func(EnumSeries) error, numericFunc func(NumericSeries) error, logFunc func(LogSeries) error, arrayFunc func(ArraySeries) error, struct_Func func(StructSeries) error, unknownFunc func(string) error) error {
+func (u *Series) AcceptFuncs(rawFunc func(api.Reference) error, enumFunc func(EnumSeries) error, numericFunc func(NumericSeries) error, logFunc func(LogSeries) error, arrayFunc func(ArraySeries) error, struct_Func func(StructSeries) error, videoFunc func(api.Reference) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -8689,11 +13956,6 @@ func (u *Series) AcceptFuncs(rawFunc func(api.Reference) error, booleanFunc func
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return rawFunc(*u.raw)
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
-		return booleanFunc(*u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -8719,14 +13981,15 @@ func (u *Series) AcceptFuncs(rawFunc func(api.Reference) error, booleanFunc func
 			return fmt.Errorf("field \"struct\" is required")
 		}
 		return struct_Func(*u.struct_)
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
+		return videoFunc(*u.video)
 	}
 }
 
 func (u *Series) RawNoopSuccess(_ api.Reference) error {
-	return nil
-}
-
-func (u *Series) BooleanNoopSuccess(_ BooleanSeries) error {
 	return nil
 }
 
@@ -8750,6 +14013,10 @@ func (u *Series) StructNoopSuccess(_ StructSeries) error {
 	return nil
 }
 
+func (u *Series) VideoNoopSuccess(_ api.Reference) error {
+	return nil
+}
+
 func (u *Series) ErrorOnUnknown(typeName string) error {
 	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
 }
@@ -8766,11 +14033,6 @@ func (u *Series) Accept(v SeriesVisitor) error {
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRaw(*u.raw)
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
-		return v.VisitBoolean(*u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -8796,17 +14058,22 @@ func (u *Series) Accept(v SeriesVisitor) error {
 			return fmt.Errorf("field \"struct\" is required")
 		}
 		return v.VisitStruct(*u.struct_)
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
+		return v.VisitVideo(*u.video)
 	}
 }
 
 type SeriesVisitor interface {
 	VisitRaw(v api.Reference) error
-	VisitBoolean(v BooleanSeries) error
 	VisitEnum(v EnumSeries) error
 	VisitNumeric(v NumericSeries) error
 	VisitLog(v LogSeries) error
 	VisitArray(v ArraySeries) error
 	VisitStruct(v StructSeries) error
+	VisitVideo(v api.Reference) error
 	VisitUnknown(typeName string) error
 }
 
@@ -8822,11 +14089,6 @@ func (u *Series) AcceptWithContext(ctx context.Context, v SeriesVisitorWithConte
 			return fmt.Errorf("field \"raw\" is required")
 		}
 		return v.VisitRawWithContext(ctx, *u.raw)
-	case "boolean":
-		if u.boolean == nil {
-			return fmt.Errorf("field \"boolean\" is required")
-		}
-		return v.VisitBooleanWithContext(ctx, *u.boolean)
 	case "enum":
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
@@ -8852,26 +14114,27 @@ func (u *Series) AcceptWithContext(ctx context.Context, v SeriesVisitorWithConte
 			return fmt.Errorf("field \"struct\" is required")
 		}
 		return v.VisitStructWithContext(ctx, *u.struct_)
+	case "video":
+		if u.video == nil {
+			return fmt.Errorf("field \"video\" is required")
+		}
+		return v.VisitVideoWithContext(ctx, *u.video)
 	}
 }
 
 type SeriesVisitorWithContext interface {
 	VisitRawWithContext(ctx context.Context, v api.Reference) error
-	VisitBooleanWithContext(ctx context.Context, v BooleanSeries) error
 	VisitEnumWithContext(ctx context.Context, v EnumSeries) error
 	VisitNumericWithContext(ctx context.Context, v NumericSeries) error
 	VisitLogWithContext(ctx context.Context, v LogSeries) error
 	VisitArrayWithContext(ctx context.Context, v ArraySeries) error
 	VisitStructWithContext(ctx context.Context, v StructSeries) error
+	VisitVideoWithContext(ctx context.Context, v api.Reference) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
 func NewSeriesFromRaw(v api.Reference) Series {
 	return Series{typ: "raw", raw: &v}
-}
-
-func NewSeriesFromBoolean(v BooleanSeries) Series {
-	return Series{typ: "boolean", boolean: &v}
 }
 
 func NewSeriesFromEnum(v EnumSeries) Series {
@@ -8894,12 +14157,22 @@ func NewSeriesFromStruct(v StructSeries) Series {
 	return Series{typ: "struct", struct_: &v}
 }
 
+func NewSeriesFromVideo(v api.Reference) Series {
+	return Series{typ: "video", video: &v}
+}
+
 type StructSeries struct {
 	typ               string
 	channel           *api.ChannelSeries
 	raw               *api.Reference
 	derived           *DerivedSeries
+	combine           *CombineStructSeries
+	selectStruct      *SelectSeries
 	extractFromStruct *ExtractStructFromStructSeries
+	toStartOfInterval *StructToStartOfIntervalSeries
+	timeShift         *StructTimeShiftSeries
+	filterByTag       *StructTagFilterSeries
+	selectTags        *StructSelectTagsSeries
 }
 
 type structSeriesDeserializer struct {
@@ -8907,11 +14180,17 @@ type structSeriesDeserializer struct {
 	Channel           *api.ChannelSeries             `json:"channel"`
 	Raw               *api.Reference                 `json:"raw"`
 	Derived           *DerivedSeries                 `json:"derived"`
+	Combine           *CombineStructSeries           `json:"combine"`
+	SelectStruct      *SelectSeries                  `json:"selectStruct"`
 	ExtractFromStruct *ExtractStructFromStructSeries `json:"extractFromStruct"`
+	ToStartOfInterval *StructToStartOfIntervalSeries `json:"toStartOfInterval"`
+	TimeShift         *StructTimeShiftSeries         `json:"timeShift"`
+	FilterByTag       *StructTagFilterSeries         `json:"filterByTag"`
+	SelectTags        *StructSelectTagsSeries        `json:"selectTags"`
 }
 
 func (u *structSeriesDeserializer) toStruct() StructSeries {
-	return StructSeries{typ: u.Type, channel: u.Channel, raw: u.Raw, derived: u.Derived, extractFromStruct: u.ExtractFromStruct}
+	return StructSeries{typ: u.Type, channel: u.Channel, raw: u.Raw, derived: u.Derived, combine: u.Combine, selectStruct: u.SelectStruct, extractFromStruct: u.ExtractFromStruct, toStartOfInterval: u.ToStartOfInterval, timeShift: u.TimeShift, filterByTag: u.FilterByTag, selectTags: u.SelectTags}
 }
 
 func (u *StructSeries) toSerializer() (interface{}, error) {
@@ -8942,6 +14221,22 @@ func (u *StructSeries) toSerializer() (interface{}, error) {
 			Type    string        `json:"type"`
 			Derived DerivedSeries `json:"derived"`
 		}{Type: "derived", Derived: *u.derived}, nil
+	case "combine":
+		if u.combine == nil {
+			return nil, fmt.Errorf("field \"combine\" is required")
+		}
+		return struct {
+			Type    string              `json:"type"`
+			Combine CombineStructSeries `json:"combine"`
+		}{Type: "combine", Combine: *u.combine}, nil
+	case "selectStruct":
+		if u.selectStruct == nil {
+			return nil, fmt.Errorf("field \"selectStruct\" is required")
+		}
+		return struct {
+			Type         string       `json:"type"`
+			SelectStruct SelectSeries `json:"selectStruct"`
+		}{Type: "selectStruct", SelectStruct: *u.selectStruct}, nil
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return nil, fmt.Errorf("field \"extractFromStruct\" is required")
@@ -8950,6 +14245,38 @@ func (u *StructSeries) toSerializer() (interface{}, error) {
 			Type              string                        `json:"type"`
 			ExtractFromStruct ExtractStructFromStructSeries `json:"extractFromStruct"`
 		}{Type: "extractFromStruct", ExtractFromStruct: *u.extractFromStruct}, nil
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return nil, fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return struct {
+			Type              string                        `json:"type"`
+			ToStartOfInterval StructToStartOfIntervalSeries `json:"toStartOfInterval"`
+		}{Type: "toStartOfInterval", ToStartOfInterval: *u.toStartOfInterval}, nil
+	case "timeShift":
+		if u.timeShift == nil {
+			return nil, fmt.Errorf("field \"timeShift\" is required")
+		}
+		return struct {
+			Type      string                `json:"type"`
+			TimeShift StructTimeShiftSeries `json:"timeShift"`
+		}{Type: "timeShift", TimeShift: *u.timeShift}, nil
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return nil, fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return struct {
+			Type        string                `json:"type"`
+			FilterByTag StructTagFilterSeries `json:"filterByTag"`
+		}{Type: "filterByTag", FilterByTag: *u.filterByTag}, nil
+	case "selectTags":
+		if u.selectTags == nil {
+			return nil, fmt.Errorf("field \"selectTags\" is required")
+		}
+		return struct {
+			Type       string                 `json:"type"`
+			SelectTags StructSelectTagsSeries `json:"selectTags"`
+		}{Type: "selectTags", SelectTags: *u.selectTags}, nil
 	}
 }
 
@@ -8980,9 +14307,33 @@ func (u *StructSeries) UnmarshalJSON(data []byte) error {
 		if u.derived == nil {
 			return fmt.Errorf("field \"derived\" is required")
 		}
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+	case "selectStruct":
+		if u.selectStruct == nil {
+			return fmt.Errorf("field \"selectStruct\" is required")
+		}
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
+		}
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
 		}
 	}
 	return nil
@@ -9004,7 +14355,7 @@ func (u *StructSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *StructSeries) AcceptFuncs(channelFunc func(api.ChannelSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, extractFromStructFunc func(ExtractStructFromStructSeries) error, unknownFunc func(string) error) error {
+func (u *StructSeries) AcceptFuncs(channelFunc func(api.ChannelSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, combineFunc func(CombineStructSeries) error, selectStructFunc func(SelectSeries) error, extractFromStructFunc func(ExtractStructFromStructSeries) error, toStartOfIntervalFunc func(StructToStartOfIntervalSeries) error, timeShiftFunc func(StructTimeShiftSeries) error, filterByTagFunc func(StructTagFilterSeries) error, selectTagsFunc func(StructSelectTagsSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -9026,11 +14377,41 @@ func (u *StructSeries) AcceptFuncs(channelFunc func(api.ChannelSeries) error, ra
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return derivedFunc(*u.derived)
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+		return combineFunc(*u.combine)
+	case "selectStruct":
+		if u.selectStruct == nil {
+			return fmt.Errorf("field \"selectStruct\" is required")
+		}
+		return selectStructFunc(*u.selectStruct)
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return extractFromStructFunc(*u.extractFromStruct)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return toStartOfIntervalFunc(*u.toStartOfInterval)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return timeShiftFunc(*u.timeShift)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return filterByTagFunc(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return selectTagsFunc(*u.selectTags)
 	}
 }
 
@@ -9046,7 +14427,31 @@ func (u *StructSeries) DerivedNoopSuccess(_ DerivedSeries) error {
 	return nil
 }
 
+func (u *StructSeries) CombineNoopSuccess(_ CombineStructSeries) error {
+	return nil
+}
+
+func (u *StructSeries) SelectStructNoopSuccess(_ SelectSeries) error {
+	return nil
+}
+
 func (u *StructSeries) ExtractFromStructNoopSuccess(_ ExtractStructFromStructSeries) error {
+	return nil
+}
+
+func (u *StructSeries) ToStartOfIntervalNoopSuccess(_ StructToStartOfIntervalSeries) error {
+	return nil
+}
+
+func (u *StructSeries) TimeShiftNoopSuccess(_ StructTimeShiftSeries) error {
+	return nil
+}
+
+func (u *StructSeries) FilterByTagNoopSuccess(_ StructTagFilterSeries) error {
+	return nil
+}
+
+func (u *StructSeries) SelectTagsNoopSuccess(_ StructSelectTagsSeries) error {
 	return nil
 }
 
@@ -9076,11 +14481,41 @@ func (u *StructSeries) Accept(v StructSeriesVisitor) error {
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerived(*u.derived)
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+		return v.VisitCombine(*u.combine)
+	case "selectStruct":
+		if u.selectStruct == nil {
+			return fmt.Errorf("field \"selectStruct\" is required")
+		}
+		return v.VisitSelectStruct(*u.selectStruct)
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStruct(*u.extractFromStruct)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfInterval(*u.toStartOfInterval)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return v.VisitTimeShift(*u.timeShift)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTag(*u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTags(*u.selectTags)
 	}
 }
 
@@ -9088,7 +14523,13 @@ type StructSeriesVisitor interface {
 	VisitChannel(v api.ChannelSeries) error
 	VisitRaw(v api.Reference) error
 	VisitDerived(v DerivedSeries) error
+	VisitCombine(v CombineStructSeries) error
+	VisitSelectStruct(v SelectSeries) error
 	VisitExtractFromStruct(v ExtractStructFromStructSeries) error
+	VisitToStartOfInterval(v StructToStartOfIntervalSeries) error
+	VisitTimeShift(v StructTimeShiftSeries) error
+	VisitFilterByTag(v StructTagFilterSeries) error
+	VisitSelectTags(v StructSelectTagsSeries) error
 	VisitUnknown(typeName string) error
 }
 
@@ -9114,11 +14555,41 @@ func (u *StructSeries) AcceptWithContext(ctx context.Context, v StructSeriesVisi
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerivedWithContext(ctx, *u.derived)
+	case "combine":
+		if u.combine == nil {
+			return fmt.Errorf("field \"combine\" is required")
+		}
+		return v.VisitCombineWithContext(ctx, *u.combine)
+	case "selectStruct":
+		if u.selectStruct == nil {
+			return fmt.Errorf("field \"selectStruct\" is required")
+		}
+		return v.VisitSelectStructWithContext(ctx, *u.selectStruct)
 	case "extractFromStruct":
 		if u.extractFromStruct == nil {
 			return fmt.Errorf("field \"extractFromStruct\" is required")
 		}
 		return v.VisitExtractFromStructWithContext(ctx, *u.extractFromStruct)
+	case "toStartOfInterval":
+		if u.toStartOfInterval == nil {
+			return fmt.Errorf("field \"toStartOfInterval\" is required")
+		}
+		return v.VisitToStartOfIntervalWithContext(ctx, *u.toStartOfInterval)
+	case "timeShift":
+		if u.timeShift == nil {
+			return fmt.Errorf("field \"timeShift\" is required")
+		}
+		return v.VisitTimeShiftWithContext(ctx, *u.timeShift)
+	case "filterByTag":
+		if u.filterByTag == nil {
+			return fmt.Errorf("field \"filterByTag\" is required")
+		}
+		return v.VisitFilterByTagWithContext(ctx, *u.filterByTag)
+	case "selectTags":
+		if u.selectTags == nil {
+			return fmt.Errorf("field \"selectTags\" is required")
+		}
+		return v.VisitSelectTagsWithContext(ctx, *u.selectTags)
 	}
 }
 
@@ -9126,7 +14597,13 @@ type StructSeriesVisitorWithContext interface {
 	VisitChannelWithContext(ctx context.Context, v api.ChannelSeries) error
 	VisitRawWithContext(ctx context.Context, v api.Reference) error
 	VisitDerivedWithContext(ctx context.Context, v DerivedSeries) error
+	VisitCombineWithContext(ctx context.Context, v CombineStructSeries) error
+	VisitSelectStructWithContext(ctx context.Context, v SelectSeries) error
 	VisitExtractFromStructWithContext(ctx context.Context, v ExtractStructFromStructSeries) error
+	VisitToStartOfIntervalWithContext(ctx context.Context, v StructToStartOfIntervalSeries) error
+	VisitTimeShiftWithContext(ctx context.Context, v StructTimeShiftSeries) error
+	VisitFilterByTagWithContext(ctx context.Context, v StructTagFilterSeries) error
+	VisitSelectTagsWithContext(ctx context.Context, v StructSelectTagsSeries) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -9142,8 +14619,246 @@ func NewStructSeriesFromDerived(v DerivedSeries) StructSeries {
 	return StructSeries{typ: "derived", derived: &v}
 }
 
+func NewStructSeriesFromCombine(v CombineStructSeries) StructSeries {
+	return StructSeries{typ: "combine", combine: &v}
+}
+
+func NewStructSeriesFromSelectStruct(v SelectSeries) StructSeries {
+	return StructSeries{typ: "selectStruct", selectStruct: &v}
+}
+
 func NewStructSeriesFromExtractFromStruct(v ExtractStructFromStructSeries) StructSeries {
 	return StructSeries{typ: "extractFromStruct", extractFromStruct: &v}
+}
+
+func NewStructSeriesFromToStartOfInterval(v StructToStartOfIntervalSeries) StructSeries {
+	return StructSeries{typ: "toStartOfInterval", toStartOfInterval: &v}
+}
+
+func NewStructSeriesFromTimeShift(v StructTimeShiftSeries) StructSeries {
+	return StructSeries{typ: "timeShift", timeShift: &v}
+}
+
+func NewStructSeriesFromFilterByTag(v StructTagFilterSeries) StructSeries {
+	return StructSeries{typ: "filterByTag", filterByTag: &v}
+}
+
+func NewStructSeriesFromSelectTags(v StructSelectTagsSeries) StructSeries {
+	return StructSeries{typ: "selectTags", selectTags: &v}
+}
+
+// How to shift timestamps after tagging (subtract anchor from each point in the interval slice).
+type TagByIntervalsTimeShift struct {
+	typ            string
+	intervalStart  *api.IntervalStartTimeShift
+	intervalEnd    *api.IntervalEndTimeShift
+	eventTimeShift *EventTimeShift
+}
+
+type tagByIntervalsTimeShiftDeserializer struct {
+	Type           string                      `json:"type"`
+	IntervalStart  *api.IntervalStartTimeShift `json:"intervalStart"`
+	IntervalEnd    *api.IntervalEndTimeShift   `json:"intervalEnd"`
+	EventTimeShift *EventTimeShift             `json:"eventTimeShift"`
+}
+
+func (u *tagByIntervalsTimeShiftDeserializer) toStruct() TagByIntervalsTimeShift {
+	return TagByIntervalsTimeShift{typ: u.Type, intervalStart: u.IntervalStart, intervalEnd: u.IntervalEnd, eventTimeShift: u.EventTimeShift}
+}
+
+func (u *TagByIntervalsTimeShift) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "intervalStart":
+		if u.intervalStart == nil {
+			return nil, fmt.Errorf("field \"intervalStart\" is required")
+		}
+		return struct {
+			Type          string                     `json:"type"`
+			IntervalStart api.IntervalStartTimeShift `json:"intervalStart"`
+		}{Type: "intervalStart", IntervalStart: *u.intervalStart}, nil
+	case "intervalEnd":
+		if u.intervalEnd == nil {
+			return nil, fmt.Errorf("field \"intervalEnd\" is required")
+		}
+		return struct {
+			Type        string                   `json:"type"`
+			IntervalEnd api.IntervalEndTimeShift `json:"intervalEnd"`
+		}{Type: "intervalEnd", IntervalEnd: *u.intervalEnd}, nil
+	case "eventTimeShift":
+		if u.eventTimeShift == nil {
+			return nil, fmt.Errorf("field \"eventTimeShift\" is required")
+		}
+		return struct {
+			Type           string         `json:"type"`
+			EventTimeShift EventTimeShift `json:"eventTimeShift"`
+		}{Type: "eventTimeShift", EventTimeShift: *u.eventTimeShift}, nil
+	}
+}
+
+func (u TagByIntervalsTimeShift) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *TagByIntervalsTimeShift) UnmarshalJSON(data []byte) error {
+	var deser tagByIntervalsTimeShiftDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "intervalStart":
+		if u.intervalStart == nil {
+			return fmt.Errorf("field \"intervalStart\" is required")
+		}
+	case "intervalEnd":
+		if u.intervalEnd == nil {
+			return fmt.Errorf("field \"intervalEnd\" is required")
+		}
+	case "eventTimeShift":
+		if u.eventTimeShift == nil {
+			return fmt.Errorf("field \"eventTimeShift\" is required")
+		}
+	}
+	return nil
+}
+
+func (u TagByIntervalsTimeShift) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *TagByIntervalsTimeShift) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *TagByIntervalsTimeShift) AcceptFuncs(intervalStartFunc func(api.IntervalStartTimeShift) error, intervalEndFunc func(api.IntervalEndTimeShift) error, eventTimeShiftFunc func(EventTimeShift) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in TagByIntervalsTimeShift type")
+		}
+		return unknownFunc(u.typ)
+	case "intervalStart":
+		if u.intervalStart == nil {
+			return fmt.Errorf("field \"intervalStart\" is required")
+		}
+		return intervalStartFunc(*u.intervalStart)
+	case "intervalEnd":
+		if u.intervalEnd == nil {
+			return fmt.Errorf("field \"intervalEnd\" is required")
+		}
+		return intervalEndFunc(*u.intervalEnd)
+	case "eventTimeShift":
+		if u.eventTimeShift == nil {
+			return fmt.Errorf("field \"eventTimeShift\" is required")
+		}
+		return eventTimeShiftFunc(*u.eventTimeShift)
+	}
+}
+
+func (u *TagByIntervalsTimeShift) IntervalStartNoopSuccess(_ api.IntervalStartTimeShift) error {
+	return nil
+}
+
+func (u *TagByIntervalsTimeShift) IntervalEndNoopSuccess(_ api.IntervalEndTimeShift) error {
+	return nil
+}
+
+func (u *TagByIntervalsTimeShift) EventTimeShiftNoopSuccess(_ EventTimeShift) error {
+	return nil
+}
+
+func (u *TagByIntervalsTimeShift) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *TagByIntervalsTimeShift) Accept(v TagByIntervalsTimeShiftVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "intervalStart":
+		if u.intervalStart == nil {
+			return fmt.Errorf("field \"intervalStart\" is required")
+		}
+		return v.VisitIntervalStart(*u.intervalStart)
+	case "intervalEnd":
+		if u.intervalEnd == nil {
+			return fmt.Errorf("field \"intervalEnd\" is required")
+		}
+		return v.VisitIntervalEnd(*u.intervalEnd)
+	case "eventTimeShift":
+		if u.eventTimeShift == nil {
+			return fmt.Errorf("field \"eventTimeShift\" is required")
+		}
+		return v.VisitEventTimeShift(*u.eventTimeShift)
+	}
+}
+
+type TagByIntervalsTimeShiftVisitor interface {
+	VisitIntervalStart(v api.IntervalStartTimeShift) error
+	VisitIntervalEnd(v api.IntervalEndTimeShift) error
+	VisitEventTimeShift(v EventTimeShift) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *TagByIntervalsTimeShift) AcceptWithContext(ctx context.Context, v TagByIntervalsTimeShiftVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "intervalStart":
+		if u.intervalStart == nil {
+			return fmt.Errorf("field \"intervalStart\" is required")
+		}
+		return v.VisitIntervalStartWithContext(ctx, *u.intervalStart)
+	case "intervalEnd":
+		if u.intervalEnd == nil {
+			return fmt.Errorf("field \"intervalEnd\" is required")
+		}
+		return v.VisitIntervalEndWithContext(ctx, *u.intervalEnd)
+	case "eventTimeShift":
+		if u.eventTimeShift == nil {
+			return fmt.Errorf("field \"eventTimeShift\" is required")
+		}
+		return v.VisitEventTimeShiftWithContext(ctx, *u.eventTimeShift)
+	}
+}
+
+type TagByIntervalsTimeShiftVisitorWithContext interface {
+	VisitIntervalStartWithContext(ctx context.Context, v api.IntervalStartTimeShift) error
+	VisitIntervalEndWithContext(ctx context.Context, v api.IntervalEndTimeShift) error
+	VisitEventTimeShiftWithContext(ctx context.Context, v EventTimeShift) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewTagByIntervalsTimeShiftFromIntervalStart(v api.IntervalStartTimeShift) TagByIntervalsTimeShift {
+	return TagByIntervalsTimeShift{typ: "intervalStart", intervalStart: &v}
+}
+
+func NewTagByIntervalsTimeShiftFromIntervalEnd(v api.IntervalEndTimeShift) TagByIntervalsTimeShift {
+	return TagByIntervalsTimeShift{typ: "intervalEnd", intervalEnd: &v}
+}
+
+func NewTagByIntervalsTimeShiftFromEventTimeShift(v EventTimeShift) TagByIntervalsTimeShift {
+	return TagByIntervalsTimeShift{typ: "eventTimeShift", eventTimeShift: &v}
 }
 
 type VariableValue struct {
@@ -9154,9 +14869,10 @@ type VariableValue struct {
 	integer     *int
 	channel     *api.ChannelSeries
 	derived     *DerivedSeries
+	series      *SeriesVariable
 	string      *string
 	stringSet   *[]string
-	timestamp   *api2.Timestamp
+	timestamp   *api3.Timestamp
 }
 
 type variableValueDeserializer struct {
@@ -9167,13 +14883,14 @@ type variableValueDeserializer struct {
 	Integer     *int                    `json:"integer"`
 	Channel     *api.ChannelSeries      `json:"channel"`
 	Derived     *DerivedSeries          `json:"derived"`
+	Series      *SeriesVariable         `json:"series"`
 	String      *string                 `json:"string"`
 	StringSet   *[]string               `json:"stringSet"`
-	Timestamp   *api2.Timestamp         `json:"timestamp"`
+	Timestamp   *api3.Timestamp         `json:"timestamp"`
 }
 
 func (u *variableValueDeserializer) toStruct() VariableValue {
-	return VariableValue{typ: u.Type, double: u.Double, computeNode: u.ComputeNode, duration: u.Duration, integer: u.Integer, channel: u.Channel, derived: u.Derived, string: u.String, stringSet: u.StringSet, timestamp: u.Timestamp}
+	return VariableValue{typ: u.Type, double: u.Double, computeNode: u.ComputeNode, duration: u.Duration, integer: u.Integer, channel: u.Channel, derived: u.Derived, series: u.Series, string: u.String, stringSet: u.StringSet, timestamp: u.Timestamp}
 }
 
 func (u *VariableValue) toSerializer() (interface{}, error) {
@@ -9228,6 +14945,14 @@ func (u *VariableValue) toSerializer() (interface{}, error) {
 			Type    string        `json:"type"`
 			Derived DerivedSeries `json:"derived"`
 		}{Type: "derived", Derived: *u.derived}, nil
+	case "series":
+		if u.series == nil {
+			return nil, fmt.Errorf("field \"series\" is required")
+		}
+		return struct {
+			Type   string         `json:"type"`
+			Series SeriesVariable `json:"series"`
+		}{Type: "series", Series: *u.series}, nil
 	case "string":
 		if u.string == nil {
 			return nil, fmt.Errorf("field \"string\" is required")
@@ -9250,7 +14975,7 @@ func (u *VariableValue) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type      string         `json:"type"`
-			Timestamp api2.Timestamp `json:"timestamp"`
+			Timestamp api3.Timestamp `json:"timestamp"`
 		}{Type: "timestamp", Timestamp: *u.timestamp}, nil
 	}
 }
@@ -9294,6 +15019,10 @@ func (u *VariableValue) UnmarshalJSON(data []byte) error {
 		if u.derived == nil {
 			return fmt.Errorf("field \"derived\" is required")
 		}
+	case "series":
+		if u.series == nil {
+			return fmt.Errorf("field \"series\" is required")
+		}
 	case "string":
 		if u.string == nil {
 			return fmt.Errorf("field \"string\" is required")
@@ -9326,7 +15055,7 @@ func (u *VariableValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *VariableValue) AcceptFuncs(doubleFunc func(float64) error, computeNodeFunc func(ComputeNodeWithContext) error, durationFunc func(api1.Duration) error, integerFunc func(int) error, channelFunc func(api.ChannelSeries) error, derivedFunc func(DerivedSeries) error, stringFunc func(string) error, stringSetFunc func([]string) error, timestampFunc func(api2.Timestamp) error, unknownFunc func(string) error) error {
+func (u *VariableValue) AcceptFuncs(doubleFunc func(float64) error, computeNodeFunc func(ComputeNodeWithContext) error, durationFunc func(api1.Duration) error, integerFunc func(int) error, channelFunc func(api.ChannelSeries) error, derivedFunc func(DerivedSeries) error, seriesFunc func(SeriesVariable) error, stringFunc func(string) error, stringSetFunc func([]string) error, timestampFunc func(api3.Timestamp) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -9363,6 +15092,11 @@ func (u *VariableValue) AcceptFuncs(doubleFunc func(float64) error, computeNodeF
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return derivedFunc(*u.derived)
+	case "series":
+		if u.series == nil {
+			return fmt.Errorf("field \"series\" is required")
+		}
+		return seriesFunc(*u.series)
 	case "string":
 		if u.string == nil {
 			return fmt.Errorf("field \"string\" is required")
@@ -9405,6 +15139,10 @@ func (u *VariableValue) DerivedNoopSuccess(_ DerivedSeries) error {
 	return nil
 }
 
+func (u *VariableValue) SeriesNoopSuccess(_ SeriesVariable) error {
+	return nil
+}
+
 func (u *VariableValue) StringNoopSuccess(_ string) error {
 	return nil
 }
@@ -9413,7 +15151,7 @@ func (u *VariableValue) StringSetNoopSuccess(_ []string) error {
 	return nil
 }
 
-func (u *VariableValue) TimestampNoopSuccess(_ api2.Timestamp) error {
+func (u *VariableValue) TimestampNoopSuccess(_ api3.Timestamp) error {
 	return nil
 }
 
@@ -9458,6 +15196,11 @@ func (u *VariableValue) Accept(v VariableValueVisitor) error {
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerived(*u.derived)
+	case "series":
+		if u.series == nil {
+			return fmt.Errorf("field \"series\" is required")
+		}
+		return v.VisitSeries(*u.series)
 	case "string":
 		if u.string == nil {
 			return fmt.Errorf("field \"string\" is required")
@@ -9483,9 +15226,10 @@ type VariableValueVisitor interface {
 	VisitInteger(v int) error
 	VisitChannel(v api.ChannelSeries) error
 	VisitDerived(v DerivedSeries) error
+	VisitSeries(v SeriesVariable) error
 	VisitString(v string) error
 	VisitStringSet(v []string) error
-	VisitTimestamp(v api2.Timestamp) error
+	VisitTimestamp(v api3.Timestamp) error
 	VisitUnknown(typeName string) error
 }
 
@@ -9526,6 +15270,11 @@ func (u *VariableValue) AcceptWithContext(ctx context.Context, v VariableValueVi
 			return fmt.Errorf("field \"derived\" is required")
 		}
 		return v.VisitDerivedWithContext(ctx, *u.derived)
+	case "series":
+		if u.series == nil {
+			return fmt.Errorf("field \"series\" is required")
+		}
+		return v.VisitSeriesWithContext(ctx, *u.series)
 	case "string":
 		if u.string == nil {
 			return fmt.Errorf("field \"string\" is required")
@@ -9551,9 +15300,10 @@ type VariableValueVisitorWithContext interface {
 	VisitIntegerWithContext(ctx context.Context, v int) error
 	VisitChannelWithContext(ctx context.Context, v api.ChannelSeries) error
 	VisitDerivedWithContext(ctx context.Context, v DerivedSeries) error
+	VisitSeriesWithContext(ctx context.Context, v SeriesVariable) error
 	VisitStringWithContext(ctx context.Context, v string) error
 	VisitStringSetWithContext(ctx context.Context, v []string) error
-	VisitTimestampWithContext(ctx context.Context, v api2.Timestamp) error
+	VisitTimestampWithContext(ctx context.Context, v api3.Timestamp) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -9581,6 +15331,10 @@ func NewVariableValueFromDerived(v DerivedSeries) VariableValue {
 	return VariableValue{typ: "derived", derived: &v}
 }
 
+func NewVariableValueFromSeries(v SeriesVariable) VariableValue {
+	return VariableValue{typ: "series", series: &v}
+}
+
 func NewVariableValueFromString(v string) VariableValue {
 	return VariableValue{typ: "string", string: &v}
 }
@@ -9589,7 +15343,7 @@ func NewVariableValueFromStringSet(v []string) VariableValue {
 	return VariableValue{typ: "stringSet", stringSet: &v}
 }
 
-func NewVariableValueFromTimestamp(v api2.Timestamp) VariableValue {
+func NewVariableValueFromTimestamp(v api3.Timestamp) VariableValue {
 	return VariableValue{typ: "timestamp", timestamp: &v}
 }
 

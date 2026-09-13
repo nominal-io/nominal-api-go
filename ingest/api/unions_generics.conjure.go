@@ -9,8 +9,9 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
-	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/rid"
 )
 
@@ -157,6 +158,136 @@ func (u *AuthenticationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type AuthenticationVisitorWithT[T any] interface {
 	VisitUserAndPassword(ctx context.Context, v UserAndPasswordAuthentication) (T, error)
 	VisitPublic(ctx context.Context, v PublicAuthentication) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type AvroNumericTimestampTypeWithT[T any] AvroNumericTimestampType
+
+func (u *AvroNumericTimestampTypeWithT[T]) Accept(ctx context.Context, v AvroNumericTimestampTypeVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "epoch":
+		if u.epoch == nil {
+			return result, fmt.Errorf("field \"epoch\" is required")
+		}
+		return v.VisitEpoch(ctx, *u.epoch)
+	case "relative":
+		if u.relative == nil {
+			return result, fmt.Errorf("field \"relative\" is required")
+		}
+		return v.VisitRelative(ctx, *u.relative)
+	}
+}
+
+func (u *AvroNumericTimestampTypeWithT[T]) AcceptFuncs(epochFunc func(EpochTimestamp) (T, error), relativeFunc func(RelativeTimestamp) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "epoch":
+		if u.epoch == nil {
+			return result, fmt.Errorf("field \"epoch\" is required")
+		}
+		return epochFunc(*u.epoch)
+	case "relative":
+		if u.relative == nil {
+			return result, fmt.Errorf("field \"relative\" is required")
+		}
+		return relativeFunc(*u.relative)
+	}
+}
+
+func (u *AvroNumericTimestampTypeWithT[T]) EpochNoopSuccess(EpochTimestamp) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *AvroNumericTimestampTypeWithT[T]) RelativeNoopSuccess(RelativeTimestamp) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *AvroNumericTimestampTypeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type AvroNumericTimestampTypeVisitorWithT[T any] interface {
+	VisitEpoch(ctx context.Context, v EpochTimestamp) (T, error)
+	VisitRelative(ctx context.Context, v RelativeTimestamp) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type CancelIngestJobOutcomeWithT[T any] CancelIngestJobOutcome
+
+func (u *CancelIngestJobOutcomeWithT[T]) Accept(ctx context.Context, v CancelIngestJobOutcomeVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "cancelled":
+		if u.cancelled == nil {
+			return result, fmt.Errorf("field \"cancelled\" is required")
+		}
+		return v.VisitCancelled(ctx, *u.cancelled)
+	case "failed":
+		if u.failed == nil {
+			return result, fmt.Errorf("field \"failed\" is required")
+		}
+		return v.VisitFailed(ctx, *u.failed)
+	}
+}
+
+func (u *CancelIngestJobOutcomeWithT[T]) AcceptFuncs(cancelledFunc func(IngestJob) (T, error), failedFunc func(CancelIngestJobFailure) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "cancelled":
+		if u.cancelled == nil {
+			return result, fmt.Errorf("field \"cancelled\" is required")
+		}
+		return cancelledFunc(*u.cancelled)
+	case "failed":
+		if u.failed == nil {
+			return result, fmt.Errorf("field \"failed\" is required")
+		}
+		return failedFunc(*u.failed)
+	}
+}
+
+func (u *CancelIngestJobOutcomeWithT[T]) CancelledNoopSuccess(IngestJob) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CancelIngestJobOutcomeWithT[T]) FailedNoopSuccess(CancelIngestJobFailure) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CancelIngestJobOutcomeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type CancelIngestJobOutcomeVisitorWithT[T any] interface {
+	VisitCancelled(ctx context.Context, v IngestJob) (T, error)
+	VisitFailed(ctx context.Context, v CancelIngestJobFailure) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -489,10 +620,15 @@ func (u *IngestDetailsWithT[T]) Accept(ctx context.Context, v IngestDetailsVisit
 			return result, fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideo(ctx, *u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return result, fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatial(ctx, *u.spatial)
 	}
 }
 
-func (u *IngestDetailsWithT[T]) AcceptFuncs(datasetFunc func(IngestDatasetFileDetails) (T, error), videoFunc func(IngestVideoFileDetails) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IngestDetailsWithT[T]) AcceptFuncs(datasetFunc func(IngestDatasetFileDetails) (T, error), videoFunc func(IngestVideoFileDetails) (T, error), spatialFunc func(IngestSpatialDetails) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -510,6 +646,11 @@ func (u *IngestDetailsWithT[T]) AcceptFuncs(datasetFunc func(IngestDatasetFileDe
 			return result, fmt.Errorf("field \"video\" is required")
 		}
 		return videoFunc(*u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return result, fmt.Errorf("field \"spatial\" is required")
+		}
+		return spatialFunc(*u.spatial)
 	}
 }
 
@@ -523,6 +664,11 @@ func (u *IngestDetailsWithT[T]) VideoNoopSuccess(IngestVideoFileDetails) (T, err
 	return result, nil
 }
 
+func (u *IngestDetailsWithT[T]) SpatialNoopSuccess(IngestSpatialDetails) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *IngestDetailsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -531,6 +677,7 @@ func (u *IngestDetailsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type IngestDetailsVisitorWithT[T any] interface {
 	VisitDataset(ctx context.Context, v IngestDatasetFileDetails) (T, error)
 	VisitVideo(ctx context.Context, v IngestVideoFileDetails) (T, error)
+	VisitSpatial(ctx context.Context, v IngestSpatialDetails) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -580,6 +727,199 @@ func (u *IngestJobRequestWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type IngestJobRequestVisitorWithT[T any] interface {
 	VisitIngestRequest(ctx context.Context, v IngestRequest) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type IngestJobSearchFilterWithT[T any] IngestJobSearchFilter
+
+func (u *IngestJobSearchFilterWithT[T]) Accept(ctx context.Context, v IngestJobSearchFilterVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return result, fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return v.VisitDatasetRids(ctx, *u.datasetRids)
+	case "createdByRids":
+		if u.createdByRids == nil {
+			return result, fmt.Errorf("field \"createdByRids\" is required")
+		}
+		return v.VisitCreatedByRids(ctx, *u.createdByRids)
+	case "statuses":
+		if u.statuses == nil {
+			return result, fmt.Errorf("field \"statuses\" is required")
+		}
+		return v.VisitStatuses(ctx, *u.statuses)
+	case "searchText":
+		if u.searchText == nil {
+			return result, fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchText(ctx, *u.searchText)
+	case "startTimeRange":
+		if u.startTimeRange == nil {
+			return result, fmt.Errorf("field \"startTimeRange\" is required")
+		}
+		return v.VisitStartTimeRange(ctx, *u.startTimeRange)
+	case "and":
+		if u.and == nil {
+			return result, fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAnd(ctx, *u.and)
+	case "or":
+		if u.or == nil {
+			return result, fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOr(ctx, *u.or)
+	case "not":
+		if u.not == nil {
+			return result, fmt.Errorf("field \"not\" is required")
+		}
+		return v.VisitNot(ctx, *u.not)
+	case "workspace":
+		if u.workspace == nil {
+			return result, fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspace(ctx, *u.workspace)
+	case "triggeringIngestRuleRids":
+		if u.triggeringIngestRuleRids == nil {
+			return result, fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
+		}
+		return v.VisitTriggeringIngestRuleRids(ctx, *u.triggeringIngestRuleRids)
+	}
+}
+
+func (u *IngestJobSearchFilterWithT[T]) AcceptFuncs(datasetRidsFunc func([]rids.DatasetRid) (T, error), createdByRidsFunc func([]api.UserRid) (T, error), statusesFunc func([]IngestJobStatus) (T, error), searchTextFunc func(string) (T, error), startTimeRangeFunc func(IngestJobStartTimeRange) (T, error), andFunc func([]IngestJobSearchFilter) (T, error), orFunc func([]IngestJobSearchFilter) (T, error), notFunc func(IngestJobSearchFilter) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), triggeringIngestRuleRidsFunc func([]rids.DriveIngestRuleRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return result, fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return datasetRidsFunc(*u.datasetRids)
+	case "createdByRids":
+		if u.createdByRids == nil {
+			return result, fmt.Errorf("field \"createdByRids\" is required")
+		}
+		return createdByRidsFunc(*u.createdByRids)
+	case "statuses":
+		if u.statuses == nil {
+			return result, fmt.Errorf("field \"statuses\" is required")
+		}
+		return statusesFunc(*u.statuses)
+	case "searchText":
+		if u.searchText == nil {
+			return result, fmt.Errorf("field \"searchText\" is required")
+		}
+		return searchTextFunc(*u.searchText)
+	case "startTimeRange":
+		if u.startTimeRange == nil {
+			return result, fmt.Errorf("field \"startTimeRange\" is required")
+		}
+		return startTimeRangeFunc(*u.startTimeRange)
+	case "and":
+		if u.and == nil {
+			return result, fmt.Errorf("field \"and\" is required")
+		}
+		return andFunc(*u.and)
+	case "or":
+		if u.or == nil {
+			return result, fmt.Errorf("field \"or\" is required")
+		}
+		return orFunc(*u.or)
+	case "not":
+		if u.not == nil {
+			return result, fmt.Errorf("field \"not\" is required")
+		}
+		return notFunc(*u.not)
+	case "workspace":
+		if u.workspace == nil {
+			return result, fmt.Errorf("field \"workspace\" is required")
+		}
+		return workspaceFunc(*u.workspace)
+	case "triggeringIngestRuleRids":
+		if u.triggeringIngestRuleRids == nil {
+			return result, fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
+		}
+		return triggeringIngestRuleRidsFunc(*u.triggeringIngestRuleRids)
+	}
+}
+
+func (u *IngestJobSearchFilterWithT[T]) DatasetRidsNoopSuccess([]rids.DatasetRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestJobSearchFilterWithT[T]) CreatedByRidsNoopSuccess([]api.UserRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestJobSearchFilterWithT[T]) StatusesNoopSuccess([]IngestJobStatus) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestJobSearchFilterWithT[T]) SearchTextNoopSuccess(string) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestJobSearchFilterWithT[T]) StartTimeRangeNoopSuccess(IngestJobStartTimeRange) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestJobSearchFilterWithT[T]) AndNoopSuccess([]IngestJobSearchFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestJobSearchFilterWithT[T]) OrNoopSuccess([]IngestJobSearchFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestJobSearchFilterWithT[T]) NotNoopSuccess(IngestJobSearchFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestJobSearchFilterWithT[T]) WorkspaceNoopSuccess(rids.WorkspaceRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestJobSearchFilterWithT[T]) TriggeringIngestRuleRidsNoopSuccess([]rids.DriveIngestRuleRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestJobSearchFilterWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type IngestJobSearchFilterVisitorWithT[T any] interface {
+	VisitDatasetRids(ctx context.Context, v []rids.DatasetRid) (T, error)
+	VisitCreatedByRids(ctx context.Context, v []api.UserRid) (T, error)
+	VisitStatuses(ctx context.Context, v []IngestJobStatus) (T, error)
+	VisitSearchText(ctx context.Context, v string) (T, error)
+	VisitStartTimeRange(ctx context.Context, v IngestJobStartTimeRange) (T, error)
+	VisitAnd(ctx context.Context, v []IngestJobSearchFilter) (T, error)
+	VisitOr(ctx context.Context, v []IngestJobSearchFilter) (T, error)
+	VisitNot(ctx context.Context, v IngestJobSearchFilter) (T, error)
+	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
+	VisitTriggeringIngestRuleRids(ctx context.Context, v []rids.DriveIngestRuleRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -638,10 +978,15 @@ func (u *IngestOptionsWithT[T]) Accept(ctx context.Context, v IngestOptionsVisit
 			return result, fmt.Errorf("field \"avroStream\" is required")
 		}
 		return v.VisitAvroStream(ctx, *u.avroStream)
+	case "pointCloud":
+		if u.pointCloud == nil {
+			return result, fmt.Errorf("field \"pointCloud\" is required")
+		}
+		return v.VisitPointCloud(ctx, *u.pointCloud)
 	}
 }
 
-func (u *IngestOptionsWithT[T]) AcceptFuncs(dataflashFunc func(DataflashOpts) (T, error), mcapProtobufTimeseriesFunc func(McapProtobufTimeseriesOpts) (T, error), journalJsonFunc func(JournalJsonOpts) (T, error), csvFunc func(CsvOpts) (T, error), parquetFunc func(ParquetOpts) (T, error), videoFunc func(VideoOpts) (T, error), videoV2Func func(VideoOptsV2) (T, error), containerizedFunc func(ContainerizedOpts) (T, error), avroStreamFunc func(AvroStreamOpts) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IngestOptionsWithT[T]) AcceptFuncs(dataflashFunc func(DataflashOpts) (T, error), mcapProtobufTimeseriesFunc func(McapProtobufTimeseriesOpts) (T, error), journalJsonFunc func(JournalJsonOpts) (T, error), csvFunc func(CsvOpts) (T, error), parquetFunc func(ParquetOpts) (T, error), videoFunc func(VideoOpts) (T, error), videoV2Func func(VideoOptsV2) (T, error), containerizedFunc func(ContainerizedOpts) (T, error), avroStreamFunc func(AvroStreamOpts) (T, error), pointCloudFunc func(PointCloudOpts) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -694,6 +1039,11 @@ func (u *IngestOptionsWithT[T]) AcceptFuncs(dataflashFunc func(DataflashOpts) (T
 			return result, fmt.Errorf("field \"avroStream\" is required")
 		}
 		return avroStreamFunc(*u.avroStream)
+	case "pointCloud":
+		if u.pointCloud == nil {
+			return result, fmt.Errorf("field \"pointCloud\" is required")
+		}
+		return pointCloudFunc(*u.pointCloud)
 	}
 }
 
@@ -742,6 +1092,11 @@ func (u *IngestOptionsWithT[T]) AvroStreamNoopSuccess(AvroStreamOpts) (T, error)
 	return result, nil
 }
 
+func (u *IngestOptionsWithT[T]) PointCloudNoopSuccess(PointCloudOpts) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *IngestOptionsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -757,6 +1112,7 @@ type IngestOptionsVisitorWithT[T any] interface {
 	VisitVideoV2(ctx context.Context, v VideoOptsV2) (T, error)
 	VisitContainerized(ctx context.Context, v ContainerizedOpts) (T, error)
 	VisitAvroStream(ctx context.Context, v AvroStreamOpts) (T, error)
+	VisitPointCloud(ctx context.Context, v PointCloudOpts) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -785,10 +1141,15 @@ func (u *IngestSourceWithT[T]) Accept(ctx context.Context, v IngestSourceVisitor
 			return result, fmt.Errorf("field \"presignedFile\" is required")
 		}
 		return v.VisitPresignedFile(ctx, *u.presignedFile)
+	case "fileStore":
+		if u.fileStore == nil {
+			return result, fmt.Errorf("field \"fileStore\" is required")
+		}
+		return v.VisitFileStore(ctx, *u.fileStore)
 	}
 }
 
-func (u *IngestSourceWithT[T]) AcceptFuncs(s3Func func(S3IngestSource) (T, error), gcsFunc func(GcsIngestSource) (T, error), presignedFileFunc func(PresignedFileIngestSource) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IngestSourceWithT[T]) AcceptFuncs(s3Func func(S3IngestSource) (T, error), gcsFunc func(GcsIngestSource) (T, error), presignedFileFunc func(PresignedFileIngestSource) (T, error), fileStoreFunc func(FileStoreIngestSource) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -811,6 +1172,11 @@ func (u *IngestSourceWithT[T]) AcceptFuncs(s3Func func(S3IngestSource) (T, error
 			return result, fmt.Errorf("field \"presignedFile\" is required")
 		}
 		return presignedFileFunc(*u.presignedFile)
+	case "fileStore":
+		if u.fileStore == nil {
+			return result, fmt.Errorf("field \"fileStore\" is required")
+		}
+		return fileStoreFunc(*u.fileStore)
 	}
 }
 
@@ -829,6 +1195,11 @@ func (u *IngestSourceWithT[T]) PresignedFileNoopSuccess(PresignedFileIngestSourc
 	return result, nil
 }
 
+func (u *IngestSourceWithT[T]) FileStoreNoopSuccess(FileStoreIngestSource) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *IngestSourceWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -838,6 +1209,56 @@ type IngestSourceVisitorWithT[T any] interface {
 	VisitS3(ctx context.Context, v S3IngestSource) (T, error)
 	VisitGcs(ctx context.Context, v GcsIngestSource) (T, error)
 	VisitPresignedFile(ctx context.Context, v PresignedFileIngestSource) (T, error)
+	VisitFileStore(ctx context.Context, v FileStoreIngestSource) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type IngestTriggererWithT[T any] IngestTriggerer
+
+func (u *IngestTriggererWithT[T]) Accept(ctx context.Context, v IngestTriggererVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "ingestRule":
+		if u.ingestRule == nil {
+			return result, fmt.Errorf("field \"ingestRule\" is required")
+		}
+		return v.VisitIngestRule(ctx, *u.ingestRule)
+	}
+}
+
+func (u *IngestTriggererWithT[T]) AcceptFuncs(ingestRuleFunc func(IngestRuleTriggerer) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "ingestRule":
+		if u.ingestRule == nil {
+			return result, fmt.Errorf("field \"ingestRule\" is required")
+		}
+		return ingestRuleFunc(*u.ingestRule)
+	}
+}
+
+func (u *IngestTriggererWithT[T]) IngestRuleNoopSuccess(IngestRuleTriggerer) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *IngestTriggererWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type IngestTriggererVisitorWithT[T any] interface {
+	VisitIngestRule(ctx context.Context, v IngestRuleTriggerer) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -918,7 +1339,7 @@ func (u *McapChannelsWithT[T]) Accept(ctx context.Context, v McapChannelsVisitor
 	}
 }
 
-func (u *McapChannelsWithT[T]) AcceptFuncs(allFunc func(api.Empty) (T, error), includeFunc func([]api.McapChannelLocator) (T, error), excludeFunc func([]api.McapChannelLocator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *McapChannelsWithT[T]) AcceptFuncs(allFunc func(api1.Empty) (T, error), includeFunc func([]api1.McapChannelLocator) (T, error), excludeFunc func([]api1.McapChannelLocator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -944,17 +1365,17 @@ func (u *McapChannelsWithT[T]) AcceptFuncs(allFunc func(api.Empty) (T, error), i
 	}
 }
 
-func (u *McapChannelsWithT[T]) AllNoopSuccess(api.Empty) (T, error) {
+func (u *McapChannelsWithT[T]) AllNoopSuccess(api1.Empty) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *McapChannelsWithT[T]) IncludeNoopSuccess([]api.McapChannelLocator) (T, error) {
+func (u *McapChannelsWithT[T]) IncludeNoopSuccess([]api1.McapChannelLocator) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *McapChannelsWithT[T]) ExcludeNoopSuccess([]api.McapChannelLocator) (T, error) {
+func (u *McapChannelsWithT[T]) ExcludeNoopSuccess([]api1.McapChannelLocator) (T, error) {
 	var result T
 	return result, nil
 }
@@ -965,9 +1386,9 @@ func (u *McapChannelsWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type McapChannelsVisitorWithT[T any] interface {
-	VisitAll(ctx context.Context, v api.Empty) (T, error)
-	VisitInclude(ctx context.Context, v []api.McapChannelLocator) (T, error)
-	VisitExclude(ctx context.Context, v []api.McapChannelLocator) (T, error)
+	VisitAll(ctx context.Context, v api1.Empty) (T, error)
+	VisitInclude(ctx context.Context, v []api1.McapChannelLocator) (T, error)
+	VisitExclude(ctx context.Context, v []api1.McapChannelLocator) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1059,7 +1480,7 @@ func (u *McapSourceWithT[T]) Accept(ctx context.Context, v McapSourceVisitorWith
 	}
 }
 
-func (u *McapSourceWithT[T]) AcceptFuncs(singleChannelFunc func(api.McapChannelLocator) (T, error), mcapFileFunc func(IngestSource) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *McapSourceWithT[T]) AcceptFuncs(singleChannelFunc func(api1.McapChannelLocator) (T, error), mcapFileFunc func(IngestSource) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1080,7 +1501,7 @@ func (u *McapSourceWithT[T]) AcceptFuncs(singleChannelFunc func(api.McapChannelL
 	}
 }
 
-func (u *McapSourceWithT[T]) SingleChannelNoopSuccess(api.McapChannelLocator) (T, error) {
+func (u *McapSourceWithT[T]) SingleChannelNoopSuccess(api1.McapChannelLocator) (T, error) {
 	var result T
 	return result, nil
 }
@@ -1096,7 +1517,7 @@ func (u *McapSourceWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type McapSourceVisitorWithT[T any] interface {
-	VisitSingleChannel(ctx context.Context, v api.McapChannelLocator) (T, error)
+	VisitSingleChannel(ctx context.Context, v api1.McapChannelLocator) (T, error)
 	VisitMcapFile(ctx context.Context, v IngestSource) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
@@ -1147,6 +1568,71 @@ func (u *McapTimestampTypeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type McapTimestampTypeVisitorWithT[T any] interface {
 	VisitLogTime(ctx context.Context, v LogTime) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type PointCloudIngestTargetWithT[T any] PointCloudIngestTarget
+
+func (u *PointCloudIngestTargetWithT[T]) Accept(ctx context.Context, v PointCloudIngestTargetVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "new":
+		if u.new == nil {
+			return result, fmt.Errorf("field \"new\" is required")
+		}
+		return v.VisitNew(ctx, *u.new)
+	case "existing":
+		if u.existing == nil {
+			return result, fmt.Errorf("field \"existing\" is required")
+		}
+		return v.VisitExisting(ctx, *u.existing)
+	}
+}
+
+func (u *PointCloudIngestTargetWithT[T]) AcceptFuncs(newFunc func(NewPointCloudIngestDestination) (T, error), existingFunc func(ExistingSpatialIngestDestination) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "new":
+		if u.new == nil {
+			return result, fmt.Errorf("field \"new\" is required")
+		}
+		return newFunc(*u.new)
+	case "existing":
+		if u.existing == nil {
+			return result, fmt.Errorf("field \"existing\" is required")
+		}
+		return existingFunc(*u.existing)
+	}
+}
+
+func (u *PointCloudIngestTargetWithT[T]) NewNoopSuccess(NewPointCloudIngestDestination) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PointCloudIngestTargetWithT[T]) ExistingNoopSuccess(ExistingSpatialIngestDestination) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PointCloudIngestTargetWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type PointCloudIngestTargetVisitorWithT[T any] interface {
+	VisitNew(ctx context.Context, v NewPointCloudIngestDestination) (T, error)
+	VisitExisting(ctx context.Context, v ExistingSpatialIngestDestination) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1274,7 +1760,7 @@ func (u *SearchContainerizedExtractorsQueryWithT[T]) Accept(ctx context.Context,
 	}
 }
 
-func (u *SearchContainerizedExtractorsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), labelFunc func(api.Label) (T, error), propertyFunc func(api.Property) (T, error), andFunc func([]SearchContainerizedExtractorsQuery) (T, error), orFunc func([]SearchContainerizedExtractorsQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchContainerizedExtractorsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), labelFunc func(api1.Label) (T, error), propertyFunc func(api1.Property) (T, error), andFunc func([]SearchContainerizedExtractorsQuery) (T, error), orFunc func([]SearchContainerizedExtractorsQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1320,12 +1806,12 @@ func (u *SearchContainerizedExtractorsQueryWithT[T]) SearchTextNoopSuccess(strin
 	return result, nil
 }
 
-func (u *SearchContainerizedExtractorsQueryWithT[T]) LabelNoopSuccess(api.Label) (T, error) {
+func (u *SearchContainerizedExtractorsQueryWithT[T]) LabelNoopSuccess(api1.Label) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *SearchContainerizedExtractorsQueryWithT[T]) PropertyNoopSuccess(api.Property) (T, error) {
+func (u *SearchContainerizedExtractorsQueryWithT[T]) PropertyNoopSuccess(api1.Property) (T, error) {
 	var result T
 	return result, nil
 }
@@ -1352,92 +1838,11 @@ func (u *SearchContainerizedExtractorsQueryWithT[T]) ErrorOnUnknown(typeName str
 
 type SearchContainerizedExtractorsQueryVisitorWithT[T any] interface {
 	VisitSearchText(ctx context.Context, v string) (T, error)
-	VisitLabel(ctx context.Context, v api.Label) (T, error)
-	VisitProperty(ctx context.Context, v api.Property) (T, error)
+	VisitLabel(ctx context.Context, v api1.Label) (T, error)
+	VisitProperty(ctx context.Context, v api1.Property) (T, error)
 	VisitAnd(ctx context.Context, v []SearchContainerizedExtractorsQuery) (T, error)
 	VisitOr(ctx context.Context, v []SearchContainerizedExtractorsQuery) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
-	VisitUnknown(ctx context.Context, typ string) (T, error)
-}
-
-type StreamingSessionSourceWithT[T any] StreamingSessionSource
-
-func (u *StreamingSessionSourceWithT[T]) Accept(ctx context.Context, v StreamingSessionSourceVisitorWithT[T]) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(ctx, u.typ)
-	case "mesh":
-		if u.mesh == nil {
-			return result, fmt.Errorf("field \"mesh\" is required")
-		}
-		return v.VisitMesh(ctx, *u.mesh)
-	case "dataConnector":
-		if u.dataConnector == nil {
-			return result, fmt.Errorf("field \"dataConnector\" is required")
-		}
-		return v.VisitDataConnector(ctx, *u.dataConnector)
-	case "custom":
-		if u.custom == nil {
-			return result, fmt.Errorf("field \"custom\" is required")
-		}
-		return v.VisitCustom(ctx, *u.custom)
-	}
-}
-
-func (u *StreamingSessionSourceWithT[T]) AcceptFuncs(meshFunc func(MeshStreamingSessionSource) (T, error), dataConnectorFunc func(DataConnectorStreamingSessionSource) (T, error), customFunc func(CustomStreamingSessionSource) (T, error), unknownFunc func(string) (T, error)) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "mesh":
-		if u.mesh == nil {
-			return result, fmt.Errorf("field \"mesh\" is required")
-		}
-		return meshFunc(*u.mesh)
-	case "dataConnector":
-		if u.dataConnector == nil {
-			return result, fmt.Errorf("field \"dataConnector\" is required")
-		}
-		return dataConnectorFunc(*u.dataConnector)
-	case "custom":
-		if u.custom == nil {
-			return result, fmt.Errorf("field \"custom\" is required")
-		}
-		return customFunc(*u.custom)
-	}
-}
-
-func (u *StreamingSessionSourceWithT[T]) MeshNoopSuccess(MeshStreamingSessionSource) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *StreamingSessionSourceWithT[T]) DataConnectorNoopSuccess(DataConnectorStreamingSessionSource) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *StreamingSessionSourceWithT[T]) CustomNoopSuccess(CustomStreamingSessionSource) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *StreamingSessionSourceWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
-	var result T
-	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-type StreamingSessionSourceVisitorWithT[T any] interface {
-	VisitMesh(ctx context.Context, v MeshStreamingSessionSource) (T, error)
-	VisitDataConnector(ctx context.Context, v DataConnectorStreamingSessionSource) (T, error)
-	VisitCustom(ctx context.Context, v CustomStreamingSessionSource) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1459,7 +1864,7 @@ func (u *TimeOffsetSpecWithT[T]) Accept(ctx context.Context, v TimeOffsetSpecVis
 	}
 }
 
-func (u *TimeOffsetSpecWithT[T]) AcceptFuncs(nanosFunc func(api1.Duration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *TimeOffsetSpecWithT[T]) AcceptFuncs(nanosFunc func(api2.Duration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1475,7 +1880,7 @@ func (u *TimeOffsetSpecWithT[T]) AcceptFuncs(nanosFunc func(api1.Duration) (T, e
 	}
 }
 
-func (u *TimeOffsetSpecWithT[T]) NanosNoopSuccess(api1.Duration) (T, error) {
+func (u *TimeOffsetSpecWithT[T]) NanosNoopSuccess(api2.Duration) (T, error) {
 	var result T
 	return result, nil
 }
@@ -1486,7 +1891,7 @@ func (u *TimeOffsetSpecWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type TimeOffsetSpecVisitorWithT[T any] interface {
-	VisitNanos(ctx context.Context, v api1.Duration) (T, error)
+	VisitNanos(ctx context.Context, v api2.Duration) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

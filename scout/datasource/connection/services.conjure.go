@@ -100,7 +100,12 @@ A Connection contains the relevant metadata and information to be used as a data
 The Connection Service is responsible for creating, updating, and retrieving database connections.
 */
 type ConnectionServiceClient interface {
-	// Creates a new connection.
+	/*
+	   Creates a new connection.
+
+	   Deprecated: Use CatalogService#createDataset to create a dataset, then
+	   ConnectionService#registerExternalConnectionConfig to register external connection config on it.
+	*/
 	CreateConnection(ctx context.Context, authHeader bearertoken.Token, createConnectionArg api.CreateConnection) (api.Connection, error)
 	// Updates an existing connection.
 	UpdateConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid, requestArg api.UpdateConnectionRequest) (api.Connection, error)
@@ -362,7 +367,12 @@ A Connection contains the relevant metadata and information to be used as a data
 The Connection Service is responsible for creating, updating, and retrieving database connections.
 */
 type ConnectionServiceClientWithAuth interface {
-	// Creates a new connection.
+	/*
+	   Creates a new connection.
+
+	   Deprecated: Use CatalogService#createDataset to create a dataset, then
+	   ConnectionService#registerExternalConnectionConfig to register external connection config on it.
+	*/
 	CreateConnection(ctx context.Context, createConnectionArg api.CreateConnection) (api.Connection, error)
 	// Updates an existing connection.
 	UpdateConnection(ctx context.Context, ridArg api.ConnectionRid, requestArg api.UpdateConnectionRequest) (api.Connection, error)

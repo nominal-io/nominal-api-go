@@ -16,6 +16,7 @@ type ChannelLocator struct {
 	Tags          map[api.TagName]api.TagValue `json:"tags"`
 	Asset         *api1.AssetRefName           `json:"asset,omitempty" safelogging:"@Unsafe"`
 	Run           *api1.RunRefName             `json:"run,omitempty" safelogging:"@Unsafe"`
+	InputId       *string                      `json:"inputId,omitempty"`
 }
 
 func (o ChannelLocator) MarshalJSON() ([]byte, error) {
@@ -111,6 +112,27 @@ func (o PendingReviewDispositionState) MarshalYAML() (interface{}, error) {
 }
 
 func (o *PendingReviewDispositionState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type S3Handle struct {
+	Bucket string `json:"bucket"`
+	Key    string `json:"key"`
+}
+
+func (o S3Handle) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *S3Handle) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

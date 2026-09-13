@@ -10,9 +10,58 @@ import (
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
-	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
-	"github.com/nominal-io/nominal-api-go/scout/run/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
 )
+
+type NotebookArchiveTargetWithT[T any] NotebookArchiveTarget
+
+func (u *NotebookArchiveTargetWithT[T]) Accept(ctx context.Context, v NotebookArchiveTargetVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "rids":
+		if u.rids == nil {
+			return result, fmt.Errorf("field \"rids\" is required")
+		}
+		return v.VisitRids(ctx, *u.rids)
+	}
+}
+
+func (u *NotebookArchiveTargetWithT[T]) AcceptFuncs(ridsFunc func([]api.NotebookRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "rids":
+		if u.rids == nil {
+			return result, fmt.Errorf("field \"rids\" is required")
+		}
+		return ridsFunc(*u.rids)
+	}
+}
+
+func (u *NotebookArchiveTargetWithT[T]) RidsNoopSuccess([]api.NotebookRid) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NotebookArchiveTargetWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type NotebookArchiveTargetVisitorWithT[T any] interface {
+	VisitRids(ctx context.Context, v []api.NotebookRid) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
 
 type NotebookDataScopeWithT[T any] NotebookDataScope
 
@@ -37,7 +86,7 @@ func (u *NotebookDataScopeWithT[T]) Accept(ctx context.Context, v NotebookDataSc
 	}
 }
 
-func (u *NotebookDataScopeWithT[T]) AcceptFuncs(runRidsFunc func([]api.RunRid) (T, error), assetRidsFunc func([]api1.AssetRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *NotebookDataScopeWithT[T]) AcceptFuncs(runRidsFunc func([]api1.RunRid) (T, error), assetRidsFunc func([]api.AssetRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -58,12 +107,12 @@ func (u *NotebookDataScopeWithT[T]) AcceptFuncs(runRidsFunc func([]api.RunRid) (
 	}
 }
 
-func (u *NotebookDataScopeWithT[T]) RunRidsNoopSuccess([]api.RunRid) (T, error) {
+func (u *NotebookDataScopeWithT[T]) RunRidsNoopSuccess([]api1.RunRid) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *NotebookDataScopeWithT[T]) AssetRidsNoopSuccess([]api1.AssetRid) (T, error) {
+func (u *NotebookDataScopeWithT[T]) AssetRidsNoopSuccess([]api.AssetRid) (T, error) {
 	var result T
 	return result, nil
 }
@@ -74,8 +123,8 @@ func (u *NotebookDataScopeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 }
 
 type NotebookDataScopeVisitorWithT[T any] interface {
-	VisitRunRids(ctx context.Context, v []api.RunRid) (T, error)
-	VisitAssetRids(ctx context.Context, v []api1.AssetRid) (T, error)
+	VisitRunRids(ctx context.Context, v []api1.RunRid) (T, error)
+	VisitAssetRids(ctx context.Context, v []api.AssetRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -202,7 +251,7 @@ func (u *SearchNotebooksQueryWithT[T]) Accept(ctx context.Context, v SearchNoteb
 	}
 }
 
-func (u *SearchNotebooksQueryWithT[T]) AcceptFuncs(andFunc func([]SearchNotebooksQuery) (T, error), orFunc func([]SearchNotebooksQuery) (T, error), notFunc func(SearchNotebooksQuery) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api2.Label) (T, error), labelsFunc func(api1.LabelsFilter) (T, error), propertyFunc func(api2.Property) (T, error), propertiesFunc func(api1.PropertiesFilter) (T, error), assetRidFunc func(api1.AssetRid) (T, error), assetRidsFunc func(AssetsFilter) (T, error), exactAssetRidsFunc func([]api1.AssetRid) (T, error), authorRidFunc func(api1.UserRid) (T, error), runRidFunc func(api.RunRid) (T, error), runRidsFunc func(RunsFilter) (T, error), notebookTypeFunc func(NotebookType) (T, error), notebookTypesFunc func(NotebookTypesFilter) (T, error), draftStateFunc func(bool) (T, error), archivedFunc func(bool) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), authorIsCurrentUserFunc func(bool) (T, error), authorRidsFunc func([]api1.UserRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchNotebooksQueryWithT[T]) AcceptFuncs(andFunc func([]SearchNotebooksQuery) (T, error), orFunc func([]SearchNotebooksQuery) (T, error), notFunc func(SearchNotebooksQuery) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api2.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api2.Property) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), assetRidFunc func(api.AssetRid) (T, error), assetRidsFunc func(AssetsFilter) (T, error), exactAssetRidsFunc func([]api.AssetRid) (T, error), authorRidFunc func(api.UserRid) (T, error), runRidFunc func(api1.RunRid) (T, error), runRidsFunc func(RunsFilter) (T, error), notebookTypeFunc func(NotebookType) (T, error), notebookTypesFunc func(NotebookTypesFilter) (T, error), draftStateFunc func(bool) (T, error), archivedFunc func(bool) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), authorIsCurrentUserFunc func(bool) (T, error), authorRidsFunc func([]api.UserRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -353,7 +402,7 @@ func (u *SearchNotebooksQueryWithT[T]) LabelNoopSuccess(api2.Label) (T, error) {
 	return result, nil
 }
 
-func (u *SearchNotebooksQueryWithT[T]) LabelsNoopSuccess(api1.LabelsFilter) (T, error) {
+func (u *SearchNotebooksQueryWithT[T]) LabelsNoopSuccess(api.LabelsFilter) (T, error) {
 	var result T
 	return result, nil
 }
@@ -363,12 +412,12 @@ func (u *SearchNotebooksQueryWithT[T]) PropertyNoopSuccess(api2.Property) (T, er
 	return result, nil
 }
 
-func (u *SearchNotebooksQueryWithT[T]) PropertiesNoopSuccess(api1.PropertiesFilter) (T, error) {
+func (u *SearchNotebooksQueryWithT[T]) PropertiesNoopSuccess(api.PropertiesFilter) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *SearchNotebooksQueryWithT[T]) AssetRidNoopSuccess(api1.AssetRid) (T, error) {
+func (u *SearchNotebooksQueryWithT[T]) AssetRidNoopSuccess(api.AssetRid) (T, error) {
 	var result T
 	return result, nil
 }
@@ -378,17 +427,17 @@ func (u *SearchNotebooksQueryWithT[T]) AssetRidsNoopSuccess(AssetsFilter) (T, er
 	return result, nil
 }
 
-func (u *SearchNotebooksQueryWithT[T]) ExactAssetRidsNoopSuccess([]api1.AssetRid) (T, error) {
+func (u *SearchNotebooksQueryWithT[T]) ExactAssetRidsNoopSuccess([]api.AssetRid) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *SearchNotebooksQueryWithT[T]) AuthorRidNoopSuccess(api1.UserRid) (T, error) {
+func (u *SearchNotebooksQueryWithT[T]) AuthorRidNoopSuccess(api.UserRid) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *SearchNotebooksQueryWithT[T]) RunRidNoopSuccess(api.RunRid) (T, error) {
+func (u *SearchNotebooksQueryWithT[T]) RunRidNoopSuccess(api1.RunRid) (T, error) {
 	var result T
 	return result, nil
 }
@@ -428,7 +477,7 @@ func (u *SearchNotebooksQueryWithT[T]) AuthorIsCurrentUserNoopSuccess(bool) (T, 
 	return result, nil
 }
 
-func (u *SearchNotebooksQueryWithT[T]) AuthorRidsNoopSuccess([]api1.UserRid) (T, error) {
+func (u *SearchNotebooksQueryWithT[T]) AuthorRidsNoopSuccess([]api.UserRid) (T, error) {
 	var result T
 	return result, nil
 }
@@ -445,14 +494,14 @@ type SearchNotebooksQueryVisitorWithT[T any] interface {
 	VisitExactMatch(ctx context.Context, v string) (T, error)
 	VisitSearchText(ctx context.Context, v string) (T, error)
 	VisitLabel(ctx context.Context, v api2.Label) (T, error)
-	VisitLabels(ctx context.Context, v api1.LabelsFilter) (T, error)
+	VisitLabels(ctx context.Context, v api.LabelsFilter) (T, error)
 	VisitProperty(ctx context.Context, v api2.Property) (T, error)
-	VisitProperties(ctx context.Context, v api1.PropertiesFilter) (T, error)
-	VisitAssetRid(ctx context.Context, v api1.AssetRid) (T, error)
+	VisitProperties(ctx context.Context, v api.PropertiesFilter) (T, error)
+	VisitAssetRid(ctx context.Context, v api.AssetRid) (T, error)
 	VisitAssetRids(ctx context.Context, v AssetsFilter) (T, error)
-	VisitExactAssetRids(ctx context.Context, v []api1.AssetRid) (T, error)
-	VisitAuthorRid(ctx context.Context, v api1.UserRid) (T, error)
-	VisitRunRid(ctx context.Context, v api.RunRid) (T, error)
+	VisitExactAssetRids(ctx context.Context, v []api.AssetRid) (T, error)
+	VisitAuthorRid(ctx context.Context, v api.UserRid) (T, error)
+	VisitRunRid(ctx context.Context, v api1.RunRid) (T, error)
 	VisitRunRids(ctx context.Context, v RunsFilter) (T, error)
 	VisitNotebookType(ctx context.Context, v NotebookType) (T, error)
 	VisitNotebookTypes(ctx context.Context, v NotebookTypesFilter) (T, error)
@@ -460,6 +509,6 @@ type SearchNotebooksQueryVisitorWithT[T any] interface {
 	VisitArchived(ctx context.Context, v bool) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
 	VisitAuthorIsCurrentUser(ctx context.Context, v bool) (T, error)
-	VisitAuthorRids(ctx context.Context, v []api1.UserRid) (T, error)
+	VisitAuthorRids(ctx context.Context, v []api.UserRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

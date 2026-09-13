@@ -615,6 +615,11 @@ func (u *VideoFileTimestampManifestWithT[T]) Accept(ctx context.Context, v Video
 			return result, fmt.Errorf("field \"s3path\" is required")
 		}
 		return v.VisitS3path(ctx, *u.s3path)
+	case "s3paths":
+		if u.s3paths == nil {
+			return result, fmt.Errorf("field \"s3paths\" is required")
+		}
+		return v.VisitS3paths(ctx, *u.s3paths)
 	case "noManifest":
 		if u.noManifest == nil {
 			return result, fmt.Errorf("field \"noManifest\" is required")
@@ -623,7 +628,7 @@ func (u *VideoFileTimestampManifestWithT[T]) Accept(ctx context.Context, v Video
 	}
 }
 
-func (u *VideoFileTimestampManifestWithT[T]) AcceptFuncs(mcapFunc func(McapTimestampManifest) (T, error), s3pathFunc func(api.S3Path) (T, error), noManifestFunc func(NoTimestampManifest) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *VideoFileTimestampManifestWithT[T]) AcceptFuncs(mcapFunc func(McapTimestampManifest) (T, error), s3pathFunc func(api.S3Path) (T, error), s3pathsFunc func([]api.S3Path) (T, error), noManifestFunc func(NoTimestampManifest) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -641,6 +646,11 @@ func (u *VideoFileTimestampManifestWithT[T]) AcceptFuncs(mcapFunc func(McapTimes
 			return result, fmt.Errorf("field \"s3path\" is required")
 		}
 		return s3pathFunc(*u.s3path)
+	case "s3paths":
+		if u.s3paths == nil {
+			return result, fmt.Errorf("field \"s3paths\" is required")
+		}
+		return s3pathsFunc(*u.s3paths)
 	case "noManifest":
 		if u.noManifest == nil {
 			return result, fmt.Errorf("field \"noManifest\" is required")
@@ -659,6 +669,11 @@ func (u *VideoFileTimestampManifestWithT[T]) S3pathNoopSuccess(api.S3Path) (T, e
 	return result, nil
 }
 
+func (u *VideoFileTimestampManifestWithT[T]) S3pathsNoopSuccess([]api.S3Path) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *VideoFileTimestampManifestWithT[T]) NoManifestNoopSuccess(NoTimestampManifest) (T, error) {
 	var result T
 	return result, nil
@@ -672,6 +687,7 @@ func (u *VideoFileTimestampManifestWithT[T]) ErrorOnUnknown(typeName string) (T,
 type VideoFileTimestampManifestVisitorWithT[T any] interface {
 	VisitMcap(ctx context.Context, v McapTimestampManifest) (T, error)
 	VisitS3path(ctx context.Context, v api.S3Path) (T, error)
+	VisitS3paths(ctx context.Context, v []api.S3Path) (T, error)
 	VisitNoManifest(ctx context.Context, v NoTimestampManifest) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

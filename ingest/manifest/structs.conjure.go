@@ -3,6 +3,8 @@
 package manifest
 
 import (
+	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -14,6 +16,8 @@ This is written as manifest.json in the OUTPUT_DIR by the container.
 type ExtractorManifest struct {
 	// List of output files produced by the extractor
 	Outputs []ManifestOutput `json:"outputs"`
+	// Video files produced by the extractor.
+	VideoOutputs *[]ManifestVideoOutput `json:"videoOutputs,omitempty"`
 }
 
 func (o ExtractorManifest) MarshalJSON() ([]byte, error) {
@@ -60,6 +64,8 @@ This is uploaded to S3 by yeeter and read by the Temporal activity to orchestrat
 type ExtractorUploadMetadata struct {
 	// List of uploaded files with their S3 locations and manifest metadata
 	Uploads []UploadMetadata `json:"uploads"`
+	// Uploaded video files and their resolved timestamp metadata.
+	VideoUploads *[]VideoUploadMetadata `json:"videoUploads,omitempty"`
 }
 
 func (o ExtractorUploadMetadata) MarshalJSON() ([]byte, error) {
@@ -121,6 +127,13 @@ type ManifestOutput struct {
 	   Example: "telemetry/" would create channels like "telemetry/speed", "telemetry/altitude"
 	*/
 	ChannelPrefix *string `json:"channelPrefix,omitempty"`
+	/*
+	   Optional per-output timestamp metadata. When present it overrides the job-level
+	   timestamp metadata for this output, letting outputs of different formats (e.g. a CSV
+	   and a JSON_L file in the same job) use different timestamp fields. When absent the
+	   job-level timestamp metadata is used, preserving existing behavior.
+	*/
+	TimestampMetadata *ManifestTimestampMetadata `json:"timestampMetadata,omitempty"`
 }
 
 func (o ManifestOutput) MarshalJSON() ([]byte, error) {
@@ -161,6 +174,76 @@ func (o *ManifestOutput) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 /*
+Per-output timestamp metadata for a containerized extractor output.
+
+Numeric epoch timestamps (absolute) and relative timestamps (a numeric offset from a
+starting epoch) are expressible here. Outputs that need richer timestamp types (ISO 8601,
+custom string formats) should omit this and rely on the job-level timestamp metadata,
+which supports the full TimestampType range.
+*/
+type ManifestTimestampMetadata struct {
+	/*
+	   Name of the column (TABULAR) or top-level JSON field (JSON_L) that holds the timestamp
+	   for this output.
+	*/
+	SeriesName string `json:"seriesName"`
+	// Time unit of the numeric timestamp stored in seriesName.
+	EpochTimeUnit ManifestEpochTimeUnit `json:"epochTimeUnit"`
+	/*
+	   When set, the numeric values in seriesName are interpreted as RELATIVE offsets from
+	   this starting timestamp, measured in epochTimeUnit units (e.g. seconds since the
+	   offset). This mirrors relative timestamp extraction in regular ingest and makes
+	   post-extraction timestamp surgery easier than requiring absolute timestamps
+	   everywhere. When absent, the values are absolute epoch timestamps in epochTimeUnit
+	   units, preserving existing behavior.
+	*/
+	RelativeOffset *datetime.DateTime `json:"relativeOffset,omitempty"`
+}
+
+func (o ManifestTimestampMetadata) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ManifestTimestampMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Describes a video produced by a containerized extractor.
+// safelogging:@Unsafe
+type ManifestVideoOutput struct {
+	// Relative path within OUTPUT_DIR to the video file.
+	RelativePath string `json:"relativePath"`
+	// Dataset channel name for the video.
+	Channel api.Channel `json:"channel" safelogging:"@Unsafe"`
+	// Specifies how absolute timestamps are determined for the video's frames.
+	TimestampManifest VideoTimestampManifest `json:"timestampManifest"`
+}
+
+func (o ManifestVideoOutput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ManifestVideoOutput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
 Metadata about a single file uploaded to S3 by yeeter.
 Enriches the original manifest entry with S3 upload information.
 */
@@ -182,6 +265,38 @@ func (o UploadMetadata) MarshalYAML() (interface{}, error) {
 }
 
 func (o *UploadMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Metadata about a video file uploaded to S3 by yeeter.
+// safelogging:@Unsafe
+type VideoUploadMetadata struct {
+	// Full S3 key where the video file was uploaded.
+	S3Key string `json:"s3Key"`
+	// S3 bucket name where the video file was uploaded.
+	S3Bucket string `json:"s3Bucket"`
+	// The original video manifest entry written by the extractor.
+	ManifestVideoOutput ManifestVideoOutput `json:"manifestVideoOutput" safelogging:"@Unsafe"`
+	/*
+	   Uploaded frame timestamp sidecar. Present only when the video uses the
+	   frameTimestampsRelativePath timestamp strategy.
+	*/
+	FrameTimestampsS3Path *api.S3Path `json:"frameTimestampsS3Path,omitempty" safelogging:"@Unsafe"`
+}
+
+func (o VideoUploadMetadata) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoUploadMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

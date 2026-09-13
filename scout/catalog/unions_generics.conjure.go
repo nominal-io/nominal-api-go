@@ -208,6 +208,11 @@ func (u *SearchDatasetFilesQueryWithT[T]) Accept(ctx context.Context, v SearchDa
 			return result, fmt.Errorf("field \"timeRange\" is required")
 		}
 		return v.VisitTimeRange(ctx, *u.timeRange)
+	case "uploadedAtRange":
+		if u.uploadedAtRange == nil {
+			return result, fmt.Errorf("field \"uploadedAtRange\" is required")
+		}
+		return v.VisitUploadedAtRange(ctx, *u.uploadedAtRange)
 	case "fileTags":
 		if u.fileTags == nil {
 			return result, fmt.Errorf("field \"fileTags\" is required")
@@ -226,7 +231,7 @@ func (u *SearchDatasetFilesQueryWithT[T]) Accept(ctx context.Context, v SearchDa
 	}
 }
 
-func (u *SearchDatasetFilesQueryWithT[T]) AcceptFuncs(timeRangeFunc func(TimeRangeFilter) (T, error), fileTagsFunc func(map[api.TagName]api.TagValue) (T, error), andFunc func([]SearchDatasetFilesQuery) (T, error), orFunc func([]SearchDatasetFilesQuery) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchDatasetFilesQueryWithT[T]) AcceptFuncs(timeRangeFunc func(TimeRangeFilter) (T, error), uploadedAtRangeFunc func(UploadedAtFilter) (T, error), fileTagsFunc func(map[api.TagName]api.TagValue) (T, error), andFunc func([]SearchDatasetFilesQuery) (T, error), orFunc func([]SearchDatasetFilesQuery) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -239,6 +244,11 @@ func (u *SearchDatasetFilesQueryWithT[T]) AcceptFuncs(timeRangeFunc func(TimeRan
 			return result, fmt.Errorf("field \"timeRange\" is required")
 		}
 		return timeRangeFunc(*u.timeRange)
+	case "uploadedAtRange":
+		if u.uploadedAtRange == nil {
+			return result, fmt.Errorf("field \"uploadedAtRange\" is required")
+		}
+		return uploadedAtRangeFunc(*u.uploadedAtRange)
 	case "fileTags":
 		if u.fileTags == nil {
 			return result, fmt.Errorf("field \"fileTags\" is required")
@@ -258,6 +268,11 @@ func (u *SearchDatasetFilesQueryWithT[T]) AcceptFuncs(timeRangeFunc func(TimeRan
 }
 
 func (u *SearchDatasetFilesQueryWithT[T]) TimeRangeNoopSuccess(TimeRangeFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchDatasetFilesQueryWithT[T]) UploadedAtRangeNoopSuccess(UploadedAtFilter) (T, error) {
 	var result T
 	return result, nil
 }
@@ -284,6 +299,7 @@ func (u *SearchDatasetFilesQueryWithT[T]) ErrorOnUnknown(typeName string) (T, er
 
 type SearchDatasetFilesQueryVisitorWithT[T any] interface {
 	VisitTimeRange(ctx context.Context, v TimeRangeFilter) (T, error)
+	VisitUploadedAtRange(ctx context.Context, v UploadedAtFilter) (T, error)
 	VisitFileTags(ctx context.Context, v map[api.TagName]api.TagValue) (T, error)
 	VisitAnd(ctx context.Context, v []SearchDatasetFilesQuery) (T, error)
 	VisitOr(ctx context.Context, v []SearchDatasetFilesQuery) (T, error)
@@ -320,6 +336,16 @@ func (u *SearchDatasetsQueryWithT[T]) Accept(ctx context.Context, v SearchDatase
 			return result, fmt.Errorf("field \"properties\" is required")
 		}
 		return v.VisitProperties(ctx, *u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return result, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(ctx, *u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return result, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRange(ctx, *u.numericPropertyRange)
 	case "ingestStatus":
 		if u.ingestStatus == nil {
 			return result, fmt.Errorf("field \"ingestStatus\" is required")
@@ -340,6 +366,11 @@ func (u *SearchDatasetsQueryWithT[T]) Accept(ctx context.Context, v SearchDatase
 			return result, fmt.Errorf("field \"archiveStatus\" is required")
 		}
 		return v.VisitArchiveStatus(ctx, *u.archiveStatus)
+	case "derived":
+		if u.derived == nil {
+			return result, fmt.Errorf("field \"derived\" is required")
+		}
+		return v.VisitDerived(ctx, *u.derived)
 	case "and":
 		if u.and == nil {
 			return result, fmt.Errorf("field \"and\" is required")
@@ -358,7 +389,7 @@ func (u *SearchDatasetsQueryWithT[T]) Accept(ctx context.Context, v SearchDatase
 	}
 }
 
-func (u *SearchDatasetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), exactMatchFunc func(string) (T, error), labelFunc func(api.Label) (T, error), propertiesFunc func(api.Property) (T, error), ingestStatusFunc func(IngestStatus) (T, error), ingestedBeforeInclusiveFunc func(datetime.DateTime) (T, error), ingestedAfterInclusiveFunc func(datetime.DateTime) (T, error), archiveStatusFunc func(bool) (T, error), andFunc func([]SearchDatasetsQuery) (T, error), orFunc func([]SearchDatasetsQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchDatasetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), exactMatchFunc func(string) (T, error), labelFunc func(api.Label) (T, error), propertiesFunc func(api.Property) (T, error), numericPropertyFunc func(api.NumericPropertyPredicate) (T, error), numericPropertyRangeFunc func(api.NumericPropertyRangePredicate) (T, error), ingestStatusFunc func(IngestStatus) (T, error), ingestedBeforeInclusiveFunc func(datetime.DateTime) (T, error), ingestedAfterInclusiveFunc func(datetime.DateTime) (T, error), archiveStatusFunc func(bool) (T, error), derivedFunc func(bool) (T, error), andFunc func([]SearchDatasetsQuery) (T, error), orFunc func([]SearchDatasetsQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -386,6 +417,16 @@ func (u *SearchDatasetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T
 			return result, fmt.Errorf("field \"properties\" is required")
 		}
 		return propertiesFunc(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return result, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return result, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return numericPropertyRangeFunc(*u.numericPropertyRange)
 	case "ingestStatus":
 		if u.ingestStatus == nil {
 			return result, fmt.Errorf("field \"ingestStatus\" is required")
@@ -406,6 +447,11 @@ func (u *SearchDatasetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T
 			return result, fmt.Errorf("field \"archiveStatus\" is required")
 		}
 		return archiveStatusFunc(*u.archiveStatus)
+	case "derived":
+		if u.derived == nil {
+			return result, fmt.Errorf("field \"derived\" is required")
+		}
+		return derivedFunc(*u.derived)
 	case "and":
 		if u.and == nil {
 			return result, fmt.Errorf("field \"and\" is required")
@@ -444,6 +490,16 @@ func (u *SearchDatasetsQueryWithT[T]) PropertiesNoopSuccess(api.Property) (T, er
 	return result, nil
 }
 
+func (u *SearchDatasetsQueryWithT[T]) NumericPropertyNoopSuccess(api.NumericPropertyPredicate) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchDatasetsQueryWithT[T]) NumericPropertyRangeNoopSuccess(api.NumericPropertyRangePredicate) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchDatasetsQueryWithT[T]) IngestStatusNoopSuccess(IngestStatus) (T, error) {
 	var result T
 	return result, nil
@@ -460,6 +516,11 @@ func (u *SearchDatasetsQueryWithT[T]) IngestedAfterInclusiveNoopSuccess(datetime
 }
 
 func (u *SearchDatasetsQueryWithT[T]) ArchiveStatusNoopSuccess(bool) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchDatasetsQueryWithT[T]) DerivedNoopSuccess(bool) (T, error) {
 	var result T
 	return result, nil
 }
@@ -489,10 +550,13 @@ type SearchDatasetsQueryVisitorWithT[T any] interface {
 	VisitExactMatch(ctx context.Context, v string) (T, error)
 	VisitLabel(ctx context.Context, v api.Label) (T, error)
 	VisitProperties(ctx context.Context, v api.Property) (T, error)
+	VisitNumericProperty(ctx context.Context, v api.NumericPropertyPredicate) (T, error)
+	VisitNumericPropertyRange(ctx context.Context, v api.NumericPropertyRangePredicate) (T, error)
 	VisitIngestStatus(ctx context.Context, v IngestStatus) (T, error)
 	VisitIngestedBeforeInclusive(ctx context.Context, v datetime.DateTime) (T, error)
 	VisitIngestedAfterInclusive(ctx context.Context, v datetime.DateTime) (T, error)
 	VisitArchiveStatus(ctx context.Context, v bool) (T, error)
+	VisitDerived(ctx context.Context, v bool) (T, error)
 	VisitAnd(ctx context.Context, v []SearchDatasetsQuery) (T, error)
 	VisitOr(ctx context.Context, v []SearchDatasetsQuery) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)

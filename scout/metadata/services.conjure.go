@@ -17,6 +17,7 @@ type ResourceMetadataServiceClient interface {
 	/*
 	   Returns all existing properties (key value pairs) and labels, which can be used to organize resources
 	   such as runs and videos.
+	   This legacy bulk-list surface returns string property values only. Use searchPropertyKeys for numeric keys.
 	*/
 	ListPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, requestArg ListPropertiesAndLabelsRequest) (ListPropertiesAndLabelsResponse, error)
 	/*
@@ -42,13 +43,14 @@ type ResourceMetadataServiceClient interface {
 	*/
 	SearchLabels(ctx context.Context, authHeader bearertoken.Token, requestArg SearchMetadataRequest) (SearchLabelsResponse, error)
 	/*
-	   Returns a paginated list of property keys with document usage counts, filterable
-	   by resource type, workspace, and search text.
+	   Returns a paginated list of string and numeric property keys with typed statistics,
+	   filterable by resource type, workspace, and search text.
 	*/
 	SearchPropertyKeys(ctx context.Context, authHeader bearertoken.Token, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error)
 	/*
-	   Returns a paginated list of property values for a given property key with document
-	   usage counts, filterable by resource type, workspace, and search text.
+	   Returns a paginated list of string property values for a given property key with
+	   document usage counts, filterable by resource type, workspace, and search text.
+	   Numeric values are intentionally excluded; their summary is returned by searchPropertyKeys.
 	*/
 	SearchPropertyValues(ctx context.Context, authHeader bearertoken.Token, requestArg SearchPropertyValuesRequest) (SearchPropertyValuesResponse, error)
 }
@@ -192,6 +194,7 @@ type ResourceMetadataServiceClientWithAuth interface {
 	/*
 	   Returns all existing properties (key value pairs) and labels, which can be used to organize resources
 	   such as runs and videos.
+	   This legacy bulk-list surface returns string property values only. Use searchPropertyKeys for numeric keys.
 	*/
 	ListPropertiesAndLabels(ctx context.Context, requestArg ListPropertiesAndLabelsRequest) (ListPropertiesAndLabelsResponse, error)
 	/*
@@ -217,13 +220,14 @@ type ResourceMetadataServiceClientWithAuth interface {
 	*/
 	SearchLabels(ctx context.Context, requestArg SearchMetadataRequest) (SearchLabelsResponse, error)
 	/*
-	   Returns a paginated list of property keys with document usage counts, filterable
-	   by resource type, workspace, and search text.
+	   Returns a paginated list of string and numeric property keys with typed statistics,
+	   filterable by resource type, workspace, and search text.
 	*/
 	SearchPropertyKeys(ctx context.Context, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error)
 	/*
-	   Returns a paginated list of property values for a given property key with document
-	   usage counts, filterable by resource type, workspace, and search text.
+	   Returns a paginated list of string property values for a given property key with
+	   document usage counts, filterable by resource type, workspace, and search text.
+	   Numeric values are intentionally excluded; their summary is returned by searchPropertyKeys.
 	*/
 	SearchPropertyValues(ctx context.Context, requestArg SearchPropertyValuesRequest) (SearchPropertyValuesResponse, error)
 }

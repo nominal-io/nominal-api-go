@@ -45,10 +45,15 @@ func (u *DataSourceWithT[T]) Accept(ctx context.Context, v DataSourceVisitorWith
 			return result, fmt.Errorf("field \"video\" is required")
 		}
 		return v.VisitVideo(ctx, *u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return result, fmt.Errorf("field \"spatial\" is required")
+		}
+		return v.VisitSpatial(ctx, *u.spatial)
 	}
 }
 
-func (u *DataSourceWithT[T]) AcceptFuncs(datasetFunc func(rids.DatasetRid) (T, error), connectionFunc func(ConnectionRid) (T, error), logSetFunc func(LogSetRid) (T, error), videoFunc func(rids.VideoRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *DataSourceWithT[T]) AcceptFuncs(datasetFunc func(rids.DatasetRid) (T, error), connectionFunc func(ConnectionRid) (T, error), logSetFunc func(LogSetRid) (T, error), videoFunc func(rids.VideoRid) (T, error), spatialFunc func(rids.SpatialRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -76,6 +81,11 @@ func (u *DataSourceWithT[T]) AcceptFuncs(datasetFunc func(rids.DatasetRid) (T, e
 			return result, fmt.Errorf("field \"video\" is required")
 		}
 		return videoFunc(*u.video)
+	case "spatial":
+		if u.spatial == nil {
+			return result, fmt.Errorf("field \"spatial\" is required")
+		}
+		return spatialFunc(*u.spatial)
 	}
 }
 
@@ -99,6 +109,11 @@ func (u *DataSourceWithT[T]) VideoNoopSuccess(rids.VideoRid) (T, error) {
 	return result, nil
 }
 
+func (u *DataSourceWithT[T]) SpatialNoopSuccess(rids.SpatialRid) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *DataSourceWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -109,6 +124,7 @@ type DataSourceVisitorWithT[T any] interface {
 	VisitConnection(ctx context.Context, v ConnectionRid) (T, error)
 	VisitLogSet(ctx context.Context, v LogSetRid) (T, error)
 	VisitVideo(ctx context.Context, v rids.VideoRid) (T, error)
+	VisitSpatial(ctx context.Context, v rids.SpatialRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -202,6 +218,16 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 			return result, fmt.Errorf("field \"properties\" is required")
 		}
 		return v.VisitProperties(ctx, *u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return result, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(ctx, *u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return result, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRange(ctx, *u.numericPropertyRange)
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return result, fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -257,10 +283,20 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 			return result, fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspace(ctx, *u.workspace)
+	case "lockStatus":
+		if u.lockStatus == nil {
+			return result, fmt.Errorf("field \"lockStatus\" is required")
+		}
+		return v.VisitLockStatus(ctx, *u.lockStatus)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return result, fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return v.VisitDatasetRids(ctx, *u.datasetRids)
 	}
 }
 
-func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) (T, error), startTimeFunc func(TimeframeFilter) (T, error), endTimeInclusiveFunc func(UtcTimestamp) (T, error), endTimeFunc func(TimeframeFilter) (T, error), timeRangeFunc func(TimeRangeFilter) (T, error), createdAtFunc func(TimeframeFilter) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), assetFunc func(api.AssetRid) (T, error), assetsFunc func(AssetsFilter) (T, error), isSingleAssetFunc func(bool) (T, error), labelFunc func(api1.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api1.Property) (T, error), propertyKeyFunc func(api1.PropertyName) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), dataSourceSeriesTagFunc func(DataSourceSeriesTag) (T, error), dataSourceRefNameFunc func(api2.DataSourceRefName) (T, error), dataSourceFunc func(DataSource) (T, error), runNumberFunc func(safelong.SafeLong) (T, error), runPrefixFunc func(string) (T, error), checkAlertStatesFilterFunc func(CheckAlertStatesFilter) (T, error), archivedFunc func(bool) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) (T, error), startTimeFunc func(TimeframeFilter) (T, error), endTimeInclusiveFunc func(UtcTimestamp) (T, error), endTimeFunc func(TimeframeFilter) (T, error), timeRangeFunc func(TimeRangeFilter) (T, error), createdAtFunc func(TimeframeFilter) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), assetFunc func(api.AssetRid) (T, error), assetsFunc func(AssetsFilter) (T, error), isSingleAssetFunc func(bool) (T, error), labelFunc func(api1.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api1.Property) (T, error), propertyKeyFunc func(api1.PropertyName) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), numericPropertyFunc func(api1.NumericPropertyPredicate) (T, error), numericPropertyRangeFunc func(api1.NumericPropertyRangePredicate) (T, error), dataSourceSeriesTagFunc func(DataSourceSeriesTag) (T, error), dataSourceRefNameFunc func(api2.DataSourceRefName) (T, error), dataSourceFunc func(DataSource) (T, error), runNumberFunc func(safelong.SafeLong) (T, error), runPrefixFunc func(string) (T, error), checkAlertStatesFilterFunc func(CheckAlertStatesFilter) (T, error), archivedFunc func(bool) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), lockStatusFunc func(LockStatus) (T, error), datasetRidsFunc func([]rids.DatasetRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -348,6 +384,16 @@ func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimesta
 			return result, fmt.Errorf("field \"properties\" is required")
 		}
 		return propertiesFunc(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return result, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return result, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return numericPropertyRangeFunc(*u.numericPropertyRange)
 	case "dataSourceSeriesTag":
 		if u.dataSourceSeriesTag == nil {
 			return result, fmt.Errorf("field \"dataSourceSeriesTag\" is required")
@@ -403,6 +449,16 @@ func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimesta
 			return result, fmt.Errorf("field \"workspace\" is required")
 		}
 		return workspaceFunc(*u.workspace)
+	case "lockStatus":
+		if u.lockStatus == nil {
+			return result, fmt.Errorf("field \"lockStatus\" is required")
+		}
+		return lockStatusFunc(*u.lockStatus)
+	case "datasetRids":
+		if u.datasetRids == nil {
+			return result, fmt.Errorf("field \"datasetRids\" is required")
+		}
+		return datasetRidsFunc(*u.datasetRids)
 	}
 }
 
@@ -486,6 +542,16 @@ func (u *SearchQueryWithT[T]) PropertiesNoopSuccess(api.PropertiesFilter) (T, er
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) NumericPropertyNoopSuccess(api1.NumericPropertyPredicate) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchQueryWithT[T]) NumericPropertyRangeNoopSuccess(api1.NumericPropertyRangePredicate) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) DataSourceSeriesTagNoopSuccess(DataSourceSeriesTag) (T, error) {
 	var result T
 	return result, nil
@@ -541,6 +607,16 @@ func (u *SearchQueryWithT[T]) WorkspaceNoopSuccess(rids.WorkspaceRid) (T, error)
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) LockStatusNoopSuccess(LockStatus) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchQueryWithT[T]) DatasetRidsNoopSuccess([]rids.DatasetRid) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -563,6 +639,8 @@ type SearchQueryVisitorWithT[T any] interface {
 	VisitProperty(ctx context.Context, v api1.Property) (T, error)
 	VisitPropertyKey(ctx context.Context, v api1.PropertyName) (T, error)
 	VisitProperties(ctx context.Context, v api.PropertiesFilter) (T, error)
+	VisitNumericProperty(ctx context.Context, v api1.NumericPropertyPredicate) (T, error)
+	VisitNumericPropertyRange(ctx context.Context, v api1.NumericPropertyRangePredicate) (T, error)
 	VisitDataSourceSeriesTag(ctx context.Context, v DataSourceSeriesTag) (T, error)
 	VisitDataSourceRefName(ctx context.Context, v api2.DataSourceRefName) (T, error)
 	VisitDataSource(ctx context.Context, v DataSource) (T, error)
@@ -574,6 +652,8 @@ type SearchQueryVisitorWithT[T any] interface {
 	VisitOr(ctx context.Context, v []SearchQuery) (T, error)
 	VisitNot(ctx context.Context, v SearchQuery) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
+	VisitLockStatus(ctx context.Context, v LockStatus) (T, error)
+	VisitDatasetRids(ctx context.Context, v []rids.DatasetRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -597,10 +677,15 @@ func (u *SortKeyWithT[T]) Accept(ctx context.Context, v SortKeyVisitorWithT[T]) 
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(ctx, *u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return result, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(ctx, *u.numericProperty)
 	}
 }
 
-func (u *SortKeyWithT[T]) AcceptFuncs(fieldFunc func(SortField) (T, error), propertyFunc func(SortProperty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SortKeyWithT[T]) AcceptFuncs(fieldFunc func(SortField) (T, error), propertyFunc func(SortProperty) (T, error), numericPropertyFunc func(SortProperty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -618,6 +703,11 @@ func (u *SortKeyWithT[T]) AcceptFuncs(fieldFunc func(SortField) (T, error), prop
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return result, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
 	}
 }
 
@@ -631,6 +721,11 @@ func (u *SortKeyWithT[T]) PropertyNoopSuccess(SortProperty) (T, error) {
 	return result, nil
 }
 
+func (u *SortKeyWithT[T]) NumericPropertyNoopSuccess(SortProperty) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SortKeyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -639,6 +734,7 @@ func (u *SortKeyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type SortKeyVisitorWithT[T any] interface {
 	VisitField(ctx context.Context, v SortField) (T, error)
 	VisitProperty(ctx context.Context, v SortProperty) (T, error)
+	VisitNumericProperty(ctx context.Context, v SortProperty) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

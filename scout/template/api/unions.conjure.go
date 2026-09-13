@@ -693,3 +693,142 @@ func NewSearchTemplatesQueryFromAuthorIsCurrentUser(v bool) SearchTemplatesQuery
 func NewSearchTemplatesQueryFromAuthorRids(v []api1.UserRid) SearchTemplatesQuery {
 	return SearchTemplatesQuery{typ: "authorRids", authorRids: &v}
 }
+
+/*
+Selects the templates an archive or unarchive request applies to. Only an explicit set of
+rids is supported today; a query variant can be added later without breaking callers.
+*/
+type TemplateArchiveTarget struct {
+	typ  string
+	rids *[]api1.TemplateRid
+}
+
+type templateArchiveTargetDeserializer struct {
+	Type string              `json:"type"`
+	Rids *[]api1.TemplateRid `json:"rids"`
+}
+
+func (u *templateArchiveTargetDeserializer) toStruct() TemplateArchiveTarget {
+	return TemplateArchiveTarget{typ: u.Type, rids: u.Rids}
+}
+
+func (u *TemplateArchiveTarget) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "rids":
+		if u.rids == nil {
+			return nil, fmt.Errorf("field \"rids\" is required")
+		}
+		return struct {
+			Type string             `json:"type"`
+			Rids []api1.TemplateRid `json:"rids"`
+		}{Type: "rids", Rids: *u.rids}, nil
+	}
+}
+
+func (u TemplateArchiveTarget) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *TemplateArchiveTarget) UnmarshalJSON(data []byte) error {
+	var deser templateArchiveTargetDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+	}
+	return nil
+}
+
+func (u TemplateArchiveTarget) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *TemplateArchiveTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *TemplateArchiveTarget) AcceptFuncs(ridsFunc func([]api1.TemplateRid) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in TemplateArchiveTarget type")
+		}
+		return unknownFunc(u.typ)
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+		return ridsFunc(*u.rids)
+	}
+}
+
+func (u *TemplateArchiveTarget) RidsNoopSuccess(_ []api1.TemplateRid) error {
+	return nil
+}
+
+func (u *TemplateArchiveTarget) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *TemplateArchiveTarget) Accept(v TemplateArchiveTargetVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+		return v.VisitRids(*u.rids)
+	}
+}
+
+type TemplateArchiveTargetVisitor interface {
+	VisitRids(v []api1.TemplateRid) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *TemplateArchiveTarget) AcceptWithContext(ctx context.Context, v TemplateArchiveTargetVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+		return v.VisitRidsWithContext(ctx, *u.rids)
+	}
+}
+
+type TemplateArchiveTargetVisitorWithContext interface {
+	VisitRidsWithContext(ctx context.Context, v []api1.TemplateRid) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewTemplateArchiveTargetFromRids(v []api1.TemplateRid) TemplateArchiveTarget {
+	return TemplateArchiveTarget{typ: "rids", rids: &v}
+}

@@ -9,9 +9,11 @@ import (
 	api2 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/comparisonrun/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	api4 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api5 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
+	"github.com/palantir/pkg/safelong"
 	"github.com/palantir/pkg/safeyaml"
 	"github.com/palantir/pkg/uuid"
 )
@@ -260,6 +262,33 @@ func (o *BucketDisplayStatPercentile) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type ButtonVizDefinitionV1 struct {
+	// The text rendered on the button.
+	Label  string    `json:"label"`
+	Action VizAction `json:"action"`
+	/*
+	   If present, the frontend must show a confirmation dialog and
+	   receive an explicit confirmation before performing the action.
+	*/
+	Confirmation *CommandConfirmation `json:"confirmation,omitempty"`
+}
+
+func (o ButtonVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ButtonVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type CartesianChartDefinitionV1 struct {
 	Plots []CartesianPlot `json:"plots"`
 	// Deprecated: Please use the workbook's eventRefs field instead.
@@ -396,6 +425,75 @@ func (o *ChecklistChartDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type ColumnTableStateV1 struct {
+	/*
+	   Client-owned table state payload: a JSON object of sort, column
+	   order, width, visibility, and filters. Unmodelled so the client
+	   grid library's own shapes never freeze into this API.
+	*/
+	State map[string]interface{} `json:"state"`
+}
+
+func (o ColumnTableStateV1) MarshalJSON() ([]byte, error) {
+	if o.State == nil {
+		o.State = make(map[string]interface{})
+	}
+	type _tmpColumnTableStateV1 ColumnTableStateV1
+	return safejson.Marshal(_tmpColumnTableStateV1(o))
+}
+
+func (o *ColumnTableStateV1) UnmarshalJSON(data []byte) error {
+	type _tmpColumnTableStateV1 ColumnTableStateV1
+	var rawColumnTableStateV1 _tmpColumnTableStateV1
+	if err := safejson.Unmarshal(data, &rawColumnTableStateV1); err != nil {
+		return err
+	}
+	if rawColumnTableStateV1.State == nil {
+		rawColumnTableStateV1.State = make(map[string]interface{})
+	}
+	*o = ColumnTableStateV1(rawColumnTableStateV1)
+	return nil
+}
+
+func (o ColumnTableStateV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ColumnTableStateV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type CommandConfirmation struct {
+	Title       string  `json:"title"`
+	Description *string `json:"description,omitempty"`
+	// Label for the confirm action. Clients provide a default when absent.
+	ConfirmLabel *string `json:"confirmLabel,omitempty"`
+}
+
+func (o CommandConfirmation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CommandConfirmation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Safe
 type DefaultFill struct {
 	Color api.HexColor `json:"color" safelogging:"@Safe"`
@@ -410,6 +508,45 @@ func (o DefaultFill) MarshalYAML() (interface{}, error) {
 }
 
 func (o *DefaultFill) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type EllipseShape struct{}
+
+func (o EllipseShape) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EllipseShape) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type EndNodeVizDefinitionV1 struct {
+	// The label displayed on the end node.
+	Title *string `json:"title,omitempty"`
+}
+
+func (o EndNodeVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EndNodeVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -958,10 +1095,16 @@ func (o *FrequencyPlotMultivariate) UnmarshalYAML(unmarshal func(interface{}) er
 }
 
 type FrequencyPlotTypeBode struct {
-	StftOptions         *api3.StftOptions         `json:"stftOptions,omitempty"`
-	MagnitudeScaling    *api3.MagnitudeScaling    `json:"magnitudeScaling,omitempty"`
-	OutputFrequencyType *api3.OutputFrequencyType `json:"outputFrequencyType,omitempty"`
-	UnwrapPhase         *bool                     `json:"unwrapPhase,omitempty"`
+	/*
+	   When present, aligns one Bode input to the other using the configured interpolation and driver series
+	   before estimating the frequency response. For Bode, FIRST uses the input timestamps and SECOND uses the
+	   output timestamps.
+	*/
+	AlignmentConfiguration *api11.AlignmentConfiguration `json:"alignmentConfiguration,omitempty"`
+	StftOptions            *api3.StftOptions             `json:"stftOptions,omitempty"`
+	MagnitudeScaling       *api3.MagnitudeScaling        `json:"magnitudeScaling,omitempty"`
+	OutputFrequencyType    *api3.OutputFrequencyType     `json:"outputFrequencyType,omitempty"`
+	UnwrapPhase            *bool                         `json:"unwrapPhase,omitempty"`
 	// Whether to the magnitude or phase of the output. Defaults to MAGNITUDE if not specified.
 	DisplayMode *MagnitudeAndPhaseDisplayMode `json:"displayMode,omitempty"`
 }
@@ -1010,6 +1153,19 @@ func (o *FrequencyPlotTypeCpsd) UnmarshalYAML(unmarshal func(interface{}) error)
 
 type FrequencyPlotTypeFft struct {
 	Window *api3.FftWindow `json:"window,omitempty"`
+	/*
+	   The aggregate amplitude to render for bucketed FFT data. If not specified,
+	   clients should treat this as the legacy mean behavior.
+	*/
+	PeakDetectionMode *PeakDetectionMode `json:"peakDetectionMode,omitempty"`
+	/*
+	   Length of the FFT. When nfft < input length, the input is truncated to the first nfft samples before
+	   windowing and transforming. When nfft > input length, the windowed input is zero-padded up to nfft
+	   before transforming. When nfft is unset, defaults to the input length, producing the same result as
+	   setting nfft to the input length. The output contains nfft/2 + 1 single-sided frequency bins with spacing
+	   fs/nfft. For best performance, prefer a power of 2 (e.g. 512, 1024, 2048).
+	*/
+	Nfft *int `json:"nfft,omitempty"`
 }
 
 func (o FrequencyPlotTypeFft) MarshalYAML() (interface{}, error) {
@@ -1072,6 +1228,11 @@ type FrequencyPlotTypePsd struct {
 	StftOptions         *api3.StftOptions         `json:"stftOptions,omitempty"`
 	MagnitudeScaling    *api3.MagnitudeScaling    `json:"magnitudeScaling,omitempty"`
 	OutputFrequencyType *api3.OutputFrequencyType `json:"outputFrequencyType,omitempty"`
+	/*
+	   How to render bucketed PSD data, or NONE to disable bucketing. If not
+	   specified, clients should default to AVERAGE.
+	*/
+	DisplayMode *PsdDisplayMode `json:"displayMode,omitempty"`
 }
 
 func (o FrequencyPlotTypePsd) MarshalYAML() (interface{}, error) {
@@ -1083,6 +1244,47 @@ func (o FrequencyPlotTypePsd) MarshalYAML() (interface{}, error) {
 }
 
 func (o *FrequencyPlotTypePsd) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Local Cartesian coordinate frame with no geographic reference.
+Coordinates are treated as scene-relative (metres).
+*/
+type Geo3dCrsCartesian struct{}
+
+func (o Geo3dCrsCartesian) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dCrsCartesian) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Earth-Centered Earth-Fixed Cartesian coordinates (X/Y/Z in metres from Earth's centre).
+type Geo3dCrsEcef struct{}
+
+func (o Geo3dCrsEcef) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dCrsEcef) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1114,6 +1316,13 @@ func (o *Geo3dCustomModel) UnmarshalYAML(unmarshal func(interface{}) error) erro
 type Geo3dDefinitionV1 struct {
 	Plots []GeoPlot3d `json:"plots"`
 	Title *string     `json:"title,omitempty"`
+	// Spatial dataset or channel plots in the 3D viewport.
+	SpatialPlots *[]GeoPlot3dSpatial `json:"spatialPlots,omitempty"`
+	/*
+	   Coordinate reference system for spatial assets in this panel.
+	   Absent means ECEF (the original default).
+	*/
+	Crs *Geo3dCrs `json:"crs,omitempty"`
 }
 
 func (o Geo3dDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -1194,6 +1403,31 @@ func (o *Geo3dDisplayVectorSun) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Static orientation correction for the 3D model's native coordinate system.
+Defines which model axis points forward and which points up.
+*/
+type Geo3dModelLocalOrientation struct {
+	Forward Geo3dModelAxis `json:"forward"`
+	Up      Geo3dModelAxis `json:"up"`
+}
+
+func (o Geo3dModelLocalOrientation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dModelLocalOrientation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Orientation specified as Euler angles yaw/pitch/roll in degrees.
 type Geo3dOrientationEulerAngles struct {
 	Yaw   VariableStaticOrChannel `json:"yaw"`
@@ -1256,6 +1490,34 @@ func (o Geo3dPositionEcef) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Geo3dPositionEcef) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Position in a local Cartesian coordinate frame. Useful when data is
+expressed in a scene-relative reference frame rather than a global
+geographic one (WGS84 / ECEF).
+*/
+// safelogging:@Unsafe
+type Geo3dPositionLocal struct {
+	XVariableName *api2.ChannelVariableName `json:"xVariableName,omitempty" safelogging:"@Unsafe"`
+	YVariableName *api2.ChannelVariableName `json:"yVariableName,omitempty" safelogging:"@Unsafe"`
+	ZVariableName *api2.ChannelVariableName `json:"zVariableName,omitempty" safelogging:"@Unsafe"`
+}
+
+func (o Geo3dPositionLocal) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dPositionLocal) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1424,15 +1686,63 @@ func (o *Geo3dSensorShapeSpherical) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type GeoCoordinate struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+func (o GeoCoordinate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeoCoordinate) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A custom distance annotation on the map. Units for distance are inherited from GeoVizDefinitionV1
+type GeoCustomMeasurement struct {
+	Id                   *uuid.UUID                  `json:"id,omitempty"`
+	Label                *string                     `json:"label,omitempty"`
+	Enabled              *bool                       `json:"enabled,omitempty"`
+	StartCoordinate      GeoCoordinate               `json:"startCoordinate"`
+	EndCoordinate        GeoCoordinate               `json:"endCoordinate"`
+	VisualizationOptions GeoPlotVisualizationOptions `json:"visualizationOptions"`
+}
+
+func (o GeoCustomMeasurement) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeoCustomMeasurement) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type GeoPlot3d struct {
-	PlotId               string                        `json:"plotId"`
-	Enabled              *bool                         `json:"enabled,omitempty"`
-	Label                *string                       `json:"label,omitempty"`
-	VisualizationOptions GeoPlot3dVisualizationOptions `json:"visualizationOptions"`
-	Position             Geo3dPosition                 `json:"position"`
-	Orientation          Geo3dOrientation              `json:"orientation"`
-	PlotSensors          *[]Geo3dSensor                `json:"plotSensors,omitempty"`
-	DisplayVectors       *[]Geo3dDisplayVector         `json:"displayVectors,omitempty"`
+	PlotId                string                        `json:"plotId"`
+	Enabled               *bool                         `json:"enabled,omitempty"`
+	Label                 *string                       `json:"label,omitempty"`
+	VisualizationOptions  GeoPlot3dVisualizationOptions `json:"visualizationOptions"`
+	Position              Geo3dPosition                 `json:"position"`
+	Orientation           Geo3dOrientation              `json:"orientation"`
+	ModelLocalOrientation *Geo3dModelLocalOrientation   `json:"modelLocalOrientation,omitempty"`
+	PlotSensors           *[]Geo3dSensor                `json:"plotSensors,omitempty"`
+	DisplayVectors        *[]Geo3dDisplayVector         `json:"displayVectors,omitempty"`
 }
 
 func (o GeoPlot3d) MarshalYAML() (interface{}, error) {
@@ -1444,6 +1754,76 @@ func (o GeoPlot3d) MarshalYAML() (interface{}, error) {
 }
 
 func (o *GeoPlot3d) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// 3D plot for a spatial dataset or channel (point cloud, BVH mesh, etc.) loaded by RID.
+type GeoPlot3dSpatial struct {
+	PlotId     string          `json:"plotId"`
+	Enabled    *bool           `json:"enabled,omitempty"`
+	Label      *string         `json:"label,omitempty"`
+	SpatialRid rids.SpatialRid `json:"spatialRid" safelogging:"@Safe"`
+	/*
+	   How to color the asset. If omitted, renderers use a +Z direction ramp with colormap
+	   VIRIDIS and default bounds (`SpatialColoringGeometryAxis` with axis { x: 0, y: 0, z: 1 }).
+
+	   Deprecated: Use properties instead.
+	*/
+	Coloring *SpatialColoring `json:"coloring,omitempty"`
+	/*
+	   Full versioned appearance and time-binding properties. Takes precedence over the
+	   deprecated coloring field when present. Absent on plots created before this field
+	   was added; clients should migrate via resolveGeo3dSpatialAppearance.
+	*/
+	Properties *GeoPlot3dSpatialProperties `json:"properties,omitempty"`
+}
+
+func (o GeoPlot3dSpatial) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeoPlot3dSpatial) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+All user-configurable properties for a spatial plot. Mirrors the frontend
+SpatialPropertiesV1 type — any new field added to one must be added to both.
+*/
+type GeoPlot3dSpatialPropertiesV1 struct {
+	// Splat diameter in scene units. Defaults to 0.05.
+	PointSize *float64 `json:"pointSize,omitempty"`
+	// Shape rendered for each point. Defaults to PARABOLIC.
+	SplatMode *SpatialSplatMode `json:"splatMode,omitempty"`
+	// How to color the point cloud. Defaults to Z-axis gradient with VIRIDIS.
+	Coloring *SpatialAppearanceColoring `json:"coloring,omitempty"`
+	// Volumetric visibility filter applied before rendering. Defaults to none.
+	Filter *SpatialVolumetricFilter `json:"filter,omitempty"`
+	// Playhead-driven time-visibility binding. Absent means no time filtering.
+	TimeBinding *SpatialTimeBinding `json:"timeBinding,omitempty"`
+}
+
+func (o GeoPlot3dSpatialPropertiesV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeoPlot3dSpatialPropertiesV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1475,6 +1855,7 @@ func (o *GeoPlot3dVisualizationOptions) UnmarshalYAML(unmarshal func(interface{}
 
 // safelogging:@Unsafe
 type GeoPlotFromLatLong struct {
+	Id                    *uuid.UUID                  `json:"id,omitempty"`
 	LatitudeVariableName  api2.ChannelVariableName    `json:"latitudeVariableName" safelogging:"@Unsafe"`
 	LongitudeVariableName api2.ChannelVariableName    `json:"longitudeVariableName" safelogging:"@Unsafe"`
 	SecondaryVariables    *[]SecondaryVariable        `json:"secondaryVariables,omitempty"`
@@ -1492,6 +1873,31 @@ func (o GeoPlotFromLatLong) MarshalYAML() (interface{}, error) {
 }
 
 func (o *GeoPlotFromLatLong) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GeoPlotFromOverlay struct {
+	Id                   *uuid.UUID                  `json:"id,omitempty"`
+	AttachmentRid        rids.AttachmentRid          `json:"attachmentRid" safelogging:"@Safe"`
+	SourceFormat         GeoOverlaySourceFormat      `json:"sourceFormat"`
+	Enabled              *bool                       `json:"enabled,omitempty"`
+	Label                *string                     `json:"label,omitempty"`
+	VisualizationOptions GeoPlotVisualizationOptions `json:"visualizationOptions"`
+}
+
+func (o GeoPlotFromOverlay) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeoPlotFromOverlay) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1522,8 +1928,9 @@ func (o *GeoPlotSecondaryVisibilityConfig) UnmarshalYAML(unmarshal func(interfac
 }
 
 type GeoPlotVisualizationOptions struct {
-	Color     api.HexColor `json:"color" safelogging:"@Safe"`
-	LineStyle GeoLineStyle `json:"lineStyle"`
+	Color      api.HexColor   `json:"color" safelogging:"@Safe"`
+	LineStyle  GeoLineStyle   `json:"lineStyle"`
+	ArrowStyle *GeoArrowStyle `json:"arrowStyle,omitempty"`
 	// If visible, overwrites any existing visualization options on the geo plot.
 	SecondaryColorVisualization *GeoPlotSecondaryVisibilityConfig `json:"secondaryColorVisualization,omitempty"`
 }
@@ -1591,11 +1998,14 @@ func (o *GeoPoint) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type GeoVizDefinitionV1 struct {
-	Plots             []GeoPlotFromLatLong  `json:"plots"`
-	Title             *string               `json:"title,omitempty"`
-	CustomFeatures    []GeoCustomFeature    `json:"customFeatures"`
-	BaseTileset       *GeoBaseTileset       `json:"baseTileset,omitempty"`
-	AdditionalTileset *GeoAdditionalTileset `json:"additionalTileset,omitempty"`
+	Plots              []GeoPlotFromLatLong    `json:"plots"`
+	BackgroundOverlays *[]GeoPlotFromOverlay   `json:"backgroundOverlays,omitempty"`
+	Title              *string                 `json:"title,omitempty"`
+	CustomFeatures     []GeoCustomFeature      `json:"customFeatures"`
+	CustomMeasurements *[]GeoCustomMeasurement `json:"customMeasurements,omitempty"`
+	BaseTileset        *GeoBaseTileset         `json:"baseTileset,omitempty"`
+	AdditionalTileset  *GeoAdditionalTileset   `json:"additionalTileset,omitempty"`
+	UnitSystem         *GeoUnitSystem          `json:"unitSystem,omitempty"`
 }
 
 func (o GeoVizDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -1723,6 +2133,32 @@ func (o HistogramPlot) MarshalYAML() (interface{}, error) {
 }
 
 func (o *HistogramPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ImageVizDefinitionV1 struct {
+	Title *string `json:"title,omitempty"`
+	// The uploaded image attachment. Absent until an image has been uploaded.
+	AttachmentRid *rids.AttachmentRid `json:"attachmentRid,omitempty" safelogging:"@Safe"`
+	// Alternative text for the image, for accessibility.
+	Alt *string `json:"alt,omitempty"`
+	// How the image fills its container. Clients provide a default when absent.
+	ObjectFit *ImageObjectFit `json:"objectFit,omitempty"`
+}
+
+func (o ImageVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ImageVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1982,6 +2418,42 @@ func (o *NeverConnectDisconnectedValues) UnmarshalYAML(unmarshal func(interface{
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type NoConfigAggregation struct{}
+
+func (o NoConfigAggregation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NoConfigAggregation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type NoConfigDataRequestMode struct{}
+
+func (o NoConfigDataRequestMode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NoConfigDataRequestMode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type NoConfigDisplayStat struct{}
 
 func (o NoConfigDisplayStat) MarshalYAML() (interface{}, error) {
@@ -2114,6 +2586,31 @@ func (o NumericBarVisualisationV2) MarshalYAML() (interface{}, error) {
 }
 
 func (o *NumericBarVisualisationV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Matches when lower < value < upper; both bounds are exclusive.
+Bounds must be finite and lower must be strictly less than upper.
+*/
+type NumericBetweenPredicate struct {
+	Lower float64 `json:"lower"`
+	Upper float64 `json:"upper"`
+}
+
+func (o NumericBetweenPredicate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericBetweenPredicate) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2514,6 +3011,24 @@ func (o *RangeValueChannel) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type RectangleShape struct{}
+
+func (o RectangleShape) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RectangleShape) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type RowIndependentPlotColoringConfiguration struct{}
 
 func (o RowIndependentPlotColoringConfiguration) MarshalYAML() (interface{}, error) {
@@ -2597,6 +3112,224 @@ func (o *SecondaryVariable) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type SendCommandsAction struct {
+	/*
+	   The commands to send when the action is activated. Must be
+	   non-empty and contain at most 32 entries. Translated at activation
+	   time into a command service SendCommands request.
+	*/
+	Commands []VizCommand `json:"commands"`
+}
+
+func (o SendCommandsAction) MarshalJSON() ([]byte, error) {
+	if o.Commands == nil {
+		o.Commands = make([]VizCommand, 0)
+	}
+	type _tmpSendCommandsAction SendCommandsAction
+	return safejson.Marshal(_tmpSendCommandsAction(o))
+}
+
+func (o *SendCommandsAction) UnmarshalJSON(data []byte) error {
+	type _tmpSendCommandsAction SendCommandsAction
+	var rawSendCommandsAction _tmpSendCommandsAction
+	if err := safejson.Unmarshal(data, &rawSendCommandsAction); err != nil {
+		return err
+	}
+	if rawSendCommandsAction.Commands == nil {
+		rawSendCommandsAction.Commands = make([]VizCommand, 0)
+	}
+	*o = SendCommandsAction(rawSendCommandsAction)
+	return nil
+}
+
+func (o SendCommandsAction) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SendCommandsAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ShapeVizDefinitionV1 struct {
+	Title *string `json:"title,omitempty"`
+	// The shape to render, with shape-specific configuration.
+	Shape     *Shape        `json:"shape,omitempty"`
+	FillColor *api.HexColor `json:"fillColor,omitempty" safelogging:"@Safe"`
+	/*
+	   Text rendered inside the shape. Absent means no text. The client
+	   picks the text color, and whether the shape needs an edge to stay
+	   visible, from the fill color and its own theme; neither is stored.
+	*/
+	Text *string `json:"text,omitempty"`
+}
+
+func (o ShapeVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ShapeVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Color each point using per-point RGB attribute values.
+type SpatialAppearanceColoringAttributeRgb struct {
+	// Name of the per-point attribute that encodes color (e.g. "rgb").
+	Attribute string `json:"attribute"`
+}
+
+func (o SpatialAppearanceColoringAttributeRgb) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialAppearanceColoringAttributeRgb) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Color by a per-point scalar attribute mapped through a colormap.
+type SpatialAppearanceColoringGeometry struct {
+	// Name of the per-point attribute to ramp (e.g. "intensity").
+	Attribute string          `json:"attribute"`
+	Colormap  SpatialColorMap `json:"colormap"`
+	// Colormap lower bound; omit to use the attribute's data minimum.
+	RangeMin *float64 `json:"rangeMin,omitempty"`
+	// Colormap upper bound; omit to use the attribute's data maximum.
+	RangeMax *float64 `json:"rangeMax,omitempty"`
+}
+
+func (o SpatialAppearanceColoringGeometry) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialAppearanceColoringGeometry) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Color by world-space position along a cardinal axis using a colormap.
+type SpatialAppearanceColoringGradient struct {
+	Axis     SpatialColorAxis       `json:"axis"`
+	Colormap SpatialColorMap        `json:"colormap"`
+	Extents  SpatialGradientExtents `json:"extents"`
+}
+
+func (o SpatialAppearanceColoringGradient) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialAppearanceColoringGradient) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Color using a baked matcap texture from the renderer's atlas.
+type SpatialAppearanceColoringMatCap struct {
+	Name SpatialMatcap `json:"name"`
+}
+
+func (o SpatialAppearanceColoringMatCap) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialAppearanceColoringMatCap) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Uniform solid color for all points.
+type SpatialAppearanceColoringSolid struct {
+	R int `json:"r"`
+	G int `json:"g"`
+	B int `json:"b"`
+	A int `json:"a"`
+}
+
+func (o SpatialAppearanceColoringSolid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialAppearanceColoringSolid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Color by world-space position along an axis direction using a named colormap.
+type SpatialColoringGeometryAxis struct {
+	Axis     Vec3d           `json:"axis"`
+	Colormap SpatialColorMap `json:"colormap"`
+	// Color ramp lower bound; omit for renderer default.
+	DataMin *float64 `json:"dataMin,omitempty"`
+	// Color ramp upper bound; omit for renderer default.
+	DataMax *float64 `json:"dataMax,omitempty"`
+}
+
+func (o SpatialColoringGeometryAxis) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialColoringGeometryAxis) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Bucket points together by proximity in value.
 type SpatialDecimation struct{}
 
@@ -2609,6 +3342,173 @@ func (o SpatialDecimation) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SpatialDecimation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Drives point-cloud visibility from the workbook playhead. When enabled,
+only points with a time attribute value ≤ the mapped playhead position
+are shown, revealing the cloud progressively as the playhead advances.
+*/
+type SpatialTimeBinding struct {
+	Enabled bool `json:"enabled"`
+	// Name of the per-point attribute that encodes time (e.g. "timestamp").
+	Attribute string          `json:"attribute"`
+	Unit      SpatialTimeUnit `json:"unit"`
+	/*
+	   User-supplied start of the point cloud's time range in µs. Used as a
+	   fallback when the ingest pipeline has not yet populated the spatial
+	   asset's relative_start_us property.
+	*/
+	RelativeStartUs *safelong.SafeLong `json:"relativeStartUs,omitempty"`
+	/*
+	   User-supplied end of the point cloud's time range in µs. Used as a
+	   fallback when the ingest pipeline has not yet populated the spatial
+	   asset's relative_end_us property.
+	*/
+	RelativeEndUs *safelong.SafeLong `json:"relativeEndUs,omitempty"`
+	// Controls which returns are visible relative to the playhead. Defaults to accumulated.
+	TimeWindow *SpatialTimeWindow `json:"timeWindow,omitempty"`
+}
+
+func (o SpatialTimeBinding) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialTimeBinding) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// All returns from the scan origin through the playhead.
+type SpatialTimeWindowAccumulated struct{}
+
+func (o SpatialTimeWindowAccumulated) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialTimeWindowAccumulated) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Returns within halfWidthSec seconds of the playhead in each direction.
+type SpatialTimeWindowSymmetric struct {
+	HalfWidthSec float64 `json:"halfWidthSec"`
+}
+
+func (o SpatialTimeWindowSymmetric) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialTimeWindowSymmetric) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// The most recent durationSec seconds of returns leading up to the playhead.
+type SpatialTimeWindowTrailing struct {
+	DurationSec float64 `json:"durationSec"`
+}
+
+func (o SpatialTimeWindowTrailing) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialTimeWindowTrailing) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// No filter — all points are visible.
+type SpatialVolumetricFilterNone struct{}
+
+func (o SpatialVolumetricFilterNone) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialVolumetricFilterNone) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Show only points whose attribute value equals a given string.
+type SpatialVolumetricFilterStringEquals struct {
+	Attribute string `json:"attribute"`
+	Value     string `json:"value"`
+}
+
+func (o SpatialVolumetricFilterStringEquals) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialVolumetricFilterStringEquals) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Show only points whose attribute value falls within [min, max].
+type SpatialVolumetricFilterValueRange struct {
+	Attribute string  `json:"attribute"`
+	Min       float64 `json:"min"`
+	Max       float64 `json:"max"`
+}
+
+func (o SpatialVolumetricFilterValueRange) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialVolumetricFilterValueRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2664,6 +3564,66 @@ func (o *StalenessConfiguration) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
+type StandardValve struct {
+	// Workbook channel variable providing valve feedback.
+	FeedbackChannelVariableName api2.ChannelVariableName `json:"feedbackChannelVariableName" safelogging:"@Unsafe"`
+	/*
+	   One or two rules with distinct states; first match wins.
+	   Missing, non-finite, or unmatched feedback renders unknown.
+	*/
+	StateMappings []ValveStateMapping `json:"stateMappings"`
+	/*
+	   Up to 32 choices in menu order. Clicking opens the menu; explicit
+	   selection executes only that choice's batch. All choices remain
+	   available regardless of feedback state. Empty means feedback-only.
+	*/
+	Actions []VizActionOption `json:"actions"`
+}
+
+func (o StandardValve) MarshalJSON() ([]byte, error) {
+	if o.StateMappings == nil {
+		o.StateMappings = make([]ValveStateMapping, 0)
+	}
+	if o.Actions == nil {
+		o.Actions = make([]VizActionOption, 0)
+	}
+	type _tmpStandardValve StandardValve
+	return safejson.Marshal(_tmpStandardValve(o))
+}
+
+func (o *StandardValve) UnmarshalJSON(data []byte) error {
+	type _tmpStandardValve StandardValve
+	var rawStandardValve _tmpStandardValve
+	if err := safejson.Unmarshal(data, &rawStandardValve); err != nil {
+		return err
+	}
+	if rawStandardValve.StateMappings == nil {
+		rawStandardValve.StateMappings = make([]ValveStateMapping, 0)
+	}
+	if rawStandardValve.Actions == nil {
+		rawStandardValve.Actions = make([]VizActionOption, 0)
+	}
+	*o = StandardValve(rawStandardValve)
+	return nil
+}
+
+func (o StandardValve) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StandardValve) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type StructCellConfig struct {
 	Visualisation *StructVisualisation `json:"visualisation,omitempty"`
 }
@@ -2703,6 +3663,148 @@ func (o *StructRawVisualisation) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
+type TableColumn struct {
+	Name        api2.ChannelVariableName `json:"name" safelogging:"@Unsafe"`
+	TypedConfig *TableColumnTypedConfig  `json:"typedConfig,omitempty"`
+	ColumnWidth *float64                 `json:"columnWidth,omitempty"`
+}
+
+func (o TableColumn) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TableColumn) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type TableColumnEnumConfig struct {
+	Aggregation           TableColumnEnumAggregation  `json:"aggregation"`
+	SummaryRowAggregation *TableColumnEnumAggregation `json:"summaryRowAggregation,omitempty"`
+}
+
+func (o TableColumnEnumConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TableColumnEnumConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type TableColumnLogConfig struct {
+	Aggregation           TableColumnLogAggregation  `json:"aggregation"`
+	SummaryRowAggregation *TableColumnLogAggregation `json:"summaryRowAggregation,omitempty"`
+	VisibleLogFields      []LogColumnName            `json:"visibleLogFields" safelogging:"@Unsafe"`
+	TagFilters            *LogColumnTagFilters       `json:"tagFilters,omitempty"`
+}
+
+func (o TableColumnLogConfig) MarshalJSON() ([]byte, error) {
+	if o.VisibleLogFields == nil {
+		o.VisibleLogFields = make([]LogColumnName, 0)
+	}
+	type _tmpTableColumnLogConfig TableColumnLogConfig
+	return safejson.Marshal(_tmpTableColumnLogConfig(o))
+}
+
+func (o *TableColumnLogConfig) UnmarshalJSON(data []byte) error {
+	type _tmpTableColumnLogConfig TableColumnLogConfig
+	var rawTableColumnLogConfig _tmpTableColumnLogConfig
+	if err := safejson.Unmarshal(data, &rawTableColumnLogConfig); err != nil {
+		return err
+	}
+	if rawTableColumnLogConfig.VisibleLogFields == nil {
+		rawTableColumnLogConfig.VisibleLogFields = make([]LogColumnName, 0)
+	}
+	*o = TableColumnLogConfig(rawTableColumnLogConfig)
+	return nil
+}
+
+func (o TableColumnLogConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TableColumnLogConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type TableColumnNumericConfig struct {
+	Aggregation           TableColumnNumericAggregation  `json:"aggregation"`
+	SummaryRowAggregation *TableColumnNumericAggregation `json:"summaryRowAggregation,omitempty"`
+	/*
+	   Optional per-column number formatting. If unset, the panel-level
+	   default formatting is used.
+	*/
+	NumberFormat *NumberFormat `json:"numberFormat,omitempty"`
+	/*
+	   Optional per-column comparison bar visibility. If unset, the
+	   panel-level comparisonBarsVisible setting is used. If both are
+	   unset, the default is false.
+	*/
+	ComparisonBarsVisible *bool `json:"comparisonBarsVisible,omitempty"`
+}
+
+func (o TableColumnNumericConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TableColumnNumericConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type TableColumnRangeConfig struct {
+	Aggregation           TableColumnRangeAggregation  `json:"aggregation"`
+	SummaryRowAggregation *TableColumnRangeAggregation `json:"summaryRowAggregation,omitempty"`
+}
+
+func (o TableColumnRangeConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TableColumnRangeConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Bucket points together by proximity in time.
 type TemporalDecimation struct{}
 
@@ -2715,6 +3817,25 @@ func (o TemporalDecimation) MarshalYAML() (interface{}, error) {
 }
 
 func (o *TemporalDecimation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Display relative timestamps as temporal subunits, such as 1h 20m 30s.
+type TemporalSubunitsRelativeTimestampFormat struct{}
+
+func (o TemporalSubunitsRelativeTimestampFormat) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TemporalSubunitsRelativeTimestampFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2964,10 +4085,11 @@ func (o *TimeSeriesPlot) UnmarshalYAML(unmarshal func(interface{}) error) error 
 
 // safelogging:@Unsafe
 type TimeSeriesPlotV2 struct {
-	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
-	Enabled      *bool                    `json:"enabled,omitempty"`
-	YAxisId      AxisId                   `json:"yAxisId" safelogging:"@Unsafe"`
-	Type         TimeSeriesPlotConfig     `json:"type"`
+	VariableName    api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
+	Enabled         *bool                    `json:"enabled,omitempty"`
+	YAxisId         AxisId                   `json:"yAxisId" safelogging:"@Unsafe"`
+	Type            TimeSeriesPlotConfig     `json:"type"`
+	HideFromTooltip *bool                    `json:"hideFromTooltip,omitempty"`
 }
 
 func (o TimeSeriesPlotV2) MarshalYAML() (interface{}, error) {
@@ -3052,6 +4174,85 @@ func (o *TimeSeriesRow) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type TimeSeriesTablePanelDefinitionV1 struct {
+	Title   *string       `json:"title,omitempty"`
+	Columns []TableColumn `json:"columns"`
+	/*
+	   Optional panel-level number formatting for numeric columns.
+	   Per-column number formatting overrides this value.
+	*/
+	NumberFormat         *NumberFormat `json:"numberFormat,omitempty"`
+	TimestampColumnWidth *float64      `json:"timestampColumnWidth,omitempty"`
+	// Whether to display the summary row at the bottom of the table. Default is true.
+	SummaryRowVisible *bool `json:"summaryRowVisible,omitempty"`
+	// Whether to display the comparison-style bars within numeric table cells. Default is false.
+	ComparisonBarsVisible *bool                `json:"comparisonBarsVisible,omitempty"`
+	BucketStrategy        *PanelBucketStrategy `json:"bucketStrategy,omitempty"`
+	/*
+	   Optional anchor point for fixed bucket alignment. When set,
+	   buckets align to this time instead of the viewport start.
+	*/
+	AnchorPoint *api6.Timestamp `json:"anchorPoint,omitempty"`
+	// The mode to use when requesting data from the backend. Default is full rate.
+	DataRequestMode *DataRequestMode `json:"dataRequestMode,omitempty"`
+}
+
+func (o TimeSeriesTablePanelDefinitionV1) MarshalJSON() ([]byte, error) {
+	if o.Columns == nil {
+		o.Columns = make([]TableColumn, 0)
+	}
+	type _tmpTimeSeriesTablePanelDefinitionV1 TimeSeriesTablePanelDefinitionV1
+	return safejson.Marshal(_tmpTimeSeriesTablePanelDefinitionV1(o))
+}
+
+func (o *TimeSeriesTablePanelDefinitionV1) UnmarshalJSON(data []byte) error {
+	type _tmpTimeSeriesTablePanelDefinitionV1 TimeSeriesTablePanelDefinitionV1
+	var rawTimeSeriesTablePanelDefinitionV1 _tmpTimeSeriesTablePanelDefinitionV1
+	if err := safejson.Unmarshal(data, &rawTimeSeriesTablePanelDefinitionV1); err != nil {
+		return err
+	}
+	if rawTimeSeriesTablePanelDefinitionV1.Columns == nil {
+		rawTimeSeriesTablePanelDefinitionV1.Columns = make([]TableColumn, 0)
+	}
+	*o = TimeSeriesTablePanelDefinitionV1(rawTimeSeriesTablePanelDefinitionV1)
+	return nil
+}
+
+func (o TimeSeriesTablePanelDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TimeSeriesTablePanelDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Display relative timestamps as a total number of seconds.
+type TotalSecondsRelativeTimestampFormat struct{}
+
+func (o TotalSecondsRelativeTimestampFormat) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TotalSecondsRelativeTimestampFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Trace struct {
 	/*
 	   The json trace definition according to plotly's schema
@@ -3121,6 +4322,24 @@ func (o *TraceCompute) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type TriangleShape struct{}
+
+func (o TriangleShape) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TriangleShape) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ValueAxis struct {
 	Id                  string             `json:"id"`
 	Title               string             `json:"title"`
@@ -3136,6 +4355,12 @@ type ValueAxis struct {
 	   opposite side (left for X axis, bottom for Y axis). Defaults to false.
 	*/
 	Reversed *bool `json:"reversed,omitempty"`
+	/*
+	   Spacing between axis tick labels in data units. Ticks are placed at
+	   multiples of this interval within the axis range. If not specified,
+	   ticks are chosen automatically. Applies to linear scales only.
+	*/
+	TickInterval *float64 `json:"tickInterval,omitempty"`
 }
 
 func (o ValueAxis) MarshalYAML() (interface{}, error) {
@@ -3193,6 +4418,44 @@ func (o ValueTableCell) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ValueTableCell) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ValueTableColumnChannel struct {
+	VariableName string `json:"variableName"`
+	// The column header. Falls back to the variable's own display name.
+	DisplayName *string `json:"displayName,omitempty"`
+	/*
+	   Per-column numeric visualisation, such as thresholds. Superseded by
+	   `cellConfig`, which readers prefer when both are set; writers keep
+	   writing the numeric arm's visualisation here so older readers still
+	   see thresholds.
+	*/
+	Visualisation *NumericValueVisualisationV2 `json:"visualisation,omitempty"`
+	/*
+	   Per-column typed cell settings, shared by every row of the column —
+	   the same union a grid cell persists, so the column view reaches
+	   settings parity with the grid (number format, enum color map, range,
+	   staleness, bit flags). The populated arm doubles as the channel's
+	   cell type; absent means a numeric channel configured only by
+	   `visualisation`.
+	*/
+	CellConfig *ValueTableCellConfig `json:"cellConfig,omitempty"`
+}
+
+func (o ValueTableColumnChannel) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ValueTableColumnChannel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -3274,6 +4537,85 @@ func (o *ValueTableDefinitionV2) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+A value table with three explicit layout modes: static, flow, and column.
+Display settings live here rather than on the layout so a mode switch
+preserves them; `column` has no home for them at all. The `grid` arm is
+reused verbatim from V2, making a static V3 payload byte-identical to the
+equivalent V2 one — the `v3` union tag is all that distinguishes them.
+*/
+type ValueTableDefinitionV3 struct {
+	// The display title of the panel.
+	Title *string `json:"title,omitempty"`
+	// If true, display units in the cells when available.
+	ShowUnits *bool `json:"showUnits,omitempty"`
+	// If true, display staleness indicator in the cells when available.
+	ShowStalenessIndicator *bool `json:"showStalenessIndicator,omitempty"`
+	// If true, display channel names in the cells.
+	ShowCellLabels *bool `json:"showCellLabels,omitempty"`
+	// If true, display column headers.
+	ShowColumnHeaders *bool `json:"showColumnHeaders,omitempty"`
+	// If true, display row headers.
+	ShowRowHeaders *bool `json:"showRowHeaders,omitempty"`
+	// The width of the row headers in pixels.
+	RowHeaderWidth *float64 `json:"rowHeaderWidth,omitempty"`
+	// Panel-level defaults for cell visualisations, applying to every layout mode.
+	GridDefaultCellConfigs ValueTableMultiCellConfig `json:"gridDefaultCellConfigs"`
+	Layout                 ValueTableLayoutV2        `json:"layout"`
+}
+
+func (o ValueTableDefinitionV3) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ValueTableDefinitionV3) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A cell in a flow layout, wrapped with the metadata identifying which
+grouped fan-out it came from.
+*/
+type ValueTableFlowCell struct {
+	Cell ValueTableCell `json:"cell"`
+	/*
+	   Stable id shared by every cell of one grouped fan-out. Client-generated,
+	   not a RID: there is no server-side registry, and it is meaningful only as
+	   a correlation key within a single panel payload.
+	*/
+	GroupId *uuid.UUID `json:"groupId,omitempty"`
+	/*
+	   Tag key to value, selecting which grouping of a grouped compute response
+	   this cell renders. Corresponds to `compute.api.Grouping.tagsWithValues`.
+	   Must be absent when `groupId` is absent.
+	*/
+	Partition *map[string]string `json:"partition,omitempty"`
+}
+
+func (o ValueTableFlowCell) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ValueTableFlowCell) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ValueTableGridRowColumnConfig struct {
 	// The index of the row or column to apply this configuration to.
 	Position   int                        `json:"position"`
@@ -3319,6 +4661,137 @@ func (o *ValueTableGridValueTableCell) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A layout that renders each channel as a column of a sortable, filterable table.
+type ValueTableLayoutColumn struct {
+	// The channels to display, one column each.
+	ColumnChannels []ValueTableColumnChannel `json:"columnChannels"`
+	/*
+	   Client-owned table state. The backend stores and returns it without
+	   interpreting it.
+	*/
+	ColumnTableState *ColumnTableState `json:"columnTableState,omitempty"`
+}
+
+func (o ValueTableLayoutColumn) MarshalJSON() ([]byte, error) {
+	if o.ColumnChannels == nil {
+		o.ColumnChannels = make([]ValueTableColumnChannel, 0)
+	}
+	type _tmpValueTableLayoutColumn ValueTableLayoutColumn
+	return safejson.Marshal(_tmpValueTableLayoutColumn(o))
+}
+
+func (o *ValueTableLayoutColumn) UnmarshalJSON(data []byte) error {
+	type _tmpValueTableLayoutColumn ValueTableLayoutColumn
+	var rawValueTableLayoutColumn _tmpValueTableLayoutColumn
+	if err := safejson.Unmarshal(data, &rawValueTableLayoutColumn); err != nil {
+		return err
+	}
+	if rawValueTableLayoutColumn.ColumnChannels == nil {
+		rawValueTableLayoutColumn.ColumnChannels = make([]ValueTableColumnChannel, 0)
+	}
+	*o = ValueTableLayoutColumn(rawValueTableLayoutColumn)
+	return nil
+}
+
+func (o ValueTableLayoutColumn) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ValueTableLayoutColumn) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A flowing layout where order is the data: cells render in list order and
+wrap onto a new line every `wrapWidth` cells. A cell's position is its
+index — there are no coordinates and no row or column counts.
+
+Deliberately has no `rowConfigs`: rows are derived wrap lines, so a
+persisted per-row config would be silently mis-targeted whenever
+`wrapWidth` or a fan-out's cardinality changed. Do not add one for symmetry.
+*/
+type ValueTableLayoutFlow struct {
+	// The cells to display, in render order.
+	Cells []ValueTableFlowCell `json:"cells"`
+	/*
+	   The number of cells per wrap line, and therefore the flow's column count.
+	   Never infer that count from `columnConfigs`, which is sparse: `[]` means
+	   `wrapWidth` columns none of which are configured, not zero columns.
+	*/
+	WrapWidth int `json:"wrapWidth"`
+	/*
+	   Column-level configurations, sparse over the `wrapWidth` columns: a column
+	   with no header and no cell config has no entry. `position` is authoritative
+	   rather than the array index, and must be less than `wrapWidth`. The
+	   count-plus-configs pairing mirrors `ValueTableLayoutGrid`'s `columnCount`,
+	   though that arm's list is written densely.
+	*/
+	ColumnConfigs []ValueTableGridRowColumnConfig `json:"columnConfigs"`
+	/*
+	   Per-group cell configuration, keyed by `ValueTableFlowCell.groupId`. A
+	   group with no entry falls back to `gridDefaultCellConfigs`; entries with
+	   no matching cell are tolerated.
+	*/
+	Groups map[string]ValueTableMultiCellConfig `json:"groups"`
+}
+
+func (o ValueTableLayoutFlow) MarshalJSON() ([]byte, error) {
+	if o.Cells == nil {
+		o.Cells = make([]ValueTableFlowCell, 0)
+	}
+	if o.ColumnConfigs == nil {
+		o.ColumnConfigs = make([]ValueTableGridRowColumnConfig, 0)
+	}
+	if o.Groups == nil {
+		o.Groups = make(map[string]ValueTableMultiCellConfig)
+	}
+	type _tmpValueTableLayoutFlow ValueTableLayoutFlow
+	return safejson.Marshal(_tmpValueTableLayoutFlow(o))
+}
+
+func (o *ValueTableLayoutFlow) UnmarshalJSON(data []byte) error {
+	type _tmpValueTableLayoutFlow ValueTableLayoutFlow
+	var rawValueTableLayoutFlow _tmpValueTableLayoutFlow
+	if err := safejson.Unmarshal(data, &rawValueTableLayoutFlow); err != nil {
+		return err
+	}
+	if rawValueTableLayoutFlow.Cells == nil {
+		rawValueTableLayoutFlow.Cells = make([]ValueTableFlowCell, 0)
+	}
+	if rawValueTableLayoutFlow.ColumnConfigs == nil {
+		rawValueTableLayoutFlow.ColumnConfigs = make([]ValueTableGridRowColumnConfig, 0)
+	}
+	if rawValueTableLayoutFlow.Groups == nil {
+		rawValueTableLayoutFlow.Groups = make(map[string]ValueTableMultiCellConfig)
+	}
+	*o = ValueTableLayoutFlow(rawValueTableLayoutFlow)
+	return nil
+}
+
+func (o ValueTableLayoutFlow) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ValueTableLayoutFlow) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 /*
 A 2D grid layout for the value table where cells are laid out in specific
 rows and columns. Supports hierarchical cell visualisation configurations, favoring when present:
@@ -3327,6 +4800,8 @@ the cell's own definition, then the column's, then the row's, then the panel's.
 type ValueTableLayoutGrid struct {
 	// If true, display row headers.
 	ShowRowHeaders *bool `json:"showRowHeaders,omitempty"`
+	// The width of the row headers in pixels.
+	RowHeaderWidth *float64 `json:"rowHeaderWidth,omitempty"`
 	// If true, display column headers.
 	ShowColumnHeaders *bool `json:"showColumnHeaders,omitempty"`
 	// If true, display channel names in the cells.
@@ -3444,6 +4919,70 @@ func (o *ValueTableStalenessConfig) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type ValveStateMapping struct {
+	State     ValveState     `json:"state"`
+	Predicate ValuePredicate `json:"predicate"`
+}
+
+func (o ValveStateMapping) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ValveStateMapping) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ValveVizDefinitionV1 struct {
+	Valve Valve `json:"valve"`
+}
+
+func (o ValveVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ValveVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A three-dimensional Cartesian vector.
+type Vec3d struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+	Z float64 `json:"z"`
+}
+
+func (o Vec3d) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Vec3d) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Enhanced video panel data source to be compatible with multiple assets
 // safelogging:@Unsafe
 type VideoPanelDataSource struct {
@@ -3516,11 +5055,11 @@ func (o *VideoVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Stores a video as a channel locator rather than the deprecated video datasource rid.
+// Stores a video as a variable rather than the deprecated video datasource rid.
 // safelogging:@Unsafe
 type VideoVizDefinitionV2 struct {
-	Title   *string            `json:"title,omitempty"`
-	Channel api.ChannelLocator `json:"channel" safelogging:"@Unsafe"`
+	Title    *string                  `json:"title,omitempty"`
+	Variable api2.ChannelVariableName `json:"variable" safelogging:"@Unsafe"`
 }
 
 func (o VideoVizDefinitionV2) MarshalYAML() (interface{}, error) {
@@ -3532,6 +5071,58 @@ func (o VideoVizDefinitionV2) MarshalYAML() (interface{}, error) {
 }
 
 func (o *VideoVizDefinitionV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A labeled action the user can select from a visualization's action menu.
+type VizActionOption struct {
+	// Menu label; must be non-empty and at most 128 characters.
+	Label  string    `json:"label"`
+	Action VizAction `json:"action"`
+	// If present, require explicit confirmation after selection and before execution.
+	Confirmation *CommandConfirmation `json:"confirmation,omitempty"`
+}
+
+func (o VizActionOption) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VizActionOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type VizCommand struct {
+	/*
+	   Workbook channel variable naming the commandable series. Must
+	   resolve to a physical series (VariableLocator.series); looked
+	   up in the workbook's channel-variable map at activation time.
+	*/
+	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
+	Value        api.CommandValue         `json:"value"`
+}
+
+func (o VizCommand) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VizCommand) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

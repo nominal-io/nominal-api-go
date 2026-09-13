@@ -16,6 +16,156 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+type batchSizeTooLarge struct {
+	RequestedSize int `json:"requestedSize"`
+	MaxBatchSize  int `json:"maxBatchSize"`
+}
+
+func (o batchSizeTooLarge) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *batchSizeTooLarge) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewBatchSizeTooLarge returns new instance of BatchSizeTooLarge error.
+func NewBatchSizeTooLarge(requestedSizeArg int, maxBatchSizeArg int) *BatchSizeTooLarge {
+	return &BatchSizeTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), batchSizeTooLarge: batchSizeTooLarge{RequestedSize: requestedSizeArg, MaxBatchSize: maxBatchSizeArg}}
+}
+
+// WrapWithBatchSizeTooLarge returns new instance of BatchSizeTooLarge error wrapping an existing error.
+func WrapWithBatchSizeTooLarge(err error, requestedSizeArg int, maxBatchSizeArg int) *BatchSizeTooLarge {
+	return &BatchSizeTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, batchSizeTooLarge: batchSizeTooLarge{RequestedSize: requestedSizeArg, MaxBatchSize: maxBatchSizeArg}}
+}
+
+// BatchSizeTooLarge is an error type.
+type BatchSizeTooLarge struct {
+	errorInstanceID uuid.UUID
+	batchSizeTooLarge
+	cause error
+	stack werror.StackTrace
+}
+
+// IsBatchSizeTooLarge returns true if err is an instance of BatchSizeTooLarge.
+func IsBatchSizeTooLarge(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*BatchSizeTooLarge)
+	return ok
+}
+
+func (e *BatchSizeTooLarge) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT DataSource:BatchSizeTooLarge (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *BatchSizeTooLarge) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *BatchSizeTooLarge) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *BatchSizeTooLarge) Message() string {
+	return "INVALID_ARGUMENT DataSource:BatchSizeTooLarge"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *BatchSizeTooLarge) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *BatchSizeTooLarge) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *BatchSizeTooLarge) Name() string {
+	return "DataSource:BatchSizeTooLarge"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *BatchSizeTooLarge) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *BatchSizeTooLarge) Parameters() map[string]interface{} {
+	return map[string]interface{}{"requestedSize": e.RequestedSize, "maxBatchSize": e.MaxBatchSize}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *BatchSizeTooLarge) safeParams() map[string]interface{} {
+	return map[string]interface{}{"requestedSize": e.RequestedSize, "maxBatchSize": e.MaxBatchSize, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *BatchSizeTooLarge) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *BatchSizeTooLarge) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *BatchSizeTooLarge) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e BatchSizeTooLarge) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.batchSizeTooLarge)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "DataSource:BatchSizeTooLarge", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *BatchSizeTooLarge) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters batchSizeTooLarge
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.batchSizeTooLarge = parameters
+	return nil
+}
+
 // safelogging:@Safe
 type cannotGetTagsForNonSeriesDataSource struct {
 	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
@@ -1110,7 +1260,29 @@ func (e *PrefixTreeTooLarge) UnmarshalJSON(data []byte) error {
 }
 
 type requestedPageOffsetTooLarge struct {
-	Offset int `json:"offset"`
+	Offset         int                  `json:"offset"`
+	DataSourceRids []rids.DataSourceRid `json:"dataSourceRids" safelogging:"@Safe"`
+}
+
+func (o requestedPageOffsetTooLarge) MarshalJSON() ([]byte, error) {
+	if o.DataSourceRids == nil {
+		o.DataSourceRids = make([]rids.DataSourceRid, 0)
+	}
+	type _tmprequestedPageOffsetTooLarge requestedPageOffsetTooLarge
+	return safejson.Marshal(_tmprequestedPageOffsetTooLarge(o))
+}
+
+func (o *requestedPageOffsetTooLarge) UnmarshalJSON(data []byte) error {
+	type _tmprequestedPageOffsetTooLarge requestedPageOffsetTooLarge
+	var rawrequestedPageOffsetTooLarge _tmprequestedPageOffsetTooLarge
+	if err := safejson.Unmarshal(data, &rawrequestedPageOffsetTooLarge); err != nil {
+		return err
+	}
+	if rawrequestedPageOffsetTooLarge.DataSourceRids == nil {
+		rawrequestedPageOffsetTooLarge.DataSourceRids = make([]rids.DataSourceRid, 0)
+	}
+	*o = requestedPageOffsetTooLarge(rawrequestedPageOffsetTooLarge)
+	return nil
 }
 
 func (o requestedPageOffsetTooLarge) MarshalYAML() (interface{}, error) {
@@ -1130,13 +1302,13 @@ func (o *requestedPageOffsetTooLarge) UnmarshalYAML(unmarshal func(interface{}) 
 }
 
 // NewRequestedPageOffsetTooLarge returns new instance of RequestedPageOffsetTooLarge error.
-func NewRequestedPageOffsetTooLarge(offsetArg int) *RequestedPageOffsetTooLarge {
-	return &RequestedPageOffsetTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), requestedPageOffsetTooLarge: requestedPageOffsetTooLarge{Offset: offsetArg}}
+func NewRequestedPageOffsetTooLarge(offsetArg int, dataSourceRidsArg []rids.DataSourceRid) *RequestedPageOffsetTooLarge {
+	return &RequestedPageOffsetTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), requestedPageOffsetTooLarge: requestedPageOffsetTooLarge{Offset: offsetArg, DataSourceRids: dataSourceRidsArg}}
 }
 
 // WrapWithRequestedPageOffsetTooLarge returns new instance of RequestedPageOffsetTooLarge error wrapping an existing error.
-func WrapWithRequestedPageOffsetTooLarge(err error, offsetArg int) *RequestedPageOffsetTooLarge {
-	return &RequestedPageOffsetTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, requestedPageOffsetTooLarge: requestedPageOffsetTooLarge{Offset: offsetArg}}
+func WrapWithRequestedPageOffsetTooLarge(err error, offsetArg int, dataSourceRidsArg []rids.DataSourceRid) *RequestedPageOffsetTooLarge {
+	return &RequestedPageOffsetTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, requestedPageOffsetTooLarge: requestedPageOffsetTooLarge{Offset: offsetArg, DataSourceRids: dataSourceRidsArg}}
 }
 
 // RequestedPageOffsetTooLarge is an error type.
@@ -1199,12 +1371,12 @@ func (e *RequestedPageOffsetTooLarge) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *RequestedPageOffsetTooLarge) Parameters() map[string]interface{} {
-	return map[string]interface{}{"offset": e.Offset}
+	return map[string]interface{}{"offset": e.Offset, "dataSourceRids": e.DataSourceRids}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *RequestedPageOffsetTooLarge) safeParams() map[string]interface{} {
-	return map[string]interface{}{"offset": e.Offset, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"offset": e.Offset, "dataSourceRids": e.DataSourceRids, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -1706,6 +1878,7 @@ func (e *TooManyTagValuesRequested) UnmarshalJSON(data []byte) error {
 }
 
 func init() {
+	conjureerrors.RegisterErrorType("DataSource:BatchSizeTooLarge", reflect.TypeOf(BatchSizeTooLarge{}))
 	conjureerrors.RegisterErrorType("DataSource:CannotGetTagsForNonSeriesDataSource", reflect.TypeOf(CannotGetTagsForNonSeriesDataSource{}))
 	conjureerrors.RegisterErrorType("DataSource:DataSourceNotFound", reflect.TypeOf(DataSourceNotFound{}))
 	conjureerrors.RegisterErrorType("DataSource:DataSourcesNotFound", reflect.TypeOf(DataSourcesNotFound{}))

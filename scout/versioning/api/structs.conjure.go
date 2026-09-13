@@ -312,10 +312,15 @@ func (o *ResourceAndCommitId) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// safelogging:@Safe
 type SaveWorkingStateRequest struct {
 	NewCommit    CommitId  `json:"newCommit" safelogging:"@Safe"`
 	LatestCommit *CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
+	/*
+	   Message to record on the working-state commit. At most 4096 characters. Defaults to
+	   "auto-save" when absent or blank, which is what every caller received before this
+	   field existed.
+	*/
+	Message *string `json:"message,omitempty"`
 }
 
 func (o SaveWorkingStateRequest) MarshalYAML() (interface{}, error) {

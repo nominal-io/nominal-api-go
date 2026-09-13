@@ -509,9 +509,11 @@ func (e *InvalidDataSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// safelogging:@Safe
+// safelogging:@Unsafe
 type seriesMetadataNotFound struct {
-	Rid api.SeriesMetadataRid `json:"rid" safelogging:"@Safe"`
+	Rid           *api.SeriesMetadataRid `json:"rid,omitempty" safelogging:"@Safe"`
+	DataSourceRid *rids.DataSourceRid    `json:"dataSourceRid,omitempty" safelogging:"@Safe"`
+	Channel       *api.Channel           `json:"channel,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o seriesMetadataNotFound) MarshalYAML() (interface{}, error) {
@@ -531,16 +533,20 @@ func (o *seriesMetadataNotFound) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 // NewSeriesMetadataNotFound returns new instance of SeriesMetadataNotFound error.
-func NewSeriesMetadataNotFound(ridArg api.SeriesMetadataRid) *SeriesMetadataNotFound {
-	return &SeriesMetadataNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), seriesMetadataNotFound: seriesMetadataNotFound{Rid: ridArg}}
+func NewSeriesMetadataNotFound(ridArg *api.SeriesMetadataRid, dataSourceRidArg *rids.DataSourceRid, channelArg *api.Channel) *SeriesMetadataNotFound {
+	return &SeriesMetadataNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), seriesMetadataNotFound: seriesMetadataNotFound{Rid: ridArg, DataSourceRid: dataSourceRidArg, Channel: channelArg}}
 }
 
 // WrapWithSeriesMetadataNotFound returns new instance of SeriesMetadataNotFound error wrapping an existing error.
-func WrapWithSeriesMetadataNotFound(err error, ridArg api.SeriesMetadataRid) *SeriesMetadataNotFound {
-	return &SeriesMetadataNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, seriesMetadataNotFound: seriesMetadataNotFound{Rid: ridArg}}
+func WrapWithSeriesMetadataNotFound(err error, ridArg *api.SeriesMetadataRid, dataSourceRidArg *rids.DataSourceRid, channelArg *api.Channel) *SeriesMetadataNotFound {
+	return &SeriesMetadataNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, seriesMetadataNotFound: seriesMetadataNotFound{Rid: ridArg, DataSourceRid: dataSourceRidArg, Channel: channelArg}}
 }
 
 // SeriesMetadataNotFound is an error type.
+/*
+The error supports both series metadata lookup shapes. RID-based lookups populate `rid`; channel lookups
+populate `dataSourceRid` and `channel`.
+*/
 type SeriesMetadataNotFound struct {
 	errorInstanceID uuid.UUID
 	seriesMetadataNotFound
@@ -600,12 +606,12 @@ func (e *SeriesMetadataNotFound) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *SeriesMetadataNotFound) Parameters() map[string]interface{} {
-	return map[string]interface{}{"rid": e.Rid}
+	return map[string]interface{}{"rid": e.Rid, "dataSourceRid": e.DataSourceRid, "channel": e.Channel}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *SeriesMetadataNotFound) safeParams() map[string]interface{} {
-	return map[string]interface{}{"rid": e.Rid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"rid": e.Rid, "dataSourceRid": e.DataSourceRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -622,7 +628,7 @@ func (e *SeriesMetadataNotFound) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *SeriesMetadataNotFound) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"channel": e.Channel}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
