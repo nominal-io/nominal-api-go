@@ -4,10 +4,13 @@ package catalog
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	"github.com/nominal-io/nominal-api-go/ingest/api"
-	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/datasource"
-	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/compute/api"
+	"github.com/nominal-io/nominal-api-go/scout/compute/api1"
+	api5 "github.com/nominal-io/nominal-api-go/scout/datasource/connection/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/versioning/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"
@@ -16,46 +19,18 @@ import (
 	"github.com/palantir/pkg/uuid"
 )
 
-type AddFileToDataset struct {
-	Handle Handle `json:"handle"`
-	// The size of the file in bytes.
-	FileSize          safelong.SafeLong  `json:"fileSize"`
-	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
-	IngestTagMetadata *IngestTagMetadata `json:"ingestTagMetadata,omitempty"`
-	OriginFileHandles *[]S3Handle        `json:"originFileHandles,omitempty"`
-	IngestJobRid      *api.IngestJobRid  `json:"ingestJobRid,omitempty" safelogging:"@Safe"`
-	// File-type-specific metadata. For video files, contains timestamp manifest.
-	Metadata *DatasetFileMetadata `json:"metadata,omitempty"`
-}
-
-func (o AddFileToDataset) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *AddFileToDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 // safelogging:@Unsafe
 type AllPropertiesAndLabelsResponse struct {
-	Properties map[api1.PropertyName][]api1.PropertyValue `json:"properties"`
-	Labels     []api1.Label                               `json:"labels" safelogging:"@Unsafe"`
+	Properties map[api.PropertyName][]api.PropertyValue `json:"properties"`
+	Labels     []api.Label                              `json:"labels" safelogging:"@Unsafe"`
 }
 
 func (o AllPropertiesAndLabelsResponse) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName][]api1.PropertyValue)
+		o.Properties = make(map[api.PropertyName][]api.PropertyValue)
 	}
 	if o.Labels == nil {
-		o.Labels = make([]api1.Label, 0)
+		o.Labels = make([]api.Label, 0)
 	}
 	type _tmpAllPropertiesAndLabelsResponse AllPropertiesAndLabelsResponse
 	return safejson.Marshal(_tmpAllPropertiesAndLabelsResponse(o))
@@ -68,10 +43,10 @@ func (o *AllPropertiesAndLabelsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawAllPropertiesAndLabelsResponse.Properties == nil {
-		rawAllPropertiesAndLabelsResponse.Properties = make(map[api1.PropertyName][]api1.PropertyValue)
+		rawAllPropertiesAndLabelsResponse.Properties = make(map[api.PropertyName][]api.PropertyValue)
 	}
 	if rawAllPropertiesAndLabelsResponse.Labels == nil {
-		rawAllPropertiesAndLabelsResponse.Labels = make([]api1.Label, 0)
+		rawAllPropertiesAndLabelsResponse.Labels = make([]api.Label, 0)
 	}
 	*o = AllPropertiesAndLabelsResponse(rawAllPropertiesAndLabelsResponse)
 	return nil
@@ -137,8 +112,8 @@ func (o *BatchGetDatasetFilesRequest) UnmarshalYAML(unmarshal func(interface{}) 
 }
 
 type Bounds struct {
-	Start api1.Timestamp           `json:"start" safelogging:"@Safe"`
-	End   api1.Timestamp           `json:"end" safelogging:"@Safe"`
+	Start api.Timestamp            `json:"start" safelogging:"@Safe"`
+	End   api.Timestamp            `json:"end" safelogging:"@Safe"`
 	Type  datasource.TimestampType `json:"type"`
 }
 
@@ -247,19 +222,51 @@ func (o *ChannelDetails) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type CommitDerivedDefinitionRequest struct {
+	Spec    api1.Dataset `json:"spec"`
+	Message string       `json:"message"`
+	/*
+	   If present, validates that the latest commit on main matches this id,
+	   and otherwise throws CommitConflict.
+	*/
+	LatestCommit *api2.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
+}
+
+func (o CommitDerivedDefinitionRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CommitDerivedDefinitionRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Unsafe
 type CreateDataset struct {
 	Name string `json:"name"`
 	// Deprecated: Handles should only be specified when adding files to datasets
 	Handle *Handle `json:"handle,omitempty"`
 	// Deprecated: Deprecated in favor of properties
-	Metadata       map[string]string                        `json:"metadata"`
-	OriginMetadata DatasetOriginMetadata                    `json:"originMetadata"`
-	Labels         []api1.Label                             `json:"labels" safelogging:"@Unsafe"`
-	Properties     map[api1.PropertyName]api1.PropertyValue `json:"properties"`
-	Description    *string                                  `json:"description,omitempty"`
+	Metadata       map[string]string     `json:"metadata"`
+	OriginMetadata DatasetOriginMetadata `json:"originMetadata"`
+	Labels         []api.Label           `json:"labels" safelogging:"@Unsafe"`
+	/*
+	   User-defined dataset properties. The UTF-8 JSON serialization must not exceed 2,000 bytes.
+
+	   Deprecated: use typedProperties
+	*/
+	Properties      map[api.PropertyName]api.PropertyValue      `json:"properties"`
+	TypedProperties map[api.PropertyName]api.TypedPropertyValue `json:"typedProperties"`
+	Description     *string                                     `json:"description,omitempty"`
 	// Granularity of dataset timestamps. Defaults to nanoseconds.
-	Granularity *api1.Granularity `json:"granularity,omitempty"`
+	Granularity *api.Granularity `json:"granularity,omitempty"`
 	/*
 	   If true, the dataset should be ingested to the v2 tables and is compatible with streaming.
 
@@ -275,9 +282,21 @@ type CreateDataset struct {
 	   The markings to apply to the created dataset.
 	   If not provided, the dataset will be visible to all users in the same workspace.
 	*/
-	MarkingRids []api2.MarkingRid `json:"markingRids" safelogging:"@Safe"`
+	MarkingRids []api3.MarkingRid `json:"markingRids" safelogging:"@Safe"`
 	// The backing dataset type. Defaults to LEGACY type.
 	DatasetType *DatasetBackingType `json:"datasetType,omitempty"`
+	/*
+	   Definition for a derived dataset. When present, the created dataset is virtual and does not ingest or
+	   persist dataset files.
+	*/
+	DerivedDefinition *CreateDerivedDefinition `json:"derivedDefinition,omitempty"`
+	/*
+	   Tag keys whose distinct values channel search surfaces as separate series. Every key must be produced by
+	   `derivedDefinition`; ingested tag keys, and keys supplied without a `derivedDefinition`, are rejected.
+	*/
+	ChannelSearchSplitTagKeys []api.TagName `json:"channelSearchSplitTagKeys" safelogging:"@Unsafe"`
+	// If set, the dataset's default group-by and aggregation config.
+	DefaultGroupByAndAggregationConfig *DefaultGroupByAndAggregationConfig `json:"defaultGroupByAndAggregationConfig,omitempty"`
 }
 
 func (o CreateDataset) MarshalJSON() ([]byte, error) {
@@ -285,13 +304,19 @@ func (o CreateDataset) MarshalJSON() ([]byte, error) {
 		o.Metadata = make(map[string]string)
 	}
 	if o.Labels == nil {
-		o.Labels = make([]api1.Label, 0)
+		o.Labels = make([]api.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName]api1.PropertyValue)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if o.TypedProperties == nil {
+		o.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
 	}
 	if o.MarkingRids == nil {
-		o.MarkingRids = make([]api2.MarkingRid, 0)
+		o.MarkingRids = make([]api3.MarkingRid, 0)
+	}
+	if o.ChannelSearchSplitTagKeys == nil {
+		o.ChannelSearchSplitTagKeys = make([]api.TagName, 0)
 	}
 	type _tmpCreateDataset CreateDataset
 	return safejson.Marshal(_tmpCreateDataset(o))
@@ -307,13 +332,19 @@ func (o *CreateDataset) UnmarshalJSON(data []byte) error {
 		rawCreateDataset.Metadata = make(map[string]string)
 	}
 	if rawCreateDataset.Labels == nil {
-		rawCreateDataset.Labels = make([]api1.Label, 0)
+		rawCreateDataset.Labels = make([]api.Label, 0)
 	}
 	if rawCreateDataset.Properties == nil {
-		rawCreateDataset.Properties = make(map[api1.PropertyName]api1.PropertyValue)
+		rawCreateDataset.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if rawCreateDataset.TypedProperties == nil {
+		rawCreateDataset.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
 	}
 	if rawCreateDataset.MarkingRids == nil {
-		rawCreateDataset.MarkingRids = make([]api2.MarkingRid, 0)
+		rawCreateDataset.MarkingRids = make([]api3.MarkingRid, 0)
+	}
+	if rawCreateDataset.ChannelSearchSplitTagKeys == nil {
+		rawCreateDataset.ChannelSearchSplitTagKeys = make([]api.TagName, 0)
 	}
 	*o = CreateDataset(rawCreateDataset)
 	return nil
@@ -362,6 +393,29 @@ func (o *CreateDatasetWithUuidRequest) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type CreateDerivedDefinition struct {
+	// Initial derived dataset logic.
+	Spec api1.Dataset `json:"spec"`
+	// Initial commit message for the derived definition's main branch.
+	Message string `json:"message"`
+}
+
+func (o CreateDerivedDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CreateDerivedDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type CustomTimestamp struct {
 	// The format string should be in the format of the `DateTimeFormatter` class in Java.
 	Format string `json:"format"`
@@ -392,25 +446,47 @@ type Dataset struct {
 	Rid  rid.ResourceIdentifier `json:"rid"`
 	Name string                 `json:"name"`
 	// Deprecated: Deprecated. Use DatasetFile#handle
-	Handle         *Handle                                  `json:"handle,omitempty"`
-	Description    *string                                  `json:"description,omitempty"`
-	OriginMetadata DatasetOriginMetadata                    `json:"originMetadata"`
-	Bounds         *Bounds                                  `json:"bounds,omitempty"`
-	Properties     map[api1.PropertyName]api1.PropertyValue `json:"properties"`
-	Labels         []api1.Label                             `json:"labels" safelogging:"@Unsafe"`
-	TimestampType  WeakTimestampType                        `json:"timestampType"`
-	AllowStreaming bool                                     `json:"allowStreaming"`
-	Granularity    api1.Granularity                         `json:"granularity"`
-	IsArchived     bool                                     `json:"isArchived"`
-	DatasetType    *DatasetBackingType                      `json:"datasetType,omitempty"`
+	Handle         *Handle               `json:"handle,omitempty"`
+	Description    *string               `json:"description,omitempty"`
+	OriginMetadata DatasetOriginMetadata `json:"originMetadata"`
+	Bounds         *Bounds               `json:"bounds,omitempty"`
+	// Deprecated: use typedProperties
+	Properties                         map[api.PropertyName]api.PropertyValue      `json:"properties"`
+	TypedProperties                    map[api.PropertyName]api.TypedPropertyValue `json:"typedProperties"`
+	Labels                             []api.Label                                 `json:"labels" safelogging:"@Unsafe"`
+	TimestampType                      WeakTimestampType                           `json:"timestampType"`
+	AllowStreaming                     bool                                        `json:"allowStreaming"`
+	Granularity                        api.Granularity                             `json:"granularity"`
+	IsArchived                         bool                                        `json:"isArchived"`
+	DatasetType                        *DatasetBackingType                         `json:"datasetType,omitempty"`
+	DefaultGroupByAndAggregationConfig *DefaultGroupByAndAggregationConfig         `json:"defaultGroupByAndAggregationConfig,omitempty"`
+	/*
+	   Definition for a derived dataset. When present, this dataset is virtual and backed by the referenced
+	   provided Dataset definition instead of persisted dataset files.
+	*/
+	DerivedDefinition *DerivedDefinition `json:"derivedDefinition,omitempty"`
+	/*
+	   Tag keys whose distinct values channel search surfaces as separate series. Each listed key is retained
+	   on this dataset's channel-search locators, so a channel carrying two values of that key appears once per
+	   value instead of collapsing into a single entry — the behavior a data scope has on an asset. Keys not
+	   listed here stay available for filtering and grouping but do not contribute to series cardinality.
+	   Every key must be produced by this dataset's `derivedDefinition`. Ingested tag keys cannot be split on.
+	*/
+	ChannelSearchSplitTagKeys []api.TagName `json:"channelSearchSplitTagKeys" safelogging:"@Unsafe"`
 }
 
 func (o Dataset) MarshalJSON() ([]byte, error) {
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName]api1.PropertyValue)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if o.TypedProperties == nil {
+		o.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
 	}
 	if o.Labels == nil {
-		o.Labels = make([]api1.Label, 0)
+		o.Labels = make([]api.Label, 0)
+	}
+	if o.ChannelSearchSplitTagKeys == nil {
+		o.ChannelSearchSplitTagKeys = make([]api.TagName, 0)
 	}
 	type _tmpDataset Dataset
 	return safejson.Marshal(_tmpDataset(o))
@@ -423,10 +499,16 @@ func (o *Dataset) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawDataset.Properties == nil {
-		rawDataset.Properties = make(map[api1.PropertyName]api1.PropertyValue)
+		rawDataset.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if rawDataset.TypedProperties == nil {
+		rawDataset.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
 	}
 	if rawDataset.Labels == nil {
-		rawDataset.Labels = make([]api1.Label, 0)
+		rawDataset.Labels = make([]api.Label, 0)
+	}
+	if rawDataset.ChannelSearchSplitTagKeys == nil {
+		rawDataset.ChannelSearchSplitTagKeys = make([]api.TagName, 0)
 	}
 	*o = Dataset(rawDataset)
 	return nil
@@ -441,46 +523,6 @@ func (o Dataset) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Dataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type DatasetFile struct {
-	Id         datasource.DatasetFileId `json:"id" safelogging:"@Safe"`
-	DatasetRid rids.DatasetRid          `json:"datasetRid" safelogging:"@Safe"`
-	Name       string                   `json:"name"`
-	Handle     Handle                   `json:"handle"`
-	Bounds     *Bounds                  `json:"bounds,omitempty"`
-	// Timestamp that the file was received and stored, but not processed or made available to consumers.
-	UploadedAt datetime.DateTime `json:"uploadedAt"`
-	/*
-	   Timestamp that the file is ingested at and made available for processing. If the file has failed to be
-	   ingested for any reason or is still being processed, then this value will be empty.
-	*/
-	IngestedAt        *datetime.DateTime  `json:"ingestedAt,omitempty"`
-	IngestStatus      api1.IngestStatusV2 `json:"ingestStatus"`
-	TimestampMetadata *TimestampMetadata  `json:"timestampMetadata,omitempty"`
-	IngestTagMetadata *IngestTagMetadata  `json:"ingestTagMetadata,omitempty"`
-	OriginFilePaths   *[]string           `json:"originFilePaths,omitempty"`
-	IngestJobRid      *api.IngestJobRid   `json:"ingestJobRid,omitempty" safelogging:"@Safe"`
-	// Timestamp that the file is deleted at, only present if the file has been deleted.
-	DeletedAt *datetime.DateTime `json:"deletedAt,omitempty"`
-	// File-type-specific metadata. For video files, contains timestamp manifest and segment metadata.
-	Metadata *DatasetFileMetadata `json:"metadata,omitempty"`
-}
-
-func (o DatasetFile) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *DatasetFile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -533,49 +575,6 @@ func (o *DatasetFileUri) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// safelogging:@Unsafe
-type DatasetFilesPage struct {
-	Files    []DatasetFile `json:"files"`
-	NextPage *api1.Token   `json:"nextPage,omitempty" safelogging:"@Unsafe"`
-}
-
-func (o DatasetFilesPage) MarshalJSON() ([]byte, error) {
-	if o.Files == nil {
-		o.Files = make([]DatasetFile, 0)
-	}
-	type _tmpDatasetFilesPage DatasetFilesPage
-	return safejson.Marshal(_tmpDatasetFilesPage(o))
-}
-
-func (o *DatasetFilesPage) UnmarshalJSON(data []byte) error {
-	type _tmpDatasetFilesPage DatasetFilesPage
-	var rawDatasetFilesPage _tmpDatasetFilesPage
-	if err := safejson.Unmarshal(data, &rawDatasetFilesPage); err != nil {
-		return err
-	}
-	if rawDatasetFilesPage.Files == nil {
-		rawDatasetFilesPage.Files = make([]DatasetFile, 0)
-	}
-	*o = DatasetFilesPage(rawDatasetFilesPage)
-	return nil
-}
-
-func (o DatasetFilesPage) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *DatasetFilesPage) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type DatasetOriginMetadata struct {
 	// Deprecated in favor of FileOriginMetadata
 	Path *string `json:"path,omitempty"`
@@ -586,7 +585,7 @@ type DatasetOriginMetadata struct {
 	// Deprecated in favor of FileOriginMetadata
 	XSeriesColumnName *string `json:"xSeriesColumnName,omitempty"`
 	// Deprecated in favor of FileOriginMetadata
-	XSeriesTimeUnit *api1.TimeUnit `json:"xSeriesTimeUnit,omitempty"`
+	XSeriesTimeUnit *api.TimeUnit `json:"xSeriesTimeUnit,omitempty"`
 	// Deprecated in favor of FileOriginMetadata
 	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
 	ChannelConfig     *ChannelConfig     `json:"channelConfig,omitempty"`
@@ -608,6 +607,50 @@ func (o *DatasetOriginMetadata) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Dataset-level defaults that clients apply when creating new channel references.
+type DefaultGroupByAndAggregationConfig struct {
+	// If set, the default aggregation applied to merge points of a numeric series that share an exact timestamp.
+	NumericAggregation *api4.NumericAggregationOperator `json:"numericAggregation,omitempty"`
+}
+
+func (o DefaultGroupByAndAggregationConfig) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DefaultGroupByAndAggregationConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A derived dataset definition pinned to the commit that produced it.
+type DerivedDefinition struct {
+	Spec   api1.Dataset `json:"spec"`
+	Commit api2.Commit  `json:"commit"`
+}
+
+func (o DerivedDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DerivedDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Unsafe
 type EnrichedDataset struct {
 	Rid         rid.ResourceIdentifier `json:"rid"`
@@ -621,27 +664,55 @@ type EnrichedDataset struct {
 	Handle     *Handle           `json:"handle,omitempty"`
 	IngestDate datetime.DateTime `json:"ingestDate"`
 	// Deprecated: Deprecated. Use lastIngestStatus.
-	IngestStatus     *IngestStatus                            `json:"ingestStatus,omitempty"`
-	OriginMetadata   DatasetOriginMetadata                    `json:"originMetadata"`
-	LastIngestStatus api1.IngestStatusV2                      `json:"lastIngestStatus"`
-	RetentionPolicy  RetentionPolicy                          `json:"retentionPolicy"`
-	Source           *string                                  `json:"source,omitempty"`
-	Bounds           *Bounds                                  `json:"bounds,omitempty"`
-	TimestampType    WeakTimestampType                        `json:"timestampType"`
-	Labels           []api1.Label                             `json:"labels" safelogging:"@Unsafe"`
-	Properties       map[api1.PropertyName]api1.PropertyValue `json:"properties"`
-	Granularity      api1.Granularity                         `json:"granularity"`
-	AllowStreaming   bool                                     `json:"allowStreaming"`
-	IsArchived       bool                                     `json:"isArchived"`
-	DatasetType      *DatasetBackingType                      `json:"datasetType,omitempty"`
+	IngestStatus     *IngestStatus         `json:"ingestStatus,omitempty"`
+	OriginMetadata   DatasetOriginMetadata `json:"originMetadata"`
+	LastIngestStatus api.IngestStatusV2    `json:"lastIngestStatus"`
+	RetentionPolicy  RetentionPolicy       `json:"retentionPolicy"`
+	Source           *string               `json:"source,omitempty"`
+	Bounds           *Bounds               `json:"bounds,omitempty"`
+	TimestampType    WeakTimestampType     `json:"timestampType"`
+	Labels           []api.Label           `json:"labels" safelogging:"@Unsafe"`
+	// Deprecated: use typedProperties
+	Properties                         map[api.PropertyName]api.PropertyValue      `json:"properties"`
+	TypedProperties                    map[api.PropertyName]api.TypedPropertyValue `json:"typedProperties"`
+	Granularity                        api.Granularity                             `json:"granularity"`
+	AllowStreaming                     bool                                        `json:"allowStreaming"`
+	IsArchived                         bool                                        `json:"isArchived"`
+	DatasetType                        *DatasetBackingType                         `json:"datasetType,omitempty"`
+	DefaultGroupByAndAggregationConfig *DefaultGroupByAndAggregationConfig         `json:"defaultGroupByAndAggregationConfig,omitempty"`
+	/*
+	   Connection RID whose data source was migrated into this dataset. Empty for datasets that were not created
+	   by the legacy connection-to-dataset migrations, or when the original connection row no longer exists.
+	*/
+	MigratedFromConnectionRid  *api5.ConnectionRid         `json:"migratedFromConnectionRid,omitempty" safelogging:"@Safe"`
+	ExternalConnectionMetadata *ExternalConnectionMetadata `json:"externalConnectionMetadata,omitempty"`
+	/*
+	   Definition for a derived dataset. When present, this dataset is virtual and backed by the referenced
+	   provided Dataset definition instead of persisted dataset files.
+	*/
+	DerivedDefinition *DerivedDefinition `json:"derivedDefinition,omitempty"`
+	/*
+	   Tag keys whose distinct values channel search surfaces as separate series. Each listed key is retained
+	   on this dataset's channel-search locators, so a channel carrying two values of that key appears once per
+	   value instead of collapsing into a single entry — the behavior a data scope has on an asset. Keys not
+	   listed here stay available for filtering and grouping but do not contribute to series cardinality.
+	   Every key must be produced by this dataset's `derivedDefinition`. Ingested tag keys cannot be split on.
+	*/
+	ChannelSearchSplitTagKeys []api.TagName `json:"channelSearchSplitTagKeys" safelogging:"@Unsafe"`
 }
 
 func (o EnrichedDataset) MarshalJSON() ([]byte, error) {
 	if o.Labels == nil {
-		o.Labels = make([]api1.Label, 0)
+		o.Labels = make([]api.Label, 0)
 	}
 	if o.Properties == nil {
-		o.Properties = make(map[api1.PropertyName]api1.PropertyValue)
+		o.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if o.TypedProperties == nil {
+		o.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
+	}
+	if o.ChannelSearchSplitTagKeys == nil {
+		o.ChannelSearchSplitTagKeys = make([]api.TagName, 0)
 	}
 	type _tmpEnrichedDataset EnrichedDataset
 	return safejson.Marshal(_tmpEnrichedDataset(o))
@@ -654,10 +725,16 @@ func (o *EnrichedDataset) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawEnrichedDataset.Labels == nil {
-		rawEnrichedDataset.Labels = make([]api1.Label, 0)
+		rawEnrichedDataset.Labels = make([]api.Label, 0)
 	}
 	if rawEnrichedDataset.Properties == nil {
-		rawEnrichedDataset.Properties = make(map[api1.PropertyName]api1.PropertyValue)
+		rawEnrichedDataset.Properties = make(map[api.PropertyName]api.PropertyValue)
+	}
+	if rawEnrichedDataset.TypedProperties == nil {
+		rawEnrichedDataset.TypedProperties = make(map[api.PropertyName]api.TypedPropertyValue)
+	}
+	if rawEnrichedDataset.ChannelSearchSplitTagKeys == nil {
+		rawEnrichedDataset.ChannelSearchSplitTagKeys = make([]api.TagName, 0)
 	}
 	*o = EnrichedDataset(rawEnrichedDataset)
 	return nil
@@ -680,7 +757,7 @@ func (o *EnrichedDataset) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 type EpochTimestamp struct {
-	TimeUnit api1.TimeUnit `json:"timeUnit"`
+	TimeUnit api.TimeUnit `json:"timeUnit"`
 }
 
 func (o EpochTimestamp) MarshalYAML() (interface{}, error) {
@@ -692,6 +769,28 @@ func (o EpochTimestamp) MarshalYAML() (interface{}, error) {
 }
 
 func (o *EpochTimestamp) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ExternalConnectionMetadata struct {
+	ConnectionDetails api5.ConnectionDetails `json:"connectionDetails"`
+	ConnectionStatus  api5.ConnectionStatus  `json:"connectionStatus"`
+	Limits            *api5.LimitsConfig     `json:"limits,omitempty"`
+}
+
+func (o ExternalConnectionMetadata) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ExternalConnectionMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -869,7 +968,7 @@ type IngestProgressV2 struct {
 	// Timestamp at end of ingest, empty if still in progress
 	EndTime *datetime.DateTime `json:"endTime,omitempty"`
 	// Status of ingest, contains error if failed
-	IngestStatus api1.IngestStatusV2 `json:"ingestStatus"`
+	IngestStatus api.IngestStatusV2 `json:"ingestStatus"`
 	// Whether ingest duration can be reliably calculated
 	Incalculable *bool `json:"incalculable,omitempty"`
 }
@@ -893,16 +992,16 @@ func (o *IngestProgressV2) UnmarshalYAML(unmarshal func(interface{}) error) erro
 // The tags used when ingesting the dataset file.
 type IngestTagMetadata struct {
 	// A map of tag names to column names to derive the tag values from.
-	TagColumns         map[api1.TagName]api1.ColumnName `json:"tagColumns"`
-	AdditionalFileTags map[api1.TagName]api1.TagValue   `json:"additionalFileTags"`
+	TagColumns         map[api.TagName]api.ColumnName `json:"tagColumns"`
+	AdditionalFileTags map[api.TagName]api.TagValue   `json:"additionalFileTags"`
 }
 
 func (o IngestTagMetadata) MarshalJSON() ([]byte, error) {
 	if o.TagColumns == nil {
-		o.TagColumns = make(map[api1.TagName]api1.ColumnName)
+		o.TagColumns = make(map[api.TagName]api.ColumnName)
 	}
 	if o.AdditionalFileTags == nil {
-		o.AdditionalFileTags = make(map[api1.TagName]api1.TagValue)
+		o.AdditionalFileTags = make(map[api.TagName]api.TagValue)
 	}
 	type _tmpIngestTagMetadata IngestTagMetadata
 	return safejson.Marshal(_tmpIngestTagMetadata(o))
@@ -915,10 +1014,10 @@ func (o *IngestTagMetadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawIngestTagMetadata.TagColumns == nil {
-		rawIngestTagMetadata.TagColumns = make(map[api1.TagName]api1.ColumnName)
+		rawIngestTagMetadata.TagColumns = make(map[api.TagName]api.ColumnName)
 	}
 	if rawIngestTagMetadata.AdditionalFileTags == nil {
-		rawIngestTagMetadata.AdditionalFileTags = make(map[api1.TagName]api1.TagValue)
+		rawIngestTagMetadata.AdditionalFileTags = make(map[api.TagName]api.TagValue)
 	}
 	*o = IngestTagMetadata(rawIngestTagMetadata)
 	return nil
@@ -959,7 +1058,7 @@ func (o *Iso8601Timestamp) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type MarkFileIngestError struct {
-	ErrorResult api1.ErrorResult `json:"errorResult"`
+	ErrorResult api.ErrorResult `json:"errorResult"`
 }
 
 func (o MarkFileIngestError) MarshalYAML() (interface{}, error) {
@@ -985,7 +1084,7 @@ type MarkFileIngestSuccessful struct {
 	   It's produced externally and passed here to handle retries and failures, and must be nanosecond precision.
 	   Two files cannot have the same ingested at timestamp.
 	*/
-	IngestedAt api1.Timestamp `json:"ingestedAt" safelogging:"@Safe"`
+	IngestedAt api.Timestamp `json:"ingestedAt" safelogging:"@Safe"`
 }
 
 func (o MarkFileIngestSuccessful) MarshalYAML() (interface{}, error) {
@@ -1029,8 +1128,67 @@ func (o *OriginFileUri) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Attaches external connection configuration to an existing dataset.
+// safelogging:@Unsafe
+type RegisterExternalConnectionConfigRequest struct {
+	DatasetRid        rids.DatasetRid        `json:"datasetRid" safelogging:"@Safe"`
+	ConnectionDetails api5.ConnectionDetails `json:"connectionDetails"`
+	// Metadata information about the external connection configuration.
+	Metadata map[string]string `json:"metadata"`
+	// Additional tag names that are required to construct a fully qualified series.
+	RequiredTagNames []api.TagName `json:"requiredTagNames" safelogging:"@Unsafe"`
+	// Optional externally supplied tag values. In most cases these are indexed by scraping.
+	AvailableTagValues *map[api.TagName][]api.TagValue `json:"availableTagValues,omitempty"`
+	Scraping           *api5.ScrapingConfig            `json:"scraping,omitempty"`
+	ShouldScrape       bool                            `json:"shouldScrape"`
+	Limits             *api5.LimitsConfig              `json:"limits,omitempty"`
+}
+
+func (o RegisterExternalConnectionConfigRequest) MarshalJSON() ([]byte, error) {
+	if o.Metadata == nil {
+		o.Metadata = make(map[string]string)
+	}
+	if o.RequiredTagNames == nil {
+		o.RequiredTagNames = make([]api.TagName, 0)
+	}
+	type _tmpRegisterExternalConnectionConfigRequest RegisterExternalConnectionConfigRequest
+	return safejson.Marshal(_tmpRegisterExternalConnectionConfigRequest(o))
+}
+
+func (o *RegisterExternalConnectionConfigRequest) UnmarshalJSON(data []byte) error {
+	type _tmpRegisterExternalConnectionConfigRequest RegisterExternalConnectionConfigRequest
+	var rawRegisterExternalConnectionConfigRequest _tmpRegisterExternalConnectionConfigRequest
+	if err := safejson.Unmarshal(data, &rawRegisterExternalConnectionConfigRequest); err != nil {
+		return err
+	}
+	if rawRegisterExternalConnectionConfigRequest.Metadata == nil {
+		rawRegisterExternalConnectionConfigRequest.Metadata = make(map[string]string)
+	}
+	if rawRegisterExternalConnectionConfigRequest.RequiredTagNames == nil {
+		rawRegisterExternalConnectionConfigRequest.RequiredTagNames = make([]api.TagName, 0)
+	}
+	*o = RegisterExternalConnectionConfigRequest(rawRegisterExternalConnectionConfigRequest)
+	return nil
+}
+
+func (o RegisterExternalConnectionConfigRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RegisterExternalConnectionConfigRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type RelativeTimestamp struct {
-	TimeUnit api1.TimeUnit      `json:"timeUnit"`
+	TimeUnit api.TimeUnit       `json:"timeUnit"`
 	Offset   *datetime.DateTime `json:"offset,omitempty"`
 }
 
@@ -1098,7 +1256,7 @@ type SearchDatasetFilesRequest struct {
 	Query      SearchDatasetFilesQuery `json:"query"`
 	// Defaults to 100. Will throw if larger than 1000.
 	PageSize    *int                   `json:"pageSize,omitempty"`
-	Token       *api1.Token            `json:"token,omitempty" safelogging:"@Unsafe"`
+	Token       *api.Token             `json:"token,omitempty" safelogging:"@Unsafe"`
 	SortOptions DatasetFileSortOptions `json:"sortOptions"`
 }
 
@@ -1119,54 +1277,11 @@ func (o *SearchDatasetFilesRequest) UnmarshalYAML(unmarshal func(interface{}) er
 }
 
 // safelogging:@Unsafe
-type SearchDatasetFilesResponse struct {
-	Results       []DatasetFile `json:"results"`
-	NextPageToken *api1.Token   `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
-}
-
-func (o SearchDatasetFilesResponse) MarshalJSON() ([]byte, error) {
-	if o.Results == nil {
-		o.Results = make([]DatasetFile, 0)
-	}
-	type _tmpSearchDatasetFilesResponse SearchDatasetFilesResponse
-	return safejson.Marshal(_tmpSearchDatasetFilesResponse(o))
-}
-
-func (o *SearchDatasetFilesResponse) UnmarshalJSON(data []byte) error {
-	type _tmpSearchDatasetFilesResponse SearchDatasetFilesResponse
-	var rawSearchDatasetFilesResponse _tmpSearchDatasetFilesResponse
-	if err := safejson.Unmarshal(data, &rawSearchDatasetFilesResponse); err != nil {
-		return err
-	}
-	if rawSearchDatasetFilesResponse.Results == nil {
-		rawSearchDatasetFilesResponse.Results = make([]DatasetFile, 0)
-	}
-	*o = SearchDatasetFilesResponse(rawSearchDatasetFilesResponse)
-	return nil
-}
-
-func (o SearchDatasetFilesResponse) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *SearchDatasetFilesResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// safelogging:@Unsafe
 type SearchDatasetsRequest struct {
 	Query SearchDatasetsQuery `json:"query"`
 	// Defaults to 100. Will throw if larger than 1000.
 	PageSize    *int        `json:"pageSize,omitempty"`
-	Token       *api1.Token `json:"token,omitempty" safelogging:"@Unsafe"`
+	Token       *api.Token  `json:"token,omitempty" safelogging:"@Unsafe"`
 	SortOptions SortOptions `json:"sortOptions"`
 }
 
@@ -1189,7 +1304,7 @@ func (o *SearchDatasetsRequest) UnmarshalYAML(unmarshal func(interface{}) error)
 // safelogging:@Unsafe
 type SearchDatasetsResponse struct {
 	Results       []EnrichedDataset `json:"results"`
-	NextPageToken *api1.Token       `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+	NextPageToken *api.Token        `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o SearchDatasetsResponse) MarshalJSON() ([]byte, error) {
@@ -1357,10 +1472,25 @@ func (o *UpdateBoundsRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 // safelogging:@Unsafe
 type UpdateDatasetMetadata struct {
-	Name        *string                                   `json:"name,omitempty"`
-	Description *string                                   `json:"description,omitempty"`
-	Labels      *[]api1.Label                             `json:"labels,omitempty" safelogging:"@Unsafe"`
-	Properties  *map[api1.PropertyName]api1.PropertyValue `json:"properties,omitempty"`
+	Name        *string      `json:"name,omitempty"`
+	Description *string      `json:"description,omitempty"`
+	Labels      *[]api.Label `json:"labels,omitempty" safelogging:"@Unsafe"`
+	/*
+	   User-defined dataset properties. When supplied, the UTF-8 JSON serialization must not exceed 2,000
+	   bytes.
+
+	   Deprecated: use typedProperties
+	*/
+	Properties      *map[api.PropertyName]api.PropertyValue      `json:"properties,omitempty"`
+	TypedProperties *map[api.PropertyName]api.TypedPropertyValue `json:"typedProperties,omitempty"`
+	/*
+	   Tag keys whose distinct values channel search surfaces as separate series. Absent leaves the current
+	   keys unchanged; an empty set clears them. Every key must be produced by the dataset's
+	   `derivedDefinition`.
+	*/
+	ChannelSearchSplitTagKeys *[]api.TagName `json:"channelSearchSplitTagKeys,omitempty" safelogging:"@Unsafe"`
+	// If set, replaces the dataset's default group-by and aggregation config in full.
+	DefaultGroupByAndAggregationConfig *DefaultGroupByAndAggregationConfig `json:"defaultGroupByAndAggregationConfig,omitempty"`
 }
 
 func (o UpdateDatasetMetadata) MarshalYAML() (interface{}, error) {
@@ -1401,8 +1531,8 @@ func (o *UpdateIngestStatus) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 type UpdateIngestStatusV2 struct {
-	Status      api1.IngestStatusV2 `json:"status"`
-	DatasetUuid uuid.UUID           `json:"datasetUuid"`
+	Status      api.IngestStatusV2 `json:"status"`
+	DatasetUuid uuid.UUID          `json:"datasetUuid"`
 }
 
 func (o UpdateIngestStatusV2) MarshalYAML() (interface{}, error) {
@@ -1421,11 +1551,17 @@ func (o *UpdateIngestStatusV2) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type UpdateRetentionPolicyRequest struct {
-	RetentionPolicy *RetentionPolicy `json:"retentionPolicy,omitempty"`
+/*
+Searches for files whose uploadedAt falls within the specified range using half-open bounds
+[start, end). If start is omitted the range is unbounded below. If end is omitted the range
+is unbounded above.
+*/
+type UploadedAtFilter struct {
+	Start *UtcTimestamp `json:"start,omitempty"`
+	End   *UtcTimestamp `json:"end,omitempty"`
 }
 
-func (o UpdateRetentionPolicyRequest) MarshalYAML() (interface{}, error) {
+func (o UploadedAtFilter) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -1433,7 +1569,7 @@ func (o UpdateRetentionPolicyRequest) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *UpdateRetentionPolicyRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *UploadedAtFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

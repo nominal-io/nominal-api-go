@@ -473,9 +473,9 @@ func (o *PersistenceWindowConfiguration) UnmarshalYAML(unmarshal func(interface{
 }
 
 type RollingOperationSeriesNode struct {
-	Input    NumericSeriesNode   `json:"input"`
-	Window   Window              `json:"window"`
-	Operator api.RollingOperator `json:"operator"`
+	Input    NumericSeriesNode              `json:"input"`
+	Window   Window                         `json:"window"`
+	Operator api.NumericAggregationOperator `json:"operator"`
 }
 
 func (o RollingOperationSeriesNode) MarshalYAML() (interface{}, error) {

@@ -14,13 +14,14 @@ type DatasetBackingType_Value string
 
 const (
 	DatasetBackingType_ICEBERG DatasetBackingType_Value = "ICEBERG"
+	DatasetBackingType_DUAL    DatasetBackingType_Value = "DUAL"
 	DatasetBackingType_LEGACY  DatasetBackingType_Value = "LEGACY"
 	DatasetBackingType_UNKNOWN DatasetBackingType_Value = "UNKNOWN"
 )
 
 // DatasetBackingType_Values returns all known variants of DatasetBackingType.
 func DatasetBackingType_Values() []DatasetBackingType_Value {
-	return []DatasetBackingType_Value{DatasetBackingType_ICEBERG, DatasetBackingType_LEGACY}
+	return []DatasetBackingType_Value{DatasetBackingType_ICEBERG, DatasetBackingType_DUAL, DatasetBackingType_LEGACY}
 }
 
 func New_DatasetBackingType(value DatasetBackingType_Value) DatasetBackingType {
@@ -30,7 +31,7 @@ func New_DatasetBackingType(value DatasetBackingType_Value) DatasetBackingType {
 // IsUnknown returns false for all known variants of DatasetBackingType and true otherwise.
 func (e DatasetBackingType) IsUnknown() bool {
 	switch e.val {
-	case DatasetBackingType_ICEBERG, DatasetBackingType_LEGACY:
+	case DatasetBackingType_ICEBERG, DatasetBackingType_DUAL, DatasetBackingType_LEGACY:
 		return false
 	}
 	return true
@@ -57,6 +58,8 @@ func (e *DatasetBackingType) UnmarshalText(data []byte) error {
 		*e = New_DatasetBackingType(DatasetBackingType_Value(v))
 	case "ICEBERG":
 		*e = New_DatasetBackingType(DatasetBackingType_ICEBERG)
+	case "DUAL":
+		*e = New_DatasetBackingType(DatasetBackingType_DUAL)
 	case "LEGACY":
 		*e = New_DatasetBackingType(DatasetBackingType_LEGACY)
 	}
@@ -248,12 +251,14 @@ type SortField_Value string
 
 const (
 	SortField_INGEST_DATE SortField_Value = "INGEST_DATE"
+	SortField_START_TIME  SortField_Value = "START_TIME"
+	SortField_END_TIME    SortField_Value = "END_TIME"
 	SortField_UNKNOWN     SortField_Value = "UNKNOWN"
 )
 
 // SortField_Values returns all known variants of SortField.
 func SortField_Values() []SortField_Value {
-	return []SortField_Value{SortField_INGEST_DATE}
+	return []SortField_Value{SortField_INGEST_DATE, SortField_START_TIME, SortField_END_TIME}
 }
 
 func New_SortField(value SortField_Value) SortField {
@@ -263,7 +268,7 @@ func New_SortField(value SortField_Value) SortField {
 // IsUnknown returns false for all known variants of SortField and true otherwise.
 func (e SortField) IsUnknown() bool {
 	switch e.val {
-	case SortField_INGEST_DATE:
+	case SortField_INGEST_DATE, SortField_START_TIME, SortField_END_TIME:
 		return false
 	}
 	return true
@@ -290,6 +295,10 @@ func (e *SortField) UnmarshalText(data []byte) error {
 		*e = New_SortField(SortField_Value(v))
 	case "INGEST_DATE":
 		*e = New_SortField(SortField_INGEST_DATE)
+	case "START_TIME":
+		*e = New_SortField(SortField_START_TIME)
+	case "END_TIME":
+		*e = New_SortField(SortField_END_TIME)
 	}
 	return nil
 }

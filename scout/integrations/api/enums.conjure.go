@@ -235,3 +235,63 @@ func (e *SlackInstanceType) UnmarshalText(data []byte) error {
 	}
 	return nil
 }
+
+// Content-Type for webhook requests
+type WebhookContentType struct {
+	val WebhookContentType_Value
+}
+
+type WebhookContentType_Value string
+
+const (
+	// application/json
+	WebhookContentType_APPLICATION_JSON WebhookContentType_Value = "APPLICATION_JSON"
+	// application/x-www-form-urlencoded
+	WebhookContentType_APPLICATION_X_WWW_FORM_URLENCODED WebhookContentType_Value = "APPLICATION_X_WWW_FORM_URLENCODED"
+	WebhookContentType_UNKNOWN                           WebhookContentType_Value = "UNKNOWN"
+)
+
+// WebhookContentType_Values returns all known variants of WebhookContentType.
+func WebhookContentType_Values() []WebhookContentType_Value {
+	return []WebhookContentType_Value{WebhookContentType_APPLICATION_JSON, WebhookContentType_APPLICATION_X_WWW_FORM_URLENCODED}
+}
+
+func New_WebhookContentType(value WebhookContentType_Value) WebhookContentType {
+	return WebhookContentType{val: value}
+}
+
+// IsUnknown returns false for all known variants of WebhookContentType and true otherwise.
+func (e WebhookContentType) IsUnknown() bool {
+	switch e.val {
+	case WebhookContentType_APPLICATION_JSON, WebhookContentType_APPLICATION_X_WWW_FORM_URLENCODED:
+		return false
+	}
+	return true
+}
+
+func (e WebhookContentType) Value() WebhookContentType_Value {
+	if e.IsUnknown() {
+		return WebhookContentType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e WebhookContentType) String() string {
+	return string(e.val)
+}
+
+func (e WebhookContentType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *WebhookContentType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_WebhookContentType(WebhookContentType_Value(v))
+	case "APPLICATION_JSON":
+		*e = New_WebhookContentType(WebhookContentType_APPLICATION_JSON)
+	case "APPLICATION_X_WWW_FORM_URLENCODED":
+		*e = New_WebhookContentType(WebhookContentType_APPLICATION_X_WWW_FORM_URLENCODED)
+	}
+	return nil
+}

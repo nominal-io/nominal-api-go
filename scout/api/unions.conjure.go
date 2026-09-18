@@ -145,6 +145,224 @@ func NewColorFromHexCode(v string) Color {
 	return Color{typ: "hexCode", hexCode: &v}
 }
 
+/*
+A command payload. The variant must match the target channel's data
+type: floatValue for DOUBLE channels, intValue for INT channels, and
+enumValue for STRING channels.
+*/
+type CommandValue struct {
+	typ        string
+	floatValue *float64
+	intValue   *CommandIntValue
+	enumValue  *string
+}
+
+type commandValueDeserializer struct {
+	Type       string           `json:"type"`
+	FloatValue *float64         `json:"floatValue"`
+	IntValue   *CommandIntValue `json:"intValue"`
+	EnumValue  *string          `json:"enumValue"`
+}
+
+func (u *commandValueDeserializer) toStruct() CommandValue {
+	return CommandValue{typ: u.Type, floatValue: u.FloatValue, intValue: u.IntValue, enumValue: u.EnumValue}
+}
+
+func (u *CommandValue) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "floatValue":
+		if u.floatValue == nil {
+			return nil, fmt.Errorf("field \"floatValue\" is required")
+		}
+		return struct {
+			Type       string  `json:"type"`
+			FloatValue float64 `json:"floatValue"`
+		}{Type: "floatValue", FloatValue: *u.floatValue}, nil
+	case "intValue":
+		if u.intValue == nil {
+			return nil, fmt.Errorf("field \"intValue\" is required")
+		}
+		return struct {
+			Type     string          `json:"type"`
+			IntValue CommandIntValue `json:"intValue"`
+		}{Type: "intValue", IntValue: *u.intValue}, nil
+	case "enumValue":
+		if u.enumValue == nil {
+			return nil, fmt.Errorf("field \"enumValue\" is required")
+		}
+		return struct {
+			Type      string `json:"type"`
+			EnumValue string `json:"enumValue"`
+		}{Type: "enumValue", EnumValue: *u.enumValue}, nil
+	}
+}
+
+func (u CommandValue) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *CommandValue) UnmarshalJSON(data []byte) error {
+	var deser commandValueDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "floatValue":
+		if u.floatValue == nil {
+			return fmt.Errorf("field \"floatValue\" is required")
+		}
+	case "intValue":
+		if u.intValue == nil {
+			return fmt.Errorf("field \"intValue\" is required")
+		}
+	case "enumValue":
+		if u.enumValue == nil {
+			return fmt.Errorf("field \"enumValue\" is required")
+		}
+	}
+	return nil
+}
+
+func (u CommandValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *CommandValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *CommandValue) AcceptFuncs(floatValueFunc func(float64) error, intValueFunc func(CommandIntValue) error, enumValueFunc func(string) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in CommandValue type")
+		}
+		return unknownFunc(u.typ)
+	case "floatValue":
+		if u.floatValue == nil {
+			return fmt.Errorf("field \"floatValue\" is required")
+		}
+		return floatValueFunc(*u.floatValue)
+	case "intValue":
+		if u.intValue == nil {
+			return fmt.Errorf("field \"intValue\" is required")
+		}
+		return intValueFunc(*u.intValue)
+	case "enumValue":
+		if u.enumValue == nil {
+			return fmt.Errorf("field \"enumValue\" is required")
+		}
+		return enumValueFunc(*u.enumValue)
+	}
+}
+
+func (u *CommandValue) FloatValueNoopSuccess(_ float64) error {
+	return nil
+}
+
+func (u *CommandValue) IntValueNoopSuccess(_ CommandIntValue) error {
+	return nil
+}
+
+func (u *CommandValue) EnumValueNoopSuccess(_ string) error {
+	return nil
+}
+
+func (u *CommandValue) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *CommandValue) Accept(v CommandValueVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "floatValue":
+		if u.floatValue == nil {
+			return fmt.Errorf("field \"floatValue\" is required")
+		}
+		return v.VisitFloatValue(*u.floatValue)
+	case "intValue":
+		if u.intValue == nil {
+			return fmt.Errorf("field \"intValue\" is required")
+		}
+		return v.VisitIntValue(*u.intValue)
+	case "enumValue":
+		if u.enumValue == nil {
+			return fmt.Errorf("field \"enumValue\" is required")
+		}
+		return v.VisitEnumValue(*u.enumValue)
+	}
+}
+
+type CommandValueVisitor interface {
+	VisitFloatValue(v float64) error
+	VisitIntValue(v CommandIntValue) error
+	VisitEnumValue(v string) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *CommandValue) AcceptWithContext(ctx context.Context, v CommandValueVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "floatValue":
+		if u.floatValue == nil {
+			return fmt.Errorf("field \"floatValue\" is required")
+		}
+		return v.VisitFloatValueWithContext(ctx, *u.floatValue)
+	case "intValue":
+		if u.intValue == nil {
+			return fmt.Errorf("field \"intValue\" is required")
+		}
+		return v.VisitIntValueWithContext(ctx, *u.intValue)
+	case "enumValue":
+		if u.enumValue == nil {
+			return fmt.Errorf("field \"enumValue\" is required")
+		}
+		return v.VisitEnumValueWithContext(ctx, *u.enumValue)
+	}
+}
+
+type CommandValueVisitorWithContext interface {
+	VisitFloatValueWithContext(ctx context.Context, v float64) error
+	VisitIntValueWithContext(ctx context.Context, v CommandIntValue) error
+	VisitEnumValueWithContext(ctx context.Context, v string) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewCommandValueFromFloatValue(v float64) CommandValue {
+	return CommandValue{typ: "floatValue", floatValue: &v}
+}
+
+func NewCommandValueFromIntValue(v CommandIntValue) CommandValue {
+	return CommandValue{typ: "intValue", intValue: &v}
+}
+
+func NewCommandValueFromEnumValue(v string) CommandValue {
+	return CommandValue{typ: "enumValue", enumValue: &v}
+}
+
 type DispositionState struct {
 	typ                     string
 	pendingReview           *PendingReviewDispositionState

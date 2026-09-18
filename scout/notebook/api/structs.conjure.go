@@ -59,6 +59,26 @@ func (o *AssetsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BatchArchiveNotebooksRequest struct {
+	Target NotebookArchiveTarget `json:"target"`
+}
+
+func (o BatchArchiveNotebooksRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchArchiveNotebooksRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type BatchEditNotebookMetadataRequest struct {
 	/*
 	   Additional search query to filter which workbooks are targeted by the edit.
@@ -139,6 +159,26 @@ func (o *BatchEditNotebookMetadataResponse) UnmarshalYAML(unmarshal func(interfa
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BatchUnarchiveNotebooksRequest struct {
+	Target NotebookArchiveTarget `json:"target"`
+}
+
+func (o BatchUnarchiveNotebooksRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchUnarchiveNotebooksRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ChartWithOverlays struct {
 	Rid      api1.VizId   `json:"rid" safelogging:"@Safe"`
 	Version  api1.Version `json:"version" safelogging:"@Safe"`
@@ -161,6 +201,7 @@ func (o *ChartWithOverlays) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateNotebookRequest struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
@@ -194,6 +235,10 @@ type CreateNotebookRequest struct {
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
 	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
+	// Labels to apply to the workbook on creation. Defaults to empty if not provided.
+	Labels *[]api.Label `json:"labels,omitempty" safelogging:"@Unsafe"`
+	// Properties to apply to the workbook on creation. Defaults to empty if not provided.
+	Properties *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
 	// Theme-aware preview image for the workbook. Falls back to a default illustration if not provided.
 	PreviewImage *api.ThemeAwareImage `json:"previewImage,omitempty"`
 }
@@ -228,6 +273,60 @@ func (o CreateNotebookRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CreateNotebookRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Request to duplicate a workbook. All content fields (layout, charts, contentV2, eventRefs) are
+copied from the source workbook. Metadata fields can be optionally overridden; if not provided,
+they default to the source workbook's values (except isLocked which defaults to false).
+*/
+// safelogging:@Unsafe
+type DuplicateNotebookRequest struct {
+	/*
+	   Override the title of the duplicated workbook. If not provided, generates a copy title
+	   from the source using the titleSuffix.
+	*/
+	Title *string `json:"title,omitempty"`
+	/*
+	   Custom suffix for generating the copy title (e.g., "Run analysis").
+	   Defaults to "copy". Ignored if title is explicitly provided.
+	*/
+	TitleSuffix *string `json:"titleSuffix,omitempty"`
+	// Override description. Defaults to the source workbook's description.
+	Description *string `json:"description,omitempty"`
+	// Override data scope. Defaults to the source workbook's data scope.
+	DataScope *NotebookDataScope `json:"dataScope,omitempty"`
+	// Override draft status. Defaults to the source workbook's draft status.
+	IsDraft *bool `json:"isDraft,omitempty"`
+	/*
+	   Override lock status. Defaults to false — locked workbooks are unlocked when duplicated,
+	   since the copy is a new draft for the caller to iterate on.
+	*/
+	IsLocked *bool `json:"isLocked,omitempty"`
+	// The workspace for the duplicated workbook.
+	Workspace rids.WorkspaceRid `json:"workspace" safelogging:"@Safe"`
+	// Override labels. Defaults to the source workbook's labels.
+	Labels *[]api.Label `json:"labels,omitempty" safelogging:"@Unsafe"`
+	// Override properties. Defaults to the source workbook's properties.
+	Properties *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
+	// Override preview image. Defaults to the source workbook's preview image.
+	PreviewImage *api.ThemeAwareImage `json:"previewImage,omitempty"`
+}
+
+func (o DuplicateNotebookRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DuplicateNotebookRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -380,8 +479,20 @@ type Notebook struct {
 	SnapshotRid       api1.SnapshotRid  `json:"snapshotRid" safelogging:"@Safe"`
 	SnapshotAuthorRid api1.UserRid      `json:"snapshotAuthorRid" safelogging:"@Safe"`
 	SnapshotCreatedAt datetime.DateTime `json:"snapshotCreatedAt"`
-	Metadata          NotebookMetadata  `json:"metadata" safelogging:"@Unsafe"`
-	StateAsJson       string            `json:"stateAsJson"`
+	/*
+	   The data scope recorded when this snapshot was created. Populated only for exact snapshot reads
+	   requested with a snapshot RID, and absent when the historic snapshot predates scope recording.
+	   `metadata.dataScope` remains the workbook's current mutable scope and must not be treated as
+	   historic snapshot evidence.
+	*/
+	SnapshotDataScope *NotebookDataScope `json:"snapshotDataScope,omitempty"`
+	/*
+	   Describes what the save that produced this snapshot changed. Absent on snapshots
+	   written before messages were recorded, and on saves that do not supply one.
+	*/
+	SnapshotMessage *string          `json:"snapshotMessage,omitempty"`
+	Metadata        NotebookMetadata `json:"metadata" safelogging:"@Unsafe"`
+	StateAsJson     string           `json:"stateAsJson"`
 	// Deprecated: charts are now stored in contentV2
 	Charts *[]ChartWithOverlays `json:"charts,omitempty"`
 	Layout api3.WorkbookLayout  `json:"layout"`
@@ -680,6 +791,11 @@ type SnapshotSummary struct {
 	NotebookRid api1.NotebookRid  `json:"notebookRid" safelogging:"@Safe"`
 	AuthorRid   api1.UserRid      `json:"authorRid" safelogging:"@Safe"`
 	CreatedAt   datetime.DateTime `json:"createdAt"`
+	/*
+	   Describes what the save changed. Absent on snapshots written before messages were
+	   recorded, and on saves that do not supply one.
+	*/
+	SnapshotMessage *string `json:"snapshotMessage,omitempty"`
 }
 
 func (o SnapshotSummary) MarshalYAML() (interface{}, error) {
@@ -730,6 +846,12 @@ type UpdateNotebookMetadataRequest struct {
 	IsDraft     *bool                                   `json:"isDraft,omitempty"`
 	// Theme-aware preview image for the workbook. When provided, replaces the existing preview image.
 	PreviewImage *api.ThemeAwareImage `json:"previewImage,omitempty"`
+	/*
+	   Whether to lock or unlock the workbook. If omitted, the original lock state will remain unchanged.
+	   When provided, the server derives the locking user from the auth header and generates the lock
+	   timestamp at write time.
+	*/
+	IsLocked *bool `json:"isLocked,omitempty"`
 }
 
 func (o UpdateNotebookMetadataRequest) MarshalYAML() (interface{}, error) {
@@ -762,6 +884,12 @@ type UpdateNotebookRequest struct {
 	   and throws SaveNotebookConflict otherwise.
 	*/
 	LatestSnapshotRid *api1.SnapshotRid `json:"latestSnapshotRid,omitempty" safelogging:"@Safe"`
+	/*
+	   Describes what this save changed, recorded on the resulting snapshot. At most 4096
+	   characters. Optional, so callers that have nothing to say leave it unset rather than
+	   sending an empty string (blank messages are treated as unset).
+	*/
+	SnapshotMessage *string `json:"snapshotMessage,omitempty"`
 	// Replace existing pinned events on the workbook.
 	EventRefs []api4.EventReference `json:"eventRefs"`
 	/*

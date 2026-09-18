@@ -2,6 +2,8 @@
 
 package api
 
+type ExtractorErrorDetailValue string // safelogging:@Unsafe
+
 type McapTopicName string // safelogging:@Unsafe
 
 type PresignedUrl string // safelogging:@DoNotLog
