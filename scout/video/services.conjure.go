@@ -21,21 +21,61 @@ import (
 
 // The video service manages individual video files and their metadata.
 type VideoFileServiceClient interface {
-	// Create and persist a video file entity with the given metadata
+	/*
+	   Create and persist a video file entity with the given metadata
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   videoV2 ingest records files in the Catalog directly, so no standalone VideoFile is created.
+	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateVideoFileRequest) (api.VideoFile, error)
-	// Returns video file metadata associated with a video file RID.
+	/*
+	   Returns video file metadata associated with a video file RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   read the file with CatalogService#getDatasetFile.
+	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (api.VideoFile, error)
-	// Returns all video files and their metadata associated with the given RIDs
+	/*
+	   Returns all video files and their metadata associated with the given RIDs
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   read the files with CatalogService#batchGetDatasetFiles.
+	*/
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, videoFileRidsArg []rids.VideoFileRid) ([]api.VideoFile, error)
-	// Deprecated: Returns all video files and their metadata associated with the given video RID.
+	/*
+	   Returns all video files and their metadata associated with the given video RID.
+
+	   Deprecated: Use listFilesInVideoPaginated for legacy videos, or VideoService#listVideoChannelDatasetFiles
+	   for videos as dataset channels.
+	*/
 	ListFilesInVideo(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) ([]api.VideoFile, error)
-	// Returns a paginated list of all video files and their metadata associated with the given video RID.
+	/*
+	   Returns a paginated list of all video files and their metadata associated with the given video RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   list the files backing a channel with VideoService#listVideoChannelDatasetFiles.
+	*/
 	ListFilesInVideoPaginated(ctx context.Context, authHeader bearertoken.Token, videoRidArg api.ListFilesInVideoRequest) (api.ListFilesInVideoResponse, error)
-	// Updates the metadata for a video file associated with the given RID.
+	/*
+	   Updates the metadata for a video file associated with the given RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   update title, start, and scale with VideoService#batchUpdateVideoChannelDatasetFiles addressed by datasetRid.
+	*/
 	Update(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid, requestArg api.UpdateVideoFileRequest) (api.VideoFile, error)
+	/*
+	   Updates metadata for multiple video files in a single video.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   update title, start, and scale with VideoService#batchUpdateVideoChannelDatasetFiles addressed by datasetRid.
+	*/
+	BatchUpdate(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchUpdateVideoFilesRequest) (api.BatchUpdateVideoFilesResponse, error)
 	/*
 	   Permanently deletes a video file and all associated segments from the database.
 	   This operation cannot be undone.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   delete the file with IngestService#deleteFile.
 	*/
 	Delete(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) error
 	/*
@@ -46,11 +86,26 @@ type VideoFileServiceClient interface {
 	Archive(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) error
 	// Deprecated: Unarchive a previously archived video file, exposing it to the UI and search. Unarchiving functionality will be removed on February 1st, 2026.
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) error
-	// Get the latest ingest status for a given video file by RID.
+	/*
+	   Get the latest ingest status for a given video file by RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   ingest status is tracked on the Catalog dataset file (CatalogService#getDatasetFile).
+	*/
 	GetIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (api.GetIngestStatusResponse, error)
-	// Get the latest ingest status for a set of given video files by RID.
+	/*
+	   Get the latest ingest status for a set of given video files by RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   ingest status is tracked on the Catalog dataset file (CatalogService#batchGetDatasetFiles).
+	*/
 	BatchGetIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoFileRidsArg []rids.VideoFileRid) (map[rids.VideoFileRid]api.VideoFileIngestStatus, error)
-	// Update the latest ingest status for a given video file by RID.
+	/*
+	   Update the latest ingest status for a given video file by RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   ingest status is tracked on the Catalog dataset file.
+	*/
 	UpdateIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid, requestArg api.UpdateIngestStatusRequest) error
 	/*
 	   Returns the min and max absolute and media timestamps for each segment in a video file.
@@ -179,6 +234,24 @@ func (c *videoFileServiceClient) Update(ctx context.Context, authHeader bearerto
 	return *returnVal, nil
 }
 
+func (c *videoFileServiceClient) BatchUpdate(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchUpdateVideoFilesRequest) (api.BatchUpdateVideoFilesResponse, error) {
+	var returnVal *api.BatchUpdateVideoFilesResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchUpdate"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video-files/v1/video-files/batch-update"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchUpdateVideoFilesResponse), werror.WrapWithContextParams(ctx, err, "batchUpdate failed")
+	}
+	if returnVal == nil {
+		return *new(api.BatchUpdateVideoFilesResponse), werror.ErrorWithContextParams(ctx, "batchUpdate response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *videoFileServiceClient) Delete(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Delete"))
@@ -296,21 +369,61 @@ func (c *videoFileServiceClient) GetPlaylist(ctx context.Context, authHeader bea
 
 // The video service manages individual video files and their metadata.
 type VideoFileServiceClientWithAuth interface {
-	// Create and persist a video file entity with the given metadata
+	/*
+	   Create and persist a video file entity with the given metadata
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   videoV2 ingest records files in the Catalog directly, so no standalone VideoFile is created.
+	*/
 	Create(ctx context.Context, requestArg api.CreateVideoFileRequest) (api.VideoFile, error)
-	// Returns video file metadata associated with a video file RID.
+	/*
+	   Returns video file metadata associated with a video file RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   read the file with CatalogService#getDatasetFile.
+	*/
 	Get(ctx context.Context, videoFileRidArg rids.VideoFileRid) (api.VideoFile, error)
-	// Returns all video files and their metadata associated with the given RIDs
+	/*
+	   Returns all video files and their metadata associated with the given RIDs
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   read the files with CatalogService#batchGetDatasetFiles.
+	*/
 	BatchGet(ctx context.Context, videoFileRidsArg []rids.VideoFileRid) ([]api.VideoFile, error)
-	// Deprecated: Returns all video files and their metadata associated with the given video RID.
+	/*
+	   Returns all video files and their metadata associated with the given video RID.
+
+	   Deprecated: Use listFilesInVideoPaginated for legacy videos, or VideoService#listVideoChannelDatasetFiles
+	   for videos as dataset channels.
+	*/
 	ListFilesInVideo(ctx context.Context, videoRidArg rids.VideoRid) ([]api.VideoFile, error)
-	// Returns a paginated list of all video files and their metadata associated with the given video RID.
+	/*
+	   Returns a paginated list of all video files and their metadata associated with the given video RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   list the files backing a channel with VideoService#listVideoChannelDatasetFiles.
+	*/
 	ListFilesInVideoPaginated(ctx context.Context, videoRidArg api.ListFilesInVideoRequest) (api.ListFilesInVideoResponse, error)
-	// Updates the metadata for a video file associated with the given RID.
+	/*
+	   Updates the metadata for a video file associated with the given RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   update title, start, and scale with VideoService#batchUpdateVideoChannelDatasetFiles addressed by datasetRid.
+	*/
 	Update(ctx context.Context, videoFileRidArg rids.VideoFileRid, requestArg api.UpdateVideoFileRequest) (api.VideoFile, error)
+	/*
+	   Updates metadata for multiple video files in a single video.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   update title, start, and scale with VideoService#batchUpdateVideoChannelDatasetFiles addressed by datasetRid.
+	*/
+	BatchUpdate(ctx context.Context, requestArg api.BatchUpdateVideoFilesRequest) (api.BatchUpdateVideoFilesResponse, error)
 	/*
 	   Permanently deletes a video file and all associated segments from the database.
 	   This operation cannot be undone.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   delete the file with IngestService#deleteFile.
 	*/
 	Delete(ctx context.Context, videoFileRidArg rids.VideoFileRid) error
 	/*
@@ -321,11 +434,26 @@ type VideoFileServiceClientWithAuth interface {
 	Archive(ctx context.Context, videoFileRidArg rids.VideoFileRid) error
 	// Deprecated: Unarchive a previously archived video file, exposing it to the UI and search. Unarchiving functionality will be removed on February 1st, 2026.
 	Unarchive(ctx context.Context, videoFileRidArg rids.VideoFileRid) error
-	// Get the latest ingest status for a given video file by RID.
+	/*
+	   Get the latest ingest status for a given video file by RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   ingest status is tracked on the Catalog dataset file (CatalogService#getDatasetFile).
+	*/
 	GetIngestStatus(ctx context.Context, videoFileRidArg rids.VideoFileRid) (api.GetIngestStatusResponse, error)
-	// Get the latest ingest status for a set of given video files by RID.
+	/*
+	   Get the latest ingest status for a set of given video files by RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   ingest status is tracked on the Catalog dataset file (CatalogService#batchGetDatasetFiles).
+	*/
 	BatchGetIngestStatus(ctx context.Context, videoFileRidsArg []rids.VideoFileRid) (map[rids.VideoFileRid]api.VideoFileIngestStatus, error)
-	// Update the latest ingest status for a given video file by RID.
+	/*
+	   Update the latest ingest status for a given video file by RID.
+
+	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
+	   ingest status is tracked on the Catalog dataset file.
+	*/
 	UpdateIngestStatus(ctx context.Context, videoFileRidArg rids.VideoFileRid, requestArg api.UpdateIngestStatusRequest) error
 	/*
 	   Returns the min and max absolute and media timestamps for each segment in a video file.
@@ -370,6 +498,10 @@ func (c *videoFileServiceClientWithAuth) ListFilesInVideoPaginated(ctx context.C
 
 func (c *videoFileServiceClientWithAuth) Update(ctx context.Context, videoFileRidArg rids.VideoFileRid, requestArg api.UpdateVideoFileRequest) (api.VideoFile, error) {
 	return c.client.Update(ctx, c.authHeader, videoFileRidArg, requestArg)
+}
+
+func (c *videoFileServiceClientWithAuth) BatchUpdate(ctx context.Context, requestArg api.BatchUpdateVideoFilesRequest) (api.BatchUpdateVideoFilesResponse, error) {
+	return c.client.BatchUpdate(ctx, c.authHeader, requestArg)
 }
 
 func (c *videoFileServiceClientWithAuth) Delete(ctx context.Context, videoFileRidArg rids.VideoFileRid) error {
@@ -461,6 +593,14 @@ func (c *videoFileServiceClientWithTokenProvider) Update(ctx context.Context, vi
 	return c.client.Update(ctx, bearertoken.Token(token), videoFileRidArg, requestArg)
 }
 
+func (c *videoFileServiceClientWithTokenProvider) BatchUpdate(ctx context.Context, requestArg api.BatchUpdateVideoFilesRequest) (api.BatchUpdateVideoFilesResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.BatchUpdateVideoFilesResponse), err
+	}
+	return c.client.BatchUpdate(ctx, bearertoken.Token(token), requestArg)
+}
+
 func (c *videoFileServiceClientWithTokenProvider) Delete(ctx context.Context, videoFileRidArg rids.VideoFileRid) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
@@ -540,7 +680,13 @@ type VideoSegmentServiceClient interface {
 	   Internal use only.
 	*/
 	CreateSegmentsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSegmentsV2Request) (api.CreateSegmentsV2Response, error)
-	// Returns metadata for the segment within a video containing the requested absolute timestamp.
+	// Creates segments for a channel-backed live video stream. Internal use only.
+	CreateStreamSegmentsV2(ctx context.Context, authHeader bearertoken.Token, streamUuidArg uuid.UUID, requestArg api.CreateStreamSegmentsV2Request) (api.CreateSegmentsV2Response, error)
+	/*
+	   Returns metadata for the segment within a video containing the requested absolute timestamp.
+
+	   Deprecated: Replaced by VideoService#getSegmentByTimestampV2, which addresses the video channel series (channel + tags) instead of a Video rid.
+	*/
 	GetSegmentByTimestamp(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error)
 }
 
@@ -619,6 +765,24 @@ func (c *videoSegmentServiceClient) CreateSegmentsV2(ctx context.Context, authHe
 	return *returnVal, nil
 }
 
+func (c *videoSegmentServiceClient) CreateStreamSegmentsV2(ctx context.Context, authHeader bearertoken.Token, streamUuidArg uuid.UUID, requestArg api.CreateStreamSegmentsV2Request) (api.CreateSegmentsV2Response, error) {
+	var returnVal *api.CreateSegmentsV2Response
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateStreamSegmentsV2"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/streams/%s/create-segments", url.PathEscape(fmt.Sprint(streamUuidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.CreateSegmentsV2Response), werror.WrapWithContextParams(ctx, err, "createStreamSegmentsV2 failed")
+	}
+	if returnVal == nil {
+		return *new(api.CreateSegmentsV2Response), werror.ErrorWithContextParams(ctx, "createStreamSegmentsV2 response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *videoSegmentServiceClient) GetSegmentByTimestamp(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error) {
 	var returnVal *api.Segment
 	var requestParams []httpclient.RequestParam
@@ -649,7 +813,13 @@ type VideoSegmentServiceClientWithAuth interface {
 	   Internal use only.
 	*/
 	CreateSegmentsV2(ctx context.Context, requestArg api.CreateSegmentsV2Request) (api.CreateSegmentsV2Response, error)
-	// Returns metadata for the segment within a video containing the requested absolute timestamp.
+	// Creates segments for a channel-backed live video stream. Internal use only.
+	CreateStreamSegmentsV2(ctx context.Context, streamUuidArg uuid.UUID, requestArg api.CreateStreamSegmentsV2Request) (api.CreateSegmentsV2Response, error)
+	/*
+	   Returns metadata for the segment within a video containing the requested absolute timestamp.
+
+	   Deprecated: Replaced by VideoService#getSegmentByTimestampV2, which addresses the video channel series (channel + tags) instead of a Video rid.
+	*/
 	GetSegmentByTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error)
 }
 
@@ -676,6 +846,10 @@ func (c *videoSegmentServiceClientWithAuth) CreateVideoStreamSegments(ctx contex
 
 func (c *videoSegmentServiceClientWithAuth) CreateSegmentsV2(ctx context.Context, requestArg api.CreateSegmentsV2Request) (api.CreateSegmentsV2Response, error) {
 	return c.client.CreateSegmentsV2(ctx, c.authHeader, requestArg)
+}
+
+func (c *videoSegmentServiceClientWithAuth) CreateStreamSegmentsV2(ctx context.Context, streamUuidArg uuid.UUID, requestArg api.CreateStreamSegmentsV2Request) (api.CreateSegmentsV2Response, error) {
+	return c.client.CreateStreamSegmentsV2(ctx, c.authHeader, streamUuidArg, requestArg)
 }
 
 func (c *videoSegmentServiceClientWithAuth) GetSegmentByTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error) {
@@ -723,6 +897,14 @@ func (c *videoSegmentServiceClientWithTokenProvider) CreateSegmentsV2(ctx contex
 	return c.client.CreateSegmentsV2(ctx, bearertoken.Token(token), requestArg)
 }
 
+func (c *videoSegmentServiceClientWithTokenProvider) CreateStreamSegmentsV2(ctx context.Context, streamUuidArg uuid.UUID, requestArg api.CreateStreamSegmentsV2Request) (api.CreateSegmentsV2Response, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.CreateSegmentsV2Response), err
+	}
+	return c.client.CreateStreamSegmentsV2(ctx, bearertoken.Token(token), streamUuidArg, requestArg)
+}
+
 func (c *videoSegmentServiceClientWithTokenProvider) GetSegmentByTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentByTimestampRequest) (*api.Segment, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
@@ -733,27 +915,70 @@ func (c *videoSegmentServiceClientWithTokenProvider) GetSegmentByTimestamp(ctx c
 
 // The video service manages videos and video metadata.
 type VideoServiceClient interface {
-	// Returns video metadata associated with a video rid.
+	/*
+	   Returns video metadata associated with a video rid.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; list a channel's files with
+	   listVideoChannelDatasetFiles and read dataset metadata from CatalogService.
+	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.Video, error)
-	// Returns video metadata about each video given a set of video rids.
+	/*
+	   Returns video metadata about each video given a set of video rids.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; list a channel's files with
+	   listVideoChannelDatasetFiles and read dataset metadata from CatalogService.
+	*/
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetVideosRequest) (api.GetVideosResponse, error)
-	// Returns metadata about videos that match a given query.
+	/*
+	   Returns metadata about videos that match a given query.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; search datasets with CatalogService#searchDatasets.
+	*/
 	Search(ctx context.Context, authHeader bearertoken.Token, requestArg api.SearchVideosRequest) (api.SearchVideosResponse, error)
-	// Creates and persists a video entity with the given metadata.
+	/*
+	   Creates and persists a video entity with the given metadata.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest with videoV2 options targeting a
+	   dataset channel instead of creating a Video.
+	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateVideoRequest) (api.Video, error)
-	// Updates the metadata for a video associated with the given video rid.
+	/*
+	   Updates the metadata for a video associated with the given video rid.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; update dataset metadata with
+	   CatalogService#updateDatasetMetadata and per-file titles with batchUpdateVideoChannelDatasetFiles.
+	*/
 	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.UpdateVideoMetadataRequest) (api.Video, error)
 	// Deprecated: Replaced by per-file updateIngestStatus. Will be removed after April 15th.
 	UpdateIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.UpdateIngestStatus) error
+	/*
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
+	   Catalog dataset file (CatalogService#getDatasetFile).
+	*/
 	GetIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.DetailedIngestStatus, error)
+	/*
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
+	   Catalog dataset file (CatalogService#batchGetDatasetFiles).
+	*/
 	BatchGetIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoRidsArg []rids.VideoRid) (map[rids.VideoRid]api.DetailedIngestStatus, error)
+	/*
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
+	   Catalog dataset file (CatalogService#getDatasetFile).
+	*/
 	GetEnrichedIngestStatus(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetEnrichedVideoIngestStatusRequest) (*api.EnrichedVideoIngestStatus, error)
 	/*
 	   Archives a video, which excludes it from search and hides it from being publicly visible, but does not
 	   permanently delete it. Archived videos can be unarchived.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; archive the backing dataset with
+	   CatalogService#archiveDataset, or delete individual files with IngestService#deleteFile.
 	*/
 	Archive(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) error
-	// Unarchives a previously archived video.
+	/*
+	   Unarchives a previously archived video.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; unarchive the backing dataset with CatalogService#unarchiveDataset.
+	*/
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) error
 	/*
 	   Generates an HLS playlist for a video within optional time bounds.
@@ -763,6 +988,8 @@ type VideoServiceClient interface {
 
 	   Note: The start and end parameters must either both be provided or both be omitted.
 	   Providing only one will result in a MissingTimestampBoundPair error.
+
+	   Deprecated: Replaced by getPlaylistV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetPlaylist(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, startArg *string, endArg *string) (io.ReadCloser, error)
 	/*
@@ -797,6 +1024,8 @@ type VideoServiceClient interface {
 	/*
 	   Returns the min and max absolute and media timestamps for each segment in a video that overlap with an
 	   optional set of bounds.
+
+	   Deprecated: Replaced by getSegmentSummariesInBoundsV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetSegmentSummariesInBounds(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentSummariesInBoundsRequest) ([]api.SegmentSummary, error)
 	/*
@@ -815,25 +1044,52 @@ type VideoServiceClient interface {
 	   Returns metadata for the segment containing the requested absolute timestamp. If no segment contains
 	   the timestamp, returns the closest segment starting after the timestamp. Returns empty if no segment
 	   is found at or after the timestamp.
+
+	   Deprecated: Replaced by getSegmentAtOrAfterTimestampV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetSegmentAtOrAfterTimestamp(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentAtOrAfterTimestampRequest) (*api.Segment, error)
+	/*
+	   Returns metadata for the segment containing the requested absolute timestamp for a video series
+	   (identified by channel + tags). If no segment contains the timestamp, returns the closest segment
+	   starting after the timestamp. Returns empty if no segment is found at or after the timestamp.
+	*/
+	GetSegmentAtOrAfterTimestampV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentAtOrAfterTimestampV2Request) (*api.SegmentV2, error)
 	/*
 	   Returns the min and max absolute timestamps from non-archived video files associated with a given video that
 	   overlap with an optional set of bounds. The files on the edges of the bounds will be truncated to segments
 	   that are inside or overlap with the bounds.
+
+	   Deprecated: Replaced by listVideoChannelDatasetFiles, which returns the dataset files backing a video
+	   channel together with the bounds each file contributes.
 	*/
 	GetFileSummaries(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error)
 	/*
 	   Generates a stream ID scoped to a video and returns a WHIP URL with a MediaMTX JWT and ICE servers.
 	   Enforces write permission on the video.
+
+	   Deprecated: Replaced by generateWhipStreamV2, which addresses a channel-backed live video series instead of a Video rid.
 	*/
 	GenerateWhipStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.GenerateWhipStreamResponse, error)
+	/*
+	   Generates a stream ID scoped to a channel-backed live video series and returns a WHIP URL with
+	   a MediaMTX JWT and ICE servers.
+	   Currently only datasource-backed dataset channels are supported.
+	*/
+	GenerateWhipStreamV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GenerateWhipStreamV2Request) (api.GenerateWhipStreamResponse, error)
 	/*
 	   Returns WHEP URL, ICE servers, and token for playing back the active stream.
 	   Returns empty if there is no active stream.
 	   Enforces read permission on the video.
+
+	   Deprecated: Replaced by generateWhepStreamV2, which addresses a channel-backed live video series instead of a Video rid.
 	*/
 	GenerateWhepStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (*api.GenerateWhepStreamResponse, error)
+	/*
+	   Returns WHEP URL, ICE servers, and token for playing back the active channel-backed live video stream.
+	   Returns empty if there is no active stream.
+	   Currently only datasource-backed dataset channels are supported.
+	*/
+	GenerateWhepStreamV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GenerateWhepStreamV2Request) (*api.GenerateWhepStreamResponse, error)
 	/*
 	   Returns stream session metadata for a given stream ID scoped to the video.
 	   Enforces read permission on the video.
@@ -843,14 +1099,51 @@ type VideoServiceClient interface {
 	   Returns all stream sessions for a video that overlap with the specified time bounds.
 	   A stream overlaps if there is any intersection between its [start, end] interval and the provided bounds.
 	   Enforces read permission on the video.
+
+	   Deprecated: Replaced by getStreamsInBoundsV2, which addresses a channel-backed live video series instead of a Video rid.
 	*/
 	GetStreamsInBounds(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetStreamsInBoundsRequest) (api.GetStreamsInBoundsResponse, error)
+	/*
+	   Returns all channel-backed stream sessions for a dataset/channel that overlap with the specified time bounds.
+	   A stream overlaps if there is any intersection between its [start, end] interval and the provided bounds.
+	   Enforces read metadata permission on the dataset.
+	*/
+	GetStreamsInBoundsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetStreamsInBoundsForChannelRequest) (api.GetStreamsInBoundsV2Response, error)
+	/*
+	   Returns the dataset files backing a video channel (identified by channel + tags), ordered by
+	   start timestamp ascending and paginated. Each entry carries the min/max absolute timestamps the
+	   file contributes to the channel. Optionally filtered by time bounds. Streamed sessions are not
+	   included; use getStreamsInBoundsV2 for those.
+	   Enforces read metadata permission on the datasource.
+	*/
+	ListVideoChannelDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg api.ListVideoChannelDatasetFilesRequest) (api.ListVideoChannelDatasetFilesResponse, error)
+	/*
+	   Updates one or more video dataset files in a channel in a single transaction. Each update may set a new
+	   absolute start timestamp (segments shifted so the earliest starts at the given timestamp), a scale
+	   parameter (frame timestamps rescaled around the file's start), and/or a new title (file name). If a
+	   resulting layout would overlap segments of another file in the channel, no files are updated and
+	   VIDEO_SEGMENT_CONFLICT is thrown (all-or-nothing). Returns the updated files with their new bounds and
+	   persists those bounds to the corresponding Catalog DatasetFile.
+	   Currently only datasource-backed dataset channels are supported.
+	   Enforces write data permission on the datasource.
+	*/
+	BatchUpdateVideoChannelDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchUpdateVideoChannelDatasetFilesRequest) (api.BatchUpdateVideoChannelDatasetFilesResponse, error)
 	/*
 	   Marks the active stream session as ended for the video.
 	   Throws VIDEO_NOT_FOUND if no active stream exists.
 	   Enforces write permission on the video.
+
+	   Deprecated: Replaced by endStreamV2, which addresses a channel-backed live video series instead of a Video rid.
 	*/
 	EndStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.EndStreamResponse, error)
+	/*
+	   Marks the active stream session as ended for a channel-backed live video series.
+	   Returns empty when no active stream exists, so a publisher-disconnect hook that fires
+	   more than once — or races the reaper — is a no-op rather than an error.
+	   Currently only datasource-backed dataset channels are supported.
+	   Enforces write permission on the data source.
+	*/
+	EndStreamV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.EndStreamV2Request) (*api.EndStreamResponse, error)
 	/*
 	   MediaMTX segment upload endpoint. Receives video segments from MediaMTX hooks.
 	   Validates JWT and logs session. Future: create video segments from uploaded files.
@@ -1223,6 +1516,21 @@ func (c *videoServiceClient) GetSegmentAtOrAfterTimestamp(ctx context.Context, a
 	return returnVal, nil
 }
 
+func (c *videoServiceClient) GetSegmentAtOrAfterTimestampV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentAtOrAfterTimestampV2Request) (*api.SegmentV2, error) {
+	var returnVal *api.SegmentV2
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSegmentAtOrAfterTimestampV2"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/get-segment-at-or-after-timestamp"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "getSegmentAtOrAfterTimestampV2 failed")
+	}
+	return returnVal, nil
+}
+
 func (c *videoServiceClient) GetFileSummaries(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error) {
 	var returnVal *api.GetFileSummariesResponse
 	var requestParams []httpclient.RequestParam
@@ -1258,6 +1566,24 @@ func (c *videoServiceClient) GenerateWhipStream(ctx context.Context, authHeader 
 	return *returnVal, nil
 }
 
+func (c *videoServiceClient) GenerateWhipStreamV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GenerateWhipStreamV2Request) (api.GenerateWhipStreamResponse, error) {
+	var returnVal *api.GenerateWhipStreamResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GenerateWhipStreamV2"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/streaming/whip"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GenerateWhipStreamResponse), werror.WrapWithContextParams(ctx, err, "generateWhipStreamV2 failed")
+	}
+	if returnVal == nil {
+		return *new(api.GenerateWhipStreamResponse), werror.ErrorWithContextParams(ctx, "generateWhipStreamV2 response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *videoServiceClient) GenerateWhepStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (*api.GenerateWhepStreamResponse, error) {
 	var returnVal *api.GenerateWhepStreamResponse
 	var requestParams []httpclient.RequestParam
@@ -1268,6 +1594,21 @@ func (c *videoServiceClient) GenerateWhepStream(ctx context.Context, authHeader 
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return nil, werror.WrapWithContextParams(ctx, err, "generateWhepStream failed")
+	}
+	return returnVal, nil
+}
+
+func (c *videoServiceClient) GenerateWhepStreamV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GenerateWhepStreamV2Request) (*api.GenerateWhepStreamResponse, error) {
+	var returnVal *api.GenerateWhepStreamResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GenerateWhepStreamV2"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/streaming/whep"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "generateWhepStreamV2 failed")
 	}
 	return returnVal, nil
 }
@@ -1304,6 +1645,60 @@ func (c *videoServiceClient) GetStreamsInBounds(ctx context.Context, authHeader 
 	return *returnVal, nil
 }
 
+func (c *videoServiceClient) GetStreamsInBoundsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetStreamsInBoundsForChannelRequest) (api.GetStreamsInBoundsV2Response, error) {
+	var returnVal *api.GetStreamsInBoundsV2Response
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetStreamsInBoundsV2"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/streaming/streams-in-bounds"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GetStreamsInBoundsV2Response), werror.WrapWithContextParams(ctx, err, "getStreamsInBoundsV2 failed")
+	}
+	if returnVal == nil {
+		return *new(api.GetStreamsInBoundsV2Response), werror.ErrorWithContextParams(ctx, "getStreamsInBoundsV2 response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *videoServiceClient) ListVideoChannelDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg api.ListVideoChannelDatasetFilesRequest) (api.ListVideoChannelDatasetFilesResponse, error) {
+	var returnVal *api.ListVideoChannelDatasetFilesResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListVideoChannelDatasetFiles"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/channel-dataset-files"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.ListVideoChannelDatasetFilesResponse), werror.WrapWithContextParams(ctx, err, "listVideoChannelDatasetFiles failed")
+	}
+	if returnVal == nil {
+		return *new(api.ListVideoChannelDatasetFilesResponse), werror.ErrorWithContextParams(ctx, "listVideoChannelDatasetFiles response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *videoServiceClient) BatchUpdateVideoChannelDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchUpdateVideoChannelDatasetFilesRequest) (api.BatchUpdateVideoChannelDatasetFilesResponse, error) {
+	var returnVal *api.BatchUpdateVideoChannelDatasetFilesResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchUpdateVideoChannelDatasetFiles"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/channel-dataset-files/batch-update"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchUpdateVideoChannelDatasetFilesResponse), werror.WrapWithContextParams(ctx, err, "batchUpdateVideoChannelDatasetFiles failed")
+	}
+	if returnVal == nil {
+		return *new(api.BatchUpdateVideoChannelDatasetFilesResponse), werror.ErrorWithContextParams(ctx, "batchUpdateVideoChannelDatasetFiles response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *videoServiceClient) EndStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.EndStreamResponse, error) {
 	var returnVal *api.EndStreamResponse
 	var requestParams []httpclient.RequestParam
@@ -1319,6 +1714,21 @@ func (c *videoServiceClient) EndStream(ctx context.Context, authHeader bearertok
 		return *new(api.EndStreamResponse), werror.ErrorWithContextParams(ctx, "endStream response cannot be nil")
 	}
 	return *returnVal, nil
+}
+
+func (c *videoServiceClient) EndStreamV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.EndStreamV2Request) (*api.EndStreamResponse, error) {
+	var returnVal *api.EndStreamResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("EndStreamV2"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/video/v2/videos/streaming/end"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return nil, werror.WrapWithContextParams(ctx, err, "endStreamV2 failed")
+	}
+	return returnVal, nil
 }
 
 func (c *videoServiceClient) UploadSegmentFromMediaMtx(ctx context.Context, authHeader bearertoken.Token, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {
@@ -1344,27 +1754,70 @@ func (c *videoServiceClient) UploadSegmentFromMediaMtx(ctx context.Context, auth
 
 // The video service manages videos and video metadata.
 type VideoServiceClientWithAuth interface {
-	// Returns video metadata associated with a video rid.
+	/*
+	   Returns video metadata associated with a video rid.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; list a channel's files with
+	   listVideoChannelDatasetFiles and read dataset metadata from CatalogService.
+	*/
 	Get(ctx context.Context, videoRidArg rids.VideoRid) (api.Video, error)
-	// Returns video metadata about each video given a set of video rids.
+	/*
+	   Returns video metadata about each video given a set of video rids.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; list a channel's files with
+	   listVideoChannelDatasetFiles and read dataset metadata from CatalogService.
+	*/
 	BatchGet(ctx context.Context, requestArg api.GetVideosRequest) (api.GetVideosResponse, error)
-	// Returns metadata about videos that match a given query.
+	/*
+	   Returns metadata about videos that match a given query.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; search datasets with CatalogService#searchDatasets.
+	*/
 	Search(ctx context.Context, requestArg api.SearchVideosRequest) (api.SearchVideosResponse, error)
-	// Creates and persists a video entity with the given metadata.
+	/*
+	   Creates and persists a video entity with the given metadata.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest with videoV2 options targeting a
+	   dataset channel instead of creating a Video.
+	*/
 	Create(ctx context.Context, requestArg api.CreateVideoRequest) (api.Video, error)
-	// Updates the metadata for a video associated with the given video rid.
+	/*
+	   Updates the metadata for a video associated with the given video rid.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; update dataset metadata with
+	   CatalogService#updateDatasetMetadata and per-file titles with batchUpdateVideoChannelDatasetFiles.
+	*/
 	UpdateMetadata(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.UpdateVideoMetadataRequest) (api.Video, error)
 	// Deprecated: Replaced by per-file updateIngestStatus. Will be removed after April 15th.
 	UpdateIngestStatus(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.UpdateIngestStatus) error
+	/*
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
+	   Catalog dataset file (CatalogService#getDatasetFile).
+	*/
 	GetIngestStatus(ctx context.Context, videoRidArg rids.VideoRid) (api.DetailedIngestStatus, error)
+	/*
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
+	   Catalog dataset file (CatalogService#batchGetDatasetFiles).
+	*/
 	BatchGetIngestStatus(ctx context.Context, videoRidsArg []rids.VideoRid) (map[rids.VideoRid]api.DetailedIngestStatus, error)
+	/*
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
+	   Catalog dataset file (CatalogService#getDatasetFile).
+	*/
 	GetEnrichedIngestStatus(ctx context.Context, requestArg api.GetEnrichedVideoIngestStatusRequest) (*api.EnrichedVideoIngestStatus, error)
 	/*
 	   Archives a video, which excludes it from search and hides it from being publicly visible, but does not
 	   permanently delete it. Archived videos can be unarchived.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; archive the backing dataset with
+	   CatalogService#archiveDataset, or delete individual files with IngestService#deleteFile.
 	*/
 	Archive(ctx context.Context, videoRidArg rids.VideoRid) error
-	// Unarchives a previously archived video.
+	/*
+	   Unarchives a previously archived video.
+
+	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; unarchive the backing dataset with CatalogService#unarchiveDataset.
+	*/
 	Unarchive(ctx context.Context, videoRidArg rids.VideoRid) error
 	/*
 	   Generates an HLS playlist for a video within optional time bounds.
@@ -1374,6 +1827,8 @@ type VideoServiceClientWithAuth interface {
 
 	   Note: The start and end parameters must either both be provided or both be omitted.
 	   Providing only one will result in a MissingTimestampBoundPair error.
+
+	   Deprecated: Replaced by getPlaylistV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetPlaylist(ctx context.Context, videoRidArg rids.VideoRid, startArg *string, endArg *string) (io.ReadCloser, error)
 	/*
@@ -1408,6 +1863,8 @@ type VideoServiceClientWithAuth interface {
 	/*
 	   Returns the min and max absolute and media timestamps for each segment in a video that overlap with an
 	   optional set of bounds.
+
+	   Deprecated: Replaced by getSegmentSummariesInBoundsV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetSegmentSummariesInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentSummariesInBoundsRequest) ([]api.SegmentSummary, error)
 	/*
@@ -1426,25 +1883,52 @@ type VideoServiceClientWithAuth interface {
 	   Returns metadata for the segment containing the requested absolute timestamp. If no segment contains
 	   the timestamp, returns the closest segment starting after the timestamp. Returns empty if no segment
 	   is found at or after the timestamp.
+
+	   Deprecated: Replaced by getSegmentAtOrAfterTimestampV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetSegmentAtOrAfterTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentAtOrAfterTimestampRequest) (*api.Segment, error)
+	/*
+	   Returns metadata for the segment containing the requested absolute timestamp for a video series
+	   (identified by channel + tags). If no segment contains the timestamp, returns the closest segment
+	   starting after the timestamp. Returns empty if no segment is found at or after the timestamp.
+	*/
+	GetSegmentAtOrAfterTimestampV2(ctx context.Context, requestArg api.GetSegmentAtOrAfterTimestampV2Request) (*api.SegmentV2, error)
 	/*
 	   Returns the min and max absolute timestamps from non-archived video files associated with a given video that
 	   overlap with an optional set of bounds. The files on the edges of the bounds will be truncated to segments
 	   that are inside or overlap with the bounds.
+
+	   Deprecated: Replaced by listVideoChannelDatasetFiles, which returns the dataset files backing a video
+	   channel together with the bounds each file contributes.
 	*/
 	GetFileSummaries(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error)
 	/*
 	   Generates a stream ID scoped to a video and returns a WHIP URL with a MediaMTX JWT and ICE servers.
 	   Enforces write permission on the video.
+
+	   Deprecated: Replaced by generateWhipStreamV2, which addresses a channel-backed live video series instead of a Video rid.
 	*/
 	GenerateWhipStream(ctx context.Context, videoRidArg rids.VideoRid) (api.GenerateWhipStreamResponse, error)
+	/*
+	   Generates a stream ID scoped to a channel-backed live video series and returns a WHIP URL with
+	   a MediaMTX JWT and ICE servers.
+	   Currently only datasource-backed dataset channels are supported.
+	*/
+	GenerateWhipStreamV2(ctx context.Context, requestArg api.GenerateWhipStreamV2Request) (api.GenerateWhipStreamResponse, error)
 	/*
 	   Returns WHEP URL, ICE servers, and token for playing back the active stream.
 	   Returns empty if there is no active stream.
 	   Enforces read permission on the video.
+
+	   Deprecated: Replaced by generateWhepStreamV2, which addresses a channel-backed live video series instead of a Video rid.
 	*/
 	GenerateWhepStream(ctx context.Context, videoRidArg rids.VideoRid) (*api.GenerateWhepStreamResponse, error)
+	/*
+	   Returns WHEP URL, ICE servers, and token for playing back the active channel-backed live video stream.
+	   Returns empty if there is no active stream.
+	   Currently only datasource-backed dataset channels are supported.
+	*/
+	GenerateWhepStreamV2(ctx context.Context, requestArg api.GenerateWhepStreamV2Request) (*api.GenerateWhepStreamResponse, error)
 	/*
 	   Returns stream session metadata for a given stream ID scoped to the video.
 	   Enforces read permission on the video.
@@ -1454,14 +1938,51 @@ type VideoServiceClientWithAuth interface {
 	   Returns all stream sessions for a video that overlap with the specified time bounds.
 	   A stream overlaps if there is any intersection between its [start, end] interval and the provided bounds.
 	   Enforces read permission on the video.
+
+	   Deprecated: Replaced by getStreamsInBoundsV2, which addresses a channel-backed live video series instead of a Video rid.
 	*/
 	GetStreamsInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetStreamsInBoundsRequest) (api.GetStreamsInBoundsResponse, error)
+	/*
+	   Returns all channel-backed stream sessions for a dataset/channel that overlap with the specified time bounds.
+	   A stream overlaps if there is any intersection between its [start, end] interval and the provided bounds.
+	   Enforces read metadata permission on the dataset.
+	*/
+	GetStreamsInBoundsV2(ctx context.Context, requestArg api.GetStreamsInBoundsForChannelRequest) (api.GetStreamsInBoundsV2Response, error)
+	/*
+	   Returns the dataset files backing a video channel (identified by channel + tags), ordered by
+	   start timestamp ascending and paginated. Each entry carries the min/max absolute timestamps the
+	   file contributes to the channel. Optionally filtered by time bounds. Streamed sessions are not
+	   included; use getStreamsInBoundsV2 for those.
+	   Enforces read metadata permission on the datasource.
+	*/
+	ListVideoChannelDatasetFiles(ctx context.Context, requestArg api.ListVideoChannelDatasetFilesRequest) (api.ListVideoChannelDatasetFilesResponse, error)
+	/*
+	   Updates one or more video dataset files in a channel in a single transaction. Each update may set a new
+	   absolute start timestamp (segments shifted so the earliest starts at the given timestamp), a scale
+	   parameter (frame timestamps rescaled around the file's start), and/or a new title (file name). If a
+	   resulting layout would overlap segments of another file in the channel, no files are updated and
+	   VIDEO_SEGMENT_CONFLICT is thrown (all-or-nothing). Returns the updated files with their new bounds and
+	   persists those bounds to the corresponding Catalog DatasetFile.
+	   Currently only datasource-backed dataset channels are supported.
+	   Enforces write data permission on the datasource.
+	*/
+	BatchUpdateVideoChannelDatasetFiles(ctx context.Context, requestArg api.BatchUpdateVideoChannelDatasetFilesRequest) (api.BatchUpdateVideoChannelDatasetFilesResponse, error)
 	/*
 	   Marks the active stream session as ended for the video.
 	   Throws VIDEO_NOT_FOUND if no active stream exists.
 	   Enforces write permission on the video.
+
+	   Deprecated: Replaced by endStreamV2, which addresses a channel-backed live video series instead of a Video rid.
 	*/
 	EndStream(ctx context.Context, videoRidArg rids.VideoRid) (api.EndStreamResponse, error)
+	/*
+	   Marks the active stream session as ended for a channel-backed live video series.
+	   Returns empty when no active stream exists, so a publisher-disconnect hook that fires
+	   more than once — or races the reaper — is a no-op rather than an error.
+	   Currently only datasource-backed dataset channels are supported.
+	   Enforces write permission on the data source.
+	*/
+	EndStreamV2(ctx context.Context, requestArg api.EndStreamV2Request) (*api.EndStreamResponse, error)
 	/*
 	   MediaMTX segment upload endpoint. Receives video segments from MediaMTX hooks.
 	   Validates JWT and logs session. Future: create video segments from uploaded files.
@@ -1562,6 +2083,10 @@ func (c *videoServiceClientWithAuth) GetSegmentAtOrAfterTimestamp(ctx context.Co
 	return c.client.GetSegmentAtOrAfterTimestamp(ctx, c.authHeader, videoRidArg, requestArg)
 }
 
+func (c *videoServiceClientWithAuth) GetSegmentAtOrAfterTimestampV2(ctx context.Context, requestArg api.GetSegmentAtOrAfterTimestampV2Request) (*api.SegmentV2, error) {
+	return c.client.GetSegmentAtOrAfterTimestampV2(ctx, c.authHeader, requestArg)
+}
+
 func (c *videoServiceClientWithAuth) GetFileSummaries(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error) {
 	return c.client.GetFileSummaries(ctx, c.authHeader, videoRidArg, requestArg)
 }
@@ -1570,8 +2095,16 @@ func (c *videoServiceClientWithAuth) GenerateWhipStream(ctx context.Context, vid
 	return c.client.GenerateWhipStream(ctx, c.authHeader, videoRidArg)
 }
 
+func (c *videoServiceClientWithAuth) GenerateWhipStreamV2(ctx context.Context, requestArg api.GenerateWhipStreamV2Request) (api.GenerateWhipStreamResponse, error) {
+	return c.client.GenerateWhipStreamV2(ctx, c.authHeader, requestArg)
+}
+
 func (c *videoServiceClientWithAuth) GenerateWhepStream(ctx context.Context, videoRidArg rids.VideoRid) (*api.GenerateWhepStreamResponse, error) {
 	return c.client.GenerateWhepStream(ctx, c.authHeader, videoRidArg)
+}
+
+func (c *videoServiceClientWithAuth) GenerateWhepStreamV2(ctx context.Context, requestArg api.GenerateWhepStreamV2Request) (*api.GenerateWhepStreamResponse, error) {
+	return c.client.GenerateWhepStreamV2(ctx, c.authHeader, requestArg)
 }
 
 func (c *videoServiceClientWithAuth) GetStream(ctx context.Context, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error) {
@@ -1582,8 +2115,24 @@ func (c *videoServiceClientWithAuth) GetStreamsInBounds(ctx context.Context, vid
 	return c.client.GetStreamsInBounds(ctx, c.authHeader, videoRidArg, requestArg)
 }
 
+func (c *videoServiceClientWithAuth) GetStreamsInBoundsV2(ctx context.Context, requestArg api.GetStreamsInBoundsForChannelRequest) (api.GetStreamsInBoundsV2Response, error) {
+	return c.client.GetStreamsInBoundsV2(ctx, c.authHeader, requestArg)
+}
+
+func (c *videoServiceClientWithAuth) ListVideoChannelDatasetFiles(ctx context.Context, requestArg api.ListVideoChannelDatasetFilesRequest) (api.ListVideoChannelDatasetFilesResponse, error) {
+	return c.client.ListVideoChannelDatasetFiles(ctx, c.authHeader, requestArg)
+}
+
+func (c *videoServiceClientWithAuth) BatchUpdateVideoChannelDatasetFiles(ctx context.Context, requestArg api.BatchUpdateVideoChannelDatasetFilesRequest) (api.BatchUpdateVideoChannelDatasetFilesResponse, error) {
+	return c.client.BatchUpdateVideoChannelDatasetFiles(ctx, c.authHeader, requestArg)
+}
+
 func (c *videoServiceClientWithAuth) EndStream(ctx context.Context, videoRidArg rids.VideoRid) (api.EndStreamResponse, error) {
 	return c.client.EndStream(ctx, c.authHeader, videoRidArg)
+}
+
+func (c *videoServiceClientWithAuth) EndStreamV2(ctx context.Context, requestArg api.EndStreamV2Request) (*api.EndStreamResponse, error) {
+	return c.client.EndStreamV2(ctx, c.authHeader, requestArg)
 }
 
 func (c *videoServiceClientWithAuth) UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {
@@ -1767,6 +2316,14 @@ func (c *videoServiceClientWithTokenProvider) GetSegmentAtOrAfterTimestamp(ctx c
 	return c.client.GetSegmentAtOrAfterTimestamp(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
 
+func (c *videoServiceClientWithTokenProvider) GetSegmentAtOrAfterTimestampV2(ctx context.Context, requestArg api.GetSegmentAtOrAfterTimestampV2Request) (*api.SegmentV2, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c.client.GetSegmentAtOrAfterTimestampV2(ctx, bearertoken.Token(token), requestArg)
+}
+
 func (c *videoServiceClientWithTokenProvider) GetFileSummaries(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
@@ -1783,12 +2340,28 @@ func (c *videoServiceClientWithTokenProvider) GenerateWhipStream(ctx context.Con
 	return c.client.GenerateWhipStream(ctx, bearertoken.Token(token), videoRidArg)
 }
 
+func (c *videoServiceClientWithTokenProvider) GenerateWhipStreamV2(ctx context.Context, requestArg api.GenerateWhipStreamV2Request) (api.GenerateWhipStreamResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.GenerateWhipStreamResponse), err
+	}
+	return c.client.GenerateWhipStreamV2(ctx, bearertoken.Token(token), requestArg)
+}
+
 func (c *videoServiceClientWithTokenProvider) GenerateWhepStream(ctx context.Context, videoRidArg rids.VideoRid) (*api.GenerateWhepStreamResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return c.client.GenerateWhepStream(ctx, bearertoken.Token(token), videoRidArg)
+}
+
+func (c *videoServiceClientWithTokenProvider) GenerateWhepStreamV2(ctx context.Context, requestArg api.GenerateWhepStreamV2Request) (*api.GenerateWhepStreamResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c.client.GenerateWhepStreamV2(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) GetStream(ctx context.Context, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error) {
@@ -1807,12 +2380,44 @@ func (c *videoServiceClientWithTokenProvider) GetStreamsInBounds(ctx context.Con
 	return c.client.GetStreamsInBounds(ctx, bearertoken.Token(token), videoRidArg, requestArg)
 }
 
+func (c *videoServiceClientWithTokenProvider) GetStreamsInBoundsV2(ctx context.Context, requestArg api.GetStreamsInBoundsForChannelRequest) (api.GetStreamsInBoundsV2Response, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.GetStreamsInBoundsV2Response), err
+	}
+	return c.client.GetStreamsInBoundsV2(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *videoServiceClientWithTokenProvider) ListVideoChannelDatasetFiles(ctx context.Context, requestArg api.ListVideoChannelDatasetFilesRequest) (api.ListVideoChannelDatasetFilesResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.ListVideoChannelDatasetFilesResponse), err
+	}
+	return c.client.ListVideoChannelDatasetFiles(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *videoServiceClientWithTokenProvider) BatchUpdateVideoChannelDatasetFiles(ctx context.Context, requestArg api.BatchUpdateVideoChannelDatasetFilesRequest) (api.BatchUpdateVideoChannelDatasetFilesResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.BatchUpdateVideoChannelDatasetFilesResponse), err
+	}
+	return c.client.BatchUpdateVideoChannelDatasetFiles(ctx, bearertoken.Token(token), requestArg)
+}
+
 func (c *videoServiceClientWithTokenProvider) EndStream(ctx context.Context, videoRidArg rids.VideoRid) (api.EndStreamResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api.EndStreamResponse), err
 	}
 	return c.client.EndStream(ctx, bearertoken.Token(token), videoRidArg)
+}
+
+func (c *videoServiceClientWithTokenProvider) EndStreamV2(ctx context.Context, requestArg api.EndStreamV2Request) (*api.EndStreamResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c.client.EndStreamV2(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *videoServiceClientWithTokenProvider) UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error {

@@ -58,6 +58,16 @@ func (u *SearchAssetsQueryWithT[T]) Accept(ctx context.Context, v SearchAssetsQu
 			return result, fmt.Errorf("field \"properties\" is required")
 		}
 		return v.VisitProperties(ctx, *u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return result, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(ctx, *u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return result, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRange(ctx, *u.numericPropertyRange)
 	case "typeRid":
 		if u.typeRid == nil {
 			return result, fmt.Errorf("field \"typeRid\" is required")
@@ -101,7 +111,7 @@ func (u *SearchAssetsQueryWithT[T]) Accept(ctx context.Context, v SearchAssetsQu
 	}
 }
 
-func (u *SearchAssetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), exactSubstringFunc func(string) (T, error), labelFunc func(api.Label) (T, error), labelsFunc func(api1.LabelsFilter) (T, error), propertyFunc func(api.Property) (T, error), propertyKeyFunc func(api.PropertyName) (T, error), propertiesFunc func(api1.PropertiesFilter) (T, error), typeRidFunc func(api1.TypeRid) (T, error), assetTypesFunc func(AssetTypesFilter) (T, error), isStagedFunc func(bool) (T, error), archivedFunc func(bool) (T, error), andFunc func([]SearchAssetsQuery) (T, error), orFunc func([]SearchAssetsQuery) (T, error), notFunc func(SearchAssetsQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchAssetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), exactSubstringFunc func(string) (T, error), labelFunc func(api.Label) (T, error), labelsFunc func(api1.LabelsFilter) (T, error), propertyFunc func(api.Property) (T, error), propertyKeyFunc func(api.PropertyName) (T, error), propertiesFunc func(api1.PropertiesFilter) (T, error), numericPropertyFunc func(api.NumericPropertyPredicate) (T, error), numericPropertyRangeFunc func(api.NumericPropertyRangePredicate) (T, error), typeRidFunc func(api1.TypeRid) (T, error), assetTypesFunc func(AssetTypesFilter) (T, error), isStagedFunc func(bool) (T, error), archivedFunc func(bool) (T, error), andFunc func([]SearchAssetsQuery) (T, error), orFunc func([]SearchAssetsQuery) (T, error), notFunc func(SearchAssetsQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -144,6 +154,16 @@ func (u *SearchAssetsQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, 
 			return result, fmt.Errorf("field \"properties\" is required")
 		}
 		return propertiesFunc(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return result, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return result, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return numericPropertyRangeFunc(*u.numericPropertyRange)
 	case "typeRid":
 		if u.typeRid == nil {
 			return result, fmt.Errorf("field \"typeRid\" is required")
@@ -222,6 +242,16 @@ func (u *SearchAssetsQueryWithT[T]) PropertiesNoopSuccess(api1.PropertiesFilter)
 	return result, nil
 }
 
+func (u *SearchAssetsQueryWithT[T]) NumericPropertyNoopSuccess(api.NumericPropertyPredicate) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchAssetsQueryWithT[T]) NumericPropertyRangeNoopSuccess(api.NumericPropertyRangePredicate) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchAssetsQueryWithT[T]) TypeRidNoopSuccess(api1.TypeRid) (T, error) {
 	var result T
 	return result, nil
@@ -275,6 +305,8 @@ type SearchAssetsQueryVisitorWithT[T any] interface {
 	VisitProperty(ctx context.Context, v api.Property) (T, error)
 	VisitPropertyKey(ctx context.Context, v api.PropertyName) (T, error)
 	VisitProperties(ctx context.Context, v api1.PropertiesFilter) (T, error)
+	VisitNumericProperty(ctx context.Context, v api.NumericPropertyPredicate) (T, error)
+	VisitNumericPropertyRange(ctx context.Context, v api.NumericPropertyRangePredicate) (T, error)
 	VisitTypeRid(ctx context.Context, v api1.TypeRid) (T, error)
 	VisitAssetTypes(ctx context.Context, v AssetTypesFilter) (T, error)
 	VisitIsStaged(ctx context.Context, v bool) (T, error)
@@ -435,10 +467,15 @@ func (u *SortKeyWithT[T]) Accept(ctx context.Context, v SortKeyVisitorWithT[T]) 
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(ctx, *u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return result, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(ctx, *u.numericProperty)
 	}
 }
 
-func (u *SortKeyWithT[T]) AcceptFuncs(fieldFunc func(AssetSortField) (T, error), propertyFunc func(SortProperty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SortKeyWithT[T]) AcceptFuncs(fieldFunc func(AssetSortField) (T, error), propertyFunc func(SortProperty) (T, error), numericPropertyFunc func(SortProperty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -456,6 +493,11 @@ func (u *SortKeyWithT[T]) AcceptFuncs(fieldFunc func(AssetSortField) (T, error),
 			return result, fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return result, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
 	}
 }
 
@@ -469,6 +511,11 @@ func (u *SortKeyWithT[T]) PropertyNoopSuccess(SortProperty) (T, error) {
 	return result, nil
 }
 
+func (u *SortKeyWithT[T]) NumericPropertyNoopSuccess(SortProperty) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SortKeyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -477,6 +524,7 @@ func (u *SortKeyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type SortKeyVisitorWithT[T any] interface {
 	VisitField(ctx context.Context, v AssetSortField) (T, error)
 	VisitProperty(ctx context.Context, v SortProperty) (T, error)
+	VisitNumericProperty(ctx context.Context, v SortProperty) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

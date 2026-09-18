@@ -70,18 +70,23 @@ type InvalidStreamingComputeNode struct {
 type InvalidStreamingComputeNode_Value string
 
 const (
-	InvalidStreamingComputeNode_POINT_PERSISTENCE   InvalidStreamingComputeNode_Value = "POINT_PERSISTENCE"
-	InvalidStreamingComputeNode_CUMULATIVE_SUM      InvalidStreamingComputeNode_Value = "CUMULATIVE_SUM"
-	InvalidStreamingComputeNode_INTEGRAL            InvalidStreamingComputeNode_Value = "INTEGRAL"
-	InvalidStreamingComputeNode_STALENESS_DETECTION InvalidStreamingComputeNode_Value = "STALENESS_DETECTION"
-	InvalidStreamingComputeNode_LITERAL_RANGES      InvalidStreamingComputeNode_Value = "LITERAL_RANGES"
-	InvalidStreamingComputeNode_TIME_RANGE_FILTER   InvalidStreamingComputeNode_Value = "TIME_RANGE_FILTER"
-	InvalidStreamingComputeNode_UNKNOWN             InvalidStreamingComputeNode_Value = "UNKNOWN"
+	InvalidStreamingComputeNode_POINT_PERSISTENCE                InvalidStreamingComputeNode_Value = "POINT_PERSISTENCE"
+	InvalidStreamingComputeNode_CUMULATIVE_SUM                   InvalidStreamingComputeNode_Value = "CUMULATIVE_SUM"
+	InvalidStreamingComputeNode_INTEGRAL                         InvalidStreamingComputeNode_Value = "INTEGRAL"
+	InvalidStreamingComputeNode_STALENESS_DETECTION              InvalidStreamingComputeNode_Value = "STALENESS_DETECTION"
+	InvalidStreamingComputeNode_LITERAL_RANGES                   InvalidStreamingComputeNode_Value = "LITERAL_RANGES"
+	InvalidStreamingComputeNode_LITERAL_ENUM_SERIES              InvalidStreamingComputeNode_Value = "LITERAL_ENUM_SERIES"
+	InvalidStreamingComputeNode_TAG_BY_INTERVALS                 InvalidStreamingComputeNode_Value = "TAG_BY_INTERVALS"
+	InvalidStreamingComputeNode_NUMERIC_COMBINE_WITH_TAGS        InvalidStreamingComputeNode_Value = "NUMERIC_COMBINE_WITH_TAGS"
+	InvalidStreamingComputeNode_PHASE_UNWRAP                     InvalidStreamingComputeNode_Value = "PHASE_UNWRAP"
+	InvalidStreamingComputeNode_RUN_WITH_FIXED_END               InvalidStreamingComputeNode_Value = "RUN_WITH_FIXED_END"
+	InvalidStreamingComputeNode_TIME_RANGE_FILTER_WITH_FIXED_END InvalidStreamingComputeNode_Value = "TIME_RANGE_FILTER_WITH_FIXED_END"
+	InvalidStreamingComputeNode_UNKNOWN                          InvalidStreamingComputeNode_Value = "UNKNOWN"
 )
 
 // InvalidStreamingComputeNode_Values returns all known variants of InvalidStreamingComputeNode.
 func InvalidStreamingComputeNode_Values() []InvalidStreamingComputeNode_Value {
-	return []InvalidStreamingComputeNode_Value{InvalidStreamingComputeNode_POINT_PERSISTENCE, InvalidStreamingComputeNode_CUMULATIVE_SUM, InvalidStreamingComputeNode_INTEGRAL, InvalidStreamingComputeNode_STALENESS_DETECTION, InvalidStreamingComputeNode_LITERAL_RANGES, InvalidStreamingComputeNode_TIME_RANGE_FILTER}
+	return []InvalidStreamingComputeNode_Value{InvalidStreamingComputeNode_POINT_PERSISTENCE, InvalidStreamingComputeNode_CUMULATIVE_SUM, InvalidStreamingComputeNode_INTEGRAL, InvalidStreamingComputeNode_STALENESS_DETECTION, InvalidStreamingComputeNode_LITERAL_RANGES, InvalidStreamingComputeNode_LITERAL_ENUM_SERIES, InvalidStreamingComputeNode_TAG_BY_INTERVALS, InvalidStreamingComputeNode_NUMERIC_COMBINE_WITH_TAGS, InvalidStreamingComputeNode_PHASE_UNWRAP, InvalidStreamingComputeNode_RUN_WITH_FIXED_END, InvalidStreamingComputeNode_TIME_RANGE_FILTER_WITH_FIXED_END}
 }
 
 func New_InvalidStreamingComputeNode(value InvalidStreamingComputeNode_Value) InvalidStreamingComputeNode {
@@ -91,7 +96,7 @@ func New_InvalidStreamingComputeNode(value InvalidStreamingComputeNode_Value) In
 // IsUnknown returns false for all known variants of InvalidStreamingComputeNode and true otherwise.
 func (e InvalidStreamingComputeNode) IsUnknown() bool {
 	switch e.val {
-	case InvalidStreamingComputeNode_POINT_PERSISTENCE, InvalidStreamingComputeNode_CUMULATIVE_SUM, InvalidStreamingComputeNode_INTEGRAL, InvalidStreamingComputeNode_STALENESS_DETECTION, InvalidStreamingComputeNode_LITERAL_RANGES, InvalidStreamingComputeNode_TIME_RANGE_FILTER:
+	case InvalidStreamingComputeNode_POINT_PERSISTENCE, InvalidStreamingComputeNode_CUMULATIVE_SUM, InvalidStreamingComputeNode_INTEGRAL, InvalidStreamingComputeNode_STALENESS_DETECTION, InvalidStreamingComputeNode_LITERAL_RANGES, InvalidStreamingComputeNode_LITERAL_ENUM_SERIES, InvalidStreamingComputeNode_TAG_BY_INTERVALS, InvalidStreamingComputeNode_NUMERIC_COMBINE_WITH_TAGS, InvalidStreamingComputeNode_PHASE_UNWRAP, InvalidStreamingComputeNode_RUN_WITH_FIXED_END, InvalidStreamingComputeNode_TIME_RANGE_FILTER_WITH_FIXED_END:
 		return false
 	}
 	return true
@@ -126,8 +131,18 @@ func (e *InvalidStreamingComputeNode) UnmarshalText(data []byte) error {
 		*e = New_InvalidStreamingComputeNode(InvalidStreamingComputeNode_STALENESS_DETECTION)
 	case "LITERAL_RANGES":
 		*e = New_InvalidStreamingComputeNode(InvalidStreamingComputeNode_LITERAL_RANGES)
-	case "TIME_RANGE_FILTER":
-		*e = New_InvalidStreamingComputeNode(InvalidStreamingComputeNode_TIME_RANGE_FILTER)
+	case "LITERAL_ENUM_SERIES":
+		*e = New_InvalidStreamingComputeNode(InvalidStreamingComputeNode_LITERAL_ENUM_SERIES)
+	case "TAG_BY_INTERVALS":
+		*e = New_InvalidStreamingComputeNode(InvalidStreamingComputeNode_TAG_BY_INTERVALS)
+	case "NUMERIC_COMBINE_WITH_TAGS":
+		*e = New_InvalidStreamingComputeNode(InvalidStreamingComputeNode_NUMERIC_COMBINE_WITH_TAGS)
+	case "PHASE_UNWRAP":
+		*e = New_InvalidStreamingComputeNode(InvalidStreamingComputeNode_PHASE_UNWRAP)
+	case "RUN_WITH_FIXED_END":
+		*e = New_InvalidStreamingComputeNode(InvalidStreamingComputeNode_RUN_WITH_FIXED_END)
+	case "TIME_RANGE_FILTER_WITH_FIXED_END":
+		*e = New_InvalidStreamingComputeNode(InvalidStreamingComputeNode_TIME_RANGE_FILTER_WITH_FIXED_END)
 	}
 	return nil
 }

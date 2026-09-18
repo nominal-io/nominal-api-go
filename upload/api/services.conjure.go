@@ -25,23 +25,30 @@ type UploadServiceClient interface {
 	*/
 	InitiateMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadRequestArg api.InitiateMultipartUploadRequest) (api.InitiateMultipartUploadResponse, error)
 	// Lists the parts that have been uploaded for a given uploadId.
-	ListParts(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string) ([]api.PartWithSize, error)
+	ListParts(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, bucketArg *string) ([]api.PartWithSize, error)
 	/*
 	   Signs an upload request for a single part.
 	   Returns a URL that will execute the upload without further authentication.
 	*/
-	SignPart(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, partNumberArg int) (api.SignPartResponse, error)
+	SignPart(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, partNumberArg int, bucketArg *string) (api.SignPartResponse, error)
 	/*
 	   Completes a multipart upload to object storage.
 	   This should be called after all parts have been uploaded.
 	   Will throw EmptyMultipartUpload if there are 0 parts.
 	*/
-	CompleteMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error)
+	CompleteMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, bucketArg *string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error)
 	/*
 	   Aborts a multipart upload to S3.
 	   Frees storage used by previously uploaded parts and prevents further uploads to the same uploadId.
 	*/
-	AbortMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string) error
+	AbortMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, bucketArg *string) error
+	/*
+	   Returns a short-lived signed GET URL for an object already in the uploads bucket.
+	   Use this to hand a freshly-uploaded object's path to an external service (e.g. Dagger)
+	   without giving that service any Scout credentials. The caller must be authorized to
+	   read the workspace that owns the path (encoded as the first segment of the object key).
+	*/
+	SignDownload(ctx context.Context, authHeader bearertoken.Token, requestArg api.SignDownloadRequest) (api.SignDownloadResponse, error)
 	// Uploads a file to S3. Intended for smaller files.
 	UploadFile(ctx context.Context, authHeader bearertoken.Token, fileNameArg string, sizeBytesArg *safelong.SafeLong, workspaceArg *rids.WorkspaceRid, bodyArg httpclient.RequestBody) (api1.S3Path, error)
 }
@@ -72,7 +79,7 @@ func (c *uploadServiceClient) InitiateMultipartUpload(ctx context.Context, authH
 	return *returnVal, nil
 }
 
-func (c *uploadServiceClient) ListParts(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string) ([]api.PartWithSize, error) {
+func (c *uploadServiceClient) ListParts(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, bucketArg *string) ([]api.PartWithSize, error) {
 	var returnVal []api.PartWithSize
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListParts"))
@@ -80,6 +87,9 @@ func (c *uploadServiceClient) ListParts(ctx context.Context, authHeader bearerto
 	requestParams = append(requestParams, httpclient.WithPathf("/upload/v1/multipart-upload/%s", url.PathEscape(fmt.Sprint(uploadIdArg))))
 	queryParams := make(url.Values)
 	queryParams.Set("key", fmt.Sprint(keyArg))
+	if bucketArg != nil {
+		queryParams.Set("bucket", fmt.Sprint(*bucketArg))
+	}
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
@@ -92,7 +102,7 @@ func (c *uploadServiceClient) ListParts(ctx context.Context, authHeader bearerto
 	return returnVal, nil
 }
 
-func (c *uploadServiceClient) SignPart(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, partNumberArg int) (api.SignPartResponse, error) {
+func (c *uploadServiceClient) SignPart(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, partNumberArg int, bucketArg *string) (api.SignPartResponse, error) {
 	var returnVal *api.SignPartResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SignPart"))
@@ -101,6 +111,9 @@ func (c *uploadServiceClient) SignPart(ctx context.Context, authHeader bearertok
 	queryParams := make(url.Values)
 	queryParams.Set("key", fmt.Sprint(keyArg))
 	queryParams.Set("partNumber", fmt.Sprint(partNumberArg))
+	if bucketArg != nil {
+		queryParams.Set("bucket", fmt.Sprint(*bucketArg))
+	}
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
@@ -113,7 +126,7 @@ func (c *uploadServiceClient) SignPart(ctx context.Context, authHeader bearertok
 	return *returnVal, nil
 }
 
-func (c *uploadServiceClient) CompleteMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error) {
+func (c *uploadServiceClient) CompleteMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, bucketArg *string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error) {
 	var returnVal *api.CompleteMultipartUploadResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CompleteMultipartUpload"))
@@ -122,6 +135,9 @@ func (c *uploadServiceClient) CompleteMultipartUpload(ctx context.Context, authH
 	requestParams = append(requestParams, httpclient.WithJSONRequest(partsArg))
 	queryParams := make(url.Values)
 	queryParams.Set("key", fmt.Sprint(keyArg))
+	if bucketArg != nil {
+		queryParams.Set("bucket", fmt.Sprint(*bucketArg))
+	}
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
@@ -134,19 +150,40 @@ func (c *uploadServiceClient) CompleteMultipartUpload(ctx context.Context, authH
 	return *returnVal, nil
 }
 
-func (c *uploadServiceClient) AbortMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string) error {
+func (c *uploadServiceClient) AbortMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, bucketArg *string) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("AbortMultipartUpload"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/upload/v1/multipart-upload/%s/abort", url.PathEscape(fmt.Sprint(uploadIdArg))))
 	queryParams := make(url.Values)
 	queryParams.Set("key", fmt.Sprint(keyArg))
+	if bucketArg != nil {
+		queryParams.Set("bucket", fmt.Sprint(*bucketArg))
+	}
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
 		return werror.WrapWithContextParams(ctx, err, "abortMultipartUpload failed")
 	}
 	return nil
+}
+
+func (c *uploadServiceClient) SignDownload(ctx context.Context, authHeader bearertoken.Token, requestArg api.SignDownloadRequest) (api.SignDownloadResponse, error) {
+	var returnVal *api.SignDownloadResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("SignDownload"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/upload/v1/sign-download"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.SignDownloadResponse), werror.WrapWithContextParams(ctx, err, "signDownload failed")
+	}
+	if returnVal == nil {
+		return *new(api.SignDownloadResponse), werror.ErrorWithContextParams(ctx, "signDownload response cannot be nil")
+	}
+	return *returnVal, nil
 }
 
 func (c *uploadServiceClient) UploadFile(ctx context.Context, authHeader bearertoken.Token, fileNameArg string, sizeBytesArg *safelong.SafeLong, workspaceArg *rids.WorkspaceRid, bodyArg httpclient.RequestBody) (api1.S3Path, error) {
@@ -184,23 +221,30 @@ type UploadServiceClientWithAuth interface {
 	*/
 	InitiateMultipartUpload(ctx context.Context, uploadRequestArg api.InitiateMultipartUploadRequest) (api.InitiateMultipartUploadResponse, error)
 	// Lists the parts that have been uploaded for a given uploadId.
-	ListParts(ctx context.Context, uploadIdArg string, keyArg string) ([]api.PartWithSize, error)
+	ListParts(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string) ([]api.PartWithSize, error)
 	/*
 	   Signs an upload request for a single part.
 	   Returns a URL that will execute the upload without further authentication.
 	*/
-	SignPart(ctx context.Context, uploadIdArg string, keyArg string, partNumberArg int) (api.SignPartResponse, error)
+	SignPart(ctx context.Context, uploadIdArg string, keyArg string, partNumberArg int, bucketArg *string) (api.SignPartResponse, error)
 	/*
 	   Completes a multipart upload to object storage.
 	   This should be called after all parts have been uploaded.
 	   Will throw EmptyMultipartUpload if there are 0 parts.
 	*/
-	CompleteMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error)
+	CompleteMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error)
 	/*
 	   Aborts a multipart upload to S3.
 	   Frees storage used by previously uploaded parts and prevents further uploads to the same uploadId.
 	*/
-	AbortMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string) error
+	AbortMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string) error
+	/*
+	   Returns a short-lived signed GET URL for an object already in the uploads bucket.
+	   Use this to hand a freshly-uploaded object's path to an external service (e.g. Dagger)
+	   without giving that service any Scout credentials. The caller must be authorized to
+	   read the workspace that owns the path (encoded as the first segment of the object key).
+	*/
+	SignDownload(ctx context.Context, requestArg api.SignDownloadRequest) (api.SignDownloadResponse, error)
 	// Uploads a file to S3. Intended for smaller files.
 	UploadFile(ctx context.Context, fileNameArg string, sizeBytesArg *safelong.SafeLong, workspaceArg *rids.WorkspaceRid, bodyArg httpclient.RequestBody) (api1.S3Path, error)
 }
@@ -218,20 +262,24 @@ func (c *uploadServiceClientWithAuth) InitiateMultipartUpload(ctx context.Contex
 	return c.client.InitiateMultipartUpload(ctx, c.authHeader, uploadRequestArg)
 }
 
-func (c *uploadServiceClientWithAuth) ListParts(ctx context.Context, uploadIdArg string, keyArg string) ([]api.PartWithSize, error) {
-	return c.client.ListParts(ctx, c.authHeader, uploadIdArg, keyArg)
+func (c *uploadServiceClientWithAuth) ListParts(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string) ([]api.PartWithSize, error) {
+	return c.client.ListParts(ctx, c.authHeader, uploadIdArg, keyArg, bucketArg)
 }
 
-func (c *uploadServiceClientWithAuth) SignPart(ctx context.Context, uploadIdArg string, keyArg string, partNumberArg int) (api.SignPartResponse, error) {
-	return c.client.SignPart(ctx, c.authHeader, uploadIdArg, keyArg, partNumberArg)
+func (c *uploadServiceClientWithAuth) SignPart(ctx context.Context, uploadIdArg string, keyArg string, partNumberArg int, bucketArg *string) (api.SignPartResponse, error) {
+	return c.client.SignPart(ctx, c.authHeader, uploadIdArg, keyArg, partNumberArg, bucketArg)
 }
 
-func (c *uploadServiceClientWithAuth) CompleteMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error) {
-	return c.client.CompleteMultipartUpload(ctx, c.authHeader, uploadIdArg, keyArg, partsArg)
+func (c *uploadServiceClientWithAuth) CompleteMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error) {
+	return c.client.CompleteMultipartUpload(ctx, c.authHeader, uploadIdArg, keyArg, bucketArg, partsArg)
 }
 
-func (c *uploadServiceClientWithAuth) AbortMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string) error {
-	return c.client.AbortMultipartUpload(ctx, c.authHeader, uploadIdArg, keyArg)
+func (c *uploadServiceClientWithAuth) AbortMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string) error {
+	return c.client.AbortMultipartUpload(ctx, c.authHeader, uploadIdArg, keyArg, bucketArg)
+}
+
+func (c *uploadServiceClientWithAuth) SignDownload(ctx context.Context, requestArg api.SignDownloadRequest) (api.SignDownloadResponse, error) {
+	return c.client.SignDownload(ctx, c.authHeader, requestArg)
 }
 
 func (c *uploadServiceClientWithAuth) UploadFile(ctx context.Context, fileNameArg string, sizeBytesArg *safelong.SafeLong, workspaceArg *rids.WorkspaceRid, bodyArg httpclient.RequestBody) (api1.S3Path, error) {
@@ -255,36 +303,44 @@ func (c *uploadServiceClientWithTokenProvider) InitiateMultipartUpload(ctx conte
 	return c.client.InitiateMultipartUpload(ctx, bearertoken.Token(token), uploadRequestArg)
 }
 
-func (c *uploadServiceClientWithTokenProvider) ListParts(ctx context.Context, uploadIdArg string, keyArg string) ([]api.PartWithSize, error) {
+func (c *uploadServiceClientWithTokenProvider) ListParts(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string) ([]api.PartWithSize, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.client.ListParts(ctx, bearertoken.Token(token), uploadIdArg, keyArg)
+	return c.client.ListParts(ctx, bearertoken.Token(token), uploadIdArg, keyArg, bucketArg)
 }
 
-func (c *uploadServiceClientWithTokenProvider) SignPart(ctx context.Context, uploadIdArg string, keyArg string, partNumberArg int) (api.SignPartResponse, error) {
+func (c *uploadServiceClientWithTokenProvider) SignPart(ctx context.Context, uploadIdArg string, keyArg string, partNumberArg int, bucketArg *string) (api.SignPartResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api.SignPartResponse), err
 	}
-	return c.client.SignPart(ctx, bearertoken.Token(token), uploadIdArg, keyArg, partNumberArg)
+	return c.client.SignPart(ctx, bearertoken.Token(token), uploadIdArg, keyArg, partNumberArg, bucketArg)
 }
 
-func (c *uploadServiceClientWithTokenProvider) CompleteMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error) {
+func (c *uploadServiceClientWithTokenProvider) CompleteMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api.CompleteMultipartUploadResponse), err
 	}
-	return c.client.CompleteMultipartUpload(ctx, bearertoken.Token(token), uploadIdArg, keyArg, partsArg)
+	return c.client.CompleteMultipartUpload(ctx, bearertoken.Token(token), uploadIdArg, keyArg, bucketArg, partsArg)
 }
 
-func (c *uploadServiceClientWithTokenProvider) AbortMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string) error {
+func (c *uploadServiceClientWithTokenProvider) AbortMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
 	}
-	return c.client.AbortMultipartUpload(ctx, bearertoken.Token(token), uploadIdArg, keyArg)
+	return c.client.AbortMultipartUpload(ctx, bearertoken.Token(token), uploadIdArg, keyArg, bucketArg)
+}
+
+func (c *uploadServiceClientWithTokenProvider) SignDownload(ctx context.Context, requestArg api.SignDownloadRequest) (api.SignDownloadResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.SignDownloadResponse), err
+	}
+	return c.client.SignDownload(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *uploadServiceClientWithTokenProvider) UploadFile(ctx context.Context, fileNameArg string, sizeBytesArg *safelong.SafeLong, workspaceArg *rids.WorkspaceRid, bodyArg httpclient.RequestBody) (api1.S3Path, error) {

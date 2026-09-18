@@ -977,6 +977,153 @@ func (e *RequestedPageSizeTooLarge) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type staleSearchToken struct{}
+
+func (o staleSearchToken) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *staleSearchToken) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewStaleSearchToken returns new instance of StaleSearchToken error.
+func NewStaleSearchToken() *StaleSearchToken {
+	return &StaleSearchToken{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), staleSearchToken: staleSearchToken{}}
+}
+
+// WrapWithStaleSearchToken returns new instance of StaleSearchToken error wrapping an existing error.
+func WrapWithStaleSearchToken(err error) *StaleSearchToken {
+	return &StaleSearchToken{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, staleSearchToken: staleSearchToken{}}
+}
+
+// StaleSearchToken is an error type.
+type StaleSearchToken struct {
+	errorInstanceID uuid.UUID
+	staleSearchToken
+	cause error
+	stack werror.StackTrace
+}
+
+// IsStaleSearchToken returns true if err is an instance of StaleSearchToken.
+func IsStaleSearchToken(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*StaleSearchToken)
+	return ok
+}
+
+func (e *StaleSearchToken) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:StaleSearchToken (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *StaleSearchToken) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *StaleSearchToken) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *StaleSearchToken) Message() string {
+	return "INVALID_ARGUMENT Scout:StaleSearchToken"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *StaleSearchToken) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *StaleSearchToken) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *StaleSearchToken) Name() string {
+	return "Scout:StaleSearchToken"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *StaleSearchToken) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *StaleSearchToken) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *StaleSearchToken) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *StaleSearchToken) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *StaleSearchToken) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *StaleSearchToken) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e StaleSearchToken) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.staleSearchToken)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:StaleSearchToken", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *StaleSearchToken) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters staleSearchToken
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.staleSearchToken = parameters
+	return nil
+}
+
 func init() {
 	conjureerrors.RegisterErrorType("Scout:CannotCreateNullOrBlankLabels", reflect.TypeOf(CannotCreateNullOrBlankLabels{}))
 	conjureerrors.RegisterErrorType("Scout:CannotCreateNullOrBlankProperties", reflect.TypeOf(CannotCreateNullOrBlankProperties{}))
@@ -984,4 +1131,5 @@ func init() {
 	conjureerrors.RegisterErrorType("Scout:CollidingPropertyKeysAfterStrip", reflect.TypeOf(CollidingPropertyKeysAfterStrip{}))
 	conjureerrors.RegisterErrorType("Scout:InvalidRange", reflect.TypeOf(InvalidRange{}))
 	conjureerrors.RegisterErrorType("Scout:RequestedPageSizeTooLarge", reflect.TypeOf(RequestedPageSizeTooLarge{}))
+	conjureerrors.RegisterErrorType("Scout:StaleSearchToken", reflect.TypeOf(StaleSearchToken{}))
 }

@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+/*
+The kind of workbook. Persisted on metadata, so it is readable without
+loading content and filterable through `notebookTypes`.
+*/
 type NotebookType struct {
 	val NotebookType_Value
 }
@@ -13,14 +17,16 @@ type NotebookType struct {
 type NotebookType_Value string
 
 const (
-	NotebookType_WORKBOOK            NotebookType_Value = "WORKBOOK"
-	NotebookType_COMPARISON_WORKBOOK NotebookType_Value = "COMPARISON_WORKBOOK"
-	NotebookType_UNKNOWN             NotebookType_Value = "UNKNOWN"
+	NotebookType_WORKBOOK                   NotebookType_Value = "WORKBOOK"
+	NotebookType_COMPARISON_WORKBOOK        NotebookType_Value = "COMPARISON_WORKBOOK"
+	NotebookType_ANALYST_EPHEMERAL_WORKBOOK NotebookType_Value = "ANALYST_EPHEMERAL_WORKBOOK"
+	NotebookType_REPORT                     NotebookType_Value = "REPORT"
+	NotebookType_UNKNOWN                    NotebookType_Value = "UNKNOWN"
 )
 
 // NotebookType_Values returns all known variants of NotebookType.
 func NotebookType_Values() []NotebookType_Value {
-	return []NotebookType_Value{NotebookType_WORKBOOK, NotebookType_COMPARISON_WORKBOOK}
+	return []NotebookType_Value{NotebookType_WORKBOOK, NotebookType_COMPARISON_WORKBOOK, NotebookType_ANALYST_EPHEMERAL_WORKBOOK, NotebookType_REPORT}
 }
 
 func New_NotebookType(value NotebookType_Value) NotebookType {
@@ -30,7 +36,7 @@ func New_NotebookType(value NotebookType_Value) NotebookType {
 // IsUnknown returns false for all known variants of NotebookType and true otherwise.
 func (e NotebookType) IsUnknown() bool {
 	switch e.val {
-	case NotebookType_WORKBOOK, NotebookType_COMPARISON_WORKBOOK:
+	case NotebookType_WORKBOOK, NotebookType_COMPARISON_WORKBOOK, NotebookType_ANALYST_EPHEMERAL_WORKBOOK, NotebookType_REPORT:
 		return false
 	}
 	return true
@@ -59,6 +65,10 @@ func (e *NotebookType) UnmarshalText(data []byte) error {
 		*e = New_NotebookType(NotebookType_WORKBOOK)
 	case "COMPARISON_WORKBOOK":
 		*e = New_NotebookType(NotebookType_COMPARISON_WORKBOOK)
+	case "ANALYST_EPHEMERAL_WORKBOOK":
+		*e = New_NotebookType(NotebookType_ANALYST_EPHEMERAL_WORKBOOK)
+	case "REPORT":
+		*e = New_NotebookType(NotebookType_REPORT)
 	}
 	return nil
 }

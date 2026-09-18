@@ -23,15 +23,29 @@ The DataSource Service is responsible for indexing and searching channels across
 type DataSourceServiceClient interface {
 	// Returns channels that match the search criteria. Results are sorted by similarity score.
 	SearchChannels(ctx context.Context, authHeader bearertoken.Token, queryArg api.SearchChannelsRequest) (api.SearchChannelsResponse, error)
-	// Returns channels that match the search criteria. Results are sorted by similarity score.
+	/*
+	   Returns channels that match the search criteria. Results are sorted by similarity score.
+	   If neither minDataUpdatedTime nor maxDataStartTime is provided, the search is bounded to a
+	   default one-month lookback ending now rather than scanning the data source's full history.
+	*/
 	SearchFilteredChannels(ctx context.Context, authHeader bearertoken.Token, queryArg api.SearchFilteredChannelsRequest) (api.SearchFilteredChannelsResponse, error)
-	// Returns only channels that are direct children of the parent. Returns results sorted alphabetically.
+	/*
+	   Returns only channels that are direct children of the parent. Returns results sorted alphabetically.
+	   If dataScopeFilters is not provided, the search is bounded to a default one-month lookback ending
+	   now rather than scanning the data source's full history.
+	*/
 	SearchHierarchicalChannels(ctx context.Context, authHeader bearertoken.Token, queryArg api.SearchHierarchicalChannelsRequest) (api.SearchHierarchicalChannelsResponse, error)
 	/*
 	   Indexes the channel prefix tree for a specified data source. This operation constructs a prefix tree from the
 	   channels available in the data source.
 	*/
 	IndexChannelPrefixTree(ctx context.Context, authHeader bearertoken.Token, requestArg api.IndexChannelPrefixTreeRequest) (api.ChannelPrefixTree, error)
+	/*
+	   Clears the channel hierarchy delimiter for a specified data source, removing any previously indexed
+	   prefix tree. After calling this endpoint, the data source will no longer have hierarchical channel browsing
+	   enabled until a new delimiter is set via indexChannelPrefixTree.
+	*/
+	ClearChannelPrefixTree(ctx context.Context, authHeader bearertoken.Token, requestArg api.ClearChannelPrefixTreeRequest) error
 	/*
 	   Returns the channel prefix tree for each of the specified data sources. If the tree for a data source has not
 	   been indexed, it will be omitted from the map.
@@ -47,6 +61,11 @@ type DataSourceServiceClient interface {
 	   in the same order as requests.
 	*/
 	GetDataScopeBounds(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetDataScopeBoundsRequest) (api.BatchGetDataScopeBoundsResponse, error)
+	/*
+	   Returns the maximum data timestamp across all specified data scopes using aggregate storage queries.
+	   At most 100 data scopes may be requested.
+	*/
+	GetLatestDataScopeEndTime(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetLatestDataScopeEndTimeRequest) (api.GetLatestDataScopeEndTimeResponse, error)
 	/*
 	   Returns available tag values for a given data source for a set of tag keys. For Nominal data sources, a time
 	   range can be provided to filter tag values to those present within the months spanned by the range. If no
@@ -66,6 +85,11 @@ type DataSourceServiceClient interface {
 	*/
 	GetAvailableTagValues(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error)
 	/*
+	   Returns the set of all tag keys and their values for each specified channel given
+	   initial sets of filters. Each response corresponds positionally to the input request.
+	*/
+	BatchGetAvailableTagsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetAvailableTagsForChannelRequest) (api.BatchGetAvailableTagsForChannelResponse, error)
+	/*
 	   Returns the number of distinct series matching each request's datasource, channel, range,
 	   and tag filters. Each response corresponds positionally to the input request.
 	   Returns empty seriesCount for non-Nominal datasources.
@@ -74,6 +98,7 @@ type DataSourceServiceClient interface {
 	/*
 	   Returns (channel, full-tag-map) entries for a specific channel in a dataset.
 	   If tags are provided, each entry must match all provided key/value pairs; extra tags may still be present.
+	   Only numeric-data series are returned; video series are excluded.
 	*/
 	GetMatchingChannelsWithTags(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error)
 }
@@ -158,6 +183,19 @@ func (c *dataSourceServiceClient) IndexChannelPrefixTree(ctx context.Context, au
 	return *returnVal, nil
 }
 
+func (c *dataSourceServiceClient) ClearChannelPrefixTree(ctx context.Context, authHeader bearertoken.Token, requestArg api.ClearChannelPrefixTreeRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("ClearChannelPrefixTree"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/clear-channel-prefix-tree"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "clearChannelPrefixTree failed")
+	}
+	return nil
+}
+
 func (c *dataSourceServiceClient) BatchGetChannelPrefixTrees(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetChannelPrefixTreeRequest) (api.BatchGetChannelPrefixTreeResponse, error) {
 	var returnVal *api.BatchGetChannelPrefixTreeResponse
 	var requestParams []httpclient.RequestParam
@@ -208,6 +246,24 @@ func (c *dataSourceServiceClient) GetDataScopeBounds(ctx context.Context, authHe
 	}
 	if returnVal == nil {
 		return *new(api.BatchGetDataScopeBoundsResponse), werror.ErrorWithContextParams(ctx, "getDataScopeBounds response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *dataSourceServiceClient) GetLatestDataScopeEndTime(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetLatestDataScopeEndTimeRequest) (api.GetLatestDataScopeEndTimeResponse, error) {
+	var returnVal *api.GetLatestDataScopeEndTimeResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetLatestDataScopeEndTime"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/get-latest-data-scope-end-time"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.GetLatestDataScopeEndTimeResponse), werror.WrapWithContextParams(ctx, err, "getLatestDataScopeEndTime failed")
+	}
+	if returnVal == nil {
+		return *new(api.GetLatestDataScopeEndTimeResponse), werror.ErrorWithContextParams(ctx, "getLatestDataScopeEndTime response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -266,6 +322,24 @@ func (c *dataSourceServiceClient) GetAvailableTagValues(ctx context.Context, aut
 	return *returnVal, nil
 }
 
+func (c *dataSourceServiceClient) BatchGetAvailableTagsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetAvailableTagsForChannelRequest) (api.BatchGetAvailableTagsForChannelResponse, error) {
+	var returnVal *api.BatchGetAvailableTagsForChannelResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetAvailableTagsForChannel"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/data-source/v1/data-sources/batch-get-available-tags"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.BatchGetAvailableTagsForChannelResponse), werror.WrapWithContextParams(ctx, err, "batchGetAvailableTagsForChannel failed")
+	}
+	if returnVal == nil {
+		return *new(api.BatchGetAvailableTagsForChannelResponse), werror.ErrorWithContextParams(ctx, "batchGetAvailableTagsForChannel response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 func (c *dataSourceServiceClient) BatchGetSeriesCount(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetSeriesCountRequest) (api.BatchGetSeriesCountResponse, error) {
 	var returnVal *api.BatchGetSeriesCountResponse
 	var requestParams []httpclient.RequestParam
@@ -309,15 +383,29 @@ The DataSource Service is responsible for indexing and searching channels across
 type DataSourceServiceClientWithAuth interface {
 	// Returns channels that match the search criteria. Results are sorted by similarity score.
 	SearchChannels(ctx context.Context, queryArg api.SearchChannelsRequest) (api.SearchChannelsResponse, error)
-	// Returns channels that match the search criteria. Results are sorted by similarity score.
+	/*
+	   Returns channels that match the search criteria. Results are sorted by similarity score.
+	   If neither minDataUpdatedTime nor maxDataStartTime is provided, the search is bounded to a
+	   default one-month lookback ending now rather than scanning the data source's full history.
+	*/
 	SearchFilteredChannels(ctx context.Context, queryArg api.SearchFilteredChannelsRequest) (api.SearchFilteredChannelsResponse, error)
-	// Returns only channels that are direct children of the parent. Returns results sorted alphabetically.
+	/*
+	   Returns only channels that are direct children of the parent. Returns results sorted alphabetically.
+	   If dataScopeFilters is not provided, the search is bounded to a default one-month lookback ending
+	   now rather than scanning the data source's full history.
+	*/
 	SearchHierarchicalChannels(ctx context.Context, queryArg api.SearchHierarchicalChannelsRequest) (api.SearchHierarchicalChannelsResponse, error)
 	/*
 	   Indexes the channel prefix tree for a specified data source. This operation constructs a prefix tree from the
 	   channels available in the data source.
 	*/
 	IndexChannelPrefixTree(ctx context.Context, requestArg api.IndexChannelPrefixTreeRequest) (api.ChannelPrefixTree, error)
+	/*
+	   Clears the channel hierarchy delimiter for a specified data source, removing any previously indexed
+	   prefix tree. After calling this endpoint, the data source will no longer have hierarchical channel browsing
+	   enabled until a new delimiter is set via indexChannelPrefixTree.
+	*/
+	ClearChannelPrefixTree(ctx context.Context, requestArg api.ClearChannelPrefixTreeRequest) error
 	/*
 	   Returns the channel prefix tree for each of the specified data sources. If the tree for a data source has not
 	   been indexed, it will be omitted from the map.
@@ -333,6 +421,11 @@ type DataSourceServiceClientWithAuth interface {
 	   in the same order as requests.
 	*/
 	GetDataScopeBounds(ctx context.Context, requestArg api.BatchGetDataScopeBoundsRequest) (api.BatchGetDataScopeBoundsResponse, error)
+	/*
+	   Returns the maximum data timestamp across all specified data scopes using aggregate storage queries.
+	   At most 100 data scopes may be requested.
+	*/
+	GetLatestDataScopeEndTime(ctx context.Context, requestArg api.GetLatestDataScopeEndTimeRequest) (api.GetLatestDataScopeEndTimeResponse, error)
 	/*
 	   Returns available tag values for a given data source for a set of tag keys. For Nominal data sources, a time
 	   range can be provided to filter tag values to those present within the months spanned by the range. If no
@@ -352,6 +445,11 @@ type DataSourceServiceClientWithAuth interface {
 	*/
 	GetAvailableTagValues(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error)
 	/*
+	   Returns the set of all tag keys and their values for each specified channel given
+	   initial sets of filters. Each response corresponds positionally to the input request.
+	*/
+	BatchGetAvailableTagsForChannel(ctx context.Context, requestArg api.BatchGetAvailableTagsForChannelRequest) (api.BatchGetAvailableTagsForChannelResponse, error)
+	/*
 	   Returns the number of distinct series matching each request's datasource, channel, range,
 	   and tag filters. Each response corresponds positionally to the input request.
 	   Returns empty seriesCount for non-Nominal datasources.
@@ -360,6 +458,7 @@ type DataSourceServiceClientWithAuth interface {
 	/*
 	   Returns (channel, full-tag-map) entries for a specific channel in a dataset.
 	   If tags are provided, each entry must match all provided key/value pairs; extra tags may still be present.
+	   Only numeric-data series are returned; video series are excluded.
 	*/
 	GetMatchingChannelsWithTags(ctx context.Context, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error)
 }
@@ -389,6 +488,10 @@ func (c *dataSourceServiceClientWithAuth) IndexChannelPrefixTree(ctx context.Con
 	return c.client.IndexChannelPrefixTree(ctx, c.authHeader, requestArg)
 }
 
+func (c *dataSourceServiceClientWithAuth) ClearChannelPrefixTree(ctx context.Context, requestArg api.ClearChannelPrefixTreeRequest) error {
+	return c.client.ClearChannelPrefixTree(ctx, c.authHeader, requestArg)
+}
+
 func (c *dataSourceServiceClientWithAuth) BatchGetChannelPrefixTrees(ctx context.Context, requestArg api.BatchGetChannelPrefixTreeRequest) (api.BatchGetChannelPrefixTreeResponse, error) {
 	return c.client.BatchGetChannelPrefixTrees(ctx, c.authHeader, requestArg)
 }
@@ -401,6 +504,10 @@ func (c *dataSourceServiceClientWithAuth) GetDataScopeBounds(ctx context.Context
 	return c.client.GetDataScopeBounds(ctx, c.authHeader, requestArg)
 }
 
+func (c *dataSourceServiceClientWithAuth) GetLatestDataScopeEndTime(ctx context.Context, requestArg api.GetLatestDataScopeEndTimeRequest) (api.GetLatestDataScopeEndTimeResponse, error) {
+	return c.client.GetLatestDataScopeEndTime(ctx, c.authHeader, requestArg)
+}
+
 func (c *dataSourceServiceClientWithAuth) GetTagValuesForDataSource(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetTagValuesForDataSourceRequest) (map[api1.TagName][]api1.TagValue, error) {
 	return c.client.GetTagValuesForDataSource(ctx, c.authHeader, dataSourceRidArg, requestArg)
 }
@@ -411,6 +518,10 @@ func (c *dataSourceServiceClientWithAuth) GetAvailableTagKeys(ctx context.Contex
 
 func (c *dataSourceServiceClientWithAuth) GetAvailableTagValues(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error) {
 	return c.client.GetAvailableTagValues(ctx, c.authHeader, dataSourceRidArg, requestArg)
+}
+
+func (c *dataSourceServiceClientWithAuth) BatchGetAvailableTagsForChannel(ctx context.Context, requestArg api.BatchGetAvailableTagsForChannelRequest) (api.BatchGetAvailableTagsForChannelResponse, error) {
+	return c.client.BatchGetAvailableTagsForChannel(ctx, c.authHeader, requestArg)
 }
 
 func (c *dataSourceServiceClientWithAuth) BatchGetSeriesCount(ctx context.Context, requestArg api.BatchGetSeriesCountRequest) (api.BatchGetSeriesCountResponse, error) {
@@ -462,6 +573,14 @@ func (c *dataSourceServiceClientWithTokenProvider) IndexChannelPrefixTree(ctx co
 	return c.client.IndexChannelPrefixTree(ctx, bearertoken.Token(token), requestArg)
 }
 
+func (c *dataSourceServiceClientWithTokenProvider) ClearChannelPrefixTree(ctx context.Context, requestArg api.ClearChannelPrefixTreeRequest) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.ClearChannelPrefixTree(ctx, bearertoken.Token(token), requestArg)
+}
+
 func (c *dataSourceServiceClientWithTokenProvider) BatchGetChannelPrefixTrees(ctx context.Context, requestArg api.BatchGetChannelPrefixTreeRequest) (api.BatchGetChannelPrefixTreeResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
@@ -486,6 +605,14 @@ func (c *dataSourceServiceClientWithTokenProvider) GetDataScopeBounds(ctx contex
 	return c.client.GetDataScopeBounds(ctx, bearertoken.Token(token), requestArg)
 }
 
+func (c *dataSourceServiceClientWithTokenProvider) GetLatestDataScopeEndTime(ctx context.Context, requestArg api.GetLatestDataScopeEndTimeRequest) (api.GetLatestDataScopeEndTimeResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.GetLatestDataScopeEndTimeResponse), err
+	}
+	return c.client.GetLatestDataScopeEndTime(ctx, bearertoken.Token(token), requestArg)
+}
+
 func (c *dataSourceServiceClientWithTokenProvider) GetTagValuesForDataSource(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetTagValuesForDataSourceRequest) (map[api1.TagName][]api1.TagValue, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
@@ -508,6 +635,14 @@ func (c *dataSourceServiceClientWithTokenProvider) GetAvailableTagValues(ctx con
 		return *new(api.GetAvailableTagValuesResponse), err
 	}
 	return c.client.GetAvailableTagValues(ctx, bearertoken.Token(token), dataSourceRidArg, requestArg)
+}
+
+func (c *dataSourceServiceClientWithTokenProvider) BatchGetAvailableTagsForChannel(ctx context.Context, requestArg api.BatchGetAvailableTagsForChannelRequest) (api.BatchGetAvailableTagsForChannelResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.BatchGetAvailableTagsForChannelResponse), err
+	}
+	return c.client.BatchGetAvailableTagsForChannel(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *dataSourceServiceClientWithTokenProvider) BatchGetSeriesCount(ctx context.Context, requestArg api.BatchGetSeriesCountRequest) (api.BatchGetSeriesCountResponse, error) {

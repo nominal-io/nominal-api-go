@@ -14,45 +14,49 @@ import (
 )
 
 type SearchAssetsQuery struct {
-	typ            string
-	searchText     *string
-	exactSubstring *string
-	label          *api.Label
-	labels         *api1.LabelsFilter
-	property       *api.Property
-	propertyKey    *api.PropertyName
-	properties     *api1.PropertiesFilter
-	typeRid        *api1.TypeRid
-	assetTypes     *AssetTypesFilter
-	isStaged       *bool
-	archived       *bool
-	and            *[]SearchAssetsQuery
-	or             *[]SearchAssetsQuery
-	not            *SearchAssetsQuery
-	workspace      *rids.WorkspaceRid
+	typ                  string
+	searchText           *string
+	exactSubstring       *string
+	label                *api.Label
+	labels               *api1.LabelsFilter
+	property             *api.Property
+	propertyKey          *api.PropertyName
+	properties           *api1.PropertiesFilter
+	numericProperty      *api.NumericPropertyPredicate
+	numericPropertyRange *api.NumericPropertyRangePredicate
+	typeRid              *api1.TypeRid
+	assetTypes           *AssetTypesFilter
+	isStaged             *bool
+	archived             *bool
+	and                  *[]SearchAssetsQuery
+	or                   *[]SearchAssetsQuery
+	not                  *SearchAssetsQuery
+	workspace            *rids.WorkspaceRid
 }
 
 type searchAssetsQueryDeserializer struct {
-	Type           string                 `json:"type"`
-	SearchText     *string                `json:"searchText"`
-	ExactSubstring *string                `json:"exactSubstring"`
-	Label          *api.Label             `json:"label"`
-	Labels         *api1.LabelsFilter     `json:"labels"`
-	Property       *api.Property          `json:"property"`
-	PropertyKey    *api.PropertyName      `json:"propertyKey"`
-	Properties     *api1.PropertiesFilter `json:"properties"`
-	TypeRid        *api1.TypeRid          `json:"typeRid"`
-	AssetTypes     *AssetTypesFilter      `json:"assetTypes"`
-	IsStaged       *bool                  `json:"isStaged"`
-	Archived       *bool                  `json:"archived"`
-	And            *[]SearchAssetsQuery   `json:"and"`
-	Or             *[]SearchAssetsQuery   `json:"or"`
-	Not            *SearchAssetsQuery     `json:"not"`
-	Workspace      *rids.WorkspaceRid     `json:"workspace"`
+	Type                 string                             `json:"type"`
+	SearchText           *string                            `json:"searchText"`
+	ExactSubstring       *string                            `json:"exactSubstring"`
+	Label                *api.Label                         `json:"label"`
+	Labels               *api1.LabelsFilter                 `json:"labels"`
+	Property             *api.Property                      `json:"property"`
+	PropertyKey          *api.PropertyName                  `json:"propertyKey"`
+	Properties           *api1.PropertiesFilter             `json:"properties"`
+	NumericProperty      *api.NumericPropertyPredicate      `json:"numericProperty"`
+	NumericPropertyRange *api.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+	TypeRid              *api1.TypeRid                      `json:"typeRid"`
+	AssetTypes           *AssetTypesFilter                  `json:"assetTypes"`
+	IsStaged             *bool                              `json:"isStaged"`
+	Archived             *bool                              `json:"archived"`
+	And                  *[]SearchAssetsQuery               `json:"and"`
+	Or                   *[]SearchAssetsQuery               `json:"or"`
+	Not                  *SearchAssetsQuery                 `json:"not"`
+	Workspace            *rids.WorkspaceRid                 `json:"workspace"`
 }
 
 func (u *searchAssetsQueryDeserializer) toStruct() SearchAssetsQuery {
-	return SearchAssetsQuery{typ: u.Type, searchText: u.SearchText, exactSubstring: u.ExactSubstring, label: u.Label, labels: u.Labels, property: u.Property, propertyKey: u.PropertyKey, properties: u.Properties, typeRid: u.TypeRid, assetTypes: u.AssetTypes, isStaged: u.IsStaged, archived: u.Archived, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace}
+	return SearchAssetsQuery{typ: u.Type, searchText: u.SearchText, exactSubstring: u.ExactSubstring, label: u.Label, labels: u.Labels, property: u.Property, propertyKey: u.PropertyKey, properties: u.Properties, numericProperty: u.NumericProperty, numericPropertyRange: u.NumericPropertyRange, typeRid: u.TypeRid, assetTypes: u.AssetTypes, isStaged: u.IsStaged, archived: u.Archived, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace}
 }
 
 func (u *SearchAssetsQuery) toSerializer() (interface{}, error) {
@@ -115,6 +119,22 @@ func (u *SearchAssetsQuery) toSerializer() (interface{}, error) {
 			Type       string                `json:"type"`
 			Properties api1.PropertiesFilter `json:"properties"`
 		}{Type: "properties", Properties: *u.properties}, nil
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return nil, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return struct {
+			Type            string                       `json:"type"`
+			NumericProperty api.NumericPropertyPredicate `json:"numericProperty"`
+		}{Type: "numericProperty", NumericProperty: *u.numericProperty}, nil
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return nil, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return struct {
+			Type                 string                            `json:"type"`
+			NumericPropertyRange api.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+		}{Type: "numericPropertyRange", NumericPropertyRange: *u.numericPropertyRange}, nil
 	case "typeRid":
 		if u.typeRid == nil {
 			return nil, fmt.Errorf("field \"typeRid\" is required")
@@ -225,6 +245,14 @@ func (u *SearchAssetsQuery) UnmarshalJSON(data []byte) error {
 		if u.properties == nil {
 			return fmt.Errorf("field \"properties\" is required")
 		}
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
 	case "typeRid":
 		if u.typeRid == nil {
 			return fmt.Errorf("field \"typeRid\" is required")
@@ -277,7 +305,7 @@ func (u *SearchAssetsQuery) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exactSubstringFunc func(string) error, labelFunc func(api.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api.Property) error, propertyKeyFunc func(api.PropertyName) error, propertiesFunc func(api1.PropertiesFilter) error, typeRidFunc func(api1.TypeRid) error, assetTypesFunc func(AssetTypesFilter) error, isStagedFunc func(bool) error, archivedFunc func(bool) error, andFunc func([]SearchAssetsQuery) error, orFunc func([]SearchAssetsQuery) error, notFunc func(SearchAssetsQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
+func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exactSubstringFunc func(string) error, labelFunc func(api.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api.Property) error, propertyKeyFunc func(api.PropertyName) error, propertiesFunc func(api1.PropertiesFilter) error, numericPropertyFunc func(api.NumericPropertyPredicate) error, numericPropertyRangeFunc func(api.NumericPropertyRangePredicate) error, typeRidFunc func(api1.TypeRid) error, assetTypesFunc func(AssetTypesFilter) error, isStagedFunc func(bool) error, archivedFunc func(bool) error, andFunc func([]SearchAssetsQuery) error, orFunc func([]SearchAssetsQuery) error, notFunc func(SearchAssetsQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -319,6 +347,16 @@ func (u *SearchAssetsQuery) AcceptFuncs(searchTextFunc func(string) error, exact
 			return fmt.Errorf("field \"properties\" is required")
 		}
 		return propertiesFunc(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return numericPropertyRangeFunc(*u.numericPropertyRange)
 	case "typeRid":
 		if u.typeRid == nil {
 			return fmt.Errorf("field \"typeRid\" is required")
@@ -387,6 +425,14 @@ func (u *SearchAssetsQuery) PropertyKeyNoopSuccess(_ api.PropertyName) error {
 }
 
 func (u *SearchAssetsQuery) PropertiesNoopSuccess(_ api1.PropertiesFilter) error {
+	return nil
+}
+
+func (u *SearchAssetsQuery) NumericPropertyNoopSuccess(_ api.NumericPropertyPredicate) error {
+	return nil
+}
+
+func (u *SearchAssetsQuery) NumericPropertyRangeNoopSuccess(_ api.NumericPropertyRangePredicate) error {
 	return nil
 }
 
@@ -468,6 +514,16 @@ func (u *SearchAssetsQuery) Accept(v SearchAssetsQueryVisitor) error {
 			return fmt.Errorf("field \"properties\" is required")
 		}
 		return v.VisitProperties(*u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRange(*u.numericPropertyRange)
 	case "typeRid":
 		if u.typeRid == nil {
 			return fmt.Errorf("field \"typeRid\" is required")
@@ -519,6 +575,8 @@ type SearchAssetsQueryVisitor interface {
 	VisitProperty(v api.Property) error
 	VisitPropertyKey(v api.PropertyName) error
 	VisitProperties(v api1.PropertiesFilter) error
+	VisitNumericProperty(v api.NumericPropertyPredicate) error
+	VisitNumericPropertyRange(v api.NumericPropertyRangePredicate) error
 	VisitTypeRid(v api1.TypeRid) error
 	VisitAssetTypes(v AssetTypesFilter) error
 	VisitIsStaged(v bool) error
@@ -572,6 +630,16 @@ func (u *SearchAssetsQuery) AcceptWithContext(ctx context.Context, v SearchAsset
 			return fmt.Errorf("field \"properties\" is required")
 		}
 		return v.VisitPropertiesWithContext(ctx, *u.properties)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericPropertyWithContext(ctx, *u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRangeWithContext(ctx, *u.numericPropertyRange)
 	case "typeRid":
 		if u.typeRid == nil {
 			return fmt.Errorf("field \"typeRid\" is required")
@@ -623,6 +691,8 @@ type SearchAssetsQueryVisitorWithContext interface {
 	VisitPropertyWithContext(ctx context.Context, v api.Property) error
 	VisitPropertyKeyWithContext(ctx context.Context, v api.PropertyName) error
 	VisitPropertiesWithContext(ctx context.Context, v api1.PropertiesFilter) error
+	VisitNumericPropertyWithContext(ctx context.Context, v api.NumericPropertyPredicate) error
+	VisitNumericPropertyRangeWithContext(ctx context.Context, v api.NumericPropertyRangePredicate) error
 	VisitTypeRidWithContext(ctx context.Context, v api1.TypeRid) error
 	VisitAssetTypesWithContext(ctx context.Context, v AssetTypesFilter) error
 	VisitIsStagedWithContext(ctx context.Context, v bool) error
@@ -660,6 +730,14 @@ func NewSearchAssetsQueryFromPropertyKey(v api.PropertyName) SearchAssetsQuery {
 
 func NewSearchAssetsQueryFromProperties(v api1.PropertiesFilter) SearchAssetsQuery {
 	return SearchAssetsQuery{typ: "properties", properties: &v}
+}
+
+func NewSearchAssetsQueryFromNumericProperty(v api.NumericPropertyPredicate) SearchAssetsQuery {
+	return SearchAssetsQuery{typ: "numericProperty", numericProperty: &v}
+}
+
+func NewSearchAssetsQueryFromNumericPropertyRange(v api.NumericPropertyRangePredicate) SearchAssetsQuery {
+	return SearchAssetsQuery{typ: "numericPropertyRange", numericPropertyRange: &v}
 }
 
 func NewSearchAssetsQueryFromTypeRid(v api1.TypeRid) SearchAssetsQuery {
@@ -1025,19 +1103,21 @@ func NewSearchTypesQueryFromConfiguredDatasource(v rids.DataSourceRid) SearchTyp
 }
 
 type SortKey struct {
-	typ      string
-	field    *AssetSortField
-	property *SortProperty
+	typ             string
+	field           *AssetSortField
+	property        *SortProperty
+	numericProperty *SortProperty
 }
 
 type sortKeyDeserializer struct {
-	Type     string          `json:"type"`
-	Field    *AssetSortField `json:"field"`
-	Property *SortProperty   `json:"property"`
+	Type            string          `json:"type"`
+	Field           *AssetSortField `json:"field"`
+	Property        *SortProperty   `json:"property"`
+	NumericProperty *SortProperty   `json:"numericProperty"`
 }
 
 func (u *sortKeyDeserializer) toStruct() SortKey {
-	return SortKey{typ: u.Type, field: u.Field, property: u.Property}
+	return SortKey{typ: u.Type, field: u.Field, property: u.Property, numericProperty: u.NumericProperty}
 }
 
 func (u *SortKey) toSerializer() (interface{}, error) {
@@ -1060,6 +1140,14 @@ func (u *SortKey) toSerializer() (interface{}, error) {
 			Type     string       `json:"type"`
 			Property SortProperty `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return nil, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return struct {
+			Type            string       `json:"type"`
+			NumericProperty SortProperty `json:"numericProperty"`
+		}{Type: "numericProperty", NumericProperty: *u.numericProperty}, nil
 	}
 }
 
@@ -1086,6 +1174,10 @@ func (u *SortKey) UnmarshalJSON(data []byte) error {
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
 	}
 	return nil
 }
@@ -1106,7 +1198,7 @@ func (u *SortKey) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SortKey) AcceptFuncs(fieldFunc func(AssetSortField) error, propertyFunc func(SortProperty) error, unknownFunc func(string) error) error {
+func (u *SortKey) AcceptFuncs(fieldFunc func(AssetSortField) error, propertyFunc func(SortProperty) error, numericPropertyFunc func(SortProperty) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1123,6 +1215,11 @@ func (u *SortKey) AcceptFuncs(fieldFunc func(AssetSortField) error, propertyFunc
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
 	}
 }
 
@@ -1131,6 +1228,10 @@ func (u *SortKey) FieldNoopSuccess(_ AssetSortField) error {
 }
 
 func (u *SortKey) PropertyNoopSuccess(_ SortProperty) error {
+	return nil
+}
+
+func (u *SortKey) NumericPropertyNoopSuccess(_ SortProperty) error {
 	return nil
 }
 
@@ -1155,12 +1256,18 @@ func (u *SortKey) Accept(v SortKeyVisitor) error {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(*u.numericProperty)
 	}
 }
 
 type SortKeyVisitor interface {
 	VisitField(v AssetSortField) error
 	VisitProperty(v SortProperty) error
+	VisitNumericProperty(v SortProperty) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1181,12 +1288,18 @@ func (u *SortKey) AcceptWithContext(ctx context.Context, v SortKeyVisitorWithCon
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericPropertyWithContext(ctx, *u.numericProperty)
 	}
 }
 
 type SortKeyVisitorWithContext interface {
 	VisitFieldWithContext(ctx context.Context, v AssetSortField) error
 	VisitPropertyWithContext(ctx context.Context, v SortProperty) error
+	VisitNumericPropertyWithContext(ctx context.Context, v SortProperty) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1196,6 +1309,10 @@ func NewSortKeyFromField(v AssetSortField) SortKey {
 
 func NewSortKeyFromProperty(v SortProperty) SortKey {
 	return SortKey{typ: "property", property: &v}
+}
+
+func NewSortKeyFromNumericProperty(v SortProperty) SortKey {
+	return SortKey{typ: "numericProperty", numericProperty: &v}
 }
 
 type TagConfig struct {
