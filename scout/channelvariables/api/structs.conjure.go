@@ -58,7 +58,7 @@ func (o *ChannelVariableComputeExpressionInput) UnmarshalYAML(unmarshal func(int
 type ChannelVariableComputeExpressionV1Python struct {
 	/*
 	   The python code string representing the compute for this variable.
-	   Can be up to 10000 characters long.
+	   Can be up to 25000 characters long.
 	*/
 	Expression string `json:"expression"`
 	/*
@@ -66,6 +66,12 @@ type ChannelVariableComputeExpressionV1Python struct {
 	   Inputs can be other channel variables.
 	*/
 	InputMap map[string]ChannelVariableComputeExpressionInput `json:"inputMap"`
+	/*
+	   The Nominal compute python version identifier which the expression was written in. Used to determine if any
+	   migrations are needed to later versions of the python compute syntax. If not present, assumes the oldest
+	   version.
+	*/
+	NominalComputePythonVersion *string `json:"nominalComputePythonVersion,omitempty"`
 }
 
 func (o ChannelVariableComputeExpressionV1Python) MarshalJSON() ([]byte, error) {

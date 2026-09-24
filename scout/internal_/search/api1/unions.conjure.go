@@ -10,6 +10,7 @@ import (
 	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/scout/internal_/search/api"
 	"github.com/nominal-io/nominal-api-go/scout/metadata"
+	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -27,7 +28,10 @@ type SearchQuery struct {
 	searchText            *string
 	label                 *api1.Label
 	property              *api1.Property
+	numericProperty       *api1.NumericPropertyPredicate
+	numericPropertyRange  *api1.NumericPropertyRangePredicate
 	propertyKey           *api1.PropertyName
+	dateTimeFieldPresent  *string
 	and                   *[]SearchQuery
 	or                    *[]SearchQuery
 	not                   *SearchQuery
@@ -35,33 +39,38 @@ type SearchQuery struct {
 	createdAt             *metadata.CreatedAtQuery
 	archivedStatus        *api1.ArchivedStatus
 	isPublished           *bool
+	rids                  *[]rid.ResourceIdentifier
 }
 
 type searchQueryDeserializer struct {
-	Type                  string                           `json:"type"`
-	DateTimeField         *api.DateTimeField               `json:"dateTimeField"`
-	StringField           *api.StringField                 `json:"stringField"`
-	TimestampField        *api.TimestampField              `json:"timestampField"`
-	LongField             *api.LongField                   `json:"longField"`
-	BooleanField          *api.BooleanField                `json:"booleanField"`
-	ExactMatch            *string                          `json:"exactMatch"`
-	StringArrayExactMatch *api.StringArrayField            `json:"stringArrayExactMatch"`
-	StringArrayLength     *metadata.StringArrayLengthQuery `json:"stringArrayLength"`
-	SearchText            *string                          `json:"searchText"`
-	Label                 *api1.Label                      `json:"label"`
-	Property              *api1.Property                   `json:"property"`
-	PropertyKey           *api1.PropertyName               `json:"propertyKey"`
-	And                   *[]SearchQuery                   `json:"and"`
-	Or                    *[]SearchQuery                   `json:"or"`
-	Not                   *SearchQuery                     `json:"not"`
-	Workspace             *rids.WorkspaceRid               `json:"workspace"`
-	CreatedAt             *metadata.CreatedAtQuery         `json:"createdAt"`
-	ArchivedStatus        *api1.ArchivedStatus             `json:"archivedStatus"`
-	IsPublished           *bool                            `json:"isPublished"`
+	Type                  string                              `json:"type"`
+	DateTimeField         *api.DateTimeField                  `json:"dateTimeField"`
+	StringField           *api.StringField                    `json:"stringField"`
+	TimestampField        *api.TimestampField                 `json:"timestampField"`
+	LongField             *api.LongField                      `json:"longField"`
+	BooleanField          *api.BooleanField                   `json:"booleanField"`
+	ExactMatch            *string                             `json:"exactMatch"`
+	StringArrayExactMatch *api.StringArrayField               `json:"stringArrayExactMatch"`
+	StringArrayLength     *metadata.StringArrayLengthQuery    `json:"stringArrayLength"`
+	SearchText            *string                             `json:"searchText"`
+	Label                 *api1.Label                         `json:"label"`
+	Property              *api1.Property                      `json:"property"`
+	NumericProperty       *api1.NumericPropertyPredicate      `json:"numericProperty"`
+	NumericPropertyRange  *api1.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+	PropertyKey           *api1.PropertyName                  `json:"propertyKey"`
+	DateTimeFieldPresent  *string                             `json:"dateTimeFieldPresent"`
+	And                   *[]SearchQuery                      `json:"and"`
+	Or                    *[]SearchQuery                      `json:"or"`
+	Not                   *SearchQuery                        `json:"not"`
+	Workspace             *rids.WorkspaceRid                  `json:"workspace"`
+	CreatedAt             *metadata.CreatedAtQuery            `json:"createdAt"`
+	ArchivedStatus        *api1.ArchivedStatus                `json:"archivedStatus"`
+	IsPublished           *bool                               `json:"isPublished"`
+	Rids                  *[]rid.ResourceIdentifier           `json:"rids"`
 }
 
 func (u *searchQueryDeserializer) toStruct() SearchQuery {
-	return SearchQuery{typ: u.Type, dateTimeField: u.DateTimeField, stringField: u.StringField, timestampField: u.TimestampField, longField: u.LongField, booleanField: u.BooleanField, exactMatch: u.ExactMatch, stringArrayExactMatch: u.StringArrayExactMatch, stringArrayLength: u.StringArrayLength, searchText: u.SearchText, label: u.Label, property: u.Property, propertyKey: u.PropertyKey, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, createdAt: u.CreatedAt, archivedStatus: u.ArchivedStatus, isPublished: u.IsPublished}
+	return SearchQuery{typ: u.Type, dateTimeField: u.DateTimeField, stringField: u.StringField, timestampField: u.TimestampField, longField: u.LongField, booleanField: u.BooleanField, exactMatch: u.ExactMatch, stringArrayExactMatch: u.StringArrayExactMatch, stringArrayLength: u.StringArrayLength, searchText: u.SearchText, label: u.Label, property: u.Property, numericProperty: u.NumericProperty, numericPropertyRange: u.NumericPropertyRange, propertyKey: u.PropertyKey, dateTimeFieldPresent: u.DateTimeFieldPresent, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, createdAt: u.CreatedAt, archivedStatus: u.ArchivedStatus, isPublished: u.IsPublished, rids: u.Rids}
 }
 
 func (u *SearchQuery) toSerializer() (interface{}, error) {
@@ -156,6 +165,22 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type     string        `json:"type"`
 			Property api1.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return nil, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return struct {
+			Type            string                        `json:"type"`
+			NumericProperty api1.NumericPropertyPredicate `json:"numericProperty"`
+		}{Type: "numericProperty", NumericProperty: *u.numericProperty}, nil
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return nil, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return struct {
+			Type                 string                             `json:"type"`
+			NumericPropertyRange api1.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+		}{Type: "numericPropertyRange", NumericPropertyRange: *u.numericPropertyRange}, nil
 	case "propertyKey":
 		if u.propertyKey == nil {
 			return nil, fmt.Errorf("field \"propertyKey\" is required")
@@ -164,6 +189,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type        string            `json:"type"`
 			PropertyKey api1.PropertyName `json:"propertyKey"`
 		}{Type: "propertyKey", PropertyKey: *u.propertyKey}, nil
+	case "dateTimeFieldPresent":
+		if u.dateTimeFieldPresent == nil {
+			return nil, fmt.Errorf("field \"dateTimeFieldPresent\" is required")
+		}
+		return struct {
+			Type                 string `json:"type"`
+			DateTimeFieldPresent string `json:"dateTimeFieldPresent"`
+		}{Type: "dateTimeFieldPresent", DateTimeFieldPresent: *u.dateTimeFieldPresent}, nil
 	case "and":
 		if u.and == nil {
 			return nil, fmt.Errorf("field \"and\" is required")
@@ -220,6 +253,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type        string `json:"type"`
 			IsPublished bool   `json:"isPublished"`
 		}{Type: "isPublished", IsPublished: *u.isPublished}, nil
+	case "rids":
+		if u.rids == nil {
+			return nil, fmt.Errorf("field \"rids\" is required")
+		}
+		return struct {
+			Type string                   `json:"type"`
+			Rids []rid.ResourceIdentifier `json:"rids"`
+		}{Type: "rids", Rids: *u.rids}, nil
 	}
 }
 
@@ -282,9 +323,21 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.property == nil {
 			return fmt.Errorf("field \"property\" is required")
 		}
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
 	case "propertyKey":
 		if u.propertyKey == nil {
 			return fmt.Errorf("field \"propertyKey\" is required")
+		}
+	case "dateTimeFieldPresent":
+		if u.dateTimeFieldPresent == nil {
+			return fmt.Errorf("field \"dateTimeFieldPresent\" is required")
 		}
 	case "and":
 		if u.and == nil {
@@ -314,6 +367,10 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.isPublished == nil {
 			return fmt.Errorf("field \"isPublished\" is required")
 		}
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
 	}
 	return nil
 }
@@ -334,7 +391,7 @@ func (u *SearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchQuery) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) error, stringFieldFunc func(api.StringField) error, timestampFieldFunc func(api.TimestampField) error, longFieldFunc func(api.LongField) error, booleanFieldFunc func(api.BooleanField) error, exactMatchFunc func(string) error, stringArrayExactMatchFunc func(api.StringArrayField) error, stringArrayLengthFunc func(metadata.StringArrayLengthQuery) error, searchTextFunc func(string) error, labelFunc func(api1.Label) error, propertyFunc func(api1.Property) error, propertyKeyFunc func(api1.PropertyName) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, createdAtFunc func(metadata.CreatedAtQuery) error, archivedStatusFunc func(api1.ArchivedStatus) error, isPublishedFunc func(bool) error, unknownFunc func(string) error) error {
+func (u *SearchQuery) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) error, stringFieldFunc func(api.StringField) error, timestampFieldFunc func(api.TimestampField) error, longFieldFunc func(api.LongField) error, booleanFieldFunc func(api.BooleanField) error, exactMatchFunc func(string) error, stringArrayExactMatchFunc func(api.StringArrayField) error, stringArrayLengthFunc func(metadata.StringArrayLengthQuery) error, searchTextFunc func(string) error, labelFunc func(api1.Label) error, propertyFunc func(api1.Property) error, numericPropertyFunc func(api1.NumericPropertyPredicate) error, numericPropertyRangeFunc func(api1.NumericPropertyRangePredicate) error, propertyKeyFunc func(api1.PropertyName) error, dateTimeFieldPresentFunc func(string) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, createdAtFunc func(metadata.CreatedAtQuery) error, archivedStatusFunc func(api1.ArchivedStatus) error, isPublishedFunc func(bool) error, ridsFunc func([]rid.ResourceIdentifier) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -396,11 +453,26 @@ func (u *SearchQuery) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) erro
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return propertyFunc(*u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return numericPropertyRangeFunc(*u.numericPropertyRange)
 	case "propertyKey":
 		if u.propertyKey == nil {
 			return fmt.Errorf("field \"propertyKey\" is required")
 		}
 		return propertyKeyFunc(*u.propertyKey)
+	case "dateTimeFieldPresent":
+		if u.dateTimeFieldPresent == nil {
+			return fmt.Errorf("field \"dateTimeFieldPresent\" is required")
+		}
+		return dateTimeFieldPresentFunc(*u.dateTimeFieldPresent)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -436,6 +508,11 @@ func (u *SearchQuery) AcceptFuncs(dateTimeFieldFunc func(api.DateTimeField) erro
 			return fmt.Errorf("field \"isPublished\" is required")
 		}
 		return isPublishedFunc(*u.isPublished)
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+		return ridsFunc(*u.rids)
 	}
 }
 
@@ -483,7 +560,19 @@ func (u *SearchQuery) PropertyNoopSuccess(_ api1.Property) error {
 	return nil
 }
 
+func (u *SearchQuery) NumericPropertyNoopSuccess(_ api1.NumericPropertyPredicate) error {
+	return nil
+}
+
+func (u *SearchQuery) NumericPropertyRangeNoopSuccess(_ api1.NumericPropertyRangePredicate) error {
+	return nil
+}
+
 func (u *SearchQuery) PropertyKeyNoopSuccess(_ api1.PropertyName) error {
+	return nil
+}
+
+func (u *SearchQuery) DateTimeFieldPresentNoopSuccess(_ string) error {
 	return nil
 }
 
@@ -512,6 +601,10 @@ func (u *SearchQuery) ArchivedStatusNoopSuccess(_ api1.ArchivedStatus) error {
 }
 
 func (u *SearchQuery) IsPublishedNoopSuccess(_ bool) error {
+	return nil
+}
+
+func (u *SearchQuery) RidsNoopSuccess(_ []rid.ResourceIdentifier) error {
 	return nil
 }
 
@@ -581,11 +674,26 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitProperty(*u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRange(*u.numericPropertyRange)
 	case "propertyKey":
 		if u.propertyKey == nil {
 			return fmt.Errorf("field \"propertyKey\" is required")
 		}
 		return v.VisitPropertyKey(*u.propertyKey)
+	case "dateTimeFieldPresent":
+		if u.dateTimeFieldPresent == nil {
+			return fmt.Errorf("field \"dateTimeFieldPresent\" is required")
+		}
+		return v.VisitDateTimeFieldPresent(*u.dateTimeFieldPresent)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -621,6 +729,11 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"isPublished\" is required")
 		}
 		return v.VisitIsPublished(*u.isPublished)
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+		return v.VisitRids(*u.rids)
 	}
 }
 
@@ -636,7 +749,10 @@ type SearchQueryVisitor interface {
 	VisitSearchText(v string) error
 	VisitLabel(v api1.Label) error
 	VisitProperty(v api1.Property) error
+	VisitNumericProperty(v api1.NumericPropertyPredicate) error
+	VisitNumericPropertyRange(v api1.NumericPropertyRangePredicate) error
 	VisitPropertyKey(v api1.PropertyName) error
+	VisitDateTimeFieldPresent(v string) error
 	VisitAnd(v []SearchQuery) error
 	VisitOr(v []SearchQuery) error
 	VisitNot(v SearchQuery) error
@@ -644,6 +760,7 @@ type SearchQueryVisitor interface {
 	VisitCreatedAt(v metadata.CreatedAtQuery) error
 	VisitArchivedStatus(v api1.ArchivedStatus) error
 	VisitIsPublished(v bool) error
+	VisitRids(v []rid.ResourceIdentifier) error
 	VisitUnknown(typeName string) error
 }
 
@@ -709,11 +826,26 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"property\" is required")
 		}
 		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericPropertyWithContext(ctx, *u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRangeWithContext(ctx, *u.numericPropertyRange)
 	case "propertyKey":
 		if u.propertyKey == nil {
 			return fmt.Errorf("field \"propertyKey\" is required")
 		}
 		return v.VisitPropertyKeyWithContext(ctx, *u.propertyKey)
+	case "dateTimeFieldPresent":
+		if u.dateTimeFieldPresent == nil {
+			return fmt.Errorf("field \"dateTimeFieldPresent\" is required")
+		}
+		return v.VisitDateTimeFieldPresentWithContext(ctx, *u.dateTimeFieldPresent)
 	case "and":
 		if u.and == nil {
 			return fmt.Errorf("field \"and\" is required")
@@ -749,6 +881,11 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"isPublished\" is required")
 		}
 		return v.VisitIsPublishedWithContext(ctx, *u.isPublished)
+	case "rids":
+		if u.rids == nil {
+			return fmt.Errorf("field \"rids\" is required")
+		}
+		return v.VisitRidsWithContext(ctx, *u.rids)
 	}
 }
 
@@ -764,7 +901,10 @@ type SearchQueryVisitorWithContext interface {
 	VisitSearchTextWithContext(ctx context.Context, v string) error
 	VisitLabelWithContext(ctx context.Context, v api1.Label) error
 	VisitPropertyWithContext(ctx context.Context, v api1.Property) error
+	VisitNumericPropertyWithContext(ctx context.Context, v api1.NumericPropertyPredicate) error
+	VisitNumericPropertyRangeWithContext(ctx context.Context, v api1.NumericPropertyRangePredicate) error
 	VisitPropertyKeyWithContext(ctx context.Context, v api1.PropertyName) error
+	VisitDateTimeFieldPresentWithContext(ctx context.Context, v string) error
 	VisitAndWithContext(ctx context.Context, v []SearchQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchQuery) error
 	VisitNotWithContext(ctx context.Context, v SearchQuery) error
@@ -772,6 +912,7 @@ type SearchQueryVisitorWithContext interface {
 	VisitCreatedAtWithContext(ctx context.Context, v metadata.CreatedAtQuery) error
 	VisitArchivedStatusWithContext(ctx context.Context, v api1.ArchivedStatus) error
 	VisitIsPublishedWithContext(ctx context.Context, v bool) error
+	VisitRidsWithContext(ctx context.Context, v []rid.ResourceIdentifier) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -819,8 +960,20 @@ func NewSearchQueryFromProperty(v api1.Property) SearchQuery {
 	return SearchQuery{typ: "property", property: &v}
 }
 
+func NewSearchQueryFromNumericProperty(v api1.NumericPropertyPredicate) SearchQuery {
+	return SearchQuery{typ: "numericProperty", numericProperty: &v}
+}
+
+func NewSearchQueryFromNumericPropertyRange(v api1.NumericPropertyRangePredicate) SearchQuery {
+	return SearchQuery{typ: "numericPropertyRange", numericPropertyRange: &v}
+}
+
 func NewSearchQueryFromPropertyKey(v api1.PropertyName) SearchQuery {
 	return SearchQuery{typ: "propertyKey", propertyKey: &v}
+}
+
+func NewSearchQueryFromDateTimeFieldPresent(v string) SearchQuery {
+	return SearchQuery{typ: "dateTimeFieldPresent", dateTimeFieldPresent: &v}
 }
 
 func NewSearchQueryFromAnd(v []SearchQuery) SearchQuery {
@@ -849,4 +1002,8 @@ func NewSearchQueryFromArchivedStatus(v api1.ArchivedStatus) SearchQuery {
 
 func NewSearchQueryFromIsPublished(v bool) SearchQuery {
 	return SearchQuery{typ: "isPublished", isPublished: &v}
+}
+
+func NewSearchQueryFromRids(v []rid.ResourceIdentifier) SearchQuery {
+	return SearchQuery{typ: "rids", rids: &v}
 }

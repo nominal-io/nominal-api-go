@@ -17,7 +17,11 @@ import (
 
 // Manages data sources (logical groupings of series) that are stored by Nominal.
 type NominalDataSourceServiceClient interface {
-	// Creates a data source.
+	/*
+	   Creates a data source.
+
+	   Deprecated: Use CatalogService#createDataset instead.
+	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg CreateNominalDataSourceRequest) (NominalDataSource, error)
 	Update(ctx context.Context, authHeader bearertoken.Token, ridArg rids.NominalDataSourceRid, requestArg UpdateNominalDataSourceRequest) (NominalDataSource, error)
 	/*
@@ -130,7 +134,11 @@ func (c *nominalDataSourceServiceClient) EnsureDatasetForDataSource(ctx context.
 
 // Manages data sources (logical groupings of series) that are stored by Nominal.
 type NominalDataSourceServiceClientWithAuth interface {
-	// Creates a data source.
+	/*
+	   Creates a data source.
+
+	   Deprecated: Use CatalogService#createDataset instead.
+	*/
 	Create(ctx context.Context, requestArg CreateNominalDataSourceRequest) (NominalDataSource, error)
 	Update(ctx context.Context, ridArg rids.NominalDataSourceRid, requestArg UpdateNominalDataSourceRequest) (NominalDataSource, error)
 	/*

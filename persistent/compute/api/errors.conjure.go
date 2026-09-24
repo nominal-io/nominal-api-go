@@ -17,157 +17,6 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
-type badFlinkStatus struct{}
-
-func (o badFlinkStatus) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *badFlinkStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewBadFlinkStatus returns new instance of BadFlinkStatus error.
-func NewBadFlinkStatus() *BadFlinkStatus {
-	return &BadFlinkStatus{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), badFlinkStatus: badFlinkStatus{}}
-}
-
-// WrapWithBadFlinkStatus returns new instance of BadFlinkStatus error wrapping an existing error.
-func WrapWithBadFlinkStatus(err error) *BadFlinkStatus {
-	return &BadFlinkStatus{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, badFlinkStatus: badFlinkStatus{}}
-}
-
-// BadFlinkStatus is an error type.
-/*
-Flink is required for this subscription but is currently not available.
-This can be because Flink is disabled or because of a temporary issue with the Flink cluster.
-*/
-type BadFlinkStatus struct {
-	errorInstanceID uuid.UUID
-	badFlinkStatus
-	cause error
-	stack werror.StackTrace
-}
-
-// IsBadFlinkStatus returns true if err is an instance of BadFlinkStatus.
-func IsBadFlinkStatus(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*BadFlinkStatus)
-	return ok
-}
-
-func (e *BadFlinkStatus) Error() string {
-	return fmt.Sprintf("INTERNAL PersistentCompute:BadFlinkStatus (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *BadFlinkStatus) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *BadFlinkStatus) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *BadFlinkStatus) Message() string {
-	return "INTERNAL PersistentCompute:BadFlinkStatus"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *BadFlinkStatus) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *BadFlinkStatus) Code() errors.ErrorCode {
-	return errors.Internal
-}
-
-// Name returns an error name identifying error type.
-func (e *BadFlinkStatus) Name() string {
-	return "PersistentCompute:BadFlinkStatus"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *BadFlinkStatus) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *BadFlinkStatus) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *BadFlinkStatus) safeParams() map[string]interface{} {
-	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *BadFlinkStatus) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *BadFlinkStatus) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *BadFlinkStatus) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e BadFlinkStatus) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.badFlinkStatus)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Internal, ErrorName: "PersistentCompute:BadFlinkStatus", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *BadFlinkStatus) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters badFlinkStatus
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.badFlinkStatus = parameters
-	return nil
-}
-
 type invalidClientMessage struct{}
 
 func (o invalidClientMessage) MarshalYAML() (interface{}, error) {
@@ -483,6 +332,157 @@ func (e *InvalidComputation) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.invalidComputation = parameters
+	return nil
+}
+
+type jobInvalidState struct{}
+
+func (o jobInvalidState) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *jobInvalidState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewJobInvalidState returns new instance of JobInvalidState error.
+func NewJobInvalidState() *JobInvalidState {
+	return &JobInvalidState{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), jobInvalidState: jobInvalidState{}}
+}
+
+// WrapWithJobInvalidState returns new instance of JobInvalidState error wrapping an existing error.
+func WrapWithJobInvalidState(err error) *JobInvalidState {
+	return &JobInvalidState{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, jobInvalidState: jobInvalidState{}}
+}
+
+// JobInvalidState is an error type.
+/*
+The streaming compute job entered a terminal state unexpectedly.
+This can indicate a transient issue with the compute engine.
+*/
+type JobInvalidState struct {
+	errorInstanceID uuid.UUID
+	jobInvalidState
+	cause error
+	stack werror.StackTrace
+}
+
+// IsJobInvalidState returns true if err is an instance of JobInvalidState.
+func IsJobInvalidState(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*JobInvalidState)
+	return ok
+}
+
+func (e *JobInvalidState) Error() string {
+	return fmt.Sprintf("INTERNAL PersistentCompute:JobInvalidState (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *JobInvalidState) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *JobInvalidState) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *JobInvalidState) Message() string {
+	return "INTERNAL PersistentCompute:JobInvalidState"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *JobInvalidState) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *JobInvalidState) Code() errors.ErrorCode {
+	return errors.Internal
+}
+
+// Name returns an error name identifying error type.
+func (e *JobInvalidState) Name() string {
+	return "PersistentCompute:JobInvalidState"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *JobInvalidState) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *JobInvalidState) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *JobInvalidState) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *JobInvalidState) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *JobInvalidState) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *JobInvalidState) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e JobInvalidState) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.jobInvalidState)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Internal, ErrorName: "PersistentCompute:JobInvalidState", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *JobInvalidState) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters jobInvalidState
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.jobInvalidState = parameters
 	return nil
 }
 
@@ -974,6 +974,157 @@ func (e *PollingOnlyComputation) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.pollingOnlyComputation = parameters
+	return nil
+}
+
+type subscriptionAuthExpired struct{}
+
+func (o subscriptionAuthExpired) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *subscriptionAuthExpired) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewSubscriptionAuthExpired returns new instance of SubscriptionAuthExpired error.
+func NewSubscriptionAuthExpired() *SubscriptionAuthExpired {
+	return &SubscriptionAuthExpired{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), subscriptionAuthExpired: subscriptionAuthExpired{}}
+}
+
+// WrapWithSubscriptionAuthExpired returns new instance of SubscriptionAuthExpired error wrapping an existing error.
+func WrapWithSubscriptionAuthExpired(err error) *SubscriptionAuthExpired {
+	return &SubscriptionAuthExpired{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, subscriptionAuthExpired: subscriptionAuthExpired{}}
+}
+
+// SubscriptionAuthExpired is an error type.
+/*
+The websocket subscription auth token expired. Clients should refresh credentials and
+re-establish the subscription.
+*/
+type SubscriptionAuthExpired struct {
+	errorInstanceID uuid.UUID
+	subscriptionAuthExpired
+	cause error
+	stack werror.StackTrace
+}
+
+// IsSubscriptionAuthExpired returns true if err is an instance of SubscriptionAuthExpired.
+func IsSubscriptionAuthExpired(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*SubscriptionAuthExpired)
+	return ok
+}
+
+func (e *SubscriptionAuthExpired) Error() string {
+	return fmt.Sprintf("PERMISSION_DENIED PersistentCompute:SubscriptionAuthExpired (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *SubscriptionAuthExpired) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *SubscriptionAuthExpired) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *SubscriptionAuthExpired) Message() string {
+	return "PERMISSION_DENIED PersistentCompute:SubscriptionAuthExpired"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *SubscriptionAuthExpired) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *SubscriptionAuthExpired) Code() errors.ErrorCode {
+	return errors.PermissionDenied
+}
+
+// Name returns an error name identifying error type.
+func (e *SubscriptionAuthExpired) Name() string {
+	return "PersistentCompute:SubscriptionAuthExpired"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *SubscriptionAuthExpired) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *SubscriptionAuthExpired) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *SubscriptionAuthExpired) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *SubscriptionAuthExpired) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *SubscriptionAuthExpired) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *SubscriptionAuthExpired) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e SubscriptionAuthExpired) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.subscriptionAuthExpired)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.PermissionDenied, ErrorName: "PersistentCompute:SubscriptionAuthExpired", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *SubscriptionAuthExpired) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters subscriptionAuthExpired
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.subscriptionAuthExpired = parameters
 	return nil
 }
 
@@ -2020,12 +2171,13 @@ func (e *WindowWithLookBackTooLarge) UnmarshalJSON(data []byte) error {
 }
 
 func init() {
-	conjureerrors.RegisterErrorType("PersistentCompute:BadFlinkStatus", reflect.TypeOf(BadFlinkStatus{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:InvalidClientMessage", reflect.TypeOf(InvalidClientMessage{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:InvalidComputation", reflect.TypeOf(InvalidComputation{}))
+	conjureerrors.RegisterErrorType("PersistentCompute:JobInvalidState", reflect.TypeOf(JobInvalidState{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:NonNominalStorageLocator", reflect.TypeOf(NonNominalStorageLocator{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:PermissionDenied", reflect.TypeOf(PermissionDenied{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:PollingOnlyComputation", reflect.TypeOf(PollingOnlyComputation{}))
+	conjureerrors.RegisterErrorType("PersistentCompute:SubscriptionAuthExpired", reflect.TypeOf(SubscriptionAuthExpired{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:TooManyPoints", reflect.TypeOf(TooManyPoints{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:TooManyPointsForSingleSeries", reflect.TypeOf(TooManyPointsForSingleSeries{}))
 	conjureerrors.RegisterErrorType("PersistentCompute:UnavailableResultConfiguration", reflect.TypeOf(UnavailableResultConfiguration{}))

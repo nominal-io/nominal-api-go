@@ -32,9 +32,12 @@ type AuthenticationServiceV2Client interface {
 	UpdateMyOrgSettings(ctx context.Context, authHeader bearertoken.Token, orgSettingsArg OrgSettings) (OrgSettings, error)
 	// Searches for users by email and displayName.
 	SearchUsersV2(ctx context.Context, authHeader bearertoken.Token, requestArg SearchUsersRequest) (SearchUsersResponseV2, error)
-	// Get users by RID.
+	/*
+	   Get users by RID. Returns objects for any of the requested RIDs that are members or
+	   guests of the caller's org.
+	*/
 	GetUsers(ctx context.Context, authHeader bearertoken.Token, userRidsArg []UserRid) ([]UserV2, error)
-	// Gets a user by RID.
+	// Gets a user by RID. Throws if the requested RID is not a member or guest of the caller's org.
 	GetUser(ctx context.Context, authHeader bearertoken.Token, userRidArg UserRid) (UserV2, error)
 	/*
 	   Returns JWKS (JSON Web Key Set) for MediaMTX JWT verification.
@@ -48,33 +51,29 @@ type AuthenticationServiceV2Client interface {
 	*/
 	GenerateMediaMtxToken(ctx context.Context, authHeader bearertoken.Token, requestArg GenerateMediaMtxTokenRequest) (GenerateMediaMtxTokenResponse, error)
 	/*
-	   Gets coachmark dismissals for the authenticated user.
-	   Optionally filter by specific coachmark IDs.
-
-	   Deprecated: Deprecated in favor of CoachmarksService.
+	   Batch preregister users in the caller's organization. Only creates new users for
+	   emails that don't already exist — existing accounts are silently skipped and not
+	   returned in the response. The caller must be an admin of the organization.
 	*/
-	GetMyCoachmarkDismissals(ctx context.Context, authHeader bearertoken.Token, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error)
+	BatchPreregisterUsers(ctx context.Context, authHeader bearertoken.Token, requestArg BatchPreregisterUsersRequest) (BatchPreregisterUsersResponse, error)
 	/*
-	   Dismisses a coachmark for the authenticated user.
-	   Records the dismissal timestamp and app version.
-
-	   Deprecated: Deprecated in favor of CoachmarksService.
+	   Lists members of one or more orgs together with their most recent login into each org,
+	   sorted and paginated. The caller must be an admin of every org requested — defaults to
+	   the caller's own org if none are specified.
 	*/
-	DismissMyCoachmark(ctx context.Context, authHeader bearertoken.Token, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error)
+	ListOrgLoginActivity(ctx context.Context, authHeader bearertoken.Token, requestArg ListOrgLoginActivityRequest) (ListOrgLoginActivityResponse, error)
 	/*
-	   Checks if a specific coachmark has been dismissed by the authenticated user.
-
-	   Deprecated: Deprecated in favor of CoachmarksService.
+	   Deactivates a user in the caller's organization, preventing them from obtaining new
+	   Nominal session tokens in that org. Also revokes all of the user's API keys in the
+	   caller's organization. Caller must be an admin of their  org. Target user must be a
+	   member or guest of the org.
 	*/
-	IsMyCoachmarkDismissed(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) (bool, error)
+	DeactivateUser(ctx context.Context, authHeader bearertoken.Token, userRidArg UserRid) error
 	/*
-	   Resets a coachmark dismissal for the authenticated user.
-	   This allows the coachmark to be shown again.
-	   Primarily intended for testing and debugging.
-
-	   Deprecated: Deprecated in favor of CoachmarksService.
+	   Reactivates a user in the caller's organization. Caller must be an admin of their
+	   org. Target user must be a member or guest of the org.
 	*/
-	ResetMyCoachmarkDismissal(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) error
+	ReactivateUser(ctx context.Context, authHeader bearertoken.Token, userRidArg UserRid) error
 }
 
 type authenticationServiceV2Client struct {
@@ -277,67 +276,62 @@ func (c *authenticationServiceV2Client) GenerateMediaMtxToken(ctx context.Contex
 	return *returnVal, nil
 }
 
-func (c *authenticationServiceV2Client) GetMyCoachmarkDismissals(ctx context.Context, authHeader bearertoken.Token, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error) {
-	var returnVal *GetCoachmarkDismissalsResponse
+func (c *authenticationServiceV2Client) BatchPreregisterUsers(ctx context.Context, authHeader bearertoken.Token, requestArg BatchPreregisterUsersRequest) (BatchPreregisterUsersResponse, error) {
+	var returnVal *BatchPreregisterUsersResponse
 	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetMyCoachmarkDismissals"))
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchPreregisterUsers"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismissals"))
+	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/batch-preregister-users"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(GetCoachmarkDismissalsResponse), werror.WrapWithContextParams(ctx, err, "getMyCoachmarkDismissals failed")
+		return *new(BatchPreregisterUsersResponse), werror.WrapWithContextParams(ctx, err, "batchPreregisterUsers failed")
 	}
 	if returnVal == nil {
-		return *new(GetCoachmarkDismissalsResponse), werror.ErrorWithContextParams(ctx, "getMyCoachmarkDismissals response cannot be nil")
+		return *new(BatchPreregisterUsersResponse), werror.ErrorWithContextParams(ctx, "batchPreregisterUsers response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *authenticationServiceV2Client) DismissMyCoachmark(ctx context.Context, authHeader bearertoken.Token, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error) {
-	var returnVal *CoachmarkDismissal
+func (c *authenticationServiceV2Client) ListOrgLoginActivity(ctx context.Context, authHeader bearertoken.Token, requestArg ListOrgLoginActivityRequest) (ListOrgLoginActivityResponse, error) {
+	var returnVal *ListOrgLoginActivityResponse
 	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("DismissMyCoachmark"))
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("ListOrgLoginActivity"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismiss"))
+	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/admin/org/login-activity"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(CoachmarkDismissal), werror.WrapWithContextParams(ctx, err, "dismissMyCoachmark failed")
+		return *new(ListOrgLoginActivityResponse), werror.WrapWithContextParams(ctx, err, "listOrgLoginActivity failed")
 	}
 	if returnVal == nil {
-		return *new(CoachmarkDismissal), werror.ErrorWithContextParams(ctx, "dismissMyCoachmark response cannot be nil")
+		return *new(ListOrgLoginActivityResponse), werror.ErrorWithContextParams(ctx, "listOrgLoginActivity response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *authenticationServiceV2Client) IsMyCoachmarkDismissed(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) (bool, error) {
-	var returnVal *bool
+func (c *authenticationServiceV2Client) DeactivateUser(ctx context.Context, authHeader bearertoken.Token, userRidArg UserRid) error {
 	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("IsMyCoachmarkDismissed"))
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeactivateUser"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismissed/%s", url.PathEscape(fmt.Sprint(coachmarkIdArg))))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/admin/users/%s/deactivate", url.PathEscape(fmt.Sprint(userRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(bool), werror.WrapWithContextParams(ctx, err, "isMyCoachmarkDismissed failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "deactivateUser failed")
 	}
-	if returnVal == nil {
-		return *new(bool), werror.ErrorWithContextParams(ctx, "isMyCoachmarkDismissed response cannot be nil")
-	}
-	return *returnVal, nil
+	return nil
 }
 
-func (c *authenticationServiceV2Client) ResetMyCoachmarkDismissal(ctx context.Context, authHeader bearertoken.Token, coachmarkIdArg string) error {
+func (c *authenticationServiceV2Client) ReactivateUser(ctx context.Context, authHeader bearertoken.Token, userRidArg UserRid) error {
 	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("ResetMyCoachmarkDismissal"))
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("ReactivateUser"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/my/coachmarks/dismissals/%s", url.PathEscape(fmt.Sprint(coachmarkIdArg))))
+	requestParams = append(requestParams, httpclient.WithPathf("/authentication/v2/admin/users/%s/reactivate", url.PathEscape(fmt.Sprint(userRidArg))))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
-		return werror.WrapWithContextParams(ctx, err, "resetMyCoachmarkDismissal failed")
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "reactivateUser failed")
 	}
 	return nil
 }
@@ -361,9 +355,12 @@ type AuthenticationServiceV2ClientWithAuth interface {
 	UpdateMyOrgSettings(ctx context.Context, orgSettingsArg OrgSettings) (OrgSettings, error)
 	// Searches for users by email and displayName.
 	SearchUsersV2(ctx context.Context, requestArg SearchUsersRequest) (SearchUsersResponseV2, error)
-	// Get users by RID.
+	/*
+	   Get users by RID. Returns objects for any of the requested RIDs that are members or
+	   guests of the caller's org.
+	*/
 	GetUsers(ctx context.Context, userRidsArg []UserRid) ([]UserV2, error)
-	// Gets a user by RID.
+	// Gets a user by RID. Throws if the requested RID is not a member or guest of the caller's org.
 	GetUser(ctx context.Context, userRidArg UserRid) (UserV2, error)
 	/*
 	   Returns JWKS (JSON Web Key Set) for MediaMTX JWT verification.
@@ -377,33 +374,29 @@ type AuthenticationServiceV2ClientWithAuth interface {
 	*/
 	GenerateMediaMtxToken(ctx context.Context, requestArg GenerateMediaMtxTokenRequest) (GenerateMediaMtxTokenResponse, error)
 	/*
-	   Gets coachmark dismissals for the authenticated user.
-	   Optionally filter by specific coachmark IDs.
-
-	   Deprecated: Deprecated in favor of CoachmarksService.
+	   Batch preregister users in the caller's organization. Only creates new users for
+	   emails that don't already exist — existing accounts are silently skipped and not
+	   returned in the response. The caller must be an admin of the organization.
 	*/
-	GetMyCoachmarkDismissals(ctx context.Context, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error)
+	BatchPreregisterUsers(ctx context.Context, requestArg BatchPreregisterUsersRequest) (BatchPreregisterUsersResponse, error)
 	/*
-	   Dismisses a coachmark for the authenticated user.
-	   Records the dismissal timestamp and app version.
-
-	   Deprecated: Deprecated in favor of CoachmarksService.
+	   Lists members of one or more orgs together with their most recent login into each org,
+	   sorted and paginated. The caller must be an admin of every org requested — defaults to
+	   the caller's own org if none are specified.
 	*/
-	DismissMyCoachmark(ctx context.Context, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error)
+	ListOrgLoginActivity(ctx context.Context, requestArg ListOrgLoginActivityRequest) (ListOrgLoginActivityResponse, error)
 	/*
-	   Checks if a specific coachmark has been dismissed by the authenticated user.
-
-	   Deprecated: Deprecated in favor of CoachmarksService.
+	   Deactivates a user in the caller's organization, preventing them from obtaining new
+	   Nominal session tokens in that org. Also revokes all of the user's API keys in the
+	   caller's organization. Caller must be an admin of their  org. Target user must be a
+	   member or guest of the org.
 	*/
-	IsMyCoachmarkDismissed(ctx context.Context, coachmarkIdArg string) (bool, error)
+	DeactivateUser(ctx context.Context, userRidArg UserRid) error
 	/*
-	   Resets a coachmark dismissal for the authenticated user.
-	   This allows the coachmark to be shown again.
-	   Primarily intended for testing and debugging.
-
-	   Deprecated: Deprecated in favor of CoachmarksService.
+	   Reactivates a user in the caller's organization. Caller must be an admin of their
+	   org. Target user must be a member or guest of the org.
 	*/
-	ResetMyCoachmarkDismissal(ctx context.Context, coachmarkIdArg string) error
+	ReactivateUser(ctx context.Context, userRidArg UserRid) error
 }
 
 func NewAuthenticationServiceV2ClientWithAuth(client AuthenticationServiceV2Client, authHeader bearertoken.Token) AuthenticationServiceV2ClientWithAuth {
@@ -459,20 +452,20 @@ func (c *authenticationServiceV2ClientWithAuth) GenerateMediaMtxToken(ctx contex
 	return c.client.GenerateMediaMtxToken(ctx, c.authHeader, requestArg)
 }
 
-func (c *authenticationServiceV2ClientWithAuth) GetMyCoachmarkDismissals(ctx context.Context, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error) {
-	return c.client.GetMyCoachmarkDismissals(ctx, c.authHeader, requestArg)
+func (c *authenticationServiceV2ClientWithAuth) BatchPreregisterUsers(ctx context.Context, requestArg BatchPreregisterUsersRequest) (BatchPreregisterUsersResponse, error) {
+	return c.client.BatchPreregisterUsers(ctx, c.authHeader, requestArg)
 }
 
-func (c *authenticationServiceV2ClientWithAuth) DismissMyCoachmark(ctx context.Context, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error) {
-	return c.client.DismissMyCoachmark(ctx, c.authHeader, requestArg)
+func (c *authenticationServiceV2ClientWithAuth) ListOrgLoginActivity(ctx context.Context, requestArg ListOrgLoginActivityRequest) (ListOrgLoginActivityResponse, error) {
+	return c.client.ListOrgLoginActivity(ctx, c.authHeader, requestArg)
 }
 
-func (c *authenticationServiceV2ClientWithAuth) IsMyCoachmarkDismissed(ctx context.Context, coachmarkIdArg string) (bool, error) {
-	return c.client.IsMyCoachmarkDismissed(ctx, c.authHeader, coachmarkIdArg)
+func (c *authenticationServiceV2ClientWithAuth) DeactivateUser(ctx context.Context, userRidArg UserRid) error {
+	return c.client.DeactivateUser(ctx, c.authHeader, userRidArg)
 }
 
-func (c *authenticationServiceV2ClientWithAuth) ResetMyCoachmarkDismissal(ctx context.Context, coachmarkIdArg string) error {
-	return c.client.ResetMyCoachmarkDismissal(ctx, c.authHeader, coachmarkIdArg)
+func (c *authenticationServiceV2ClientWithAuth) ReactivateUser(ctx context.Context, userRidArg UserRid) error {
+	return c.client.ReactivateUser(ctx, c.authHeader, userRidArg)
 }
 
 func NewAuthenticationServiceV2ClientWithTokenProvider(client AuthenticationServiceV2Client, tokenProvider httpclient.TokenProvider) AuthenticationServiceV2ClientWithAuth {
@@ -568,34 +561,34 @@ func (c *authenticationServiceV2ClientWithTokenProvider) GenerateMediaMtxToken(c
 	return c.client.GenerateMediaMtxToken(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *authenticationServiceV2ClientWithTokenProvider) GetMyCoachmarkDismissals(ctx context.Context, requestArg GetCoachmarkDismissalsRequest) (GetCoachmarkDismissalsResponse, error) {
+func (c *authenticationServiceV2ClientWithTokenProvider) BatchPreregisterUsers(ctx context.Context, requestArg BatchPreregisterUsersRequest) (BatchPreregisterUsersResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(GetCoachmarkDismissalsResponse), err
+		return *new(BatchPreregisterUsersResponse), err
 	}
-	return c.client.GetMyCoachmarkDismissals(ctx, bearertoken.Token(token), requestArg)
+	return c.client.BatchPreregisterUsers(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *authenticationServiceV2ClientWithTokenProvider) DismissMyCoachmark(ctx context.Context, requestArg DismissCoachmarkRequest) (CoachmarkDismissal, error) {
+func (c *authenticationServiceV2ClientWithTokenProvider) ListOrgLoginActivity(ctx context.Context, requestArg ListOrgLoginActivityRequest) (ListOrgLoginActivityResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(CoachmarkDismissal), err
+		return *new(ListOrgLoginActivityResponse), err
 	}
-	return c.client.DismissMyCoachmark(ctx, bearertoken.Token(token), requestArg)
+	return c.client.ListOrgLoginActivity(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *authenticationServiceV2ClientWithTokenProvider) IsMyCoachmarkDismissed(ctx context.Context, coachmarkIdArg string) (bool, error) {
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return *new(bool), err
-	}
-	return c.client.IsMyCoachmarkDismissed(ctx, bearertoken.Token(token), coachmarkIdArg)
-}
-
-func (c *authenticationServiceV2ClientWithTokenProvider) ResetMyCoachmarkDismissal(ctx context.Context, coachmarkIdArg string) error {
+func (c *authenticationServiceV2ClientWithTokenProvider) DeactivateUser(ctx context.Context, userRidArg UserRid) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
 	}
-	return c.client.ResetMyCoachmarkDismissal(ctx, bearertoken.Token(token), coachmarkIdArg)
+	return c.client.DeactivateUser(ctx, bearertoken.Token(token), userRidArg)
+}
+
+func (c *authenticationServiceV2ClientWithTokenProvider) ReactivateUser(ctx context.Context, userRidArg UserRid) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.ReactivateUser(ctx, bearertoken.Token(token), userRidArg)
 }

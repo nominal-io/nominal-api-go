@@ -46,17 +46,24 @@ type AuthorizationServiceClient interface {
 	// Checks if the email is allowed to register.
 	IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error)
 	// Checks if the email is allowed to register, following Okta "registration inline hook" API.
-	IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
+	IsEmailAllowedOkta(ctx context.Context, authHeader bearertoken.Token, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
+	/*
+	   Freemium variant of the Okta "registration inline hook" API: allows any email to register.
+	   Uses the same request/response shape as isEmailAllowedOkta so it can be wired up as an Okta
+	   inline hook, but always responds with ALLOW.
+	*/
+	IsEmailAllowedFreemiumOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
 	   Provides an OIDC ID token to get the orgs that the user is a member of. Throws NotAuthorized if the ID token
 	   is invalid or if the OIDC provider is not known.
 	*/
 	GetUserOrgs(ctx context.Context, requestArg GetUserOrgsRequest) (GetUserOrgsResponse, error)
 	/*
-	   Provide an OIDC ID token to get a Nominal access token suitable for making API requests.
-	   Its expiry will match that of the input ID token, capped at 24h. TODO(MGMT-933): reduce this duration.
-	   Throws NotAuthorized if the ID token is invalid or if the OIDC provider is not known.
+	   Switch the authenticated session to the provided org rid.
+	   Throws NotAuthorized if the session is invalid or the user is not a member of the org.
 	*/
+	SetUserOrg(ctx context.Context, authHeader bearertoken.Token, requestArg SetUserOrgRequest) (GetAccessTokenResponse, error)
+	// Provide an OIDC ID token to get a (24h) Nominal access token suitable for making API requests.
 	GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error)
 	/*
 	   Given an authenticated session, provide an OIDC access token to get a Nominal access token suitable
@@ -66,15 +73,28 @@ type AuthorizationServiceClient interface {
 	*/
 	RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error)
 	/*
+	   Given an IDP issued id token, return the end session endpoint, accessed through the
+	   .well-known/openid-configuration endpoint.
+	*/
+	GetIdpEndSessionEndpoint(ctx context.Context, requestArg GetIdpEndSessionEndpointRequest) (GetIdpEndSessionEndpointResponse, error)
+	/*
 	   Provide a long-lived API key for making API requests.
 	   The API key is irretrievable after initial creation.
 	*/
 	CreateApiKey(ctx context.Context, authHeader bearertoken.Token, requestArg CreateApiKeyRequest) (CreateApiKeyResponse, error)
-	// List all API keys in the organization.
+	/*
+	   List API keys in the organization. Org admins see all keys in the organization;
+	   other members see only keys they created.
+	*/
 	ListApiKeysInOrg(ctx context.Context, authHeader bearertoken.Token, requestArg ListApiKeyRequest) (ListApiKeyResponse, error)
 	// List all API keys for the user.
 	ListUserApiKeys(ctx context.Context, authHeader bearertoken.Token, requestArg ListApiKeyRequest) (ListApiKeyResponse, error)
-	// Delete an API key.
+	/*
+	   Delete an API key. The caller may always revoke a key they created; revoking another
+	   user's key requires the caller to be an org admin of the session org. A non-admin caller
+	   revoking another user's key receives NotAuthorizedAdmin. A key in a different org than the
+	   session, or an unknown key, yields ApiKeyNotFound.
+	*/
 	RevokeApiKey(ctx context.Context, authHeader bearertoken.Token, ridArg ApiKeyRid) error
 }
 
@@ -164,10 +184,11 @@ func (c *authorizationServiceClient) IsEmailAllowed(ctx context.Context, request
 	return *returnVal, nil
 }
 
-func (c *authorizationServiceClient) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
+func (c *authorizationServiceClient) IsEmailAllowedOkta(ctx context.Context, authHeader bearertoken.Token, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
 	var returnVal *OktaRegistrationResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("IsEmailAllowedOkta"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/is-email-allowed-okta"))
 	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
@@ -177,6 +198,23 @@ func (c *authorizationServiceClient) IsEmailAllowedOkta(ctx context.Context, req
 	}
 	if returnVal == nil {
 		return *new(OktaRegistrationResponse), werror.ErrorWithContextParams(ctx, "isEmailAllowedOkta response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *authorizationServiceClient) IsEmailAllowedFreemiumOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
+	var returnVal *OktaRegistrationResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("IsEmailAllowedFreemiumOkta"))
+	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/is-email-allowed-freemium-okta"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(OktaRegistrationResponse), werror.WrapWithContextParams(ctx, err, "isEmailAllowedFreemiumOkta failed")
+	}
+	if returnVal == nil {
+		return *new(OktaRegistrationResponse), werror.ErrorWithContextParams(ctx, "isEmailAllowedFreemiumOkta response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -194,6 +232,24 @@ func (c *authorizationServiceClient) GetUserOrgs(ctx context.Context, requestArg
 	}
 	if returnVal == nil {
 		return *new(GetUserOrgsResponse), werror.ErrorWithContextParams(ctx, "getUserOrgs response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *authorizationServiceClient) SetUserOrg(ctx context.Context, authHeader bearertoken.Token, requestArg SetUserOrgRequest) (GetAccessTokenResponse, error) {
+	var returnVal *GetAccessTokenResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("SetUserOrg"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/set-user-org"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GetAccessTokenResponse), werror.WrapWithContextParams(ctx, err, "setUserOrg failed")
+	}
+	if returnVal == nil {
+		return *new(GetAccessTokenResponse), werror.ErrorWithContextParams(ctx, "setUserOrg response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -228,6 +284,23 @@ func (c *authorizationServiceClient) RefreshAccessToken(ctx context.Context, req
 	}
 	if returnVal == nil {
 		return *new(RefreshAccessTokenResponse), werror.ErrorWithContextParams(ctx, "refreshAccessToken response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *authorizationServiceClient) GetIdpEndSessionEndpoint(ctx context.Context, requestArg GetIdpEndSessionEndpointRequest) (GetIdpEndSessionEndpointResponse, error) {
+	var returnVal *GetIdpEndSessionEndpointResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetIdpEndSessionEndpoint"))
+	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/get-idp-end-session-endpoint"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(GetIdpEndSessionEndpointResponse), werror.WrapWithContextParams(ctx, err, "getIdpEndSessionEndpoint failed")
+	}
+	if returnVal == nil {
+		return *new(GetIdpEndSessionEndpointResponse), werror.ErrorWithContextParams(ctx, "getIdpEndSessionEndpoint response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -331,15 +404,22 @@ type AuthorizationServiceClientWithAuth interface {
 	// Checks if the email is allowed to register, following Okta "registration inline hook" API.
 	IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
+	   Freemium variant of the Okta "registration inline hook" API: allows any email to register.
+	   Uses the same request/response shape as isEmailAllowedOkta so it can be wired up as an Okta
+	   inline hook, but always responds with ALLOW.
+	*/
+	IsEmailAllowedFreemiumOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
+	/*
 	   Provides an OIDC ID token to get the orgs that the user is a member of. Throws NotAuthorized if the ID token
 	   is invalid or if the OIDC provider is not known.
 	*/
 	GetUserOrgs(ctx context.Context, requestArg GetUserOrgsRequest) (GetUserOrgsResponse, error)
 	/*
-	   Provide an OIDC ID token to get a Nominal access token suitable for making API requests.
-	   Its expiry will match that of the input ID token, capped at 24h. TODO(MGMT-933): reduce this duration.
-	   Throws NotAuthorized if the ID token is invalid or if the OIDC provider is not known.
+	   Switch the authenticated session to the provided org rid.
+	   Throws NotAuthorized if the session is invalid or the user is not a member of the org.
 	*/
+	SetUserOrg(ctx context.Context, requestArg SetUserOrgRequest) (GetAccessTokenResponse, error)
+	// Provide an OIDC ID token to get a (24h) Nominal access token suitable for making API requests.
 	GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error)
 	/*
 	   Given an authenticated session, provide an OIDC access token to get a Nominal access token suitable
@@ -349,15 +429,28 @@ type AuthorizationServiceClientWithAuth interface {
 	*/
 	RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error)
 	/*
+	   Given an IDP issued id token, return the end session endpoint, accessed through the
+	   .well-known/openid-configuration endpoint.
+	*/
+	GetIdpEndSessionEndpoint(ctx context.Context, requestArg GetIdpEndSessionEndpointRequest) (GetIdpEndSessionEndpointResponse, error)
+	/*
 	   Provide a long-lived API key for making API requests.
 	   The API key is irretrievable after initial creation.
 	*/
 	CreateApiKey(ctx context.Context, requestArg CreateApiKeyRequest) (CreateApiKeyResponse, error)
-	// List all API keys in the organization.
+	/*
+	   List API keys in the organization. Org admins see all keys in the organization;
+	   other members see only keys they created.
+	*/
 	ListApiKeysInOrg(ctx context.Context, requestArg ListApiKeyRequest) (ListApiKeyResponse, error)
 	// List all API keys for the user.
 	ListUserApiKeys(ctx context.Context, requestArg ListApiKeyRequest) (ListApiKeyResponse, error)
-	// Delete an API key.
+	/*
+	   Delete an API key. The caller may always revoke a key they created; revoking another
+	   user's key requires the caller to be an org admin of the session org. A non-admin caller
+	   revoking another user's key receives NotAuthorizedAdmin. A key in a different org than the
+	   session, or an unknown key, yields ApiKeyNotFound.
+	*/
 	RevokeApiKey(ctx context.Context, ridArg ApiKeyRid) error
 }
 
@@ -391,11 +484,19 @@ func (c *authorizationServiceClientWithAuth) IsEmailAllowed(ctx context.Context,
 }
 
 func (c *authorizationServiceClientWithAuth) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
-	return c.client.IsEmailAllowedOkta(ctx, requestArg)
+	return c.client.IsEmailAllowedOkta(ctx, c.authHeader, requestArg)
+}
+
+func (c *authorizationServiceClientWithAuth) IsEmailAllowedFreemiumOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
+	return c.client.IsEmailAllowedFreemiumOkta(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithAuth) GetUserOrgs(ctx context.Context, requestArg GetUserOrgsRequest) (GetUserOrgsResponse, error) {
 	return c.client.GetUserOrgs(ctx, requestArg)
+}
+
+func (c *authorizationServiceClientWithAuth) SetUserOrg(ctx context.Context, requestArg SetUserOrgRequest) (GetAccessTokenResponse, error) {
+	return c.client.SetUserOrg(ctx, c.authHeader, requestArg)
 }
 
 func (c *authorizationServiceClientWithAuth) GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error) {
@@ -404,6 +505,10 @@ func (c *authorizationServiceClientWithAuth) GetAccessToken(ctx context.Context,
 
 func (c *authorizationServiceClientWithAuth) RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error) {
 	return c.client.RefreshAccessToken(ctx, requestArg)
+}
+
+func (c *authorizationServiceClientWithAuth) GetIdpEndSessionEndpoint(ctx context.Context, requestArg GetIdpEndSessionEndpointRequest) (GetIdpEndSessionEndpointResponse, error) {
+	return c.client.GetIdpEndSessionEndpoint(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithAuth) CreateApiKey(ctx context.Context, requestArg CreateApiKeyRequest) (CreateApiKeyResponse, error) {
@@ -468,11 +573,27 @@ func (c *authorizationServiceClientWithTokenProvider) IsEmailAllowed(ctx context
 }
 
 func (c *authorizationServiceClientWithTokenProvider) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
-	return c.client.IsEmailAllowedOkta(ctx, requestArg)
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(OktaRegistrationResponse), err
+	}
+	return c.client.IsEmailAllowedOkta(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *authorizationServiceClientWithTokenProvider) IsEmailAllowedFreemiumOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
+	return c.client.IsEmailAllowedFreemiumOkta(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithTokenProvider) GetUserOrgs(ctx context.Context, requestArg GetUserOrgsRequest) (GetUserOrgsResponse, error) {
 	return c.client.GetUserOrgs(ctx, requestArg)
+}
+
+func (c *authorizationServiceClientWithTokenProvider) SetUserOrg(ctx context.Context, requestArg SetUserOrgRequest) (GetAccessTokenResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(GetAccessTokenResponse), err
+	}
+	return c.client.SetUserOrg(ctx, bearertoken.Token(token), requestArg)
 }
 
 func (c *authorizationServiceClientWithTokenProvider) GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error) {
@@ -481,6 +602,10 @@ func (c *authorizationServiceClientWithTokenProvider) GetAccessToken(ctx context
 
 func (c *authorizationServiceClientWithTokenProvider) RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error) {
 	return c.client.RefreshAccessToken(ctx, requestArg)
+}
+
+func (c *authorizationServiceClientWithTokenProvider) GetIdpEndSessionEndpoint(ctx context.Context, requestArg GetIdpEndSessionEndpointRequest) (GetIdpEndSessionEndpointResponse, error) {
+	return c.client.GetIdpEndSessionEndpoint(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithTokenProvider) CreateApiKey(ctx context.Context, requestArg CreateApiKeyRequest) (CreateApiKeyResponse, error) {
@@ -545,6 +670,50 @@ func (c *internalApiKeyServiceClient) GetAccessTokenFromApiKeyValue(ctx context.
 	}
 	if returnVal == nil {
 		return *new(GetAccessTokenResponse), werror.ErrorWithContextParams(ctx, "getAccessTokenFromApiKeyValue response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+/*
+Cluster-internal endpoint that mints short-lived access tokens for a
+preconfigured sandbox workspace + sandbox user. The intended caller is an
+in-cluster integration test Job; access is gated by a shared-secret header
+and a NetworkPolicy that restricts the source pods.
+
+This service must not be exposed via the public ingress.
+*/
+type InternalSandboxTokenServiceClient interface {
+	/*
+	   Issue a Nominal-signed bearer token bound to the configured sandbox
+	   user + org. The TTL is capped at 1 hour server-side regardless of the
+	   requested value. The shared-secret header must match the value
+	   configured on gatekeeper or the call is rejected.
+	*/
+	IssueSandboxToken(ctx context.Context, requestArg IssueSandboxTokenRequest, sharedSecretArg string) (IssueSandboxTokenResponse, error)
+}
+
+type internalSandboxTokenServiceClient struct {
+	client httpclient.Client
+}
+
+func NewInternalSandboxTokenServiceClient(client httpclient.Client) InternalSandboxTokenServiceClient {
+	return &internalSandboxTokenServiceClient{client: client}
+}
+
+func (c *internalSandboxTokenServiceClient) IssueSandboxToken(ctx context.Context, requestArg IssueSandboxTokenRequest, sharedSecretArg string) (IssueSandboxTokenResponse, error) {
+	var returnVal *IssueSandboxTokenResponse
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("IssueSandboxToken"))
+	requestParams = append(requestParams, httpclient.WithPathf("/sandbox-token-internal/v1/issue"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithHeader("X-Nominal-Sandbox-Shared-Secret", fmt.Sprint(sharedSecretArg)))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(IssueSandboxTokenResponse), werror.WrapWithContextParams(ctx, err, "issueSandboxToken failed")
+	}
+	if returnVal == nil {
+		return *new(IssueSandboxTokenResponse), werror.ErrorWithContextParams(ctx, "issueSandboxToken response cannot be nil")
 	}
 	return *returnVal, nil
 }

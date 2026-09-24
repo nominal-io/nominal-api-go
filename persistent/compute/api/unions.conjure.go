@@ -281,14 +281,18 @@ type ComputeNodeAppendResponse struct {
 	rangeValue                **api.Range
 	numeric                   *api.NumericPlot
 	enum                      *api.EnumPlot
+	log                       *api.LogPlot
 	bucketedNumeric           *api.BucketedNumericPlot
 	bucketedEnum              *api.BucketedEnumPlot
 	multivariate              *api.BucketedMultivariatePlot
-	arrowNumeric              *api.ArrowNumericPlot
-	arrowEnum                 *api.ArrowEnumPlot
-	arrowBucketedNumeric      *api.ArrowBucketedNumericPlot
-	arrowBucketedEnum         *api.ArrowBucketedEnumPlot
-	arrowBucketedMultivariate *api.ArrowBucketedMultivariatePlot
+	arrowNumeric              *api.ArrowPlot
+	arrowEnum                 *api.ArrowPlot
+	arrowBucketedNumeric      *api.ArrowPlot
+	arrowBucketedEnum         *api.ArrowPlot
+	arrowBucketedMultivariate *api.ArrowPlot
+	arrowBucketedStruct       *api.ArrowPlot
+	arrowStruct               *api.ArrowPlot
+	arrowLog                  *api.ArrowPlot
 	grouped                   *GroupedComputeNodeAppendResponses
 }
 
@@ -302,19 +306,23 @@ type computeNodeAppendResponseDeserializer struct {
 	RangeValue                **api.Range                        `json:"rangeValue"`
 	Numeric                   *api.NumericPlot                   `json:"numeric"`
 	Enum                      *api.EnumPlot                      `json:"enum"`
+	Log                       *api.LogPlot                       `json:"log"`
 	BucketedNumeric           *api.BucketedNumericPlot           `json:"bucketedNumeric"`
 	BucketedEnum              *api.BucketedEnumPlot              `json:"bucketedEnum"`
 	Multivariate              *api.BucketedMultivariatePlot      `json:"multivariate"`
-	ArrowNumeric              *api.ArrowNumericPlot              `json:"arrowNumeric"`
-	ArrowEnum                 *api.ArrowEnumPlot                 `json:"arrowEnum"`
-	ArrowBucketedNumeric      *api.ArrowBucketedNumericPlot      `json:"arrowBucketedNumeric"`
-	ArrowBucketedEnum         *api.ArrowBucketedEnumPlot         `json:"arrowBucketedEnum"`
-	ArrowBucketedMultivariate *api.ArrowBucketedMultivariatePlot `json:"arrowBucketedMultivariate"`
+	ArrowNumeric              *api.ArrowPlot                     `json:"arrowNumeric"`
+	ArrowEnum                 *api.ArrowPlot                     `json:"arrowEnum"`
+	ArrowBucketedNumeric      *api.ArrowPlot                     `json:"arrowBucketedNumeric"`
+	ArrowBucketedEnum         *api.ArrowPlot                     `json:"arrowBucketedEnum"`
+	ArrowBucketedMultivariate *api.ArrowPlot                     `json:"arrowBucketedMultivariate"`
+	ArrowBucketedStruct       *api.ArrowPlot                     `json:"arrowBucketedStruct"`
+	ArrowStruct               *api.ArrowPlot                     `json:"arrowStruct"`
+	ArrowLog                  *api.ArrowPlot                     `json:"arrowLog"`
 	Grouped                   *GroupedComputeNodeAppendResponses `json:"grouped"`
 }
 
 func (u *computeNodeAppendResponseDeserializer) toStruct() ComputeNodeAppendResponse {
-	return ComputeNodeAppendResponse{typ: u.Type, range_: u.Range, enumPoint: u.EnumPoint, numericPoint: u.NumericPoint, singlePoint: u.SinglePoint, logPoint: u.LogPoint, rangeValue: u.RangeValue, numeric: u.Numeric, enum: u.Enum, bucketedNumeric: u.BucketedNumeric, bucketedEnum: u.BucketedEnum, multivariate: u.Multivariate, arrowNumeric: u.ArrowNumeric, arrowEnum: u.ArrowEnum, arrowBucketedNumeric: u.ArrowBucketedNumeric, arrowBucketedEnum: u.ArrowBucketedEnum, arrowBucketedMultivariate: u.ArrowBucketedMultivariate, grouped: u.Grouped}
+	return ComputeNodeAppendResponse{typ: u.Type, range_: u.Range, enumPoint: u.EnumPoint, numericPoint: u.NumericPoint, singlePoint: u.SinglePoint, logPoint: u.LogPoint, rangeValue: u.RangeValue, numeric: u.Numeric, enum: u.Enum, log: u.Log, bucketedNumeric: u.BucketedNumeric, bucketedEnum: u.BucketedEnum, multivariate: u.Multivariate, arrowNumeric: u.ArrowNumeric, arrowEnum: u.ArrowEnum, arrowBucketedNumeric: u.ArrowBucketedNumeric, arrowBucketedEnum: u.ArrowBucketedEnum, arrowBucketedMultivariate: u.ArrowBucketedMultivariate, arrowBucketedStruct: u.ArrowBucketedStruct, arrowStruct: u.ArrowStruct, arrowLog: u.ArrowLog, grouped: u.Grouped}
 }
 
 func (u *ComputeNodeAppendResponse) toSerializer() (interface{}, error) {
@@ -390,6 +398,14 @@ func (u *ComputeNodeAppendResponse) toSerializer() (interface{}, error) {
 			Type string       `json:"type"`
 			Enum api.EnumPlot `json:"enum"`
 		}{Type: "enum", Enum: *u.enum}, nil
+	case "log":
+		if u.log == nil {
+			return nil, fmt.Errorf("field \"log\" is required")
+		}
+		return struct {
+			Type string      `json:"type"`
+			Log  api.LogPlot `json:"log"`
+		}{Type: "log", Log: *u.log}, nil
 	case "bucketedNumeric":
 		if u.bucketedNumeric == nil {
 			return nil, fmt.Errorf("field \"bucketedNumeric\" is required")
@@ -419,41 +435,65 @@ func (u *ComputeNodeAppendResponse) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"arrowNumeric\" is required")
 		}
 		return struct {
-			Type         string               `json:"type"`
-			ArrowNumeric api.ArrowNumericPlot `json:"arrowNumeric"`
+			Type         string        `json:"type"`
+			ArrowNumeric api.ArrowPlot `json:"arrowNumeric"`
 		}{Type: "arrowNumeric", ArrowNumeric: *u.arrowNumeric}, nil
 	case "arrowEnum":
 		if u.arrowEnum == nil {
 			return nil, fmt.Errorf("field \"arrowEnum\" is required")
 		}
 		return struct {
-			Type      string            `json:"type"`
-			ArrowEnum api.ArrowEnumPlot `json:"arrowEnum"`
+			Type      string        `json:"type"`
+			ArrowEnum api.ArrowPlot `json:"arrowEnum"`
 		}{Type: "arrowEnum", ArrowEnum: *u.arrowEnum}, nil
 	case "arrowBucketedNumeric":
 		if u.arrowBucketedNumeric == nil {
 			return nil, fmt.Errorf("field \"arrowBucketedNumeric\" is required")
 		}
 		return struct {
-			Type                 string                       `json:"type"`
-			ArrowBucketedNumeric api.ArrowBucketedNumericPlot `json:"arrowBucketedNumeric"`
+			Type                 string        `json:"type"`
+			ArrowBucketedNumeric api.ArrowPlot `json:"arrowBucketedNumeric"`
 		}{Type: "arrowBucketedNumeric", ArrowBucketedNumeric: *u.arrowBucketedNumeric}, nil
 	case "arrowBucketedEnum":
 		if u.arrowBucketedEnum == nil {
 			return nil, fmt.Errorf("field \"arrowBucketedEnum\" is required")
 		}
 		return struct {
-			Type              string                    `json:"type"`
-			ArrowBucketedEnum api.ArrowBucketedEnumPlot `json:"arrowBucketedEnum"`
+			Type              string        `json:"type"`
+			ArrowBucketedEnum api.ArrowPlot `json:"arrowBucketedEnum"`
 		}{Type: "arrowBucketedEnum", ArrowBucketedEnum: *u.arrowBucketedEnum}, nil
 	case "arrowBucketedMultivariate":
 		if u.arrowBucketedMultivariate == nil {
 			return nil, fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
 		}
 		return struct {
-			Type                      string                            `json:"type"`
-			ArrowBucketedMultivariate api.ArrowBucketedMultivariatePlot `json:"arrowBucketedMultivariate"`
+			Type                      string        `json:"type"`
+			ArrowBucketedMultivariate api.ArrowPlot `json:"arrowBucketedMultivariate"`
 		}{Type: "arrowBucketedMultivariate", ArrowBucketedMultivariate: *u.arrowBucketedMultivariate}, nil
+	case "arrowBucketedStruct":
+		if u.arrowBucketedStruct == nil {
+			return nil, fmt.Errorf("field \"arrowBucketedStruct\" is required")
+		}
+		return struct {
+			Type                string        `json:"type"`
+			ArrowBucketedStruct api.ArrowPlot `json:"arrowBucketedStruct"`
+		}{Type: "arrowBucketedStruct", ArrowBucketedStruct: *u.arrowBucketedStruct}, nil
+	case "arrowStruct":
+		if u.arrowStruct == nil {
+			return nil, fmt.Errorf("field \"arrowStruct\" is required")
+		}
+		return struct {
+			Type        string        `json:"type"`
+			ArrowStruct api.ArrowPlot `json:"arrowStruct"`
+		}{Type: "arrowStruct", ArrowStruct: *u.arrowStruct}, nil
+	case "arrowLog":
+		if u.arrowLog == nil {
+			return nil, fmt.Errorf("field \"arrowLog\" is required")
+		}
+		return struct {
+			Type     string        `json:"type"`
+			ArrowLog api.ArrowPlot `json:"arrowLog"`
+		}{Type: "arrowLog", ArrowLog: *u.arrowLog}, nil
 	case "grouped":
 		if u.grouped == nil {
 			return nil, fmt.Errorf("field \"grouped\" is required")
@@ -497,6 +537,10 @@ func (u *ComputeNodeAppendResponse) UnmarshalJSON(data []byte) error {
 		if u.enum == nil {
 			return fmt.Errorf("field \"enum\" is required")
 		}
+	case "log":
+		if u.log == nil {
+			return fmt.Errorf("field \"log\" is required")
+		}
 	case "bucketedNumeric":
 		if u.bucketedNumeric == nil {
 			return fmt.Errorf("field \"bucketedNumeric\" is required")
@@ -529,6 +573,18 @@ func (u *ComputeNodeAppendResponse) UnmarshalJSON(data []byte) error {
 		if u.arrowBucketedMultivariate == nil {
 			return fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
 		}
+	case "arrowBucketedStruct":
+		if u.arrowBucketedStruct == nil {
+			return fmt.Errorf("field \"arrowBucketedStruct\" is required")
+		}
+	case "arrowStruct":
+		if u.arrowStruct == nil {
+			return fmt.Errorf("field \"arrowStruct\" is required")
+		}
+	case "arrowLog":
+		if u.arrowLog == nil {
+			return fmt.Errorf("field \"arrowLog\" is required")
+		}
 	case "grouped":
 		if u.grouped == nil {
 			return fmt.Errorf("field \"grouped\" is required")
@@ -553,7 +609,7 @@ func (u *ComputeNodeAppendResponse) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ComputeNodeAppendResponse) AcceptFuncs(range_Func func([]api.Range) error, enumPointFunc func(*api.EnumPoint) error, numericPointFunc func(*api.NumericPoint) error, singlePointFunc func(*api.SinglePoint) error, logPointFunc func(*api.LogPoint) error, rangeValueFunc func(*api.Range) error, numericFunc func(api.NumericPlot) error, enumFunc func(api.EnumPlot) error, bucketedNumericFunc func(api.BucketedNumericPlot) error, bucketedEnumFunc func(api.BucketedEnumPlot) error, multivariateFunc func(api.BucketedMultivariatePlot) error, arrowNumericFunc func(api.ArrowNumericPlot) error, arrowEnumFunc func(api.ArrowEnumPlot) error, arrowBucketedNumericFunc func(api.ArrowBucketedNumericPlot) error, arrowBucketedEnumFunc func(api.ArrowBucketedEnumPlot) error, arrowBucketedMultivariateFunc func(api.ArrowBucketedMultivariatePlot) error, groupedFunc func(GroupedComputeNodeAppendResponses) error, unknownFunc func(string) error) error {
+func (u *ComputeNodeAppendResponse) AcceptFuncs(range_Func func([]api.Range) error, enumPointFunc func(*api.EnumPoint) error, numericPointFunc func(*api.NumericPoint) error, singlePointFunc func(*api.SinglePoint) error, logPointFunc func(*api.LogPoint) error, rangeValueFunc func(*api.Range) error, numericFunc func(api.NumericPlot) error, enumFunc func(api.EnumPlot) error, logFunc func(api.LogPlot) error, bucketedNumericFunc func(api.BucketedNumericPlot) error, bucketedEnumFunc func(api.BucketedEnumPlot) error, multivariateFunc func(api.BucketedMultivariatePlot) error, arrowNumericFunc func(api.ArrowPlot) error, arrowEnumFunc func(api.ArrowPlot) error, arrowBucketedNumericFunc func(api.ArrowPlot) error, arrowBucketedEnumFunc func(api.ArrowPlot) error, arrowBucketedMultivariateFunc func(api.ArrowPlot) error, arrowBucketedStructFunc func(api.ArrowPlot) error, arrowStructFunc func(api.ArrowPlot) error, arrowLogFunc func(api.ArrowPlot) error, groupedFunc func(GroupedComputeNodeAppendResponses) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -605,6 +661,11 @@ func (u *ComputeNodeAppendResponse) AcceptFuncs(range_Func func([]api.Range) err
 			return fmt.Errorf("field \"enum\" is required")
 		}
 		return enumFunc(*u.enum)
+	case "log":
+		if u.log == nil {
+			return fmt.Errorf("field \"log\" is required")
+		}
+		return logFunc(*u.log)
 	case "bucketedNumeric":
 		if u.bucketedNumeric == nil {
 			return fmt.Errorf("field \"bucketedNumeric\" is required")
@@ -645,6 +706,21 @@ func (u *ComputeNodeAppendResponse) AcceptFuncs(range_Func func([]api.Range) err
 			return fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
 		}
 		return arrowBucketedMultivariateFunc(*u.arrowBucketedMultivariate)
+	case "arrowBucketedStruct":
+		if u.arrowBucketedStruct == nil {
+			return fmt.Errorf("field \"arrowBucketedStruct\" is required")
+		}
+		return arrowBucketedStructFunc(*u.arrowBucketedStruct)
+	case "arrowStruct":
+		if u.arrowStruct == nil {
+			return fmt.Errorf("field \"arrowStruct\" is required")
+		}
+		return arrowStructFunc(*u.arrowStruct)
+	case "arrowLog":
+		if u.arrowLog == nil {
+			return fmt.Errorf("field \"arrowLog\" is required")
+		}
+		return arrowLogFunc(*u.arrowLog)
 	case "grouped":
 		if u.grouped == nil {
 			return fmt.Errorf("field \"grouped\" is required")
@@ -685,6 +761,10 @@ func (u *ComputeNodeAppendResponse) EnumNoopSuccess(_ api.EnumPlot) error {
 	return nil
 }
 
+func (u *ComputeNodeAppendResponse) LogNoopSuccess(_ api.LogPlot) error {
+	return nil
+}
+
 func (u *ComputeNodeAppendResponse) BucketedNumericNoopSuccess(_ api.BucketedNumericPlot) error {
 	return nil
 }
@@ -697,23 +777,35 @@ func (u *ComputeNodeAppendResponse) MultivariateNoopSuccess(_ api.BucketedMultiv
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) ArrowNumericNoopSuccess(_ api.ArrowNumericPlot) error {
+func (u *ComputeNodeAppendResponse) ArrowNumericNoopSuccess(_ api.ArrowPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) ArrowEnumNoopSuccess(_ api.ArrowEnumPlot) error {
+func (u *ComputeNodeAppendResponse) ArrowEnumNoopSuccess(_ api.ArrowPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) ArrowBucketedNumericNoopSuccess(_ api.ArrowBucketedNumericPlot) error {
+func (u *ComputeNodeAppendResponse) ArrowBucketedNumericNoopSuccess(_ api.ArrowPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) ArrowBucketedEnumNoopSuccess(_ api.ArrowBucketedEnumPlot) error {
+func (u *ComputeNodeAppendResponse) ArrowBucketedEnumNoopSuccess(_ api.ArrowPlot) error {
 	return nil
 }
 
-func (u *ComputeNodeAppendResponse) ArrowBucketedMultivariateNoopSuccess(_ api.ArrowBucketedMultivariatePlot) error {
+func (u *ComputeNodeAppendResponse) ArrowBucketedMultivariateNoopSuccess(_ api.ArrowPlot) error {
+	return nil
+}
+
+func (u *ComputeNodeAppendResponse) ArrowBucketedStructNoopSuccess(_ api.ArrowPlot) error {
+	return nil
+}
+
+func (u *ComputeNodeAppendResponse) ArrowStructNoopSuccess(_ api.ArrowPlot) error {
+	return nil
+}
+
+func (u *ComputeNodeAppendResponse) ArrowLogNoopSuccess(_ api.ArrowPlot) error {
 	return nil
 }
 
@@ -777,6 +869,11 @@ func (u *ComputeNodeAppendResponse) Accept(v ComputeNodeAppendResponseVisitor) e
 			return fmt.Errorf("field \"enum\" is required")
 		}
 		return v.VisitEnum(*u.enum)
+	case "log":
+		if u.log == nil {
+			return fmt.Errorf("field \"log\" is required")
+		}
+		return v.VisitLog(*u.log)
 	case "bucketedNumeric":
 		if u.bucketedNumeric == nil {
 			return fmt.Errorf("field \"bucketedNumeric\" is required")
@@ -817,6 +914,21 @@ func (u *ComputeNodeAppendResponse) Accept(v ComputeNodeAppendResponseVisitor) e
 			return fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
 		}
 		return v.VisitArrowBucketedMultivariate(*u.arrowBucketedMultivariate)
+	case "arrowBucketedStruct":
+		if u.arrowBucketedStruct == nil {
+			return fmt.Errorf("field \"arrowBucketedStruct\" is required")
+		}
+		return v.VisitArrowBucketedStruct(*u.arrowBucketedStruct)
+	case "arrowStruct":
+		if u.arrowStruct == nil {
+			return fmt.Errorf("field \"arrowStruct\" is required")
+		}
+		return v.VisitArrowStruct(*u.arrowStruct)
+	case "arrowLog":
+		if u.arrowLog == nil {
+			return fmt.Errorf("field \"arrowLog\" is required")
+		}
+		return v.VisitArrowLog(*u.arrowLog)
 	case "grouped":
 		if u.grouped == nil {
 			return fmt.Errorf("field \"grouped\" is required")
@@ -834,14 +946,18 @@ type ComputeNodeAppendResponseVisitor interface {
 	VisitRangeValue(v *api.Range) error
 	VisitNumeric(v api.NumericPlot) error
 	VisitEnum(v api.EnumPlot) error
+	VisitLog(v api.LogPlot) error
 	VisitBucketedNumeric(v api.BucketedNumericPlot) error
 	VisitBucketedEnum(v api.BucketedEnumPlot) error
 	VisitMultivariate(v api.BucketedMultivariatePlot) error
-	VisitArrowNumeric(v api.ArrowNumericPlot) error
-	VisitArrowEnum(v api.ArrowEnumPlot) error
-	VisitArrowBucketedNumeric(v api.ArrowBucketedNumericPlot) error
-	VisitArrowBucketedEnum(v api.ArrowBucketedEnumPlot) error
-	VisitArrowBucketedMultivariate(v api.ArrowBucketedMultivariatePlot) error
+	VisitArrowNumeric(v api.ArrowPlot) error
+	VisitArrowEnum(v api.ArrowPlot) error
+	VisitArrowBucketedNumeric(v api.ArrowPlot) error
+	VisitArrowBucketedEnum(v api.ArrowPlot) error
+	VisitArrowBucketedMultivariate(v api.ArrowPlot) error
+	VisitArrowBucketedStruct(v api.ArrowPlot) error
+	VisitArrowStruct(v api.ArrowPlot) error
+	VisitArrowLog(v api.ArrowPlot) error
 	VisitGrouped(v GroupedComputeNodeAppendResponses) error
 	VisitUnknown(typeName string) error
 }
@@ -898,6 +1014,11 @@ func (u *ComputeNodeAppendResponse) AcceptWithContext(ctx context.Context, v Com
 			return fmt.Errorf("field \"enum\" is required")
 		}
 		return v.VisitEnumWithContext(ctx, *u.enum)
+	case "log":
+		if u.log == nil {
+			return fmt.Errorf("field \"log\" is required")
+		}
+		return v.VisitLogWithContext(ctx, *u.log)
 	case "bucketedNumeric":
 		if u.bucketedNumeric == nil {
 			return fmt.Errorf("field \"bucketedNumeric\" is required")
@@ -938,6 +1059,21 @@ func (u *ComputeNodeAppendResponse) AcceptWithContext(ctx context.Context, v Com
 			return fmt.Errorf("field \"arrowBucketedMultivariate\" is required")
 		}
 		return v.VisitArrowBucketedMultivariateWithContext(ctx, *u.arrowBucketedMultivariate)
+	case "arrowBucketedStruct":
+		if u.arrowBucketedStruct == nil {
+			return fmt.Errorf("field \"arrowBucketedStruct\" is required")
+		}
+		return v.VisitArrowBucketedStructWithContext(ctx, *u.arrowBucketedStruct)
+	case "arrowStruct":
+		if u.arrowStruct == nil {
+			return fmt.Errorf("field \"arrowStruct\" is required")
+		}
+		return v.VisitArrowStructWithContext(ctx, *u.arrowStruct)
+	case "arrowLog":
+		if u.arrowLog == nil {
+			return fmt.Errorf("field \"arrowLog\" is required")
+		}
+		return v.VisitArrowLogWithContext(ctx, *u.arrowLog)
 	case "grouped":
 		if u.grouped == nil {
 			return fmt.Errorf("field \"grouped\" is required")
@@ -955,14 +1091,18 @@ type ComputeNodeAppendResponseVisitorWithContext interface {
 	VisitRangeValueWithContext(ctx context.Context, v *api.Range) error
 	VisitNumericWithContext(ctx context.Context, v api.NumericPlot) error
 	VisitEnumWithContext(ctx context.Context, v api.EnumPlot) error
+	VisitLogWithContext(ctx context.Context, v api.LogPlot) error
 	VisitBucketedNumericWithContext(ctx context.Context, v api.BucketedNumericPlot) error
 	VisitBucketedEnumWithContext(ctx context.Context, v api.BucketedEnumPlot) error
 	VisitMultivariateWithContext(ctx context.Context, v api.BucketedMultivariatePlot) error
-	VisitArrowNumericWithContext(ctx context.Context, v api.ArrowNumericPlot) error
-	VisitArrowEnumWithContext(ctx context.Context, v api.ArrowEnumPlot) error
-	VisitArrowBucketedNumericWithContext(ctx context.Context, v api.ArrowBucketedNumericPlot) error
-	VisitArrowBucketedEnumWithContext(ctx context.Context, v api.ArrowBucketedEnumPlot) error
-	VisitArrowBucketedMultivariateWithContext(ctx context.Context, v api.ArrowBucketedMultivariatePlot) error
+	VisitArrowNumericWithContext(ctx context.Context, v api.ArrowPlot) error
+	VisitArrowEnumWithContext(ctx context.Context, v api.ArrowPlot) error
+	VisitArrowBucketedNumericWithContext(ctx context.Context, v api.ArrowPlot) error
+	VisitArrowBucketedEnumWithContext(ctx context.Context, v api.ArrowPlot) error
+	VisitArrowBucketedMultivariateWithContext(ctx context.Context, v api.ArrowPlot) error
+	VisitArrowBucketedStructWithContext(ctx context.Context, v api.ArrowPlot) error
+	VisitArrowStructWithContext(ctx context.Context, v api.ArrowPlot) error
+	VisitArrowLogWithContext(ctx context.Context, v api.ArrowPlot) error
 	VisitGroupedWithContext(ctx context.Context, v GroupedComputeNodeAppendResponses) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
@@ -999,6 +1139,10 @@ func NewComputeNodeAppendResponseFromEnum(v api.EnumPlot) ComputeNodeAppendRespo
 	return ComputeNodeAppendResponse{typ: "enum", enum: &v}
 }
 
+func NewComputeNodeAppendResponseFromLog(v api.LogPlot) ComputeNodeAppendResponse {
+	return ComputeNodeAppendResponse{typ: "log", log: &v}
+}
+
 func NewComputeNodeAppendResponseFromBucketedNumeric(v api.BucketedNumericPlot) ComputeNodeAppendResponse {
 	return ComputeNodeAppendResponse{typ: "bucketedNumeric", bucketedNumeric: &v}
 }
@@ -1011,24 +1155,36 @@ func NewComputeNodeAppendResponseFromMultivariate(v api.BucketedMultivariatePlot
 	return ComputeNodeAppendResponse{typ: "multivariate", multivariate: &v}
 }
 
-func NewComputeNodeAppendResponseFromArrowNumeric(v api.ArrowNumericPlot) ComputeNodeAppendResponse {
+func NewComputeNodeAppendResponseFromArrowNumeric(v api.ArrowPlot) ComputeNodeAppendResponse {
 	return ComputeNodeAppendResponse{typ: "arrowNumeric", arrowNumeric: &v}
 }
 
-func NewComputeNodeAppendResponseFromArrowEnum(v api.ArrowEnumPlot) ComputeNodeAppendResponse {
+func NewComputeNodeAppendResponseFromArrowEnum(v api.ArrowPlot) ComputeNodeAppendResponse {
 	return ComputeNodeAppendResponse{typ: "arrowEnum", arrowEnum: &v}
 }
 
-func NewComputeNodeAppendResponseFromArrowBucketedNumeric(v api.ArrowBucketedNumericPlot) ComputeNodeAppendResponse {
+func NewComputeNodeAppendResponseFromArrowBucketedNumeric(v api.ArrowPlot) ComputeNodeAppendResponse {
 	return ComputeNodeAppendResponse{typ: "arrowBucketedNumeric", arrowBucketedNumeric: &v}
 }
 
-func NewComputeNodeAppendResponseFromArrowBucketedEnum(v api.ArrowBucketedEnumPlot) ComputeNodeAppendResponse {
+func NewComputeNodeAppendResponseFromArrowBucketedEnum(v api.ArrowPlot) ComputeNodeAppendResponse {
 	return ComputeNodeAppendResponse{typ: "arrowBucketedEnum", arrowBucketedEnum: &v}
 }
 
-func NewComputeNodeAppendResponseFromArrowBucketedMultivariate(v api.ArrowBucketedMultivariatePlot) ComputeNodeAppendResponse {
+func NewComputeNodeAppendResponseFromArrowBucketedMultivariate(v api.ArrowPlot) ComputeNodeAppendResponse {
 	return ComputeNodeAppendResponse{typ: "arrowBucketedMultivariate", arrowBucketedMultivariate: &v}
+}
+
+func NewComputeNodeAppendResponseFromArrowBucketedStruct(v api.ArrowPlot) ComputeNodeAppendResponse {
+	return ComputeNodeAppendResponse{typ: "arrowBucketedStruct", arrowBucketedStruct: &v}
+}
+
+func NewComputeNodeAppendResponseFromArrowStruct(v api.ArrowPlot) ComputeNodeAppendResponse {
+	return ComputeNodeAppendResponse{typ: "arrowStruct", arrowStruct: &v}
+}
+
+func NewComputeNodeAppendResponseFromArrowLog(v api.ArrowPlot) ComputeNodeAppendResponse {
+	return ComputeNodeAppendResponse{typ: "arrowLog", arrowLog: &v}
 }
 
 func NewComputeNodeAppendResponseFromGrouped(v GroupedComputeNodeAppendResponses) ComputeNodeAppendResponse {

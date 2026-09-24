@@ -17,18 +17,24 @@ type InvalidComputationType struct {
 type InvalidComputationType_Value string
 
 const (
-	InvalidComputationType_POINT_PERSISTENCE   InvalidComputationType_Value = "POINT_PERSISTENCE"
-	InvalidComputationType_CUMULATIVE_SUM      InvalidComputationType_Value = "CUMULATIVE_SUM"
-	InvalidComputationType_INTEGRAL            InvalidComputationType_Value = "INTEGRAL"
-	InvalidComputationType_STALENESS_DETECTION InvalidComputationType_Value = "STALENESS_DETECTION"
-	InvalidComputationType_TIME_RANGE_FILTER   InvalidComputationType_Value = "TIME_RANGE_FILTER"
-	InvalidComputationType_LITERAL_RANGES      InvalidComputationType_Value = "LITERAL_RANGES"
-	InvalidComputationType_UNKNOWN             InvalidComputationType_Value = "UNKNOWN"
+	InvalidComputationType_POINT_PERSISTENCE                InvalidComputationType_Value = "POINT_PERSISTENCE"
+	InvalidComputationType_CUMULATIVE_SUM                   InvalidComputationType_Value = "CUMULATIVE_SUM"
+	InvalidComputationType_INTEGRAL                         InvalidComputationType_Value = "INTEGRAL"
+	InvalidComputationType_SCALAR_UDF                       InvalidComputationType_Value = "SCALAR_UDF"
+	InvalidComputationType_STALENESS_DETECTION              InvalidComputationType_Value = "STALENESS_DETECTION"
+	InvalidComputationType_LITERAL_RANGES                   InvalidComputationType_Value = "LITERAL_RANGES"
+	InvalidComputationType_LITERAL_ENUM_SERIES              InvalidComputationType_Value = "LITERAL_ENUM_SERIES"
+	InvalidComputationType_TAG_BY_INTERVALS                 InvalidComputationType_Value = "TAG_BY_INTERVALS"
+	InvalidComputationType_NUMERIC_COMBINE_WITH_TAGS        InvalidComputationType_Value = "NUMERIC_COMBINE_WITH_TAGS"
+	InvalidComputationType_PHASE_UNWRAP                     InvalidComputationType_Value = "PHASE_UNWRAP"
+	InvalidComputationType_RUN_WITH_FIXED_END               InvalidComputationType_Value = "RUN_WITH_FIXED_END"
+	InvalidComputationType_TIME_RANGE_FILTER_WITH_FIXED_END InvalidComputationType_Value = "TIME_RANGE_FILTER_WITH_FIXED_END"
+	InvalidComputationType_UNKNOWN                          InvalidComputationType_Value = "UNKNOWN"
 )
 
 // InvalidComputationType_Values returns all known variants of InvalidComputationType.
 func InvalidComputationType_Values() []InvalidComputationType_Value {
-	return []InvalidComputationType_Value{InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_TIME_RANGE_FILTER, InvalidComputationType_LITERAL_RANGES}
+	return []InvalidComputationType_Value{InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_SCALAR_UDF, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_LITERAL_RANGES, InvalidComputationType_LITERAL_ENUM_SERIES, InvalidComputationType_TAG_BY_INTERVALS, InvalidComputationType_NUMERIC_COMBINE_WITH_TAGS, InvalidComputationType_PHASE_UNWRAP, InvalidComputationType_RUN_WITH_FIXED_END, InvalidComputationType_TIME_RANGE_FILTER_WITH_FIXED_END}
 }
 
 func New_InvalidComputationType(value InvalidComputationType_Value) InvalidComputationType {
@@ -38,7 +44,7 @@ func New_InvalidComputationType(value InvalidComputationType_Value) InvalidCompu
 // IsUnknown returns false for all known variants of InvalidComputationType and true otherwise.
 func (e InvalidComputationType) IsUnknown() bool {
 	switch e.val {
-	case InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_TIME_RANGE_FILTER, InvalidComputationType_LITERAL_RANGES:
+	case InvalidComputationType_POINT_PERSISTENCE, InvalidComputationType_CUMULATIVE_SUM, InvalidComputationType_INTEGRAL, InvalidComputationType_SCALAR_UDF, InvalidComputationType_STALENESS_DETECTION, InvalidComputationType_LITERAL_RANGES, InvalidComputationType_LITERAL_ENUM_SERIES, InvalidComputationType_TAG_BY_INTERVALS, InvalidComputationType_NUMERIC_COMBINE_WITH_TAGS, InvalidComputationType_PHASE_UNWRAP, InvalidComputationType_RUN_WITH_FIXED_END, InvalidComputationType_TIME_RANGE_FILTER_WITH_FIXED_END:
 		return false
 	}
 	return true
@@ -69,12 +75,24 @@ func (e *InvalidComputationType) UnmarshalText(data []byte) error {
 		*e = New_InvalidComputationType(InvalidComputationType_CUMULATIVE_SUM)
 	case "INTEGRAL":
 		*e = New_InvalidComputationType(InvalidComputationType_INTEGRAL)
+	case "SCALAR_UDF":
+		*e = New_InvalidComputationType(InvalidComputationType_SCALAR_UDF)
 	case "STALENESS_DETECTION":
 		*e = New_InvalidComputationType(InvalidComputationType_STALENESS_DETECTION)
-	case "TIME_RANGE_FILTER":
-		*e = New_InvalidComputationType(InvalidComputationType_TIME_RANGE_FILTER)
 	case "LITERAL_RANGES":
 		*e = New_InvalidComputationType(InvalidComputationType_LITERAL_RANGES)
+	case "LITERAL_ENUM_SERIES":
+		*e = New_InvalidComputationType(InvalidComputationType_LITERAL_ENUM_SERIES)
+	case "TAG_BY_INTERVALS":
+		*e = New_InvalidComputationType(InvalidComputationType_TAG_BY_INTERVALS)
+	case "NUMERIC_COMBINE_WITH_TAGS":
+		*e = New_InvalidComputationType(InvalidComputationType_NUMERIC_COMBINE_WITH_TAGS)
+	case "PHASE_UNWRAP":
+		*e = New_InvalidComputationType(InvalidComputationType_PHASE_UNWRAP)
+	case "RUN_WITH_FIXED_END":
+		*e = New_InvalidComputationType(InvalidComputationType_RUN_WITH_FIXED_END)
+	case "TIME_RANGE_FILTER_WITH_FIXED_END":
+		*e = New_InvalidComputationType(InvalidComputationType_TIME_RANGE_FILTER_WITH_FIXED_END)
 	}
 	return nil
 }
@@ -91,19 +109,24 @@ type PollingOnlyComputationType struct {
 type PollingOnlyComputationType_Value string
 
 const (
-	PollingOnlyComputationType_FREQUENCY_DOMAIN                PollingOnlyComputationType_Value = "FREQUENCY_DOMAIN"
-	PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY     PollingOnlyComputationType_Value = "PAGE_SUMMARIZATION_STRATEGY"
-	PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY PollingOnlyComputationType_Value = "TRUNCATE_SUMMARIZATION_STRATEGY"
-	PollingOnlyComputationType_LOG_SERIES                      PollingOnlyComputationType_Value = "LOG_SERIES"
-	PollingOnlyComputationType_CURVE_FITTING                   PollingOnlyComputationType_Value = "CURVE_FITTING"
-	PollingOnlyComputationType_ARRAY                           PollingOnlyComputationType_Value = "ARRAY"
-	PollingOnlyComputationType_STRUCT                          PollingOnlyComputationType_Value = "STRUCT"
-	PollingOnlyComputationType_UNKNOWN                         PollingOnlyComputationType_Value = "UNKNOWN"
+	PollingOnlyComputationType_FREQUENCY_DOMAIN                      PollingOnlyComputationType_Value = "FREQUENCY_DOMAIN"
+	PollingOnlyComputationType_LTTB_SUMMARIZATION_STRATEGY           PollingOnlyComputationType_Value = "LTTB_SUMMARIZATION_STRATEGY"
+	PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY           PollingOnlyComputationType_Value = "PAGE_SUMMARIZATION_STRATEGY"
+	PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY       PollingOnlyComputationType_Value = "TRUNCATE_SUMMARIZATION_STRATEGY"
+	PollingOnlyComputationType_LARGEST_TRIANGLE_THREE_BUCKETS_SERIES PollingOnlyComputationType_Value = "LARGEST_TRIANGLE_THREE_BUCKETS_SERIES"
+	PollingOnlyComputationType_LOG_SERIES                            PollingOnlyComputationType_Value = "LOG_SERIES"
+	PollingOnlyComputationType_CURVE_FITTING                         PollingOnlyComputationType_Value = "CURVE_FITTING"
+	PollingOnlyComputationType_SIGNAL_FILTER                         PollingOnlyComputationType_Value = "SIGNAL_FILTER"
+	PollingOnlyComputationType_SCALAR_UDF                            PollingOnlyComputationType_Value = "SCALAR_UDF"
+	PollingOnlyComputationType_AGGREGATION_UDF                       PollingOnlyComputationType_Value = "AGGREGATION_UDF"
+	PollingOnlyComputationType_ARRAY                                 PollingOnlyComputationType_Value = "ARRAY"
+	PollingOnlyComputationType_STRUCT                                PollingOnlyComputationType_Value = "STRUCT"
+	PollingOnlyComputationType_UNKNOWN                               PollingOnlyComputationType_Value = "UNKNOWN"
 )
 
 // PollingOnlyComputationType_Values returns all known variants of PollingOnlyComputationType.
 func PollingOnlyComputationType_Values() []PollingOnlyComputationType_Value {
-	return []PollingOnlyComputationType_Value{PollingOnlyComputationType_FREQUENCY_DOMAIN, PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_LOG_SERIES, PollingOnlyComputationType_CURVE_FITTING, PollingOnlyComputationType_ARRAY, PollingOnlyComputationType_STRUCT}
+	return []PollingOnlyComputationType_Value{PollingOnlyComputationType_FREQUENCY_DOMAIN, PollingOnlyComputationType_LTTB_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_LARGEST_TRIANGLE_THREE_BUCKETS_SERIES, PollingOnlyComputationType_LOG_SERIES, PollingOnlyComputationType_CURVE_FITTING, PollingOnlyComputationType_SIGNAL_FILTER, PollingOnlyComputationType_SCALAR_UDF, PollingOnlyComputationType_AGGREGATION_UDF, PollingOnlyComputationType_ARRAY, PollingOnlyComputationType_STRUCT}
 }
 
 func New_PollingOnlyComputationType(value PollingOnlyComputationType_Value) PollingOnlyComputationType {
@@ -113,7 +136,7 @@ func New_PollingOnlyComputationType(value PollingOnlyComputationType_Value) Poll
 // IsUnknown returns false for all known variants of PollingOnlyComputationType and true otherwise.
 func (e PollingOnlyComputationType) IsUnknown() bool {
 	switch e.val {
-	case PollingOnlyComputationType_FREQUENCY_DOMAIN, PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_LOG_SERIES, PollingOnlyComputationType_CURVE_FITTING, PollingOnlyComputationType_ARRAY, PollingOnlyComputationType_STRUCT:
+	case PollingOnlyComputationType_FREQUENCY_DOMAIN, PollingOnlyComputationType_LTTB_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY, PollingOnlyComputationType_LARGEST_TRIANGLE_THREE_BUCKETS_SERIES, PollingOnlyComputationType_LOG_SERIES, PollingOnlyComputationType_CURVE_FITTING, PollingOnlyComputationType_SIGNAL_FILTER, PollingOnlyComputationType_SCALAR_UDF, PollingOnlyComputationType_AGGREGATION_UDF, PollingOnlyComputationType_ARRAY, PollingOnlyComputationType_STRUCT:
 		return false
 	}
 	return true
@@ -140,14 +163,24 @@ func (e *PollingOnlyComputationType) UnmarshalText(data []byte) error {
 		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_Value(v))
 	case "FREQUENCY_DOMAIN":
 		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_FREQUENCY_DOMAIN)
+	case "LTTB_SUMMARIZATION_STRATEGY":
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_LTTB_SUMMARIZATION_STRATEGY)
 	case "PAGE_SUMMARIZATION_STRATEGY":
 		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_PAGE_SUMMARIZATION_STRATEGY)
 	case "TRUNCATE_SUMMARIZATION_STRATEGY":
 		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_TRUNCATE_SUMMARIZATION_STRATEGY)
+	case "LARGEST_TRIANGLE_THREE_BUCKETS_SERIES":
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_LARGEST_TRIANGLE_THREE_BUCKETS_SERIES)
 	case "LOG_SERIES":
 		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_LOG_SERIES)
 	case "CURVE_FITTING":
 		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_CURVE_FITTING)
+	case "SIGNAL_FILTER":
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_SIGNAL_FILTER)
+	case "SCALAR_UDF":
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_SCALAR_UDF)
+	case "AGGREGATION_UDF":
+		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_AGGREGATION_UDF)
 	case "ARRAY":
 		*e = New_PollingOnlyComputationType(PollingOnlyComputationType_ARRAY)
 	case "STRUCT":

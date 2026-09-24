@@ -268,6 +268,7 @@ type RecordsBatchExternal struct {
 	Channel api.Channel                  `json:"channel" safelogging:"@Unsafe"`
 	Tags    map[api.TagName]api.TagValue `json:"tags"`
 	Points  PointsExternal               `json:"points"`
+	Unit    *api.Unit                    `json:"unit,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o RecordsBatchExternal) MarshalJSON() ([]byte, error) {
@@ -513,6 +514,7 @@ func (o *WriteBatchesRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type WriteBatchesRequestExternal struct {
 	Batches       []RecordsBatchExternal             `json:"batches"`
 	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid" safelogging:"@Safe"`
@@ -522,6 +524,8 @@ type WriteBatchesRequestExternal struct {
 	   Deprecated: Should not be used.
 	*/
 	AsynchronousInsert *bool `json:"asynchronousInsert,omitempty"`
+	// Optional client-provided session name identifier for tracing the origin of a write request.
+	SessionName *string `json:"sessionName,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o WriteBatchesRequestExternal) MarshalJSON() ([]byte, error) {
@@ -561,11 +565,14 @@ func (o *WriteBatchesRequestExternal) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type WriteColumnBatchesRequest struct {
 	// Batches of columnar data to stream to Nominal. Each channel's data are provided as a column batch.
 	Batches []ColumnBatch `json:"batches"`
 	// RID of the datasource (e.g., for a Connection) or dataset to stream data into.
 	DataSourceRid rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid" safelogging:"@Safe"`
+	// Optional client-provided session name identifier for tracing the origin of a write request.
+	SessionName *string `json:"sessionName,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o WriteColumnBatchesRequest) MarshalJSON() ([]byte, error) {

@@ -62,3 +62,64 @@ func (e *OktaRegistrationStatus) UnmarshalText(data []byte) error {
 	}
 	return nil
 }
+
+/*
+Which sandbox workspace to create a token for. Each has its own service user, so
+the two values are two user identities in the same sandbox org.
+*/
+type SandboxWorkspace struct {
+	val SandboxWorkspace_Value
+}
+
+type SandboxWorkspace_Value string
+
+const (
+	SandboxWorkspace_PRIMARY   SandboxWorkspace_Value = "PRIMARY"
+	SandboxWorkspace_SECONDARY SandboxWorkspace_Value = "SECONDARY"
+	SandboxWorkspace_UNKNOWN   SandboxWorkspace_Value = "UNKNOWN"
+)
+
+// SandboxWorkspace_Values returns all known variants of SandboxWorkspace.
+func SandboxWorkspace_Values() []SandboxWorkspace_Value {
+	return []SandboxWorkspace_Value{SandboxWorkspace_PRIMARY, SandboxWorkspace_SECONDARY}
+}
+
+func New_SandboxWorkspace(value SandboxWorkspace_Value) SandboxWorkspace {
+	return SandboxWorkspace{val: value}
+}
+
+// IsUnknown returns false for all known variants of SandboxWorkspace and true otherwise.
+func (e SandboxWorkspace) IsUnknown() bool {
+	switch e.val {
+	case SandboxWorkspace_PRIMARY, SandboxWorkspace_SECONDARY:
+		return false
+	}
+	return true
+}
+
+func (e SandboxWorkspace) Value() SandboxWorkspace_Value {
+	if e.IsUnknown() {
+		return SandboxWorkspace_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SandboxWorkspace) String() string {
+	return string(e.val)
+}
+
+func (e SandboxWorkspace) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SandboxWorkspace) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SandboxWorkspace(SandboxWorkspace_Value(v))
+	case "PRIMARY":
+		*e = New_SandboxWorkspace(SandboxWorkspace_PRIMARY)
+	case "SECONDARY":
+		*e = New_SandboxWorkspace(SandboxWorkspace_SECONDARY)
+	}
+	return nil
+}

@@ -16,7 +16,7 @@ type CreateNominalDataSourceRequest struct {
 	Id          NominalDataSourceId `json:"id" safelogging:"@Unsafe"`
 	Description *string             `json:"description,omitempty"`
 	/*
-	   Specifies the timestamp granularity of the datasource (i.e., picosecond or nanosecond scale).
+	   Specifies the timestamp granularity of the datasource.
 	   Defaults to nanosecond granularity.
 	*/
 	Granularity              *api.Granularity `json:"granularity,omitempty"`

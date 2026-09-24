@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/palantir/pkg/safejson"
+	"github.com/palantir/pkg/safelong"
 	"github.com/palantir/pkg/safeyaml"
 )
 
@@ -369,21 +370,23 @@ type ColumnValues struct {
 	strings *[]string
 	doubles *[]float64
 	ints    *[]int
+	uint64s *[]safelong.SafeLong
 	arrays  *ArraysValues
 	structs *[]string
 }
 
 type columnValuesDeserializer struct {
-	Type    string        `json:"type"`
-	Strings *[]string     `json:"strings"`
-	Doubles *[]float64    `json:"doubles"`
-	Ints    *[]int        `json:"ints"`
-	Arrays  *ArraysValues `json:"arrays"`
-	Structs *[]string     `json:"structs"`
+	Type    string               `json:"type"`
+	Strings *[]string            `json:"strings"`
+	Doubles *[]float64           `json:"doubles"`
+	Ints    *[]int               `json:"ints"`
+	Uint64s *[]safelong.SafeLong `json:"uint64s"`
+	Arrays  *ArraysValues        `json:"arrays"`
+	Structs *[]string            `json:"structs"`
 }
 
 func (u *columnValuesDeserializer) toStruct() ColumnValues {
-	return ColumnValues{typ: u.Type, strings: u.Strings, doubles: u.Doubles, ints: u.Ints, arrays: u.Arrays, structs: u.Structs}
+	return ColumnValues{typ: u.Type, strings: u.Strings, doubles: u.Doubles, ints: u.Ints, uint64s: u.Uint64s, arrays: u.Arrays, structs: u.Structs}
 }
 
 func (u *ColumnValues) toSerializer() (interface{}, error) {
@@ -414,6 +417,14 @@ func (u *ColumnValues) toSerializer() (interface{}, error) {
 			Type string `json:"type"`
 			Ints []int  `json:"ints"`
 		}{Type: "ints", Ints: *u.ints}, nil
+	case "uint64s":
+		if u.uint64s == nil {
+			return nil, fmt.Errorf("field \"uint64s\" is required")
+		}
+		return struct {
+			Type    string              `json:"type"`
+			Uint64s []safelong.SafeLong `json:"uint64s"`
+		}{Type: "uint64s", Uint64s: *u.uint64s}, nil
 	case "arrays":
 		if u.arrays == nil {
 			return nil, fmt.Errorf("field \"arrays\" is required")
@@ -460,6 +471,10 @@ func (u *ColumnValues) UnmarshalJSON(data []byte) error {
 		if u.ints == nil {
 			return fmt.Errorf("field \"ints\" is required")
 		}
+	case "uint64s":
+		if u.uint64s == nil {
+			return fmt.Errorf("field \"uint64s\" is required")
+		}
 	case "arrays":
 		if u.arrays == nil {
 			return fmt.Errorf("field \"arrays\" is required")
@@ -488,7 +503,7 @@ func (u *ColumnValues) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ColumnValues) AcceptFuncs(stringsFunc func([]string) error, doublesFunc func([]float64) error, intsFunc func([]int) error, arraysFunc func(ArraysValues) error, structsFunc func([]string) error, unknownFunc func(string) error) error {
+func (u *ColumnValues) AcceptFuncs(stringsFunc func([]string) error, doublesFunc func([]float64) error, intsFunc func([]int) error, uint64sFunc func([]safelong.SafeLong) error, arraysFunc func(ArraysValues) error, structsFunc func([]string) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -510,6 +525,11 @@ func (u *ColumnValues) AcceptFuncs(stringsFunc func([]string) error, doublesFunc
 			return fmt.Errorf("field \"ints\" is required")
 		}
 		return intsFunc(*u.ints)
+	case "uint64s":
+		if u.uint64s == nil {
+			return fmt.Errorf("field \"uint64s\" is required")
+		}
+		return uint64sFunc(*u.uint64s)
 	case "arrays":
 		if u.arrays == nil {
 			return fmt.Errorf("field \"arrays\" is required")
@@ -532,6 +552,10 @@ func (u *ColumnValues) DoublesNoopSuccess(_ []float64) error {
 }
 
 func (u *ColumnValues) IntsNoopSuccess(_ []int) error {
+	return nil
+}
+
+func (u *ColumnValues) Uint64sNoopSuccess(_ []safelong.SafeLong) error {
 	return nil
 }
 
@@ -569,6 +593,11 @@ func (u *ColumnValues) Accept(v ColumnValuesVisitor) error {
 			return fmt.Errorf("field \"ints\" is required")
 		}
 		return v.VisitInts(*u.ints)
+	case "uint64s":
+		if u.uint64s == nil {
+			return fmt.Errorf("field \"uint64s\" is required")
+		}
+		return v.VisitUint64s(*u.uint64s)
 	case "arrays":
 		if u.arrays == nil {
 			return fmt.Errorf("field \"arrays\" is required")
@@ -586,6 +615,7 @@ type ColumnValuesVisitor interface {
 	VisitStrings(v []string) error
 	VisitDoubles(v []float64) error
 	VisitInts(v []int) error
+	VisitUint64s(v []safelong.SafeLong) error
 	VisitArrays(v ArraysValues) error
 	VisitStructs(v []string) error
 	VisitUnknown(typeName string) error
@@ -613,6 +643,11 @@ func (u *ColumnValues) AcceptWithContext(ctx context.Context, v ColumnValuesVisi
 			return fmt.Errorf("field \"ints\" is required")
 		}
 		return v.VisitIntsWithContext(ctx, *u.ints)
+	case "uint64s":
+		if u.uint64s == nil {
+			return fmt.Errorf("field \"uint64s\" is required")
+		}
+		return v.VisitUint64sWithContext(ctx, *u.uint64s)
 	case "arrays":
 		if u.arrays == nil {
 			return fmt.Errorf("field \"arrays\" is required")
@@ -630,6 +665,7 @@ type ColumnValuesVisitorWithContext interface {
 	VisitStringsWithContext(ctx context.Context, v []string) error
 	VisitDoublesWithContext(ctx context.Context, v []float64) error
 	VisitIntsWithContext(ctx context.Context, v []int) error
+	VisitUint64sWithContext(ctx context.Context, v []safelong.SafeLong) error
 	VisitArraysWithContext(ctx context.Context, v ArraysValues) error
 	VisitStructsWithContext(ctx context.Context, v []string) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
@@ -645,6 +681,10 @@ func NewColumnValuesFromDoubles(v []float64) ColumnValues {
 
 func NewColumnValuesFromInts(v []int) ColumnValues {
 	return ColumnValues{typ: "ints", ints: &v}
+}
+
+func NewColumnValuesFromUint64s(v []safelong.SafeLong) ColumnValues {
+	return ColumnValues{typ: "uint64s", uint64s: &v}
 }
 
 func NewColumnValuesFromArrays(v ArraysValues) ColumnValues {
@@ -1033,6 +1073,7 @@ type PointsExternal struct {
 	string  *[]StringPoint
 	double  *[]DoublePoint
 	int     *[]IntPoint
+	uint64  *[]Uint64Point
 	array   *ArrayPoints
 	struct_ *[]StructPoint
 }
@@ -1042,12 +1083,13 @@ type pointsExternalDeserializer struct {
 	String *[]StringPoint `json:"string"`
 	Double *[]DoublePoint `json:"double"`
 	Int    *[]IntPoint    `json:"int"`
+	Uint64 *[]Uint64Point `json:"uint64"`
 	Array  *ArrayPoints   `json:"array"`
 	Struct *[]StructPoint `json:"struct"`
 }
 
 func (u *pointsExternalDeserializer) toStruct() PointsExternal {
-	return PointsExternal{typ: u.Type, string: u.String, double: u.Double, int: u.Int, array: u.Array, struct_: u.Struct}
+	return PointsExternal{typ: u.Type, string: u.String, double: u.Double, int: u.Int, uint64: u.Uint64, array: u.Array, struct_: u.Struct}
 }
 
 func (u *PointsExternal) toSerializer() (interface{}, error) {
@@ -1078,6 +1120,14 @@ func (u *PointsExternal) toSerializer() (interface{}, error) {
 			Type string     `json:"type"`
 			Int  []IntPoint `json:"int"`
 		}{Type: "int", Int: *u.int}, nil
+	case "uint64":
+		if u.uint64 == nil {
+			return nil, fmt.Errorf("field \"uint64\" is required")
+		}
+		return struct {
+			Type   string        `json:"type"`
+			Uint64 []Uint64Point `json:"uint64"`
+		}{Type: "uint64", Uint64: *u.uint64}, nil
 	case "array":
 		if u.array == nil {
 			return nil, fmt.Errorf("field \"array\" is required")
@@ -1124,6 +1174,10 @@ func (u *PointsExternal) UnmarshalJSON(data []byte) error {
 		if u.int == nil {
 			return fmt.Errorf("field \"int\" is required")
 		}
+	case "uint64":
+		if u.uint64 == nil {
+			return fmt.Errorf("field \"uint64\" is required")
+		}
 	case "array":
 		if u.array == nil {
 			return fmt.Errorf("field \"array\" is required")
@@ -1152,7 +1206,7 @@ func (u *PointsExternal) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *PointsExternal) AcceptFuncs(stringFunc func([]StringPoint) error, doubleFunc func([]DoublePoint) error, intFunc func([]IntPoint) error, arrayFunc func(ArrayPoints) error, struct_Func func([]StructPoint) error, unknownFunc func(string) error) error {
+func (u *PointsExternal) AcceptFuncs(stringFunc func([]StringPoint) error, doubleFunc func([]DoublePoint) error, intFunc func([]IntPoint) error, uint64Func func([]Uint64Point) error, arrayFunc func(ArrayPoints) error, struct_Func func([]StructPoint) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1174,6 +1228,11 @@ func (u *PointsExternal) AcceptFuncs(stringFunc func([]StringPoint) error, doubl
 			return fmt.Errorf("field \"int\" is required")
 		}
 		return intFunc(*u.int)
+	case "uint64":
+		if u.uint64 == nil {
+			return fmt.Errorf("field \"uint64\" is required")
+		}
+		return uint64Func(*u.uint64)
 	case "array":
 		if u.array == nil {
 			return fmt.Errorf("field \"array\" is required")
@@ -1196,6 +1255,10 @@ func (u *PointsExternal) DoubleNoopSuccess(_ []DoublePoint) error {
 }
 
 func (u *PointsExternal) IntNoopSuccess(_ []IntPoint) error {
+	return nil
+}
+
+func (u *PointsExternal) Uint64NoopSuccess(_ []Uint64Point) error {
 	return nil
 }
 
@@ -1233,6 +1296,11 @@ func (u *PointsExternal) Accept(v PointsExternalVisitor) error {
 			return fmt.Errorf("field \"int\" is required")
 		}
 		return v.VisitInt(*u.int)
+	case "uint64":
+		if u.uint64 == nil {
+			return fmt.Errorf("field \"uint64\" is required")
+		}
+		return v.VisitUint64(*u.uint64)
 	case "array":
 		if u.array == nil {
 			return fmt.Errorf("field \"array\" is required")
@@ -1250,6 +1318,7 @@ type PointsExternalVisitor interface {
 	VisitString(v []StringPoint) error
 	VisitDouble(v []DoublePoint) error
 	VisitInt(v []IntPoint) error
+	VisitUint64(v []Uint64Point) error
 	VisitArray(v ArrayPoints) error
 	VisitStruct(v []StructPoint) error
 	VisitUnknown(typeName string) error
@@ -1277,6 +1346,11 @@ func (u *PointsExternal) AcceptWithContext(ctx context.Context, v PointsExternal
 			return fmt.Errorf("field \"int\" is required")
 		}
 		return v.VisitIntWithContext(ctx, *u.int)
+	case "uint64":
+		if u.uint64 == nil {
+			return fmt.Errorf("field \"uint64\" is required")
+		}
+		return v.VisitUint64WithContext(ctx, *u.uint64)
 	case "array":
 		if u.array == nil {
 			return fmt.Errorf("field \"array\" is required")
@@ -1294,6 +1368,7 @@ type PointsExternalVisitorWithContext interface {
 	VisitStringWithContext(ctx context.Context, v []StringPoint) error
 	VisitDoubleWithContext(ctx context.Context, v []DoublePoint) error
 	VisitIntWithContext(ctx context.Context, v []IntPoint) error
+	VisitUint64WithContext(ctx context.Context, v []Uint64Point) error
 	VisitArrayWithContext(ctx context.Context, v ArrayPoints) error
 	VisitStructWithContext(ctx context.Context, v []StructPoint) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
@@ -1309,6 +1384,10 @@ func NewPointsExternalFromDouble(v []DoublePoint) PointsExternal {
 
 func NewPointsExternalFromInt(v []IntPoint) PointsExternal {
 	return PointsExternal{typ: "int", int: &v}
+}
+
+func NewPointsExternalFromUint64(v []Uint64Point) PointsExternal {
+	return PointsExternal{typ: "uint64", uint64: &v}
 }
 
 func NewPointsExternalFromArray(v ArrayPoints) PointsExternal {

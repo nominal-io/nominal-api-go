@@ -263,6 +263,65 @@ func (o *BigQueryLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+This request changes the nominal data type used for one channel in one data source.
+The operator is expected to be a workspace admin for the workspace containing the data source.
+The request includes the expected current type so retries and stale caller intent fail visibly.
+*/
+// safelogging:@Unsafe
+type ChangeDataTypeRequest struct {
+	// Identifies the data source whose channel metadata should be changed.
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
+	// Identifies the channel name within the data source.
+	Channel api.Channel `json:"channel" safelogging:"@Unsafe"`
+	// Provides the exact nominal type the caller expects to be stored in the locator before the change.
+	ExpectedCurrentType api2.NominalDataType `json:"expectedCurrentType"`
+	// Provides the exact nominal type future series resolution should use.
+	NewType api2.NominalDataType `json:"newType"`
+}
+
+func (o ChangeDataTypeRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ChangeDataTypeRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// This response identifies the series metadata row and nominal types from the applied change.
+type ChangeDataTypeResponse struct {
+	// Identifies the series metadata row being changed.
+	SeriesMetadataRid api.SeriesMetadataRid `json:"seriesMetadataRid" safelogging:"@Safe"`
+	// Reports the exact nominal type read from the existing locator.
+	OldType api2.NominalDataType `json:"oldType"`
+	// Reports the exact nominal type requested by the caller.
+	NewType api2.NominalDataType `json:"newType"`
+}
+
+func (o ChangeDataTypeResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ChangeDataTypeResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Unsafe
 type CreateSeriesMetadataRequest struct {
 	/*
@@ -274,6 +333,8 @@ type CreateSeriesMetadataRequest struct {
 	Locator       LocatorTemplate    `json:"locator"`
 	Unit          *api.Unit          `json:"unit,omitempty" safelogging:"@Unsafe"`
 	Description   *string            `json:"description,omitempty"`
+	// Classifies how the channel is used. Omitted values default to STANDARD.
+	ChannelKind *api.ChannelKind `json:"channelKind,omitempty"`
 	/*
 	   Tags specified here will take precedence over tags specified in the RunDatasource, in the case that both specify the same TagName.
 
@@ -476,6 +537,8 @@ type SeriesMetadata struct {
 	*/
 	Tags           map[api.TagName]api.TagValue `json:"tags"`
 	SeriesDataType *api.SeriesDataType          `json:"seriesDataType,omitempty"`
+	// Classifies how the channel is used. Omitted values should be treated as STANDARD.
+	ChannelKind *api.ChannelKind `json:"channelKind,omitempty"`
 }
 
 func (o SeriesMetadata) MarshalJSON() ([]byte, error) {
@@ -508,6 +571,27 @@ func (o SeriesMetadata) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SeriesMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type SpatialLocatorTemplate struct {
+	Channel api.Channel `json:"channel" safelogging:"@Unsafe"`
+}
+
+func (o SpatialLocatorTemplate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpatialLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -594,6 +678,8 @@ type UpdateSeriesMetadataRequest struct {
 	Unit        *api.Unit        `json:"unit,omitempty" safelogging:"@Unsafe"`
 	UnitUpdate  *api1.UnitUpdate `json:"unitUpdate,omitempty"`
 	Description *string          `json:"description,omitempty"`
+	// Updates the channel kind. Omitted values preserve the current setting.
+	ChannelKind *api.ChannelKind `json:"channelKind,omitempty"`
 }
 
 func (o UpdateSeriesMetadataRequest) MarshalYAML() (interface{}, error) {

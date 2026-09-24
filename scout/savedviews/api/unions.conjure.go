@@ -7,10 +7,12 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/event"
-	api1 "github.com/nominal-io/nominal-api-go/scout/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/nominal-io/nominal-api-go/scout/run/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/versioning/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -633,6 +635,978 @@ func NewMetricColumnsFromAsset(v AssetMetricColumns) MetricColumns {
 	return MetricColumns{typ: "asset", asset: &v}
 }
 
+type ProcedureExecutionSearchQuery struct {
+	typ            string
+	searchText     *string
+	label          *api1.Label
+	property       *api1.Property
+	and            *[]ProcedureExecutionSearchQuery
+	or             *[]ProcedureExecutionSearchQuery
+	workspace      *rids.WorkspaceRid
+	procedureRid   *rids.ProcedureRid
+	commitId       *api2.CommitId
+	createdBy      *api3.UserRid
+	progressStatus *ProcedureExecutionProgressStatus
+	assetsFilter   *ProcedureExecutionAssetsFilter
+	isArchived     *bool
+}
+
+type procedureExecutionSearchQueryDeserializer struct {
+	Type           string                            `json:"type"`
+	SearchText     *string                           `json:"searchText"`
+	Label          *api1.Label                       `json:"label"`
+	Property       *api1.Property                    `json:"property"`
+	And            *[]ProcedureExecutionSearchQuery  `json:"and"`
+	Or             *[]ProcedureExecutionSearchQuery  `json:"or"`
+	Workspace      *rids.WorkspaceRid                `json:"workspace"`
+	ProcedureRid   *rids.ProcedureRid                `json:"procedureRid"`
+	CommitId       *api2.CommitId                    `json:"commitId"`
+	CreatedBy      *api3.UserRid                     `json:"createdBy"`
+	ProgressStatus *ProcedureExecutionProgressStatus `json:"progressStatus"`
+	AssetsFilter   *ProcedureExecutionAssetsFilter   `json:"assetsFilter"`
+	IsArchived     *bool                             `json:"isArchived"`
+}
+
+func (u *procedureExecutionSearchQueryDeserializer) toStruct() ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: u.Type, searchText: u.SearchText, label: u.Label, property: u.Property, and: u.And, or: u.Or, workspace: u.Workspace, procedureRid: u.ProcedureRid, commitId: u.CommitId, createdBy: u.CreatedBy, progressStatus: u.ProgressStatus, assetsFilter: u.AssetsFilter, isArchived: u.IsArchived}
+}
+
+func (u *ProcedureExecutionSearchQuery) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return nil, fmt.Errorf("field \"searchText\" is required")
+		}
+		return struct {
+			Type       string `json:"type"`
+			SearchText string `json:"searchText"`
+		}{Type: "searchText", SearchText: *u.searchText}, nil
+	case "label":
+		if u.label == nil {
+			return nil, fmt.Errorf("field \"label\" is required")
+		}
+		return struct {
+			Type  string     `json:"type"`
+			Label api1.Label `json:"label"`
+		}{Type: "label", Label: *u.label}, nil
+	case "property":
+		if u.property == nil {
+			return nil, fmt.Errorf("field \"property\" is required")
+		}
+		return struct {
+			Type     string        `json:"type"`
+			Property api1.Property `json:"property"`
+		}{Type: "property", Property: *u.property}, nil
+	case "and":
+		if u.and == nil {
+			return nil, fmt.Errorf("field \"and\" is required")
+		}
+		return struct {
+			Type string                          `json:"type"`
+			And  []ProcedureExecutionSearchQuery `json:"and"`
+		}{Type: "and", And: *u.and}, nil
+	case "or":
+		if u.or == nil {
+			return nil, fmt.Errorf("field \"or\" is required")
+		}
+		return struct {
+			Type string                          `json:"type"`
+			Or   []ProcedureExecutionSearchQuery `json:"or"`
+		}{Type: "or", Or: *u.or}, nil
+	case "workspace":
+		if u.workspace == nil {
+			return nil, fmt.Errorf("field \"workspace\" is required")
+		}
+		return struct {
+			Type      string            `json:"type"`
+			Workspace rids.WorkspaceRid `json:"workspace"`
+		}{Type: "workspace", Workspace: *u.workspace}, nil
+	case "procedureRid":
+		if u.procedureRid == nil {
+			return nil, fmt.Errorf("field \"procedureRid\" is required")
+		}
+		return struct {
+			Type         string            `json:"type"`
+			ProcedureRid rids.ProcedureRid `json:"procedureRid"`
+		}{Type: "procedureRid", ProcedureRid: *u.procedureRid}, nil
+	case "commitId":
+		if u.commitId == nil {
+			return nil, fmt.Errorf("field \"commitId\" is required")
+		}
+		return struct {
+			Type     string        `json:"type"`
+			CommitId api2.CommitId `json:"commitId"`
+		}{Type: "commitId", CommitId: *u.commitId}, nil
+	case "createdBy":
+		if u.createdBy == nil {
+			return nil, fmt.Errorf("field \"createdBy\" is required")
+		}
+		return struct {
+			Type      string       `json:"type"`
+			CreatedBy api3.UserRid `json:"createdBy"`
+		}{Type: "createdBy", CreatedBy: *u.createdBy}, nil
+	case "progressStatus":
+		if u.progressStatus == nil {
+			return nil, fmt.Errorf("field \"progressStatus\" is required")
+		}
+		return struct {
+			Type           string                           `json:"type"`
+			ProgressStatus ProcedureExecutionProgressStatus `json:"progressStatus"`
+		}{Type: "progressStatus", ProgressStatus: *u.progressStatus}, nil
+	case "assetsFilter":
+		if u.assetsFilter == nil {
+			return nil, fmt.Errorf("field \"assetsFilter\" is required")
+		}
+		return struct {
+			Type         string                         `json:"type"`
+			AssetsFilter ProcedureExecutionAssetsFilter `json:"assetsFilter"`
+		}{Type: "assetsFilter", AssetsFilter: *u.assetsFilter}, nil
+	case "isArchived":
+		if u.isArchived == nil {
+			return nil, fmt.Errorf("field \"isArchived\" is required")
+		}
+		return struct {
+			Type       string `json:"type"`
+			IsArchived bool   `json:"isArchived"`
+		}{Type: "isArchived", IsArchived: *u.isArchived}, nil
+	}
+}
+
+func (u ProcedureExecutionSearchQuery) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ProcedureExecutionSearchQuery) UnmarshalJSON(data []byte) error {
+	var deser procedureExecutionSearchQueryDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+	case "procedureRid":
+		if u.procedureRid == nil {
+			return fmt.Errorf("field \"procedureRid\" is required")
+		}
+	case "commitId":
+		if u.commitId == nil {
+			return fmt.Errorf("field \"commitId\" is required")
+		}
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+	case "progressStatus":
+		if u.progressStatus == nil {
+			return fmt.Errorf("field \"progressStatus\" is required")
+		}
+	case "assetsFilter":
+		if u.assetsFilter == nil {
+			return fmt.Errorf("field \"assetsFilter\" is required")
+		}
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ProcedureExecutionSearchQuery) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ProcedureExecutionSearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ProcedureExecutionSearchQuery) AcceptFuncs(searchTextFunc func(string) error, labelFunc func(api1.Label) error, propertyFunc func(api1.Property) error, andFunc func([]ProcedureExecutionSearchQuery) error, orFunc func([]ProcedureExecutionSearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, procedureRidFunc func(rids.ProcedureRid) error, commitIdFunc func(api2.CommitId) error, createdByFunc func(api3.UserRid) error, progressStatusFunc func(ProcedureExecutionProgressStatus) error, assetsFilterFunc func(ProcedureExecutionAssetsFilter) error, isArchivedFunc func(bool) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ProcedureExecutionSearchQuery type")
+		}
+		return unknownFunc(u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return searchTextFunc(*u.searchText)
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+		return labelFunc(*u.label)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return propertyFunc(*u.property)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return andFunc(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return orFunc(*u.or)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return workspaceFunc(*u.workspace)
+	case "procedureRid":
+		if u.procedureRid == nil {
+			return fmt.Errorf("field \"procedureRid\" is required")
+		}
+		return procedureRidFunc(*u.procedureRid)
+	case "commitId":
+		if u.commitId == nil {
+			return fmt.Errorf("field \"commitId\" is required")
+		}
+		return commitIdFunc(*u.commitId)
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+		return createdByFunc(*u.createdBy)
+	case "progressStatus":
+		if u.progressStatus == nil {
+			return fmt.Errorf("field \"progressStatus\" is required")
+		}
+		return progressStatusFunc(*u.progressStatus)
+	case "assetsFilter":
+		if u.assetsFilter == nil {
+			return fmt.Errorf("field \"assetsFilter\" is required")
+		}
+		return assetsFilterFunc(*u.assetsFilter)
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+		return isArchivedFunc(*u.isArchived)
+	}
+}
+
+func (u *ProcedureExecutionSearchQuery) SearchTextNoopSuccess(_ string) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) LabelNoopSuccess(_ api1.Label) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) PropertyNoopSuccess(_ api1.Property) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) AndNoopSuccess(_ []ProcedureExecutionSearchQuery) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) OrNoopSuccess(_ []ProcedureExecutionSearchQuery) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) ProcedureRidNoopSuccess(_ rids.ProcedureRid) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) CommitIdNoopSuccess(_ api2.CommitId) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) CreatedByNoopSuccess(_ api3.UserRid) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) ProgressStatusNoopSuccess(_ ProcedureExecutionProgressStatus) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) AssetsFilterNoopSuccess(_ ProcedureExecutionAssetsFilter) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) IsArchivedNoopSuccess(_ bool) error {
+	return nil
+}
+
+func (u *ProcedureExecutionSearchQuery) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ProcedureExecutionSearchQuery) Accept(v ProcedureExecutionSearchQueryVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchText(*u.searchText)
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+		return v.VisitLabel(*u.label)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitProperty(*u.property)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAnd(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOr(*u.or)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspace(*u.workspace)
+	case "procedureRid":
+		if u.procedureRid == nil {
+			return fmt.Errorf("field \"procedureRid\" is required")
+		}
+		return v.VisitProcedureRid(*u.procedureRid)
+	case "commitId":
+		if u.commitId == nil {
+			return fmt.Errorf("field \"commitId\" is required")
+		}
+		return v.VisitCommitId(*u.commitId)
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+		return v.VisitCreatedBy(*u.createdBy)
+	case "progressStatus":
+		if u.progressStatus == nil {
+			return fmt.Errorf("field \"progressStatus\" is required")
+		}
+		return v.VisitProgressStatus(*u.progressStatus)
+	case "assetsFilter":
+		if u.assetsFilter == nil {
+			return fmt.Errorf("field \"assetsFilter\" is required")
+		}
+		return v.VisitAssetsFilter(*u.assetsFilter)
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+		return v.VisitIsArchived(*u.isArchived)
+	}
+}
+
+type ProcedureExecutionSearchQueryVisitor interface {
+	VisitSearchText(v string) error
+	VisitLabel(v api1.Label) error
+	VisitProperty(v api1.Property) error
+	VisitAnd(v []ProcedureExecutionSearchQuery) error
+	VisitOr(v []ProcedureExecutionSearchQuery) error
+	VisitWorkspace(v rids.WorkspaceRid) error
+	VisitProcedureRid(v rids.ProcedureRid) error
+	VisitCommitId(v api2.CommitId) error
+	VisitCreatedBy(v api3.UserRid) error
+	VisitProgressStatus(v ProcedureExecutionProgressStatus) error
+	VisitAssetsFilter(v ProcedureExecutionAssetsFilter) error
+	VisitIsArchived(v bool) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ProcedureExecutionSearchQuery) AcceptWithContext(ctx context.Context, v ProcedureExecutionSearchQueryVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchTextWithContext(ctx, *u.searchText)
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+		return v.VisitLabelWithContext(ctx, *u.label)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAndWithContext(ctx, *u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOrWithContext(ctx, *u.or)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
+	case "procedureRid":
+		if u.procedureRid == nil {
+			return fmt.Errorf("field \"procedureRid\" is required")
+		}
+		return v.VisitProcedureRidWithContext(ctx, *u.procedureRid)
+	case "commitId":
+		if u.commitId == nil {
+			return fmt.Errorf("field \"commitId\" is required")
+		}
+		return v.VisitCommitIdWithContext(ctx, *u.commitId)
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+		return v.VisitCreatedByWithContext(ctx, *u.createdBy)
+	case "progressStatus":
+		if u.progressStatus == nil {
+			return fmt.Errorf("field \"progressStatus\" is required")
+		}
+		return v.VisitProgressStatusWithContext(ctx, *u.progressStatus)
+	case "assetsFilter":
+		if u.assetsFilter == nil {
+			return fmt.Errorf("field \"assetsFilter\" is required")
+		}
+		return v.VisitAssetsFilterWithContext(ctx, *u.assetsFilter)
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+		return v.VisitIsArchivedWithContext(ctx, *u.isArchived)
+	}
+}
+
+type ProcedureExecutionSearchQueryVisitorWithContext interface {
+	VisitSearchTextWithContext(ctx context.Context, v string) error
+	VisitLabelWithContext(ctx context.Context, v api1.Label) error
+	VisitPropertyWithContext(ctx context.Context, v api1.Property) error
+	VisitAndWithContext(ctx context.Context, v []ProcedureExecutionSearchQuery) error
+	VisitOrWithContext(ctx context.Context, v []ProcedureExecutionSearchQuery) error
+	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
+	VisitProcedureRidWithContext(ctx context.Context, v rids.ProcedureRid) error
+	VisitCommitIdWithContext(ctx context.Context, v api2.CommitId) error
+	VisitCreatedByWithContext(ctx context.Context, v api3.UserRid) error
+	VisitProgressStatusWithContext(ctx context.Context, v ProcedureExecutionProgressStatus) error
+	VisitAssetsFilterWithContext(ctx context.Context, v ProcedureExecutionAssetsFilter) error
+	VisitIsArchivedWithContext(ctx context.Context, v bool) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewProcedureExecutionSearchQueryFromSearchText(v string) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "searchText", searchText: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromLabel(v api1.Label) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "label", label: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromProperty(v api1.Property) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "property", property: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromAnd(v []ProcedureExecutionSearchQuery) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "and", and: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromOr(v []ProcedureExecutionSearchQuery) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "or", or: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromWorkspace(v rids.WorkspaceRid) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "workspace", workspace: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromProcedureRid(v rids.ProcedureRid) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "procedureRid", procedureRid: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromCommitId(v api2.CommitId) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "commitId", commitId: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromCreatedBy(v api3.UserRid) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "createdBy", createdBy: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromProgressStatus(v ProcedureExecutionProgressStatus) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "progressStatus", progressStatus: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromAssetsFilter(v ProcedureExecutionAssetsFilter) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "assetsFilter", assetsFilter: &v}
+}
+
+func NewProcedureExecutionSearchQueryFromIsArchived(v bool) ProcedureExecutionSearchQuery {
+	return ProcedureExecutionSearchQuery{typ: "isArchived", isArchived: &v}
+}
+
+type ProcedureSearchQuery struct {
+	typ        string
+	searchText *string
+	label      *api1.Label
+	property   *api1.Property
+	and        *[]ProcedureSearchQuery
+	or         *[]ProcedureSearchQuery
+	workspace  *rids.WorkspaceRid
+	createdBy  *api3.UserRid
+	isArchived *bool
+}
+
+type procedureSearchQueryDeserializer struct {
+	Type       string                  `json:"type"`
+	SearchText *string                 `json:"searchText"`
+	Label      *api1.Label             `json:"label"`
+	Property   *api1.Property          `json:"property"`
+	And        *[]ProcedureSearchQuery `json:"and"`
+	Or         *[]ProcedureSearchQuery `json:"or"`
+	Workspace  *rids.WorkspaceRid      `json:"workspace"`
+	CreatedBy  *api3.UserRid           `json:"createdBy"`
+	IsArchived *bool                   `json:"isArchived"`
+}
+
+func (u *procedureSearchQueryDeserializer) toStruct() ProcedureSearchQuery {
+	return ProcedureSearchQuery{typ: u.Type, searchText: u.SearchText, label: u.Label, property: u.Property, and: u.And, or: u.Or, workspace: u.Workspace, createdBy: u.CreatedBy, isArchived: u.IsArchived}
+}
+
+func (u *ProcedureSearchQuery) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return nil, fmt.Errorf("field \"searchText\" is required")
+		}
+		return struct {
+			Type       string `json:"type"`
+			SearchText string `json:"searchText"`
+		}{Type: "searchText", SearchText: *u.searchText}, nil
+	case "label":
+		if u.label == nil {
+			return nil, fmt.Errorf("field \"label\" is required")
+		}
+		return struct {
+			Type  string     `json:"type"`
+			Label api1.Label `json:"label"`
+		}{Type: "label", Label: *u.label}, nil
+	case "property":
+		if u.property == nil {
+			return nil, fmt.Errorf("field \"property\" is required")
+		}
+		return struct {
+			Type     string        `json:"type"`
+			Property api1.Property `json:"property"`
+		}{Type: "property", Property: *u.property}, nil
+	case "and":
+		if u.and == nil {
+			return nil, fmt.Errorf("field \"and\" is required")
+		}
+		return struct {
+			Type string                 `json:"type"`
+			And  []ProcedureSearchQuery `json:"and"`
+		}{Type: "and", And: *u.and}, nil
+	case "or":
+		if u.or == nil {
+			return nil, fmt.Errorf("field \"or\" is required")
+		}
+		return struct {
+			Type string                 `json:"type"`
+			Or   []ProcedureSearchQuery `json:"or"`
+		}{Type: "or", Or: *u.or}, nil
+	case "workspace":
+		if u.workspace == nil {
+			return nil, fmt.Errorf("field \"workspace\" is required")
+		}
+		return struct {
+			Type      string            `json:"type"`
+			Workspace rids.WorkspaceRid `json:"workspace"`
+		}{Type: "workspace", Workspace: *u.workspace}, nil
+	case "createdBy":
+		if u.createdBy == nil {
+			return nil, fmt.Errorf("field \"createdBy\" is required")
+		}
+		return struct {
+			Type      string       `json:"type"`
+			CreatedBy api3.UserRid `json:"createdBy"`
+		}{Type: "createdBy", CreatedBy: *u.createdBy}, nil
+	case "isArchived":
+		if u.isArchived == nil {
+			return nil, fmt.Errorf("field \"isArchived\" is required")
+		}
+		return struct {
+			Type       string `json:"type"`
+			IsArchived bool   `json:"isArchived"`
+		}{Type: "isArchived", IsArchived: *u.isArchived}, nil
+	}
+}
+
+func (u ProcedureSearchQuery) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ProcedureSearchQuery) UnmarshalJSON(data []byte) error {
+	var deser procedureSearchQueryDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ProcedureSearchQuery) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ProcedureSearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ProcedureSearchQuery) AcceptFuncs(searchTextFunc func(string) error, labelFunc func(api1.Label) error, propertyFunc func(api1.Property) error, andFunc func([]ProcedureSearchQuery) error, orFunc func([]ProcedureSearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, createdByFunc func(api3.UserRid) error, isArchivedFunc func(bool) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ProcedureSearchQuery type")
+		}
+		return unknownFunc(u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return searchTextFunc(*u.searchText)
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+		return labelFunc(*u.label)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return propertyFunc(*u.property)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return andFunc(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return orFunc(*u.or)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return workspaceFunc(*u.workspace)
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+		return createdByFunc(*u.createdBy)
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+		return isArchivedFunc(*u.isArchived)
+	}
+}
+
+func (u *ProcedureSearchQuery) SearchTextNoopSuccess(_ string) error {
+	return nil
+}
+
+func (u *ProcedureSearchQuery) LabelNoopSuccess(_ api1.Label) error {
+	return nil
+}
+
+func (u *ProcedureSearchQuery) PropertyNoopSuccess(_ api1.Property) error {
+	return nil
+}
+
+func (u *ProcedureSearchQuery) AndNoopSuccess(_ []ProcedureSearchQuery) error {
+	return nil
+}
+
+func (u *ProcedureSearchQuery) OrNoopSuccess(_ []ProcedureSearchQuery) error {
+	return nil
+}
+
+func (u *ProcedureSearchQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
+	return nil
+}
+
+func (u *ProcedureSearchQuery) CreatedByNoopSuccess(_ api3.UserRid) error {
+	return nil
+}
+
+func (u *ProcedureSearchQuery) IsArchivedNoopSuccess(_ bool) error {
+	return nil
+}
+
+func (u *ProcedureSearchQuery) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ProcedureSearchQuery) Accept(v ProcedureSearchQueryVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchText(*u.searchText)
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+		return v.VisitLabel(*u.label)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitProperty(*u.property)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAnd(*u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOr(*u.or)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspace(*u.workspace)
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+		return v.VisitCreatedBy(*u.createdBy)
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+		return v.VisitIsArchived(*u.isArchived)
+	}
+}
+
+type ProcedureSearchQueryVisitor interface {
+	VisitSearchText(v string) error
+	VisitLabel(v api1.Label) error
+	VisitProperty(v api1.Property) error
+	VisitAnd(v []ProcedureSearchQuery) error
+	VisitOr(v []ProcedureSearchQuery) error
+	VisitWorkspace(v rids.WorkspaceRid) error
+	VisitCreatedBy(v api3.UserRid) error
+	VisitIsArchived(v bool) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ProcedureSearchQuery) AcceptWithContext(ctx context.Context, v ProcedureSearchQueryVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "searchText":
+		if u.searchText == nil {
+			return fmt.Errorf("field \"searchText\" is required")
+		}
+		return v.VisitSearchTextWithContext(ctx, *u.searchText)
+	case "label":
+		if u.label == nil {
+			return fmt.Errorf("field \"label\" is required")
+		}
+		return v.VisitLabelWithContext(ctx, *u.label)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitPropertyWithContext(ctx, *u.property)
+	case "and":
+		if u.and == nil {
+			return fmt.Errorf("field \"and\" is required")
+		}
+		return v.VisitAndWithContext(ctx, *u.and)
+	case "or":
+		if u.or == nil {
+			return fmt.Errorf("field \"or\" is required")
+		}
+		return v.VisitOrWithContext(ctx, *u.or)
+	case "workspace":
+		if u.workspace == nil {
+			return fmt.Errorf("field \"workspace\" is required")
+		}
+		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
+	case "createdBy":
+		if u.createdBy == nil {
+			return fmt.Errorf("field \"createdBy\" is required")
+		}
+		return v.VisitCreatedByWithContext(ctx, *u.createdBy)
+	case "isArchived":
+		if u.isArchived == nil {
+			return fmt.Errorf("field \"isArchived\" is required")
+		}
+		return v.VisitIsArchivedWithContext(ctx, *u.isArchived)
+	}
+}
+
+type ProcedureSearchQueryVisitorWithContext interface {
+	VisitSearchTextWithContext(ctx context.Context, v string) error
+	VisitLabelWithContext(ctx context.Context, v api1.Label) error
+	VisitPropertyWithContext(ctx context.Context, v api1.Property) error
+	VisitAndWithContext(ctx context.Context, v []ProcedureSearchQuery) error
+	VisitOrWithContext(ctx context.Context, v []ProcedureSearchQuery) error
+	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
+	VisitCreatedByWithContext(ctx context.Context, v api3.UserRid) error
+	VisitIsArchivedWithContext(ctx context.Context, v bool) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewProcedureSearchQueryFromSearchText(v string) ProcedureSearchQuery {
+	return ProcedureSearchQuery{typ: "searchText", searchText: &v}
+}
+
+func NewProcedureSearchQueryFromLabel(v api1.Label) ProcedureSearchQuery {
+	return ProcedureSearchQuery{typ: "label", label: &v}
+}
+
+func NewProcedureSearchQueryFromProperty(v api1.Property) ProcedureSearchQuery {
+	return ProcedureSearchQuery{typ: "property", property: &v}
+}
+
+func NewProcedureSearchQueryFromAnd(v []ProcedureSearchQuery) ProcedureSearchQuery {
+	return ProcedureSearchQuery{typ: "and", and: &v}
+}
+
+func NewProcedureSearchQueryFromOr(v []ProcedureSearchQuery) ProcedureSearchQuery {
+	return ProcedureSearchQuery{typ: "or", or: &v}
+}
+
+func NewProcedureSearchQueryFromWorkspace(v rids.WorkspaceRid) ProcedureSearchQuery {
+	return ProcedureSearchQuery{typ: "workspace", workspace: &v}
+}
+
+func NewProcedureSearchQueryFromCreatedBy(v api3.UserRid) ProcedureSearchQuery {
+	return ProcedureSearchQuery{typ: "createdBy", createdBy: &v}
+}
+
+func NewProcedureSearchQueryFromIsArchived(v bool) ProcedureSearchQuery {
+	return ProcedureSearchQuery{typ: "isArchived", isArchived: &v}
+}
+
 type SearchSavedViewsQuery struct {
 	typ                       string
 	and                       *SearchSavedViewsQueryList
@@ -964,25 +1938,29 @@ func NewSearchSavedViewsQueryFromWorkspace(v rids.WorkspaceRid) SearchSavedViews
 }
 
 type SearchState struct {
-	typ       string
-	asset     *AssetSearchState
-	run       *RunSearchState
-	checklist *ChecklistSearchState
-	workbook  *WorkbookSearchState
-	template  *TemplateSearchState
+	typ                string
+	asset              *AssetSearchState
+	run                *RunSearchState
+	checklist          *ChecklistSearchState
+	workbook           *WorkbookSearchState
+	template           *TemplateSearchState
+	procedure          *ProcedureSearchState
+	procedureExecution *ProcedureExecutionSearchState
 }
 
 type searchStateDeserializer struct {
-	Type      string                `json:"type"`
-	Asset     *AssetSearchState     `json:"asset"`
-	Run       *RunSearchState       `json:"run"`
-	Checklist *ChecklistSearchState `json:"checklist"`
-	Workbook  *WorkbookSearchState  `json:"workbook"`
-	Template  *TemplateSearchState  `json:"template"`
+	Type               string                         `json:"type"`
+	Asset              *AssetSearchState              `json:"asset"`
+	Run                *RunSearchState                `json:"run"`
+	Checklist          *ChecklistSearchState          `json:"checklist"`
+	Workbook           *WorkbookSearchState           `json:"workbook"`
+	Template           *TemplateSearchState           `json:"template"`
+	Procedure          *ProcedureSearchState          `json:"procedure"`
+	ProcedureExecution *ProcedureExecutionSearchState `json:"procedureExecution"`
 }
 
 func (u *searchStateDeserializer) toStruct() SearchState {
-	return SearchState{typ: u.Type, asset: u.Asset, run: u.Run, checklist: u.Checklist, workbook: u.Workbook, template: u.Template}
+	return SearchState{typ: u.Type, asset: u.Asset, run: u.Run, checklist: u.Checklist, workbook: u.Workbook, template: u.Template, procedure: u.Procedure, procedureExecution: u.ProcedureExecution}
 }
 
 func (u *SearchState) toSerializer() (interface{}, error) {
@@ -1029,6 +2007,22 @@ func (u *SearchState) toSerializer() (interface{}, error) {
 			Type     string              `json:"type"`
 			Template TemplateSearchState `json:"template"`
 		}{Type: "template", Template: *u.template}, nil
+	case "procedure":
+		if u.procedure == nil {
+			return nil, fmt.Errorf("field \"procedure\" is required")
+		}
+		return struct {
+			Type      string               `json:"type"`
+			Procedure ProcedureSearchState `json:"procedure"`
+		}{Type: "procedure", Procedure: *u.procedure}, nil
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return nil, fmt.Errorf("field \"procedureExecution\" is required")
+		}
+		return struct {
+			Type               string                        `json:"type"`
+			ProcedureExecution ProcedureExecutionSearchState `json:"procedureExecution"`
+		}{Type: "procedureExecution", ProcedureExecution: *u.procedureExecution}, nil
 	}
 }
 
@@ -1067,6 +2061,14 @@ func (u *SearchState) UnmarshalJSON(data []byte) error {
 		if u.template == nil {
 			return fmt.Errorf("field \"template\" is required")
 		}
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return fmt.Errorf("field \"procedureExecution\" is required")
+		}
 	}
 	return nil
 }
@@ -1087,7 +2089,7 @@ func (u *SearchState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchState) AcceptFuncs(assetFunc func(AssetSearchState) error, runFunc func(RunSearchState) error, checklistFunc func(ChecklistSearchState) error, workbookFunc func(WorkbookSearchState) error, templateFunc func(TemplateSearchState) error, unknownFunc func(string) error) error {
+func (u *SearchState) AcceptFuncs(assetFunc func(AssetSearchState) error, runFunc func(RunSearchState) error, checklistFunc func(ChecklistSearchState) error, workbookFunc func(WorkbookSearchState) error, templateFunc func(TemplateSearchState) error, procedureFunc func(ProcedureSearchState) error, procedureExecutionFunc func(ProcedureExecutionSearchState) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1119,6 +2121,16 @@ func (u *SearchState) AcceptFuncs(assetFunc func(AssetSearchState) error, runFun
 			return fmt.Errorf("field \"template\" is required")
 		}
 		return templateFunc(*u.template)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return procedureFunc(*u.procedure)
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return fmt.Errorf("field \"procedureExecution\" is required")
+		}
+		return procedureExecutionFunc(*u.procedureExecution)
 	}
 }
 
@@ -1139,6 +2151,14 @@ func (u *SearchState) WorkbookNoopSuccess(_ WorkbookSearchState) error {
 }
 
 func (u *SearchState) TemplateNoopSuccess(_ TemplateSearchState) error {
+	return nil
+}
+
+func (u *SearchState) ProcedureNoopSuccess(_ ProcedureSearchState) error {
+	return nil
+}
+
+func (u *SearchState) ProcedureExecutionNoopSuccess(_ ProcedureExecutionSearchState) error {
 	return nil
 }
 
@@ -1178,6 +2198,16 @@ func (u *SearchState) Accept(v SearchStateVisitor) error {
 			return fmt.Errorf("field \"template\" is required")
 		}
 		return v.VisitTemplate(*u.template)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return v.VisitProcedure(*u.procedure)
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return fmt.Errorf("field \"procedureExecution\" is required")
+		}
+		return v.VisitProcedureExecution(*u.procedureExecution)
 	}
 }
 
@@ -1187,6 +2217,8 @@ type SearchStateVisitor interface {
 	VisitChecklist(v ChecklistSearchState) error
 	VisitWorkbook(v WorkbookSearchState) error
 	VisitTemplate(v TemplateSearchState) error
+	VisitProcedure(v ProcedureSearchState) error
+	VisitProcedureExecution(v ProcedureExecutionSearchState) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1222,6 +2254,16 @@ func (u *SearchState) AcceptWithContext(ctx context.Context, v SearchStateVisito
 			return fmt.Errorf("field \"template\" is required")
 		}
 		return v.VisitTemplateWithContext(ctx, *u.template)
+	case "procedure":
+		if u.procedure == nil {
+			return fmt.Errorf("field \"procedure\" is required")
+		}
+		return v.VisitProcedureWithContext(ctx, *u.procedure)
+	case "procedureExecution":
+		if u.procedureExecution == nil {
+			return fmt.Errorf("field \"procedureExecution\" is required")
+		}
+		return v.VisitProcedureExecutionWithContext(ctx, *u.procedureExecution)
 	}
 }
 
@@ -1231,6 +2273,8 @@ type SearchStateVisitorWithContext interface {
 	VisitChecklistWithContext(ctx context.Context, v ChecklistSearchState) error
 	VisitWorkbookWithContext(ctx context.Context, v WorkbookSearchState) error
 	VisitTemplateWithContext(ctx context.Context, v TemplateSearchState) error
+	VisitProcedureWithContext(ctx context.Context, v ProcedureSearchState) error
+	VisitProcedureExecutionWithContext(ctx context.Context, v ProcedureExecutionSearchState) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1252,6 +2296,14 @@ func NewSearchStateFromWorkbook(v WorkbookSearchState) SearchState {
 
 func NewSearchStateFromTemplate(v TemplateSearchState) SearchState {
 	return SearchState{typ: "template", template: &v}
+}
+
+func NewSearchStateFromProcedure(v ProcedureSearchState) SearchState {
+	return SearchState{typ: "procedure", procedure: &v}
+}
+
+func NewSearchStateFromProcedureExecution(v ProcedureExecutionSearchState) SearchState {
+	return SearchState{typ: "procedureExecution", procedureExecution: &v}
 }
 
 type SortKey struct {
@@ -1391,14 +2443,14 @@ func NewSortKeyFromField(v SortField) SortKey {
 
 type UpdateColor struct {
 	typ        string
-	color      *api1.Color
-	clearColor *api2.Empty
+	color      *api4.Color
+	clearColor *api1.Empty
 }
 
 type updateColorDeserializer struct {
 	Type       string      `json:"type"`
-	Color      *api1.Color `json:"color"`
-	ClearColor *api2.Empty `json:"clearColor"`
+	Color      *api4.Color `json:"color"`
+	ClearColor *api1.Empty `json:"clearColor"`
 }
 
 func (u *updateColorDeserializer) toStruct() UpdateColor {
@@ -1415,7 +2467,7 @@ func (u *UpdateColor) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type  string     `json:"type"`
-			Color api1.Color `json:"color"`
+			Color api4.Color `json:"color"`
 		}{Type: "color", Color: *u.color}, nil
 	case "clearColor":
 		if u.clearColor == nil {
@@ -1423,7 +2475,7 @@ func (u *UpdateColor) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type       string     `json:"type"`
-			ClearColor api2.Empty `json:"clearColor"`
+			ClearColor api1.Empty `json:"clearColor"`
 		}{Type: "clearColor", ClearColor: *u.clearColor}, nil
 	}
 }
@@ -1471,7 +2523,7 @@ func (u *UpdateColor) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UpdateColor) AcceptFuncs(colorFunc func(api1.Color) error, clearColorFunc func(api2.Empty) error, unknownFunc func(string) error) error {
+func (u *UpdateColor) AcceptFuncs(colorFunc func(api4.Color) error, clearColorFunc func(api1.Empty) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1491,11 +2543,11 @@ func (u *UpdateColor) AcceptFuncs(colorFunc func(api1.Color) error, clearColorFu
 	}
 }
 
-func (u *UpdateColor) ColorNoopSuccess(_ api1.Color) error {
+func (u *UpdateColor) ColorNoopSuccess(_ api4.Color) error {
 	return nil
 }
 
-func (u *UpdateColor) ClearColorNoopSuccess(_ api2.Empty) error {
+func (u *UpdateColor) ClearColorNoopSuccess(_ api1.Empty) error {
 	return nil
 }
 
@@ -1524,8 +2576,8 @@ func (u *UpdateColor) Accept(v UpdateColorVisitor) error {
 }
 
 type UpdateColorVisitor interface {
-	VisitColor(v api1.Color) error
-	VisitClearColor(v api2.Empty) error
+	VisitColor(v api4.Color) error
+	VisitClearColor(v api1.Empty) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1550,29 +2602,29 @@ func (u *UpdateColor) AcceptWithContext(ctx context.Context, v UpdateColorVisito
 }
 
 type UpdateColorVisitorWithContext interface {
-	VisitColorWithContext(ctx context.Context, v api1.Color) error
-	VisitClearColorWithContext(ctx context.Context, v api2.Empty) error
+	VisitColorWithContext(ctx context.Context, v api4.Color) error
+	VisitClearColorWithContext(ctx context.Context, v api1.Empty) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewUpdateColorFromColor(v api1.Color) UpdateColor {
+func NewUpdateColorFromColor(v api4.Color) UpdateColor {
 	return UpdateColor{typ: "color", color: &v}
 }
 
-func NewUpdateColorFromClearColor(v api2.Empty) UpdateColor {
+func NewUpdateColorFromClearColor(v api1.Empty) UpdateColor {
 	return UpdateColor{typ: "clearColor", clearColor: &v}
 }
 
 type UpdateSymbol struct {
 	typ         string
-	symbol      *api1.Symbol
-	clearSymbol *api2.Empty
+	symbol      *api4.Symbol
+	clearSymbol *api1.Empty
 }
 
 type updateSymbolDeserializer struct {
 	Type        string       `json:"type"`
-	Symbol      *api1.Symbol `json:"symbol"`
-	ClearSymbol *api2.Empty  `json:"clearSymbol"`
+	Symbol      *api4.Symbol `json:"symbol"`
+	ClearSymbol *api1.Empty  `json:"clearSymbol"`
 }
 
 func (u *updateSymbolDeserializer) toStruct() UpdateSymbol {
@@ -1589,7 +2641,7 @@ func (u *UpdateSymbol) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type   string      `json:"type"`
-			Symbol api1.Symbol `json:"symbol"`
+			Symbol api4.Symbol `json:"symbol"`
 		}{Type: "symbol", Symbol: *u.symbol}, nil
 	case "clearSymbol":
 		if u.clearSymbol == nil {
@@ -1597,7 +2649,7 @@ func (u *UpdateSymbol) toSerializer() (interface{}, error) {
 		}
 		return struct {
 			Type        string     `json:"type"`
-			ClearSymbol api2.Empty `json:"clearSymbol"`
+			ClearSymbol api1.Empty `json:"clearSymbol"`
 		}{Type: "clearSymbol", ClearSymbol: *u.clearSymbol}, nil
 	}
 }
@@ -1645,7 +2697,7 @@ func (u *UpdateSymbol) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UpdateSymbol) AcceptFuncs(symbolFunc func(api1.Symbol) error, clearSymbolFunc func(api2.Empty) error, unknownFunc func(string) error) error {
+func (u *UpdateSymbol) AcceptFuncs(symbolFunc func(api4.Symbol) error, clearSymbolFunc func(api1.Empty) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1665,11 +2717,11 @@ func (u *UpdateSymbol) AcceptFuncs(symbolFunc func(api1.Symbol) error, clearSymb
 	}
 }
 
-func (u *UpdateSymbol) SymbolNoopSuccess(_ api1.Symbol) error {
+func (u *UpdateSymbol) SymbolNoopSuccess(_ api4.Symbol) error {
 	return nil
 }
 
-func (u *UpdateSymbol) ClearSymbolNoopSuccess(_ api2.Empty) error {
+func (u *UpdateSymbol) ClearSymbolNoopSuccess(_ api1.Empty) error {
 	return nil
 }
 
@@ -1698,8 +2750,8 @@ func (u *UpdateSymbol) Accept(v UpdateSymbolVisitor) error {
 }
 
 type UpdateSymbolVisitor interface {
-	VisitSymbol(v api1.Symbol) error
-	VisitClearSymbol(v api2.Empty) error
+	VisitSymbol(v api4.Symbol) error
+	VisitClearSymbol(v api1.Empty) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1724,15 +2776,15 @@ func (u *UpdateSymbol) AcceptWithContext(ctx context.Context, v UpdateSymbolVisi
 }
 
 type UpdateSymbolVisitorWithContext interface {
-	VisitSymbolWithContext(ctx context.Context, v api1.Symbol) error
-	VisitClearSymbolWithContext(ctx context.Context, v api2.Empty) error
+	VisitSymbolWithContext(ctx context.Context, v api4.Symbol) error
+	VisitClearSymbolWithContext(ctx context.Context, v api1.Empty) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewUpdateSymbolFromSymbol(v api1.Symbol) UpdateSymbol {
+func NewUpdateSymbolFromSymbol(v api4.Symbol) UpdateSymbol {
 	return UpdateSymbol{typ: "symbol", symbol: &v}
 }
 
-func NewUpdateSymbolFromClearSymbol(v api2.Empty) UpdateSymbol {
+func NewUpdateSymbolFromClearSymbol(v api1.Empty) UpdateSymbol {
 	return UpdateSymbol{typ: "clearSymbol", clearSymbol: &v}
 }

@@ -9,8 +9,8 @@ import (
 	"github.com/nominal-io/nominal-api-go/scout/asset/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/checks/api"
 	api7 "github.com/nominal-io/nominal-api-go/scout/notebook/api"
-	api4 "github.com/nominal-io/nominal-api-go/scout/rids/api"
-	api3 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	api6 "github.com/nominal-io/nominal-api-go/scout/template/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
@@ -364,11 +364,137 @@ func (o *MostRecentRun) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type ProcedureExecutionAssetsFilter struct {
+	AssetRids []api3.AssetRid      `json:"assetRids" safelogging:"@Safe"`
+	Operator  AssetsFilterOperator `json:"operator"`
+}
+
+func (o ProcedureExecutionAssetsFilter) MarshalJSON() ([]byte, error) {
+	if o.AssetRids == nil {
+		o.AssetRids = make([]api3.AssetRid, 0)
+	}
+	type _tmpProcedureExecutionAssetsFilter ProcedureExecutionAssetsFilter
+	return safejson.Marshal(_tmpProcedureExecutionAssetsFilter(o))
+}
+
+func (o *ProcedureExecutionAssetsFilter) UnmarshalJSON(data []byte) error {
+	type _tmpProcedureExecutionAssetsFilter ProcedureExecutionAssetsFilter
+	var rawProcedureExecutionAssetsFilter _tmpProcedureExecutionAssetsFilter
+	if err := safejson.Unmarshal(data, &rawProcedureExecutionAssetsFilter); err != nil {
+		return err
+	}
+	if rawProcedureExecutionAssetsFilter.AssetRids == nil {
+		rawProcedureExecutionAssetsFilter.AssetRids = make([]api3.AssetRid, 0)
+	}
+	*o = ProcedureExecutionAssetsFilter(rawProcedureExecutionAssetsFilter)
+	return nil
+}
+
+func (o ProcedureExecutionAssetsFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ProcedureExecutionAssetsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ProcedureExecutionSearchState struct {
+	Sort  *ProcedureExecutionSortOptions `json:"sort,omitempty"`
+	Query ProcedureExecutionSearchQuery  `json:"query"`
+}
+
+func (o ProcedureExecutionSearchState) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ProcedureExecutionSearchState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ProcedureExecutionSortOptions struct {
+	IsDescending *bool                       `json:"isDescending,omitempty"`
+	SortField    ProcedureExecutionSortField `json:"sortField"`
+}
+
+func (o ProcedureExecutionSortOptions) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ProcedureExecutionSortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ProcedureSearchState struct {
+	Sort  *ProcedureSortOptions `json:"sort,omitempty"`
+	Query ProcedureSearchQuery  `json:"query"`
+}
+
+func (o ProcedureSearchState) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ProcedureSearchState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ProcedureSortOptions struct {
+	IsDescending *bool               `json:"isDescending,omitempty"`
+	SortField    *ProcedureSortField `json:"sortField,omitempty"`
+}
+
+func (o ProcedureSortOptions) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ProcedureSortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Unsafe
 type RunSearchState struct {
-	Sort    *api3.SortOptions `json:"sort,omitempty"`
+	Sort    *api4.SortOptions `json:"sort,omitempty"`
 	GroupBy *[]ColumnId       `json:"groupBy,omitempty" safelogging:"@Unsafe"`
-	Query   api3.SearchQuery  `json:"query"`
+	Query   api4.SearchQuery  `json:"query"`
 }
 
 func (o RunSearchState) MarshalYAML() (interface{}, error) {
@@ -410,14 +536,14 @@ func (o *SavedView) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type SavedViewMetadata struct {
-	Rid          api4.SavedViewRid `json:"rid" safelogging:"@Safe"`
+	Rid          api3.SavedViewRid `json:"rid" safelogging:"@Safe"`
 	ResourceType ResourceType      `json:"resourceType"`
 	Title        string            `json:"title"`
 	Symbol       *api2.Symbol      `json:"symbol,omitempty"`
 	Color        *api2.Color       `json:"color,omitempty"`
 	IsArchived   bool              `json:"isArchived"`
 	CreatedAt    datetime.DateTime `json:"createdAt"`
-	CreatedBy    api4.UserRid      `json:"createdBy" safelogging:"@Safe"`
+	CreatedBy    api3.UserRid      `json:"createdBy" safelogging:"@Safe"`
 	UpdatedAt    datetime.DateTime `json:"updatedAt"`
 }
 

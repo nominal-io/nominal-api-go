@@ -3,6 +3,7 @@
 package api
 
 import (
+	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safelong"
 	"github.com/palantir/pkg/safeyaml"
@@ -63,8 +64,9 @@ func (o *Empty) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type ErrorResult struct {
-	ErrorType ErrorType `json:"errorType" safelogging:"@Safe"`
-	Message   string    `json:"message"`
+	ErrorType       ErrorType `json:"errorType" safelogging:"@Safe"`
+	Message         string    `json:"message"`
+	ErrorInstanceId *string   `json:"errorInstanceId,omitempty"`
 }
 
 func (o ErrorResult) MarshalYAML() (interface{}, error) {
@@ -83,7 +85,9 @@ func (o *ErrorResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type InProgressResult struct{}
+type InProgressResult struct {
+	InProgressDetails *InProgressDetails `json:"inProgressDetails,omitempty"`
+}
 
 func (o InProgressResult) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
@@ -94,6 +98,102 @@ func (o InProgressResult) MarshalYAML() (interface{}, error) {
 }
 
 func (o *InProgressResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type Ingesting struct{}
+
+func (o Ingesting) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Ingesting) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Matches resources that have a numeric value for the named property and whose value satisfies the operator.
+NEQ excludes resources that lack the property or store a string value under the same name.
+*/
+// safelogging:@Unsafe
+type NumericPropertyPredicate struct {
+	Name     PropertyName               `json:"name" safelogging:"@Unsafe"`
+	Value    float64                    `json:"value"`
+	Operator PropertyComparisonOperator `json:"operator"`
+}
+
+func (o NumericPropertyPredicate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericPropertyPredicate) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Inclusive range on a numeric property. At least one bound is required.
+BETWEEN: min <= x <= max. An absent bound is unbounded on that side.
+NOT_BETWEEN: x < min OR x > max. An absent bound drops that side.
+Both operators require a numeric value for `name`. Missing properties
+and string values never match.
+Bounds are closed [min, max] to match the number chip (is between /
+is not between), not half-open.
+*/
+// safelogging:@Unsafe
+type NumericPropertyRangePredicate struct {
+	Name     PropertyName                 `json:"name" safelogging:"@Unsafe"`
+	Min      *float64                     `json:"min,omitempty"`
+	Max      *float64                     `json:"max,omitempty"`
+	Operator NumericPropertyRangeOperator `json:"operator"`
+}
+
+func (o NumericPropertyRangePredicate) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericPropertyRangePredicate) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type Parsing struct{}
+
+func (o Parsing) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Parsing) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -123,6 +223,25 @@ func (o *Property) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type Queued struct{}
+
+func (o Queued) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Queued) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Deprecated for new APIs. Define an API-owned range with the endpoint semantics it needs instead.
 // safelogging:@Safe
 type Range struct {
 	Start Timestamp `json:"start" safelogging:"@Safe"`
@@ -234,9 +353,10 @@ func (o *SuccessResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Safe
 type ThemeAwareImage struct {
-	Light string `json:"light"`
-	Dark  string `json:"dark"`
+	Light rids.AttachmentRid `json:"light" safelogging:"@Safe"`
+	Dark  rids.AttachmentRid `json:"dark" safelogging:"@Safe"`
 }
 
 func (o ThemeAwareImage) MarshalYAML() (interface{}, error) {
@@ -256,17 +376,15 @@ func (o *ThemeAwareImage) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 /*
-Picosecond precision timestamp type, represented by an epoch time in seconds, a nanosecond offset, and
-optional picosecond offset.
+Deprecated for new APIs. Use google.protobuf.Timestamp for absolute instants in proto APIs.
+
+This legacy nanosecond precision timestamp type is represented by an epoch time in seconds and a nanosecond offset.
 The nanosecond offset is from the start of the epoch second, so must be less than 1 billion.
-The optional picosecond offset is only used for picosecond-precision data sources and is from the start of
-the nanosecond, so must be less than 1000.
 */
 // safelogging:@Safe
 type Timestamp struct {
 	Seconds safelong.SafeLong `json:"seconds" safelogging:"@Safe"`
 	Nanos   safelong.SafeLong `json:"nanos" safelogging:"@Safe"`
-	Picos   *int              `json:"picos,omitempty" safelogging:"@Safe"`
 }
 
 func (o Timestamp) MarshalYAML() (interface{}, error) {
