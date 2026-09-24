@@ -16,6 +16,484 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
+type arrayValuesUnsupported struct{}
+
+func (o arrayValuesUnsupported) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *arrayValuesUnsupported) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewArrayValuesUnsupported returns new instance of ArrayValuesUnsupported error.
+func NewArrayValuesUnsupported() *ArrayValuesUnsupported {
+	return &ArrayValuesUnsupported{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), arrayValuesUnsupported: arrayValuesUnsupported{}}
+}
+
+// WrapWithArrayValuesUnsupported returns new instance of ArrayValuesUnsupported error wrapping an existing error.
+func WrapWithArrayValuesUnsupported(err error) *ArrayValuesUnsupported {
+	return &ArrayValuesUnsupported{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, arrayValuesUnsupported: arrayValuesUnsupported{}}
+}
+
+// ArrayValuesUnsupported is an error type.
+// Array-valued channels cannot be exported in this format.
+type ArrayValuesUnsupported struct {
+	errorInstanceID uuid.UUID
+	arrayValuesUnsupported
+	cause error
+	stack werror.StackTrace
+}
+
+// IsArrayValuesUnsupported returns true if err is an instance of ArrayValuesUnsupported.
+func IsArrayValuesUnsupported(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ArrayValuesUnsupported)
+	return ok
+}
+
+func (e *ArrayValuesUnsupported) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Export:ArrayValuesUnsupported (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ArrayValuesUnsupported) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ArrayValuesUnsupported) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ArrayValuesUnsupported) Message() string {
+	return "INVALID_ARGUMENT Export:ArrayValuesUnsupported"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ArrayValuesUnsupported) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ArrayValuesUnsupported) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *ArrayValuesUnsupported) Name() string {
+	return "Export:ArrayValuesUnsupported"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ArrayValuesUnsupported) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ArrayValuesUnsupported) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ArrayValuesUnsupported) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ArrayValuesUnsupported) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ArrayValuesUnsupported) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ArrayValuesUnsupported) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ArrayValuesUnsupported) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.arrayValuesUnsupported)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Export:ArrayValuesUnsupported", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ArrayValuesUnsupported) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters arrayValuesUnsupported
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.arrayValuesUnsupported = parameters
+	return nil
+}
+
+type arrowRequiresSingleChannel struct {
+	ChannelCount int `json:"channelCount"`
+}
+
+func (o arrowRequiresSingleChannel) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *arrowRequiresSingleChannel) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewArrowRequiresSingleChannel returns new instance of ArrowRequiresSingleChannel error.
+func NewArrowRequiresSingleChannel(channelCountArg int) *ArrowRequiresSingleChannel {
+	return &ArrowRequiresSingleChannel{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), arrowRequiresSingleChannel: arrowRequiresSingleChannel{ChannelCount: channelCountArg}}
+}
+
+// WrapWithArrowRequiresSingleChannel returns new instance of ArrowRequiresSingleChannel error wrapping an existing error.
+func WrapWithArrowRequiresSingleChannel(err error, channelCountArg int) *ArrowRequiresSingleChannel {
+	return &ArrowRequiresSingleChannel{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, arrowRequiresSingleChannel: arrowRequiresSingleChannel{ChannelCount: channelCountArg}}
+}
+
+// ArrowRequiresSingleChannel is an error type.
+// Arrow export supports exactly one requested channel.
+type ArrowRequiresSingleChannel struct {
+	errorInstanceID uuid.UUID
+	arrowRequiresSingleChannel
+	cause error
+	stack werror.StackTrace
+}
+
+// IsArrowRequiresSingleChannel returns true if err is an instance of ArrowRequiresSingleChannel.
+func IsArrowRequiresSingleChannel(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ArrowRequiresSingleChannel)
+	return ok
+}
+
+func (e *ArrowRequiresSingleChannel) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Export:ArrowRequiresSingleChannel (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ArrowRequiresSingleChannel) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ArrowRequiresSingleChannel) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ArrowRequiresSingleChannel) Message() string {
+	return "INVALID_ARGUMENT Export:ArrowRequiresSingleChannel"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ArrowRequiresSingleChannel) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ArrowRequiresSingleChannel) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *ArrowRequiresSingleChannel) Name() string {
+	return "Export:ArrowRequiresSingleChannel"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ArrowRequiresSingleChannel) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ArrowRequiresSingleChannel) Parameters() map[string]interface{} {
+	return map[string]interface{}{"channelCount": e.ChannelCount}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ArrowRequiresSingleChannel) safeParams() map[string]interface{} {
+	return map[string]interface{}{"channelCount": e.ChannelCount, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ArrowRequiresSingleChannel) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ArrowRequiresSingleChannel) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ArrowRequiresSingleChannel) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ArrowRequiresSingleChannel) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.arrowRequiresSingleChannel)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Export:ArrowRequiresSingleChannel", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ArrowRequiresSingleChannel) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters arrowRequiresSingleChannel
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.arrowRequiresSingleChannel = parameters
+	return nil
+}
+
+type channelsNotExportable struct {
+	Format       string   `json:"format"`
+	FailureCount int      `json:"failureCount"`
+	ErrorNames   []string `json:"errorNames"`
+	ChannelNames []string `json:"channelNames"`
+}
+
+func (o channelsNotExportable) MarshalJSON() ([]byte, error) {
+	if o.ErrorNames == nil {
+		o.ErrorNames = make([]string, 0)
+	}
+	if o.ChannelNames == nil {
+		o.ChannelNames = make([]string, 0)
+	}
+	type _tmpchannelsNotExportable channelsNotExportable
+	return safejson.Marshal(_tmpchannelsNotExportable(o))
+}
+
+func (o *channelsNotExportable) UnmarshalJSON(data []byte) error {
+	type _tmpchannelsNotExportable channelsNotExportable
+	var rawchannelsNotExportable _tmpchannelsNotExportable
+	if err := safejson.Unmarshal(data, &rawchannelsNotExportable); err != nil {
+		return err
+	}
+	if rawchannelsNotExportable.ErrorNames == nil {
+		rawchannelsNotExportable.ErrorNames = make([]string, 0)
+	}
+	if rawchannelsNotExportable.ChannelNames == nil {
+		rawchannelsNotExportable.ChannelNames = make([]string, 0)
+	}
+	*o = channelsNotExportable(rawchannelsNotExportable)
+	return nil
+}
+
+func (o channelsNotExportable) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *channelsNotExportable) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewChannelsNotExportable returns new instance of ChannelsNotExportable error.
+func NewChannelsNotExportable(formatArg string, failureCountArg int, errorNamesArg []string, channelNamesArg []string) *ChannelsNotExportable {
+	return &ChannelsNotExportable{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), channelsNotExportable: channelsNotExportable{Format: formatArg, FailureCount: failureCountArg, ErrorNames: errorNamesArg, ChannelNames: channelNamesArg}}
+}
+
+// WrapWithChannelsNotExportable returns new instance of ChannelsNotExportable error wrapping an existing error.
+func WrapWithChannelsNotExportable(err error, formatArg string, failureCountArg int, errorNamesArg []string, channelNamesArg []string) *ChannelsNotExportable {
+	return &ChannelsNotExportable{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, channelsNotExportable: channelsNotExportable{Format: formatArg, FailureCount: failureCountArg, ErrorNames: errorNamesArg, ChannelNames: channelNamesArg}}
+}
+
+// ChannelsNotExportable is an error type.
+// One or more requested export columns could not be exported.
+type ChannelsNotExportable struct {
+	errorInstanceID uuid.UUID
+	channelsNotExportable
+	cause error
+	stack werror.StackTrace
+}
+
+// IsChannelsNotExportable returns true if err is an instance of ChannelsNotExportable.
+func IsChannelsNotExportable(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ChannelsNotExportable)
+	return ok
+}
+
+func (e *ChannelsNotExportable) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Export:ChannelsNotExportable (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ChannelsNotExportable) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ChannelsNotExportable) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ChannelsNotExportable) Message() string {
+	return "INVALID_ARGUMENT Export:ChannelsNotExportable"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ChannelsNotExportable) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ChannelsNotExportable) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *ChannelsNotExportable) Name() string {
+	return "Export:ChannelsNotExportable"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ChannelsNotExportable) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ChannelsNotExportable) Parameters() map[string]interface{} {
+	return map[string]interface{}{"format": e.Format, "failureCount": e.FailureCount, "errorNames": e.ErrorNames, "channelNames": e.ChannelNames}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ChannelsNotExportable) safeParams() map[string]interface{} {
+	return map[string]interface{}{"format": e.Format, "failureCount": e.FailureCount, "errorNames": e.ErrorNames, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ChannelsNotExportable) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ChannelsNotExportable) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"channelNames": e.ChannelNames}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ChannelsNotExportable) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ChannelsNotExportable) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.channelsNotExportable)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Export:ChannelsNotExportable", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ChannelsNotExportable) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters channelsNotExportable
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.channelsNotExportable = parameters
+	return nil
+}
+
 type exportBucketNotConfigured struct{}
 
 func (o exportBucketNotConfigured) MarshalYAML() (interface{}, error) {
@@ -313,7 +791,164 @@ func (e *ExportDataTooBig) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type matExportExceedsMat5VariableLimit struct {
+	LimitBytes safelong.SafeLong `json:"limitBytes"`
+}
+
+func (o matExportExceedsMat5VariableLimit) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *matExportExceedsMat5VariableLimit) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewMatExportExceedsMat5VariableLimit returns new instance of MatExportExceedsMat5VariableLimit error.
+func NewMatExportExceedsMat5VariableLimit(limitBytesArg safelong.SafeLong) *MatExportExceedsMat5VariableLimit {
+	return &MatExportExceedsMat5VariableLimit{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), matExportExceedsMat5VariableLimit: matExportExceedsMat5VariableLimit{LimitBytes: limitBytesArg}}
+}
+
+// WrapWithMatExportExceedsMat5VariableLimit returns new instance of MatExportExceedsMat5VariableLimit error wrapping an existing error.
+func WrapWithMatExportExceedsMat5VariableLimit(err error, limitBytesArg safelong.SafeLong) *MatExportExceedsMat5VariableLimit {
+	return &MatExportExceedsMat5VariableLimit{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, matExportExceedsMat5VariableLimit: matExportExceedsMat5VariableLimit{LimitBytes: limitBytesArg}}
+}
+
+// MatExportExceedsMat5VariableLimit is an error type.
+/*
+The requested MAT export is larger than the 2GB per-variable limit of MAT5 files.
+Narrow the time range, request fewer channels, use a coarser resolution, or export CSV/Arrow instead.
+*/
+type MatExportExceedsMat5VariableLimit struct {
+	errorInstanceID uuid.UUID
+	matExportExceedsMat5VariableLimit
+	cause error
+	stack werror.StackTrace
+}
+
+// IsMatExportExceedsMat5VariableLimit returns true if err is an instance of MatExportExceedsMat5VariableLimit.
+func IsMatExportExceedsMat5VariableLimit(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*MatExportExceedsMat5VariableLimit)
+	return ok
+}
+
+func (e *MatExportExceedsMat5VariableLimit) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Export:MatExportExceedsMat5VariableLimit (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *MatExportExceedsMat5VariableLimit) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *MatExportExceedsMat5VariableLimit) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *MatExportExceedsMat5VariableLimit) Message() string {
+	return "INVALID_ARGUMENT Export:MatExportExceedsMat5VariableLimit"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *MatExportExceedsMat5VariableLimit) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *MatExportExceedsMat5VariableLimit) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *MatExportExceedsMat5VariableLimit) Name() string {
+	return "Export:MatExportExceedsMat5VariableLimit"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *MatExportExceedsMat5VariableLimit) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *MatExportExceedsMat5VariableLimit) Parameters() map[string]interface{} {
+	return map[string]interface{}{"limitBytes": e.LimitBytes}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *MatExportExceedsMat5VariableLimit) safeParams() map[string]interface{} {
+	return map[string]interface{}{"limitBytes": e.LimitBytes, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *MatExportExceedsMat5VariableLimit) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *MatExportExceedsMat5VariableLimit) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *MatExportExceedsMat5VariableLimit) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e MatExportExceedsMat5VariableLimit) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.matExportExceedsMat5VariableLimit)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Export:MatExportExceedsMat5VariableLimit", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *MatExportExceedsMat5VariableLimit) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters matExportExceedsMat5VariableLimit
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.matExportExceedsMat5VariableLimit = parameters
+	return nil
+}
+
 func init() {
+	conjureerrors.RegisterErrorType("Export:ArrayValuesUnsupported", reflect.TypeOf(ArrayValuesUnsupported{}))
+	conjureerrors.RegisterErrorType("Export:ArrowRequiresSingleChannel", reflect.TypeOf(ArrowRequiresSingleChannel{}))
+	conjureerrors.RegisterErrorType("Export:ChannelsNotExportable", reflect.TypeOf(ChannelsNotExportable{}))
 	conjureerrors.RegisterErrorType("Export:ExportBucketNotConfigured", reflect.TypeOf(ExportBucketNotConfigured{}))
 	conjureerrors.RegisterErrorType("Export:ExportDataTooBig", reflect.TypeOf(ExportDataTooBig{}))
+	conjureerrors.RegisterErrorType("Export:MatExportExceedsMat5VariableLimit", reflect.TypeOf(MatExportExceedsMat5VariableLimit{}))
 }

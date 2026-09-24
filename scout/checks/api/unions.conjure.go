@@ -7,14 +7,192 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
-	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
+
+/*
+Alignment strategy for a check's compute, resolved to the compute API alignment at
+execution time.
+*/
+type CheckAlignmentStrategy struct {
+	typ          string
+	driverSeries *DriverSeriesAlignment
+	union        *UnionAlignment
+}
+
+type checkAlignmentStrategyDeserializer struct {
+	Type         string                 `json:"type"`
+	DriverSeries *DriverSeriesAlignment `json:"driverSeries"`
+	Union        *UnionAlignment        `json:"union"`
+}
+
+func (u *checkAlignmentStrategyDeserializer) toStruct() CheckAlignmentStrategy {
+	return CheckAlignmentStrategy{typ: u.Type, driverSeries: u.DriverSeries, union: u.Union}
+}
+
+func (u *CheckAlignmentStrategy) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return nil, fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return struct {
+			Type         string                `json:"type"`
+			DriverSeries DriverSeriesAlignment `json:"driverSeries"`
+		}{Type: "driverSeries", DriverSeries: *u.driverSeries}, nil
+	case "union":
+		if u.union == nil {
+			return nil, fmt.Errorf("field \"union\" is required")
+		}
+		return struct {
+			Type  string         `json:"type"`
+			Union UnionAlignment `json:"union"`
+		}{Type: "union", Union: *u.union}, nil
+	}
+}
+
+func (u CheckAlignmentStrategy) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *CheckAlignmentStrategy) UnmarshalJSON(data []byte) error {
+	var deser checkAlignmentStrategyDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+	}
+	return nil
+}
+
+func (u CheckAlignmentStrategy) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *CheckAlignmentStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *CheckAlignmentStrategy) AcceptFuncs(driverSeriesFunc func(DriverSeriesAlignment) error, unionFunc func(UnionAlignment) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in CheckAlignmentStrategy type")
+		}
+		return unknownFunc(u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return driverSeriesFunc(*u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+		return unionFunc(*u.union)
+	}
+}
+
+func (u *CheckAlignmentStrategy) DriverSeriesNoopSuccess(_ DriverSeriesAlignment) error {
+	return nil
+}
+
+func (u *CheckAlignmentStrategy) UnionNoopSuccess(_ UnionAlignment) error {
+	return nil
+}
+
+func (u *CheckAlignmentStrategy) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *CheckAlignmentStrategy) Accept(v CheckAlignmentStrategyVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return v.VisitDriverSeries(*u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+		return v.VisitUnion(*u.union)
+	}
+}
+
+type CheckAlignmentStrategyVisitor interface {
+	VisitDriverSeries(v DriverSeriesAlignment) error
+	VisitUnion(v UnionAlignment) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *CheckAlignmentStrategy) AcceptWithContext(ctx context.Context, v CheckAlignmentStrategyVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return v.VisitDriverSeriesWithContext(ctx, *u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return fmt.Errorf("field \"union\" is required")
+		}
+		return v.VisitUnionWithContext(ctx, *u.union)
+	}
+}
+
+type CheckAlignmentStrategyVisitorWithContext interface {
+	VisitDriverSeriesWithContext(ctx context.Context, v DriverSeriesAlignment) error
+	VisitUnionWithContext(ctx context.Context, v UnionAlignment) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewCheckAlignmentStrategyFromDriverSeries(v DriverSeriesAlignment) CheckAlignmentStrategy {
+	return CheckAlignmentStrategy{typ: "driverSeries", driverSeries: &v}
+}
+
+func NewCheckAlignmentStrategyFromUnion(v UnionAlignment) CheckAlignmentStrategy {
+	return CheckAlignmentStrategy{typ: "union", union: &v}
+}
 
 type CheckCondition struct {
 	typ                      string
@@ -268,6 +446,145 @@ func NewCheckConditionFromParameterizedNumRangesV1(v ParameterizedNumRangesCondi
 	return CheckCondition{typ: "parameterizedNumRangesV1", parameterizedNumRangesV1: &v}
 }
 
+/*
+Fill strategy for a check's compute, expressed in user-facing units and resolved to the
+compute API fill strategy at execution time.
+*/
+type CheckFillStrategy struct {
+	typ         string
+	forwardFill *api.UserDuration
+}
+
+type checkFillStrategyDeserializer struct {
+	Type        string            `json:"type"`
+	ForwardFill *api.UserDuration `json:"forwardFill"`
+}
+
+func (u *checkFillStrategyDeserializer) toStruct() CheckFillStrategy {
+	return CheckFillStrategy{typ: u.Type, forwardFill: u.ForwardFill}
+}
+
+func (u *CheckFillStrategy) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return nil, fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return struct {
+			Type        string           `json:"type"`
+			ForwardFill api.UserDuration `json:"forwardFill"`
+		}{Type: "forwardFill", ForwardFill: *u.forwardFill}, nil
+	}
+}
+
+func (u CheckFillStrategy) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *CheckFillStrategy) UnmarshalJSON(data []byte) error {
+	var deser checkFillStrategyDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+	}
+	return nil
+}
+
+func (u CheckFillStrategy) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *CheckFillStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *CheckFillStrategy) AcceptFuncs(forwardFillFunc func(api.UserDuration) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in CheckFillStrategy type")
+		}
+		return unknownFunc(u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return forwardFillFunc(*u.forwardFill)
+	}
+}
+
+func (u *CheckFillStrategy) ForwardFillNoopSuccess(_ api.UserDuration) error {
+	return nil
+}
+
+func (u *CheckFillStrategy) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *CheckFillStrategy) Accept(v CheckFillStrategyVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return v.VisitForwardFill(*u.forwardFill)
+	}
+}
+
+type CheckFillStrategyVisitor interface {
+	VisitForwardFill(v api.UserDuration) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *CheckFillStrategy) AcceptWithContext(ctx context.Context, v CheckFillStrategyVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return v.VisitForwardFillWithContext(ctx, *u.forwardFill)
+	}
+}
+
+type CheckFillStrategyVisitorWithContext interface {
+	VisitForwardFillWithContext(ctx context.Context, v api.UserDuration) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewCheckFillStrategyFromForwardFill(v api.UserDuration) CheckFillStrategy {
+	return CheckFillStrategy{typ: "forwardFill", forwardFill: &v}
+}
+
 type ChecklistEntry struct {
 	typ   string
 	check *Check
@@ -408,17 +725,17 @@ type ChecklistSearchQuery struct {
 	and                 *[]ChecklistSearchQuery
 	or                  *[]ChecklistSearchQuery
 	searchText          *string
-	label               *api.Label
-	labels              *api1.LabelsFilter
-	property            *api.Property
-	properties          *api1.PropertiesFilter
-	authorRid           *api1.UserRid
-	assigneeRid         *api1.UserRid
+	label               *api1.Label
+	labels              *api.LabelsFilter
+	property            *api1.Property
+	properties          *api.PropertiesFilter
+	authorRid           *api.UserRid
+	assigneeRid         *api.UserRid
 	isPublished         *bool
 	not                 *ChecklistSearchQuery
 	workspace           *rids.WorkspaceRid
 	authorIsCurrentUser *bool
-	authorRids          *[]api1.UserRid
+	authorRids          *[]api.UserRid
 	isArchived          *bool
 }
 
@@ -427,17 +744,17 @@ type checklistSearchQueryDeserializer struct {
 	And                 *[]ChecklistSearchQuery `json:"and"`
 	Or                  *[]ChecklistSearchQuery `json:"or"`
 	SearchText          *string                 `json:"searchText"`
-	Label               *api.Label              `json:"label"`
-	Labels              *api1.LabelsFilter      `json:"labels"`
-	Property            *api.Property           `json:"property"`
-	Properties          *api1.PropertiesFilter  `json:"properties"`
-	AuthorRid           *api1.UserRid           `json:"authorRid"`
-	AssigneeRid         *api1.UserRid           `json:"assigneeRid"`
+	Label               *api1.Label             `json:"label"`
+	Labels              *api.LabelsFilter       `json:"labels"`
+	Property            *api1.Property          `json:"property"`
+	Properties          *api.PropertiesFilter   `json:"properties"`
+	AuthorRid           *api.UserRid            `json:"authorRid"`
+	AssigneeRid         *api.UserRid            `json:"assigneeRid"`
 	IsPublished         *bool                   `json:"isPublished"`
 	Not                 *ChecklistSearchQuery   `json:"not"`
 	Workspace           *rids.WorkspaceRid      `json:"workspace"`
 	AuthorIsCurrentUser *bool                   `json:"authorIsCurrentUser"`
-	AuthorRids          *[]api1.UserRid         `json:"authorRids"`
+	AuthorRids          *[]api.UserRid          `json:"authorRids"`
 	IsArchived          *bool                   `json:"isArchived"`
 }
 
@@ -478,48 +795,48 @@ func (u *ChecklistSearchQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"label\" is required")
 		}
 		return struct {
-			Type  string    `json:"type"`
-			Label api.Label `json:"label"`
+			Type  string     `json:"type"`
+			Label api1.Label `json:"label"`
 		}{Type: "label", Label: *u.label}, nil
 	case "labels":
 		if u.labels == nil {
 			return nil, fmt.Errorf("field \"labels\" is required")
 		}
 		return struct {
-			Type   string            `json:"type"`
-			Labels api1.LabelsFilter `json:"labels"`
+			Type   string           `json:"type"`
+			Labels api.LabelsFilter `json:"labels"`
 		}{Type: "labels", Labels: *u.labels}, nil
 	case "property":
 		if u.property == nil {
 			return nil, fmt.Errorf("field \"property\" is required")
 		}
 		return struct {
-			Type     string       `json:"type"`
-			Property api.Property `json:"property"`
+			Type     string        `json:"type"`
+			Property api1.Property `json:"property"`
 		}{Type: "property", Property: *u.property}, nil
 	case "properties":
 		if u.properties == nil {
 			return nil, fmt.Errorf("field \"properties\" is required")
 		}
 		return struct {
-			Type       string                `json:"type"`
-			Properties api1.PropertiesFilter `json:"properties"`
+			Type       string               `json:"type"`
+			Properties api.PropertiesFilter `json:"properties"`
 		}{Type: "properties", Properties: *u.properties}, nil
 	case "authorRid":
 		if u.authorRid == nil {
 			return nil, fmt.Errorf("field \"authorRid\" is required")
 		}
 		return struct {
-			Type      string       `json:"type"`
-			AuthorRid api1.UserRid `json:"authorRid"`
+			Type      string      `json:"type"`
+			AuthorRid api.UserRid `json:"authorRid"`
 		}{Type: "authorRid", AuthorRid: *u.authorRid}, nil
 	case "assigneeRid":
 		if u.assigneeRid == nil {
 			return nil, fmt.Errorf("field \"assigneeRid\" is required")
 		}
 		return struct {
-			Type        string       `json:"type"`
-			AssigneeRid api1.UserRid `json:"assigneeRid"`
+			Type        string      `json:"type"`
+			AssigneeRid api.UserRid `json:"assigneeRid"`
 		}{Type: "assigneeRid", AssigneeRid: *u.assigneeRid}, nil
 	case "isPublished":
 		if u.isPublished == nil {
@@ -558,8 +875,8 @@ func (u *ChecklistSearchQuery) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"authorRids\" is required")
 		}
 		return struct {
-			Type       string         `json:"type"`
-			AuthorRids []api1.UserRid `json:"authorRids"`
+			Type       string        `json:"type"`
+			AuthorRids []api.UserRid `json:"authorRids"`
 		}{Type: "authorRids", AuthorRids: *u.authorRids}, nil
 	case "isArchived":
 		if u.isArchived == nil {
@@ -667,7 +984,7 @@ func (u *ChecklistSearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) error, orFunc func([]ChecklistSearchQuery) error, searchTextFunc func(string) error, labelFunc func(api.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api.Property) error, propertiesFunc func(api1.PropertiesFilter) error, authorRidFunc func(api1.UserRid) error, assigneeRidFunc func(api1.UserRid) error, isPublishedFunc func(bool) error, notFunc func(ChecklistSearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, authorIsCurrentUserFunc func(bool) error, authorRidsFunc func([]api1.UserRid) error, isArchivedFunc func(bool) error, unknownFunc func(string) error) error {
+func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) error, orFunc func([]ChecklistSearchQuery) error, searchTextFunc func(string) error, labelFunc func(api1.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api1.Property) error, propertiesFunc func(api.PropertiesFilter) error, authorRidFunc func(api.UserRid) error, assigneeRidFunc func(api.UserRid) error, isPublishedFunc func(bool) error, notFunc func(ChecklistSearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, authorIsCurrentUserFunc func(bool) error, authorRidsFunc func([]api.UserRid) error, isArchivedFunc func(bool) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -764,27 +1081,27 @@ func (u *ChecklistSearchQuery) SearchTextNoopSuccess(_ string) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) LabelNoopSuccess(_ api.Label) error {
+func (u *ChecklistSearchQuery) LabelNoopSuccess(_ api1.Label) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) LabelsNoopSuccess(_ api1.LabelsFilter) error {
+func (u *ChecklistSearchQuery) LabelsNoopSuccess(_ api.LabelsFilter) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) PropertyNoopSuccess(_ api.Property) error {
+func (u *ChecklistSearchQuery) PropertyNoopSuccess(_ api1.Property) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) PropertiesNoopSuccess(_ api1.PropertiesFilter) error {
+func (u *ChecklistSearchQuery) PropertiesNoopSuccess(_ api.PropertiesFilter) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) AuthorRidNoopSuccess(_ api1.UserRid) error {
+func (u *ChecklistSearchQuery) AuthorRidNoopSuccess(_ api.UserRid) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) AssigneeRidNoopSuccess(_ api1.UserRid) error {
+func (u *ChecklistSearchQuery) AssigneeRidNoopSuccess(_ api.UserRid) error {
 	return nil
 }
 
@@ -804,7 +1121,7 @@ func (u *ChecklistSearchQuery) AuthorIsCurrentUserNoopSuccess(_ bool) error {
 	return nil
 }
 
-func (u *ChecklistSearchQuery) AuthorRidsNoopSuccess(_ []api1.UserRid) error {
+func (u *ChecklistSearchQuery) AuthorRidsNoopSuccess(_ []api.UserRid) error {
 	return nil
 }
 
@@ -905,17 +1222,17 @@ type ChecklistSearchQueryVisitor interface {
 	VisitAnd(v []ChecklistSearchQuery) error
 	VisitOr(v []ChecklistSearchQuery) error
 	VisitSearchText(v string) error
-	VisitLabel(v api.Label) error
-	VisitLabels(v api1.LabelsFilter) error
-	VisitProperty(v api.Property) error
-	VisitProperties(v api1.PropertiesFilter) error
-	VisitAuthorRid(v api1.UserRid) error
-	VisitAssigneeRid(v api1.UserRid) error
+	VisitLabel(v api1.Label) error
+	VisitLabels(v api.LabelsFilter) error
+	VisitProperty(v api1.Property) error
+	VisitProperties(v api.PropertiesFilter) error
+	VisitAuthorRid(v api.UserRid) error
+	VisitAssigneeRid(v api.UserRid) error
 	VisitIsPublished(v bool) error
 	VisitNot(v ChecklistSearchQuery) error
 	VisitWorkspace(v rids.WorkspaceRid) error
 	VisitAuthorIsCurrentUser(v bool) error
-	VisitAuthorRids(v []api1.UserRid) error
+	VisitAuthorRids(v []api.UserRid) error
 	VisitIsArchived(v bool) error
 	VisitUnknown(typeName string) error
 }
@@ -1009,17 +1326,17 @@ type ChecklistSearchQueryVisitorWithContext interface {
 	VisitAndWithContext(ctx context.Context, v []ChecklistSearchQuery) error
 	VisitOrWithContext(ctx context.Context, v []ChecklistSearchQuery) error
 	VisitSearchTextWithContext(ctx context.Context, v string) error
-	VisitLabelWithContext(ctx context.Context, v api.Label) error
-	VisitLabelsWithContext(ctx context.Context, v api1.LabelsFilter) error
-	VisitPropertyWithContext(ctx context.Context, v api.Property) error
-	VisitPropertiesWithContext(ctx context.Context, v api1.PropertiesFilter) error
-	VisitAuthorRidWithContext(ctx context.Context, v api1.UserRid) error
-	VisitAssigneeRidWithContext(ctx context.Context, v api1.UserRid) error
+	VisitLabelWithContext(ctx context.Context, v api1.Label) error
+	VisitLabelsWithContext(ctx context.Context, v api.LabelsFilter) error
+	VisitPropertyWithContext(ctx context.Context, v api1.Property) error
+	VisitPropertiesWithContext(ctx context.Context, v api.PropertiesFilter) error
+	VisitAuthorRidWithContext(ctx context.Context, v api.UserRid) error
+	VisitAssigneeRidWithContext(ctx context.Context, v api.UserRid) error
 	VisitIsPublishedWithContext(ctx context.Context, v bool) error
 	VisitNotWithContext(ctx context.Context, v ChecklistSearchQuery) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
 	VisitAuthorIsCurrentUserWithContext(ctx context.Context, v bool) error
-	VisitAuthorRidsWithContext(ctx context.Context, v []api1.UserRid) error
+	VisitAuthorRidsWithContext(ctx context.Context, v []api.UserRid) error
 	VisitIsArchivedWithContext(ctx context.Context, v bool) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
@@ -1036,27 +1353,27 @@ func NewChecklistSearchQueryFromSearchText(v string) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "searchText", searchText: &v}
 }
 
-func NewChecklistSearchQueryFromLabel(v api.Label) ChecklistSearchQuery {
+func NewChecklistSearchQueryFromLabel(v api1.Label) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "label", label: &v}
 }
 
-func NewChecklistSearchQueryFromLabels(v api1.LabelsFilter) ChecklistSearchQuery {
+func NewChecklistSearchQueryFromLabels(v api.LabelsFilter) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "labels", labels: &v}
 }
 
-func NewChecklistSearchQueryFromProperty(v api.Property) ChecklistSearchQuery {
+func NewChecklistSearchQueryFromProperty(v api1.Property) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "property", property: &v}
 }
 
-func NewChecklistSearchQueryFromProperties(v api1.PropertiesFilter) ChecklistSearchQuery {
+func NewChecklistSearchQueryFromProperties(v api.PropertiesFilter) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "properties", properties: &v}
 }
 
-func NewChecklistSearchQueryFromAuthorRid(v api1.UserRid) ChecklistSearchQuery {
+func NewChecklistSearchQueryFromAuthorRid(v api.UserRid) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "authorRid", authorRid: &v}
 }
 
-func NewChecklistSearchQueryFromAssigneeRid(v api1.UserRid) ChecklistSearchQuery {
+func NewChecklistSearchQueryFromAssigneeRid(v api.UserRid) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "assigneeRid", assigneeRid: &v}
 }
 
@@ -1076,12 +1393,282 @@ func NewChecklistSearchQueryFromAuthorIsCurrentUser(v bool) ChecklistSearchQuery
 	return ChecklistSearchQuery{typ: "authorIsCurrentUser", authorIsCurrentUser: &v}
 }
 
-func NewChecklistSearchQueryFromAuthorRids(v []api1.UserRid) ChecklistSearchQuery {
+func NewChecklistSearchQueryFromAuthorRids(v []api.UserRid) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "authorRids", authorRids: &v}
 }
 
 func NewChecklistSearchQueryFromIsArchived(v bool) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "isArchived", isArchived: &v}
+}
+
+type ComputeExpression struct {
+	typ string
+	v1  *ComputeExpressionV1
+}
+
+type computeExpressionDeserializer struct {
+	Type string               `json:"type"`
+	V1   *ComputeExpressionV1 `json:"v1"`
+}
+
+func (u *computeExpressionDeserializer) toStruct() ComputeExpression {
+	return ComputeExpression{typ: u.Type, v1: u.V1}
+}
+
+func (u *ComputeExpression) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string              `json:"type"`
+			V1   ComputeExpressionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u ComputeExpression) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ComputeExpression) UnmarshalJSON(data []byte) error {
+	var deser computeExpressionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ComputeExpression) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ComputeExpression) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ComputeExpression) AcceptFuncs(v1Func func(ComputeExpressionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ComputeExpression type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ComputeExpression) V1NoopSuccess(_ ComputeExpressionV1) error {
+	return nil
+}
+
+func (u *ComputeExpression) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ComputeExpression) Accept(v ComputeExpressionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type ComputeExpressionVisitor interface {
+	VisitV1(v ComputeExpressionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ComputeExpression) AcceptWithContext(ctx context.Context, v ComputeExpressionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type ComputeExpressionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v ComputeExpressionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewComputeExpressionFromV1(v ComputeExpressionV1) ComputeExpression {
+	return ComputeExpression{typ: "v1", v1: &v}
+}
+
+type ComputeExpressionV1 struct {
+	typ    string
+	python *ComputeExpressionV1Python
+}
+
+type computeExpressionV1Deserializer struct {
+	Type   string                     `json:"type"`
+	Python *ComputeExpressionV1Python `json:"python"`
+}
+
+func (u *computeExpressionV1Deserializer) toStruct() ComputeExpressionV1 {
+	return ComputeExpressionV1{typ: u.Type, python: u.Python}
+}
+
+func (u *ComputeExpressionV1) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "python":
+		if u.python == nil {
+			return nil, fmt.Errorf("field \"python\" is required")
+		}
+		return struct {
+			Type   string                    `json:"type"`
+			Python ComputeExpressionV1Python `json:"python"`
+		}{Type: "python", Python: *u.python}, nil
+	}
+}
+
+func (u ComputeExpressionV1) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ComputeExpressionV1) UnmarshalJSON(data []byte) error {
+	var deser computeExpressionV1Deserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ComputeExpressionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ComputeExpressionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ComputeExpressionV1) AcceptFuncs(pythonFunc func(ComputeExpressionV1Python) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ComputeExpressionV1 type")
+		}
+		return unknownFunc(u.typ)
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+		return pythonFunc(*u.python)
+	}
+}
+
+func (u *ComputeExpressionV1) PythonNoopSuccess(_ ComputeExpressionV1Python) error {
+	return nil
+}
+
+func (u *ComputeExpressionV1) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ComputeExpressionV1) Accept(v ComputeExpressionV1Visitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+		return v.VisitPython(*u.python)
+	}
+}
+
+type ComputeExpressionV1Visitor interface {
+	VisitPython(v ComputeExpressionV1Python) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ComputeExpressionV1) AcceptWithContext(ctx context.Context, v ComputeExpressionV1VisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "python":
+		if u.python == nil {
+			return fmt.Errorf("field \"python\" is required")
+		}
+		return v.VisitPythonWithContext(ctx, *u.python)
+	}
+}
+
+type ComputeExpressionV1VisitorWithContext interface {
+	VisitPythonWithContext(ctx context.Context, v ComputeExpressionV1Python) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewComputeExpressionV1FromPython(v ComputeExpressionV1Python) ComputeExpressionV1 {
+	return ComputeExpressionV1{typ: "python", python: &v}
 }
 
 type CreateChecklistEntryRequest struct {
@@ -1569,7 +2156,6 @@ func NewJobSpecFromCheckV2(v CheckJobSpec) JobSpec {
 
 type UnresolvedCheckCondition struct {
 	typ                      string
-	booleanSeriesV1          *UnresolvedBooleanSeriesConditionV1
 	numRangesV2              *UnresolvedNumRangesConditionV2
 	numRangesV3              *UnresolvedNumRangesConditionV3
 	parameterizedNumRangesV1 *UnresolvedParameterizedNumRangesConditionV1
@@ -1577,28 +2163,19 @@ type UnresolvedCheckCondition struct {
 
 type unresolvedCheckConditionDeserializer struct {
 	Type                     string                                       `json:"type"`
-	BooleanSeriesV1          *UnresolvedBooleanSeriesConditionV1          `json:"booleanSeriesV1"`
 	NumRangesV2              *UnresolvedNumRangesConditionV2              `json:"numRangesV2"`
 	NumRangesV3              *UnresolvedNumRangesConditionV3              `json:"numRangesV3"`
 	ParameterizedNumRangesV1 *UnresolvedParameterizedNumRangesConditionV1 `json:"parameterizedNumRangesV1"`
 }
 
 func (u *unresolvedCheckConditionDeserializer) toStruct() UnresolvedCheckCondition {
-	return UnresolvedCheckCondition{typ: u.Type, booleanSeriesV1: u.BooleanSeriesV1, numRangesV2: u.NumRangesV2, numRangesV3: u.NumRangesV3, parameterizedNumRangesV1: u.ParameterizedNumRangesV1}
+	return UnresolvedCheckCondition{typ: u.Type, numRangesV2: u.NumRangesV2, numRangesV3: u.NumRangesV3, parameterizedNumRangesV1: u.ParameterizedNumRangesV1}
 }
 
 func (u *UnresolvedCheckCondition) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return nil, fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return struct {
-			Type            string                             `json:"type"`
-			BooleanSeriesV1 UnresolvedBooleanSeriesConditionV1 `json:"booleanSeriesV1"`
-		}{Type: "booleanSeriesV1", BooleanSeriesV1: *u.booleanSeriesV1}, nil
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return nil, fmt.Errorf("field \"numRangesV2\" is required")
@@ -1641,10 +2218,6 @@ func (u *UnresolvedCheckCondition) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1677,18 +2250,13 @@ func (u *UnresolvedCheckCondition) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UnresolvedCheckCondition) AcceptFuncs(booleanSeriesV1Func func(UnresolvedBooleanSeriesConditionV1) error, numRangesV2Func func(UnresolvedNumRangesConditionV2) error, numRangesV3Func func(UnresolvedNumRangesConditionV3) error, parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) error, unknownFunc func(string) error) error {
+func (u *UnresolvedCheckCondition) AcceptFuncs(numRangesV2Func func(UnresolvedNumRangesConditionV2) error, numRangesV3Func func(UnresolvedNumRangesConditionV3) error, parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in UnresolvedCheckCondition type")
 		}
 		return unknownFunc(u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return booleanSeriesV1Func(*u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1705,10 +2273,6 @@ func (u *UnresolvedCheckCondition) AcceptFuncs(booleanSeriesV1Func func(Unresolv
 		}
 		return parameterizedNumRangesV1Func(*u.parameterizedNumRangesV1)
 	}
-}
-
-func (u *UnresolvedCheckCondition) BooleanSeriesV1NoopSuccess(_ UnresolvedBooleanSeriesConditionV1) error {
-	return nil
 }
 
 func (u *UnresolvedCheckCondition) NumRangesV2NoopSuccess(_ UnresolvedNumRangesConditionV2) error {
@@ -1734,11 +2298,6 @@ func (u *UnresolvedCheckCondition) Accept(v UnresolvedCheckConditionVisitor) err
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return v.VisitBooleanSeriesV1(*u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1758,7 +2317,6 @@ func (u *UnresolvedCheckCondition) Accept(v UnresolvedCheckConditionVisitor) err
 }
 
 type UnresolvedCheckConditionVisitor interface {
-	VisitBooleanSeriesV1(v UnresolvedBooleanSeriesConditionV1) error
 	VisitNumRangesV2(v UnresolvedNumRangesConditionV2) error
 	VisitNumRangesV3(v UnresolvedNumRangesConditionV3) error
 	VisitParameterizedNumRangesV1(v UnresolvedParameterizedNumRangesConditionV1) error
@@ -1772,11 +2330,6 @@ func (u *UnresolvedCheckCondition) AcceptWithContext(ctx context.Context, v Unre
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return v.VisitBooleanSeriesV1WithContext(ctx, *u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return fmt.Errorf("field \"numRangesV2\" is required")
@@ -1796,15 +2349,10 @@ func (u *UnresolvedCheckCondition) AcceptWithContext(ctx context.Context, v Unre
 }
 
 type UnresolvedCheckConditionVisitorWithContext interface {
-	VisitBooleanSeriesV1WithContext(ctx context.Context, v UnresolvedBooleanSeriesConditionV1) error
 	VisitNumRangesV2WithContext(ctx context.Context, v UnresolvedNumRangesConditionV2) error
 	VisitNumRangesV3WithContext(ctx context.Context, v UnresolvedNumRangesConditionV3) error
 	VisitParameterizedNumRangesV1WithContext(ctx context.Context, v UnresolvedParameterizedNumRangesConditionV1) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewUnresolvedCheckConditionFromBooleanSeriesV1(v UnresolvedBooleanSeriesConditionV1) UnresolvedCheckCondition {
-	return UnresolvedCheckCondition{typ: "booleanSeriesV1", booleanSeriesV1: &v}
 }
 
 func NewUnresolvedCheckConditionFromNumRangesV2(v UnresolvedNumRangesConditionV2) UnresolvedCheckCondition {
@@ -2074,13 +2622,13 @@ func NewUnresolvedVariableLocatorFromTimestamp(v TimestampLocator) UnresolvedVar
 type UpdateChecklistEntryRequest struct {
 	typ         string
 	createCheck *CreateCheckRequest
-	check       *api1.CheckRid
+	check       *api.CheckRid
 }
 
 type updateChecklistEntryRequestDeserializer struct {
 	Type        string              `json:"type"`
 	CreateCheck *CreateCheckRequest `json:"createCheck"`
-	Check       *api1.CheckRid      `json:"check"`
+	Check       *api.CheckRid       `json:"check"`
 }
 
 func (u *updateChecklistEntryRequestDeserializer) toStruct() UpdateChecklistEntryRequest {
@@ -2104,8 +2652,8 @@ func (u *UpdateChecklistEntryRequest) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"check\" is required")
 		}
 		return struct {
-			Type  string        `json:"type"`
-			Check api1.CheckRid `json:"check"`
+			Type  string       `json:"type"`
+			Check api.CheckRid `json:"check"`
 		}{Type: "check", Check: *u.check}, nil
 	}
 }
@@ -2153,7 +2701,7 @@ func (u *UpdateChecklistEntryRequest) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UpdateChecklistEntryRequest) AcceptFuncs(createCheckFunc func(CreateCheckRequest) error, checkFunc func(api1.CheckRid) error, unknownFunc func(string) error) error {
+func (u *UpdateChecklistEntryRequest) AcceptFuncs(createCheckFunc func(CreateCheckRequest) error, checkFunc func(api.CheckRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2177,7 +2725,7 @@ func (u *UpdateChecklistEntryRequest) CreateCheckNoopSuccess(_ CreateCheckReques
 	return nil
 }
 
-func (u *UpdateChecklistEntryRequest) CheckNoopSuccess(_ api1.CheckRid) error {
+func (u *UpdateChecklistEntryRequest) CheckNoopSuccess(_ api.CheckRid) error {
 	return nil
 }
 
@@ -2207,7 +2755,7 @@ func (u *UpdateChecklistEntryRequest) Accept(v UpdateChecklistEntryRequestVisito
 
 type UpdateChecklistEntryRequestVisitor interface {
 	VisitCreateCheck(v CreateCheckRequest) error
-	VisitCheck(v api1.CheckRid) error
+	VisitCheck(v api.CheckRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2233,7 +2781,7 @@ func (u *UpdateChecklistEntryRequest) AcceptWithContext(ctx context.Context, v U
 
 type UpdateChecklistEntryRequestVisitorWithContext interface {
 	VisitCreateCheckWithContext(ctx context.Context, v CreateCheckRequest) error
-	VisitCheckWithContext(ctx context.Context, v api1.CheckRid) error
+	VisitCheckWithContext(ctx context.Context, v api.CheckRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -2241,7 +2789,7 @@ func NewUpdateChecklistEntryRequestFromCreateCheck(v CreateCheckRequest) UpdateC
 	return UpdateChecklistEntryRequest{typ: "createCheck", createCheck: &v}
 }
 
-func NewUpdateChecklistEntryRequestFromCheck(v api1.CheckRid) UpdateChecklistEntryRequest {
+func NewUpdateChecklistEntryRequestFromCheck(v api.CheckRid) UpdateChecklistEntryRequest {
 	return UpdateChecklistEntryRequest{typ: "check", check: &v}
 }
 

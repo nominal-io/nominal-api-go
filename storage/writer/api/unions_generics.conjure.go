@@ -7,6 +7,8 @@ package api
 import (
 	"context"
 	"fmt"
+
+	"github.com/palantir/pkg/safelong"
 )
 
 type ArrayPointsWithT[T any] ArrayPoints
@@ -164,6 +166,11 @@ func (u *ColumnValuesWithT[T]) Accept(ctx context.Context, v ColumnValuesVisitor
 			return result, fmt.Errorf("field \"ints\" is required")
 		}
 		return v.VisitInts(ctx, *u.ints)
+	case "uint64s":
+		if u.uint64s == nil {
+			return result, fmt.Errorf("field \"uint64s\" is required")
+		}
+		return v.VisitUint64s(ctx, *u.uint64s)
 	case "arrays":
 		if u.arrays == nil {
 			return result, fmt.Errorf("field \"arrays\" is required")
@@ -177,7 +184,7 @@ func (u *ColumnValuesWithT[T]) Accept(ctx context.Context, v ColumnValuesVisitor
 	}
 }
 
-func (u *ColumnValuesWithT[T]) AcceptFuncs(stringsFunc func([]string) (T, error), doublesFunc func([]float64) (T, error), intsFunc func([]int) (T, error), arraysFunc func(ArraysValues) (T, error), structsFunc func([]string) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ColumnValuesWithT[T]) AcceptFuncs(stringsFunc func([]string) (T, error), doublesFunc func([]float64) (T, error), intsFunc func([]int) (T, error), uint64sFunc func([]safelong.SafeLong) (T, error), arraysFunc func(ArraysValues) (T, error), structsFunc func([]string) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -200,6 +207,11 @@ func (u *ColumnValuesWithT[T]) AcceptFuncs(stringsFunc func([]string) (T, error)
 			return result, fmt.Errorf("field \"ints\" is required")
 		}
 		return intsFunc(*u.ints)
+	case "uint64s":
+		if u.uint64s == nil {
+			return result, fmt.Errorf("field \"uint64s\" is required")
+		}
+		return uint64sFunc(*u.uint64s)
 	case "arrays":
 		if u.arrays == nil {
 			return result, fmt.Errorf("field \"arrays\" is required")
@@ -228,6 +240,11 @@ func (u *ColumnValuesWithT[T]) IntsNoopSuccess([]int) (T, error) {
 	return result, nil
 }
 
+func (u *ColumnValuesWithT[T]) Uint64sNoopSuccess([]safelong.SafeLong) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ColumnValuesWithT[T]) ArraysNoopSuccess(ArraysValues) (T, error) {
 	var result T
 	return result, nil
@@ -247,6 +264,7 @@ type ColumnValuesVisitorWithT[T any] interface {
 	VisitStrings(ctx context.Context, v []string) (T, error)
 	VisitDoubles(ctx context.Context, v []float64) (T, error)
 	VisitInts(ctx context.Context, v []int) (T, error)
+	VisitUint64s(ctx context.Context, v []safelong.SafeLong) (T, error)
 	VisitArrays(ctx context.Context, v ArraysValues) (T, error)
 	VisitStructs(ctx context.Context, v []string) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
@@ -422,6 +440,11 @@ func (u *PointsExternalWithT[T]) Accept(ctx context.Context, v PointsExternalVis
 			return result, fmt.Errorf("field \"int\" is required")
 		}
 		return v.VisitInt(ctx, *u.int)
+	case "uint64":
+		if u.uint64 == nil {
+			return result, fmt.Errorf("field \"uint64\" is required")
+		}
+		return v.VisitUint64(ctx, *u.uint64)
 	case "array":
 		if u.array == nil {
 			return result, fmt.Errorf("field \"array\" is required")
@@ -435,7 +458,7 @@ func (u *PointsExternalWithT[T]) Accept(ctx context.Context, v PointsExternalVis
 	}
 }
 
-func (u *PointsExternalWithT[T]) AcceptFuncs(stringFunc func([]StringPoint) (T, error), doubleFunc func([]DoublePoint) (T, error), intFunc func([]IntPoint) (T, error), arrayFunc func(ArrayPoints) (T, error), struct_Func func([]StructPoint) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *PointsExternalWithT[T]) AcceptFuncs(stringFunc func([]StringPoint) (T, error), doubleFunc func([]DoublePoint) (T, error), intFunc func([]IntPoint) (T, error), uint64Func func([]Uint64Point) (T, error), arrayFunc func(ArrayPoints) (T, error), struct_Func func([]StructPoint) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -458,6 +481,11 @@ func (u *PointsExternalWithT[T]) AcceptFuncs(stringFunc func([]StringPoint) (T, 
 			return result, fmt.Errorf("field \"int\" is required")
 		}
 		return intFunc(*u.int)
+	case "uint64":
+		if u.uint64 == nil {
+			return result, fmt.Errorf("field \"uint64\" is required")
+		}
+		return uint64Func(*u.uint64)
 	case "array":
 		if u.array == nil {
 			return result, fmt.Errorf("field \"array\" is required")
@@ -486,6 +514,11 @@ func (u *PointsExternalWithT[T]) IntNoopSuccess([]IntPoint) (T, error) {
 	return result, nil
 }
 
+func (u *PointsExternalWithT[T]) Uint64NoopSuccess([]Uint64Point) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *PointsExternalWithT[T]) ArrayNoopSuccess(ArrayPoints) (T, error) {
 	var result T
 	return result, nil
@@ -505,6 +538,7 @@ type PointsExternalVisitorWithT[T any] interface {
 	VisitString(ctx context.Context, v []StringPoint) (T, error)
 	VisitDouble(ctx context.Context, v []DoublePoint) (T, error)
 	VisitInt(ctx context.Context, v []IntPoint) (T, error)
+	VisitUint64(ctx context.Context, v []Uint64Point) (T, error)
 	VisitArray(ctx context.Context, v ArrayPoints) (T, error)
 	VisitStruct(ctx context.Context, v []StructPoint) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)

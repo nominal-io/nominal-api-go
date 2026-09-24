@@ -9,12 +9,910 @@ import (
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-contract/errors"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 	"github.com/palantir/pkg/uuid"
 	werror "github.com/palantir/witchcraft-go-error"
 )
+
+// safelogging:@Safe
+type demoWorkbookAlreadyArchived struct {
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
+}
+
+func (o demoWorkbookAlreadyArchived) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *demoWorkbookAlreadyArchived) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDemoWorkbookAlreadyArchived returns new instance of DemoWorkbookAlreadyArchived error.
+func NewDemoWorkbookAlreadyArchived(notebookRidArg api.NotebookRid) *DemoWorkbookAlreadyArchived {
+	return &DemoWorkbookAlreadyArchived{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), demoWorkbookAlreadyArchived: demoWorkbookAlreadyArchived{NotebookRid: notebookRidArg}}
+}
+
+// WrapWithDemoWorkbookAlreadyArchived returns new instance of DemoWorkbookAlreadyArchived error wrapping an existing error.
+func WrapWithDemoWorkbookAlreadyArchived(err error, notebookRidArg api.NotebookRid) *DemoWorkbookAlreadyArchived {
+	return &DemoWorkbookAlreadyArchived{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, demoWorkbookAlreadyArchived: demoWorkbookAlreadyArchived{NotebookRid: notebookRidArg}}
+}
+
+// DemoWorkbookAlreadyArchived is an error type.
+type DemoWorkbookAlreadyArchived struct {
+	errorInstanceID uuid.UUID
+	demoWorkbookAlreadyArchived
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDemoWorkbookAlreadyArchived returns true if err is an instance of DemoWorkbookAlreadyArchived.
+func IsDemoWorkbookAlreadyArchived(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DemoWorkbookAlreadyArchived)
+	return ok
+}
+
+func (e *DemoWorkbookAlreadyArchived) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookAlreadyArchived (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DemoWorkbookAlreadyArchived) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DemoWorkbookAlreadyArchived) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DemoWorkbookAlreadyArchived) Message() string {
+	return "INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookAlreadyArchived"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DemoWorkbookAlreadyArchived) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DemoWorkbookAlreadyArchived) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *DemoWorkbookAlreadyArchived) Name() string {
+	return "SandboxWorkspace:DemoWorkbookAlreadyArchived"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DemoWorkbookAlreadyArchived) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DemoWorkbookAlreadyArchived) Parameters() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DemoWorkbookAlreadyArchived) safeParams() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookAlreadyArchived) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DemoWorkbookAlreadyArchived) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookAlreadyArchived) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DemoWorkbookAlreadyArchived) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.demoWorkbookAlreadyArchived)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "SandboxWorkspace:DemoWorkbookAlreadyArchived", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DemoWorkbookAlreadyArchived) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters demoWorkbookAlreadyArchived
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.demoWorkbookAlreadyArchived = parameters
+	return nil
+}
+
+// safelogging:@Safe
+type demoWorkbookDescriptionRequired struct {
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
+}
+
+func (o demoWorkbookDescriptionRequired) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *demoWorkbookDescriptionRequired) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDemoWorkbookDescriptionRequired returns new instance of DemoWorkbookDescriptionRequired error.
+func NewDemoWorkbookDescriptionRequired(notebookRidArg api.NotebookRid) *DemoWorkbookDescriptionRequired {
+	return &DemoWorkbookDescriptionRequired{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), demoWorkbookDescriptionRequired: demoWorkbookDescriptionRequired{NotebookRid: notebookRidArg}}
+}
+
+// WrapWithDemoWorkbookDescriptionRequired returns new instance of DemoWorkbookDescriptionRequired error wrapping an existing error.
+func WrapWithDemoWorkbookDescriptionRequired(err error, notebookRidArg api.NotebookRid) *DemoWorkbookDescriptionRequired {
+	return &DemoWorkbookDescriptionRequired{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, demoWorkbookDescriptionRequired: demoWorkbookDescriptionRequired{NotebookRid: notebookRidArg}}
+}
+
+// DemoWorkbookDescriptionRequired is an error type.
+type DemoWorkbookDescriptionRequired struct {
+	errorInstanceID uuid.UUID
+	demoWorkbookDescriptionRequired
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDemoWorkbookDescriptionRequired returns true if err is an instance of DemoWorkbookDescriptionRequired.
+func IsDemoWorkbookDescriptionRequired(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DemoWorkbookDescriptionRequired)
+	return ok
+}
+
+func (e *DemoWorkbookDescriptionRequired) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookDescriptionRequired (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DemoWorkbookDescriptionRequired) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DemoWorkbookDescriptionRequired) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DemoWorkbookDescriptionRequired) Message() string {
+	return "INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookDescriptionRequired"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DemoWorkbookDescriptionRequired) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DemoWorkbookDescriptionRequired) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *DemoWorkbookDescriptionRequired) Name() string {
+	return "SandboxWorkspace:DemoWorkbookDescriptionRequired"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DemoWorkbookDescriptionRequired) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DemoWorkbookDescriptionRequired) Parameters() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DemoWorkbookDescriptionRequired) safeParams() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookDescriptionRequired) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DemoWorkbookDescriptionRequired) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookDescriptionRequired) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DemoWorkbookDescriptionRequired) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.demoWorkbookDescriptionRequired)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "SandboxWorkspace:DemoWorkbookDescriptionRequired", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DemoWorkbookDescriptionRequired) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters demoWorkbookDescriptionRequired
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.demoWorkbookDescriptionRequired = parameters
+	return nil
+}
+
+type demoWorkbookDuplicateLabels struct{}
+
+func (o demoWorkbookDuplicateLabels) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *demoWorkbookDuplicateLabels) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDemoWorkbookDuplicateLabels returns new instance of DemoWorkbookDuplicateLabels error.
+func NewDemoWorkbookDuplicateLabels() *DemoWorkbookDuplicateLabels {
+	return &DemoWorkbookDuplicateLabels{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), demoWorkbookDuplicateLabels: demoWorkbookDuplicateLabels{}}
+}
+
+// WrapWithDemoWorkbookDuplicateLabels returns new instance of DemoWorkbookDuplicateLabels error wrapping an existing error.
+func WrapWithDemoWorkbookDuplicateLabels(err error) *DemoWorkbookDuplicateLabels {
+	return &DemoWorkbookDuplicateLabels{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, demoWorkbookDuplicateLabels: demoWorkbookDuplicateLabels{}}
+}
+
+// DemoWorkbookDuplicateLabels is an error type.
+type DemoWorkbookDuplicateLabels struct {
+	errorInstanceID uuid.UUID
+	demoWorkbookDuplicateLabels
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDemoWorkbookDuplicateLabels returns true if err is an instance of DemoWorkbookDuplicateLabels.
+func IsDemoWorkbookDuplicateLabels(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DemoWorkbookDuplicateLabels)
+	return ok
+}
+
+func (e *DemoWorkbookDuplicateLabels) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookDuplicateLabels (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DemoWorkbookDuplicateLabels) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DemoWorkbookDuplicateLabels) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DemoWorkbookDuplicateLabels) Message() string {
+	return "INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookDuplicateLabels"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DemoWorkbookDuplicateLabels) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DemoWorkbookDuplicateLabels) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *DemoWorkbookDuplicateLabels) Name() string {
+	return "SandboxWorkspace:DemoWorkbookDuplicateLabels"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DemoWorkbookDuplicateLabels) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DemoWorkbookDuplicateLabels) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DemoWorkbookDuplicateLabels) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookDuplicateLabels) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DemoWorkbookDuplicateLabels) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookDuplicateLabels) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DemoWorkbookDuplicateLabels) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.demoWorkbookDuplicateLabels)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "SandboxWorkspace:DemoWorkbookDuplicateLabels", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DemoWorkbookDuplicateLabels) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters demoWorkbookDuplicateLabels
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.demoWorkbookDuplicateLabels = parameters
+	return nil
+}
+
+// safelogging:@Safe
+type demoWorkbookLabelsRequired struct {
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
+}
+
+func (o demoWorkbookLabelsRequired) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *demoWorkbookLabelsRequired) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDemoWorkbookLabelsRequired returns new instance of DemoWorkbookLabelsRequired error.
+func NewDemoWorkbookLabelsRequired(notebookRidArg api.NotebookRid) *DemoWorkbookLabelsRequired {
+	return &DemoWorkbookLabelsRequired{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), demoWorkbookLabelsRequired: demoWorkbookLabelsRequired{NotebookRid: notebookRidArg}}
+}
+
+// WrapWithDemoWorkbookLabelsRequired returns new instance of DemoWorkbookLabelsRequired error wrapping an existing error.
+func WrapWithDemoWorkbookLabelsRequired(err error, notebookRidArg api.NotebookRid) *DemoWorkbookLabelsRequired {
+	return &DemoWorkbookLabelsRequired{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, demoWorkbookLabelsRequired: demoWorkbookLabelsRequired{NotebookRid: notebookRidArg}}
+}
+
+// DemoWorkbookLabelsRequired is an error type.
+type DemoWorkbookLabelsRequired struct {
+	errorInstanceID uuid.UUID
+	demoWorkbookLabelsRequired
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDemoWorkbookLabelsRequired returns true if err is an instance of DemoWorkbookLabelsRequired.
+func IsDemoWorkbookLabelsRequired(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DemoWorkbookLabelsRequired)
+	return ok
+}
+
+func (e *DemoWorkbookLabelsRequired) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookLabelsRequired (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DemoWorkbookLabelsRequired) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DemoWorkbookLabelsRequired) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DemoWorkbookLabelsRequired) Message() string {
+	return "INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookLabelsRequired"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DemoWorkbookLabelsRequired) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DemoWorkbookLabelsRequired) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *DemoWorkbookLabelsRequired) Name() string {
+	return "SandboxWorkspace:DemoWorkbookLabelsRequired"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DemoWorkbookLabelsRequired) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DemoWorkbookLabelsRequired) Parameters() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DemoWorkbookLabelsRequired) safeParams() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookLabelsRequired) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DemoWorkbookLabelsRequired) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookLabelsRequired) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DemoWorkbookLabelsRequired) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.demoWorkbookLabelsRequired)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "SandboxWorkspace:DemoWorkbookLabelsRequired", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DemoWorkbookLabelsRequired) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters demoWorkbookLabelsRequired
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.demoWorkbookLabelsRequired = parameters
+	return nil
+}
+
+// safelogging:@Safe
+type demoWorkbookMustBePublished struct {
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
+}
+
+func (o demoWorkbookMustBePublished) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *demoWorkbookMustBePublished) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDemoWorkbookMustBePublished returns new instance of DemoWorkbookMustBePublished error.
+func NewDemoWorkbookMustBePublished(notebookRidArg api.NotebookRid) *DemoWorkbookMustBePublished {
+	return &DemoWorkbookMustBePublished{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), demoWorkbookMustBePublished: demoWorkbookMustBePublished{NotebookRid: notebookRidArg}}
+}
+
+// WrapWithDemoWorkbookMustBePublished returns new instance of DemoWorkbookMustBePublished error wrapping an existing error.
+func WrapWithDemoWorkbookMustBePublished(err error, notebookRidArg api.NotebookRid) *DemoWorkbookMustBePublished {
+	return &DemoWorkbookMustBePublished{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, demoWorkbookMustBePublished: demoWorkbookMustBePublished{NotebookRid: notebookRidArg}}
+}
+
+// DemoWorkbookMustBePublished is an error type.
+type DemoWorkbookMustBePublished struct {
+	errorInstanceID uuid.UUID
+	demoWorkbookMustBePublished
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDemoWorkbookMustBePublished returns true if err is an instance of DemoWorkbookMustBePublished.
+func IsDemoWorkbookMustBePublished(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DemoWorkbookMustBePublished)
+	return ok
+}
+
+func (e *DemoWorkbookMustBePublished) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookMustBePublished (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DemoWorkbookMustBePublished) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DemoWorkbookMustBePublished) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DemoWorkbookMustBePublished) Message() string {
+	return "INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookMustBePublished"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DemoWorkbookMustBePublished) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DemoWorkbookMustBePublished) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *DemoWorkbookMustBePublished) Name() string {
+	return "SandboxWorkspace:DemoWorkbookMustBePublished"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DemoWorkbookMustBePublished) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DemoWorkbookMustBePublished) Parameters() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DemoWorkbookMustBePublished) safeParams() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookMustBePublished) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DemoWorkbookMustBePublished) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookMustBePublished) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DemoWorkbookMustBePublished) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.demoWorkbookMustBePublished)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "SandboxWorkspace:DemoWorkbookMustBePublished", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DemoWorkbookMustBePublished) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters demoWorkbookMustBePublished
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.demoWorkbookMustBePublished = parameters
+	return nil
+}
+
+// safelogging:@Safe
+type demoWorkbookTitleRequired struct {
+	NotebookRid api.NotebookRid `json:"notebookRid" safelogging:"@Safe"`
+}
+
+func (o demoWorkbookTitleRequired) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *demoWorkbookTitleRequired) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDemoWorkbookTitleRequired returns new instance of DemoWorkbookTitleRequired error.
+func NewDemoWorkbookTitleRequired(notebookRidArg api.NotebookRid) *DemoWorkbookTitleRequired {
+	return &DemoWorkbookTitleRequired{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), demoWorkbookTitleRequired: demoWorkbookTitleRequired{NotebookRid: notebookRidArg}}
+}
+
+// WrapWithDemoWorkbookTitleRequired returns new instance of DemoWorkbookTitleRequired error wrapping an existing error.
+func WrapWithDemoWorkbookTitleRequired(err error, notebookRidArg api.NotebookRid) *DemoWorkbookTitleRequired {
+	return &DemoWorkbookTitleRequired{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, demoWorkbookTitleRequired: demoWorkbookTitleRequired{NotebookRid: notebookRidArg}}
+}
+
+// DemoWorkbookTitleRequired is an error type.
+type DemoWorkbookTitleRequired struct {
+	errorInstanceID uuid.UUID
+	demoWorkbookTitleRequired
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDemoWorkbookTitleRequired returns true if err is an instance of DemoWorkbookTitleRequired.
+func IsDemoWorkbookTitleRequired(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DemoWorkbookTitleRequired)
+	return ok
+}
+
+func (e *DemoWorkbookTitleRequired) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookTitleRequired (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DemoWorkbookTitleRequired) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DemoWorkbookTitleRequired) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DemoWorkbookTitleRequired) Message() string {
+	return "INVALID_ARGUMENT SandboxWorkspace:DemoWorkbookTitleRequired"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DemoWorkbookTitleRequired) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DemoWorkbookTitleRequired) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *DemoWorkbookTitleRequired) Name() string {
+	return "SandboxWorkspace:DemoWorkbookTitleRequired"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DemoWorkbookTitleRequired) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DemoWorkbookTitleRequired) Parameters() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DemoWorkbookTitleRequired) safeParams() map[string]interface{} {
+	return map[string]interface{}{"notebookRid": e.NotebookRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookTitleRequired) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DemoWorkbookTitleRequired) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DemoWorkbookTitleRequired) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DemoWorkbookTitleRequired) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.demoWorkbookTitleRequired)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "SandboxWorkspace:DemoWorkbookTitleRequired", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DemoWorkbookTitleRequired) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters demoWorkbookTitleRequired
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.demoWorkbookTitleRequired = parameters
+	return nil
+}
 
 // safelogging:@Safe
 type workspaceNotSandbox struct {
@@ -167,5 +1065,11 @@ func (e *WorkspaceNotSandbox) UnmarshalJSON(data []byte) error {
 }
 
 func init() {
+	conjureerrors.RegisterErrorType("SandboxWorkspace:DemoWorkbookAlreadyArchived", reflect.TypeOf(DemoWorkbookAlreadyArchived{}))
+	conjureerrors.RegisterErrorType("SandboxWorkspace:DemoWorkbookDescriptionRequired", reflect.TypeOf(DemoWorkbookDescriptionRequired{}))
+	conjureerrors.RegisterErrorType("SandboxWorkspace:DemoWorkbookDuplicateLabels", reflect.TypeOf(DemoWorkbookDuplicateLabels{}))
+	conjureerrors.RegisterErrorType("SandboxWorkspace:DemoWorkbookLabelsRequired", reflect.TypeOf(DemoWorkbookLabelsRequired{}))
+	conjureerrors.RegisterErrorType("SandboxWorkspace:DemoWorkbookMustBePublished", reflect.TypeOf(DemoWorkbookMustBePublished{}))
+	conjureerrors.RegisterErrorType("SandboxWorkspace:DemoWorkbookTitleRequired", reflect.TypeOf(DemoWorkbookTitleRequired{}))
 	conjureerrors.RegisterErrorType("SandboxWorkspace:WorkspaceNotSandbox", reflect.TypeOf(WorkspaceNotSandbox{}))
 }

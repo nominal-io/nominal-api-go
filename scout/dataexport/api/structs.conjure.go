@@ -74,6 +74,30 @@ func (o *Csv) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Describes one requested export column that could not be exported.
+type ExportChannelFailure struct {
+	// User-visible export column name from the request.
+	ColumnName string `json:"columnName"`
+	// Error explaining why this export column could not be exported.
+	Error api1.SerializableError `json:"error"`
+}
+
+func (o ExportChannelFailure) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ExportChannelFailure) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ExportDataRequest struct {
 	Format      ExportFormat       `json:"format"`
 	Compression *CompressionFormat `json:"compression,omitempty"`
@@ -183,7 +207,26 @@ func (o *Iso8601TimestampFormat) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 // Export settings for a `.mat` file compatible with matlab.
-type Matfile struct{}
+type Matfile struct {
+	/*
+	   If present, exported column names are split on this single-character delimiter and written as nested
+	   MATLAB structs. If absent, MATLAB export preserves the existing flat field behavior.
+
+	   When this option is set, requested channel names must produce valid struct paths after splitting:
+	   - the delimiter must be exactly one character;
+	   - no path segment may be empty;
+	   - the first path segment may not be `timestamps`, which is reserved for the generated timestamp column;
+	   - no two channels may resolve to the same path;
+	   - no channel may resolve to both a leaf and an object path, such as `a.b` and `a.b.c`.
+
+	   If a grouped export produces multiple output columns for one requested channel, tag names and values
+	   are appended to the final leaf field name only. The delimiter is not applied to those tag suffixes.
+
+	   Other channel name segments are preserved as-is. Segments that are not valid MATLAB identifiers may
+	   require dynamic field access in MATLAB.
+	*/
+	StructHierarchicalDelimiter *string `json:"structHierarchicalDelimiter,omitempty"`
+}
 
 func (o Matfile) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)

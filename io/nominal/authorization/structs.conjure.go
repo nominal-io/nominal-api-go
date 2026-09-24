@@ -149,15 +149,18 @@ func (o *GetAccessTokenFromApiKeyRequest) UnmarshalYAML(unmarshal func(interface
 
 /*
 We accept an OIDC ID token issued by a trusted identity provider as proof of authentication.
-The ID token is validated and exchanged for a Nominal access token.
+The ID token is validated and exchanged for a Nominal access token with a 24h expiry.
 This ID token should generally be short lived since it is fungible with a Nominal access token
-via this endpoint. An access token, if provider, is used to get user information from the OIDC
-userinfo endpoint. An org rid should be provided if the user is a member of multiple orgs.
+via this endpoint. An access token, if provided, is used to get user information from the OIDC
+userinfo endpoint.
+A workspace rid or an org rid should be provided if the user is a guest or a member of multiple
+orgs. These will be resolved to determine what org the Nominal token should be minted for.
 */
 type GetAccessTokenRequest struct {
-	IdToken     string      `json:"idToken"`
-	AccessToken *string     `json:"accessToken,omitempty"`
-	OrgRid      *api.OrgRid `json:"orgRid,omitempty" safelogging:"@Safe"`
+	IdToken      string             `json:"idToken"`
+	AccessToken  *string            `json:"accessToken,omitempty"`
+	OrgRid       *api.OrgRid        `json:"orgRid,omitempty" safelogging:"@Safe"`
+	WorkspaceRid *rids.WorkspaceRid `json:"workspaceRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o GetAccessTokenRequest) MarshalYAML() (interface{}, error) {
@@ -181,6 +184,11 @@ type GetAccessTokenResponse struct {
 	ExpiresAtSeconds safelong.SafeLong `json:"expiresAtSeconds"`
 	UserUuid         uuid.UUID         `json:"userUuid"`
 	OrgUuid          uuid.UUID         `json:"orgUuid"`
+	/*
+	   True if the user reaches the token's org as a guest rather than a member.
+	   Populated by all endpoints; optional for version compatibility.
+	*/
+	IsGuest *bool `json:"isGuest,omitempty"`
 }
 
 func (o GetAccessTokenResponse) MarshalYAML() (interface{}, error) {
@@ -199,9 +207,54 @@ func (o *GetAccessTokenResponse) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// We use the claims in the id token to determine which orgs the user belongs to.
-type GetUserOrgsRequest struct {
+/*
+We use an OIDC id token issued by a trusted identity provider to access the end session endpoint.
+This is only used to get the issuer
+*/
+type GetIdpEndSessionEndpointRequest struct {
 	IdToken string `json:"idToken"`
+}
+
+func (o GetIdpEndSessionEndpointRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetIdpEndSessionEndpointRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type GetIdpEndSessionEndpointResponse struct {
+	EndSessionEndpoint *string `json:"endSessionEndpoint,omitempty"`
+}
+
+func (o GetIdpEndSessionEndpointResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetIdpEndSessionEndpointResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// We use the claims in the id + access token to determine which orgs the user belongs to.
+type GetUserOrgsRequest struct {
+	IdToken     string  `json:"idToken"`
+	AccessToken *string `json:"accessToken,omitempty"`
 }
 
 func (o GetUserOrgsRequest) MarshalYAML() (interface{}, error) {
@@ -301,6 +354,63 @@ func (o *IsEmailAllowedResponse) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Request a short-lived bearer token for one of the sandbox workspaces configured
+on the gatekeeper service. Intended for in-cluster integration test runners.
+*/
+type IssueSandboxTokenRequest struct {
+	/*
+	   Desired token lifetime in seconds. Capped server-side at 3600 (1h).
+	   Omit to use the server default (the cap). Non-positive values are
+	   rejected with SandboxTokenUnavailable rather than silently
+	   upgraded to the cap.
+	*/
+	RequestedTtlSeconds *safelong.SafeLong `json:"requestedTtlSeconds,omitempty"`
+	// Which sandbox workspace to create a token for. The default is PRIMARY.
+	SandboxWorkspace *SandboxWorkspace `json:"sandboxWorkspace,omitempty"`
+}
+
+func (o IssueSandboxTokenRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *IssueSandboxTokenRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@DoNotLog
+type IssueSandboxTokenResponse struct {
+	AccessToken      string            `json:"accessToken" safelogging:"@DoNotLog"`
+	ExpiresAtSeconds safelong.SafeLong `json:"expiresAtSeconds"`
+	UserUuid         uuid.UUID         `json:"userUuid"`
+	OrgUuid          uuid.UUID         `json:"orgUuid"`
+	WorkspaceRid     rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
+}
+
+func (o IssueSandboxTokenResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *IssueSandboxTokenResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Unsafe
 type ListApiKeyRequest struct {
 	// If true, include deleted API keys in the response. Defaults to false.
@@ -371,6 +481,56 @@ func (o *ListApiKeyResponse) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Okta inline hook error object displayed to the end user when registration is denied.
+Custom messages are surfaced from errorCauses[].errorSummary with a location pointing
+at a user profile attribute; the top-level errorSummary alone is not shown to users.
+*/
+type OktaRegistrationError struct {
+	ErrorSummary string                        `json:"errorSummary"`
+	ErrorCauses  *[]OktaRegistrationErrorCause `json:"errorCauses,omitempty"`
+}
+
+func (o OktaRegistrationError) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OktaRegistrationError) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type OktaRegistrationErrorCause struct {
+	ErrorSummary string  `json:"errorSummary"`
+	Reason       *string `json:"reason,omitempty"`
+	LocationType *string `json:"locationType,omitempty"`
+	Location     *string `json:"location,omitempty"`
+	Domain       *string `json:"domain,omitempty"`
+}
+
+func (o OktaRegistrationErrorCause) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OktaRegistrationErrorCause) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type OktaRegistrationEventData struct {
 	UserProfile OktaRegistrationUserProfile `json:"userProfile"`
 }
@@ -414,6 +574,7 @@ func (o *OktaRegistrationRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 
 type OktaRegistrationResponse struct {
 	Commands []OktaUpdateActionCommand `json:"commands"`
+	Error    *OktaRegistrationError    `json:"error,omitempty"`
 }
 
 func (o OktaRegistrationResponse) MarshalJSON() ([]byte, error) {
@@ -517,9 +678,8 @@ func (o *OktaUpdateActionValue) UnmarshalYAML(unmarshal func(interface{}) error)
 /*
 We accept an OIDC access token issued by a trusted identity provider to refresh a Nominal access token.
 The access token is validated and exchanged for a Nominal access token. To be used in this endpoint,
-the OIDC access token must contain an email claim.
-The org rid from the expiring session should be provided to deconflict if the user is a member of
-multiple orgs.
+the OIDC access token must contain an email claim. The org rid from the expiring session should be provided.
+It is required for guest users and multi-org users to determine what org the Nominal token should be minted for.
 */
 type RefreshAccessTokenRequest struct {
 	AccessToken string      `json:"accessToken"`
@@ -547,6 +707,11 @@ type RefreshAccessTokenResponse struct {
 	ExpiresAtSeconds safelong.SafeLong `json:"expiresAtSeconds"`
 	UserUuid         uuid.UUID         `json:"userUuid"`
 	OrgUuid          uuid.UUID         `json:"orgUuid"`
+	/*
+	   True if the user reaches the token's org as a guest rather than a member.
+	   Populated by all endpoints; optional for version compatibility.
+	*/
+	IsGuest *bool `json:"isGuest,omitempty"`
 }
 
 func (o RefreshAccessTokenResponse) MarshalYAML() (interface{}, error) {
@@ -600,6 +765,32 @@ func (o RegisterInWorkspaceRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *RegisterInWorkspaceRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Switch the authenticated session to the provided org rid.
+The user must belong to that org. Returns a new Nominal access token scoped to the org,
+with expiry bounded by the current token's remaining lifetime (capped at 24h).
+*/
+// safelogging:@Safe
+type SetUserOrgRequest struct {
+	OrgRid api.OrgRid `json:"orgRid" safelogging:"@Safe"`
+}
+
+func (o SetUserOrgRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SetUserOrgRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

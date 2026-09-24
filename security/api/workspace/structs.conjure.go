@@ -10,6 +10,35 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+type GetWorkspacesRequest struct {
+	/*
+	   When true (the default), returns only workspaces in the caller's session org.
+	   When false, returns workspaces across all orgs the user belongs to.
+	*/
+	FilterBySessionOrg *bool `json:"filterBySessionOrg,omitempty"`
+	/*
+	   When true, includes workspaces where the user matches a guest condition.
+	   When false (the default), returns only workspaces where the user is a full member.
+	*/
+	IncludeGuestWorkspaces *bool `json:"includeGuestWorkspaces,omitempty"`
+}
+
+func (o GetWorkspacesRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GetWorkspacesRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Safe
 type ProcedureSettingsV1 struct {
 	/*

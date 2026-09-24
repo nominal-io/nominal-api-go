@@ -11,24 +11,38 @@ import (
 )
 
 /*
-A record of a coachmark dismissal, including when it was dismissed
-and on which app version.
+Request to batch preregister users in the caller's organization.
+Only creates new users for emails that don't already exist.
+Newly created users are stored with an email claim matching their email address.
+Maximum of 1000 emails per request.
 */
-type CoachmarkDismissal struct {
-	// The coachmark identifier (typically the feature flag name)
-	CoachmarkId string `json:"coachmarkId"`
-	// ISO 8601 timestamp of when the coachmark was dismissed
-	DismissedAt datetime.DateTime `json:"dismissedAt"`
-	// The apps-scout version (semver) when the coachmark was dismissed
-	AppVersion string `json:"appVersion"`
-	/*
-	   The step index when dismissed (for multi-step coachmarks).
-	   If not present, the coachmark was dismissed via the X button.
-	*/
-	StepIndex *int `json:"stepIndex,omitempty"`
+type BatchPreregisterUsersRequest struct {
+	// The list of email addresses to preregister. Maximum 1000 entries.
+	Emails []string `json:"emails"`
 }
 
-func (o CoachmarkDismissal) MarshalYAML() (interface{}, error) {
+func (o BatchPreregisterUsersRequest) MarshalJSON() ([]byte, error) {
+	if o.Emails == nil {
+		o.Emails = make([]string, 0)
+	}
+	type _tmpBatchPreregisterUsersRequest BatchPreregisterUsersRequest
+	return safejson.Marshal(_tmpBatchPreregisterUsersRequest(o))
+}
+
+func (o *BatchPreregisterUsersRequest) UnmarshalJSON(data []byte) error {
+	type _tmpBatchPreregisterUsersRequest BatchPreregisterUsersRequest
+	var rawBatchPreregisterUsersRequest _tmpBatchPreregisterUsersRequest
+	if err := safejson.Unmarshal(data, &rawBatchPreregisterUsersRequest); err != nil {
+		return err
+	}
+	if rawBatchPreregisterUsersRequest.Emails == nil {
+		rawBatchPreregisterUsersRequest.Emails = make([]string, 0)
+	}
+	*o = BatchPreregisterUsersRequest(rawBatchPreregisterUsersRequest)
+	return nil
+}
+
+func (o BatchPreregisterUsersRequest) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -36,7 +50,53 @@ func (o CoachmarkDismissal) MarshalYAML() (interface{}, error) {
 	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
 }
 
-func (o *CoachmarkDismissal) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (o *BatchPreregisterUsersRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Response containing only the newly created users keyed by email.
+Emails that already had existing accounts are silently skipped.
+*/
+type BatchPreregisterUsersResponse struct {
+	// Map of email to UserV2 for each newly created user.
+	Users map[string]UserV2 `json:"users"`
+}
+
+func (o BatchPreregisterUsersResponse) MarshalJSON() ([]byte, error) {
+	if o.Users == nil {
+		o.Users = make(map[string]UserV2)
+	}
+	type _tmpBatchPreregisterUsersResponse BatchPreregisterUsersResponse
+	return safejson.Marshal(_tmpBatchPreregisterUsersResponse(o))
+}
+
+func (o *BatchPreregisterUsersResponse) UnmarshalJSON(data []byte) error {
+	type _tmpBatchPreregisterUsersResponse BatchPreregisterUsersResponse
+	var rawBatchPreregisterUsersResponse _tmpBatchPreregisterUsersResponse
+	if err := safejson.Unmarshal(data, &rawBatchPreregisterUsersResponse); err != nil {
+		return err
+	}
+	if rawBatchPreregisterUsersResponse.Users == nil {
+		rawBatchPreregisterUsersResponse.Users = make(map[string]UserV2)
+	}
+	*o = BatchPreregisterUsersResponse(rawBatchPreregisterUsersResponse)
+	return nil
+}
+
+func (o BatchPreregisterUsersResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BatchPreregisterUsersResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -58,32 +118,6 @@ func (o DefaultNumberFormatConfigurations) MarshalYAML() (interface{}, error) {
 }
 
 func (o *DefaultNumberFormatConfigurations) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// Request to dismiss a coachmark
-type DismissCoachmarkRequest struct {
-	// The coachmark identifier to dismiss
-	CoachmarkId string `json:"coachmarkId"`
-	// The apps-scout version (semver) when dismissing
-	AppVersion string `json:"appVersion"`
-	// The step index when dismissed (for multi-step coachmarks)
-	StepIndex *int `json:"stepIndex,omitempty"`
-}
-
-func (o DismissCoachmarkRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *DismissCoachmarkRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -149,74 +183,6 @@ func (o GenerateMediaMtxTokenResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *GenerateMediaMtxTokenResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// Request to get coachmark dismissals
-type GetCoachmarkDismissalsRequest struct {
-	/*
-	   Optional list of coachmark IDs to filter by.
-	   If empty, returns all dismissals for the user.
-	*/
-	CoachmarkIds *[]string `json:"coachmarkIds,omitempty"`
-}
-
-func (o GetCoachmarkDismissalsRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *GetCoachmarkDismissalsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// Response containing coachmark dismissals
-type GetCoachmarkDismissalsResponse struct {
-	// Map of coachmark ID to dismissal record
-	Dismissals map[string]CoachmarkDismissal `json:"dismissals"`
-}
-
-func (o GetCoachmarkDismissalsResponse) MarshalJSON() ([]byte, error) {
-	if o.Dismissals == nil {
-		o.Dismissals = make(map[string]CoachmarkDismissal)
-	}
-	type _tmpGetCoachmarkDismissalsResponse GetCoachmarkDismissalsResponse
-	return safejson.Marshal(_tmpGetCoachmarkDismissalsResponse(o))
-}
-
-func (o *GetCoachmarkDismissalsResponse) UnmarshalJSON(data []byte) error {
-	type _tmpGetCoachmarkDismissalsResponse GetCoachmarkDismissalsResponse
-	var rawGetCoachmarkDismissalsResponse _tmpGetCoachmarkDismissalsResponse
-	if err := safejson.Unmarshal(data, &rawGetCoachmarkDismissalsResponse); err != nil {
-		return err
-	}
-	if rawGetCoachmarkDismissalsResponse.Dismissals == nil {
-		rawGetCoachmarkDismissalsResponse.Dismissals = make(map[string]CoachmarkDismissal)
-	}
-	*o = GetCoachmarkDismissalsResponse(rawGetCoachmarkDismissalsResponse)
-	return nil
-}
-
-func (o GetCoachmarkDismissalsResponse) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *GetCoachmarkDismissalsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -292,6 +258,84 @@ func (o *Jwks) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Lists members of one or more orgs together with their most recent login into each org.
+The caller must be an admin of every org requested. Defaults to the caller's own org.
+*/
+// safelogging:@Unsafe
+type ListOrgLoginActivityRequest struct {
+	// Defaults to the caller's own org. The caller must be an admin of every org listed.
+	Orgs *[]OrgRid `json:"orgs,omitempty" safelogging:"@Safe"`
+	/*
+	   Sorts by last login time. Defaults to true (most recent login first, with users
+	   who have never logged in last). Set to false to sort oldest-first, with users who
+	   have never logged in first.
+	*/
+	IsDescending  *bool       `json:"isDescending,omitempty"`
+	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+	// Defaults to 100. Will throw if larger than 1_000.
+	PageSize *int `json:"pageSize,omitempty"`
+}
+
+func (o ListOrgLoginActivityRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ListOrgLoginActivityRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Unsafe
+type ListOrgLoginActivityResponse struct {
+	Results       []OrgUserLoginActivity `json:"results"`
+	NextPageToken *api1.Token            `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+}
+
+func (o ListOrgLoginActivityResponse) MarshalJSON() ([]byte, error) {
+	if o.Results == nil {
+		o.Results = make([]OrgUserLoginActivity, 0)
+	}
+	type _tmpListOrgLoginActivityResponse ListOrgLoginActivityResponse
+	return safejson.Marshal(_tmpListOrgLoginActivityResponse(o))
+}
+
+func (o *ListOrgLoginActivityResponse) UnmarshalJSON(data []byte) error {
+	type _tmpListOrgLoginActivityResponse ListOrgLoginActivityResponse
+	var rawListOrgLoginActivityResponse _tmpListOrgLoginActivityResponse
+	if err := safejson.Unmarshal(data, &rawListOrgLoginActivityResponse); err != nil {
+		return err
+	}
+	if rawListOrgLoginActivityResponse.Results == nil {
+		rawListOrgLoginActivityResponse.Results = make([]OrgUserLoginActivity, 0)
+	}
+	*o = ListOrgLoginActivityResponse(rawListOrgLoginActivityResponse)
+	return nil
+}
+
+func (o ListOrgLoginActivityResponse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ListOrgLoginActivityResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // A permission definition for MediaMTX authentication
 type MediaMtxPermission struct {
 	// The action permitted. Allowed values are publish, read, playback, api, metrics, pprof.
@@ -318,6 +362,8 @@ func (o *MediaMtxPermission) UnmarshalYAML(unmarshal func(interface{}) error) er
 
 type OrgSettings struct {
 	DefaultTimeRangeType *DefaultTimeRangeTypeSetting `json:"defaultTimeRangeType,omitempty"`
+	// Whether newly created workbooks are visible in search by default.
+	DefaultWorkbookVisibleInSearch *bool `json:"defaultWorkbookVisibleInSearch,omitempty"`
 }
 
 func (o OrgSettings) MarshalYAML() (interface{}, error) {
@@ -329,6 +375,32 @@ func (o OrgSettings) MarshalYAML() (interface{}, error) {
 }
 
 func (o *OrgSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type OrgUserLoginActivity struct {
+	UserRid UserRid `json:"userRid" safelogging:"@Safe"`
+	OrgRid  OrgRid  `json:"orgRid" safelogging:"@Safe"`
+	/*
+	   The most recent time this user logged into orgRid.
+	   Absent if they have never logged in.
+	*/
+	LastLoginAt *datetime.DateTime `json:"lastLoginAt,omitempty"`
+}
+
+func (o OrgUserLoginActivity) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *OrgUserLoginActivity) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -457,6 +529,14 @@ type UserSettings struct {
 	TimeSeriesHoverTooltipConcise *bool                              `json:"timeSeriesHoverTooltipConcise,omitempty"`
 	ChartHoverTooltipMode         *ChartTooltipModeSetting           `json:"chartHoverTooltipMode,omitempty"`
 	DefaultNumberFormats          *DefaultNumberFormatConfigurations `json:"defaultNumberFormats,omitempty"`
+	// Relative timestamp display preference.
+	RelativeTimestampFormat *api.RelativeTimestampFormat `json:"relativeTimestampFormat,omitempty"`
+	VimModeEnabled          *bool                        `json:"vimModeEnabled,omitempty"`
+	/*
+	   Whether newly created workbooks are visible in search by default.
+	   If absent, the organization default applies.
+	*/
+	DefaultWorkbookVisibleInSearch *bool `json:"defaultWorkbookVisibleInSearch,omitempty"`
 }
 
 func (o UserSettings) MarshalYAML() (interface{}, error) {
@@ -475,13 +555,15 @@ func (o *UserSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type UserV2 struct {
 	Rid         UserRid `json:"rid" safelogging:"@Safe"`
 	OrgRid      OrgRid  `json:"orgRid" safelogging:"@Safe"`
-	Email       string  `json:"email"`
-	DisplayName string  `json:"displayName"`
+	Email       string  `json:"email" safelogging:"@Unsafe"`
+	DisplayName string  `json:"displayName" safelogging:"@Unsafe"`
 	// Avatar URL or a default avatar if the user does not have one.
-	AvatarUrl string `json:"avatarUrl"`
+	AvatarUrl string             `json:"avatarUrl"`
+	CreatedAt *datetime.DateTime `json:"createdAt,omitempty"`
 }
 
 func (o UserV2) MarshalYAML() (interface{}, error) {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-contract/errors"
+	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 	"github.com/palantir/pkg/uuid"
@@ -308,6 +309,305 @@ func (e *NotAuthorized) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.notAuthorized = parameters
+	return nil
+}
+
+type notAuthorizedAdmin struct {
+	Rid rid.ResourceIdentifier `json:"rid"`
+}
+
+func (o notAuthorizedAdmin) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *notAuthorizedAdmin) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewNotAuthorizedAdmin returns new instance of NotAuthorizedAdmin error.
+func NewNotAuthorizedAdmin(ridArg rid.ResourceIdentifier) *NotAuthorizedAdmin {
+	return &NotAuthorizedAdmin{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), notAuthorizedAdmin: notAuthorizedAdmin{Rid: ridArg}}
+}
+
+// WrapWithNotAuthorizedAdmin returns new instance of NotAuthorizedAdmin error wrapping an existing error.
+func WrapWithNotAuthorizedAdmin(err error, ridArg rid.ResourceIdentifier) *NotAuthorizedAdmin {
+	return &NotAuthorizedAdmin{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, notAuthorizedAdmin: notAuthorizedAdmin{Rid: ridArg}}
+}
+
+// NotAuthorizedAdmin is an error type.
+type NotAuthorizedAdmin struct {
+	errorInstanceID uuid.UUID
+	notAuthorizedAdmin
+	cause error
+	stack werror.StackTrace
+}
+
+// IsNotAuthorizedAdmin returns true if err is an instance of NotAuthorizedAdmin.
+func IsNotAuthorizedAdmin(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*NotAuthorizedAdmin)
+	return ok
+}
+
+func (e *NotAuthorizedAdmin) Error() string {
+	return fmt.Sprintf("PERMISSION_DENIED Authentication:NotAuthorizedAdmin (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *NotAuthorizedAdmin) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *NotAuthorizedAdmin) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *NotAuthorizedAdmin) Message() string {
+	return "PERMISSION_DENIED Authentication:NotAuthorizedAdmin"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *NotAuthorizedAdmin) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *NotAuthorizedAdmin) Code() errors.ErrorCode {
+	return errors.PermissionDenied
+}
+
+// Name returns an error name identifying error type.
+func (e *NotAuthorizedAdmin) Name() string {
+	return "Authentication:NotAuthorizedAdmin"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *NotAuthorizedAdmin) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *NotAuthorizedAdmin) Parameters() map[string]interface{} {
+	return map[string]interface{}{"rid": e.Rid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *NotAuthorizedAdmin) safeParams() map[string]interface{} {
+	return map[string]interface{}{"rid": e.Rid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *NotAuthorizedAdmin) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *NotAuthorizedAdmin) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *NotAuthorizedAdmin) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e NotAuthorizedAdmin) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.notAuthorizedAdmin)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.PermissionDenied, ErrorName: "Authentication:NotAuthorizedAdmin", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *NotAuthorizedAdmin) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters notAuthorizedAdmin
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.notAuthorizedAdmin = parameters
+	return nil
+}
+
+type orgLoginActivityLimitExceeded struct {
+	RequestedLimit int `json:"requestedLimit"`
+	AllowedLimit   int `json:"allowedLimit"`
+}
+
+func (o orgLoginActivityLimitExceeded) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *orgLoginActivityLimitExceeded) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewOrgLoginActivityLimitExceeded returns new instance of OrgLoginActivityLimitExceeded error.
+func NewOrgLoginActivityLimitExceeded(requestedLimitArg int, allowedLimitArg int) *OrgLoginActivityLimitExceeded {
+	return &OrgLoginActivityLimitExceeded{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), orgLoginActivityLimitExceeded: orgLoginActivityLimitExceeded{RequestedLimit: requestedLimitArg, AllowedLimit: allowedLimitArg}}
+}
+
+// WrapWithOrgLoginActivityLimitExceeded returns new instance of OrgLoginActivityLimitExceeded error wrapping an existing error.
+func WrapWithOrgLoginActivityLimitExceeded(err error, requestedLimitArg int, allowedLimitArg int) *OrgLoginActivityLimitExceeded {
+	return &OrgLoginActivityLimitExceeded{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, orgLoginActivityLimitExceeded: orgLoginActivityLimitExceeded{RequestedLimit: requestedLimitArg, AllowedLimit: allowedLimitArg}}
+}
+
+// OrgLoginActivityLimitExceeded is an error type.
+type OrgLoginActivityLimitExceeded struct {
+	errorInstanceID uuid.UUID
+	orgLoginActivityLimitExceeded
+	cause error
+	stack werror.StackTrace
+}
+
+// IsOrgLoginActivityLimitExceeded returns true if err is an instance of OrgLoginActivityLimitExceeded.
+func IsOrgLoginActivityLimitExceeded(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*OrgLoginActivityLimitExceeded)
+	return ok
+}
+
+func (e *OrgLoginActivityLimitExceeded) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Authentication:OrgLoginActivityLimitExceeded (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *OrgLoginActivityLimitExceeded) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *OrgLoginActivityLimitExceeded) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *OrgLoginActivityLimitExceeded) Message() string {
+	return "INVALID_ARGUMENT Authentication:OrgLoginActivityLimitExceeded"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *OrgLoginActivityLimitExceeded) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *OrgLoginActivityLimitExceeded) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *OrgLoginActivityLimitExceeded) Name() string {
+	return "Authentication:OrgLoginActivityLimitExceeded"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *OrgLoginActivityLimitExceeded) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *OrgLoginActivityLimitExceeded) Parameters() map[string]interface{} {
+	return map[string]interface{}{"requestedLimit": e.RequestedLimit, "allowedLimit": e.AllowedLimit}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *OrgLoginActivityLimitExceeded) safeParams() map[string]interface{} {
+	return map[string]interface{}{"requestedLimit": e.RequestedLimit, "allowedLimit": e.AllowedLimit, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *OrgLoginActivityLimitExceeded) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *OrgLoginActivityLimitExceeded) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *OrgLoginActivityLimitExceeded) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e OrgLoginActivityLimitExceeded) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.orgLoginActivityLimitExceeded)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Authentication:OrgLoginActivityLimitExceeded", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *OrgLoginActivityLimitExceeded) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters orgLoginActivityLimitExceeded
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.orgLoginActivityLimitExceeded = parameters
 	return nil
 }
 
@@ -758,6 +1058,8 @@ func (e *UserNotFound) UnmarshalJSON(data []byte) error {
 func init() {
 	conjureerrors.RegisterErrorType("Authentication:MultipleUsersForSameEmail", reflect.TypeOf(MultipleUsersForSameEmail{}))
 	conjureerrors.RegisterErrorType("Authentication:NotAuthorized", reflect.TypeOf(NotAuthorized{}))
+	conjureerrors.RegisterErrorType("Authentication:NotAuthorizedAdmin", reflect.TypeOf(NotAuthorizedAdmin{}))
+	conjureerrors.RegisterErrorType("Authentication:OrgLoginActivityLimitExceeded", reflect.TypeOf(OrgLoginActivityLimitExceeded{}))
 	conjureerrors.RegisterErrorType("Authentication:OrgNotFound", reflect.TypeOf(OrgNotFound{}))
 	conjureerrors.RegisterErrorType("Authentication:SearchUsersLimitExceeded", reflect.TypeOf(SearchUsersLimitExceeded{}))
 	conjureerrors.RegisterErrorType("Authentication:UserNotFound", reflect.TypeOf(UserNotFound{}))

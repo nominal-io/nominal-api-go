@@ -10,231 +10,19 @@ import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
 	api7 "github.com/nominal-io/nominal-api-go/io/nominal/api"
-	api3 "github.com/nominal-io/nominal-api-go/scout/api"
-	api1 "github.com/nominal-io/nominal-api-go/scout/notebook/api"
-	api2 "github.com/nominal-io/nominal-api-go/scout/rids/api"
-	api4 "github.com/nominal-io/nominal-api-go/scout/run/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/api"
+	"github.com/nominal-io/nominal-api-go/scout/notebook/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	api11 "github.com/nominal-io/nominal-api-go/scout/run/api1"
-	api5 "github.com/nominal-io/nominal-api-go/scout/template/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/template/api"
 	api6 "github.com/nominal-io/nominal-api-go/scout/units/api"
-	"github.com/nominal-io/nominal-api-go/scout/versioning/api"
+	api5 "github.com/nominal-io/nominal-api-go/scout/versioning/api"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-client/httpclient"
 	"github.com/palantir/pkg/bearertoken"
 	"github.com/palantir/pkg/rid"
 	werror "github.com/palantir/witchcraft-go-error"
 )
-
-/*
-These endpoints are not intended to be used directly by clients, since
-they require saving resource-specific state associated with new commits.
-*/
-type InternalVersioningServiceClient interface {
-	/*
-	   Creates a root commit (no parents) and a "main" branch
-	   pointing to that commit, for the given resource.
-	   Throws if the resource already has a commit graph.
-	*/
-	InitResourceVersioning(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.InitResourceVersioningRequest) (api.BranchAndCommit, error)
-	/*
-	   Creates a non-permanent commit on the given branch,
-	   Throws if the branch doesn't exist.
-	   Throws if latestCommit is passed and is not the latest commit.
-	*/
-	SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.SaveWorkingStateRequest) (api.BranchAndCommit, error)
-	/*
-	   Creates a new permanent commit on the given branch.
-	   Throws if the branch doesn't exist.
-	   Throws if latestCommit is passed and is not the latest commit.
-	*/
-	Commit(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.CommitRequest) (api.BranchAndCommit, error)
-	/*
-	   Compacts the commit graph for the resource by deleting
-	   working state commits that match the provided strategy.
-	   Persists commits that are pointed to by branches.
-	   Returns the set of commits that were compacted.
-	   Throws if the resource doesn't exist.
-	*/
-	CompactCommits(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.CompactCommitsRequest) ([]api.CommitId, error)
-}
-
-type internalVersioningServiceClient struct {
-	client httpclient.Client
-}
-
-func NewInternalVersioningServiceClient(client httpclient.Client) InternalVersioningServiceClient {
-	return &internalVersioningServiceClient{client: client}
-}
-
-func (c *internalVersioningServiceClient) InitResourceVersioning(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.InitResourceVersioningRequest) (api.BranchAndCommit, error) {
-	var returnVal *api.BranchAndCommit
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("InitResourceVersioning"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/internal/scout/v1/versioning/%s", url.PathEscape(fmt.Sprint(resourceRidArg))))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api.BranchAndCommit), werror.WrapWithContextParams(ctx, err, "initResourceVersioning failed")
-	}
-	if returnVal == nil {
-		return *new(api.BranchAndCommit), werror.ErrorWithContextParams(ctx, "initResourceVersioning response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *internalVersioningServiceClient) SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.SaveWorkingStateRequest) (api.BranchAndCommit, error) {
-	var returnVal *api.BranchAndCommit
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("SaveWorkingState"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/internal/scout/v1/versioning/%s/branch/%s/working-state", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(branchNameArg))))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api.BranchAndCommit), werror.WrapWithContextParams(ctx, err, "saveWorkingState failed")
-	}
-	if returnVal == nil {
-		return *new(api.BranchAndCommit), werror.ErrorWithContextParams(ctx, "saveWorkingState response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *internalVersioningServiceClient) Commit(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.CommitRequest) (api.BranchAndCommit, error) {
-	var returnVal *api.BranchAndCommit
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("Commit"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/internal/scout/v1/versioning/%s/branch/%s/commit", url.PathEscape(fmt.Sprint(resourceRidArg)), url.PathEscape(fmt.Sprint(branchNameArg))))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api.BranchAndCommit), werror.WrapWithContextParams(ctx, err, "commit failed")
-	}
-	if returnVal == nil {
-		return *new(api.BranchAndCommit), werror.ErrorWithContextParams(ctx, "commit response cannot be nil")
-	}
-	return *returnVal, nil
-}
-
-func (c *internalVersioningServiceClient) CompactCommits(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.CompactCommitsRequest) ([]api.CommitId, error) {
-	var returnVal []api.CommitId
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("CompactCommits"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/internal/scout/v1/versioning/%s/compact-commits", url.PathEscape(fmt.Sprint(resourceRidArg))))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return nil, werror.WrapWithContextParams(ctx, err, "compactCommits failed")
-	}
-	if returnVal == nil {
-		return nil, werror.ErrorWithContextParams(ctx, "compactCommits response cannot be nil")
-	}
-	return returnVal, nil
-}
-
-/*
-These endpoints are not intended to be used directly by clients, since
-they require saving resource-specific state associated with new commits.
-*/
-type InternalVersioningServiceClientWithAuth interface {
-	/*
-	   Creates a root commit (no parents) and a "main" branch
-	   pointing to that commit, for the given resource.
-	   Throws if the resource already has a commit graph.
-	*/
-	InitResourceVersioning(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.InitResourceVersioningRequest) (api.BranchAndCommit, error)
-	/*
-	   Creates a non-permanent commit on the given branch,
-	   Throws if the branch doesn't exist.
-	   Throws if latestCommit is passed and is not the latest commit.
-	*/
-	SaveWorkingState(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.SaveWorkingStateRequest) (api.BranchAndCommit, error)
-	/*
-	   Creates a new permanent commit on the given branch.
-	   Throws if the branch doesn't exist.
-	   Throws if latestCommit is passed and is not the latest commit.
-	*/
-	Commit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.CommitRequest) (api.BranchAndCommit, error)
-	/*
-	   Compacts the commit graph for the resource by deleting
-	   working state commits that match the provided strategy.
-	   Persists commits that are pointed to by branches.
-	   Returns the set of commits that were compacted.
-	   Throws if the resource doesn't exist.
-	*/
-	CompactCommits(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CompactCommitsRequest) ([]api.CommitId, error)
-}
-
-func NewInternalVersioningServiceClientWithAuth(client InternalVersioningServiceClient, authHeader bearertoken.Token) InternalVersioningServiceClientWithAuth {
-	return &internalVersioningServiceClientWithAuth{client: client, authHeader: authHeader}
-}
-
-type internalVersioningServiceClientWithAuth struct {
-	client     InternalVersioningServiceClient
-	authHeader bearertoken.Token
-}
-
-func (c *internalVersioningServiceClientWithAuth) InitResourceVersioning(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.InitResourceVersioningRequest) (api.BranchAndCommit, error) {
-	return c.client.InitResourceVersioning(ctx, c.authHeader, resourceRidArg, requestArg)
-}
-
-func (c *internalVersioningServiceClientWithAuth) SaveWorkingState(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.SaveWorkingStateRequest) (api.BranchAndCommit, error) {
-	return c.client.SaveWorkingState(ctx, c.authHeader, resourceRidArg, branchNameArg, requestArg)
-}
-
-func (c *internalVersioningServiceClientWithAuth) Commit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.CommitRequest) (api.BranchAndCommit, error) {
-	return c.client.Commit(ctx, c.authHeader, resourceRidArg, branchNameArg, requestArg)
-}
-
-func (c *internalVersioningServiceClientWithAuth) CompactCommits(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CompactCommitsRequest) ([]api.CommitId, error) {
-	return c.client.CompactCommits(ctx, c.authHeader, resourceRidArg, requestArg)
-}
-
-func NewInternalVersioningServiceClientWithTokenProvider(client InternalVersioningServiceClient, tokenProvider httpclient.TokenProvider) InternalVersioningServiceClientWithAuth {
-	return &internalVersioningServiceClientWithTokenProvider{client: client, tokenProvider: tokenProvider}
-}
-
-type internalVersioningServiceClientWithTokenProvider struct {
-	client        InternalVersioningServiceClient
-	tokenProvider httpclient.TokenProvider
-}
-
-func (c *internalVersioningServiceClientWithTokenProvider) InitResourceVersioning(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.InitResourceVersioningRequest) (api.BranchAndCommit, error) {
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return *new(api.BranchAndCommit), err
-	}
-	return c.client.InitResourceVersioning(ctx, bearertoken.Token(token), resourceRidArg, requestArg)
-}
-
-func (c *internalVersioningServiceClientWithTokenProvider) SaveWorkingState(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.SaveWorkingStateRequest) (api.BranchAndCommit, error) {
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return *new(api.BranchAndCommit), err
-	}
-	return c.client.SaveWorkingState(ctx, bearertoken.Token(token), resourceRidArg, branchNameArg, requestArg)
-}
-
-func (c *internalVersioningServiceClientWithTokenProvider) Commit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName, requestArg api.CommitRequest) (api.BranchAndCommit, error) {
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return *new(api.BranchAndCommit), err
-	}
-	return c.client.Commit(ctx, bearertoken.Token(token), resourceRidArg, branchNameArg, requestArg)
-}
-
-func (c *internalVersioningServiceClientWithTokenProvider) CompactCommits(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CompactCommitsRequest) ([]api.CommitId, error) {
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return c.client.CompactCommits(ctx, bearertoken.Token(token), resourceRidArg, requestArg)
-}
 
 // NotebookService manages workbooks (formerly known as notebooks).
 type NotebookServiceClient interface {
@@ -242,47 +30,73 @@ type NotebookServiceClient interface {
 	   Creates a new workbook. The workbook will be associated with the provided run. If the run does not exist,
 	   a RunNotFound error will be thrown.
 	*/
-	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api1.CreateNotebookRequest) (api1.Notebook, error)
+	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateNotebookRequest) (api.Notebook, error)
 	// Updates the contents of a workbook.
-	Update(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookRequest) (api1.Notebook, error)
-	Get(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error)
-	BatchGet(ctx context.Context, authHeader bearertoken.Token, ridsArg []api2.NotebookRid) ([]api1.Notebook, error)
-	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api2.NotebookRid) ([]api1.NotebookMetadataWithRid, error)
+	Update(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.UpdateNotebookRequest) (api.Notebook, error)
+	Get(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, snapshotArg *api1.SnapshotRid) (api.Notebook, error)
+	BatchGet(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.NotebookRid) ([]api.Notebook, error)
+	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.NotebookRid) ([]api.NotebookMetadataWithRid, error)
 	// Updates metadata about a workbook, but not its contents.
-	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookMetadataRequest) (api1.NotebookMetadata, error)
+	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.UpdateNotebookMetadataRequest) (api.NotebookMetadata, error)
 	// Returns the set of all ref names used by the workbook.
-	GetUsedRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) ([]api3.DataSourceRefName, error)
+	GetUsedRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) ([]api2.DataSourceRefName, error)
 	// Updates the data source ref names for all variables used in the workbook.
-	UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, requestArg api1.UpdateRefNameRequest) (api1.Notebook, error)
+	UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.UpdateRefNameRequest) (api.Notebook, error)
 	/*
 	   Returns all properties (key value pairs) and labels that have been previously used on workbook. These can
 	   be used to organize workbooks.
 	*/
-	GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api1.GetAllLabelsAndPropertiesResponse, error)
-	Search(ctx context.Context, authHeader bearertoken.Token, requestArg api1.SearchNotebooksRequest) (api1.SearchNotebooksResponse, error)
+	GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api.GetAllLabelsAndPropertiesResponse, error)
+	Search(ctx context.Context, authHeader bearertoken.Token, requestArg api.SearchNotebooksRequest) (api.SearchNotebooksResponse, error)
 	/*
 	   Batch edits metadata across multiple workbooks. Supports rename/merge for labels and properties.
 	   If more than 1000 workbooks are targeted, this endpoint will throw a 400.
 	*/
-	BatchEditNotebookMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api1.BatchEditNotebookMetadataRequest) (api1.BatchEditNotebookMetadataResponse, error)
-	// Makes a workbook uneditable.
-	Lock(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error
-	// Unlocks a workbook for editing.
-	Unlock(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error
+	BatchEditNotebookMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchEditNotebookMetadataRequest) (api.BatchEditNotebookMetadataResponse, error)
+	/*
+	   Makes a workbook uneditable.
+	   Deprecated: use the isLocked field on updateMetadata instead.
+
+	   Deprecated: Prefer the isLocked field on updateMetadata.
+	*/
+	Lock(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error
+	/*
+	   Unlocks a workbook for editing.
+	   Deprecated: use the isLocked field on updateMetadata instead.
+
+	   Deprecated: Prefer the isLocked field on updateMetadata.
+	*/
+	Unlock(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error
 	/*
 	   Archives a workbook, which excludes it from search and hides it from being publicly visible, but does not
 	   permanently delete it. Archived workbooks can be unarchived.
 	*/
-	Archive(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error
+	Archive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error
 	// Makes a previously archived workbook searchable.
-	Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error
+	Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error
+	/*
+	   Archives the provided workbooks. Already-archived workbooks are left unchanged (their
+	   archiving user and timestamp are preserved). Throws if any of the workbooks don't exist.
+	*/
+	BatchArchive(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchArchiveNotebooksRequest) error
+	/*
+	   Unarchives the provided workbooks. Workbooks that are not archived are left unchanged.
+	   Throws if any of the workbooks don't exist.
+	*/
+	BatchUnarchive(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchUnarchiveNotebooksRequest) error
 	// The workbook will be deleted and is not recoverable. For soft deletion, use archive.
-	Delete(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error
+	Delete(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error
+	/*
+	   Duplicates an existing workbook, copying its content (layout, charts, variables, pinned events)
+	   and optionally overriding metadata fields such as title, description, data scope, labels,
+	   and properties. Returns the newly created workbook.
+	*/
+	Duplicate(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.DuplicateNotebookRequest) (api.Notebook, error)
 	/*
 	   Retrieves the snapshot history for a given workbook. These are sorted in reverse chronological order. Results
 	   are limited by page size.
 	*/
-	GetSnapshotHistory(ctx context.Context, authHeader bearertoken.Token, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error)
+	GetSnapshotHistory(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSnapshotHistoryRequest) (api.GetSnapshotHistoryResponse, error)
 }
 
 type notebookServiceClient struct {
@@ -293,8 +107,8 @@ func NewNotebookServiceClient(client httpclient.Client) NotebookServiceClient {
 	return &notebookServiceClient{client: client}
 }
 
-func (c *notebookServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg api1.CreateNotebookRequest) (api1.Notebook, error) {
-	var returnVal *api1.Notebook
+func (c *notebookServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateNotebookRequest) (api.Notebook, error) {
+	var returnVal *api.Notebook
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -303,16 +117,16 @@ func (c *notebookServiceClient) Create(ctx context.Context, authHeader bearertok
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api1.Notebook), werror.WrapWithContextParams(ctx, err, "create failed")
+		return *new(api.Notebook), werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	if returnVal == nil {
-		return *new(api1.Notebook), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
+		return *new(api.Notebook), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *notebookServiceClient) Update(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookRequest) (api1.Notebook, error) {
-	var returnVal *api1.Notebook
+func (c *notebookServiceClient) Update(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.UpdateNotebookRequest) (api.Notebook, error) {
+	var returnVal *api.Notebook
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Update"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -321,16 +135,16 @@ func (c *notebookServiceClient) Update(ctx context.Context, authHeader bearertok
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Put(ctx, requestParams...); err != nil {
-		return *new(api1.Notebook), werror.WrapWithContextParams(ctx, err, "update failed")
+		return *new(api.Notebook), werror.WrapWithContextParams(ctx, err, "update failed")
 	}
 	if returnVal == nil {
-		return *new(api1.Notebook), werror.ErrorWithContextParams(ctx, "update response cannot be nil")
+		return *new(api.Notebook), werror.ErrorWithContextParams(ctx, "update response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *notebookServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error) {
-	var returnVal *api1.Notebook
+func (c *notebookServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, snapshotArg *api1.SnapshotRid) (api.Notebook, error) {
+	var returnVal *api.Notebook
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -343,16 +157,16 @@ func (c *notebookServiceClient) Get(ctx context.Context, authHeader bearertoken.
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api1.Notebook), werror.WrapWithContextParams(ctx, err, "get failed")
+		return *new(api.Notebook), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return *new(api1.Notebook), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(api.Notebook), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *notebookServiceClient) BatchGet(ctx context.Context, authHeader bearertoken.Token, ridsArg []api2.NotebookRid) ([]api1.Notebook, error) {
-	var returnVal []api1.Notebook
+func (c *notebookServiceClient) BatchGet(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.NotebookRid) ([]api.Notebook, error) {
+	var returnVal []api.Notebook
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGet"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -369,8 +183,8 @@ func (c *notebookServiceClient) BatchGet(ctx context.Context, authHeader bearert
 	return returnVal, nil
 }
 
-func (c *notebookServiceClient) BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api2.NotebookRid) ([]api1.NotebookMetadataWithRid, error) {
-	var returnVal []api1.NotebookMetadataWithRid
+func (c *notebookServiceClient) BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.NotebookRid) ([]api.NotebookMetadataWithRid, error) {
+	var returnVal []api.NotebookMetadataWithRid
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetMetadata"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -387,8 +201,8 @@ func (c *notebookServiceClient) BatchGetMetadata(ctx context.Context, authHeader
 	return returnVal, nil
 }
 
-func (c *notebookServiceClient) UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookMetadataRequest) (api1.NotebookMetadata, error) {
-	var returnVal *api1.NotebookMetadata
+func (c *notebookServiceClient) UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.UpdateNotebookMetadataRequest) (api.NotebookMetadata, error) {
+	var returnVal *api.NotebookMetadata
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateMetadata"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -397,16 +211,16 @@ func (c *notebookServiceClient) UpdateMetadata(ctx context.Context, authHeader b
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Put(ctx, requestParams...); err != nil {
-		return *new(api1.NotebookMetadata), werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
+		return *new(api.NotebookMetadata), werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
 	}
 	if returnVal == nil {
-		return *new(api1.NotebookMetadata), werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
+		return *new(api.NotebookMetadata), werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *notebookServiceClient) GetUsedRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) ([]api3.DataSourceRefName, error) {
-	var returnVal []api3.DataSourceRefName
+func (c *notebookServiceClient) GetUsedRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) ([]api2.DataSourceRefName, error) {
+	var returnVal []api2.DataSourceRefName
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetUsedRefNames"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -422,8 +236,8 @@ func (c *notebookServiceClient) GetUsedRefNames(ctx context.Context, authHeader 
 	return returnVal, nil
 }
 
-func (c *notebookServiceClient) UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid, requestArg api1.UpdateRefNameRequest) (api1.Notebook, error) {
-	var returnVal *api1.Notebook
+func (c *notebookServiceClient) UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.UpdateRefNameRequest) (api.Notebook, error) {
+	var returnVal *api.Notebook
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateRefNames"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -432,16 +246,16 @@ func (c *notebookServiceClient) UpdateRefNames(ctx context.Context, authHeader b
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api1.Notebook), werror.WrapWithContextParams(ctx, err, "updateRefNames failed")
+		return *new(api.Notebook), werror.WrapWithContextParams(ctx, err, "updateRefNames failed")
 	}
 	if returnVal == nil {
-		return *new(api1.Notebook), werror.ErrorWithContextParams(ctx, "updateRefNames response cannot be nil")
+		return *new(api.Notebook), werror.ErrorWithContextParams(ctx, "updateRefNames response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *notebookServiceClient) GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api1.GetAllLabelsAndPropertiesResponse, error) {
-	var returnVal *api1.GetAllLabelsAndPropertiesResponse
+func (c *notebookServiceClient) GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api.GetAllLabelsAndPropertiesResponse, error) {
+	var returnVal *api.GetAllLabelsAndPropertiesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAllLabelsAndProperties"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -454,16 +268,16 @@ func (c *notebookServiceClient) GetAllLabelsAndProperties(ctx context.Context, a
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api1.GetAllLabelsAndPropertiesResponse), werror.WrapWithContextParams(ctx, err, "getAllLabelsAndProperties failed")
+		return *new(api.GetAllLabelsAndPropertiesResponse), werror.WrapWithContextParams(ctx, err, "getAllLabelsAndProperties failed")
 	}
 	if returnVal == nil {
-		return *new(api1.GetAllLabelsAndPropertiesResponse), werror.ErrorWithContextParams(ctx, "getAllLabelsAndProperties response cannot be nil")
+		return *new(api.GetAllLabelsAndPropertiesResponse), werror.ErrorWithContextParams(ctx, "getAllLabelsAndProperties response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *notebookServiceClient) Search(ctx context.Context, authHeader bearertoken.Token, requestArg api1.SearchNotebooksRequest) (api1.SearchNotebooksResponse, error) {
-	var returnVal *api1.SearchNotebooksResponse
+func (c *notebookServiceClient) Search(ctx context.Context, authHeader bearertoken.Token, requestArg api.SearchNotebooksRequest) (api.SearchNotebooksResponse, error) {
+	var returnVal *api.SearchNotebooksResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Search"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -472,16 +286,16 @@ func (c *notebookServiceClient) Search(ctx context.Context, authHeader bearertok
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api1.SearchNotebooksResponse), werror.WrapWithContextParams(ctx, err, "search failed")
+		return *new(api.SearchNotebooksResponse), werror.WrapWithContextParams(ctx, err, "search failed")
 	}
 	if returnVal == nil {
-		return *new(api1.SearchNotebooksResponse), werror.ErrorWithContextParams(ctx, "search response cannot be nil")
+		return *new(api.SearchNotebooksResponse), werror.ErrorWithContextParams(ctx, "search response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *notebookServiceClient) BatchEditNotebookMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api1.BatchEditNotebookMetadataRequest) (api1.BatchEditNotebookMetadataResponse, error) {
-	var returnVal *api1.BatchEditNotebookMetadataResponse
+func (c *notebookServiceClient) BatchEditNotebookMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchEditNotebookMetadataRequest) (api.BatchEditNotebookMetadataResponse, error) {
+	var returnVal *api.BatchEditNotebookMetadataResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchEditNotebookMetadata"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -490,15 +304,15 @@ func (c *notebookServiceClient) BatchEditNotebookMetadata(ctx context.Context, a
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api1.BatchEditNotebookMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchEditNotebookMetadata failed")
+		return *new(api.BatchEditNotebookMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchEditNotebookMetadata failed")
 	}
 	if returnVal == nil {
-		return *new(api1.BatchEditNotebookMetadataResponse), werror.ErrorWithContextParams(ctx, "batchEditNotebookMetadata response cannot be nil")
+		return *new(api.BatchEditNotebookMetadataResponse), werror.ErrorWithContextParams(ctx, "batchEditNotebookMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *notebookServiceClient) Lock(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClient) Lock(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Lock"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -510,7 +324,7 @@ func (c *notebookServiceClient) Lock(ctx context.Context, authHeader bearertoken
 	return nil
 }
 
-func (c *notebookServiceClient) Unlock(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClient) Unlock(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Unlock"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -522,7 +336,7 @@ func (c *notebookServiceClient) Unlock(ctx context.Context, authHeader bearertok
 	return nil
 }
 
-func (c *notebookServiceClient) Archive(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClient) Archive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Archive"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -534,7 +348,7 @@ func (c *notebookServiceClient) Archive(ctx context.Context, authHeader bearerto
 	return nil
 }
 
-func (c *notebookServiceClient) Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClient) Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Unarchive"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -546,7 +360,33 @@ func (c *notebookServiceClient) Unarchive(ctx context.Context, authHeader bearer
 	return nil
 }
 
-func (c *notebookServiceClient) Delete(ctx context.Context, authHeader bearertoken.Token, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClient) BatchArchive(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchArchiveNotebooksRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchArchive"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/batch-archive"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "batchArchive failed")
+	}
+	return nil
+}
+
+func (c *notebookServiceClient) BatchUnarchive(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchUnarchiveNotebooksRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchUnarchive"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/batch-unarchive"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "batchUnarchive failed")
+	}
+	return nil
+}
+
+func (c *notebookServiceClient) Delete(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Delete"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -558,8 +398,26 @@ func (c *notebookServiceClient) Delete(ctx context.Context, authHeader bearertok
 	return nil
 }
 
-func (c *notebookServiceClient) GetSnapshotHistory(ctx context.Context, authHeader bearertoken.Token, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error) {
-	var returnVal *api1.GetSnapshotHistoryResponse
+func (c *notebookServiceClient) Duplicate(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.DuplicateNotebookRequest) (api.Notebook, error) {
+	var returnVal *api.Notebook
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("Duplicate"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v2/notebook/%s/duplicate", url.PathEscape(fmt.Sprint(ridArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api.Notebook), werror.WrapWithContextParams(ctx, err, "duplicate failed")
+	}
+	if returnVal == nil {
+		return *new(api.Notebook), werror.ErrorWithContextParams(ctx, "duplicate response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *notebookServiceClient) GetSnapshotHistory(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSnapshotHistoryRequest) (api.GetSnapshotHistoryResponse, error) {
+	var returnVal *api.GetSnapshotHistoryResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetSnapshotHistory"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -568,10 +426,10 @@ func (c *notebookServiceClient) GetSnapshotHistory(ctx context.Context, authHead
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api1.GetSnapshotHistoryResponse), werror.WrapWithContextParams(ctx, err, "getSnapshotHistory failed")
+		return *new(api.GetSnapshotHistoryResponse), werror.WrapWithContextParams(ctx, err, "getSnapshotHistory failed")
 	}
 	if returnVal == nil {
-		return *new(api1.GetSnapshotHistoryResponse), werror.ErrorWithContextParams(ctx, "getSnapshotHistory response cannot be nil")
+		return *new(api.GetSnapshotHistoryResponse), werror.ErrorWithContextParams(ctx, "getSnapshotHistory response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -582,47 +440,73 @@ type NotebookServiceClientWithAuth interface {
 	   Creates a new workbook. The workbook will be associated with the provided run. If the run does not exist,
 	   a RunNotFound error will be thrown.
 	*/
-	Create(ctx context.Context, requestArg api1.CreateNotebookRequest) (api1.Notebook, error)
+	Create(ctx context.Context, requestArg api.CreateNotebookRequest) (api.Notebook, error)
 	// Updates the contents of a workbook.
-	Update(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookRequest) (api1.Notebook, error)
-	Get(ctx context.Context, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error)
-	BatchGet(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.Notebook, error)
-	BatchGetMetadata(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.NotebookMetadataWithRid, error)
+	Update(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateNotebookRequest) (api.Notebook, error)
+	Get(ctx context.Context, ridArg api1.NotebookRid, snapshotArg *api1.SnapshotRid) (api.Notebook, error)
+	BatchGet(ctx context.Context, ridsArg []api1.NotebookRid) ([]api.Notebook, error)
+	BatchGetMetadata(ctx context.Context, ridsArg []api1.NotebookRid) ([]api.NotebookMetadataWithRid, error)
 	// Updates metadata about a workbook, but not its contents.
-	UpdateMetadata(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookMetadataRequest) (api1.NotebookMetadata, error)
+	UpdateMetadata(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateNotebookMetadataRequest) (api.NotebookMetadata, error)
 	// Returns the set of all ref names used by the workbook.
-	GetUsedRefNames(ctx context.Context, ridArg api2.NotebookRid) ([]api3.DataSourceRefName, error)
+	GetUsedRefNames(ctx context.Context, ridArg api1.NotebookRid) ([]api2.DataSourceRefName, error)
 	// Updates the data source ref names for all variables used in the workbook.
-	UpdateRefNames(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateRefNameRequest) (api1.Notebook, error)
+	UpdateRefNames(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateRefNameRequest) (api.Notebook, error)
 	/*
 	   Returns all properties (key value pairs) and labels that have been previously used on workbook. These can
 	   be used to organize workbooks.
 	*/
-	GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api1.GetAllLabelsAndPropertiesResponse, error)
-	Search(ctx context.Context, requestArg api1.SearchNotebooksRequest) (api1.SearchNotebooksResponse, error)
+	GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api.GetAllLabelsAndPropertiesResponse, error)
+	Search(ctx context.Context, requestArg api.SearchNotebooksRequest) (api.SearchNotebooksResponse, error)
 	/*
 	   Batch edits metadata across multiple workbooks. Supports rename/merge for labels and properties.
 	   If more than 1000 workbooks are targeted, this endpoint will throw a 400.
 	*/
-	BatchEditNotebookMetadata(ctx context.Context, requestArg api1.BatchEditNotebookMetadataRequest) (api1.BatchEditNotebookMetadataResponse, error)
-	// Makes a workbook uneditable.
-	Lock(ctx context.Context, ridArg api2.NotebookRid) error
-	// Unlocks a workbook for editing.
-	Unlock(ctx context.Context, ridArg api2.NotebookRid) error
+	BatchEditNotebookMetadata(ctx context.Context, requestArg api.BatchEditNotebookMetadataRequest) (api.BatchEditNotebookMetadataResponse, error)
+	/*
+	   Makes a workbook uneditable.
+	   Deprecated: use the isLocked field on updateMetadata instead.
+
+	   Deprecated: Prefer the isLocked field on updateMetadata.
+	*/
+	Lock(ctx context.Context, ridArg api1.NotebookRid) error
+	/*
+	   Unlocks a workbook for editing.
+	   Deprecated: use the isLocked field on updateMetadata instead.
+
+	   Deprecated: Prefer the isLocked field on updateMetadata.
+	*/
+	Unlock(ctx context.Context, ridArg api1.NotebookRid) error
 	/*
 	   Archives a workbook, which excludes it from search and hides it from being publicly visible, but does not
 	   permanently delete it. Archived workbooks can be unarchived.
 	*/
-	Archive(ctx context.Context, ridArg api2.NotebookRid) error
+	Archive(ctx context.Context, ridArg api1.NotebookRid) error
 	// Makes a previously archived workbook searchable.
-	Unarchive(ctx context.Context, ridArg api2.NotebookRid) error
+	Unarchive(ctx context.Context, ridArg api1.NotebookRid) error
+	/*
+	   Archives the provided workbooks. Already-archived workbooks are left unchanged (their
+	   archiving user and timestamp are preserved). Throws if any of the workbooks don't exist.
+	*/
+	BatchArchive(ctx context.Context, requestArg api.BatchArchiveNotebooksRequest) error
+	/*
+	   Unarchives the provided workbooks. Workbooks that are not archived are left unchanged.
+	   Throws if any of the workbooks don't exist.
+	*/
+	BatchUnarchive(ctx context.Context, requestArg api.BatchUnarchiveNotebooksRequest) error
 	// The workbook will be deleted and is not recoverable. For soft deletion, use archive.
-	Delete(ctx context.Context, ridArg api2.NotebookRid) error
+	Delete(ctx context.Context, ridArg api1.NotebookRid) error
+	/*
+	   Duplicates an existing workbook, copying its content (layout, charts, variables, pinned events)
+	   and optionally overriding metadata fields such as title, description, data scope, labels,
+	   and properties. Returns the newly created workbook.
+	*/
+	Duplicate(ctx context.Context, ridArg api1.NotebookRid, requestArg api.DuplicateNotebookRequest) (api.Notebook, error)
 	/*
 	   Retrieves the snapshot history for a given workbook. These are sorted in reverse chronological order. Results
 	   are limited by page size.
 	*/
-	GetSnapshotHistory(ctx context.Context, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error)
+	GetSnapshotHistory(ctx context.Context, requestArg api.GetSnapshotHistoryRequest) (api.GetSnapshotHistoryResponse, error)
 }
 
 func NewNotebookServiceClientWithAuth(client NotebookServiceClient, authHeader bearertoken.Token) NotebookServiceClientWithAuth {
@@ -634,71 +518,83 @@ type notebookServiceClientWithAuth struct {
 	authHeader bearertoken.Token
 }
 
-func (c *notebookServiceClientWithAuth) Create(ctx context.Context, requestArg api1.CreateNotebookRequest) (api1.Notebook, error) {
+func (c *notebookServiceClientWithAuth) Create(ctx context.Context, requestArg api.CreateNotebookRequest) (api.Notebook, error) {
 	return c.client.Create(ctx, c.authHeader, requestArg)
 }
 
-func (c *notebookServiceClientWithAuth) Update(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookRequest) (api1.Notebook, error) {
+func (c *notebookServiceClientWithAuth) Update(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateNotebookRequest) (api.Notebook, error) {
 	return c.client.Update(ctx, c.authHeader, ridArg, requestArg)
 }
 
-func (c *notebookServiceClientWithAuth) Get(ctx context.Context, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error) {
+func (c *notebookServiceClientWithAuth) Get(ctx context.Context, ridArg api1.NotebookRid, snapshotArg *api1.SnapshotRid) (api.Notebook, error) {
 	return c.client.Get(ctx, c.authHeader, ridArg, snapshotArg)
 }
 
-func (c *notebookServiceClientWithAuth) BatchGet(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.Notebook, error) {
+func (c *notebookServiceClientWithAuth) BatchGet(ctx context.Context, ridsArg []api1.NotebookRid) ([]api.Notebook, error) {
 	return c.client.BatchGet(ctx, c.authHeader, ridsArg)
 }
 
-func (c *notebookServiceClientWithAuth) BatchGetMetadata(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.NotebookMetadataWithRid, error) {
+func (c *notebookServiceClientWithAuth) BatchGetMetadata(ctx context.Context, ridsArg []api1.NotebookRid) ([]api.NotebookMetadataWithRid, error) {
 	return c.client.BatchGetMetadata(ctx, c.authHeader, ridsArg)
 }
 
-func (c *notebookServiceClientWithAuth) UpdateMetadata(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookMetadataRequest) (api1.NotebookMetadata, error) {
+func (c *notebookServiceClientWithAuth) UpdateMetadata(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateNotebookMetadataRequest) (api.NotebookMetadata, error) {
 	return c.client.UpdateMetadata(ctx, c.authHeader, ridArg, requestArg)
 }
 
-func (c *notebookServiceClientWithAuth) GetUsedRefNames(ctx context.Context, ridArg api2.NotebookRid) ([]api3.DataSourceRefName, error) {
+func (c *notebookServiceClientWithAuth) GetUsedRefNames(ctx context.Context, ridArg api1.NotebookRid) ([]api2.DataSourceRefName, error) {
 	return c.client.GetUsedRefNames(ctx, c.authHeader, ridArg)
 }
 
-func (c *notebookServiceClientWithAuth) UpdateRefNames(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateRefNameRequest) (api1.Notebook, error) {
+func (c *notebookServiceClientWithAuth) UpdateRefNames(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateRefNameRequest) (api.Notebook, error) {
 	return c.client.UpdateRefNames(ctx, c.authHeader, ridArg, requestArg)
 }
 
-func (c *notebookServiceClientWithAuth) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api1.GetAllLabelsAndPropertiesResponse, error) {
+func (c *notebookServiceClientWithAuth) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api.GetAllLabelsAndPropertiesResponse, error) {
 	return c.client.GetAllLabelsAndProperties(ctx, c.authHeader, workspacesArg)
 }
 
-func (c *notebookServiceClientWithAuth) Search(ctx context.Context, requestArg api1.SearchNotebooksRequest) (api1.SearchNotebooksResponse, error) {
+func (c *notebookServiceClientWithAuth) Search(ctx context.Context, requestArg api.SearchNotebooksRequest) (api.SearchNotebooksResponse, error) {
 	return c.client.Search(ctx, c.authHeader, requestArg)
 }
 
-func (c *notebookServiceClientWithAuth) BatchEditNotebookMetadata(ctx context.Context, requestArg api1.BatchEditNotebookMetadataRequest) (api1.BatchEditNotebookMetadataResponse, error) {
+func (c *notebookServiceClientWithAuth) BatchEditNotebookMetadata(ctx context.Context, requestArg api.BatchEditNotebookMetadataRequest) (api.BatchEditNotebookMetadataResponse, error) {
 	return c.client.BatchEditNotebookMetadata(ctx, c.authHeader, requestArg)
 }
 
-func (c *notebookServiceClientWithAuth) Lock(ctx context.Context, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClientWithAuth) Lock(ctx context.Context, ridArg api1.NotebookRid) error {
 	return c.client.Lock(ctx, c.authHeader, ridArg)
 }
 
-func (c *notebookServiceClientWithAuth) Unlock(ctx context.Context, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClientWithAuth) Unlock(ctx context.Context, ridArg api1.NotebookRid) error {
 	return c.client.Unlock(ctx, c.authHeader, ridArg)
 }
 
-func (c *notebookServiceClientWithAuth) Archive(ctx context.Context, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClientWithAuth) Archive(ctx context.Context, ridArg api1.NotebookRid) error {
 	return c.client.Archive(ctx, c.authHeader, ridArg)
 }
 
-func (c *notebookServiceClientWithAuth) Unarchive(ctx context.Context, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClientWithAuth) Unarchive(ctx context.Context, ridArg api1.NotebookRid) error {
 	return c.client.Unarchive(ctx, c.authHeader, ridArg)
 }
 
-func (c *notebookServiceClientWithAuth) Delete(ctx context.Context, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClientWithAuth) BatchArchive(ctx context.Context, requestArg api.BatchArchiveNotebooksRequest) error {
+	return c.client.BatchArchive(ctx, c.authHeader, requestArg)
+}
+
+func (c *notebookServiceClientWithAuth) BatchUnarchive(ctx context.Context, requestArg api.BatchUnarchiveNotebooksRequest) error {
+	return c.client.BatchUnarchive(ctx, c.authHeader, requestArg)
+}
+
+func (c *notebookServiceClientWithAuth) Delete(ctx context.Context, ridArg api1.NotebookRid) error {
 	return c.client.Delete(ctx, c.authHeader, ridArg)
 }
 
-func (c *notebookServiceClientWithAuth) GetSnapshotHistory(ctx context.Context, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error) {
+func (c *notebookServiceClientWithAuth) Duplicate(ctx context.Context, ridArg api1.NotebookRid, requestArg api.DuplicateNotebookRequest) (api.Notebook, error) {
+	return c.client.Duplicate(ctx, c.authHeader, ridArg, requestArg)
+}
+
+func (c *notebookServiceClientWithAuth) GetSnapshotHistory(ctx context.Context, requestArg api.GetSnapshotHistoryRequest) (api.GetSnapshotHistoryResponse, error) {
 	return c.client.GetSnapshotHistory(ctx, c.authHeader, requestArg)
 }
 
@@ -711,31 +607,31 @@ type notebookServiceClientWithTokenProvider struct {
 	tokenProvider httpclient.TokenProvider
 }
 
-func (c *notebookServiceClientWithTokenProvider) Create(ctx context.Context, requestArg api1.CreateNotebookRequest) (api1.Notebook, error) {
+func (c *notebookServiceClientWithTokenProvider) Create(ctx context.Context, requestArg api.CreateNotebookRequest) (api.Notebook, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api1.Notebook), err
+		return *new(api.Notebook), err
 	}
 	return c.client.Create(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) Update(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookRequest) (api1.Notebook, error) {
+func (c *notebookServiceClientWithTokenProvider) Update(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateNotebookRequest) (api.Notebook, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api1.Notebook), err
+		return *new(api.Notebook), err
 	}
 	return c.client.Update(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) Get(ctx context.Context, ridArg api2.NotebookRid, snapshotArg *api2.SnapshotRid) (api1.Notebook, error) {
+func (c *notebookServiceClientWithTokenProvider) Get(ctx context.Context, ridArg api1.NotebookRid, snapshotArg *api1.SnapshotRid) (api.Notebook, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api1.Notebook), err
+		return *new(api.Notebook), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), ridArg, snapshotArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) BatchGet(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.Notebook, error) {
+func (c *notebookServiceClientWithTokenProvider) BatchGet(ctx context.Context, ridsArg []api1.NotebookRid) ([]api.Notebook, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -743,7 +639,7 @@ func (c *notebookServiceClientWithTokenProvider) BatchGet(ctx context.Context, r
 	return c.client.BatchGet(ctx, bearertoken.Token(token), ridsArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) BatchGetMetadata(ctx context.Context, ridsArg []api2.NotebookRid) ([]api1.NotebookMetadataWithRid, error) {
+func (c *notebookServiceClientWithTokenProvider) BatchGetMetadata(ctx context.Context, ridsArg []api1.NotebookRid) ([]api.NotebookMetadataWithRid, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -751,15 +647,15 @@ func (c *notebookServiceClientWithTokenProvider) BatchGetMetadata(ctx context.Co
 	return c.client.BatchGetMetadata(ctx, bearertoken.Token(token), ridsArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) UpdateMetadata(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateNotebookMetadataRequest) (api1.NotebookMetadata, error) {
+func (c *notebookServiceClientWithTokenProvider) UpdateMetadata(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateNotebookMetadataRequest) (api.NotebookMetadata, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api1.NotebookMetadata), err
+		return *new(api.NotebookMetadata), err
 	}
 	return c.client.UpdateMetadata(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) GetUsedRefNames(ctx context.Context, ridArg api2.NotebookRid) ([]api3.DataSourceRefName, error) {
+func (c *notebookServiceClientWithTokenProvider) GetUsedRefNames(ctx context.Context, ridArg api1.NotebookRid) ([]api2.DataSourceRefName, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -767,39 +663,39 @@ func (c *notebookServiceClientWithTokenProvider) GetUsedRefNames(ctx context.Con
 	return c.client.GetUsedRefNames(ctx, bearertoken.Token(token), ridArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) UpdateRefNames(ctx context.Context, ridArg api2.NotebookRid, requestArg api1.UpdateRefNameRequest) (api1.Notebook, error) {
+func (c *notebookServiceClientWithTokenProvider) UpdateRefNames(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateRefNameRequest) (api.Notebook, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api1.Notebook), err
+		return *new(api.Notebook), err
 	}
 	return c.client.UpdateRefNames(ctx, bearertoken.Token(token), ridArg, requestArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api1.GetAllLabelsAndPropertiesResponse, error) {
+func (c *notebookServiceClientWithTokenProvider) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api.GetAllLabelsAndPropertiesResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api1.GetAllLabelsAndPropertiesResponse), err
+		return *new(api.GetAllLabelsAndPropertiesResponse), err
 	}
 	return c.client.GetAllLabelsAndProperties(ctx, bearertoken.Token(token), workspacesArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) Search(ctx context.Context, requestArg api1.SearchNotebooksRequest) (api1.SearchNotebooksResponse, error) {
+func (c *notebookServiceClientWithTokenProvider) Search(ctx context.Context, requestArg api.SearchNotebooksRequest) (api.SearchNotebooksResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api1.SearchNotebooksResponse), err
+		return *new(api.SearchNotebooksResponse), err
 	}
 	return c.client.Search(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) BatchEditNotebookMetadata(ctx context.Context, requestArg api1.BatchEditNotebookMetadataRequest) (api1.BatchEditNotebookMetadataResponse, error) {
+func (c *notebookServiceClientWithTokenProvider) BatchEditNotebookMetadata(ctx context.Context, requestArg api.BatchEditNotebookMetadataRequest) (api.BatchEditNotebookMetadataResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api1.BatchEditNotebookMetadataResponse), err
+		return *new(api.BatchEditNotebookMetadataResponse), err
 	}
 	return c.client.BatchEditNotebookMetadata(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) Lock(ctx context.Context, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClientWithTokenProvider) Lock(ctx context.Context, ridArg api1.NotebookRid) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -807,7 +703,7 @@ func (c *notebookServiceClientWithTokenProvider) Lock(ctx context.Context, ridAr
 	return c.client.Lock(ctx, bearertoken.Token(token), ridArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) Unlock(ctx context.Context, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClientWithTokenProvider) Unlock(ctx context.Context, ridArg api1.NotebookRid) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -815,7 +711,7 @@ func (c *notebookServiceClientWithTokenProvider) Unlock(ctx context.Context, rid
 	return c.client.Unlock(ctx, bearertoken.Token(token), ridArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) Archive(ctx context.Context, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClientWithTokenProvider) Archive(ctx context.Context, ridArg api1.NotebookRid) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -823,7 +719,7 @@ func (c *notebookServiceClientWithTokenProvider) Archive(ctx context.Context, ri
 	return c.client.Archive(ctx, bearertoken.Token(token), ridArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) Unarchive(ctx context.Context, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClientWithTokenProvider) Unarchive(ctx context.Context, ridArg api1.NotebookRid) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -831,7 +727,23 @@ func (c *notebookServiceClientWithTokenProvider) Unarchive(ctx context.Context, 
 	return c.client.Unarchive(ctx, bearertoken.Token(token), ridArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) Delete(ctx context.Context, ridArg api2.NotebookRid) error {
+func (c *notebookServiceClientWithTokenProvider) BatchArchive(ctx context.Context, requestArg api.BatchArchiveNotebooksRequest) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.BatchArchive(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *notebookServiceClientWithTokenProvider) BatchUnarchive(ctx context.Context, requestArg api.BatchUnarchiveNotebooksRequest) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.BatchUnarchive(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *notebookServiceClientWithTokenProvider) Delete(ctx context.Context, ridArg api1.NotebookRid) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -839,10 +751,18 @@ func (c *notebookServiceClientWithTokenProvider) Delete(ctx context.Context, rid
 	return c.client.Delete(ctx, bearertoken.Token(token), ridArg)
 }
 
-func (c *notebookServiceClientWithTokenProvider) GetSnapshotHistory(ctx context.Context, requestArg api1.GetSnapshotHistoryRequest) (api1.GetSnapshotHistoryResponse, error) {
+func (c *notebookServiceClientWithTokenProvider) Duplicate(ctx context.Context, ridArg api1.NotebookRid, requestArg api.DuplicateNotebookRequest) (api.Notebook, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api1.GetSnapshotHistoryResponse), err
+		return *new(api.Notebook), err
+	}
+	return c.client.Duplicate(ctx, bearertoken.Token(token), ridArg, requestArg)
+}
+
+func (c *notebookServiceClientWithTokenProvider) GetSnapshotHistory(ctx context.Context, requestArg api.GetSnapshotHistoryRequest) (api.GetSnapshotHistoryResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api.GetSnapshotHistoryResponse), err
 	}
 	return c.client.GetSnapshotHistory(ctx, bearertoken.Token(token), requestArg)
 }
@@ -858,78 +778,82 @@ type RunServiceClient interface {
 
 	   Throws if start is equal to or after end.
 	*/
-	CreateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api4.CreateRunRequest) (api11.Run, error)
+	CreateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api3.CreateRunRequest) (api11.Run, error)
 	/*
 	   Updates an existing run based on its RID.
 
 	   Throws if start is equal to or after end.
 	*/
-	UpdateRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, detailsArg api4.UpdateRunRequest) (api11.Run, error)
+	UpdateRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, detailsArg api3.UpdateRunRequest) (api11.Run, error)
 	/*
 	   Batch edits metadata across multiple runs. Supports rename/merge for labels and properties.
 	   If more than 1000 runs are targeted, this endpoint will throw a 400.
 	*/
-	BatchEditRunMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api4.BatchEditRunMetadataRequest) (api4.BatchEditRunMetadataResponse, error)
+	BatchEditRunMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api3.BatchEditRunMetadataRequest) (api3.BatchEditRunMetadataResponse, error)
 	/*
 	   Adds datasources to the run in question.
 
 	   Throws if any of the ref names conflict with existing data sources or each other.
 	*/
-	AddDataSourcesToRun(ctx context.Context, authHeader bearertoken.Token, runRidArg api4.RunRid, requestArg map[api3.DataSourceRefName]api4.CreateRunDataSource) (api11.Run, error)
+	AddDataSourcesToRun(ctx context.Context, authHeader bearertoken.Token, runRidArg api3.RunRid, requestArg map[api2.DataSourceRefName]api3.CreateRunDataSource) (api11.Run, error)
 	/*
 	   Updates a run if it exists, otherwise it's created from scratch.
 	   Will throw if the workspace of an existing run is different from the workspace of the request.
 	*/
-	CreateOrUpdateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api4.CreateOrUpdateRunRequest) (api11.Run, error)
+	CreateOrUpdateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api3.CreateOrUpdateRunRequest) (api11.Run, error)
 	// Fetches details about the run in question based on its RID.
-	GetRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid) (api11.Run, error)
+	GetRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid) (api11.Run, error)
 	/*
 	   Fetches details about the run in question based on its RID,
 	   including metrics for check and violation review status.
 	*/
-	GetRunWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid) (api11.RunWithDataReviewMetrics, error)
+	GetRunWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid) (api11.RunWithDataReviewMetrics, error)
 	// Fetches details about the run in question based on its RID, including a summary of the data review status.
-	GetRunWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid) (api11.RunWithDataReviewSummary, error)
+	GetRunWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid) (api11.RunWithDataReviewSummary, error)
 	// Fetches a run based on the run number, rather than RID.
-	GetRunById(ctx context.Context, authHeader bearertoken.Token, getRunByIdRequestArg api4.GetRunByIdRequest) (api11.Run, error)
+	GetRunById(ctx context.Context, authHeader bearertoken.Token, getRunByIdRequestArg api3.GetRunByIdRequest) (api11.Run, error)
 	// Fetches a list of run details based on a list of RIDs.
-	GetRuns(ctx context.Context, authHeader bearertoken.Token, ridsArg []api4.RunRid) (map[api4.RunRid]api11.Run, error)
+	GetRuns(ctx context.Context, authHeader bearertoken.Token, ridsArg []api3.RunRid) (map[api3.RunRid]api11.Run, error)
 	// Fetches the runs with the given asset.
-	GetRunsByAsset(ctx context.Context, authHeader bearertoken.Token, requestArg api4.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error)
+	GetRunsByAsset(ctx context.Context, authHeader bearertoken.Token, requestArg api3.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error)
 	/*
 	   Fetches the latest run for each requested asset.
 	   Assets without associated runs will not be included in response.
 	*/
-	GetLatestRunForAssets(ctx context.Context, authHeader bearertoken.Token, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error)
-	// Deprecated: Deprecated in favor of MetadataService#listPropertiesAndLabels
-	GetAllRunsPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error)
+	GetLatestRunForAssets(ctx context.Context, authHeader bearertoken.Token, requestArg []api1.AssetRid) (map[api1.AssetRid]api11.Run, error)
+	/*
+	   This legacy bulk-list surface returns string property values only.
+
+	   Deprecated: Deprecated in favor of MetadataService#listPropertiesAndLabels
+	*/
+	GetAllRunsPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api3.AllRunsPropertiesAndLabelsResponse, error)
 	/*
 	   Searches for runs that match the given filters. Defaults to returning un-archived runs, absent an archive
 	   filter.
 	*/
-	SearchRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsResponse, error)
+	SearchRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api3.SearchRunsRequest) (api11.SearchRunsResponse, error)
 	/*
 	   Searches for runs that match the given filters and
 	   includes metrics for check and violation review status. Defaults to returning un-archived runs, absent an
 	   archive filter.
 	*/
-	SearchRunsWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error)
+	SearchRunsWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error)
 	/*
 	   Searches for runs that match the given filters and includes a summary of the data review status. Defaults to
 	   returning un-archived runs, absent an archive filter.
 
 	   Deprecated: Deprecated in favor of searchRunsWithDataReviewMetrics
 	*/
-	SearchRunsWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error)
+	SearchRunsWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error)
 	// Soft-deletes a run. Runs still exist in the database but are no longer visible.
-	ArchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
-	UnarchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
-	ArchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.ArchiveRunsRequest) error
-	UnarchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.UnarchiveRunsRequest) error
+	ArchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
+	UnarchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
+	ArchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api3.ArchiveRunsRequest) error
+	UnarchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api3.UnarchiveRunsRequest) error
 	// Returns the list of ref names that are in use across specified and authorized workspaces.
-	GetDataSourceRefNameAndTypeList(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error)
+	GetDataSourceRefNameAndTypeList(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) ([]api3.RefNameAndType, error)
 	// Updates the attachments associated with a run.
-	UpdateRunAttachment(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error
+	UpdateRunAttachment(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, requestArg api3.UpdateAttachmentsRequest) error
 }
 
 type runServiceClient struct {
@@ -940,7 +864,7 @@ func NewRunServiceClient(client httpclient.Client) RunServiceClient {
 	return &runServiceClient{client: client}
 }
 
-func (c *runServiceClient) CreateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api4.CreateRunRequest) (api11.Run, error) {
+func (c *runServiceClient) CreateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api3.CreateRunRequest) (api11.Run, error) {
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateRun"))
@@ -958,7 +882,7 @@ func (c *runServiceClient) CreateRun(ctx context.Context, authHeader bearertoken
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) UpdateRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, detailsArg api4.UpdateRunRequest) (api11.Run, error) {
+func (c *runServiceClient) UpdateRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, detailsArg api3.UpdateRunRequest) (api11.Run, error) {
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateRun"))
@@ -976,8 +900,8 @@ func (c *runServiceClient) UpdateRun(ctx context.Context, authHeader bearertoken
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) BatchEditRunMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api4.BatchEditRunMetadataRequest) (api4.BatchEditRunMetadataResponse, error) {
-	var returnVal *api4.BatchEditRunMetadataResponse
+func (c *runServiceClient) BatchEditRunMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api3.BatchEditRunMetadataRequest) (api3.BatchEditRunMetadataResponse, error) {
+	var returnVal *api3.BatchEditRunMetadataResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchEditRunMetadata"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -986,15 +910,15 @@ func (c *runServiceClient) BatchEditRunMetadata(ctx context.Context, authHeader 
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api4.BatchEditRunMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchEditRunMetadata failed")
+		return *new(api3.BatchEditRunMetadataResponse), werror.WrapWithContextParams(ctx, err, "batchEditRunMetadata failed")
 	}
 	if returnVal == nil {
-		return *new(api4.BatchEditRunMetadataResponse), werror.ErrorWithContextParams(ctx, "batchEditRunMetadata response cannot be nil")
+		return *new(api3.BatchEditRunMetadataResponse), werror.ErrorWithContextParams(ctx, "batchEditRunMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) AddDataSourcesToRun(ctx context.Context, authHeader bearertoken.Token, runRidArg api4.RunRid, requestArg map[api3.DataSourceRefName]api4.CreateRunDataSource) (api11.Run, error) {
+func (c *runServiceClient) AddDataSourcesToRun(ctx context.Context, authHeader bearertoken.Token, runRidArg api3.RunRid, requestArg map[api2.DataSourceRefName]api3.CreateRunDataSource) (api11.Run, error) {
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("AddDataSourcesToRun"))
@@ -1012,7 +936,7 @@ func (c *runServiceClient) AddDataSourcesToRun(ctx context.Context, authHeader b
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) CreateOrUpdateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api4.CreateOrUpdateRunRequest) (api11.Run, error) {
+func (c *runServiceClient) CreateOrUpdateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api3.CreateOrUpdateRunRequest) (api11.Run, error) {
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateOrUpdateRun"))
@@ -1030,7 +954,7 @@ func (c *runServiceClient) CreateOrUpdateRun(ctx context.Context, authHeader bea
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) GetRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid) (api11.Run, error) {
+func (c *runServiceClient) GetRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid) (api11.Run, error) {
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRun"))
@@ -1047,7 +971,7 @@ func (c *runServiceClient) GetRun(ctx context.Context, authHeader bearertoken.To
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) GetRunWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid) (api11.RunWithDataReviewMetrics, error) {
+func (c *runServiceClient) GetRunWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid) (api11.RunWithDataReviewMetrics, error) {
 	var returnVal *api11.RunWithDataReviewMetrics
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRunWithDataReviewMetrics"))
@@ -1064,7 +988,7 @@ func (c *runServiceClient) GetRunWithDataReviewMetrics(ctx context.Context, auth
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) GetRunWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid) (api11.RunWithDataReviewSummary, error) {
+func (c *runServiceClient) GetRunWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid) (api11.RunWithDataReviewSummary, error) {
 	var returnVal *api11.RunWithDataReviewSummary
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRunWithDataReviewSummary"))
@@ -1081,7 +1005,7 @@ func (c *runServiceClient) GetRunWithDataReviewSummary(ctx context.Context, auth
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) GetRunById(ctx context.Context, authHeader bearertoken.Token, getRunByIdRequestArg api4.GetRunByIdRequest) (api11.Run, error) {
+func (c *runServiceClient) GetRunById(ctx context.Context, authHeader bearertoken.Token, getRunByIdRequestArg api3.GetRunByIdRequest) (api11.Run, error) {
 	var returnVal *api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRunById"))
@@ -1099,8 +1023,8 @@ func (c *runServiceClient) GetRunById(ctx context.Context, authHeader bearertoke
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) GetRuns(ctx context.Context, authHeader bearertoken.Token, ridsArg []api4.RunRid) (map[api4.RunRid]api11.Run, error) {
-	var returnVal map[api4.RunRid]api11.Run
+func (c *runServiceClient) GetRuns(ctx context.Context, authHeader bearertoken.Token, ridsArg []api3.RunRid) (map[api3.RunRid]api11.Run, error) {
+	var returnVal map[api3.RunRid]api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRuns"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1117,7 +1041,7 @@ func (c *runServiceClient) GetRuns(ctx context.Context, authHeader bearertoken.T
 	return returnVal, nil
 }
 
-func (c *runServiceClient) GetRunsByAsset(ctx context.Context, authHeader bearertoken.Token, requestArg api4.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error) {
+func (c *runServiceClient) GetRunsByAsset(ctx context.Context, authHeader bearertoken.Token, requestArg api3.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error) {
 	var returnVal *api11.GetRunsByAssetResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetRunsByAsset"))
@@ -1135,8 +1059,8 @@ func (c *runServiceClient) GetRunsByAsset(ctx context.Context, authHeader bearer
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) GetLatestRunForAssets(ctx context.Context, authHeader bearertoken.Token, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error) {
-	var returnVal map[api2.AssetRid]api11.Run
+func (c *runServiceClient) GetLatestRunForAssets(ctx context.Context, authHeader bearertoken.Token, requestArg []api1.AssetRid) (map[api1.AssetRid]api11.Run, error) {
+	var returnVal map[api1.AssetRid]api11.Run
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetLatestRunForAssets"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1153,8 +1077,8 @@ func (c *runServiceClient) GetLatestRunForAssets(ctx context.Context, authHeader
 	return returnVal, nil
 }
 
-func (c *runServiceClient) GetAllRunsPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error) {
-	var returnVal *api4.AllRunsPropertiesAndLabelsResponse
+func (c *runServiceClient) GetAllRunsPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api3.AllRunsPropertiesAndLabelsResponse, error) {
+	var returnVal *api3.AllRunsPropertiesAndLabelsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAllRunsPropertiesAndLabels"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1167,15 +1091,15 @@ func (c *runServiceClient) GetAllRunsPropertiesAndLabels(ctx context.Context, au
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api4.AllRunsPropertiesAndLabelsResponse), werror.WrapWithContextParams(ctx, err, "getAllRunsPropertiesAndLabels failed")
+		return *new(api3.AllRunsPropertiesAndLabelsResponse), werror.WrapWithContextParams(ctx, err, "getAllRunsPropertiesAndLabels failed")
 	}
 	if returnVal == nil {
-		return *new(api4.AllRunsPropertiesAndLabelsResponse), werror.ErrorWithContextParams(ctx, "getAllRunsPropertiesAndLabels response cannot be nil")
+		return *new(api3.AllRunsPropertiesAndLabelsResponse), werror.ErrorWithContextParams(ctx, "getAllRunsPropertiesAndLabels response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) SearchRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsResponse, error) {
+func (c *runServiceClient) SearchRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api3.SearchRunsRequest) (api11.SearchRunsResponse, error) {
 	var returnVal *api11.SearchRunsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchRuns"))
@@ -1193,7 +1117,7 @@ func (c *runServiceClient) SearchRuns(ctx context.Context, authHeader bearertoke
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) SearchRunsWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error) {
+func (c *runServiceClient) SearchRunsWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error) {
 	var returnVal *api11.SearchRunsWithDataReviewMetricsResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchRunsWithDataReviewMetrics"))
@@ -1211,7 +1135,7 @@ func (c *runServiceClient) SearchRunsWithDataReviewMetrics(ctx context.Context, 
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) SearchRunsWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error) {
+func (c *runServiceClient) SearchRunsWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error) {
 	var returnVal *api11.SearchRunsWithDataReviewSummaryResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchRunsWithDataReviewSummary"))
@@ -1229,7 +1153,7 @@ func (c *runServiceClient) SearchRunsWithDataReviewSummary(ctx context.Context, 
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) ArchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
+func (c *runServiceClient) ArchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
 	var returnVal *bool
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveRun"))
@@ -1251,7 +1175,7 @@ func (c *runServiceClient) ArchiveRun(ctx context.Context, authHeader bearertoke
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) UnarchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
+func (c *runServiceClient) UnarchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
 	var returnVal *bool
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveRun"))
@@ -1273,7 +1197,7 @@ func (c *runServiceClient) UnarchiveRun(ctx context.Context, authHeader bearerto
 	return *returnVal, nil
 }
 
-func (c *runServiceClient) ArchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.ArchiveRunsRequest) error {
+func (c *runServiceClient) ArchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api3.ArchiveRunsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("ArchiveRuns"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1286,7 +1210,7 @@ func (c *runServiceClient) ArchiveRuns(ctx context.Context, authHeader bearertok
 	return nil
 }
 
-func (c *runServiceClient) UnarchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api4.UnarchiveRunsRequest) error {
+func (c *runServiceClient) UnarchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api3.UnarchiveRunsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UnarchiveRuns"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1299,8 +1223,8 @@ func (c *runServiceClient) UnarchiveRuns(ctx context.Context, authHeader bearert
 	return nil
 }
 
-func (c *runServiceClient) GetDataSourceRefNameAndTypeList(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error) {
-	var returnVal []api4.RefNameAndType
+func (c *runServiceClient) GetDataSourceRefNameAndTypeList(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) ([]api3.RefNameAndType, error) {
+	var returnVal []api3.RefNameAndType
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetDataSourceRefNameAndTypeList"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1321,7 +1245,7 @@ func (c *runServiceClient) GetDataSourceRefNameAndTypeList(ctx context.Context, 
 	return returnVal, nil
 }
 
-func (c *runServiceClient) UpdateRunAttachment(ctx context.Context, authHeader bearertoken.Token, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error {
+func (c *runServiceClient) UpdateRunAttachment(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, requestArg api3.UpdateAttachmentsRequest) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateRunAttachment"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1345,78 +1269,82 @@ type RunServiceClientWithAuth interface {
 
 	   Throws if start is equal to or after end.
 	*/
-	CreateRun(ctx context.Context, detailsArg api4.CreateRunRequest) (api11.Run, error)
+	CreateRun(ctx context.Context, detailsArg api3.CreateRunRequest) (api11.Run, error)
 	/*
 	   Updates an existing run based on its RID.
 
 	   Throws if start is equal to or after end.
 	*/
-	UpdateRun(ctx context.Context, ridArg api4.RunRid, detailsArg api4.UpdateRunRequest) (api11.Run, error)
+	UpdateRun(ctx context.Context, ridArg api3.RunRid, detailsArg api3.UpdateRunRequest) (api11.Run, error)
 	/*
 	   Batch edits metadata across multiple runs. Supports rename/merge for labels and properties.
 	   If more than 1000 runs are targeted, this endpoint will throw a 400.
 	*/
-	BatchEditRunMetadata(ctx context.Context, requestArg api4.BatchEditRunMetadataRequest) (api4.BatchEditRunMetadataResponse, error)
+	BatchEditRunMetadata(ctx context.Context, requestArg api3.BatchEditRunMetadataRequest) (api3.BatchEditRunMetadataResponse, error)
 	/*
 	   Adds datasources to the run in question.
 
 	   Throws if any of the ref names conflict with existing data sources or each other.
 	*/
-	AddDataSourcesToRun(ctx context.Context, runRidArg api4.RunRid, requestArg map[api3.DataSourceRefName]api4.CreateRunDataSource) (api11.Run, error)
+	AddDataSourcesToRun(ctx context.Context, runRidArg api3.RunRid, requestArg map[api2.DataSourceRefName]api3.CreateRunDataSource) (api11.Run, error)
 	/*
 	   Updates a run if it exists, otherwise it's created from scratch.
 	   Will throw if the workspace of an existing run is different from the workspace of the request.
 	*/
-	CreateOrUpdateRun(ctx context.Context, detailsArg api4.CreateOrUpdateRunRequest) (api11.Run, error)
+	CreateOrUpdateRun(ctx context.Context, detailsArg api3.CreateOrUpdateRunRequest) (api11.Run, error)
 	// Fetches details about the run in question based on its RID.
-	GetRun(ctx context.Context, ridArg api4.RunRid) (api11.Run, error)
+	GetRun(ctx context.Context, ridArg api3.RunRid) (api11.Run, error)
 	/*
 	   Fetches details about the run in question based on its RID,
 	   including metrics for check and violation review status.
 	*/
-	GetRunWithDataReviewMetrics(ctx context.Context, ridArg api4.RunRid) (api11.RunWithDataReviewMetrics, error)
+	GetRunWithDataReviewMetrics(ctx context.Context, ridArg api3.RunRid) (api11.RunWithDataReviewMetrics, error)
 	// Fetches details about the run in question based on its RID, including a summary of the data review status.
-	GetRunWithDataReviewSummary(ctx context.Context, ridArg api4.RunRid) (api11.RunWithDataReviewSummary, error)
+	GetRunWithDataReviewSummary(ctx context.Context, ridArg api3.RunRid) (api11.RunWithDataReviewSummary, error)
 	// Fetches a run based on the run number, rather than RID.
-	GetRunById(ctx context.Context, getRunByIdRequestArg api4.GetRunByIdRequest) (api11.Run, error)
+	GetRunById(ctx context.Context, getRunByIdRequestArg api3.GetRunByIdRequest) (api11.Run, error)
 	// Fetches a list of run details based on a list of RIDs.
-	GetRuns(ctx context.Context, ridsArg []api4.RunRid) (map[api4.RunRid]api11.Run, error)
+	GetRuns(ctx context.Context, ridsArg []api3.RunRid) (map[api3.RunRid]api11.Run, error)
 	// Fetches the runs with the given asset.
-	GetRunsByAsset(ctx context.Context, requestArg api4.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error)
+	GetRunsByAsset(ctx context.Context, requestArg api3.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error)
 	/*
 	   Fetches the latest run for each requested asset.
 	   Assets without associated runs will not be included in response.
 	*/
-	GetLatestRunForAssets(ctx context.Context, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error)
-	// Deprecated: Deprecated in favor of MetadataService#listPropertiesAndLabels
-	GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error)
+	GetLatestRunForAssets(ctx context.Context, requestArg []api1.AssetRid) (map[api1.AssetRid]api11.Run, error)
+	/*
+	   This legacy bulk-list surface returns string property values only.
+
+	   Deprecated: Deprecated in favor of MetadataService#listPropertiesAndLabels
+	*/
+	GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api3.AllRunsPropertiesAndLabelsResponse, error)
 	/*
 	   Searches for runs that match the given filters. Defaults to returning un-archived runs, absent an archive
 	   filter.
 	*/
-	SearchRuns(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsResponse, error)
+	SearchRuns(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsResponse, error)
 	/*
 	   Searches for runs that match the given filters and
 	   includes metrics for check and violation review status. Defaults to returning un-archived runs, absent an
 	   archive filter.
 	*/
-	SearchRunsWithDataReviewMetrics(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error)
+	SearchRunsWithDataReviewMetrics(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error)
 	/*
 	   Searches for runs that match the given filters and includes a summary of the data review status. Defaults to
 	   returning un-archived runs, absent an archive filter.
 
 	   Deprecated: Deprecated in favor of searchRunsWithDataReviewMetrics
 	*/
-	SearchRunsWithDataReviewSummary(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error)
+	SearchRunsWithDataReviewSummary(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error)
 	// Soft-deletes a run. Runs still exist in the database but are no longer visible.
-	ArchiveRun(ctx context.Context, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
-	UnarchiveRun(ctx context.Context, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
-	ArchiveRuns(ctx context.Context, requestArg api4.ArchiveRunsRequest) error
-	UnarchiveRuns(ctx context.Context, requestArg api4.UnarchiveRunsRequest) error
+	ArchiveRun(ctx context.Context, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
+	UnarchiveRun(ctx context.Context, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
+	ArchiveRuns(ctx context.Context, requestArg api3.ArchiveRunsRequest) error
+	UnarchiveRuns(ctx context.Context, requestArg api3.UnarchiveRunsRequest) error
 	// Returns the list of ref names that are in use across specified and authorized workspaces.
-	GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error)
+	GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api3.RefNameAndType, error)
 	// Updates the attachments associated with a run.
-	UpdateRunAttachment(ctx context.Context, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error
+	UpdateRunAttachment(ctx context.Context, ridArg api3.RunRid, requestArg api3.UpdateAttachmentsRequest) error
 }
 
 func NewRunServiceClientWithAuth(client RunServiceClient, authHeader bearertoken.Token) RunServiceClientWithAuth {
@@ -1428,91 +1356,91 @@ type runServiceClientWithAuth struct {
 	authHeader bearertoken.Token
 }
 
-func (c *runServiceClientWithAuth) CreateRun(ctx context.Context, detailsArg api4.CreateRunRequest) (api11.Run, error) {
+func (c *runServiceClientWithAuth) CreateRun(ctx context.Context, detailsArg api3.CreateRunRequest) (api11.Run, error) {
 	return c.client.CreateRun(ctx, c.authHeader, detailsArg)
 }
 
-func (c *runServiceClientWithAuth) UpdateRun(ctx context.Context, ridArg api4.RunRid, detailsArg api4.UpdateRunRequest) (api11.Run, error) {
+func (c *runServiceClientWithAuth) UpdateRun(ctx context.Context, ridArg api3.RunRid, detailsArg api3.UpdateRunRequest) (api11.Run, error) {
 	return c.client.UpdateRun(ctx, c.authHeader, ridArg, detailsArg)
 }
 
-func (c *runServiceClientWithAuth) BatchEditRunMetadata(ctx context.Context, requestArg api4.BatchEditRunMetadataRequest) (api4.BatchEditRunMetadataResponse, error) {
+func (c *runServiceClientWithAuth) BatchEditRunMetadata(ctx context.Context, requestArg api3.BatchEditRunMetadataRequest) (api3.BatchEditRunMetadataResponse, error) {
 	return c.client.BatchEditRunMetadata(ctx, c.authHeader, requestArg)
 }
 
-func (c *runServiceClientWithAuth) AddDataSourcesToRun(ctx context.Context, runRidArg api4.RunRid, requestArg map[api3.DataSourceRefName]api4.CreateRunDataSource) (api11.Run, error) {
+func (c *runServiceClientWithAuth) AddDataSourcesToRun(ctx context.Context, runRidArg api3.RunRid, requestArg map[api2.DataSourceRefName]api3.CreateRunDataSource) (api11.Run, error) {
 	return c.client.AddDataSourcesToRun(ctx, c.authHeader, runRidArg, requestArg)
 }
 
-func (c *runServiceClientWithAuth) CreateOrUpdateRun(ctx context.Context, detailsArg api4.CreateOrUpdateRunRequest) (api11.Run, error) {
+func (c *runServiceClientWithAuth) CreateOrUpdateRun(ctx context.Context, detailsArg api3.CreateOrUpdateRunRequest) (api11.Run, error) {
 	return c.client.CreateOrUpdateRun(ctx, c.authHeader, detailsArg)
 }
 
-func (c *runServiceClientWithAuth) GetRun(ctx context.Context, ridArg api4.RunRid) (api11.Run, error) {
+func (c *runServiceClientWithAuth) GetRun(ctx context.Context, ridArg api3.RunRid) (api11.Run, error) {
 	return c.client.GetRun(ctx, c.authHeader, ridArg)
 }
 
-func (c *runServiceClientWithAuth) GetRunWithDataReviewMetrics(ctx context.Context, ridArg api4.RunRid) (api11.RunWithDataReviewMetrics, error) {
+func (c *runServiceClientWithAuth) GetRunWithDataReviewMetrics(ctx context.Context, ridArg api3.RunRid) (api11.RunWithDataReviewMetrics, error) {
 	return c.client.GetRunWithDataReviewMetrics(ctx, c.authHeader, ridArg)
 }
 
-func (c *runServiceClientWithAuth) GetRunWithDataReviewSummary(ctx context.Context, ridArg api4.RunRid) (api11.RunWithDataReviewSummary, error) {
+func (c *runServiceClientWithAuth) GetRunWithDataReviewSummary(ctx context.Context, ridArg api3.RunRid) (api11.RunWithDataReviewSummary, error) {
 	return c.client.GetRunWithDataReviewSummary(ctx, c.authHeader, ridArg)
 }
 
-func (c *runServiceClientWithAuth) GetRunById(ctx context.Context, getRunByIdRequestArg api4.GetRunByIdRequest) (api11.Run, error) {
+func (c *runServiceClientWithAuth) GetRunById(ctx context.Context, getRunByIdRequestArg api3.GetRunByIdRequest) (api11.Run, error) {
 	return c.client.GetRunById(ctx, c.authHeader, getRunByIdRequestArg)
 }
 
-func (c *runServiceClientWithAuth) GetRuns(ctx context.Context, ridsArg []api4.RunRid) (map[api4.RunRid]api11.Run, error) {
+func (c *runServiceClientWithAuth) GetRuns(ctx context.Context, ridsArg []api3.RunRid) (map[api3.RunRid]api11.Run, error) {
 	return c.client.GetRuns(ctx, c.authHeader, ridsArg)
 }
 
-func (c *runServiceClientWithAuth) GetRunsByAsset(ctx context.Context, requestArg api4.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error) {
+func (c *runServiceClientWithAuth) GetRunsByAsset(ctx context.Context, requestArg api3.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error) {
 	return c.client.GetRunsByAsset(ctx, c.authHeader, requestArg)
 }
 
-func (c *runServiceClientWithAuth) GetLatestRunForAssets(ctx context.Context, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error) {
+func (c *runServiceClientWithAuth) GetLatestRunForAssets(ctx context.Context, requestArg []api1.AssetRid) (map[api1.AssetRid]api11.Run, error) {
 	return c.client.GetLatestRunForAssets(ctx, c.authHeader, requestArg)
 }
 
-func (c *runServiceClientWithAuth) GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error) {
+func (c *runServiceClientWithAuth) GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api3.AllRunsPropertiesAndLabelsResponse, error) {
 	return c.client.GetAllRunsPropertiesAndLabels(ctx, c.authHeader, workspacesArg)
 }
 
-func (c *runServiceClientWithAuth) SearchRuns(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsResponse, error) {
+func (c *runServiceClientWithAuth) SearchRuns(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsResponse, error) {
 	return c.client.SearchRuns(ctx, c.authHeader, requestArg)
 }
 
-func (c *runServiceClientWithAuth) SearchRunsWithDataReviewMetrics(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error) {
+func (c *runServiceClientWithAuth) SearchRunsWithDataReviewMetrics(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error) {
 	return c.client.SearchRunsWithDataReviewMetrics(ctx, c.authHeader, requestArg)
 }
 
-func (c *runServiceClientWithAuth) SearchRunsWithDataReviewSummary(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error) {
+func (c *runServiceClientWithAuth) SearchRunsWithDataReviewSummary(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error) {
 	return c.client.SearchRunsWithDataReviewSummary(ctx, c.authHeader, requestArg)
 }
 
-func (c *runServiceClientWithAuth) ArchiveRun(ctx context.Context, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
+func (c *runServiceClientWithAuth) ArchiveRun(ctx context.Context, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
 	return c.client.ArchiveRun(ctx, c.authHeader, ridArg, includeLinkedWorkbooksArg)
 }
 
-func (c *runServiceClientWithAuth) UnarchiveRun(ctx context.Context, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
+func (c *runServiceClientWithAuth) UnarchiveRun(ctx context.Context, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
 	return c.client.UnarchiveRun(ctx, c.authHeader, ridArg, includeLinkedWorkbooksArg)
 }
 
-func (c *runServiceClientWithAuth) ArchiveRuns(ctx context.Context, requestArg api4.ArchiveRunsRequest) error {
+func (c *runServiceClientWithAuth) ArchiveRuns(ctx context.Context, requestArg api3.ArchiveRunsRequest) error {
 	return c.client.ArchiveRuns(ctx, c.authHeader, requestArg)
 }
 
-func (c *runServiceClientWithAuth) UnarchiveRuns(ctx context.Context, requestArg api4.UnarchiveRunsRequest) error {
+func (c *runServiceClientWithAuth) UnarchiveRuns(ctx context.Context, requestArg api3.UnarchiveRunsRequest) error {
 	return c.client.UnarchiveRuns(ctx, c.authHeader, requestArg)
 }
 
-func (c *runServiceClientWithAuth) GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error) {
+func (c *runServiceClientWithAuth) GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api3.RefNameAndType, error) {
 	return c.client.GetDataSourceRefNameAndTypeList(ctx, c.authHeader, workspacesArg)
 }
 
-func (c *runServiceClientWithAuth) UpdateRunAttachment(ctx context.Context, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error {
+func (c *runServiceClientWithAuth) UpdateRunAttachment(ctx context.Context, ridArg api3.RunRid, requestArg api3.UpdateAttachmentsRequest) error {
 	return c.client.UpdateRunAttachment(ctx, c.authHeader, ridArg, requestArg)
 }
 
@@ -1525,7 +1453,7 @@ type runServiceClientWithTokenProvider struct {
 	tokenProvider httpclient.TokenProvider
 }
 
-func (c *runServiceClientWithTokenProvider) CreateRun(ctx context.Context, detailsArg api4.CreateRunRequest) (api11.Run, error) {
+func (c *runServiceClientWithTokenProvider) CreateRun(ctx context.Context, detailsArg api3.CreateRunRequest) (api11.Run, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.Run), err
@@ -1533,7 +1461,7 @@ func (c *runServiceClientWithTokenProvider) CreateRun(ctx context.Context, detai
 	return c.client.CreateRun(ctx, bearertoken.Token(token), detailsArg)
 }
 
-func (c *runServiceClientWithTokenProvider) UpdateRun(ctx context.Context, ridArg api4.RunRid, detailsArg api4.UpdateRunRequest) (api11.Run, error) {
+func (c *runServiceClientWithTokenProvider) UpdateRun(ctx context.Context, ridArg api3.RunRid, detailsArg api3.UpdateRunRequest) (api11.Run, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.Run), err
@@ -1541,15 +1469,15 @@ func (c *runServiceClientWithTokenProvider) UpdateRun(ctx context.Context, ridAr
 	return c.client.UpdateRun(ctx, bearertoken.Token(token), ridArg, detailsArg)
 }
 
-func (c *runServiceClientWithTokenProvider) BatchEditRunMetadata(ctx context.Context, requestArg api4.BatchEditRunMetadataRequest) (api4.BatchEditRunMetadataResponse, error) {
+func (c *runServiceClientWithTokenProvider) BatchEditRunMetadata(ctx context.Context, requestArg api3.BatchEditRunMetadataRequest) (api3.BatchEditRunMetadataResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api4.BatchEditRunMetadataResponse), err
+		return *new(api3.BatchEditRunMetadataResponse), err
 	}
 	return c.client.BatchEditRunMetadata(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *runServiceClientWithTokenProvider) AddDataSourcesToRun(ctx context.Context, runRidArg api4.RunRid, requestArg map[api3.DataSourceRefName]api4.CreateRunDataSource) (api11.Run, error) {
+func (c *runServiceClientWithTokenProvider) AddDataSourcesToRun(ctx context.Context, runRidArg api3.RunRid, requestArg map[api2.DataSourceRefName]api3.CreateRunDataSource) (api11.Run, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.Run), err
@@ -1557,7 +1485,7 @@ func (c *runServiceClientWithTokenProvider) AddDataSourcesToRun(ctx context.Cont
 	return c.client.AddDataSourcesToRun(ctx, bearertoken.Token(token), runRidArg, requestArg)
 }
 
-func (c *runServiceClientWithTokenProvider) CreateOrUpdateRun(ctx context.Context, detailsArg api4.CreateOrUpdateRunRequest) (api11.Run, error) {
+func (c *runServiceClientWithTokenProvider) CreateOrUpdateRun(ctx context.Context, detailsArg api3.CreateOrUpdateRunRequest) (api11.Run, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.Run), err
@@ -1565,7 +1493,7 @@ func (c *runServiceClientWithTokenProvider) CreateOrUpdateRun(ctx context.Contex
 	return c.client.CreateOrUpdateRun(ctx, bearertoken.Token(token), detailsArg)
 }
 
-func (c *runServiceClientWithTokenProvider) GetRun(ctx context.Context, ridArg api4.RunRid) (api11.Run, error) {
+func (c *runServiceClientWithTokenProvider) GetRun(ctx context.Context, ridArg api3.RunRid) (api11.Run, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.Run), err
@@ -1573,7 +1501,7 @@ func (c *runServiceClientWithTokenProvider) GetRun(ctx context.Context, ridArg a
 	return c.client.GetRun(ctx, bearertoken.Token(token), ridArg)
 }
 
-func (c *runServiceClientWithTokenProvider) GetRunWithDataReviewMetrics(ctx context.Context, ridArg api4.RunRid) (api11.RunWithDataReviewMetrics, error) {
+func (c *runServiceClientWithTokenProvider) GetRunWithDataReviewMetrics(ctx context.Context, ridArg api3.RunRid) (api11.RunWithDataReviewMetrics, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.RunWithDataReviewMetrics), err
@@ -1581,7 +1509,7 @@ func (c *runServiceClientWithTokenProvider) GetRunWithDataReviewMetrics(ctx cont
 	return c.client.GetRunWithDataReviewMetrics(ctx, bearertoken.Token(token), ridArg)
 }
 
-func (c *runServiceClientWithTokenProvider) GetRunWithDataReviewSummary(ctx context.Context, ridArg api4.RunRid) (api11.RunWithDataReviewSummary, error) {
+func (c *runServiceClientWithTokenProvider) GetRunWithDataReviewSummary(ctx context.Context, ridArg api3.RunRid) (api11.RunWithDataReviewSummary, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.RunWithDataReviewSummary), err
@@ -1589,7 +1517,7 @@ func (c *runServiceClientWithTokenProvider) GetRunWithDataReviewSummary(ctx cont
 	return c.client.GetRunWithDataReviewSummary(ctx, bearertoken.Token(token), ridArg)
 }
 
-func (c *runServiceClientWithTokenProvider) GetRunById(ctx context.Context, getRunByIdRequestArg api4.GetRunByIdRequest) (api11.Run, error) {
+func (c *runServiceClientWithTokenProvider) GetRunById(ctx context.Context, getRunByIdRequestArg api3.GetRunByIdRequest) (api11.Run, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.Run), err
@@ -1597,7 +1525,7 @@ func (c *runServiceClientWithTokenProvider) GetRunById(ctx context.Context, getR
 	return c.client.GetRunById(ctx, bearertoken.Token(token), getRunByIdRequestArg)
 }
 
-func (c *runServiceClientWithTokenProvider) GetRuns(ctx context.Context, ridsArg []api4.RunRid) (map[api4.RunRid]api11.Run, error) {
+func (c *runServiceClientWithTokenProvider) GetRuns(ctx context.Context, ridsArg []api3.RunRid) (map[api3.RunRid]api11.Run, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -1605,7 +1533,7 @@ func (c *runServiceClientWithTokenProvider) GetRuns(ctx context.Context, ridsArg
 	return c.client.GetRuns(ctx, bearertoken.Token(token), ridsArg)
 }
 
-func (c *runServiceClientWithTokenProvider) GetRunsByAsset(ctx context.Context, requestArg api4.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error) {
+func (c *runServiceClientWithTokenProvider) GetRunsByAsset(ctx context.Context, requestArg api3.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.GetRunsByAssetResponse), err
@@ -1613,7 +1541,7 @@ func (c *runServiceClientWithTokenProvider) GetRunsByAsset(ctx context.Context, 
 	return c.client.GetRunsByAsset(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *runServiceClientWithTokenProvider) GetLatestRunForAssets(ctx context.Context, requestArg []api2.AssetRid) (map[api2.AssetRid]api11.Run, error) {
+func (c *runServiceClientWithTokenProvider) GetLatestRunForAssets(ctx context.Context, requestArg []api1.AssetRid) (map[api1.AssetRid]api11.Run, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -1621,15 +1549,15 @@ func (c *runServiceClientWithTokenProvider) GetLatestRunForAssets(ctx context.Co
 	return c.client.GetLatestRunForAssets(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *runServiceClientWithTokenProvider) GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.AllRunsPropertiesAndLabelsResponse, error) {
+func (c *runServiceClientWithTokenProvider) GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api3.AllRunsPropertiesAndLabelsResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api4.AllRunsPropertiesAndLabelsResponse), err
+		return *new(api3.AllRunsPropertiesAndLabelsResponse), err
 	}
 	return c.client.GetAllRunsPropertiesAndLabels(ctx, bearertoken.Token(token), workspacesArg)
 }
 
-func (c *runServiceClientWithTokenProvider) SearchRuns(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsResponse, error) {
+func (c *runServiceClientWithTokenProvider) SearchRuns(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.SearchRunsResponse), err
@@ -1637,7 +1565,7 @@ func (c *runServiceClientWithTokenProvider) SearchRuns(ctx context.Context, requ
 	return c.client.SearchRuns(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *runServiceClientWithTokenProvider) SearchRunsWithDataReviewMetrics(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error) {
+func (c *runServiceClientWithTokenProvider) SearchRunsWithDataReviewMetrics(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.SearchRunsWithDataReviewMetricsResponse), err
@@ -1645,7 +1573,7 @@ func (c *runServiceClientWithTokenProvider) SearchRunsWithDataReviewMetrics(ctx 
 	return c.client.SearchRunsWithDataReviewMetrics(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *runServiceClientWithTokenProvider) SearchRunsWithDataReviewSummary(ctx context.Context, requestArg api4.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error) {
+func (c *runServiceClientWithTokenProvider) SearchRunsWithDataReviewSummary(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(api11.SearchRunsWithDataReviewSummaryResponse), err
@@ -1653,7 +1581,7 @@ func (c *runServiceClientWithTokenProvider) SearchRunsWithDataReviewSummary(ctx 
 	return c.client.SearchRunsWithDataReviewSummary(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *runServiceClientWithTokenProvider) ArchiveRun(ctx context.Context, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
+func (c *runServiceClientWithTokenProvider) ArchiveRun(ctx context.Context, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(bool), err
@@ -1661,7 +1589,7 @@ func (c *runServiceClientWithTokenProvider) ArchiveRun(ctx context.Context, ridA
 	return c.client.ArchiveRun(ctx, bearertoken.Token(token), ridArg, includeLinkedWorkbooksArg)
 }
 
-func (c *runServiceClientWithTokenProvider) UnarchiveRun(ctx context.Context, ridArg api4.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
+func (c *runServiceClientWithTokenProvider) UnarchiveRun(ctx context.Context, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return *new(bool), err
@@ -1669,7 +1597,7 @@ func (c *runServiceClientWithTokenProvider) UnarchiveRun(ctx context.Context, ri
 	return c.client.UnarchiveRun(ctx, bearertoken.Token(token), ridArg, includeLinkedWorkbooksArg)
 }
 
-func (c *runServiceClientWithTokenProvider) ArchiveRuns(ctx context.Context, requestArg api4.ArchiveRunsRequest) error {
+func (c *runServiceClientWithTokenProvider) ArchiveRuns(ctx context.Context, requestArg api3.ArchiveRunsRequest) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -1677,7 +1605,7 @@ func (c *runServiceClientWithTokenProvider) ArchiveRuns(ctx context.Context, req
 	return c.client.ArchiveRuns(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *runServiceClientWithTokenProvider) UnarchiveRuns(ctx context.Context, requestArg api4.UnarchiveRunsRequest) error {
+func (c *runServiceClientWithTokenProvider) UnarchiveRuns(ctx context.Context, requestArg api3.UnarchiveRunsRequest) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -1685,7 +1613,7 @@ func (c *runServiceClientWithTokenProvider) UnarchiveRuns(ctx context.Context, r
 	return c.client.UnarchiveRuns(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *runServiceClientWithTokenProvider) GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api4.RefNameAndType, error) {
+func (c *runServiceClientWithTokenProvider) GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api3.RefNameAndType, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -1693,7 +1621,7 @@ func (c *runServiceClientWithTokenProvider) GetDataSourceRefNameAndTypeList(ctx 
 	return c.client.GetDataSourceRefNameAndTypeList(ctx, bearertoken.Token(token), workspacesArg)
 }
 
-func (c *runServiceClientWithTokenProvider) UpdateRunAttachment(ctx context.Context, ridArg api4.RunRid, requestArg api4.UpdateAttachmentsRequest) error {
+func (c *runServiceClientWithTokenProvider) UpdateRunAttachment(ctx context.Context, ridArg api3.RunRid, requestArg api3.UpdateAttachmentsRequest) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -1707,43 +1635,59 @@ can be re-used across runs. Templates are versioned.
 */
 type TemplateServiceClient interface {
 	// Creates a new template.
-	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api5.CreateTemplateRequest) (api5.Template, error)
+	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api4.CreateTemplateRequest) (api4.Template, error)
 	/*
 	   Must only pass one of (branch, commit). If neither are passed,
 	   the latest commit on the "main" branch is returned.
 	   Throws if the template, branch, or commit doesn't exist.
 	*/
-	Get(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) (api5.Template, error)
-	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api2.TemplateRid) ([]api5.TemplateSummary, error)
+	Get(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) (api4.Template, error)
+	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.TemplateRid) ([]api4.TemplateSummary, error)
 	/*
 	   Creates a commit that may be compacted, e.g cleaned up and not exist anymore.
 	   Throws if the template or branch doesn't exist.
 	   Throws if the latest commit doesn't match the provided id.
 	   Throws if you save to an archived template.
 	*/
-	SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.SaveTemplateRequest) (api5.Template, error)
+	SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.SaveTemplateRequest) (api4.Template, error)
 	// Returns the set of all ref names used by the template.
-	GetUsedRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) ([]api3.DataSourceRefName, error)
+	GetUsedRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) ([]api2.DataSourceRefName, error)
 	// Updates the data source ref names for all variables used in the template.
-	UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.UpdateRefNameRequest) (api5.Template, error)
+	UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.UpdateRefNameRequest) (api4.Template, error)
 	/*
 	   Creates a commit with a commit message.
 	   Throws if the template or branch doesn't exist.
 	   Throws if the latest commit doesn't match the provided id.
 	   Throws if you commit to an archived template.
 	*/
-	Commit(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.CommitTemplateRequest) (api5.Template, error)
+	Commit(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.CommitTemplateRequest) (api4.Template, error)
 	// Throws if the template doesn't exist.
-	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, requestArg api5.UpdateMetadataRequest) (api5.TemplateMetadata, error)
-	SearchTemplates(ctx context.Context, authHeader bearertoken.Token, requestArg api5.SearchTemplatesRequest) (api5.SearchTemplatesResponse, error)
-	GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api5.GetAllLabelsAndPropertiesResponse, error)
+	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, requestArg api4.UpdateMetadataRequest) (api4.TemplateMetadata, error)
+	/*
+	   Archives the provided templates. Templates that are already archived are left unchanged.
+	   Throws if any of the templates don't exist.
+	*/
+	BatchArchive(ctx context.Context, authHeader bearertoken.Token, requestArg api4.BatchArchiveTemplatesRequest) error
+	/*
+	   Unarchives the provided templates. Templates that are not archived are left unchanged.
+	   Throws if any of the templates don't exist.
+	*/
+	BatchUnarchive(ctx context.Context, authHeader bearertoken.Token, requestArg api4.BatchUnarchiveTemplatesRequest) error
+	SearchTemplates(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchTemplatesRequest) (api4.SearchTemplatesResponse, error)
+	GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api4.GetAllLabelsAndPropertiesResponse, error)
+	/*
+	   Duplicates an existing template, copying its content (layout, charts, variables)
+	   and optionally overriding metadata fields such as title, description, labels,
+	   and properties. Returns the newly created template.
+	*/
+	Duplicate(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, requestArg api4.DuplicateTemplateRequest) (api4.Template, error)
 	/*
 	   Merges the given branch to the "main" branch.
 	   Throws if the template or branch doesn't exist.
 	   Throws if the latest commit doesn't match the provided id.
 	   Throws if you merge on an archived template.
 	*/
-	MergeToMain(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, requestArg api5.MergeToMainRequest) (api5.Template, error)
+	MergeToMain(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, requestArg api4.MergeToMainRequest) (api4.Template, error)
 }
 
 type templateServiceClient struct {
@@ -1754,8 +1698,8 @@ func NewTemplateServiceClient(client httpclient.Client) TemplateServiceClient {
 	return &templateServiceClient{client: client}
 }
 
-func (c *templateServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg api5.CreateTemplateRequest) (api5.Template, error) {
-	var returnVal *api5.Template
+func (c *templateServiceClient) Create(ctx context.Context, authHeader bearertoken.Token, requestArg api4.CreateTemplateRequest) (api4.Template, error) {
+	var returnVal *api4.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Create"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1764,16 +1708,16 @@ func (c *templateServiceClient) Create(ctx context.Context, authHeader bearertok
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "create failed")
+		return *new(api4.Template), werror.WrapWithContextParams(ctx, err, "create failed")
 	}
 	if returnVal == nil {
-		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
+		return *new(api4.Template), werror.ErrorWithContextParams(ctx, "create response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *templateServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) (api5.Template, error) {
-	var returnVal *api5.Template
+func (c *templateServiceClient) Get(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) (api4.Template, error) {
+	var returnVal *api4.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Get"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1789,16 +1733,16 @@ func (c *templateServiceClient) Get(ctx context.Context, authHeader bearertoken.
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "get failed")
+		return *new(api4.Template), werror.WrapWithContextParams(ctx, err, "get failed")
 	}
 	if returnVal == nil {
-		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
+		return *new(api4.Template), werror.ErrorWithContextParams(ctx, "get response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *templateServiceClient) BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api2.TemplateRid) ([]api5.TemplateSummary, error) {
-	var returnVal []api5.TemplateSummary
+func (c *templateServiceClient) BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.TemplateRid) ([]api4.TemplateSummary, error) {
+	var returnVal []api4.TemplateSummary
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetMetadata"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1815,8 +1759,8 @@ func (c *templateServiceClient) BatchGetMetadata(ctx context.Context, authHeader
 	return returnVal, nil
 }
 
-func (c *templateServiceClient) SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.SaveTemplateRequest) (api5.Template, error) {
-	var returnVal *api5.Template
+func (c *templateServiceClient) SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.SaveTemplateRequest) (api4.Template, error) {
+	var returnVal *api4.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SaveWorkingState"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1830,16 +1774,16 @@ func (c *templateServiceClient) SaveWorkingState(ctx context.Context, authHeader
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "saveWorkingState failed")
+		return *new(api4.Template), werror.WrapWithContextParams(ctx, err, "saveWorkingState failed")
 	}
 	if returnVal == nil {
-		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "saveWorkingState response cannot be nil")
+		return *new(api4.Template), werror.ErrorWithContextParams(ctx, "saveWorkingState response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *templateServiceClient) GetUsedRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) ([]api3.DataSourceRefName, error) {
-	var returnVal []api3.DataSourceRefName
+func (c *templateServiceClient) GetUsedRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) ([]api2.DataSourceRefName, error) {
+	var returnVal []api2.DataSourceRefName
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetUsedRefNames"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1863,8 +1807,8 @@ func (c *templateServiceClient) GetUsedRefNames(ctx context.Context, authHeader 
 	return returnVal, nil
 }
 
-func (c *templateServiceClient) UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.UpdateRefNameRequest) (api5.Template, error) {
-	var returnVal *api5.Template
+func (c *templateServiceClient) UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.UpdateRefNameRequest) (api4.Template, error) {
+	var returnVal *api4.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateRefNames"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1878,16 +1822,16 @@ func (c *templateServiceClient) UpdateRefNames(ctx context.Context, authHeader b
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "updateRefNames failed")
+		return *new(api4.Template), werror.WrapWithContextParams(ctx, err, "updateRefNames failed")
 	}
 	if returnVal == nil {
-		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "updateRefNames response cannot be nil")
+		return *new(api4.Template), werror.ErrorWithContextParams(ctx, "updateRefNames response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *templateServiceClient) Commit(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.CommitTemplateRequest) (api5.Template, error) {
-	var returnVal *api5.Template
+func (c *templateServiceClient) Commit(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.CommitTemplateRequest) (api4.Template, error) {
+	var returnVal *api4.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Commit"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1901,16 +1845,16 @@ func (c *templateServiceClient) Commit(ctx context.Context, authHeader bearertok
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "commit failed")
+		return *new(api4.Template), werror.WrapWithContextParams(ctx, err, "commit failed")
 	}
 	if returnVal == nil {
-		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "commit response cannot be nil")
+		return *new(api4.Template), werror.ErrorWithContextParams(ctx, "commit response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *templateServiceClient) UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, requestArg api5.UpdateMetadataRequest) (api5.TemplateMetadata, error) {
-	var returnVal *api5.TemplateMetadata
+func (c *templateServiceClient) UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, requestArg api4.UpdateMetadataRequest) (api4.TemplateMetadata, error) {
+	var returnVal *api4.TemplateMetadata
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("UpdateMetadata"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1919,16 +1863,42 @@ func (c *templateServiceClient) UpdateMetadata(ctx context.Context, authHeader b
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api5.TemplateMetadata), werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
+		return *new(api4.TemplateMetadata), werror.WrapWithContextParams(ctx, err, "updateMetadata failed")
 	}
 	if returnVal == nil {
-		return *new(api5.TemplateMetadata), werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
+		return *new(api4.TemplateMetadata), werror.ErrorWithContextParams(ctx, "updateMetadata response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *templateServiceClient) SearchTemplates(ctx context.Context, authHeader bearertoken.Token, requestArg api5.SearchTemplatesRequest) (api5.SearchTemplatesResponse, error) {
-	var returnVal *api5.SearchTemplatesResponse
+func (c *templateServiceClient) BatchArchive(ctx context.Context, authHeader bearertoken.Token, requestArg api4.BatchArchiveTemplatesRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchArchive"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/batch-archive"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "batchArchive failed")
+	}
+	return nil
+}
+
+func (c *templateServiceClient) BatchUnarchive(ctx context.Context, authHeader bearertoken.Token, requestArg api4.BatchUnarchiveTemplatesRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchUnarchive"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/batch-unarchive"))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "batchUnarchive failed")
+	}
+	return nil
+}
+
+func (c *templateServiceClient) SearchTemplates(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchTemplatesRequest) (api4.SearchTemplatesResponse, error) {
+	var returnVal *api4.SearchTemplatesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("SearchTemplates"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1937,16 +1907,16 @@ func (c *templateServiceClient) SearchTemplates(ctx context.Context, authHeader 
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api5.SearchTemplatesResponse), werror.WrapWithContextParams(ctx, err, "searchTemplates failed")
+		return *new(api4.SearchTemplatesResponse), werror.WrapWithContextParams(ctx, err, "searchTemplates failed")
 	}
 	if returnVal == nil {
-		return *new(api5.SearchTemplatesResponse), werror.ErrorWithContextParams(ctx, "searchTemplates response cannot be nil")
+		return *new(api4.SearchTemplatesResponse), werror.ErrorWithContextParams(ctx, "searchTemplates response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *templateServiceClient) GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api5.GetAllLabelsAndPropertiesResponse, error) {
-	var returnVal *api5.GetAllLabelsAndPropertiesResponse
+func (c *templateServiceClient) GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api4.GetAllLabelsAndPropertiesResponse, error) {
+	var returnVal *api4.GetAllLabelsAndPropertiesResponse
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetAllLabelsAndProperties"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1959,16 +1929,34 @@ func (c *templateServiceClient) GetAllLabelsAndProperties(ctx context.Context, a
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api5.GetAllLabelsAndPropertiesResponse), werror.WrapWithContextParams(ctx, err, "getAllLabelsAndProperties failed")
+		return *new(api4.GetAllLabelsAndPropertiesResponse), werror.WrapWithContextParams(ctx, err, "getAllLabelsAndProperties failed")
 	}
 	if returnVal == nil {
-		return *new(api5.GetAllLabelsAndPropertiesResponse), werror.ErrorWithContextParams(ctx, "getAllLabelsAndProperties response cannot be nil")
+		return *new(api4.GetAllLabelsAndPropertiesResponse), werror.ErrorWithContextParams(ctx, "getAllLabelsAndProperties response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *templateServiceClient) MergeToMain(ctx context.Context, authHeader bearertoken.Token, templateRidArg api2.TemplateRid, requestArg api5.MergeToMainRequest) (api5.Template, error) {
-	var returnVal *api5.Template
+func (c *templateServiceClient) Duplicate(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, requestArg api4.DuplicateTemplateRequest) (api4.Template, error) {
+	var returnVal *api4.Template
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("Duplicate"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/template/%s/duplicate", url.PathEscape(fmt.Sprint(templateRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api4.Template), werror.WrapWithContextParams(ctx, err, "duplicate failed")
+	}
+	if returnVal == nil {
+		return *new(api4.Template), werror.ErrorWithContextParams(ctx, "duplicate response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
+func (c *templateServiceClient) MergeToMain(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, requestArg api4.MergeToMainRequest) (api4.Template, error) {
+	var returnVal *api4.Template
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("MergeToMain"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -1977,10 +1965,10 @@ func (c *templateServiceClient) MergeToMain(ctx context.Context, authHeader bear
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api5.Template), werror.WrapWithContextParams(ctx, err, "mergeToMain failed")
+		return *new(api4.Template), werror.WrapWithContextParams(ctx, err, "mergeToMain failed")
 	}
 	if returnVal == nil {
-		return *new(api5.Template), werror.ErrorWithContextParams(ctx, "mergeToMain response cannot be nil")
+		return *new(api4.Template), werror.ErrorWithContextParams(ctx, "mergeToMain response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -1991,43 +1979,59 @@ can be re-used across runs. Templates are versioned.
 */
 type TemplateServiceClientWithAuth interface {
 	// Creates a new template.
-	Create(ctx context.Context, requestArg api5.CreateTemplateRequest) (api5.Template, error)
+	Create(ctx context.Context, requestArg api4.CreateTemplateRequest) (api4.Template, error)
 	/*
 	   Must only pass one of (branch, commit). If neither are passed,
 	   the latest commit on the "main" branch is returned.
 	   Throws if the template, branch, or commit doesn't exist.
 	*/
-	Get(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) (api5.Template, error)
-	BatchGetMetadata(ctx context.Context, ridsArg []api2.TemplateRid) ([]api5.TemplateSummary, error)
+	Get(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) (api4.Template, error)
+	BatchGetMetadata(ctx context.Context, ridsArg []api1.TemplateRid) ([]api4.TemplateSummary, error)
 	/*
 	   Creates a commit that may be compacted, e.g cleaned up and not exist anymore.
 	   Throws if the template or branch doesn't exist.
 	   Throws if the latest commit doesn't match the provided id.
 	   Throws if you save to an archived template.
 	*/
-	SaveWorkingState(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.SaveTemplateRequest) (api5.Template, error)
+	SaveWorkingState(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.SaveTemplateRequest) (api4.Template, error)
 	// Returns the set of all ref names used by the template.
-	GetUsedRefNames(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) ([]api3.DataSourceRefName, error)
+	GetUsedRefNames(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) ([]api2.DataSourceRefName, error)
 	// Updates the data source ref names for all variables used in the template.
-	UpdateRefNames(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.UpdateRefNameRequest) (api5.Template, error)
+	UpdateRefNames(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.UpdateRefNameRequest) (api4.Template, error)
 	/*
 	   Creates a commit with a commit message.
 	   Throws if the template or branch doesn't exist.
 	   Throws if the latest commit doesn't match the provided id.
 	   Throws if you commit to an archived template.
 	*/
-	Commit(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.CommitTemplateRequest) (api5.Template, error)
+	Commit(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.CommitTemplateRequest) (api4.Template, error)
 	// Throws if the template doesn't exist.
-	UpdateMetadata(ctx context.Context, templateRidArg api2.TemplateRid, requestArg api5.UpdateMetadataRequest) (api5.TemplateMetadata, error)
-	SearchTemplates(ctx context.Context, requestArg api5.SearchTemplatesRequest) (api5.SearchTemplatesResponse, error)
-	GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api5.GetAllLabelsAndPropertiesResponse, error)
+	UpdateMetadata(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.UpdateMetadataRequest) (api4.TemplateMetadata, error)
+	/*
+	   Archives the provided templates. Templates that are already archived are left unchanged.
+	   Throws if any of the templates don't exist.
+	*/
+	BatchArchive(ctx context.Context, requestArg api4.BatchArchiveTemplatesRequest) error
+	/*
+	   Unarchives the provided templates. Templates that are not archived are left unchanged.
+	   Throws if any of the templates don't exist.
+	*/
+	BatchUnarchive(ctx context.Context, requestArg api4.BatchUnarchiveTemplatesRequest) error
+	SearchTemplates(ctx context.Context, requestArg api4.SearchTemplatesRequest) (api4.SearchTemplatesResponse, error)
+	GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.GetAllLabelsAndPropertiesResponse, error)
+	/*
+	   Duplicates an existing template, copying its content (layout, charts, variables)
+	   and optionally overriding metadata fields such as title, description, labels,
+	   and properties. Returns the newly created template.
+	*/
+	Duplicate(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.DuplicateTemplateRequest) (api4.Template, error)
 	/*
 	   Merges the given branch to the "main" branch.
 	   Throws if the template or branch doesn't exist.
 	   Throws if the latest commit doesn't match the provided id.
 	   Throws if you merge on an archived template.
 	*/
-	MergeToMain(ctx context.Context, templateRidArg api2.TemplateRid, requestArg api5.MergeToMainRequest) (api5.Template, error)
+	MergeToMain(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.MergeToMainRequest) (api4.Template, error)
 }
 
 func NewTemplateServiceClientWithAuth(client TemplateServiceClient, authHeader bearertoken.Token) TemplateServiceClientWithAuth {
@@ -2039,47 +2043,59 @@ type templateServiceClientWithAuth struct {
 	authHeader bearertoken.Token
 }
 
-func (c *templateServiceClientWithAuth) Create(ctx context.Context, requestArg api5.CreateTemplateRequest) (api5.Template, error) {
+func (c *templateServiceClientWithAuth) Create(ctx context.Context, requestArg api4.CreateTemplateRequest) (api4.Template, error) {
 	return c.client.Create(ctx, c.authHeader, requestArg)
 }
 
-func (c *templateServiceClientWithAuth) Get(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) (api5.Template, error) {
+func (c *templateServiceClientWithAuth) Get(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) (api4.Template, error) {
 	return c.client.Get(ctx, c.authHeader, templateRidArg, branchArg, commitArg)
 }
 
-func (c *templateServiceClientWithAuth) BatchGetMetadata(ctx context.Context, ridsArg []api2.TemplateRid) ([]api5.TemplateSummary, error) {
+func (c *templateServiceClientWithAuth) BatchGetMetadata(ctx context.Context, ridsArg []api1.TemplateRid) ([]api4.TemplateSummary, error) {
 	return c.client.BatchGetMetadata(ctx, c.authHeader, ridsArg)
 }
 
-func (c *templateServiceClientWithAuth) SaveWorkingState(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.SaveTemplateRequest) (api5.Template, error) {
+func (c *templateServiceClientWithAuth) SaveWorkingState(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.SaveTemplateRequest) (api4.Template, error) {
 	return c.client.SaveWorkingState(ctx, c.authHeader, templateRidArg, branchArg, requestArg)
 }
 
-func (c *templateServiceClientWithAuth) GetUsedRefNames(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) ([]api3.DataSourceRefName, error) {
+func (c *templateServiceClientWithAuth) GetUsedRefNames(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) ([]api2.DataSourceRefName, error) {
 	return c.client.GetUsedRefNames(ctx, c.authHeader, templateRidArg, branchArg, commitArg)
 }
 
-func (c *templateServiceClientWithAuth) UpdateRefNames(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.UpdateRefNameRequest) (api5.Template, error) {
+func (c *templateServiceClientWithAuth) UpdateRefNames(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.UpdateRefNameRequest) (api4.Template, error) {
 	return c.client.UpdateRefNames(ctx, c.authHeader, templateRidArg, branchArg, requestArg)
 }
 
-func (c *templateServiceClientWithAuth) Commit(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.CommitTemplateRequest) (api5.Template, error) {
+func (c *templateServiceClientWithAuth) Commit(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.CommitTemplateRequest) (api4.Template, error) {
 	return c.client.Commit(ctx, c.authHeader, templateRidArg, branchArg, requestArg)
 }
 
-func (c *templateServiceClientWithAuth) UpdateMetadata(ctx context.Context, templateRidArg api2.TemplateRid, requestArg api5.UpdateMetadataRequest) (api5.TemplateMetadata, error) {
+func (c *templateServiceClientWithAuth) UpdateMetadata(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.UpdateMetadataRequest) (api4.TemplateMetadata, error) {
 	return c.client.UpdateMetadata(ctx, c.authHeader, templateRidArg, requestArg)
 }
 
-func (c *templateServiceClientWithAuth) SearchTemplates(ctx context.Context, requestArg api5.SearchTemplatesRequest) (api5.SearchTemplatesResponse, error) {
+func (c *templateServiceClientWithAuth) BatchArchive(ctx context.Context, requestArg api4.BatchArchiveTemplatesRequest) error {
+	return c.client.BatchArchive(ctx, c.authHeader, requestArg)
+}
+
+func (c *templateServiceClientWithAuth) BatchUnarchive(ctx context.Context, requestArg api4.BatchUnarchiveTemplatesRequest) error {
+	return c.client.BatchUnarchive(ctx, c.authHeader, requestArg)
+}
+
+func (c *templateServiceClientWithAuth) SearchTemplates(ctx context.Context, requestArg api4.SearchTemplatesRequest) (api4.SearchTemplatesResponse, error) {
 	return c.client.SearchTemplates(ctx, c.authHeader, requestArg)
 }
 
-func (c *templateServiceClientWithAuth) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api5.GetAllLabelsAndPropertiesResponse, error) {
+func (c *templateServiceClientWithAuth) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.GetAllLabelsAndPropertiesResponse, error) {
 	return c.client.GetAllLabelsAndProperties(ctx, c.authHeader, workspacesArg)
 }
 
-func (c *templateServiceClientWithAuth) MergeToMain(ctx context.Context, templateRidArg api2.TemplateRid, requestArg api5.MergeToMainRequest) (api5.Template, error) {
+func (c *templateServiceClientWithAuth) Duplicate(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.DuplicateTemplateRequest) (api4.Template, error) {
+	return c.client.Duplicate(ctx, c.authHeader, templateRidArg, requestArg)
+}
+
+func (c *templateServiceClientWithAuth) MergeToMain(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.MergeToMainRequest) (api4.Template, error) {
 	return c.client.MergeToMain(ctx, c.authHeader, templateRidArg, requestArg)
 }
 
@@ -2092,23 +2108,23 @@ type templateServiceClientWithTokenProvider struct {
 	tokenProvider httpclient.TokenProvider
 }
 
-func (c *templateServiceClientWithTokenProvider) Create(ctx context.Context, requestArg api5.CreateTemplateRequest) (api5.Template, error) {
+func (c *templateServiceClientWithTokenProvider) Create(ctx context.Context, requestArg api4.CreateTemplateRequest) (api4.Template, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api5.Template), err
+		return *new(api4.Template), err
 	}
 	return c.client.Create(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *templateServiceClientWithTokenProvider) Get(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) (api5.Template, error) {
+func (c *templateServiceClientWithTokenProvider) Get(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) (api4.Template, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api5.Template), err
+		return *new(api4.Template), err
 	}
 	return c.client.Get(ctx, bearertoken.Token(token), templateRidArg, branchArg, commitArg)
 }
 
-func (c *templateServiceClientWithTokenProvider) BatchGetMetadata(ctx context.Context, ridsArg []api2.TemplateRid) ([]api5.TemplateSummary, error) {
+func (c *templateServiceClientWithTokenProvider) BatchGetMetadata(ctx context.Context, ridsArg []api1.TemplateRid) ([]api4.TemplateSummary, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -2116,15 +2132,15 @@ func (c *templateServiceClientWithTokenProvider) BatchGetMetadata(ctx context.Co
 	return c.client.BatchGetMetadata(ctx, bearertoken.Token(token), ridsArg)
 }
 
-func (c *templateServiceClientWithTokenProvider) SaveWorkingState(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.SaveTemplateRequest) (api5.Template, error) {
+func (c *templateServiceClientWithTokenProvider) SaveWorkingState(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.SaveTemplateRequest) (api4.Template, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api5.Template), err
+		return *new(api4.Template), err
 	}
 	return c.client.SaveWorkingState(ctx, bearertoken.Token(token), templateRidArg, branchArg, requestArg)
 }
 
-func (c *templateServiceClientWithTokenProvider) GetUsedRefNames(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, commitArg *api.CommitId) ([]api3.DataSourceRefName, error) {
+func (c *templateServiceClientWithTokenProvider) GetUsedRefNames(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) ([]api2.DataSourceRefName, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -2132,50 +2148,74 @@ func (c *templateServiceClientWithTokenProvider) GetUsedRefNames(ctx context.Con
 	return c.client.GetUsedRefNames(ctx, bearertoken.Token(token), templateRidArg, branchArg, commitArg)
 }
 
-func (c *templateServiceClientWithTokenProvider) UpdateRefNames(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.UpdateRefNameRequest) (api5.Template, error) {
+func (c *templateServiceClientWithTokenProvider) UpdateRefNames(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.UpdateRefNameRequest) (api4.Template, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api5.Template), err
+		return *new(api4.Template), err
 	}
 	return c.client.UpdateRefNames(ctx, bearertoken.Token(token), templateRidArg, branchArg, requestArg)
 }
 
-func (c *templateServiceClientWithTokenProvider) Commit(ctx context.Context, templateRidArg api2.TemplateRid, branchArg *api.BranchName, requestArg api5.CommitTemplateRequest) (api5.Template, error) {
+func (c *templateServiceClientWithTokenProvider) Commit(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.CommitTemplateRequest) (api4.Template, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api5.Template), err
+		return *new(api4.Template), err
 	}
 	return c.client.Commit(ctx, bearertoken.Token(token), templateRidArg, branchArg, requestArg)
 }
 
-func (c *templateServiceClientWithTokenProvider) UpdateMetadata(ctx context.Context, templateRidArg api2.TemplateRid, requestArg api5.UpdateMetadataRequest) (api5.TemplateMetadata, error) {
+func (c *templateServiceClientWithTokenProvider) UpdateMetadata(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.UpdateMetadataRequest) (api4.TemplateMetadata, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api5.TemplateMetadata), err
+		return *new(api4.TemplateMetadata), err
 	}
 	return c.client.UpdateMetadata(ctx, bearertoken.Token(token), templateRidArg, requestArg)
 }
 
-func (c *templateServiceClientWithTokenProvider) SearchTemplates(ctx context.Context, requestArg api5.SearchTemplatesRequest) (api5.SearchTemplatesResponse, error) {
+func (c *templateServiceClientWithTokenProvider) BatchArchive(ctx context.Context, requestArg api4.BatchArchiveTemplatesRequest) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api5.SearchTemplatesResponse), err
+		return err
+	}
+	return c.client.BatchArchive(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *templateServiceClientWithTokenProvider) BatchUnarchive(ctx context.Context, requestArg api4.BatchUnarchiveTemplatesRequest) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.BatchUnarchive(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *templateServiceClientWithTokenProvider) SearchTemplates(ctx context.Context, requestArg api4.SearchTemplatesRequest) (api4.SearchTemplatesResponse, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api4.SearchTemplatesResponse), err
 	}
 	return c.client.SearchTemplates(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *templateServiceClientWithTokenProvider) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api5.GetAllLabelsAndPropertiesResponse, error) {
+func (c *templateServiceClientWithTokenProvider) GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.GetAllLabelsAndPropertiesResponse, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api5.GetAllLabelsAndPropertiesResponse), err
+		return *new(api4.GetAllLabelsAndPropertiesResponse), err
 	}
 	return c.client.GetAllLabelsAndProperties(ctx, bearertoken.Token(token), workspacesArg)
 }
 
-func (c *templateServiceClientWithTokenProvider) MergeToMain(ctx context.Context, templateRidArg api2.TemplateRid, requestArg api5.MergeToMainRequest) (api5.Template, error) {
+func (c *templateServiceClientWithTokenProvider) Duplicate(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.DuplicateTemplateRequest) (api4.Template, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api5.Template), err
+		return *new(api4.Template), err
+	}
+	return c.client.Duplicate(ctx, bearertoken.Token(token), templateRidArg, requestArg)
+}
+
+func (c *templateServiceClientWithTokenProvider) MergeToMain(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.MergeToMainRequest) (api4.Template, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api4.Template), err
 	}
 	return c.client.MergeToMain(ctx, bearertoken.Token(token), templateRidArg, requestArg)
 }
@@ -2378,81 +2418,81 @@ type VersioningServiceClient interface {
 	   pointer for this resource.
 	   Throws if the provided commit doesn't exist.
 	*/
-	CreateBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateBranchRequest) (api.Branch, error)
+	CreateBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateBranchRequest) (api5.Branch, error)
 	/*
 	   Creates an immutable pointer to the provided commit.
 	   Throws if the name is already used as a commit
 	   pointer for this resource.
 	   Throws if the provided commit doesn't exist.
 	*/
-	CreateTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateTagRequest) (api.Tag, error)
+	CreateTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateTagRequest) (api5.Tag, error)
 	// Throws if the commit doesn't exist.
-	GetCommit(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId) (api.Commit, error)
+	GetCommit(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId) (api5.Commit, error)
 	// Filters out resources that are not authorized.
-	BatchGetCommits(ctx context.Context, authHeader bearertoken.Token, resourceAndCommitIdsArg []api.ResourceAndCommitId) ([]api.Commit, error)
+	BatchGetCommits(ctx context.Context, authHeader bearertoken.Token, resourceAndCommitIdsArg []api5.ResourceAndCommitId) ([]api5.Commit, error)
 	/*
 	   Returns the commit pointed to by the branch.
 	   Throws if the branch doesn't exist.
 	*/
-	GetCommitByBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Commit, error)
+	GetCommitByBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Commit, error)
 	/*
 	   Returns the commit pointed to by the tag.
 	   Throws if the tag doesn't exist.
 	*/
-	GetCommitByTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Commit, error)
+	GetCommitByTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Commit, error)
 	/*
 	   Returns the least common ancestor of the two commits.
 	   Throws if either commit doesn't exist.
 	*/
-	GetLeastCommonAncestor(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.GetLeastCommonAncestorRequest) (api.CommitId, error)
+	GetLeastCommonAncestor(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api5.GetLeastCommonAncestorRequest) (api5.CommitId, error)
 	/*
 	   Returns the commit history sorted by creation time descending.
-	   Excludes working state commits.
+	   Excludes working state commits unless includeWorkingState is true.
 	   Throws if the commit doesn't exist.
 	*/
-	GetCommitHistory(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token) (api.CommitHistory, error)
+	GetCommitHistory(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token, includeWorkingStateArg *bool) (api5.CommitHistory, error)
 	/*
 	   Persists the commits so that they are not compacted.
 	   This operation is atomic - either all commits are persisted
 	   or none are (in the case of an error).
 	*/
-	PersistCommits(ctx context.Context, authHeader bearertoken.Token, requestArg []api.ResourceAndCommitId) error
+	PersistCommits(ctx context.Context, authHeader bearertoken.Token, requestArg []api5.ResourceAndCommitId) error
 	// Throws if the branch doesn't exist.
-	GetBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Branch, error)
+	GetBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Branch, error)
 	/*
 	   Returns all branches for the resource in order of
 	   most recently updated.
 	*/
-	GetBranches(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier) ([]api.Branch, error)
+	GetBranches(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier) ([]api5.Branch, error)
 	// Omits branches that are not authorized.
-	BatchGetBranches(ctx context.Context, authHeader bearertoken.Token, resourceAndBranchesArg []api.ResourceAndBranchName) ([]api.Branch, error)
+	BatchGetBranches(ctx context.Context, authHeader bearertoken.Token, resourceAndBranchesArg []api5.ResourceAndBranchName) ([]api5.Branch, error)
 	// Throws if the tag doesn't exist.
-	GetTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Tag, error)
+	GetTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Tag, error)
 	// Omits tags that are not authorized.
-	BatchGetTags(ctx context.Context, authHeader bearertoken.Token, resourceAndCommitsArg []api.ResourceAndCommitId) ([]api.Tag, error)
+	BatchGetTags(ctx context.Context, authHeader bearertoken.Token, resourceAndCommitsArg []api5.ResourceAndCommitId) ([]api5.Tag, error)
 	/*
 	   Returns all tags for the resource in order of
 	   most recently created.
 	*/
-	GetTagsByResource(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier) ([]api.Tag, error)
+	GetTagsByResource(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier) ([]api5.Tag, error)
 	/*
 	   Deletes the branch pointer.
 	   Throws if the branch doesn't exist.
 	   Throws if you attempt to delete the "main" branch.
 	*/
-	DeleteBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) error
+	DeleteBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) error
 	/*
 	   Deletes the branch pointers.
 	   Throws if any resource or branch is non-existent
 	   or unauthorized.
 	   Throws if any attempt is made to delete "main".
 	*/
-	DeleteBranches(ctx context.Context, authHeader bearertoken.Token, resourceAndBranchesArg []api.ResourceAndBranchName) error
+	DeleteBranches(ctx context.Context, authHeader bearertoken.Token, resourceAndBranchesArg []api5.ResourceAndBranchName) error
 	/*
 	   Deletes the tag pointer.
 	   Throws if the tag doesn't exist.
 	*/
-	DeleteTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) error
+	DeleteTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) error
 }
 
 type versioningServiceClient struct {
@@ -2463,8 +2503,8 @@ func NewVersioningServiceClient(client httpclient.Client) VersioningServiceClien
 	return &versioningServiceClient{client: client}
 }
 
-func (c *versioningServiceClient) CreateBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateBranchRequest) (api.Branch, error) {
-	var returnVal *api.Branch
+func (c *versioningServiceClient) CreateBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateBranchRequest) (api5.Branch, error) {
+	var returnVal *api5.Branch
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateBranch"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2473,16 +2513,16 @@ func (c *versioningServiceClient) CreateBranch(ctx context.Context, authHeader b
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api.Branch), werror.WrapWithContextParams(ctx, err, "createBranch failed")
+		return *new(api5.Branch), werror.WrapWithContextParams(ctx, err, "createBranch failed")
 	}
 	if returnVal == nil {
-		return *new(api.Branch), werror.ErrorWithContextParams(ctx, "createBranch response cannot be nil")
+		return *new(api5.Branch), werror.ErrorWithContextParams(ctx, "createBranch response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *versioningServiceClient) CreateTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateTagRequest) (api.Tag, error) {
-	var returnVal *api.Tag
+func (c *versioningServiceClient) CreateTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateTagRequest) (api5.Tag, error) {
+	var returnVal *api5.Tag
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("CreateTag"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2491,16 +2531,16 @@ func (c *versioningServiceClient) CreateTag(ctx context.Context, authHeader bear
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api.Tag), werror.WrapWithContextParams(ctx, err, "createTag failed")
+		return *new(api5.Tag), werror.WrapWithContextParams(ctx, err, "createTag failed")
 	}
 	if returnVal == nil {
-		return *new(api.Tag), werror.ErrorWithContextParams(ctx, "createTag response cannot be nil")
+		return *new(api5.Tag), werror.ErrorWithContextParams(ctx, "createTag response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *versioningServiceClient) GetCommit(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId) (api.Commit, error) {
-	var returnVal *api.Commit
+func (c *versioningServiceClient) GetCommit(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId) (api5.Commit, error) {
+	var returnVal *api5.Commit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCommit"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2508,16 +2548,16 @@ func (c *versioningServiceClient) GetCommit(ctx context.Context, authHeader bear
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api.Commit), werror.WrapWithContextParams(ctx, err, "getCommit failed")
+		return *new(api5.Commit), werror.WrapWithContextParams(ctx, err, "getCommit failed")
 	}
 	if returnVal == nil {
-		return *new(api.Commit), werror.ErrorWithContextParams(ctx, "getCommit response cannot be nil")
+		return *new(api5.Commit), werror.ErrorWithContextParams(ctx, "getCommit response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *versioningServiceClient) BatchGetCommits(ctx context.Context, authHeader bearertoken.Token, resourceAndCommitIdsArg []api.ResourceAndCommitId) ([]api.Commit, error) {
-	var returnVal []api.Commit
+func (c *versioningServiceClient) BatchGetCommits(ctx context.Context, authHeader bearertoken.Token, resourceAndCommitIdsArg []api5.ResourceAndCommitId) ([]api5.Commit, error) {
+	var returnVal []api5.Commit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetCommits"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2534,8 +2574,8 @@ func (c *versioningServiceClient) BatchGetCommits(ctx context.Context, authHeade
 	return returnVal, nil
 }
 
-func (c *versioningServiceClient) GetCommitByBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Commit, error) {
-	var returnVal *api.Commit
+func (c *versioningServiceClient) GetCommitByBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Commit, error) {
+	var returnVal *api5.Commit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCommitByBranch"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2543,16 +2583,16 @@ func (c *versioningServiceClient) GetCommitByBranch(ctx context.Context, authHea
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api.Commit), werror.WrapWithContextParams(ctx, err, "getCommitByBranch failed")
+		return *new(api5.Commit), werror.WrapWithContextParams(ctx, err, "getCommitByBranch failed")
 	}
 	if returnVal == nil {
-		return *new(api.Commit), werror.ErrorWithContextParams(ctx, "getCommitByBranch response cannot be nil")
+		return *new(api5.Commit), werror.ErrorWithContextParams(ctx, "getCommitByBranch response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *versioningServiceClient) GetCommitByTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Commit, error) {
-	var returnVal *api.Commit
+func (c *versioningServiceClient) GetCommitByTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Commit, error) {
+	var returnVal *api5.Commit
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCommitByTag"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2560,16 +2600,16 @@ func (c *versioningServiceClient) GetCommitByTag(ctx context.Context, authHeader
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api.Commit), werror.WrapWithContextParams(ctx, err, "getCommitByTag failed")
+		return *new(api5.Commit), werror.WrapWithContextParams(ctx, err, "getCommitByTag failed")
 	}
 	if returnVal == nil {
-		return *new(api.Commit), werror.ErrorWithContextParams(ctx, "getCommitByTag response cannot be nil")
+		return *new(api5.Commit), werror.ErrorWithContextParams(ctx, "getCommitByTag response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *versioningServiceClient) GetLeastCommonAncestor(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api.GetLeastCommonAncestorRequest) (api.CommitId, error) {
-	var returnVal *api.CommitId
+func (c *versioningServiceClient) GetLeastCommonAncestor(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api5.GetLeastCommonAncestorRequest) (api5.CommitId, error) {
+	var returnVal *api5.CommitId
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetLeastCommonAncestor"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2578,16 +2618,16 @@ func (c *versioningServiceClient) GetLeastCommonAncestor(ctx context.Context, au
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(api.CommitId), werror.WrapWithContextParams(ctx, err, "getLeastCommonAncestor failed")
+		return *new(api5.CommitId), werror.WrapWithContextParams(ctx, err, "getLeastCommonAncestor failed")
 	}
 	if returnVal == nil {
-		return *new(api.CommitId), werror.ErrorWithContextParams(ctx, "getLeastCommonAncestor response cannot be nil")
+		return *new(api5.CommitId), werror.ErrorWithContextParams(ctx, "getLeastCommonAncestor response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *versioningServiceClient) GetCommitHistory(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token) (api.CommitHistory, error) {
-	var returnVal *api.CommitHistory
+func (c *versioningServiceClient) GetCommitHistory(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token, includeWorkingStateArg *bool) (api5.CommitHistory, error) {
+	var returnVal *api5.CommitHistory
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetCommitHistory"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2599,19 +2639,22 @@ func (c *versioningServiceClient) GetCommitHistory(ctx context.Context, authHead
 	if nextPageTokenArg != nil {
 		queryParams.Set("nextPageToken", fmt.Sprint(*nextPageTokenArg))
 	}
+	if includeWorkingStateArg != nil {
+		queryParams.Set("includeWorkingState", fmt.Sprint(*includeWorkingStateArg))
+	}
 	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api.CommitHistory), werror.WrapWithContextParams(ctx, err, "getCommitHistory failed")
+		return *new(api5.CommitHistory), werror.WrapWithContextParams(ctx, err, "getCommitHistory failed")
 	}
 	if returnVal == nil {
-		return *new(api.CommitHistory), werror.ErrorWithContextParams(ctx, "getCommitHistory response cannot be nil")
+		return *new(api5.CommitHistory), werror.ErrorWithContextParams(ctx, "getCommitHistory response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *versioningServiceClient) PersistCommits(ctx context.Context, authHeader bearertoken.Token, requestArg []api.ResourceAndCommitId) error {
+func (c *versioningServiceClient) PersistCommits(ctx context.Context, authHeader bearertoken.Token, requestArg []api5.ResourceAndCommitId) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("PersistCommits"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2624,8 +2667,8 @@ func (c *versioningServiceClient) PersistCommits(ctx context.Context, authHeader
 	return nil
 }
 
-func (c *versioningServiceClient) GetBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Branch, error) {
-	var returnVal *api.Branch
+func (c *versioningServiceClient) GetBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Branch, error) {
+	var returnVal *api5.Branch
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetBranch"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2633,16 +2676,16 @@ func (c *versioningServiceClient) GetBranch(ctx context.Context, authHeader bear
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api.Branch), werror.WrapWithContextParams(ctx, err, "getBranch failed")
+		return *new(api5.Branch), werror.WrapWithContextParams(ctx, err, "getBranch failed")
 	}
 	if returnVal == nil {
-		return *new(api.Branch), werror.ErrorWithContextParams(ctx, "getBranch response cannot be nil")
+		return *new(api5.Branch), werror.ErrorWithContextParams(ctx, "getBranch response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *versioningServiceClient) GetBranches(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier) ([]api.Branch, error) {
-	var returnVal []api.Branch
+func (c *versioningServiceClient) GetBranches(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier) ([]api5.Branch, error) {
+	var returnVal []api5.Branch
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetBranches"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2658,8 +2701,8 @@ func (c *versioningServiceClient) GetBranches(ctx context.Context, authHeader be
 	return returnVal, nil
 }
 
-func (c *versioningServiceClient) BatchGetBranches(ctx context.Context, authHeader bearertoken.Token, resourceAndBranchesArg []api.ResourceAndBranchName) ([]api.Branch, error) {
-	var returnVal []api.Branch
+func (c *versioningServiceClient) BatchGetBranches(ctx context.Context, authHeader bearertoken.Token, resourceAndBranchesArg []api5.ResourceAndBranchName) ([]api5.Branch, error) {
+	var returnVal []api5.Branch
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetBranches"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2676,8 +2719,8 @@ func (c *versioningServiceClient) BatchGetBranches(ctx context.Context, authHead
 	return returnVal, nil
 }
 
-func (c *versioningServiceClient) GetTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Tag, error) {
-	var returnVal *api.Tag
+func (c *versioningServiceClient) GetTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Tag, error) {
+	var returnVal *api5.Tag
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetTag"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2685,16 +2728,16 @@ func (c *versioningServiceClient) GetTag(ctx context.Context, authHeader bearert
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
-		return *new(api.Tag), werror.WrapWithContextParams(ctx, err, "getTag failed")
+		return *new(api5.Tag), werror.WrapWithContextParams(ctx, err, "getTag failed")
 	}
 	if returnVal == nil {
-		return *new(api.Tag), werror.ErrorWithContextParams(ctx, "getTag response cannot be nil")
+		return *new(api5.Tag), werror.ErrorWithContextParams(ctx, "getTag response cannot be nil")
 	}
 	return *returnVal, nil
 }
 
-func (c *versioningServiceClient) BatchGetTags(ctx context.Context, authHeader bearertoken.Token, resourceAndCommitsArg []api.ResourceAndCommitId) ([]api.Tag, error) {
-	var returnVal []api.Tag
+func (c *versioningServiceClient) BatchGetTags(ctx context.Context, authHeader bearertoken.Token, resourceAndCommitsArg []api5.ResourceAndCommitId) ([]api5.Tag, error) {
+	var returnVal []api5.Tag
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("BatchGetTags"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2711,8 +2754,8 @@ func (c *versioningServiceClient) BatchGetTags(ctx context.Context, authHeader b
 	return returnVal, nil
 }
 
-func (c *versioningServiceClient) GetTagsByResource(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier) ([]api.Tag, error) {
-	var returnVal []api.Tag
+func (c *versioningServiceClient) GetTagsByResource(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier) ([]api5.Tag, error) {
+	var returnVal []api5.Tag
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetTagsByResource"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2728,7 +2771,7 @@ func (c *versioningServiceClient) GetTagsByResource(ctx context.Context, authHea
 	return returnVal, nil
 }
 
-func (c *versioningServiceClient) DeleteBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) error {
+func (c *versioningServiceClient) DeleteBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteBranch"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2740,7 +2783,7 @@ func (c *versioningServiceClient) DeleteBranch(ctx context.Context, authHeader b
 	return nil
 }
 
-func (c *versioningServiceClient) DeleteBranches(ctx context.Context, authHeader bearertoken.Token, resourceAndBranchesArg []api.ResourceAndBranchName) error {
+func (c *versioningServiceClient) DeleteBranches(ctx context.Context, authHeader bearertoken.Token, resourceAndBranchesArg []api5.ResourceAndBranchName) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteBranches"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2753,7 +2796,7 @@ func (c *versioningServiceClient) DeleteBranches(ctx context.Context, authHeader
 	return nil
 }
 
-func (c *versioningServiceClient) DeleteTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) error {
+func (c *versioningServiceClient) DeleteTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteTag"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -2779,81 +2822,81 @@ type VersioningServiceClientWithAuth interface {
 	   pointer for this resource.
 	   Throws if the provided commit doesn't exist.
 	*/
-	CreateBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateBranchRequest) (api.Branch, error)
+	CreateBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateBranchRequest) (api5.Branch, error)
 	/*
 	   Creates an immutable pointer to the provided commit.
 	   Throws if the name is already used as a commit
 	   pointer for this resource.
 	   Throws if the provided commit doesn't exist.
 	*/
-	CreateTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateTagRequest) (api.Tag, error)
+	CreateTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateTagRequest) (api5.Tag, error)
 	// Throws if the commit doesn't exist.
-	GetCommit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId) (api.Commit, error)
+	GetCommit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId) (api5.Commit, error)
 	// Filters out resources that are not authorized.
-	BatchGetCommits(ctx context.Context, resourceAndCommitIdsArg []api.ResourceAndCommitId) ([]api.Commit, error)
+	BatchGetCommits(ctx context.Context, resourceAndCommitIdsArg []api5.ResourceAndCommitId) ([]api5.Commit, error)
 	/*
 	   Returns the commit pointed to by the branch.
 	   Throws if the branch doesn't exist.
 	*/
-	GetCommitByBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Commit, error)
+	GetCommitByBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Commit, error)
 	/*
 	   Returns the commit pointed to by the tag.
 	   Throws if the tag doesn't exist.
 	*/
-	GetCommitByTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Commit, error)
+	GetCommitByTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Commit, error)
 	/*
 	   Returns the least common ancestor of the two commits.
 	   Throws if either commit doesn't exist.
 	*/
-	GetLeastCommonAncestor(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.GetLeastCommonAncestorRequest) (api.CommitId, error)
+	GetLeastCommonAncestor(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.GetLeastCommonAncestorRequest) (api5.CommitId, error)
 	/*
 	   Returns the commit history sorted by creation time descending.
-	   Excludes working state commits.
+	   Excludes working state commits unless includeWorkingState is true.
 	   Throws if the commit doesn't exist.
 	*/
-	GetCommitHistory(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token) (api.CommitHistory, error)
+	GetCommitHistory(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token, includeWorkingStateArg *bool) (api5.CommitHistory, error)
 	/*
 	   Persists the commits so that they are not compacted.
 	   This operation is atomic - either all commits are persisted
 	   or none are (in the case of an error).
 	*/
-	PersistCommits(ctx context.Context, requestArg []api.ResourceAndCommitId) error
+	PersistCommits(ctx context.Context, requestArg []api5.ResourceAndCommitId) error
 	// Throws if the branch doesn't exist.
-	GetBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Branch, error)
+	GetBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Branch, error)
 	/*
 	   Returns all branches for the resource in order of
 	   most recently updated.
 	*/
-	GetBranches(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api.Branch, error)
+	GetBranches(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api5.Branch, error)
 	// Omits branches that are not authorized.
-	BatchGetBranches(ctx context.Context, resourceAndBranchesArg []api.ResourceAndBranchName) ([]api.Branch, error)
+	BatchGetBranches(ctx context.Context, resourceAndBranchesArg []api5.ResourceAndBranchName) ([]api5.Branch, error)
 	// Throws if the tag doesn't exist.
-	GetTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Tag, error)
+	GetTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Tag, error)
 	// Omits tags that are not authorized.
-	BatchGetTags(ctx context.Context, resourceAndCommitsArg []api.ResourceAndCommitId) ([]api.Tag, error)
+	BatchGetTags(ctx context.Context, resourceAndCommitsArg []api5.ResourceAndCommitId) ([]api5.Tag, error)
 	/*
 	   Returns all tags for the resource in order of
 	   most recently created.
 	*/
-	GetTagsByResource(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api.Tag, error)
+	GetTagsByResource(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api5.Tag, error)
 	/*
 	   Deletes the branch pointer.
 	   Throws if the branch doesn't exist.
 	   Throws if you attempt to delete the "main" branch.
 	*/
-	DeleteBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) error
+	DeleteBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) error
 	/*
 	   Deletes the branch pointers.
 	   Throws if any resource or branch is non-existent
 	   or unauthorized.
 	   Throws if any attempt is made to delete "main".
 	*/
-	DeleteBranches(ctx context.Context, resourceAndBranchesArg []api.ResourceAndBranchName) error
+	DeleteBranches(ctx context.Context, resourceAndBranchesArg []api5.ResourceAndBranchName) error
 	/*
 	   Deletes the tag pointer.
 	   Throws if the tag doesn't exist.
 	*/
-	DeleteTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) error
+	DeleteTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) error
 }
 
 func NewVersioningServiceClientWithAuth(client VersioningServiceClient, authHeader bearertoken.Token) VersioningServiceClientWithAuth {
@@ -2865,75 +2908,75 @@ type versioningServiceClientWithAuth struct {
 	authHeader bearertoken.Token
 }
 
-func (c *versioningServiceClientWithAuth) CreateBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateBranchRequest) (api.Branch, error) {
+func (c *versioningServiceClientWithAuth) CreateBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateBranchRequest) (api5.Branch, error) {
 	return c.client.CreateBranch(ctx, c.authHeader, resourceRidArg, requestArg)
 }
 
-func (c *versioningServiceClientWithAuth) CreateTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateTagRequest) (api.Tag, error) {
+func (c *versioningServiceClientWithAuth) CreateTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateTagRequest) (api5.Tag, error) {
 	return c.client.CreateTag(ctx, c.authHeader, resourceRidArg, requestArg)
 }
 
-func (c *versioningServiceClientWithAuth) GetCommit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId) (api.Commit, error) {
+func (c *versioningServiceClientWithAuth) GetCommit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId) (api5.Commit, error) {
 	return c.client.GetCommit(ctx, c.authHeader, resourceRidArg, commitIdArg)
 }
 
-func (c *versioningServiceClientWithAuth) BatchGetCommits(ctx context.Context, resourceAndCommitIdsArg []api.ResourceAndCommitId) ([]api.Commit, error) {
+func (c *versioningServiceClientWithAuth) BatchGetCommits(ctx context.Context, resourceAndCommitIdsArg []api5.ResourceAndCommitId) ([]api5.Commit, error) {
 	return c.client.BatchGetCommits(ctx, c.authHeader, resourceAndCommitIdsArg)
 }
 
-func (c *versioningServiceClientWithAuth) GetCommitByBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Commit, error) {
+func (c *versioningServiceClientWithAuth) GetCommitByBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Commit, error) {
 	return c.client.GetCommitByBranch(ctx, c.authHeader, resourceRidArg, branchNameArg)
 }
 
-func (c *versioningServiceClientWithAuth) GetCommitByTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Commit, error) {
+func (c *versioningServiceClientWithAuth) GetCommitByTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Commit, error) {
 	return c.client.GetCommitByTag(ctx, c.authHeader, resourceRidArg, tagNameArg)
 }
 
-func (c *versioningServiceClientWithAuth) GetLeastCommonAncestor(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.GetLeastCommonAncestorRequest) (api.CommitId, error) {
+func (c *versioningServiceClientWithAuth) GetLeastCommonAncestor(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.GetLeastCommonAncestorRequest) (api5.CommitId, error) {
 	return c.client.GetLeastCommonAncestor(ctx, c.authHeader, resourceRidArg, requestArg)
 }
 
-func (c *versioningServiceClientWithAuth) GetCommitHistory(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token) (api.CommitHistory, error) {
-	return c.client.GetCommitHistory(ctx, c.authHeader, resourceRidArg, commitIdArg, pageSizeArg, nextPageTokenArg)
+func (c *versioningServiceClientWithAuth) GetCommitHistory(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token, includeWorkingStateArg *bool) (api5.CommitHistory, error) {
+	return c.client.GetCommitHistory(ctx, c.authHeader, resourceRidArg, commitIdArg, pageSizeArg, nextPageTokenArg, includeWorkingStateArg)
 }
 
-func (c *versioningServiceClientWithAuth) PersistCommits(ctx context.Context, requestArg []api.ResourceAndCommitId) error {
+func (c *versioningServiceClientWithAuth) PersistCommits(ctx context.Context, requestArg []api5.ResourceAndCommitId) error {
 	return c.client.PersistCommits(ctx, c.authHeader, requestArg)
 }
 
-func (c *versioningServiceClientWithAuth) GetBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Branch, error) {
+func (c *versioningServiceClientWithAuth) GetBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Branch, error) {
 	return c.client.GetBranch(ctx, c.authHeader, resourceRidArg, branchNameArg)
 }
 
-func (c *versioningServiceClientWithAuth) GetBranches(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api.Branch, error) {
+func (c *versioningServiceClientWithAuth) GetBranches(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api5.Branch, error) {
 	return c.client.GetBranches(ctx, c.authHeader, resourceRidArg)
 }
 
-func (c *versioningServiceClientWithAuth) BatchGetBranches(ctx context.Context, resourceAndBranchesArg []api.ResourceAndBranchName) ([]api.Branch, error) {
+func (c *versioningServiceClientWithAuth) BatchGetBranches(ctx context.Context, resourceAndBranchesArg []api5.ResourceAndBranchName) ([]api5.Branch, error) {
 	return c.client.BatchGetBranches(ctx, c.authHeader, resourceAndBranchesArg)
 }
 
-func (c *versioningServiceClientWithAuth) GetTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Tag, error) {
+func (c *versioningServiceClientWithAuth) GetTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Tag, error) {
 	return c.client.GetTag(ctx, c.authHeader, resourceRidArg, tagNameArg)
 }
 
-func (c *versioningServiceClientWithAuth) BatchGetTags(ctx context.Context, resourceAndCommitsArg []api.ResourceAndCommitId) ([]api.Tag, error) {
+func (c *versioningServiceClientWithAuth) BatchGetTags(ctx context.Context, resourceAndCommitsArg []api5.ResourceAndCommitId) ([]api5.Tag, error) {
 	return c.client.BatchGetTags(ctx, c.authHeader, resourceAndCommitsArg)
 }
 
-func (c *versioningServiceClientWithAuth) GetTagsByResource(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api.Tag, error) {
+func (c *versioningServiceClientWithAuth) GetTagsByResource(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api5.Tag, error) {
 	return c.client.GetTagsByResource(ctx, c.authHeader, resourceRidArg)
 }
 
-func (c *versioningServiceClientWithAuth) DeleteBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) error {
+func (c *versioningServiceClientWithAuth) DeleteBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) error {
 	return c.client.DeleteBranch(ctx, c.authHeader, resourceRidArg, branchNameArg)
 }
 
-func (c *versioningServiceClientWithAuth) DeleteBranches(ctx context.Context, resourceAndBranchesArg []api.ResourceAndBranchName) error {
+func (c *versioningServiceClientWithAuth) DeleteBranches(ctx context.Context, resourceAndBranchesArg []api5.ResourceAndBranchName) error {
 	return c.client.DeleteBranches(ctx, c.authHeader, resourceAndBranchesArg)
 }
 
-func (c *versioningServiceClientWithAuth) DeleteTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) error {
+func (c *versioningServiceClientWithAuth) DeleteTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) error {
 	return c.client.DeleteTag(ctx, c.authHeader, resourceRidArg, tagNameArg)
 }
 
@@ -2946,31 +2989,31 @@ type versioningServiceClientWithTokenProvider struct {
 	tokenProvider httpclient.TokenProvider
 }
 
-func (c *versioningServiceClientWithTokenProvider) CreateBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateBranchRequest) (api.Branch, error) {
+func (c *versioningServiceClientWithTokenProvider) CreateBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateBranchRequest) (api5.Branch, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api.Branch), err
+		return *new(api5.Branch), err
 	}
 	return c.client.CreateBranch(ctx, bearertoken.Token(token), resourceRidArg, requestArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) CreateTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.CreateTagRequest) (api.Tag, error) {
+func (c *versioningServiceClientWithTokenProvider) CreateTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateTagRequest) (api5.Tag, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api.Tag), err
+		return *new(api5.Tag), err
 	}
 	return c.client.CreateTag(ctx, bearertoken.Token(token), resourceRidArg, requestArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) GetCommit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId) (api.Commit, error) {
+func (c *versioningServiceClientWithTokenProvider) GetCommit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId) (api5.Commit, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api.Commit), err
+		return *new(api5.Commit), err
 	}
 	return c.client.GetCommit(ctx, bearertoken.Token(token), resourceRidArg, commitIdArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) BatchGetCommits(ctx context.Context, resourceAndCommitIdsArg []api.ResourceAndCommitId) ([]api.Commit, error) {
+func (c *versioningServiceClientWithTokenProvider) BatchGetCommits(ctx context.Context, resourceAndCommitIdsArg []api5.ResourceAndCommitId) ([]api5.Commit, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -2978,39 +3021,39 @@ func (c *versioningServiceClientWithTokenProvider) BatchGetCommits(ctx context.C
 	return c.client.BatchGetCommits(ctx, bearertoken.Token(token), resourceAndCommitIdsArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) GetCommitByBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Commit, error) {
+func (c *versioningServiceClientWithTokenProvider) GetCommitByBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Commit, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api.Commit), err
+		return *new(api5.Commit), err
 	}
 	return c.client.GetCommitByBranch(ctx, bearertoken.Token(token), resourceRidArg, branchNameArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) GetCommitByTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Commit, error) {
+func (c *versioningServiceClientWithTokenProvider) GetCommitByTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Commit, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api.Commit), err
+		return *new(api5.Commit), err
 	}
 	return c.client.GetCommitByTag(ctx, bearertoken.Token(token), resourceRidArg, tagNameArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) GetLeastCommonAncestor(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api.GetLeastCommonAncestorRequest) (api.CommitId, error) {
+func (c *versioningServiceClientWithTokenProvider) GetLeastCommonAncestor(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.GetLeastCommonAncestorRequest) (api5.CommitId, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api.CommitId), err
+		return *new(api5.CommitId), err
 	}
 	return c.client.GetLeastCommonAncestor(ctx, bearertoken.Token(token), resourceRidArg, requestArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) GetCommitHistory(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token) (api.CommitHistory, error) {
+func (c *versioningServiceClientWithTokenProvider) GetCommitHistory(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token, includeWorkingStateArg *bool) (api5.CommitHistory, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api.CommitHistory), err
+		return *new(api5.CommitHistory), err
 	}
-	return c.client.GetCommitHistory(ctx, bearertoken.Token(token), resourceRidArg, commitIdArg, pageSizeArg, nextPageTokenArg)
+	return c.client.GetCommitHistory(ctx, bearertoken.Token(token), resourceRidArg, commitIdArg, pageSizeArg, nextPageTokenArg, includeWorkingStateArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) PersistCommits(ctx context.Context, requestArg []api.ResourceAndCommitId) error {
+func (c *versioningServiceClientWithTokenProvider) PersistCommits(ctx context.Context, requestArg []api5.ResourceAndCommitId) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -3018,15 +3061,15 @@ func (c *versioningServiceClientWithTokenProvider) PersistCommits(ctx context.Co
 	return c.client.PersistCommits(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) GetBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) (api.Branch, error) {
+func (c *versioningServiceClientWithTokenProvider) GetBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Branch, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api.Branch), err
+		return *new(api5.Branch), err
 	}
 	return c.client.GetBranch(ctx, bearertoken.Token(token), resourceRidArg, branchNameArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) GetBranches(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api.Branch, error) {
+func (c *versioningServiceClientWithTokenProvider) GetBranches(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api5.Branch, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -3034,7 +3077,7 @@ func (c *versioningServiceClientWithTokenProvider) GetBranches(ctx context.Conte
 	return c.client.GetBranches(ctx, bearertoken.Token(token), resourceRidArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) BatchGetBranches(ctx context.Context, resourceAndBranchesArg []api.ResourceAndBranchName) ([]api.Branch, error) {
+func (c *versioningServiceClientWithTokenProvider) BatchGetBranches(ctx context.Context, resourceAndBranchesArg []api5.ResourceAndBranchName) ([]api5.Branch, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -3042,15 +3085,15 @@ func (c *versioningServiceClientWithTokenProvider) BatchGetBranches(ctx context.
 	return c.client.BatchGetBranches(ctx, bearertoken.Token(token), resourceAndBranchesArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) GetTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) (api.Tag, error) {
+func (c *versioningServiceClientWithTokenProvider) GetTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Tag, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(api.Tag), err
+		return *new(api5.Tag), err
 	}
 	return c.client.GetTag(ctx, bearertoken.Token(token), resourceRidArg, tagNameArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) BatchGetTags(ctx context.Context, resourceAndCommitsArg []api.ResourceAndCommitId) ([]api.Tag, error) {
+func (c *versioningServiceClientWithTokenProvider) BatchGetTags(ctx context.Context, resourceAndCommitsArg []api5.ResourceAndCommitId) ([]api5.Tag, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -3058,7 +3101,7 @@ func (c *versioningServiceClientWithTokenProvider) BatchGetTags(ctx context.Cont
 	return c.client.BatchGetTags(ctx, bearertoken.Token(token), resourceAndCommitsArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) GetTagsByResource(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api.Tag, error) {
+func (c *versioningServiceClientWithTokenProvider) GetTagsByResource(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api5.Tag, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -3066,7 +3109,7 @@ func (c *versioningServiceClientWithTokenProvider) GetTagsByResource(ctx context
 	return c.client.GetTagsByResource(ctx, bearertoken.Token(token), resourceRidArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) DeleteBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api.BranchName) error {
+func (c *versioningServiceClientWithTokenProvider) DeleteBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -3074,7 +3117,7 @@ func (c *versioningServiceClientWithTokenProvider) DeleteBranch(ctx context.Cont
 	return c.client.DeleteBranch(ctx, bearertoken.Token(token), resourceRidArg, branchNameArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) DeleteBranches(ctx context.Context, resourceAndBranchesArg []api.ResourceAndBranchName) error {
+func (c *versioningServiceClientWithTokenProvider) DeleteBranches(ctx context.Context, resourceAndBranchesArg []api5.ResourceAndBranchName) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err
@@ -3082,7 +3125,7 @@ func (c *versioningServiceClientWithTokenProvider) DeleteBranches(ctx context.Co
 	return c.client.DeleteBranches(ctx, bearertoken.Token(token), resourceAndBranchesArg)
 }
 
-func (c *versioningServiceClientWithTokenProvider) DeleteTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api.TagName) error {
+func (c *versioningServiceClientWithTokenProvider) DeleteTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) error {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return err

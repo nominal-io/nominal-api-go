@@ -284,11 +284,10 @@ type NominalChannelWriterServiceClient interface {
 	     }
 	   }
 
-	   // Picosecond precision timestamp.
+	   // Nanosecond precision timestamp.
 	   message Timestamp {
 	     optional int64 seconds = 1;
 	     optional int64 nanos = 2;
-	     optional int32 picos = 3;
 	   }
 
 	   message DoublePoints { repeated double points = 1; }
@@ -625,11 +624,10 @@ type NominalChannelWriterServiceClientWithAuth interface {
 	     }
 	   }
 
-	   // Picosecond precision timestamp.
+	   // Nanosecond precision timestamp.
 	   message Timestamp {
 	     optional int64 seconds = 1;
 	     optional int64 nanos = 2;
-	     optional int32 picos = 3;
 	   }
 
 	   message DoublePoints { repeated double points = 1; }

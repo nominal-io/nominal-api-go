@@ -316,6 +316,310 @@ func (e *ConflictingDataTypes) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Unsafe
+type conflictingUnits struct {
+	Channel api.Channel `json:"channel" safelogging:"@Unsafe"`
+}
+
+func (o conflictingUnits) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *conflictingUnits) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewConflictingUnits returns new instance of ConflictingUnits error.
+func NewConflictingUnits(channelArg api.Channel) *ConflictingUnits {
+	return &ConflictingUnits{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), conflictingUnits: conflictingUnits{Channel: channelArg}}
+}
+
+// WrapWithConflictingUnits returns new instance of ConflictingUnits error wrapping an existing error.
+func WrapWithConflictingUnits(err error, channelArg api.Channel) *ConflictingUnits {
+	return &ConflictingUnits{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, conflictingUnits: conflictingUnits{Channel: channelArg}}
+}
+
+// ConflictingUnits is an error type.
+// Found two different units for the same channel in the request.
+type ConflictingUnits struct {
+	errorInstanceID uuid.UUID
+	conflictingUnits
+	cause error
+	stack werror.StackTrace
+}
+
+// IsConflictingUnits returns true if err is an instance of ConflictingUnits.
+func IsConflictingUnits(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ConflictingUnits)
+	return ok
+}
+
+func (e *ConflictingUnits) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT NominalChannelWriter:ConflictingUnits (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ConflictingUnits) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ConflictingUnits) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ConflictingUnits) Message() string {
+	return "INVALID_ARGUMENT NominalChannelWriter:ConflictingUnits"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ConflictingUnits) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ConflictingUnits) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *ConflictingUnits) Name() string {
+	return "NominalChannelWriter:ConflictingUnits"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ConflictingUnits) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ConflictingUnits) Parameters() map[string]interface{} {
+	return map[string]interface{}{"channel": e.Channel}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ConflictingUnits) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ConflictingUnits) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ConflictingUnits) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"channel": e.Channel}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ConflictingUnits) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ConflictingUnits) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.conflictingUnits)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "NominalChannelWriter:ConflictingUnits", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ConflictingUnits) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters conflictingUnits
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.conflictingUnits = parameters
+	return nil
+}
+
+type duplicateResolvedChannelName struct {
+	Channel string `json:"channel"`
+}
+
+func (o duplicateResolvedChannelName) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *duplicateResolvedChannelName) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewDuplicateResolvedChannelName returns new instance of DuplicateResolvedChannelName error.
+func NewDuplicateResolvedChannelName(channelArg string) *DuplicateResolvedChannelName {
+	return &DuplicateResolvedChannelName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), duplicateResolvedChannelName: duplicateResolvedChannelName{Channel: channelArg}}
+}
+
+// WrapWithDuplicateResolvedChannelName returns new instance of DuplicateResolvedChannelName error wrapping an existing error.
+func WrapWithDuplicateResolvedChannelName(err error, channelArg string) *DuplicateResolvedChannelName {
+	return &DuplicateResolvedChannelName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, duplicateResolvedChannelName: duplicateResolvedChannelName{Channel: channelArg}}
+}
+
+// DuplicateResolvedChannelName is an error type.
+/*
+Multiple ingested columns resolve to the same channel name after applying channelPrefix and
+channelNameOverrides. Resolved channel names must be unique within a single ingest.
+*/
+type DuplicateResolvedChannelName struct {
+	errorInstanceID uuid.UUID
+	duplicateResolvedChannelName
+	cause error
+	stack werror.StackTrace
+}
+
+// IsDuplicateResolvedChannelName returns true if err is an instance of DuplicateResolvedChannelName.
+func IsDuplicateResolvedChannelName(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*DuplicateResolvedChannelName)
+	return ok
+}
+
+func (e *DuplicateResolvedChannelName) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT NominalChannelWriter:DuplicateResolvedChannelName (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *DuplicateResolvedChannelName) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *DuplicateResolvedChannelName) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *DuplicateResolvedChannelName) Message() string {
+	return "INVALID_ARGUMENT NominalChannelWriter:DuplicateResolvedChannelName"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *DuplicateResolvedChannelName) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *DuplicateResolvedChannelName) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *DuplicateResolvedChannelName) Name() string {
+	return "NominalChannelWriter:DuplicateResolvedChannelName"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *DuplicateResolvedChannelName) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *DuplicateResolvedChannelName) Parameters() map[string]interface{} {
+	return map[string]interface{}{"channel": e.Channel}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *DuplicateResolvedChannelName) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DuplicateResolvedChannelName) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *DuplicateResolvedChannelName) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"channel": e.Channel}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *DuplicateResolvedChannelName) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e DuplicateResolvedChannelName) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.duplicateResolvedChannelName)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "NominalChannelWriter:DuplicateResolvedChannelName", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *DuplicateResolvedChannelName) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters duplicateResolvedChannelName
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.duplicateResolvedChannelName = parameters
+	return nil
+}
+
 type invalidChannelName struct {
 	Reason string `json:"reason"`
 }
@@ -617,7 +921,9 @@ func (e *InvalidDataSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type invalidStruct struct{}
+type invalidStruct struct {
+	Reason string `json:"reason"`
+}
 
 func (o invalidStruct) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)
@@ -636,13 +942,13 @@ func (o *invalidStruct) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // NewInvalidStruct returns new instance of InvalidStruct error.
-func NewInvalidStruct() *InvalidStruct {
-	return &InvalidStruct{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidStruct: invalidStruct{}}
+func NewInvalidStruct(reasonArg string) *InvalidStruct {
+	return &InvalidStruct{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidStruct: invalidStruct{Reason: reasonArg}}
 }
 
 // WrapWithInvalidStruct returns new instance of InvalidStruct error wrapping an existing error.
-func WrapWithInvalidStruct(err error) *InvalidStruct {
-	return &InvalidStruct{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidStruct: invalidStruct{}}
+func WrapWithInvalidStruct(err error, reasonArg string) *InvalidStruct {
+	return &InvalidStruct{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidStruct: invalidStruct{Reason: reasonArg}}
 }
 
 // InvalidStruct is an error type.
@@ -706,12 +1012,12 @@ func (e *InvalidStruct) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *InvalidStruct) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"reason": e.Reason}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *InvalidStruct) safeParams() map[string]interface{} {
-	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"reason": e.Reason, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -1514,9 +1820,467 @@ func (e *StreamingDisabledOnDataset) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type structTooLarge struct {
+	MaxBytes    int `json:"maxBytes"`
+	ActualBytes int `json:"actualBytes"`
+}
+
+func (o structTooLarge) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *structTooLarge) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewStructTooLarge returns new instance of StructTooLarge error.
+func NewStructTooLarge(maxBytesArg int, actualBytesArg int) *StructTooLarge {
+	return &StructTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), structTooLarge: structTooLarge{MaxBytes: maxBytesArg, ActualBytes: actualBytesArg}}
+}
+
+// WrapWithStructTooLarge returns new instance of StructTooLarge error wrapping an existing error.
+func WrapWithStructTooLarge(err error, maxBytesArg int, actualBytesArg int) *StructTooLarge {
+	return &StructTooLarge{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, structTooLarge: structTooLarge{MaxBytes: maxBytesArg, ActualBytes: actualBytesArg}}
+}
+
+// StructTooLarge is an error type.
+// Struct value exceeds maximum allowed UTF-8 byte size.
+type StructTooLarge struct {
+	errorInstanceID uuid.UUID
+	structTooLarge
+	cause error
+	stack werror.StackTrace
+}
+
+// IsStructTooLarge returns true if err is an instance of StructTooLarge.
+func IsStructTooLarge(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*StructTooLarge)
+	return ok
+}
+
+func (e *StructTooLarge) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT NominalChannelWriter:StructTooLarge (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *StructTooLarge) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *StructTooLarge) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *StructTooLarge) Message() string {
+	return "INVALID_ARGUMENT NominalChannelWriter:StructTooLarge"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *StructTooLarge) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *StructTooLarge) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *StructTooLarge) Name() string {
+	return "NominalChannelWriter:StructTooLarge"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *StructTooLarge) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *StructTooLarge) Parameters() map[string]interface{} {
+	return map[string]interface{}{"maxBytes": e.MaxBytes, "actualBytes": e.ActualBytes}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *StructTooLarge) safeParams() map[string]interface{} {
+	return map[string]interface{}{"maxBytes": e.MaxBytes, "actualBytes": e.ActualBytes, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *StructTooLarge) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *StructTooLarge) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *StructTooLarge) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e StructTooLarge) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.structTooLarge)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "NominalChannelWriter:StructTooLarge", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *StructTooLarge) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters structTooLarge
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.structTooLarge = parameters
+	return nil
+}
+
+type tooManyChannelNameOverrides struct {
+	MaxOverrides    int `json:"maxOverrides"`
+	ActualOverrides int `json:"actualOverrides"`
+}
+
+func (o tooManyChannelNameOverrides) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *tooManyChannelNameOverrides) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewTooManyChannelNameOverrides returns new instance of TooManyChannelNameOverrides error.
+func NewTooManyChannelNameOverrides(maxOverridesArg int, actualOverridesArg int) *TooManyChannelNameOverrides {
+	return &TooManyChannelNameOverrides{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooManyChannelNameOverrides: tooManyChannelNameOverrides{MaxOverrides: maxOverridesArg, ActualOverrides: actualOverridesArg}}
+}
+
+// WrapWithTooManyChannelNameOverrides returns new instance of TooManyChannelNameOverrides error wrapping an existing error.
+func WrapWithTooManyChannelNameOverrides(err error, maxOverridesArg int, actualOverridesArg int) *TooManyChannelNameOverrides {
+	return &TooManyChannelNameOverrides{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooManyChannelNameOverrides: tooManyChannelNameOverrides{MaxOverrides: maxOverridesArg, ActualOverrides: actualOverridesArg}}
+}
+
+// TooManyChannelNameOverrides is an error type.
+// The request specifies more channel name overrides than the maximum allowed.
+type TooManyChannelNameOverrides struct {
+	errorInstanceID uuid.UUID
+	tooManyChannelNameOverrides
+	cause error
+	stack werror.StackTrace
+}
+
+// IsTooManyChannelNameOverrides returns true if err is an instance of TooManyChannelNameOverrides.
+func IsTooManyChannelNameOverrides(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*TooManyChannelNameOverrides)
+	return ok
+}
+
+func (e *TooManyChannelNameOverrides) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT NominalChannelWriter:TooManyChannelNameOverrides (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *TooManyChannelNameOverrides) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *TooManyChannelNameOverrides) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *TooManyChannelNameOverrides) Message() string {
+	return "INVALID_ARGUMENT NominalChannelWriter:TooManyChannelNameOverrides"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *TooManyChannelNameOverrides) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *TooManyChannelNameOverrides) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *TooManyChannelNameOverrides) Name() string {
+	return "NominalChannelWriter:TooManyChannelNameOverrides"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *TooManyChannelNameOverrides) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *TooManyChannelNameOverrides) Parameters() map[string]interface{} {
+	return map[string]interface{}{"maxOverrides": e.MaxOverrides, "actualOverrides": e.ActualOverrides}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *TooManyChannelNameOverrides) safeParams() map[string]interface{} {
+	return map[string]interface{}{"maxOverrides": e.MaxOverrides, "actualOverrides": e.ActualOverrides, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyChannelNameOverrides) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *TooManyChannelNameOverrides) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyChannelNameOverrides) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e TooManyChannelNameOverrides) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.tooManyChannelNameOverrides)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "NominalChannelWriter:TooManyChannelNameOverrides", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *TooManyChannelNameOverrides) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters tooManyChannelNameOverrides
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.tooManyChannelNameOverrides = parameters
+	return nil
+}
+
+type tooManySessionSources struct {
+	MaxSessionSources int                                `json:"maxSessionSources"`
+	DataSourceRid     rids.NominalDataSourceOrDatasetRid `json:"dataSourceRid" safelogging:"@Safe"`
+}
+
+func (o tooManySessionSources) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *tooManySessionSources) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewTooManySessionSources returns new instance of TooManySessionSources error.
+func NewTooManySessionSources(maxSessionSourcesArg int, dataSourceRidArg rids.NominalDataSourceOrDatasetRid) *TooManySessionSources {
+	return &TooManySessionSources{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooManySessionSources: tooManySessionSources{MaxSessionSources: maxSessionSourcesArg, DataSourceRid: dataSourceRidArg}}
+}
+
+// WrapWithTooManySessionSources returns new instance of TooManySessionSources error wrapping an existing error.
+func WrapWithTooManySessionSources(err error, maxSessionSourcesArg int, dataSourceRidArg rids.NominalDataSourceOrDatasetRid) *TooManySessionSources {
+	return &TooManySessionSources{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooManySessionSources: tooManySessionSources{MaxSessionSources: maxSessionSourcesArg, DataSourceRid: dataSourceRidArg}}
+}
+
+// TooManySessionSources is an error type.
+/*
+The dataset has exceeded the maximum number of distinct active session sources allowed per hour.
+This is a best-effort limit enforced per channel-writer instance.
+*/
+type TooManySessionSources struct {
+	errorInstanceID uuid.UUID
+	tooManySessionSources
+	cause error
+	stack werror.StackTrace
+}
+
+// IsTooManySessionSources returns true if err is an instance of TooManySessionSources.
+func IsTooManySessionSources(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*TooManySessionSources)
+	return ok
+}
+
+func (e *TooManySessionSources) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT NominalChannelWriter:TooManySessionSources (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *TooManySessionSources) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *TooManySessionSources) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *TooManySessionSources) Message() string {
+	return "INVALID_ARGUMENT NominalChannelWriter:TooManySessionSources"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *TooManySessionSources) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *TooManySessionSources) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *TooManySessionSources) Name() string {
+	return "NominalChannelWriter:TooManySessionSources"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *TooManySessionSources) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *TooManySessionSources) Parameters() map[string]interface{} {
+	return map[string]interface{}{"maxSessionSources": e.MaxSessionSources, "dataSourceRid": e.DataSourceRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *TooManySessionSources) safeParams() map[string]interface{} {
+	return map[string]interface{}{"maxSessionSources": e.MaxSessionSources, "dataSourceRid": e.DataSourceRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManySessionSources) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *TooManySessionSources) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManySessionSources) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e TooManySessionSources) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.tooManySessionSources)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "NominalChannelWriter:TooManySessionSources", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *TooManySessionSources) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters tooManySessionSources
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.tooManySessionSources = parameters
+	return nil
+}
+
 func init() {
 	conjureerrors.RegisterErrorType("NominalChannelWriter:ArrayTooLarge", reflect.TypeOf(ArrayTooLarge{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:ConflictingDataTypes", reflect.TypeOf(ConflictingDataTypes{}))
+	conjureerrors.RegisterErrorType("NominalChannelWriter:ConflictingUnits", reflect.TypeOf(ConflictingUnits{}))
+	conjureerrors.RegisterErrorType("NominalChannelWriter:DuplicateResolvedChannelName", reflect.TypeOf(DuplicateResolvedChannelName{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:InvalidChannelName", reflect.TypeOf(InvalidChannelName{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:InvalidDataSource", reflect.TypeOf(InvalidDataSource{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:InvalidStruct", reflect.TypeOf(InvalidStruct{}))
@@ -1525,4 +2289,7 @@ func init() {
 	conjureerrors.RegisterErrorType("NominalChannelWriter:MismatchedTimestampsAndValues", reflect.TypeOf(MismatchedTimestampsAndValues{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:PointsTooLarge", reflect.TypeOf(PointsTooLarge{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:StreamingDisabledOnDataset", reflect.TypeOf(StreamingDisabledOnDataset{}))
+	conjureerrors.RegisterErrorType("NominalChannelWriter:StructTooLarge", reflect.TypeOf(StructTooLarge{}))
+	conjureerrors.RegisterErrorType("NominalChannelWriter:TooManyChannelNameOverrides", reflect.TypeOf(TooManyChannelNameOverrides{}))
+	conjureerrors.RegisterErrorType("NominalChannelWriter:TooManySessionSources", reflect.TypeOf(TooManySessionSources{}))
 }

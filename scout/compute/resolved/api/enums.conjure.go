@@ -63,6 +63,126 @@ func (e *RangeSortOrder) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type ResolvedAggregationUdfReturnShape struct {
+	val ResolvedAggregationUdfReturnShape_Value
+}
+
+type ResolvedAggregationUdfReturnShape_Value string
+
+const (
+	ResolvedAggregationUdfReturnShape_SCALAR             ResolvedAggregationUdfReturnShape_Value = "SCALAR"
+	ResolvedAggregationUdfReturnShape_TIMESTAMPED_VALUE  ResolvedAggregationUdfReturnShape_Value = "TIMESTAMPED_VALUE"
+	ResolvedAggregationUdfReturnShape_TIMESTAMPED_VALUES ResolvedAggregationUdfReturnShape_Value = "TIMESTAMPED_VALUES"
+	ResolvedAggregationUdfReturnShape_UNKNOWN            ResolvedAggregationUdfReturnShape_Value = "UNKNOWN"
+)
+
+// ResolvedAggregationUdfReturnShape_Values returns all known variants of ResolvedAggregationUdfReturnShape.
+func ResolvedAggregationUdfReturnShape_Values() []ResolvedAggregationUdfReturnShape_Value {
+	return []ResolvedAggregationUdfReturnShape_Value{ResolvedAggregationUdfReturnShape_SCALAR, ResolvedAggregationUdfReturnShape_TIMESTAMPED_VALUE, ResolvedAggregationUdfReturnShape_TIMESTAMPED_VALUES}
+}
+
+func New_ResolvedAggregationUdfReturnShape(value ResolvedAggregationUdfReturnShape_Value) ResolvedAggregationUdfReturnShape {
+	return ResolvedAggregationUdfReturnShape{val: value}
+}
+
+// IsUnknown returns false for all known variants of ResolvedAggregationUdfReturnShape and true otherwise.
+func (e ResolvedAggregationUdfReturnShape) IsUnknown() bool {
+	switch e.val {
+	case ResolvedAggregationUdfReturnShape_SCALAR, ResolvedAggregationUdfReturnShape_TIMESTAMPED_VALUE, ResolvedAggregationUdfReturnShape_TIMESTAMPED_VALUES:
+		return false
+	}
+	return true
+}
+
+func (e ResolvedAggregationUdfReturnShape) Value() ResolvedAggregationUdfReturnShape_Value {
+	if e.IsUnknown() {
+		return ResolvedAggregationUdfReturnShape_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ResolvedAggregationUdfReturnShape) String() string {
+	return string(e.val)
+}
+
+func (e ResolvedAggregationUdfReturnShape) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ResolvedAggregationUdfReturnShape) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ResolvedAggregationUdfReturnShape(ResolvedAggregationUdfReturnShape_Value(v))
+	case "SCALAR":
+		*e = New_ResolvedAggregationUdfReturnShape(ResolvedAggregationUdfReturnShape_SCALAR)
+	case "TIMESTAMPED_VALUE":
+		*e = New_ResolvedAggregationUdfReturnShape(ResolvedAggregationUdfReturnShape_TIMESTAMPED_VALUE)
+	case "TIMESTAMPED_VALUES":
+		*e = New_ResolvedAggregationUdfReturnShape(ResolvedAggregationUdfReturnShape_TIMESTAMPED_VALUES)
+	}
+	return nil
+}
+
+type ResolvedUdfParameterType struct {
+	val ResolvedUdfParameterType_Value
+}
+
+type ResolvedUdfParameterType_Value string
+
+const (
+	ResolvedUdfParameterType_F64     ResolvedUdfParameterType_Value = "F64"
+	ResolvedUdfParameterType_I64     ResolvedUdfParameterType_Value = "I64"
+	ResolvedUdfParameterType_STRING  ResolvedUdfParameterType_Value = "STRING"
+	ResolvedUdfParameterType_UNKNOWN ResolvedUdfParameterType_Value = "UNKNOWN"
+)
+
+// ResolvedUdfParameterType_Values returns all known variants of ResolvedUdfParameterType.
+func ResolvedUdfParameterType_Values() []ResolvedUdfParameterType_Value {
+	return []ResolvedUdfParameterType_Value{ResolvedUdfParameterType_F64, ResolvedUdfParameterType_I64, ResolvedUdfParameterType_STRING}
+}
+
+func New_ResolvedUdfParameterType(value ResolvedUdfParameterType_Value) ResolvedUdfParameterType {
+	return ResolvedUdfParameterType{val: value}
+}
+
+// IsUnknown returns false for all known variants of ResolvedUdfParameterType and true otherwise.
+func (e ResolvedUdfParameterType) IsUnknown() bool {
+	switch e.val {
+	case ResolvedUdfParameterType_F64, ResolvedUdfParameterType_I64, ResolvedUdfParameterType_STRING:
+		return false
+	}
+	return true
+}
+
+func (e ResolvedUdfParameterType) Value() ResolvedUdfParameterType_Value {
+	if e.IsUnknown() {
+		return ResolvedUdfParameterType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ResolvedUdfParameterType) String() string {
+	return string(e.val)
+}
+
+func (e ResolvedUdfParameterType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ResolvedUdfParameterType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ResolvedUdfParameterType(ResolvedUdfParameterType_Value(v))
+	case "F64":
+		*e = New_ResolvedUdfParameterType(ResolvedUdfParameterType_F64)
+	case "I64":
+		*e = New_ResolvedUdfParameterType(ResolvedUdfParameterType_I64)
+	case "STRING":
+		*e = New_ResolvedUdfParameterType(ResolvedUdfParameterType_STRING)
+	}
+	return nil
+}
+
 type TagFilterOperator struct {
 	val TagFilterOperator_Value
 }

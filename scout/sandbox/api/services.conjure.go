@@ -23,6 +23,18 @@ type SandboxWorkspaceServiceClient interface {
 	GetDemoWorkbooks(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid) (GetDemoWorkbooksResponse, error)
 	// Sets the list of demo workbook RIDs for the given sandbox workspace, replacing any existing entries.
 	SetDemoWorkbooks(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid, requestArg SetDemoWorkbooksRequest) error
+	/*
+	   Appends workbooks to the existing demo workbook list. If archiveOnLabelConflict is true,
+	   existing workbooks with an exact label-set match are archived along with all related
+	   resources instead of raising an error. The cascade performs a full graph traversal:
+	   starting from the workbook's data scope (asset RIDs or run RIDs), it alternates between
+	   discovering runs linked to assets and assets linked to runs until convergence. All
+	   discovered assets, runs, datasets (from both asset and run data scopes), and events
+	   (from snapshot refs and from all discovered assets) are then archived. This ensures no
+	   orphaned resources remain when demo workbooks are replaced. Partial (subset/superset)
+	   label conflicts always raise an error.
+	*/
+	AddDemoWorkbooks(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid, requestArg AddDemoWorkbooksRequest) error
 }
 
 type sandboxWorkspaceServiceClient struct {
@@ -63,6 +75,19 @@ func (c *sandboxWorkspaceServiceClient) SetDemoWorkbooks(ctx context.Context, au
 	return nil
 }
 
+func (c *sandboxWorkspaceServiceClient) AddDemoWorkbooks(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid, requestArg AddDemoWorkbooksRequest) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("AddDemoWorkbooks"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/sandbox-workspace/%s/demo-workbooks", url.PathEscape(fmt.Sprint(workspaceRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "addDemoWorkbooks failed")
+	}
+	return nil
+}
+
 /*
 Service for managing demo workbooks in sandbox workspaces.
 All endpoints validate that the provided workspace has the human-readable ID "sandbox".
@@ -72,6 +97,18 @@ type SandboxWorkspaceServiceClientWithAuth interface {
 	GetDemoWorkbooks(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (GetDemoWorkbooksResponse, error)
 	// Sets the list of demo workbook RIDs for the given sandbox workspace, replacing any existing entries.
 	SetDemoWorkbooks(ctx context.Context, workspaceRidArg rids.WorkspaceRid, requestArg SetDemoWorkbooksRequest) error
+	/*
+	   Appends workbooks to the existing demo workbook list. If archiveOnLabelConflict is true,
+	   existing workbooks with an exact label-set match are archived along with all related
+	   resources instead of raising an error. The cascade performs a full graph traversal:
+	   starting from the workbook's data scope (asset RIDs or run RIDs), it alternates between
+	   discovering runs linked to assets and assets linked to runs until convergence. All
+	   discovered assets, runs, datasets (from both asset and run data scopes), and events
+	   (from snapshot refs and from all discovered assets) are then archived. This ensures no
+	   orphaned resources remain when demo workbooks are replaced. Partial (subset/superset)
+	   label conflicts always raise an error.
+	*/
+	AddDemoWorkbooks(ctx context.Context, workspaceRidArg rids.WorkspaceRid, requestArg AddDemoWorkbooksRequest) error
 }
 
 func NewSandboxWorkspaceServiceClientWithAuth(client SandboxWorkspaceServiceClient, authHeader bearertoken.Token) SandboxWorkspaceServiceClientWithAuth {
@@ -89,6 +126,10 @@ func (c *sandboxWorkspaceServiceClientWithAuth) GetDemoWorkbooks(ctx context.Con
 
 func (c *sandboxWorkspaceServiceClientWithAuth) SetDemoWorkbooks(ctx context.Context, workspaceRidArg rids.WorkspaceRid, requestArg SetDemoWorkbooksRequest) error {
 	return c.client.SetDemoWorkbooks(ctx, c.authHeader, workspaceRidArg, requestArg)
+}
+
+func (c *sandboxWorkspaceServiceClientWithAuth) AddDemoWorkbooks(ctx context.Context, workspaceRidArg rids.WorkspaceRid, requestArg AddDemoWorkbooksRequest) error {
+	return c.client.AddDemoWorkbooks(ctx, c.authHeader, workspaceRidArg, requestArg)
 }
 
 func NewSandboxWorkspaceServiceClientWithTokenProvider(client SandboxWorkspaceServiceClient, tokenProvider httpclient.TokenProvider) SandboxWorkspaceServiceClientWithAuth {
@@ -114,4 +155,12 @@ func (c *sandboxWorkspaceServiceClientWithTokenProvider) SetDemoWorkbooks(ctx co
 		return err
 	}
 	return c.client.SetDemoWorkbooks(ctx, bearertoken.Token(token), workspaceRidArg, requestArg)
+}
+
+func (c *sandboxWorkspaceServiceClientWithTokenProvider) AddDemoWorkbooks(ctx context.Context, workspaceRidArg rids.WorkspaceRid, requestArg AddDemoWorkbooksRequest) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.AddDemoWorkbooks(ctx, bearertoken.Token(token), workspaceRidArg, requestArg)
 }

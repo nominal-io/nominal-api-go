@@ -11,11 +11,11 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-// safelogging:@Unsafe
+// safelogging:@DoNotLog
 type CreateSecretRequest struct {
 	Name           string                                 `json:"name"`
 	Description    string                                 `json:"description"`
-	DecryptedValue string                                 `json:"decryptedValue"`
+	DecryptedValue string                                 `json:"decryptedValue" safelogging:"@DoNotLog"`
 	Properties     map[api.PropertyName]api.PropertyValue `json:"properties"`
 	Labels         []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	/*
@@ -69,12 +69,12 @@ func (o *CreateSecretRequest) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// safelogging:@Unsafe
+// safelogging:@DoNotLog
 type DecryptedSecret struct {
 	Rid            SecretRid                              `json:"rid" safelogging:"@Safe"`
 	Name           string                                 `json:"name"`
 	Description    string                                 `json:"description"`
-	DecryptedValue string                                 `json:"decryptedValue"`
+	DecryptedValue string                                 `json:"decryptedValue" safelogging:"@DoNotLog"`
 	CreatedBy      rid.ResourceIdentifier                 `json:"createdBy"`
 	Properties     map[api.PropertyName]api.PropertyValue `json:"properties"`
 	Labels         []api.Label                            `json:"labels" safelogging:"@Unsafe"`
@@ -354,13 +354,13 @@ func (o *SortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// safelogging:@Unsafe
+// safelogging:@DoNotLog
 type UpdateSecretRequest struct {
 	Name           *string                                 `json:"name,omitempty"`
 	Description    *string                                 `json:"description,omitempty"`
 	Properties     *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
 	Labels         *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
-	DecryptedValue *string                                 `json:"decryptedValue,omitempty"`
+	DecryptedValue *string                                 `json:"decryptedValue,omitempty" safelogging:"@DoNotLog"`
 }
 
 func (o UpdateSecretRequest) MarshalYAML() (interface{}, error) {

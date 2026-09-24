@@ -19,9 +19,15 @@ This service provides information about workspaces. Workspaces provide access co
 Nominal live within a workspace.
 */
 type WorkspaceServiceClient interface {
-	// Gets all workspaces that the requesting user belongs to.
-	GetWorkspaces(ctx context.Context, authHeader bearertoken.Token) ([]Workspace, error)
-	// Gets the workspace with the specified WorkspaceRid.
+	/*
+	   Gets all workspaces that the requesting user belongs to. Filters results to workspaces in the user's session org,
+	   unless otherwise specified.
+	*/
+	GetWorkspaces(ctx context.Context, authHeader bearertoken.Token, filterBySessionOrgArg *bool, includeGuestWorkspacesArg *bool) ([]Workspace, error)
+	/*
+	   Gets the workspace with the specified WorkspaceRid. Throws if the requesting user does not have
+	   access to the workspace based on their current session.
+	*/
 	GetWorkspace(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid) (Workspace, error)
 	// Updates the settings of the workspace with the specified WorkspaceRid.
 	UpdateWorkspace(ctx context.Context, authHeader bearertoken.Token, ridArg rids.WorkspaceRid, requestArg UpdateWorkspaceRequest) (Workspace, error)
@@ -41,12 +47,20 @@ func NewWorkspaceServiceClient(client httpclient.Client) WorkspaceServiceClient 
 	return &workspaceServiceClient{client: client}
 }
 
-func (c *workspaceServiceClient) GetWorkspaces(ctx context.Context, authHeader bearertoken.Token) ([]Workspace, error) {
+func (c *workspaceServiceClient) GetWorkspaces(ctx context.Context, authHeader bearertoken.Token, filterBySessionOrgArg *bool, includeGuestWorkspacesArg *bool) ([]Workspace, error) {
 	var returnVal []Workspace
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetWorkspaces"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
 	requestParams = append(requestParams, httpclient.WithPathf("/workspaces/v1/workspaces"))
+	queryParams := make(url.Values)
+	if filterBySessionOrgArg != nil {
+		queryParams.Set("filterBySessionOrg", fmt.Sprint(*filterBySessionOrgArg))
+	}
+	if includeGuestWorkspacesArg != nil {
+		queryParams.Set("includeGuestWorkspaces", fmt.Sprint(*includeGuestWorkspacesArg))
+	}
+	requestParams = append(requestParams, httpclient.WithQueryValues(queryParams))
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Get(ctx, requestParams...); err != nil {
@@ -112,9 +126,15 @@ This service provides information about workspaces. Workspaces provide access co
 Nominal live within a workspace.
 */
 type WorkspaceServiceClientWithAuth interface {
-	// Gets all workspaces that the requesting user belongs to.
-	GetWorkspaces(ctx context.Context) ([]Workspace, error)
-	// Gets the workspace with the specified WorkspaceRid.
+	/*
+	   Gets all workspaces that the requesting user belongs to. Filters results to workspaces in the user's session org,
+	   unless otherwise specified.
+	*/
+	GetWorkspaces(ctx context.Context, filterBySessionOrgArg *bool, includeGuestWorkspacesArg *bool) ([]Workspace, error)
+	/*
+	   Gets the workspace with the specified WorkspaceRid. Throws if the requesting user does not have
+	   access to the workspace based on their current session.
+	*/
 	GetWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (Workspace, error)
 	// Updates the settings of the workspace with the specified WorkspaceRid.
 	UpdateWorkspace(ctx context.Context, ridArg rids.WorkspaceRid, requestArg UpdateWorkspaceRequest) (Workspace, error)
@@ -135,8 +155,8 @@ type workspaceServiceClientWithAuth struct {
 	authHeader bearertoken.Token
 }
 
-func (c *workspaceServiceClientWithAuth) GetWorkspaces(ctx context.Context) ([]Workspace, error) {
-	return c.client.GetWorkspaces(ctx, c.authHeader)
+func (c *workspaceServiceClientWithAuth) GetWorkspaces(ctx context.Context, filterBySessionOrgArg *bool, includeGuestWorkspacesArg *bool) ([]Workspace, error) {
+	return c.client.GetWorkspaces(ctx, c.authHeader, filterBySessionOrgArg, includeGuestWorkspacesArg)
 }
 
 func (c *workspaceServiceClientWithAuth) GetWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (Workspace, error) {
@@ -160,12 +180,12 @@ type workspaceServiceClientWithTokenProvider struct {
 	tokenProvider httpclient.TokenProvider
 }
 
-func (c *workspaceServiceClientWithTokenProvider) GetWorkspaces(ctx context.Context) ([]Workspace, error) {
+func (c *workspaceServiceClientWithTokenProvider) GetWorkspaces(ctx context.Context, filterBySessionOrgArg *bool, includeGuestWorkspacesArg *bool) ([]Workspace, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.client.GetWorkspaces(ctx, bearertoken.Token(token))
+	return c.client.GetWorkspaces(ctx, bearertoken.Token(token), filterBySessionOrgArg, includeGuestWorkspacesArg)
 }
 
 func (c *workspaceServiceClientWithTokenProvider) GetWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (Workspace, error) {

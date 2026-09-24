@@ -9,12 +9,77 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
-	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 )
+
+type CheckAlignmentStrategyWithT[T any] CheckAlignmentStrategy
+
+func (u *CheckAlignmentStrategyWithT[T]) Accept(ctx context.Context, v CheckAlignmentStrategyVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return result, fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return v.VisitDriverSeries(ctx, *u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return result, fmt.Errorf("field \"union\" is required")
+		}
+		return v.VisitUnion(ctx, *u.union)
+	}
+}
+
+func (u *CheckAlignmentStrategyWithT[T]) AcceptFuncs(driverSeriesFunc func(DriverSeriesAlignment) (T, error), unionFunc func(UnionAlignment) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "driverSeries":
+		if u.driverSeries == nil {
+			return result, fmt.Errorf("field \"driverSeries\" is required")
+		}
+		return driverSeriesFunc(*u.driverSeries)
+	case "union":
+		if u.union == nil {
+			return result, fmt.Errorf("field \"union\" is required")
+		}
+		return unionFunc(*u.union)
+	}
+}
+
+func (u *CheckAlignmentStrategyWithT[T]) DriverSeriesNoopSuccess(DriverSeriesAlignment) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CheckAlignmentStrategyWithT[T]) UnionNoopSuccess(UnionAlignment) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CheckAlignmentStrategyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type CheckAlignmentStrategyVisitorWithT[T any] interface {
+	VisitDriverSeries(ctx context.Context, v DriverSeriesAlignment) (T, error)
+	VisitUnion(ctx context.Context, v UnionAlignment) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
 
 type CheckConditionWithT[T any] CheckCondition
 
@@ -110,6 +175,55 @@ type CheckConditionVisitorWithT[T any] interface {
 	VisitNumRangesV2(ctx context.Context, v NumRangesConditionV2) (T, error)
 	VisitNumRangesV3(ctx context.Context, v NumRangesConditionV3) (T, error)
 	VisitParameterizedNumRangesV1(ctx context.Context, v ParameterizedNumRangesConditionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type CheckFillStrategyWithT[T any] CheckFillStrategy
+
+func (u *CheckFillStrategyWithT[T]) Accept(ctx context.Context, v CheckFillStrategyVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return result, fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return v.VisitForwardFill(ctx, *u.forwardFill)
+	}
+}
+
+func (u *CheckFillStrategyWithT[T]) AcceptFuncs(forwardFillFunc func(api.UserDuration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "forwardFill":
+		if u.forwardFill == nil {
+			return result, fmt.Errorf("field \"forwardFill\" is required")
+		}
+		return forwardFillFunc(*u.forwardFill)
+	}
+}
+
+func (u *CheckFillStrategyWithT[T]) ForwardFillNoopSuccess(api.UserDuration) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *CheckFillStrategyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type CheckFillStrategyVisitorWithT[T any] interface {
+	VisitForwardFill(ctx context.Context, v api.UserDuration) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -250,7 +364,7 @@ func (u *ChecklistSearchQueryWithT[T]) Accept(ctx context.Context, v ChecklistSe
 	}
 }
 
-func (u *ChecklistSearchQueryWithT[T]) AcceptFuncs(andFunc func([]ChecklistSearchQuery) (T, error), orFunc func([]ChecklistSearchQuery) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api.Label) (T, error), labelsFunc func(api1.LabelsFilter) (T, error), propertyFunc func(api.Property) (T, error), propertiesFunc func(api1.PropertiesFilter) (T, error), authorRidFunc func(api1.UserRid) (T, error), assigneeRidFunc func(api1.UserRid) (T, error), isPublishedFunc func(bool) (T, error), notFunc func(ChecklistSearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), authorIsCurrentUserFunc func(bool) (T, error), authorRidsFunc func([]api1.UserRid) (T, error), isArchivedFunc func(bool) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ChecklistSearchQueryWithT[T]) AcceptFuncs(andFunc func([]ChecklistSearchQuery) (T, error), orFunc func([]ChecklistSearchQuery) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api1.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api1.Property) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), authorRidFunc func(api.UserRid) (T, error), assigneeRidFunc func(api.UserRid) (T, error), isPublishedFunc func(bool) (T, error), notFunc func(ChecklistSearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), authorIsCurrentUserFunc func(bool) (T, error), authorRidsFunc func([]api.UserRid) (T, error), isArchivedFunc func(bool) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -351,32 +465,32 @@ func (u *ChecklistSearchQueryWithT[T]) SearchTextNoopSuccess(string) (T, error) 
 	return result, nil
 }
 
-func (u *ChecklistSearchQueryWithT[T]) LabelNoopSuccess(api.Label) (T, error) {
+func (u *ChecklistSearchQueryWithT[T]) LabelNoopSuccess(api1.Label) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *ChecklistSearchQueryWithT[T]) LabelsNoopSuccess(api1.LabelsFilter) (T, error) {
+func (u *ChecklistSearchQueryWithT[T]) LabelsNoopSuccess(api.LabelsFilter) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *ChecklistSearchQueryWithT[T]) PropertyNoopSuccess(api.Property) (T, error) {
+func (u *ChecklistSearchQueryWithT[T]) PropertyNoopSuccess(api1.Property) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *ChecklistSearchQueryWithT[T]) PropertiesNoopSuccess(api1.PropertiesFilter) (T, error) {
+func (u *ChecklistSearchQueryWithT[T]) PropertiesNoopSuccess(api.PropertiesFilter) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *ChecklistSearchQueryWithT[T]) AuthorRidNoopSuccess(api1.UserRid) (T, error) {
+func (u *ChecklistSearchQueryWithT[T]) AuthorRidNoopSuccess(api.UserRid) (T, error) {
 	var result T
 	return result, nil
 }
 
-func (u *ChecklistSearchQueryWithT[T]) AssigneeRidNoopSuccess(api1.UserRid) (T, error) {
+func (u *ChecklistSearchQueryWithT[T]) AssigneeRidNoopSuccess(api.UserRid) (T, error) {
 	var result T
 	return result, nil
 }
@@ -401,7 +515,7 @@ func (u *ChecklistSearchQueryWithT[T]) AuthorIsCurrentUserNoopSuccess(bool) (T, 
 	return result, nil
 }
 
-func (u *ChecklistSearchQueryWithT[T]) AuthorRidsNoopSuccess([]api1.UserRid) (T, error) {
+func (u *ChecklistSearchQueryWithT[T]) AuthorRidsNoopSuccess([]api.UserRid) (T, error) {
 	var result T
 	return result, nil
 }
@@ -420,18 +534,116 @@ type ChecklistSearchQueryVisitorWithT[T any] interface {
 	VisitAnd(ctx context.Context, v []ChecklistSearchQuery) (T, error)
 	VisitOr(ctx context.Context, v []ChecklistSearchQuery) (T, error)
 	VisitSearchText(ctx context.Context, v string) (T, error)
-	VisitLabel(ctx context.Context, v api.Label) (T, error)
-	VisitLabels(ctx context.Context, v api1.LabelsFilter) (T, error)
-	VisitProperty(ctx context.Context, v api.Property) (T, error)
-	VisitProperties(ctx context.Context, v api1.PropertiesFilter) (T, error)
-	VisitAuthorRid(ctx context.Context, v api1.UserRid) (T, error)
-	VisitAssigneeRid(ctx context.Context, v api1.UserRid) (T, error)
+	VisitLabel(ctx context.Context, v api1.Label) (T, error)
+	VisitLabels(ctx context.Context, v api.LabelsFilter) (T, error)
+	VisitProperty(ctx context.Context, v api1.Property) (T, error)
+	VisitProperties(ctx context.Context, v api.PropertiesFilter) (T, error)
+	VisitAuthorRid(ctx context.Context, v api.UserRid) (T, error)
+	VisitAssigneeRid(ctx context.Context, v api.UserRid) (T, error)
 	VisitIsPublished(ctx context.Context, v bool) (T, error)
 	VisitNot(ctx context.Context, v ChecklistSearchQuery) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
 	VisitAuthorIsCurrentUser(ctx context.Context, v bool) (T, error)
-	VisitAuthorRids(ctx context.Context, v []api1.UserRid) (T, error)
+	VisitAuthorRids(ctx context.Context, v []api.UserRid) (T, error)
 	VisitIsArchived(ctx context.Context, v bool) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type ComputeExpressionWithT[T any] ComputeExpression
+
+func (u *ComputeExpressionWithT[T]) Accept(ctx context.Context, v ComputeExpressionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *ComputeExpressionWithT[T]) AcceptFuncs(v1Func func(ComputeExpressionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ComputeExpressionWithT[T]) V1NoopSuccess(ComputeExpressionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ComputeExpressionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ComputeExpressionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v ComputeExpressionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type ComputeExpressionV1WithT[T any] ComputeExpressionV1
+
+func (u *ComputeExpressionV1WithT[T]) Accept(ctx context.Context, v ComputeExpressionV1VisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "python":
+		if u.python == nil {
+			return result, fmt.Errorf("field \"python\" is required")
+		}
+		return v.VisitPython(ctx, *u.python)
+	}
+}
+
+func (u *ComputeExpressionV1WithT[T]) AcceptFuncs(pythonFunc func(ComputeExpressionV1Python) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "python":
+		if u.python == nil {
+			return result, fmt.Errorf("field \"python\" is required")
+		}
+		return pythonFunc(*u.python)
+	}
+}
+
+func (u *ComputeExpressionV1WithT[T]) PythonNoopSuccess(ComputeExpressionV1Python) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ComputeExpressionV1WithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ComputeExpressionV1VisitorWithT[T any] interface {
+	VisitPython(ctx context.Context, v ComputeExpressionV1Python) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -624,11 +836,6 @@ func (u *UnresolvedCheckConditionWithT[T]) Accept(ctx context.Context, v Unresol
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return result, fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return v.VisitBooleanSeriesV1(ctx, *u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return result, fmt.Errorf("field \"numRangesV2\" is required")
@@ -647,7 +854,7 @@ func (u *UnresolvedCheckConditionWithT[T]) Accept(ctx context.Context, v Unresol
 	}
 }
 
-func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(booleanSeriesV1Func func(UnresolvedBooleanSeriesConditionV1) (T, error), numRangesV2Func func(UnresolvedNumRangesConditionV2) (T, error), numRangesV3Func func(UnresolvedNumRangesConditionV3) (T, error), parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(numRangesV2Func func(UnresolvedNumRangesConditionV2) (T, error), numRangesV3Func func(UnresolvedNumRangesConditionV3) (T, error), parameterizedNumRangesV1Func func(UnresolvedParameterizedNumRangesConditionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -655,11 +862,6 @@ func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(booleanSeriesV1Func func(
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "booleanSeriesV1":
-		if u.booleanSeriesV1 == nil {
-			return result, fmt.Errorf("field \"booleanSeriesV1\" is required")
-		}
-		return booleanSeriesV1Func(*u.booleanSeriesV1)
 	case "numRangesV2":
 		if u.numRangesV2 == nil {
 			return result, fmt.Errorf("field \"numRangesV2\" is required")
@@ -676,11 +878,6 @@ func (u *UnresolvedCheckConditionWithT[T]) AcceptFuncs(booleanSeriesV1Func func(
 		}
 		return parameterizedNumRangesV1Func(*u.parameterizedNumRangesV1)
 	}
-}
-
-func (u *UnresolvedCheckConditionWithT[T]) BooleanSeriesV1NoopSuccess(UnresolvedBooleanSeriesConditionV1) (T, error) {
-	var result T
-	return result, nil
 }
 
 func (u *UnresolvedCheckConditionWithT[T]) NumRangesV2NoopSuccess(UnresolvedNumRangesConditionV2) (T, error) {
@@ -704,7 +901,6 @@ func (u *UnresolvedCheckConditionWithT[T]) ErrorOnUnknown(typeName string) (T, e
 }
 
 type UnresolvedCheckConditionVisitorWithT[T any] interface {
-	VisitBooleanSeriesV1(ctx context.Context, v UnresolvedBooleanSeriesConditionV1) (T, error)
 	VisitNumRangesV2(ctx context.Context, v UnresolvedNumRangesConditionV2) (T, error)
 	VisitNumRangesV3(ctx context.Context, v UnresolvedNumRangesConditionV3) (T, error)
 	VisitParameterizedNumRangesV1(ctx context.Context, v UnresolvedParameterizedNumRangesConditionV1) (T, error)
@@ -831,7 +1027,7 @@ func (u *UpdateChecklistEntryRequestWithT[T]) Accept(ctx context.Context, v Upda
 	}
 }
 
-func (u *UpdateChecklistEntryRequestWithT[T]) AcceptFuncs(createCheckFunc func(CreateCheckRequest) (T, error), checkFunc func(api1.CheckRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UpdateChecklistEntryRequestWithT[T]) AcceptFuncs(createCheckFunc func(CreateCheckRequest) (T, error), checkFunc func(api.CheckRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -857,7 +1053,7 @@ func (u *UpdateChecklistEntryRequestWithT[T]) CreateCheckNoopSuccess(CreateCheck
 	return result, nil
 }
 
-func (u *UpdateChecklistEntryRequestWithT[T]) CheckNoopSuccess(api1.CheckRid) (T, error) {
+func (u *UpdateChecklistEntryRequestWithT[T]) CheckNoopSuccess(api.CheckRid) (T, error) {
 	var result T
 	return result, nil
 }
@@ -869,7 +1065,7 @@ func (u *UpdateChecklistEntryRequestWithT[T]) ErrorOnUnknown(typeName string) (T
 
 type UpdateChecklistEntryRequestVisitorWithT[T any] interface {
 	VisitCreateCheck(ctx context.Context, v CreateCheckRequest) (T, error)
-	VisitCheck(ctx context.Context, v api1.CheckRid) (T, error)
+	VisitCheck(ctx context.Context, v api.CheckRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

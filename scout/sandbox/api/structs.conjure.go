@@ -8,6 +8,61 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+type AddDemoWorkbooksRequest struct {
+	NotebookRids []api.NotebookRid `json:"notebookRids" safelogging:"@Safe"`
+	/*
+	   When true, existing workbooks with an exact label-set match are archived
+	   instead of raising an error, along with all related resources discovered
+	   via full graph traversal: the workbook's data scope seeds initial assets
+	   or runs, then the system alternates between discovering runs linked to
+	   assets and assets linked to runs until no new resources are found.
+	   All discovered assets, runs, datasets (from both asset and run data
+	   scopes), and events (from the workbook's snapshot refs and from all
+	   discovered assets) are archived. This is intended for demo workbook
+	   replacement flows where all resources are recreated from scratch.
+	   Partial (subset/superset) label conflicts always raise an error.
+	   Defaults to false.
+	*/
+	ArchiveOnLabelConflict *bool `json:"archiveOnLabelConflict,omitempty"`
+}
+
+func (o AddDemoWorkbooksRequest) MarshalJSON() ([]byte, error) {
+	if o.NotebookRids == nil {
+		o.NotebookRids = make([]api.NotebookRid, 0)
+	}
+	type _tmpAddDemoWorkbooksRequest AddDemoWorkbooksRequest
+	return safejson.Marshal(_tmpAddDemoWorkbooksRequest(o))
+}
+
+func (o *AddDemoWorkbooksRequest) UnmarshalJSON(data []byte) error {
+	type _tmpAddDemoWorkbooksRequest AddDemoWorkbooksRequest
+	var rawAddDemoWorkbooksRequest _tmpAddDemoWorkbooksRequest
+	if err := safejson.Unmarshal(data, &rawAddDemoWorkbooksRequest); err != nil {
+		return err
+	}
+	if rawAddDemoWorkbooksRequest.NotebookRids == nil {
+		rawAddDemoWorkbooksRequest.NotebookRids = make([]api.NotebookRid, 0)
+	}
+	*o = AddDemoWorkbooksRequest(rawAddDemoWorkbooksRequest)
+	return nil
+}
+
+func (o AddDemoWorkbooksRequest) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *AddDemoWorkbooksRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Safe
 type GetDemoWorkbooksResponse struct {
 	NotebookRids []api.NotebookRid `json:"notebookRids" safelogging:"@Safe"`

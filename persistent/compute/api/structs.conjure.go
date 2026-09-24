@@ -8,6 +8,7 @@ import (
 	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/datetime"
+	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -281,6 +282,11 @@ type StreamingComputeNodeRequest struct {
 	Node        api11.ComputableNode `json:"node"`
 	WindowWidth api2.Duration        `json:"windowWidth"`
 	Context     api11.Context        `json:"context"`
+	/*
+	   Optional RID identifying the resource that initiated this query (e.g. workbook/notebook RID, checklist RID).
+	   Used for observability only — trusted as-is, no permission checks are performed on this value.
+	*/
+	SourceRid *rid.ResourceIdentifier `json:"sourceRid,omitempty"`
 }
 
 func (o StreamingComputeNodeRequest) MarshalYAML() (interface{}, error) {
@@ -415,10 +421,14 @@ type SubscriptionOptions struct {
 	*/
 	UseFlink *bool `json:"useFlink,omitempty"`
 	/*
-	   Configures the lateness threshold for the raw points.
-	   Results will be delayed by the duration specified by this setting.
+	   Configures the lateness threshold for the raw points. Results will be delayed by
+	   the duration specified by this setting.
+	   When specified, lateness is measured against wall-clock time: a point is emitted
+	   once wall-clock time passes its timestamp plus this duration, and dropped if it
+	   arrives after that.
+	   When unspecified, defaults to 100ms measured against the latest point seen on the
+	   series rather than wall-clock time.
 	   Note this configuration is only available if we are using Flink.
-	   Defaults to 1 second.
 	*/
 	AllowedLateness *api2.Duration `json:"allowedLateness,omitempty"`
 }
