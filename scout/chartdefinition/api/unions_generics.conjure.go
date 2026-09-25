@@ -5959,6 +5959,71 @@ type ValveVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type ValveNormalPositionWithT[T any] ValveNormalPosition
+
+func (u *ValveNormalPositionWithT[T]) Accept(ctx context.Context, v ValveNormalPositionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "normallyOpen":
+		if u.normallyOpen == nil {
+			return result, fmt.Errorf("field \"normallyOpen\" is required")
+		}
+		return v.VisitNormallyOpen(ctx, *u.normallyOpen)
+	case "normallyClosed":
+		if u.normallyClosed == nil {
+			return result, fmt.Errorf("field \"normallyClosed\" is required")
+		}
+		return v.VisitNormallyClosed(ctx, *u.normallyClosed)
+	}
+}
+
+func (u *ValveNormalPositionWithT[T]) AcceptFuncs(normallyOpenFunc func(NormallyOpenValvePosition) (T, error), normallyClosedFunc func(NormallyClosedValvePosition) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "normallyOpen":
+		if u.normallyOpen == nil {
+			return result, fmt.Errorf("field \"normallyOpen\" is required")
+		}
+		return normallyOpenFunc(*u.normallyOpen)
+	case "normallyClosed":
+		if u.normallyClosed == nil {
+			return result, fmt.Errorf("field \"normallyClosed\" is required")
+		}
+		return normallyClosedFunc(*u.normallyClosed)
+	}
+}
+
+func (u *ValveNormalPositionWithT[T]) NormallyOpenNoopSuccess(NormallyOpenValvePosition) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValveNormalPositionWithT[T]) NormallyClosedNoopSuccess(NormallyClosedValvePosition) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValveNormalPositionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ValveNormalPositionVisitorWithT[T any] interface {
+	VisitNormallyOpen(ctx context.Context, v NormallyOpenValvePosition) (T, error)
+	VisitNormallyClosed(ctx context.Context, v NormallyClosedValvePosition) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type ValveVizDefinitionWithT[T any] ValveVizDefinition
 
 func (u *ValveVizDefinitionWithT[T]) Accept(ctx context.Context, v ValveVizDefinitionVisitorWithT[T]) (T, error) {

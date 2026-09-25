@@ -15957,6 +15957,181 @@ func NewValveFromStandard(v StandardValve) Valve {
 	return Valve{typ: "standard", standard: &v}
 }
 
+// The valve's position when not powered.
+type ValveNormalPosition struct {
+	typ            string
+	normallyOpen   *NormallyOpenValvePosition
+	normallyClosed *NormallyClosedValvePosition
+}
+
+type valveNormalPositionDeserializer struct {
+	Type           string                       `json:"type"`
+	NormallyOpen   *NormallyOpenValvePosition   `json:"normallyOpen"`
+	NormallyClosed *NormallyClosedValvePosition `json:"normallyClosed"`
+}
+
+func (u *valveNormalPositionDeserializer) toStruct() ValveNormalPosition {
+	return ValveNormalPosition{typ: u.Type, normallyOpen: u.NormallyOpen, normallyClosed: u.NormallyClosed}
+}
+
+func (u *ValveNormalPosition) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "normallyOpen":
+		if u.normallyOpen == nil {
+			return nil, fmt.Errorf("field \"normallyOpen\" is required")
+		}
+		return struct {
+			Type         string                    `json:"type"`
+			NormallyOpen NormallyOpenValvePosition `json:"normallyOpen"`
+		}{Type: "normallyOpen", NormallyOpen: *u.normallyOpen}, nil
+	case "normallyClosed":
+		if u.normallyClosed == nil {
+			return nil, fmt.Errorf("field \"normallyClosed\" is required")
+		}
+		return struct {
+			Type           string                      `json:"type"`
+			NormallyClosed NormallyClosedValvePosition `json:"normallyClosed"`
+		}{Type: "normallyClosed", NormallyClosed: *u.normallyClosed}, nil
+	}
+}
+
+func (u ValveNormalPosition) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *ValveNormalPosition) UnmarshalJSON(data []byte) error {
+	var deser valveNormalPositionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "normallyOpen":
+		if u.normallyOpen == nil {
+			return fmt.Errorf("field \"normallyOpen\" is required")
+		}
+	case "normallyClosed":
+		if u.normallyClosed == nil {
+			return fmt.Errorf("field \"normallyClosed\" is required")
+		}
+	}
+	return nil
+}
+
+func (u ValveNormalPosition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *ValveNormalPosition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *ValveNormalPosition) AcceptFuncs(normallyOpenFunc func(NormallyOpenValvePosition) error, normallyClosedFunc func(NormallyClosedValvePosition) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in ValveNormalPosition type")
+		}
+		return unknownFunc(u.typ)
+	case "normallyOpen":
+		if u.normallyOpen == nil {
+			return fmt.Errorf("field \"normallyOpen\" is required")
+		}
+		return normallyOpenFunc(*u.normallyOpen)
+	case "normallyClosed":
+		if u.normallyClosed == nil {
+			return fmt.Errorf("field \"normallyClosed\" is required")
+		}
+		return normallyClosedFunc(*u.normallyClosed)
+	}
+}
+
+func (u *ValveNormalPosition) NormallyOpenNoopSuccess(_ NormallyOpenValvePosition) error {
+	return nil
+}
+
+func (u *ValveNormalPosition) NormallyClosedNoopSuccess(_ NormallyClosedValvePosition) error {
+	return nil
+}
+
+func (u *ValveNormalPosition) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *ValveNormalPosition) Accept(v ValveNormalPositionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "normallyOpen":
+		if u.normallyOpen == nil {
+			return fmt.Errorf("field \"normallyOpen\" is required")
+		}
+		return v.VisitNormallyOpen(*u.normallyOpen)
+	case "normallyClosed":
+		if u.normallyClosed == nil {
+			return fmt.Errorf("field \"normallyClosed\" is required")
+		}
+		return v.VisitNormallyClosed(*u.normallyClosed)
+	}
+}
+
+type ValveNormalPositionVisitor interface {
+	VisitNormallyOpen(v NormallyOpenValvePosition) error
+	VisitNormallyClosed(v NormallyClosedValvePosition) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *ValveNormalPosition) AcceptWithContext(ctx context.Context, v ValveNormalPositionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "normallyOpen":
+		if u.normallyOpen == nil {
+			return fmt.Errorf("field \"normallyOpen\" is required")
+		}
+		return v.VisitNormallyOpenWithContext(ctx, *u.normallyOpen)
+	case "normallyClosed":
+		if u.normallyClosed == nil {
+			return fmt.Errorf("field \"normallyClosed\" is required")
+		}
+		return v.VisitNormallyClosedWithContext(ctx, *u.normallyClosed)
+	}
+}
+
+type ValveNormalPositionVisitorWithContext interface {
+	VisitNormallyOpenWithContext(ctx context.Context, v NormallyOpenValvePosition) error
+	VisitNormallyClosedWithContext(ctx context.Context, v NormallyClosedValvePosition) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewValveNormalPositionFromNormallyOpen(v NormallyOpenValvePosition) ValveNormalPosition {
+	return ValveNormalPosition{typ: "normallyOpen", normallyOpen: &v}
+}
+
+func NewValveNormalPositionFromNormallyClosed(v NormallyClosedValvePosition) ValveNormalPosition {
+	return ValveNormalPosition{typ: "normallyClosed", normallyClosed: &v}
+}
+
 type ValveVizDefinition struct {
 	typ string
 	v1  *ValveVizDefinitionV1

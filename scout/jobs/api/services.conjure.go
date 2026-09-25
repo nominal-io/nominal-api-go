@@ -92,6 +92,11 @@ type JobServiceClient interface {
 	   the response.
 	*/
 	BatchGetJobReports(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetJobReportsRequest) (api1.BatchGetJobReportsResponse, error)
+	/*
+	   Cancels an in-progress job. For compute jobs this also stops the running computation.
+	   A no-op for jobs already in a terminal state. Returns the resulting report.
+	*/
+	CancelJob(ctx context.Context, authHeader bearertoken.Token, jobRidArg api.JobRid) (api1.JobReport, error)
 }
 
 type jobServiceClient struct {
@@ -137,6 +142,23 @@ func (c *jobServiceClient) BatchGetJobReports(ctx context.Context, authHeader be
 	return *returnVal, nil
 }
 
+func (c *jobServiceClient) CancelJob(ctx context.Context, authHeader bearertoken.Token, jobRidArg api.JobRid) (api1.JobReport, error) {
+	var returnVal *api1.JobReport
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("CancelJob"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/jobs/v1/%s/cancel", url.PathEscape(fmt.Sprint(jobRidArg))))
+	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Post(ctx, requestParams...); err != nil {
+		return *new(api1.JobReport), werror.WrapWithContextParams(ctx, err, "cancelJob failed")
+	}
+	if returnVal == nil {
+		return *new(api1.JobReport), werror.ErrorWithContextParams(ctx, "cancelJob response cannot be nil")
+	}
+	return *returnVal, nil
+}
+
 // The Job Service is responsible for returning information about jobs for checklist executions.
 type JobServiceClientWithAuth interface {
 	// Fetches the job report for a job RID. Throws ResourcesNotFound if no job exists with this job RID.
@@ -146,6 +168,11 @@ type JobServiceClientWithAuth interface {
 	   the response.
 	*/
 	BatchGetJobReports(ctx context.Context, requestArg api.BatchGetJobReportsRequest) (api1.BatchGetJobReportsResponse, error)
+	/*
+	   Cancels an in-progress job. For compute jobs this also stops the running computation.
+	   A no-op for jobs already in a terminal state. Returns the resulting report.
+	*/
+	CancelJob(ctx context.Context, jobRidArg api.JobRid) (api1.JobReport, error)
 }
 
 func NewJobServiceClientWithAuth(client JobServiceClient, authHeader bearertoken.Token) JobServiceClientWithAuth {
@@ -163,6 +190,10 @@ func (c *jobServiceClientWithAuth) GetJobReport(ctx context.Context, jobRidArg a
 
 func (c *jobServiceClientWithAuth) BatchGetJobReports(ctx context.Context, requestArg api.BatchGetJobReportsRequest) (api1.BatchGetJobReportsResponse, error) {
 	return c.client.BatchGetJobReports(ctx, c.authHeader, requestArg)
+}
+
+func (c *jobServiceClientWithAuth) CancelJob(ctx context.Context, jobRidArg api.JobRid) (api1.JobReport, error) {
+	return c.client.CancelJob(ctx, c.authHeader, jobRidArg)
 }
 
 func NewJobServiceClientWithTokenProvider(client JobServiceClient, tokenProvider httpclient.TokenProvider) JobServiceClientWithAuth {
@@ -188,4 +219,12 @@ func (c *jobServiceClientWithTokenProvider) BatchGetJobReports(ctx context.Conte
 		return *new(api1.BatchGetJobReportsResponse), err
 	}
 	return c.client.BatchGetJobReports(ctx, bearertoken.Token(token), requestArg)
+}
+
+func (c *jobServiceClientWithTokenProvider) CancelJob(ctx context.Context, jobRidArg api.JobRid) (api1.JobReport, error) {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return *new(api1.JobReport), err
+	}
+	return c.client.CancelJob(ctx, bearertoken.Token(token), jobRidArg)
 }

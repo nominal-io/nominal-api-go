@@ -2235,12 +2235,14 @@ const (
 	RefpropSubstance_CARBON_DIOXIDE  RefpropSubstance_Value = "CARBON_DIOXIDE"
 	RefpropSubstance_ARGON           RefpropSubstance_Value = "ARGON"
 	RefpropSubstance_CARBON_MONOXIDE RefpropSubstance_Value = "CARBON_MONOXIDE"
+	RefpropSubstance_JET_A_4658      RefpropSubstance_Value = "JET_A_4658"
+	RefpropSubstance_JET_A_3638      RefpropSubstance_Value = "JET_A_3638"
 	RefpropSubstance_UNKNOWN         RefpropSubstance_Value = "UNKNOWN"
 )
 
 // RefpropSubstance_Values returns all known variants of RefpropSubstance.
 func RefpropSubstance_Values() []RefpropSubstance_Value {
-	return []RefpropSubstance_Value{RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR, RefpropSubstance_CARBON_DIOXIDE, RefpropSubstance_ARGON, RefpropSubstance_CARBON_MONOXIDE}
+	return []RefpropSubstance_Value{RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR, RefpropSubstance_CARBON_DIOXIDE, RefpropSubstance_ARGON, RefpropSubstance_CARBON_MONOXIDE, RefpropSubstance_JET_A_4658, RefpropSubstance_JET_A_3638}
 }
 
 func New_RefpropSubstance(value RefpropSubstance_Value) RefpropSubstance {
@@ -2250,7 +2252,7 @@ func New_RefpropSubstance(value RefpropSubstance_Value) RefpropSubstance {
 // IsUnknown returns false for all known variants of RefpropSubstance and true otherwise.
 func (e RefpropSubstance) IsUnknown() bool {
 	switch e.val {
-	case RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR, RefpropSubstance_CARBON_DIOXIDE, RefpropSubstance_ARGON, RefpropSubstance_CARBON_MONOXIDE:
+	case RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR, RefpropSubstance_CARBON_DIOXIDE, RefpropSubstance_ARGON, RefpropSubstance_CARBON_MONOXIDE, RefpropSubstance_JET_A_4658, RefpropSubstance_JET_A_3638:
 		return false
 	}
 	return true
@@ -2301,6 +2303,10 @@ func (e *RefpropSubstance) UnmarshalText(data []byte) error {
 		*e = New_RefpropSubstance(RefpropSubstance_ARGON)
 	case "CARBON_MONOXIDE":
 		*e = New_RefpropSubstance(RefpropSubstance_CARBON_MONOXIDE)
+	case "JET_A_4658":
+		*e = New_RefpropSubstance(RefpropSubstance_JET_A_4658)
+	case "JET_A_3638":
+		*e = New_RefpropSubstance(RefpropSubstance_JET_A_3638)
 	}
 	return nil
 }
