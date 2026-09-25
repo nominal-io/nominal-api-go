@@ -2665,6 +2665,42 @@ func (o *NoConnectingLine) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type NormallyClosedValvePosition struct{}
+
+func (o NormallyClosedValvePosition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NormallyClosedValvePosition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type NormallyOpenValvePosition struct{}
+
+func (o NormallyOpenValvePosition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NormallyOpenValvePosition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Number format for numeric cells, eg 1e4 | 10000 | 10,000.
 type NumberFormat struct {
 	// Include the specified number of significant figures, rounding if needed.
@@ -5319,6 +5355,11 @@ type ValveVizDefinitionV1 struct {
 	Valve Valve `json:"valve"`
 	// Clockwise rotation in degrees. Multiples of 90; absent means no rotation.
 	RotationDegrees *int `json:"rotationDegrees,omitempty"`
+	/*
+	   The valve's position when not powered, which determines the
+	   symbol rendered. Absent is treated as normallyClosed.
+	*/
+	NormalPosition *ValveNormalPosition `json:"normalPosition,omitempty"`
 }
 
 func (o ValveVizDefinitionV1) MarshalYAML() (interface{}, error) {

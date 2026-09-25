@@ -12,17 +12,19 @@ import (
 )
 
 type JobResult struct {
-	typ            string
-	checkJobResult *CheckJobResult
+	typ              string
+	checkJobResult   *CheckJobResult
+	computeJobResult *api.ComputeJobResult
 }
 
 type jobResultDeserializer struct {
-	Type           string          `json:"type"`
-	CheckJobResult *CheckJobResult `json:"checkJobResult"`
+	Type             string                `json:"type"`
+	CheckJobResult   *CheckJobResult       `json:"checkJobResult"`
+	ComputeJobResult *api.ComputeJobResult `json:"computeJobResult"`
 }
 
 func (u *jobResultDeserializer) toStruct() JobResult {
-	return JobResult{typ: u.Type, checkJobResult: u.CheckJobResult}
+	return JobResult{typ: u.Type, checkJobResult: u.CheckJobResult, computeJobResult: u.ComputeJobResult}
 }
 
 func (u *JobResult) toSerializer() (interface{}, error) {
@@ -37,6 +39,14 @@ func (u *JobResult) toSerializer() (interface{}, error) {
 			Type           string         `json:"type"`
 			CheckJobResult CheckJobResult `json:"checkJobResult"`
 		}{Type: "checkJobResult", CheckJobResult: *u.checkJobResult}, nil
+	case "computeJobResult":
+		if u.computeJobResult == nil {
+			return nil, fmt.Errorf("field \"computeJobResult\" is required")
+		}
+		return struct {
+			Type             string               `json:"type"`
+			ComputeJobResult api.ComputeJobResult `json:"computeJobResult"`
+		}{Type: "computeJobResult", ComputeJobResult: *u.computeJobResult}, nil
 	}
 }
 
@@ -59,6 +69,10 @@ func (u *JobResult) UnmarshalJSON(data []byte) error {
 		if u.checkJobResult == nil {
 			return fmt.Errorf("field \"checkJobResult\" is required")
 		}
+	case "computeJobResult":
+		if u.computeJobResult == nil {
+			return fmt.Errorf("field \"computeJobResult\" is required")
+		}
 	}
 	return nil
 }
@@ -79,7 +93,7 @@ func (u *JobResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *JobResult) AcceptFuncs(checkJobResultFunc func(CheckJobResult) error, unknownFunc func(string) error) error {
+func (u *JobResult) AcceptFuncs(checkJobResultFunc func(CheckJobResult) error, computeJobResultFunc func(api.ComputeJobResult) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -91,10 +105,19 @@ func (u *JobResult) AcceptFuncs(checkJobResultFunc func(CheckJobResult) error, u
 			return fmt.Errorf("field \"checkJobResult\" is required")
 		}
 		return checkJobResultFunc(*u.checkJobResult)
+	case "computeJobResult":
+		if u.computeJobResult == nil {
+			return fmt.Errorf("field \"computeJobResult\" is required")
+		}
+		return computeJobResultFunc(*u.computeJobResult)
 	}
 }
 
 func (u *JobResult) CheckJobResultNoopSuccess(_ CheckJobResult) error {
+	return nil
+}
+
+func (u *JobResult) ComputeJobResultNoopSuccess(_ api.ComputeJobResult) error {
 	return nil
 }
 
@@ -114,11 +137,17 @@ func (u *JobResult) Accept(v JobResultVisitor) error {
 			return fmt.Errorf("field \"checkJobResult\" is required")
 		}
 		return v.VisitCheckJobResult(*u.checkJobResult)
+	case "computeJobResult":
+		if u.computeJobResult == nil {
+			return fmt.Errorf("field \"computeJobResult\" is required")
+		}
+		return v.VisitComputeJobResult(*u.computeJobResult)
 	}
 }
 
 type JobResultVisitor interface {
 	VisitCheckJobResult(v CheckJobResult) error
+	VisitComputeJobResult(v api.ComputeJobResult) error
 	VisitUnknown(typeName string) error
 }
 
@@ -134,11 +163,17 @@ func (u *JobResult) AcceptWithContext(ctx context.Context, v JobResultVisitorWit
 			return fmt.Errorf("field \"checkJobResult\" is required")
 		}
 		return v.VisitCheckJobResultWithContext(ctx, *u.checkJobResult)
+	case "computeJobResult":
+		if u.computeJobResult == nil {
+			return fmt.Errorf("field \"computeJobResult\" is required")
+		}
+		return v.VisitComputeJobResultWithContext(ctx, *u.computeJobResult)
 	}
 }
 
 type JobResultVisitorWithContext interface {
 	VisitCheckJobResultWithContext(ctx context.Context, v CheckJobResult) error
+	VisitComputeJobResultWithContext(ctx context.Context, v api.ComputeJobResult) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -146,11 +181,16 @@ func NewJobResultFromCheckJobResult(v CheckJobResult) JobResult {
 	return JobResult{typ: "checkJobResult", checkJobResult: &v}
 }
 
+func NewJobResultFromComputeJobResult(v api.ComputeJobResult) JobResult {
+	return JobResult{typ: "computeJobResult", computeJobResult: &v}
+}
+
 type JobStatus struct {
 	typ        string
 	inProgress *api.InProgress
 	completed  *Completed
 	failed     *api.Failed
+	cancelled  *api.Cancelled
 }
 
 type jobStatusDeserializer struct {
@@ -158,10 +198,11 @@ type jobStatusDeserializer struct {
 	InProgress *api.InProgress `json:"inProgress"`
 	Completed  *Completed      `json:"completed"`
 	Failed     *api.Failed     `json:"failed"`
+	Cancelled  *api.Cancelled  `json:"cancelled"`
 }
 
 func (u *jobStatusDeserializer) toStruct() JobStatus {
-	return JobStatus{typ: u.Type, inProgress: u.InProgress, completed: u.Completed, failed: u.Failed}
+	return JobStatus{typ: u.Type, inProgress: u.InProgress, completed: u.Completed, failed: u.Failed, cancelled: u.Cancelled}
 }
 
 func (u *JobStatus) toSerializer() (interface{}, error) {
@@ -192,6 +233,14 @@ func (u *JobStatus) toSerializer() (interface{}, error) {
 			Type   string     `json:"type"`
 			Failed api.Failed `json:"failed"`
 		}{Type: "failed", Failed: *u.failed}, nil
+	case "cancelled":
+		if u.cancelled == nil {
+			return nil, fmt.Errorf("field \"cancelled\" is required")
+		}
+		return struct {
+			Type      string        `json:"type"`
+			Cancelled api.Cancelled `json:"cancelled"`
+		}{Type: "cancelled", Cancelled: *u.cancelled}, nil
 	}
 }
 
@@ -222,6 +271,10 @@ func (u *JobStatus) UnmarshalJSON(data []byte) error {
 		if u.failed == nil {
 			return fmt.Errorf("field \"failed\" is required")
 		}
+	case "cancelled":
+		if u.cancelled == nil {
+			return fmt.Errorf("field \"cancelled\" is required")
+		}
 	}
 	return nil
 }
@@ -242,7 +295,7 @@ func (u *JobStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *JobStatus) AcceptFuncs(inProgressFunc func(api.InProgress) error, completedFunc func(Completed) error, failedFunc func(api.Failed) error, unknownFunc func(string) error) error {
+func (u *JobStatus) AcceptFuncs(inProgressFunc func(api.InProgress) error, completedFunc func(Completed) error, failedFunc func(api.Failed) error, cancelledFunc func(api.Cancelled) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -264,6 +317,11 @@ func (u *JobStatus) AcceptFuncs(inProgressFunc func(api.InProgress) error, compl
 			return fmt.Errorf("field \"failed\" is required")
 		}
 		return failedFunc(*u.failed)
+	case "cancelled":
+		if u.cancelled == nil {
+			return fmt.Errorf("field \"cancelled\" is required")
+		}
+		return cancelledFunc(*u.cancelled)
 	}
 }
 
@@ -276,6 +334,10 @@ func (u *JobStatus) CompletedNoopSuccess(_ Completed) error {
 }
 
 func (u *JobStatus) FailedNoopSuccess(_ api.Failed) error {
+	return nil
+}
+
+func (u *JobStatus) CancelledNoopSuccess(_ api.Cancelled) error {
 	return nil
 }
 
@@ -305,6 +367,11 @@ func (u *JobStatus) Accept(v JobStatusVisitor) error {
 			return fmt.Errorf("field \"failed\" is required")
 		}
 		return v.VisitFailed(*u.failed)
+	case "cancelled":
+		if u.cancelled == nil {
+			return fmt.Errorf("field \"cancelled\" is required")
+		}
+		return v.VisitCancelled(*u.cancelled)
 	}
 }
 
@@ -312,6 +379,7 @@ type JobStatusVisitor interface {
 	VisitInProgress(v api.InProgress) error
 	VisitCompleted(v Completed) error
 	VisitFailed(v api.Failed) error
+	VisitCancelled(v api.Cancelled) error
 	VisitUnknown(typeName string) error
 }
 
@@ -337,6 +405,11 @@ func (u *JobStatus) AcceptWithContext(ctx context.Context, v JobStatusVisitorWit
 			return fmt.Errorf("field \"failed\" is required")
 		}
 		return v.VisitFailedWithContext(ctx, *u.failed)
+	case "cancelled":
+		if u.cancelled == nil {
+			return fmt.Errorf("field \"cancelled\" is required")
+		}
+		return v.VisitCancelledWithContext(ctx, *u.cancelled)
 	}
 }
 
@@ -344,6 +417,7 @@ type JobStatusVisitorWithContext interface {
 	VisitInProgressWithContext(ctx context.Context, v api.InProgress) error
 	VisitCompletedWithContext(ctx context.Context, v Completed) error
 	VisitFailedWithContext(ctx context.Context, v api.Failed) error
+	VisitCancelledWithContext(ctx context.Context, v api.Cancelled) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -357,4 +431,8 @@ func NewJobStatusFromCompleted(v Completed) JobStatus {
 
 func NewJobStatusFromFailed(v api.Failed) JobStatus {
 	return JobStatus{typ: "failed", failed: &v}
+}
+
+func NewJobStatusFromCancelled(v api.Cancelled) JobStatus {
+	return JobStatus{typ: "cancelled", cancelled: &v}
 }

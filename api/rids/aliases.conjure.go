@@ -1469,6 +1469,55 @@ func (a *SegmentRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
+// Unique resource identifier for an Analyst skill record.
+type SkillRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a SkillRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a SkillRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *SkillRid) UnmarshalText(data []byte) error {
+	var rawSkillRid rid.ResourceIdentifier
+	if err := rawSkillRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = SkillRid(rawSkillRid)
+	return nil
+}
+
+func (a SkillRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *SkillRid) UnmarshalJSON(data []byte) error {
+	var rawSkillRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawSkillRid); err != nil {
+		return err
+	}
+	*a = SkillRid(rawSkillRid)
+	return nil
+}
+
+func (a SkillRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *SkillRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
 // Unique resource identifier for a Spatial Asset (point cloud, BVH, etc.)
 type SpatialRid rid.ResourceIdentifier // safelogging:@Safe
 
