@@ -26,10 +26,15 @@ func (u *JobResultWithT[T]) Accept(ctx context.Context, v JobResultVisitorWithT[
 			return result, fmt.Errorf("field \"checkJobResult\" is required")
 		}
 		return v.VisitCheckJobResult(ctx, *u.checkJobResult)
+	case "computeJobResult":
+		if u.computeJobResult == nil {
+			return result, fmt.Errorf("field \"computeJobResult\" is required")
+		}
+		return v.VisitComputeJobResult(ctx, *u.computeJobResult)
 	}
 }
 
-func (u *JobResultWithT[T]) AcceptFuncs(checkJobResultFunc func(CheckJobResult) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *JobResultWithT[T]) AcceptFuncs(checkJobResultFunc func(CheckJobResult) (T, error), computeJobResultFunc func(api.ComputeJobResult) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -42,10 +47,20 @@ func (u *JobResultWithT[T]) AcceptFuncs(checkJobResultFunc func(CheckJobResult) 
 			return result, fmt.Errorf("field \"checkJobResult\" is required")
 		}
 		return checkJobResultFunc(*u.checkJobResult)
+	case "computeJobResult":
+		if u.computeJobResult == nil {
+			return result, fmt.Errorf("field \"computeJobResult\" is required")
+		}
+		return computeJobResultFunc(*u.computeJobResult)
 	}
 }
 
 func (u *JobResultWithT[T]) CheckJobResultNoopSuccess(CheckJobResult) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *JobResultWithT[T]) ComputeJobResultNoopSuccess(api.ComputeJobResult) (T, error) {
 	var result T
 	return result, nil
 }
@@ -57,6 +72,7 @@ func (u *JobResultWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type JobResultVisitorWithT[T any] interface {
 	VisitCheckJobResult(ctx context.Context, v CheckJobResult) (T, error)
+	VisitComputeJobResult(ctx context.Context, v api.ComputeJobResult) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -85,10 +101,15 @@ func (u *JobStatusWithT[T]) Accept(ctx context.Context, v JobStatusVisitorWithT[
 			return result, fmt.Errorf("field \"failed\" is required")
 		}
 		return v.VisitFailed(ctx, *u.failed)
+	case "cancelled":
+		if u.cancelled == nil {
+			return result, fmt.Errorf("field \"cancelled\" is required")
+		}
+		return v.VisitCancelled(ctx, *u.cancelled)
 	}
 }
 
-func (u *JobStatusWithT[T]) AcceptFuncs(inProgressFunc func(api.InProgress) (T, error), completedFunc func(Completed) (T, error), failedFunc func(api.Failed) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *JobStatusWithT[T]) AcceptFuncs(inProgressFunc func(api.InProgress) (T, error), completedFunc func(Completed) (T, error), failedFunc func(api.Failed) (T, error), cancelledFunc func(api.Cancelled) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -111,6 +132,11 @@ func (u *JobStatusWithT[T]) AcceptFuncs(inProgressFunc func(api.InProgress) (T, 
 			return result, fmt.Errorf("field \"failed\" is required")
 		}
 		return failedFunc(*u.failed)
+	case "cancelled":
+		if u.cancelled == nil {
+			return result, fmt.Errorf("field \"cancelled\" is required")
+		}
+		return cancelledFunc(*u.cancelled)
 	}
 }
 
@@ -129,6 +155,11 @@ func (u *JobStatusWithT[T]) FailedNoopSuccess(api.Failed) (T, error) {
 	return result, nil
 }
 
+func (u *JobStatusWithT[T]) CancelledNoopSuccess(api.Cancelled) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *JobStatusWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -138,5 +169,6 @@ type JobStatusVisitorWithT[T any] interface {
 	VisitInProgress(ctx context.Context, v api.InProgress) (T, error)
 	VisitCompleted(ctx context.Context, v Completed) (T, error)
 	VisitFailed(ctx context.Context, v api.Failed) (T, error)
+	VisitCancelled(ctx context.Context, v api.Cancelled) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

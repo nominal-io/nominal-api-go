@@ -1526,6 +1526,56 @@ func (o *Divide) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Removes series from the base dataset by name: raw and derived series alike are no longer selectable under
+those names. Dropping a name absent from `input` has no effect. Combined with `WithSeriesDataset`, which
+can expose a series under another name, this renames a series:
+`dropSeries(withSeries(input, [newName = select(oldName)]), [oldName])`.
+*/
+type DropSeriesDataset struct {
+	// The base dataset to drop series from.
+	Input Dataset `json:"input"`
+	// Names of the series to drop.
+	Names []api1.StringConstant `json:"names"`
+}
+
+func (o DropSeriesDataset) MarshalJSON() ([]byte, error) {
+	if o.Names == nil {
+		o.Names = make([]api1.StringConstant, 0)
+	}
+	type _tmpDropSeriesDataset DropSeriesDataset
+	return safejson.Marshal(_tmpDropSeriesDataset(o))
+}
+
+func (o *DropSeriesDataset) UnmarshalJSON(data []byte) error {
+	type _tmpDropSeriesDataset DropSeriesDataset
+	var rawDropSeriesDataset _tmpDropSeriesDataset
+	if err := safejson.Unmarshal(data, &rawDropSeriesDataset); err != nil {
+		return err
+	}
+	if rawDropSeriesDataset.Names == nil {
+		rawDropSeriesDataset.Names = make([]api1.StringConstant, 0)
+	}
+	*o = DropSeriesDataset(rawDropSeriesDataset)
+	return nil
+}
+
+func (o DropSeriesDataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DropSeriesDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Filters a list of ranges down to only those satisfying a threshold condition on the range's duration.
 type DurationFilterRanges struct {
 	Input             RangeSeries             `json:"input"`

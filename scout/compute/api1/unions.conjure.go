@@ -2889,6 +2889,7 @@ type Dataset struct {
 	timeShift     *TimeShiftedDataset
 	alignByAnchor *AnchorAlignedDataset
 	withSeries    *WithSeriesDataset
+	dropSeries    *DropSeriesDataset
 	reference     *api.DatasetReference
 }
 
@@ -2904,11 +2905,12 @@ type datasetDeserializer struct {
 	TimeShift     *TimeShiftedDataset   `json:"timeShift"`
 	AlignByAnchor *AnchorAlignedDataset `json:"alignByAnchor"`
 	WithSeries    *WithSeriesDataset    `json:"withSeries"`
+	DropSeries    *DropSeriesDataset    `json:"dropSeries"`
 	Reference     *api.DatasetReference `json:"reference"`
 }
 
 func (u *datasetDeserializer) toStruct() Dataset {
-	return Dataset{typ: u.Type, asset: u.Asset, run: u.Run, saved: u.Saved, search: u.Search, combine: u.Combine, tag: u.Tag, filter: u.Filter, timeShift: u.TimeShift, alignByAnchor: u.AlignByAnchor, withSeries: u.WithSeries, reference: u.Reference}
+	return Dataset{typ: u.Type, asset: u.Asset, run: u.Run, saved: u.Saved, search: u.Search, combine: u.Combine, tag: u.Tag, filter: u.Filter, timeShift: u.TimeShift, alignByAnchor: u.AlignByAnchor, withSeries: u.WithSeries, dropSeries: u.DropSeries, reference: u.Reference}
 }
 
 func (u *Dataset) toSerializer() (interface{}, error) {
@@ -2995,6 +2997,14 @@ func (u *Dataset) toSerializer() (interface{}, error) {
 			Type       string            `json:"type"`
 			WithSeries WithSeriesDataset `json:"withSeries"`
 		}{Type: "withSeries", WithSeries: *u.withSeries}, nil
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return nil, fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return struct {
+			Type       string            `json:"type"`
+			DropSeries DropSeriesDataset `json:"dropSeries"`
+		}{Type: "dropSeries", DropSeries: *u.dropSeries}, nil
 	case "reference":
 		if u.reference == nil {
 			return nil, fmt.Errorf("field \"reference\" is required")
@@ -3061,6 +3071,10 @@ func (u *Dataset) UnmarshalJSON(data []byte) error {
 		if u.withSeries == nil {
 			return fmt.Errorf("field \"withSeries\" is required")
 		}
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return fmt.Errorf("field \"dropSeries\" is required")
+		}
 	case "reference":
 		if u.reference == nil {
 			return fmt.Errorf("field \"reference\" is required")
@@ -3085,7 +3099,7 @@ func (u *Dataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Dataset) AcceptFuncs(assetFunc func(api.Asset) error, runFunc func(api.Run) error, savedFunc func(api.SavedDataset) error, searchFunc func(SearchDataset) error, combineFunc func(CombinedDataset) error, tagFunc func(TaggedDataset) error, filterFunc func(FilteredDataset) error, timeShiftFunc func(TimeShiftedDataset) error, alignByAnchorFunc func(AnchorAlignedDataset) error, withSeriesFunc func(WithSeriesDataset) error, referenceFunc func(api.DatasetReference) error, unknownFunc func(string) error) error {
+func (u *Dataset) AcceptFuncs(assetFunc func(api.Asset) error, runFunc func(api.Run) error, savedFunc func(api.SavedDataset) error, searchFunc func(SearchDataset) error, combineFunc func(CombinedDataset) error, tagFunc func(TaggedDataset) error, filterFunc func(FilteredDataset) error, timeShiftFunc func(TimeShiftedDataset) error, alignByAnchorFunc func(AnchorAlignedDataset) error, withSeriesFunc func(WithSeriesDataset) error, dropSeriesFunc func(DropSeriesDataset) error, referenceFunc func(api.DatasetReference) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -3142,6 +3156,11 @@ func (u *Dataset) AcceptFuncs(assetFunc func(api.Asset) error, runFunc func(api.
 			return fmt.Errorf("field \"withSeries\" is required")
 		}
 		return withSeriesFunc(*u.withSeries)
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return dropSeriesFunc(*u.dropSeries)
 	case "reference":
 		if u.reference == nil {
 			return fmt.Errorf("field \"reference\" is required")
@@ -3187,6 +3206,10 @@ func (u *Dataset) AlignByAnchorNoopSuccess(_ AnchorAlignedDataset) error {
 }
 
 func (u *Dataset) WithSeriesNoopSuccess(_ WithSeriesDataset) error {
+	return nil
+}
+
+func (u *Dataset) DropSeriesNoopSuccess(_ DropSeriesDataset) error {
 	return nil
 }
 
@@ -3255,6 +3278,11 @@ func (u *Dataset) Accept(v DatasetVisitor) error {
 			return fmt.Errorf("field \"withSeries\" is required")
 		}
 		return v.VisitWithSeries(*u.withSeries)
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return v.VisitDropSeries(*u.dropSeries)
 	case "reference":
 		if u.reference == nil {
 			return fmt.Errorf("field \"reference\" is required")
@@ -3274,6 +3302,7 @@ type DatasetVisitor interface {
 	VisitTimeShift(v TimeShiftedDataset) error
 	VisitAlignByAnchor(v AnchorAlignedDataset) error
 	VisitWithSeries(v WithSeriesDataset) error
+	VisitDropSeries(v DropSeriesDataset) error
 	VisitReference(v api.DatasetReference) error
 	VisitUnknown(typeName string) error
 }
@@ -3335,6 +3364,11 @@ func (u *Dataset) AcceptWithContext(ctx context.Context, v DatasetVisitorWithCon
 			return fmt.Errorf("field \"withSeries\" is required")
 		}
 		return v.VisitWithSeriesWithContext(ctx, *u.withSeries)
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return v.VisitDropSeriesWithContext(ctx, *u.dropSeries)
 	case "reference":
 		if u.reference == nil {
 			return fmt.Errorf("field \"reference\" is required")
@@ -3354,6 +3388,7 @@ type DatasetVisitorWithContext interface {
 	VisitTimeShiftWithContext(ctx context.Context, v TimeShiftedDataset) error
 	VisitAlignByAnchorWithContext(ctx context.Context, v AnchorAlignedDataset) error
 	VisitWithSeriesWithContext(ctx context.Context, v WithSeriesDataset) error
+	VisitDropSeriesWithContext(ctx context.Context, v DropSeriesDataset) error
 	VisitReferenceWithContext(ctx context.Context, v api.DatasetReference) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
@@ -3396,6 +3431,10 @@ func NewDatasetFromAlignByAnchor(v AnchorAlignedDataset) Dataset {
 
 func NewDatasetFromWithSeries(v WithSeriesDataset) Dataset {
 	return Dataset{typ: "withSeries", withSeries: &v}
+}
+
+func NewDatasetFromDropSeries(v DropSeriesDataset) Dataset {
+	return Dataset{typ: "dropSeries", dropSeries: &v}
 }
 
 func NewDatasetFromReference(v api.DatasetReference) Dataset {

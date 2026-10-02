@@ -267,6 +267,32 @@ func (o *BatchGetJobReportsRequest) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+The job was cancelled by an explicit `cancelJob` request. Distinct from `Failed`: cancellation is a
+user-initiated terminal state, not an error. `executionStartTime` is absent if the job was cancelled
+before it began executing.
+*/
+type Cancelled struct {
+	ExecutionStartTime *datetime.DateTime `json:"executionStartTime,omitempty"`
+	ExecutionEndTime   datetime.DateTime  `json:"executionEndTime"`
+}
+
+func (o Cancelled) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Cancelled) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Unsafe
 type Check struct {
 	Rid                      api.CheckRid        `json:"rid" safelogging:"@Safe"`
@@ -572,6 +598,55 @@ func (o ComputeExpressionV1Python) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ComputeExpressionV1Python) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// The result of a compute job.
+type ComputeJobResult struct {
+	Response         api3.ComputeNodeResponse `json:"response"`
+	ExecutionEndTime datetime.DateTime        `json:"executionEndTime"`
+}
+
+func (o ComputeJobResult) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ComputeJobResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Runs a single compute expression asynchronously. The `request` takes the same form as a
+request to the compute service's `compute` endpoint. The job and its result belong to
+`workspaceRid`, and every datasource the request reads must belong to that workspace.
+A job whose result exceeds 1 MiB fails.
+*/
+type ComputeJobSpec struct {
+	Request      api11.ComputeNodeRequest `json:"request"`
+	WorkspaceRid rids.WorkspaceRid        `json:"workspaceRid" safelogging:"@Safe"`
+}
+
+func (o ComputeJobSpec) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ComputeJobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

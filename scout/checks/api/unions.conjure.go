@@ -2022,15 +2022,17 @@ func NewFunctionNodeFromRanges(v api11.RangeSeries) FunctionNode {
 type JobSpec struct {
 	typ     string
 	checkV2 *CheckJobSpec
+	compute *ComputeJobSpec
 }
 
 type jobSpecDeserializer struct {
-	Type    string        `json:"type"`
-	CheckV2 *CheckJobSpec `json:"checkV2"`
+	Type    string          `json:"type"`
+	CheckV2 *CheckJobSpec   `json:"checkV2"`
+	Compute *ComputeJobSpec `json:"compute"`
 }
 
 func (u *jobSpecDeserializer) toStruct() JobSpec {
-	return JobSpec{typ: u.Type, checkV2: u.CheckV2}
+	return JobSpec{typ: u.Type, checkV2: u.CheckV2, compute: u.Compute}
 }
 
 func (u *JobSpec) toSerializer() (interface{}, error) {
@@ -2045,6 +2047,14 @@ func (u *JobSpec) toSerializer() (interface{}, error) {
 			Type    string       `json:"type"`
 			CheckV2 CheckJobSpec `json:"checkV2"`
 		}{Type: "checkV2", CheckV2: *u.checkV2}, nil
+	case "compute":
+		if u.compute == nil {
+			return nil, fmt.Errorf("field \"compute\" is required")
+		}
+		return struct {
+			Type    string         `json:"type"`
+			Compute ComputeJobSpec `json:"compute"`
+		}{Type: "compute", Compute: *u.compute}, nil
 	}
 }
 
@@ -2067,6 +2077,10 @@ func (u *JobSpec) UnmarshalJSON(data []byte) error {
 		if u.checkV2 == nil {
 			return fmt.Errorf("field \"checkV2\" is required")
 		}
+	case "compute":
+		if u.compute == nil {
+			return fmt.Errorf("field \"compute\" is required")
+		}
 	}
 	return nil
 }
@@ -2087,7 +2101,7 @@ func (u *JobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, unknownFunc func(string) error) error {
+func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, computeFunc func(ComputeJobSpec) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2099,10 +2113,19 @@ func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, unknownFunc 
 			return fmt.Errorf("field \"checkV2\" is required")
 		}
 		return checkV2Func(*u.checkV2)
+	case "compute":
+		if u.compute == nil {
+			return fmt.Errorf("field \"compute\" is required")
+		}
+		return computeFunc(*u.compute)
 	}
 }
 
 func (u *JobSpec) CheckV2NoopSuccess(_ CheckJobSpec) error {
+	return nil
+}
+
+func (u *JobSpec) ComputeNoopSuccess(_ ComputeJobSpec) error {
 	return nil
 }
 
@@ -2122,11 +2145,17 @@ func (u *JobSpec) Accept(v JobSpecVisitor) error {
 			return fmt.Errorf("field \"checkV2\" is required")
 		}
 		return v.VisitCheckV2(*u.checkV2)
+	case "compute":
+		if u.compute == nil {
+			return fmt.Errorf("field \"compute\" is required")
+		}
+		return v.VisitCompute(*u.compute)
 	}
 }
 
 type JobSpecVisitor interface {
 	VisitCheckV2(v CheckJobSpec) error
+	VisitCompute(v ComputeJobSpec) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2142,16 +2171,26 @@ func (u *JobSpec) AcceptWithContext(ctx context.Context, v JobSpecVisitorWithCon
 			return fmt.Errorf("field \"checkV2\" is required")
 		}
 		return v.VisitCheckV2WithContext(ctx, *u.checkV2)
+	case "compute":
+		if u.compute == nil {
+			return fmt.Errorf("field \"compute\" is required")
+		}
+		return v.VisitComputeWithContext(ctx, *u.compute)
 	}
 }
 
 type JobSpecVisitorWithContext interface {
 	VisitCheckV2WithContext(ctx context.Context, v CheckJobSpec) error
+	VisitComputeWithContext(ctx context.Context, v ComputeJobSpec) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
 func NewJobSpecFromCheckV2(v CheckJobSpec) JobSpec {
 	return JobSpec{typ: "checkV2", checkV2: &v}
+}
+
+func NewJobSpecFromCompute(v ComputeJobSpec) JobSpec {
+	return JobSpec{typ: "compute", compute: &v}
 }
 
 type UnresolvedCheckCondition struct {

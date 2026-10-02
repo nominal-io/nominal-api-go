@@ -773,27 +773,25 @@ func NewSearchAssetsQueryFromWorkspace(v rids.WorkspaceRid) SearchAssetsQuery {
 }
 
 type SearchTypesQuery struct {
-	typ                  string
-	searchText           *string
-	property             *api.PropertyName
-	and                  *[]SearchTypesQuery
-	or                   *[]SearchTypesQuery
-	workspace            *rids.WorkspaceRid
-	configuredDatasource *rids.DataSourceRid
+	typ        string
+	searchText *string
+	property   *api.PropertyName
+	and        *[]SearchTypesQuery
+	or         *[]SearchTypesQuery
+	workspace  *rids.WorkspaceRid
 }
 
 type searchTypesQueryDeserializer struct {
-	Type                 string              `json:"type"`
-	SearchText           *string             `json:"searchText"`
-	Property             *api.PropertyName   `json:"property"`
-	And                  *[]SearchTypesQuery `json:"and"`
-	Or                   *[]SearchTypesQuery `json:"or"`
-	Workspace            *rids.WorkspaceRid  `json:"workspace"`
-	ConfiguredDatasource *rids.DataSourceRid `json:"configuredDatasource"`
+	Type       string              `json:"type"`
+	SearchText *string             `json:"searchText"`
+	Property   *api.PropertyName   `json:"property"`
+	And        *[]SearchTypesQuery `json:"and"`
+	Or         *[]SearchTypesQuery `json:"or"`
+	Workspace  *rids.WorkspaceRid  `json:"workspace"`
 }
 
 func (u *searchTypesQueryDeserializer) toStruct() SearchTypesQuery {
-	return SearchTypesQuery{typ: u.Type, searchText: u.SearchText, property: u.Property, and: u.And, or: u.Or, workspace: u.Workspace, configuredDatasource: u.ConfiguredDatasource}
+	return SearchTypesQuery{typ: u.Type, searchText: u.SearchText, property: u.Property, and: u.And, or: u.Or, workspace: u.Workspace}
 }
 
 func (u *SearchTypesQuery) toSerializer() (interface{}, error) {
@@ -840,14 +838,6 @@ func (u *SearchTypesQuery) toSerializer() (interface{}, error) {
 			Type      string            `json:"type"`
 			Workspace rids.WorkspaceRid `json:"workspace"`
 		}{Type: "workspace", Workspace: *u.workspace}, nil
-	case "configuredDatasource":
-		if u.configuredDatasource == nil {
-			return nil, fmt.Errorf("field \"configuredDatasource\" is required")
-		}
-		return struct {
-			Type                 string             `json:"type"`
-			ConfiguredDatasource rids.DataSourceRid `json:"configuredDatasource"`
-		}{Type: "configuredDatasource", ConfiguredDatasource: *u.configuredDatasource}, nil
 	}
 }
 
@@ -886,10 +876,6 @@ func (u *SearchTypesQuery) UnmarshalJSON(data []byte) error {
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
 		}
-	case "configuredDatasource":
-		if u.configuredDatasource == nil {
-			return fmt.Errorf("field \"configuredDatasource\" is required")
-		}
 	}
 	return nil
 }
@@ -910,7 +896,7 @@ func (u *SearchTypesQuery) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchTypesQuery) AcceptFuncs(searchTextFunc func(string) error, propertyFunc func(api.PropertyName) error, andFunc func([]SearchTypesQuery) error, orFunc func([]SearchTypesQuery) error, workspaceFunc func(rids.WorkspaceRid) error, configuredDatasourceFunc func(rids.DataSourceRid) error, unknownFunc func(string) error) error {
+func (u *SearchTypesQuery) AcceptFuncs(searchTextFunc func(string) error, propertyFunc func(api.PropertyName) error, andFunc func([]SearchTypesQuery) error, orFunc func([]SearchTypesQuery) error, workspaceFunc func(rids.WorkspaceRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -942,11 +928,6 @@ func (u *SearchTypesQuery) AcceptFuncs(searchTextFunc func(string) error, proper
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return workspaceFunc(*u.workspace)
-	case "configuredDatasource":
-		if u.configuredDatasource == nil {
-			return fmt.Errorf("field \"configuredDatasource\" is required")
-		}
-		return configuredDatasourceFunc(*u.configuredDatasource)
 	}
 }
 
@@ -967,10 +948,6 @@ func (u *SearchTypesQuery) OrNoopSuccess(_ []SearchTypesQuery) error {
 }
 
 func (u *SearchTypesQuery) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error {
-	return nil
-}
-
-func (u *SearchTypesQuery) ConfiguredDatasourceNoopSuccess(_ rids.DataSourceRid) error {
 	return nil
 }
 
@@ -1010,11 +987,6 @@ func (u *SearchTypesQuery) Accept(v SearchTypesQueryVisitor) error {
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspace(*u.workspace)
-	case "configuredDatasource":
-		if u.configuredDatasource == nil {
-			return fmt.Errorf("field \"configuredDatasource\" is required")
-		}
-		return v.VisitConfiguredDatasource(*u.configuredDatasource)
 	}
 }
 
@@ -1024,7 +996,6 @@ type SearchTypesQueryVisitor interface {
 	VisitAnd(v []SearchTypesQuery) error
 	VisitOr(v []SearchTypesQuery) error
 	VisitWorkspace(v rids.WorkspaceRid) error
-	VisitConfiguredDatasource(v rids.DataSourceRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1060,11 +1031,6 @@ func (u *SearchTypesQuery) AcceptWithContext(ctx context.Context, v SearchTypesQ
 			return fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspaceWithContext(ctx, *u.workspace)
-	case "configuredDatasource":
-		if u.configuredDatasource == nil {
-			return fmt.Errorf("field \"configuredDatasource\" is required")
-		}
-		return v.VisitConfiguredDatasourceWithContext(ctx, *u.configuredDatasource)
 	}
 }
 
@@ -1074,7 +1040,6 @@ type SearchTypesQueryVisitorWithContext interface {
 	VisitAndWithContext(ctx context.Context, v []SearchTypesQuery) error
 	VisitOrWithContext(ctx context.Context, v []SearchTypesQuery) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
-	VisitConfiguredDatasourceWithContext(ctx context.Context, v rids.DataSourceRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1096,10 +1061,6 @@ func NewSearchTypesQueryFromOr(v []SearchTypesQuery) SearchTypesQuery {
 
 func NewSearchTypesQueryFromWorkspace(v rids.WorkspaceRid) SearchTypesQuery {
 	return SearchTypesQuery{typ: "workspace", workspace: &v}
-}
-
-func NewSearchTypesQueryFromConfiguredDatasource(v rids.DataSourceRid) SearchTypesQuery {
-	return SearchTypesQuery{typ: "configuredDatasource", configuredDatasource: &v}
 }
 
 type SortKey struct {
@@ -1313,317 +1274,4 @@ func NewSortKeyFromProperty(v SortProperty) SortKey {
 
 func NewSortKeyFromNumericProperty(v SortProperty) SortKey {
 	return SortKey{typ: "numericProperty", numericProperty: &v}
-}
-
-type TagConfig struct {
-	typ string
-	v1  *[]api.TagName
-}
-
-type tagConfigDeserializer struct {
-	Type string         `json:"type"`
-	V1   *[]api.TagName `json:"v1"`
-}
-
-func (u *tagConfigDeserializer) toStruct() TagConfig {
-	return TagConfig{typ: u.Type, v1: u.V1}
-}
-
-func (u *TagConfig) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "v1":
-		if u.v1 == nil {
-			return nil, fmt.Errorf("field \"v1\" is required")
-		}
-		return struct {
-			Type string        `json:"type"`
-			V1   []api.TagName `json:"v1"`
-		}{Type: "v1", V1: *u.v1}, nil
-	}
-}
-
-func (u TagConfig) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *TagConfig) UnmarshalJSON(data []byte) error {
-	var deser tagConfigDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "v1":
-		if u.v1 == nil {
-			return fmt.Errorf("field \"v1\" is required")
-		}
-	}
-	return nil
-}
-
-func (u TagConfig) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *TagConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *TagConfig) AcceptFuncs(v1Func func([]api.TagName) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in TagConfig type")
-		}
-		return unknownFunc(u.typ)
-	case "v1":
-		if u.v1 == nil {
-			return fmt.Errorf("field \"v1\" is required")
-		}
-		return v1Func(*u.v1)
-	}
-}
-
-func (u *TagConfig) V1NoopSuccess(_ []api.TagName) error {
-	return nil
-}
-
-func (u *TagConfig) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *TagConfig) Accept(v TagConfigVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
-	case "v1":
-		if u.v1 == nil {
-			return fmt.Errorf("field \"v1\" is required")
-		}
-		return v.VisitV1(*u.v1)
-	}
-}
-
-type TagConfigVisitor interface {
-	VisitV1(v []api.TagName) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *TagConfig) AcceptWithContext(ctx context.Context, v TagConfigVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "v1":
-		if u.v1 == nil {
-			return fmt.Errorf("field \"v1\" is required")
-		}
-		return v.VisitV1WithContext(ctx, *u.v1)
-	}
-}
-
-type TagConfigVisitorWithContext interface {
-	VisitV1WithContext(ctx context.Context, v []api.TagName) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewTagConfigFromV1(v []api.TagName) TagConfig {
-	return TagConfig{typ: "v1", v1: &v}
-}
-
-/*
-The request to update the type of the asset. The request will replace the existing type with the type
-specified in the request if a typeRID is provided. Otherwise, the type will be removed from the asset.
-*/
-type UpdateOrRemoveAssetType struct {
-	typ        string
-	typeRid    *api1.TypeRid
-	removeType *RemoveType
-}
-
-type updateOrRemoveAssetTypeDeserializer struct {
-	Type       string        `json:"type"`
-	TypeRid    *api1.TypeRid `json:"typeRid"`
-	RemoveType *RemoveType   `json:"removeType"`
-}
-
-func (u *updateOrRemoveAssetTypeDeserializer) toStruct() UpdateOrRemoveAssetType {
-	return UpdateOrRemoveAssetType{typ: u.Type, typeRid: u.TypeRid, removeType: u.RemoveType}
-}
-
-func (u *UpdateOrRemoveAssetType) toSerializer() (interface{}, error) {
-	switch u.typ {
-	default:
-		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "typeRid":
-		if u.typeRid == nil {
-			return nil, fmt.Errorf("field \"typeRid\" is required")
-		}
-		return struct {
-			Type    string       `json:"type"`
-			TypeRid api1.TypeRid `json:"typeRid"`
-		}{Type: "typeRid", TypeRid: *u.typeRid}, nil
-	case "removeType":
-		if u.removeType == nil {
-			return nil, fmt.Errorf("field \"removeType\" is required")
-		}
-		return struct {
-			Type       string     `json:"type"`
-			RemoveType RemoveType `json:"removeType"`
-		}{Type: "removeType", RemoveType: *u.removeType}, nil
-	}
-}
-
-func (u UpdateOrRemoveAssetType) MarshalJSON() ([]byte, error) {
-	ser, err := u.toSerializer()
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(ser)
-}
-
-func (u *UpdateOrRemoveAssetType) UnmarshalJSON(data []byte) error {
-	var deser updateOrRemoveAssetTypeDeserializer
-	if err := safejson.Unmarshal(data, &deser); err != nil {
-		return err
-	}
-	*u = deser.toStruct()
-	switch u.typ {
-	case "typeRid":
-		if u.typeRid == nil {
-			return fmt.Errorf("field \"typeRid\" is required")
-		}
-	case "removeType":
-		if u.removeType == nil {
-			return fmt.Errorf("field \"removeType\" is required")
-		}
-	}
-	return nil
-}
-
-func (u UpdateOrRemoveAssetType) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (u *UpdateOrRemoveAssetType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&u)
-}
-
-func (u *UpdateOrRemoveAssetType) AcceptFuncs(typeRidFunc func(api1.TypeRid) error, removeTypeFunc func(RemoveType) error, unknownFunc func(string) error) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in UpdateOrRemoveAssetType type")
-		}
-		return unknownFunc(u.typ)
-	case "typeRid":
-		if u.typeRid == nil {
-			return fmt.Errorf("field \"typeRid\" is required")
-		}
-		return typeRidFunc(*u.typeRid)
-	case "removeType":
-		if u.removeType == nil {
-			return fmt.Errorf("field \"removeType\" is required")
-		}
-		return removeTypeFunc(*u.removeType)
-	}
-}
-
-func (u *UpdateOrRemoveAssetType) TypeRidNoopSuccess(_ api1.TypeRid) error {
-	return nil
-}
-
-func (u *UpdateOrRemoveAssetType) RemoveTypeNoopSuccess(_ RemoveType) error {
-	return nil
-}
-
-func (u *UpdateOrRemoveAssetType) ErrorOnUnknown(typeName string) error {
-	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-func (u *UpdateOrRemoveAssetType) Accept(v UpdateOrRemoveAssetTypeVisitor) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(u.typ)
-	case "typeRid":
-		if u.typeRid == nil {
-			return fmt.Errorf("field \"typeRid\" is required")
-		}
-		return v.VisitTypeRid(*u.typeRid)
-	case "removeType":
-		if u.removeType == nil {
-			return fmt.Errorf("field \"removeType\" is required")
-		}
-		return v.VisitRemoveType(*u.removeType)
-	}
-}
-
-type UpdateOrRemoveAssetTypeVisitor interface {
-	VisitTypeRid(v api1.TypeRid) error
-	VisitRemoveType(v RemoveType) error
-	VisitUnknown(typeName string) error
-}
-
-func (u *UpdateOrRemoveAssetType) AcceptWithContext(ctx context.Context, v UpdateOrRemoveAssetTypeVisitorWithContext) error {
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "typeRid":
-		if u.typeRid == nil {
-			return fmt.Errorf("field \"typeRid\" is required")
-		}
-		return v.VisitTypeRidWithContext(ctx, *u.typeRid)
-	case "removeType":
-		if u.removeType == nil {
-			return fmt.Errorf("field \"removeType\" is required")
-		}
-		return v.VisitRemoveTypeWithContext(ctx, *u.removeType)
-	}
-}
-
-type UpdateOrRemoveAssetTypeVisitorWithContext interface {
-	VisitTypeRidWithContext(ctx context.Context, v api1.TypeRid) error
-	VisitRemoveTypeWithContext(ctx context.Context, v RemoveType) error
-	VisitUnknownWithContext(ctx context.Context, typeName string) error
-}
-
-func NewUpdateOrRemoveAssetTypeFromTypeRid(v api1.TypeRid) UpdateOrRemoveAssetType {
-	return UpdateOrRemoveAssetType{typ: "typeRid", typeRid: &v}
-}
-
-func NewUpdateOrRemoveAssetTypeFromRemoveType(v RemoveType) UpdateOrRemoveAssetType {
-	return UpdateOrRemoveAssetType{typ: "removeType", removeType: &v}
 }

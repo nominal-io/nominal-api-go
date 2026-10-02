@@ -18,6 +18,7 @@ type FunctionNode struct {
 	enum    *api1.EnumSeries
 	numeric *api1.NumericSeries
 	ranges  *api1.RangeSeries
+	udf     *RegisteredUdf
 }
 
 type functionNodeDeserializer struct {
@@ -25,10 +26,11 @@ type functionNodeDeserializer struct {
 	Enum    *api1.EnumSeries    `json:"enum"`
 	Numeric *api1.NumericSeries `json:"numeric"`
 	Ranges  *api1.RangeSeries   `json:"ranges"`
+	Udf     *RegisteredUdf      `json:"udf"`
 }
 
 func (u *functionNodeDeserializer) toStruct() FunctionNode {
-	return FunctionNode{typ: u.Type, enum: u.Enum, numeric: u.Numeric, ranges: u.Ranges}
+	return FunctionNode{typ: u.Type, enum: u.Enum, numeric: u.Numeric, ranges: u.Ranges, udf: u.Udf}
 }
 
 func (u *FunctionNode) toSerializer() (interface{}, error) {
@@ -59,6 +61,14 @@ func (u *FunctionNode) toSerializer() (interface{}, error) {
 			Type   string           `json:"type"`
 			Ranges api1.RangeSeries `json:"ranges"`
 		}{Type: "ranges", Ranges: *u.ranges}, nil
+	case "udf":
+		if u.udf == nil {
+			return nil, fmt.Errorf("field \"udf\" is required")
+		}
+		return struct {
+			Type string        `json:"type"`
+			Udf  RegisteredUdf `json:"udf"`
+		}{Type: "udf", Udf: *u.udf}, nil
 	}
 }
 
@@ -89,6 +99,10 @@ func (u *FunctionNode) UnmarshalJSON(data []byte) error {
 		if u.ranges == nil {
 			return fmt.Errorf("field \"ranges\" is required")
 		}
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
 	}
 	return nil
 }
@@ -109,7 +123,7 @@ func (u *FunctionNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *FunctionNode) AcceptFuncs(enumFunc func(api1.EnumSeries) error, numericFunc func(api1.NumericSeries) error, rangesFunc func(api1.RangeSeries) error, unknownFunc func(string) error) error {
+func (u *FunctionNode) AcceptFuncs(enumFunc func(api1.EnumSeries) error, numericFunc func(api1.NumericSeries) error, rangesFunc func(api1.RangeSeries) error, udfFunc func(RegisteredUdf) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -131,6 +145,11 @@ func (u *FunctionNode) AcceptFuncs(enumFunc func(api1.EnumSeries) error, numeric
 			return fmt.Errorf("field \"ranges\" is required")
 		}
 		return rangesFunc(*u.ranges)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return udfFunc(*u.udf)
 	}
 }
 
@@ -143,6 +162,10 @@ func (u *FunctionNode) NumericNoopSuccess(_ api1.NumericSeries) error {
 }
 
 func (u *FunctionNode) RangesNoopSuccess(_ api1.RangeSeries) error {
+	return nil
+}
+
+func (u *FunctionNode) UdfNoopSuccess(_ RegisteredUdf) error {
 	return nil
 }
 
@@ -172,6 +195,11 @@ func (u *FunctionNode) Accept(v FunctionNodeVisitor) error {
 			return fmt.Errorf("field \"ranges\" is required")
 		}
 		return v.VisitRanges(*u.ranges)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return v.VisitUdf(*u.udf)
 	}
 }
 
@@ -179,6 +207,7 @@ type FunctionNodeVisitor interface {
 	VisitEnum(v api1.EnumSeries) error
 	VisitNumeric(v api1.NumericSeries) error
 	VisitRanges(v api1.RangeSeries) error
+	VisitUdf(v RegisteredUdf) error
 	VisitUnknown(typeName string) error
 }
 
@@ -204,6 +233,11 @@ func (u *FunctionNode) AcceptWithContext(ctx context.Context, v FunctionNodeVisi
 			return fmt.Errorf("field \"ranges\" is required")
 		}
 		return v.VisitRangesWithContext(ctx, *u.ranges)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return v.VisitUdfWithContext(ctx, *u.udf)
 	}
 }
 
@@ -211,6 +245,7 @@ type FunctionNodeVisitorWithContext interface {
 	VisitEnumWithContext(ctx context.Context, v api1.EnumSeries) error
 	VisitNumericWithContext(ctx context.Context, v api1.NumericSeries) error
 	VisitRangesWithContext(ctx context.Context, v api1.RangeSeries) error
+	VisitUdfWithContext(ctx context.Context, v RegisteredUdf) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -224,6 +259,10 @@ func NewFunctionNodeFromNumeric(v api1.NumericSeries) FunctionNode {
 
 func NewFunctionNodeFromRanges(v api1.RangeSeries) FunctionNode {
 	return FunctionNode{typ: "ranges", ranges: &v}
+}
+
+func NewFunctionNodeFromUdf(v RegisteredUdf) FunctionNode {
+	return FunctionNode{typ: "udf", udf: &v}
 }
 
 // Request reference to a module. This is used to refer to modules in requests.
