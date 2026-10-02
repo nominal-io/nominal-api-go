@@ -38,10 +38,15 @@ func (u *FunctionNodeWithT[T]) Accept(ctx context.Context, v FunctionNodeVisitor
 			return result, fmt.Errorf("field \"ranges\" is required")
 		}
 		return v.VisitRanges(ctx, *u.ranges)
+	case "udf":
+		if u.udf == nil {
+			return result, fmt.Errorf("field \"udf\" is required")
+		}
+		return v.VisitUdf(ctx, *u.udf)
 	}
 }
 
-func (u *FunctionNodeWithT[T]) AcceptFuncs(enumFunc func(api1.EnumSeries) (T, error), numericFunc func(api1.NumericSeries) (T, error), rangesFunc func(api1.RangeSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *FunctionNodeWithT[T]) AcceptFuncs(enumFunc func(api1.EnumSeries) (T, error), numericFunc func(api1.NumericSeries) (T, error), rangesFunc func(api1.RangeSeries) (T, error), udfFunc func(RegisteredUdf) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -64,6 +69,11 @@ func (u *FunctionNodeWithT[T]) AcceptFuncs(enumFunc func(api1.EnumSeries) (T, er
 			return result, fmt.Errorf("field \"ranges\" is required")
 		}
 		return rangesFunc(*u.ranges)
+	case "udf":
+		if u.udf == nil {
+			return result, fmt.Errorf("field \"udf\" is required")
+		}
+		return udfFunc(*u.udf)
 	}
 }
 
@@ -82,6 +92,11 @@ func (u *FunctionNodeWithT[T]) RangesNoopSuccess(api1.RangeSeries) (T, error) {
 	return result, nil
 }
 
+func (u *FunctionNodeWithT[T]) UdfNoopSuccess(RegisteredUdf) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *FunctionNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -91,6 +106,7 @@ type FunctionNodeVisitorWithT[T any] interface {
 	VisitEnum(ctx context.Context, v api1.EnumSeries) (T, error)
 	VisitNumeric(ctx context.Context, v api1.NumericSeries) (T, error)
 	VisitRanges(ctx context.Context, v api1.RangeSeries) (T, error)
+	VisitUdf(ctx context.Context, v RegisteredUdf) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

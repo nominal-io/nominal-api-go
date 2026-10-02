@@ -792,10 +792,15 @@ func (u *JobSpecWithT[T]) Accept(ctx context.Context, v JobSpecVisitorWithT[T]) 
 			return result, fmt.Errorf("field \"checkV2\" is required")
 		}
 		return v.VisitCheckV2(ctx, *u.checkV2)
+	case "compute":
+		if u.compute == nil {
+			return result, fmt.Errorf("field \"compute\" is required")
+		}
+		return v.VisitCompute(ctx, *u.compute)
 	}
 }
 
-func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error), computeFunc func(ComputeJobSpec) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -808,10 +813,20 @@ func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error),
 			return result, fmt.Errorf("field \"checkV2\" is required")
 		}
 		return checkV2Func(*u.checkV2)
+	case "compute":
+		if u.compute == nil {
+			return result, fmt.Errorf("field \"compute\" is required")
+		}
+		return computeFunc(*u.compute)
 	}
 }
 
 func (u *JobSpecWithT[T]) CheckV2NoopSuccess(CheckJobSpec) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *JobSpecWithT[T]) ComputeNoopSuccess(ComputeJobSpec) (T, error) {
 	var result T
 	return result, nil
 }
@@ -823,6 +838,7 @@ func (u *JobSpecWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type JobSpecVisitorWithT[T any] interface {
 	VisitCheckV2(ctx context.Context, v CheckJobSpec) (T, error)
+	VisitCompute(ctx context.Context, v ComputeJobSpec) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

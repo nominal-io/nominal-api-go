@@ -288,6 +288,29 @@ func (o *BucketDisplayStatPercentile) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type BurstDiscVizDefinitionV1 struct {
+	// The label displayed on the burst disc.
+	Title *string `json:"title,omitempty"`
+	// Clockwise rotation in degrees. Multiples of 90; absent means no rotation.
+	RotationDegrees *int `json:"rotationDegrees,omitempty"`
+}
+
+func (o BurstDiscVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *BurstDiscVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ButtonVizDefinitionV1 struct {
 	// The text rendered on the button.
 	Label  string    `json:"label"`
@@ -402,6 +425,27 @@ func (o CartesianPlot) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CartesianPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A single row of text centered in the bubble. There is never a divider.
+type CenteredInstrumentLayout struct {
+	Text *string `json:"text,omitempty"`
+}
+
+func (o CenteredInstrumentLayout) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CenteredInstrumentLayout) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1322,6 +1366,25 @@ func (o *FrequencyPlotTypePsd) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Full-size, opaque point markers.
+type FullSizeMarkerAppearance struct{}
+
+func (o FullSizeMarkerAppearance) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FullSizeMarkerAppearance) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 /*
 Local Cartesian coordinate frame with no geographic reference.
 Coordinates are treated as scene-relative (metres).
@@ -2122,6 +2185,25 @@ func (o *GeoVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Point markers are not drawn.
+type HiddenMarkerAppearance struct{}
+
+func (o HiddenMarkerAppearance) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *HiddenMarkerAppearance) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Always omit empty series from the legend.
 type HideEmptySeriesAlways struct{}
 
@@ -2315,6 +2397,35 @@ func (o ImageVizDefinitionV1) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ImageVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A P&ID instrument bubble: a circle holding either one centered row of
+text or two rows of text. The layout is designed for up to 4 characters
+per row. Longer text is allowed, and the client shrinks it to fit. The
+bubble's size comes from its canvas rect.
+*/
+type InstrumentVizDefinitionV1 struct {
+	// The label displayed on the instrument.
+	Title *string `json:"title,omitempty"`
+	// How text is arranged inside the bubble. Absent means an empty bubble.
+	Layout *InstrumentLayout `json:"layout,omitempty"`
+}
+
+func (o InstrumentVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *InstrumentVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2658,6 +2769,42 @@ func (o NoConnectingLine) MarshalYAML() (interface{}, error) {
 }
 
 func (o *NoConnectingLine) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type NormallyClosedValvePosition struct{}
+
+func (o NormallyClosedValvePosition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NormallyClosedValvePosition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type NormallyOpenValvePosition struct{}
+
+func (o NormallyOpenValvePosition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NormallyOpenValvePosition) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -3419,6 +3566,24 @@ func (o SinkBoundary) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SinkBoundary) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type SolidInstrumentDivider struct{}
+
+func (o SolidInstrumentDivider) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SolidInstrumentDivider) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -4239,6 +4404,8 @@ type TimeSeriesChartDefinitionV1 struct {
 	StalenessConfiguration *StalenessConfiguration `json:"stalenessConfiguration,omitempty"`
 	// Determines how to draw connecting lines between points. By default, uses forward fill/stair step connectors bounded by the staleness threshold.
 	ConnectingLineConfiguration *ConnectingLineConfiguration `json:"connectingLineConfiguration,omitempty"`
+	// Determines how point markers are drawn on numeric plots. By default, uses full-size markers.
+	MarkerAppearance *MarkerAppearance `json:"markerAppearance,omitempty"`
 	/*
 	   Configuration for coloring time series plots in this chart. By default, plots are colored
 	   independently between rows with a unique color if possible when created.
@@ -4639,6 +4806,31 @@ func (o TriangleShape) MarshalYAML() (interface{}, error) {
 }
 
 func (o *TriangleShape) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type TwoRowInstrumentLayout struct {
+	// Text in the top row, usually the ISA function letters (e.g. "PIT"). Absent means the row is empty.
+	TopText *string `json:"topText,omitempty"`
+	// Text in the bottom row, usually the loop number (e.g. "1234"). Absent means the row is empty.
+	BottomText *string `json:"bottomText,omitempty"`
+	// A horizontal line between the two rows. Absent means no line.
+	Divider *InstrumentDivider `json:"divider,omitempty"`
+}
+
+func (o TwoRowInstrumentLayout) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TwoRowInstrumentLayout) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -5319,6 +5511,11 @@ type ValveVizDefinitionV1 struct {
 	Valve Valve `json:"valve"`
 	// Clockwise rotation in degrees. Multiples of 90; absent means no rotation.
 	RotationDegrees *int `json:"rotationDegrees,omitempty"`
+	/*
+	   The valve's position when not powered, which determines the
+	   symbol rendered. Absent is treated as normallyClosed.
+	*/
+	NormalPosition *ValveNormalPosition `json:"normalPosition,omitempty"`
 }
 
 func (o ValveVizDefinitionV1) MarshalYAML() (interface{}, error) {

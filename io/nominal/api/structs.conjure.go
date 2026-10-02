@@ -105,7 +105,10 @@ func (o *InProgressResult) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type Ingesting struct{}
+type Ingesting struct {
+	// Optional fraction between 0 and 1 indicating progress through ingestion.
+	Progress *float64 `json:"progress,omitempty"`
+}
 
 func (o Ingesting) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)

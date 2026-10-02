@@ -1173,6 +1173,11 @@ func (u *DatasetWithT[T]) Accept(ctx context.Context, v DatasetVisitorWithT[T]) 
 			return result, fmt.Errorf("field \"withSeries\" is required")
 		}
 		return v.VisitWithSeries(ctx, *u.withSeries)
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return result, fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return v.VisitDropSeries(ctx, *u.dropSeries)
 	case "reference":
 		if u.reference == nil {
 			return result, fmt.Errorf("field \"reference\" is required")
@@ -1181,7 +1186,7 @@ func (u *DatasetWithT[T]) Accept(ctx context.Context, v DatasetVisitorWithT[T]) 
 	}
 }
 
-func (u *DatasetWithT[T]) AcceptFuncs(assetFunc func(api.Asset) (T, error), runFunc func(api.Run) (T, error), savedFunc func(api.SavedDataset) (T, error), searchFunc func(SearchDataset) (T, error), combineFunc func(CombinedDataset) (T, error), tagFunc func(TaggedDataset) (T, error), filterFunc func(FilteredDataset) (T, error), timeShiftFunc func(TimeShiftedDataset) (T, error), alignByAnchorFunc func(AnchorAlignedDataset) (T, error), withSeriesFunc func(WithSeriesDataset) (T, error), referenceFunc func(api.DatasetReference) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *DatasetWithT[T]) AcceptFuncs(assetFunc func(api.Asset) (T, error), runFunc func(api.Run) (T, error), savedFunc func(api.SavedDataset) (T, error), searchFunc func(SearchDataset) (T, error), combineFunc func(CombinedDataset) (T, error), tagFunc func(TaggedDataset) (T, error), filterFunc func(FilteredDataset) (T, error), timeShiftFunc func(TimeShiftedDataset) (T, error), alignByAnchorFunc func(AnchorAlignedDataset) (T, error), withSeriesFunc func(WithSeriesDataset) (T, error), dropSeriesFunc func(DropSeriesDataset) (T, error), referenceFunc func(api.DatasetReference) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1239,6 +1244,11 @@ func (u *DatasetWithT[T]) AcceptFuncs(assetFunc func(api.Asset) (T, error), runF
 			return result, fmt.Errorf("field \"withSeries\" is required")
 		}
 		return withSeriesFunc(*u.withSeries)
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return result, fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return dropSeriesFunc(*u.dropSeries)
 	case "reference":
 		if u.reference == nil {
 			return result, fmt.Errorf("field \"reference\" is required")
@@ -1297,6 +1307,11 @@ func (u *DatasetWithT[T]) WithSeriesNoopSuccess(WithSeriesDataset) (T, error) {
 	return result, nil
 }
 
+func (u *DatasetWithT[T]) DropSeriesNoopSuccess(DropSeriesDataset) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *DatasetWithT[T]) ReferenceNoopSuccess(api.DatasetReference) (T, error) {
 	var result T
 	return result, nil
@@ -1318,6 +1333,7 @@ type DatasetVisitorWithT[T any] interface {
 	VisitTimeShift(ctx context.Context, v TimeShiftedDataset) (T, error)
 	VisitAlignByAnchor(ctx context.Context, v AnchorAlignedDataset) (T, error)
 	VisitWithSeries(ctx context.Context, v WithSeriesDataset) (T, error)
+	VisitDropSeries(ctx context.Context, v DropSeriesDataset) (T, error)
 	VisitReference(ctx context.Context, v api.DatasetReference) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
