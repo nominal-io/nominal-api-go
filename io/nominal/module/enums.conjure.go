@@ -6,6 +6,63 @@ import (
 	"strings"
 )
 
+type RegisteredUdfKind struct {
+	val RegisteredUdfKind_Value
+}
+
+type RegisteredUdfKind_Value string
+
+const (
+	RegisteredUdfKind_SCALAR      RegisteredUdfKind_Value = "SCALAR"
+	RegisteredUdfKind_AGGREGATION RegisteredUdfKind_Value = "AGGREGATION"
+	RegisteredUdfKind_UNKNOWN     RegisteredUdfKind_Value = "UNKNOWN"
+)
+
+// RegisteredUdfKind_Values returns all known variants of RegisteredUdfKind.
+func RegisteredUdfKind_Values() []RegisteredUdfKind_Value {
+	return []RegisteredUdfKind_Value{RegisteredUdfKind_SCALAR, RegisteredUdfKind_AGGREGATION}
+}
+
+func New_RegisteredUdfKind(value RegisteredUdfKind_Value) RegisteredUdfKind {
+	return RegisteredUdfKind{val: value}
+}
+
+// IsUnknown returns false for all known variants of RegisteredUdfKind and true otherwise.
+func (e RegisteredUdfKind) IsUnknown() bool {
+	switch e.val {
+	case RegisteredUdfKind_SCALAR, RegisteredUdfKind_AGGREGATION:
+		return false
+	}
+	return true
+}
+
+func (e RegisteredUdfKind) Value() RegisteredUdfKind_Value {
+	if e.IsUnknown() {
+		return RegisteredUdfKind_UNKNOWN
+	}
+	return e.val
+}
+
+func (e RegisteredUdfKind) String() string {
+	return string(e.val)
+}
+
+func (e RegisteredUdfKind) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *RegisteredUdfKind) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_RegisteredUdfKind(RegisteredUdfKind_Value(v))
+	case "SCALAR":
+		*e = New_RegisteredUdfKind(RegisteredUdfKind_SCALAR)
+	case "AGGREGATION":
+		*e = New_RegisteredUdfKind(RegisteredUdfKind_AGGREGATION)
+	}
+	return nil
+}
+
 type SearchModulesSortField struct {
 	val SearchModulesSortField_Value
 }
@@ -65,6 +122,240 @@ func (e *SearchModulesSortField) UnmarshalText(data []byte) error {
 		*e = New_SearchModulesSortField(SearchModulesSortField_CREATED_AT)
 	case "ARCHIVED_AT":
 		*e = New_SearchModulesSortField(SearchModulesSortField_ARCHIVED_AT)
+	}
+	return nil
+}
+
+type UdfCardinality struct {
+	val UdfCardinality_Value
+}
+
+type UdfCardinality_Value string
+
+const (
+	UdfCardinality_VALUE   UdfCardinality_Value = "VALUE"
+	UdfCardinality_VECTOR  UdfCardinality_Value = "VECTOR"
+	UdfCardinality_UNKNOWN UdfCardinality_Value = "UNKNOWN"
+)
+
+// UdfCardinality_Values returns all known variants of UdfCardinality.
+func UdfCardinality_Values() []UdfCardinality_Value {
+	return []UdfCardinality_Value{UdfCardinality_VALUE, UdfCardinality_VECTOR}
+}
+
+func New_UdfCardinality(value UdfCardinality_Value) UdfCardinality {
+	return UdfCardinality{val: value}
+}
+
+// IsUnknown returns false for all known variants of UdfCardinality and true otherwise.
+func (e UdfCardinality) IsUnknown() bool {
+	switch e.val {
+	case UdfCardinality_VALUE, UdfCardinality_VECTOR:
+		return false
+	}
+	return true
+}
+
+func (e UdfCardinality) Value() UdfCardinality_Value {
+	if e.IsUnknown() {
+		return UdfCardinality_UNKNOWN
+	}
+	return e.val
+}
+
+func (e UdfCardinality) String() string {
+	return string(e.val)
+}
+
+func (e UdfCardinality) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *UdfCardinality) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_UdfCardinality(UdfCardinality_Value(v))
+	case "VALUE":
+		*e = New_UdfCardinality(UdfCardinality_VALUE)
+	case "VECTOR":
+		*e = New_UdfCardinality(UdfCardinality_VECTOR)
+	}
+	return nil
+}
+
+type UdfDataType struct {
+	val UdfDataType_Value
+}
+
+type UdfDataType_Value string
+
+const (
+	UdfDataType_F64     UdfDataType_Value = "F64"
+	UdfDataType_I64     UdfDataType_Value = "I64"
+	UdfDataType_STRING  UdfDataType_Value = "STRING"
+	UdfDataType_UNKNOWN UdfDataType_Value = "UNKNOWN"
+)
+
+// UdfDataType_Values returns all known variants of UdfDataType.
+func UdfDataType_Values() []UdfDataType_Value {
+	return []UdfDataType_Value{UdfDataType_F64, UdfDataType_I64, UdfDataType_STRING}
+}
+
+func New_UdfDataType(value UdfDataType_Value) UdfDataType {
+	return UdfDataType{val: value}
+}
+
+// IsUnknown returns false for all known variants of UdfDataType and true otherwise.
+func (e UdfDataType) IsUnknown() bool {
+	switch e.val {
+	case UdfDataType_F64, UdfDataType_I64, UdfDataType_STRING:
+		return false
+	}
+	return true
+}
+
+func (e UdfDataType) Value() UdfDataType_Value {
+	if e.IsUnknown() {
+		return UdfDataType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e UdfDataType) String() string {
+	return string(e.val)
+}
+
+func (e UdfDataType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *UdfDataType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_UdfDataType(UdfDataType_Value(v))
+	case "F64":
+		*e = New_UdfDataType(UdfDataType_F64)
+	case "I64":
+		*e = New_UdfDataType(UdfDataType_I64)
+	case "STRING":
+		*e = New_UdfDataType(UdfDataType_STRING)
+	}
+	return nil
+}
+
+type UdfOutputShape struct {
+	val UdfOutputShape_Value
+}
+
+type UdfOutputShape_Value string
+
+const (
+	UdfOutputShape_SCALAR             UdfOutputShape_Value = "SCALAR"
+	UdfOutputShape_TIMESTAMPED_VALUE  UdfOutputShape_Value = "TIMESTAMPED_VALUE"
+	UdfOutputShape_TIMESTAMPED_VALUES UdfOutputShape_Value = "TIMESTAMPED_VALUES"
+	UdfOutputShape_UNKNOWN            UdfOutputShape_Value = "UNKNOWN"
+)
+
+// UdfOutputShape_Values returns all known variants of UdfOutputShape.
+func UdfOutputShape_Values() []UdfOutputShape_Value {
+	return []UdfOutputShape_Value{UdfOutputShape_SCALAR, UdfOutputShape_TIMESTAMPED_VALUE, UdfOutputShape_TIMESTAMPED_VALUES}
+}
+
+func New_UdfOutputShape(value UdfOutputShape_Value) UdfOutputShape {
+	return UdfOutputShape{val: value}
+}
+
+// IsUnknown returns false for all known variants of UdfOutputShape and true otherwise.
+func (e UdfOutputShape) IsUnknown() bool {
+	switch e.val {
+	case UdfOutputShape_SCALAR, UdfOutputShape_TIMESTAMPED_VALUE, UdfOutputShape_TIMESTAMPED_VALUES:
+		return false
+	}
+	return true
+}
+
+func (e UdfOutputShape) Value() UdfOutputShape_Value {
+	if e.IsUnknown() {
+		return UdfOutputShape_UNKNOWN
+	}
+	return e.val
+}
+
+func (e UdfOutputShape) String() string {
+	return string(e.val)
+}
+
+func (e UdfOutputShape) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *UdfOutputShape) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_UdfOutputShape(UdfOutputShape_Value(v))
+	case "SCALAR":
+		*e = New_UdfOutputShape(UdfOutputShape_SCALAR)
+	case "TIMESTAMPED_VALUE":
+		*e = New_UdfOutputShape(UdfOutputShape_TIMESTAMPED_VALUE)
+	case "TIMESTAMPED_VALUES":
+		*e = New_UdfOutputShape(UdfOutputShape_TIMESTAMPED_VALUES)
+	}
+	return nil
+}
+
+type UdfOutputType struct {
+	val UdfOutputType_Value
+}
+
+type UdfOutputType_Value string
+
+const (
+	UdfOutputType_NUMERIC UdfOutputType_Value = "NUMERIC"
+	UdfOutputType_ENUM    UdfOutputType_Value = "ENUM"
+	UdfOutputType_UNKNOWN UdfOutputType_Value = "UNKNOWN"
+)
+
+// UdfOutputType_Values returns all known variants of UdfOutputType.
+func UdfOutputType_Values() []UdfOutputType_Value {
+	return []UdfOutputType_Value{UdfOutputType_NUMERIC, UdfOutputType_ENUM}
+}
+
+func New_UdfOutputType(value UdfOutputType_Value) UdfOutputType {
+	return UdfOutputType{val: value}
+}
+
+// IsUnknown returns false for all known variants of UdfOutputType and true otherwise.
+func (e UdfOutputType) IsUnknown() bool {
+	switch e.val {
+	case UdfOutputType_NUMERIC, UdfOutputType_ENUM:
+		return false
+	}
+	return true
+}
+
+func (e UdfOutputType) Value() UdfOutputType_Value {
+	if e.IsUnknown() {
+		return UdfOutputType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e UdfOutputType) String() string {
+	return string(e.val)
+}
+
+func (e UdfOutputType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *UdfOutputType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_UdfOutputType(UdfOutputType_Value(v))
+	case "NUMERIC":
+		*e = New_UdfOutputType(UdfOutputType_NUMERIC)
+	case "ENUM":
+		*e = New_UdfOutputType(UdfOutputType_ENUM)
 	}
 	return nil
 }

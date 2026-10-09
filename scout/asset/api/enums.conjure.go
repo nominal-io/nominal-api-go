@@ -66,6 +66,120 @@ func (e *AssetSortField) UnmarshalText(data []byte) error {
 	return nil
 }
 
+type PropertyRequirement struct {
+	val PropertyRequirement_Value
+}
+
+type PropertyRequirement_Value string
+
+const (
+	PropertyRequirement_REQUIRED  PropertyRequirement_Value = "REQUIRED"
+	PropertyRequirement_SUGGESTED PropertyRequirement_Value = "SUGGESTED"
+	PropertyRequirement_UNKNOWN   PropertyRequirement_Value = "UNKNOWN"
+)
+
+// PropertyRequirement_Values returns all known variants of PropertyRequirement.
+func PropertyRequirement_Values() []PropertyRequirement_Value {
+	return []PropertyRequirement_Value{PropertyRequirement_REQUIRED, PropertyRequirement_SUGGESTED}
+}
+
+func New_PropertyRequirement(value PropertyRequirement_Value) PropertyRequirement {
+	return PropertyRequirement{val: value}
+}
+
+// IsUnknown returns false for all known variants of PropertyRequirement and true otherwise.
+func (e PropertyRequirement) IsUnknown() bool {
+	switch e.val {
+	case PropertyRequirement_REQUIRED, PropertyRequirement_SUGGESTED:
+		return false
+	}
+	return true
+}
+
+func (e PropertyRequirement) Value() PropertyRequirement_Value {
+	if e.IsUnknown() {
+		return PropertyRequirement_UNKNOWN
+	}
+	return e.val
+}
+
+func (e PropertyRequirement) String() string {
+	return string(e.val)
+}
+
+func (e PropertyRequirement) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *PropertyRequirement) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_PropertyRequirement(PropertyRequirement_Value(v))
+	case "REQUIRED":
+		*e = New_PropertyRequirement(PropertyRequirement_REQUIRED)
+	case "SUGGESTED":
+		*e = New_PropertyRequirement(PropertyRequirement_SUGGESTED)
+	}
+	return nil
+}
+
+type PropertyValueType struct {
+	val PropertyValueType_Value
+}
+
+type PropertyValueType_Value string
+
+const (
+	PropertyValueType_STRING  PropertyValueType_Value = "STRING"
+	PropertyValueType_NUMBER  PropertyValueType_Value = "NUMBER"
+	PropertyValueType_UNKNOWN PropertyValueType_Value = "UNKNOWN"
+)
+
+// PropertyValueType_Values returns all known variants of PropertyValueType.
+func PropertyValueType_Values() []PropertyValueType_Value {
+	return []PropertyValueType_Value{PropertyValueType_STRING, PropertyValueType_NUMBER}
+}
+
+func New_PropertyValueType(value PropertyValueType_Value) PropertyValueType {
+	return PropertyValueType{val: value}
+}
+
+// IsUnknown returns false for all known variants of PropertyValueType and true otherwise.
+func (e PropertyValueType) IsUnknown() bool {
+	switch e.val {
+	case PropertyValueType_STRING, PropertyValueType_NUMBER:
+		return false
+	}
+	return true
+}
+
+func (e PropertyValueType) Value() PropertyValueType_Value {
+	if e.IsUnknown() {
+		return PropertyValueType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e PropertyValueType) String() string {
+	return string(e.val)
+}
+
+func (e PropertyValueType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *PropertyValueType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_PropertyValueType(PropertyValueType_Value(v))
+	case "STRING":
+		*e = New_PropertyValueType(PropertyValueType_STRING)
+	case "NUMBER":
+		*e = New_PropertyValueType(PropertyValueType_NUMBER)
+	}
+	return nil
+}
+
 type TypeSortField struct {
 	val TypeSortField_Value
 }

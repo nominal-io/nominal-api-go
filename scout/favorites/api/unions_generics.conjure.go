@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
+	api2 "github.com/nominal-io/nominal-api-go/scout/plan/api"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
 )
@@ -58,10 +59,15 @@ func (u *FavoriteResourceWithT[T]) Accept(ctx context.Context, v FavoriteResourc
 			return result, fmt.Errorf("field \"procedure\" is required")
 		}
 		return v.VisitProcedure(ctx, *u.procedure)
+	case "plan":
+		if u.plan == nil {
+			return result, fmt.Errorf("field \"plan\" is required")
+		}
+		return v.VisitPlan(ctx, *u.plan)
 	}
 }
 
-func (u *FavoriteResourceWithT[T]) AcceptFuncs(assetFunc func(api.AssetRid) (T, error), runFunc func(api1.RunRid) (T, error), notebookFunc func(api.NotebookRid) (T, error), notebookTemplateFunc func(api.TemplateRid) (T, error), checklistFunc func(api.ChecklistRid) (T, error), savedViewFunc func(api.SavedViewRid) (T, error), procedureFunc func(rids.ProcedureRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *FavoriteResourceWithT[T]) AcceptFuncs(assetFunc func(api.AssetRid) (T, error), runFunc func(api1.RunRid) (T, error), notebookFunc func(api.NotebookRid) (T, error), notebookTemplateFunc func(api.TemplateRid) (T, error), checklistFunc func(api.ChecklistRid) (T, error), savedViewFunc func(api.SavedViewRid) (T, error), procedureFunc func(rids.ProcedureRid) (T, error), planFunc func(api2.PlanRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -104,6 +110,11 @@ func (u *FavoriteResourceWithT[T]) AcceptFuncs(assetFunc func(api.AssetRid) (T, 
 			return result, fmt.Errorf("field \"procedure\" is required")
 		}
 		return procedureFunc(*u.procedure)
+	case "plan":
+		if u.plan == nil {
+			return result, fmt.Errorf("field \"plan\" is required")
+		}
+		return planFunc(*u.plan)
 	}
 }
 
@@ -142,6 +153,11 @@ func (u *FavoriteResourceWithT[T]) ProcedureNoopSuccess(rids.ProcedureRid) (T, e
 	return result, nil
 }
 
+func (u *FavoriteResourceWithT[T]) PlanNoopSuccess(api2.PlanRid) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *FavoriteResourceWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -155,5 +171,6 @@ type FavoriteResourceVisitorWithT[T any] interface {
 	VisitChecklist(ctx context.Context, v api.ChecklistRid) (T, error)
 	VisitSavedView(ctx context.Context, v api.SavedViewRid) (T, error)
 	VisitProcedure(ctx context.Context, v rids.ProcedureRid) (T, error)
+	VisitPlan(ctx context.Context, v api2.PlanRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

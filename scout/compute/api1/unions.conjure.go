@@ -1088,6 +1088,7 @@ type ComputableNode struct {
 	cartesian3d  *SummarizeCartesian3d
 	frequency    *FrequencyDomain
 	frequencyV2  *FrequencyDomainV2
+	spectrogram  *Spectrogram
 	histogram    *Histogram
 	curveV2      *CurveFitV2
 	curve        *CurveFit
@@ -1103,6 +1104,7 @@ type computableNodeDeserializer struct {
 	Cartesian3d  *SummarizeCartesian3d  `json:"cartesian3d"`
 	Frequency    *FrequencyDomain       `json:"frequency"`
 	FrequencyV2  *FrequencyDomainV2     `json:"frequencyV2"`
+	Spectrogram  *Spectrogram           `json:"spectrogram"`
 	Histogram    *Histogram             `json:"histogram"`
 	CurveV2      *CurveFitV2            `json:"curveV2"`
 	Curve        *CurveFit              `json:"curve"`
@@ -1110,7 +1112,7 @@ type computableNodeDeserializer struct {
 }
 
 func (u *computableNodeDeserializer) toStruct() ComputableNode {
-	return ComputableNode{typ: u.Type, ranges: u.Ranges, series: u.Series, value: u.Value, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, frequency: u.Frequency, frequencyV2: u.FrequencyV2, histogram: u.Histogram, curveV2: u.CurveV2, curve: u.Curve, multivariate: u.Multivariate}
+	return ComputableNode{typ: u.Type, ranges: u.Ranges, series: u.Series, value: u.Value, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, frequency: u.Frequency, frequencyV2: u.FrequencyV2, spectrogram: u.Spectrogram, histogram: u.Histogram, curveV2: u.CurveV2, curve: u.Curve, multivariate: u.Multivariate}
 }
 
 func (u *ComputableNode) toSerializer() (interface{}, error) {
@@ -1173,6 +1175,14 @@ func (u *ComputableNode) toSerializer() (interface{}, error) {
 			Type        string            `json:"type"`
 			FrequencyV2 FrequencyDomainV2 `json:"frequencyV2"`
 		}{Type: "frequencyV2", FrequencyV2: *u.frequencyV2}, nil
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return nil, fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return struct {
+			Type        string      `json:"type"`
+			Spectrogram Spectrogram `json:"spectrogram"`
+		}{Type: "spectrogram", Spectrogram: *u.spectrogram}, nil
 	case "histogram":
 		if u.histogram == nil {
 			return nil, fmt.Errorf("field \"histogram\" is required")
@@ -1251,6 +1261,10 @@ func (u *ComputableNode) UnmarshalJSON(data []byte) error {
 		if u.frequencyV2 == nil {
 			return fmt.Errorf("field \"frequencyV2\" is required")
 		}
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
 	case "histogram":
 		if u.histogram == nil {
 			return fmt.Errorf("field \"histogram\" is required")
@@ -1287,7 +1301,7 @@ func (u *ComputableNode) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRanges) error, seriesFunc func(SummarizeSeries) error, valueFunc func(SelectValue) error, cartesianFunc func(SummarizeCartesian) error, cartesian3dFunc func(SummarizeCartesian3d) error, frequencyFunc func(FrequencyDomain) error, frequencyV2Func func(FrequencyDomainV2) error, histogramFunc func(Histogram) error, curveV2Func func(CurveFitV2) error, curveFunc func(CurveFit) error, multivariateFunc func(SummarizeMultivariate) error, unknownFunc func(string) error) error {
+func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRanges) error, seriesFunc func(SummarizeSeries) error, valueFunc func(SelectValue) error, cartesianFunc func(SummarizeCartesian) error, cartesian3dFunc func(SummarizeCartesian3d) error, frequencyFunc func(FrequencyDomain) error, frequencyV2Func func(FrequencyDomainV2) error, spectrogramFunc func(Spectrogram) error, histogramFunc func(Histogram) error, curveV2Func func(CurveFitV2) error, curveFunc func(CurveFit) error, multivariateFunc func(SummarizeMultivariate) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1329,6 +1343,11 @@ func (u *ComputableNode) AcceptFuncs(rangesFunc func(SummarizeRanges) error, ser
 			return fmt.Errorf("field \"frequencyV2\" is required")
 		}
 		return frequencyV2Func(*u.frequencyV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return spectrogramFunc(*u.spectrogram)
 	case "histogram":
 		if u.histogram == nil {
 			return fmt.Errorf("field \"histogram\" is required")
@@ -1377,6 +1396,10 @@ func (u *ComputableNode) FrequencyNoopSuccess(_ FrequencyDomain) error {
 }
 
 func (u *ComputableNode) FrequencyV2NoopSuccess(_ FrequencyDomainV2) error {
+	return nil
+}
+
+func (u *ComputableNode) SpectrogramNoopSuccess(_ Spectrogram) error {
 	return nil
 }
 
@@ -1442,6 +1465,11 @@ func (u *ComputableNode) Accept(v ComputableNodeVisitor) error {
 			return fmt.Errorf("field \"frequencyV2\" is required")
 		}
 		return v.VisitFrequencyV2(*u.frequencyV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return v.VisitSpectrogram(*u.spectrogram)
 	case "histogram":
 		if u.histogram == nil {
 			return fmt.Errorf("field \"histogram\" is required")
@@ -1473,6 +1501,7 @@ type ComputableNodeVisitor interface {
 	VisitCartesian3d(v SummarizeCartesian3d) error
 	VisitFrequency(v FrequencyDomain) error
 	VisitFrequencyV2(v FrequencyDomainV2) error
+	VisitSpectrogram(v Spectrogram) error
 	VisitHistogram(v Histogram) error
 	VisitCurveV2(v CurveFitV2) error
 	VisitCurve(v CurveFit) error
@@ -1522,6 +1551,11 @@ func (u *ComputableNode) AcceptWithContext(ctx context.Context, v ComputableNode
 			return fmt.Errorf("field \"frequencyV2\" is required")
 		}
 		return v.VisitFrequencyV2WithContext(ctx, *u.frequencyV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return v.VisitSpectrogramWithContext(ctx, *u.spectrogram)
 	case "histogram":
 		if u.histogram == nil {
 			return fmt.Errorf("field \"histogram\" is required")
@@ -1553,6 +1587,7 @@ type ComputableNodeVisitorWithContext interface {
 	VisitCartesian3dWithContext(ctx context.Context, v SummarizeCartesian3d) error
 	VisitFrequencyWithContext(ctx context.Context, v FrequencyDomain) error
 	VisitFrequencyV2WithContext(ctx context.Context, v FrequencyDomainV2) error
+	VisitSpectrogramWithContext(ctx context.Context, v Spectrogram) error
 	VisitHistogramWithContext(ctx context.Context, v Histogram) error
 	VisitCurveV2WithContext(ctx context.Context, v CurveFitV2) error
 	VisitCurveWithContext(ctx context.Context, v CurveFit) error
@@ -1586,6 +1621,10 @@ func NewComputableNodeFromFrequency(v FrequencyDomain) ComputableNode {
 
 func NewComputableNodeFromFrequencyV2(v FrequencyDomainV2) ComputableNode {
 	return ComputableNode{typ: "frequencyV2", frequencyV2: &v}
+}
+
+func NewComputableNodeFromSpectrogram(v Spectrogram) ComputableNode {
+	return ComputableNode{typ: "spectrogram", spectrogram: &v}
 }
 
 func NewComputableNodeFromHistogram(v Histogram) ComputableNode {
@@ -2878,37 +2917,41 @@ A logical bundle of named series. For the time being, columns are each a time se
 A dataset is either rooted in persisted data (asset or dataset) or defined as a transformation of another dataset.
 */
 type Dataset struct {
-	typ           string
-	asset         *api.Asset
-	run           *api.Run
-	saved         *api.SavedDataset
-	search        *SearchDataset
-	combine       *CombinedDataset
-	tag           *TaggedDataset
-	filter        *FilteredDataset
-	timeShift     *TimeShiftedDataset
-	alignByAnchor *AnchorAlignedDataset
-	withSeries    *WithSeriesDataset
-	reference     *api.DatasetReference
+	typ            string
+	asset          *api.Asset
+	run            *api.Run
+	saved          *api.SavedDataset
+	search         *SearchDataset
+	combine        *CombinedDataset
+	tag            *TaggedDataset
+	filter         *FilteredDataset
+	timeShift      *TimeShiftedDataset
+	alignByAnchor  *AnchorAlignedDataset
+	withSeries     *WithSeriesDataset
+	dropSeries     *DropSeriesDataset
+	reference      *api.DatasetReference
+	withDimensions *DimensionsDataset
 }
 
 type datasetDeserializer struct {
-	Type          string                `json:"type"`
-	Asset         *api.Asset            `json:"asset"`
-	Run           *api.Run              `json:"run"`
-	Saved         *api.SavedDataset     `json:"saved"`
-	Search        *SearchDataset        `json:"search"`
-	Combine       *CombinedDataset      `json:"combine"`
-	Tag           *TaggedDataset        `json:"tag"`
-	Filter        *FilteredDataset      `json:"filter"`
-	TimeShift     *TimeShiftedDataset   `json:"timeShift"`
-	AlignByAnchor *AnchorAlignedDataset `json:"alignByAnchor"`
-	WithSeries    *WithSeriesDataset    `json:"withSeries"`
-	Reference     *api.DatasetReference `json:"reference"`
+	Type           string                `json:"type"`
+	Asset          *api.Asset            `json:"asset"`
+	Run            *api.Run              `json:"run"`
+	Saved          *api.SavedDataset     `json:"saved"`
+	Search         *SearchDataset        `json:"search"`
+	Combine        *CombinedDataset      `json:"combine"`
+	Tag            *TaggedDataset        `json:"tag"`
+	Filter         *FilteredDataset      `json:"filter"`
+	TimeShift      *TimeShiftedDataset   `json:"timeShift"`
+	AlignByAnchor  *AnchorAlignedDataset `json:"alignByAnchor"`
+	WithSeries     *WithSeriesDataset    `json:"withSeries"`
+	DropSeries     *DropSeriesDataset    `json:"dropSeries"`
+	Reference      *api.DatasetReference `json:"reference"`
+	WithDimensions *DimensionsDataset    `json:"withDimensions"`
 }
 
 func (u *datasetDeserializer) toStruct() Dataset {
-	return Dataset{typ: u.Type, asset: u.Asset, run: u.Run, saved: u.Saved, search: u.Search, combine: u.Combine, tag: u.Tag, filter: u.Filter, timeShift: u.TimeShift, alignByAnchor: u.AlignByAnchor, withSeries: u.WithSeries, reference: u.Reference}
+	return Dataset{typ: u.Type, asset: u.Asset, run: u.Run, saved: u.Saved, search: u.Search, combine: u.Combine, tag: u.Tag, filter: u.Filter, timeShift: u.TimeShift, alignByAnchor: u.AlignByAnchor, withSeries: u.WithSeries, dropSeries: u.DropSeries, reference: u.Reference, withDimensions: u.WithDimensions}
 }
 
 func (u *Dataset) toSerializer() (interface{}, error) {
@@ -2995,6 +3038,14 @@ func (u *Dataset) toSerializer() (interface{}, error) {
 			Type       string            `json:"type"`
 			WithSeries WithSeriesDataset `json:"withSeries"`
 		}{Type: "withSeries", WithSeries: *u.withSeries}, nil
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return nil, fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return struct {
+			Type       string            `json:"type"`
+			DropSeries DropSeriesDataset `json:"dropSeries"`
+		}{Type: "dropSeries", DropSeries: *u.dropSeries}, nil
 	case "reference":
 		if u.reference == nil {
 			return nil, fmt.Errorf("field \"reference\" is required")
@@ -3003,6 +3054,14 @@ func (u *Dataset) toSerializer() (interface{}, error) {
 			Type      string               `json:"type"`
 			Reference api.DatasetReference `json:"reference"`
 		}{Type: "reference", Reference: *u.reference}, nil
+	case "withDimensions":
+		if u.withDimensions == nil {
+			return nil, fmt.Errorf("field \"withDimensions\" is required")
+		}
+		return struct {
+			Type           string            `json:"type"`
+			WithDimensions DimensionsDataset `json:"withDimensions"`
+		}{Type: "withDimensions", WithDimensions: *u.withDimensions}, nil
 	}
 }
 
@@ -3061,9 +3120,17 @@ func (u *Dataset) UnmarshalJSON(data []byte) error {
 		if u.withSeries == nil {
 			return fmt.Errorf("field \"withSeries\" is required")
 		}
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return fmt.Errorf("field \"dropSeries\" is required")
+		}
 	case "reference":
 		if u.reference == nil {
 			return fmt.Errorf("field \"reference\" is required")
+		}
+	case "withDimensions":
+		if u.withDimensions == nil {
+			return fmt.Errorf("field \"withDimensions\" is required")
 		}
 	}
 	return nil
@@ -3085,7 +3152,7 @@ func (u *Dataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Dataset) AcceptFuncs(assetFunc func(api.Asset) error, runFunc func(api.Run) error, savedFunc func(api.SavedDataset) error, searchFunc func(SearchDataset) error, combineFunc func(CombinedDataset) error, tagFunc func(TaggedDataset) error, filterFunc func(FilteredDataset) error, timeShiftFunc func(TimeShiftedDataset) error, alignByAnchorFunc func(AnchorAlignedDataset) error, withSeriesFunc func(WithSeriesDataset) error, referenceFunc func(api.DatasetReference) error, unknownFunc func(string) error) error {
+func (u *Dataset) AcceptFuncs(assetFunc func(api.Asset) error, runFunc func(api.Run) error, savedFunc func(api.SavedDataset) error, searchFunc func(SearchDataset) error, combineFunc func(CombinedDataset) error, tagFunc func(TaggedDataset) error, filterFunc func(FilteredDataset) error, timeShiftFunc func(TimeShiftedDataset) error, alignByAnchorFunc func(AnchorAlignedDataset) error, withSeriesFunc func(WithSeriesDataset) error, dropSeriesFunc func(DropSeriesDataset) error, referenceFunc func(api.DatasetReference) error, withDimensionsFunc func(DimensionsDataset) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -3142,11 +3209,21 @@ func (u *Dataset) AcceptFuncs(assetFunc func(api.Asset) error, runFunc func(api.
 			return fmt.Errorf("field \"withSeries\" is required")
 		}
 		return withSeriesFunc(*u.withSeries)
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return dropSeriesFunc(*u.dropSeries)
 	case "reference":
 		if u.reference == nil {
 			return fmt.Errorf("field \"reference\" is required")
 		}
 		return referenceFunc(*u.reference)
+	case "withDimensions":
+		if u.withDimensions == nil {
+			return fmt.Errorf("field \"withDimensions\" is required")
+		}
+		return withDimensionsFunc(*u.withDimensions)
 	}
 }
 
@@ -3190,7 +3267,15 @@ func (u *Dataset) WithSeriesNoopSuccess(_ WithSeriesDataset) error {
 	return nil
 }
 
+func (u *Dataset) DropSeriesNoopSuccess(_ DropSeriesDataset) error {
+	return nil
+}
+
 func (u *Dataset) ReferenceNoopSuccess(_ api.DatasetReference) error {
+	return nil
+}
+
+func (u *Dataset) WithDimensionsNoopSuccess(_ DimensionsDataset) error {
 	return nil
 }
 
@@ -3255,11 +3340,21 @@ func (u *Dataset) Accept(v DatasetVisitor) error {
 			return fmt.Errorf("field \"withSeries\" is required")
 		}
 		return v.VisitWithSeries(*u.withSeries)
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return v.VisitDropSeries(*u.dropSeries)
 	case "reference":
 		if u.reference == nil {
 			return fmt.Errorf("field \"reference\" is required")
 		}
 		return v.VisitReference(*u.reference)
+	case "withDimensions":
+		if u.withDimensions == nil {
+			return fmt.Errorf("field \"withDimensions\" is required")
+		}
+		return v.VisitWithDimensions(*u.withDimensions)
 	}
 }
 
@@ -3274,7 +3369,9 @@ type DatasetVisitor interface {
 	VisitTimeShift(v TimeShiftedDataset) error
 	VisitAlignByAnchor(v AnchorAlignedDataset) error
 	VisitWithSeries(v WithSeriesDataset) error
+	VisitDropSeries(v DropSeriesDataset) error
 	VisitReference(v api.DatasetReference) error
+	VisitWithDimensions(v DimensionsDataset) error
 	VisitUnknown(typeName string) error
 }
 
@@ -3335,11 +3432,21 @@ func (u *Dataset) AcceptWithContext(ctx context.Context, v DatasetVisitorWithCon
 			return fmt.Errorf("field \"withSeries\" is required")
 		}
 		return v.VisitWithSeriesWithContext(ctx, *u.withSeries)
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return v.VisitDropSeriesWithContext(ctx, *u.dropSeries)
 	case "reference":
 		if u.reference == nil {
 			return fmt.Errorf("field \"reference\" is required")
 		}
 		return v.VisitReferenceWithContext(ctx, *u.reference)
+	case "withDimensions":
+		if u.withDimensions == nil {
+			return fmt.Errorf("field \"withDimensions\" is required")
+		}
+		return v.VisitWithDimensionsWithContext(ctx, *u.withDimensions)
 	}
 }
 
@@ -3354,7 +3461,9 @@ type DatasetVisitorWithContext interface {
 	VisitTimeShiftWithContext(ctx context.Context, v TimeShiftedDataset) error
 	VisitAlignByAnchorWithContext(ctx context.Context, v AnchorAlignedDataset) error
 	VisitWithSeriesWithContext(ctx context.Context, v WithSeriesDataset) error
+	VisitDropSeriesWithContext(ctx context.Context, v DropSeriesDataset) error
 	VisitReferenceWithContext(ctx context.Context, v api.DatasetReference) error
+	VisitWithDimensionsWithContext(ctx context.Context, v DimensionsDataset) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -3398,8 +3507,16 @@ func NewDatasetFromWithSeries(v WithSeriesDataset) Dataset {
 	return Dataset{typ: "withSeries", withSeries: &v}
 }
 
+func NewDatasetFromDropSeries(v DropSeriesDataset) Dataset {
+	return Dataset{typ: "dropSeries", dropSeries: &v}
+}
+
 func NewDatasetFromReference(v api.DatasetReference) Dataset {
 	return Dataset{typ: "reference", reference: &v}
+}
+
+func NewDatasetFromWithDimensions(v DimensionsDataset) Dataset {
+	return Dataset{typ: "withDimensions", withDimensions: &v}
 }
 
 type DatasetAnchor struct {

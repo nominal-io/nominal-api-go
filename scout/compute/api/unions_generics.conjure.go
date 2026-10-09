@@ -591,6 +591,11 @@ func (u *ComputeNodeResponseWithT[T]) Accept(ctx context.Context, v ComputeNodeR
 			return result, fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
 		return v.VisitFrequencyDomainV2(ctx, *u.frequencyDomainV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return result, fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return v.VisitSpectrogram(ctx, *u.spectrogram)
 	case "bucketedFrequencyDomain":
 		if u.bucketedFrequencyDomain == nil {
 			return result, fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
@@ -654,7 +659,7 @@ func (u *ComputeNodeResponseWithT[T]) Accept(ctx context.Context, v ComputeNodeR
 	}
 }
 
-func (u *ComputeNodeResponseWithT[T]) AcceptFuncs(range_Func func([]Range) (T, error), rangesSummaryFunc func(RangesSummary) (T, error), rangeValueFunc func(*Range) (T, error), numericFunc func(NumericPlot) (T, error), bucketedNumericFunc func(BucketedNumericPlot) (T, error), numericPointFunc func(*NumericPoint) (T, error), singlePointFunc func(*SinglePoint) (T, error), arrowNumericFunc func(ArrowPlot) (T, error), arrowBucketedNumericFunc func(ArrowPlot) (T, error), enumFunc func(EnumPlot) (T, error), enumPointFunc func(*EnumPoint) (T, error), bucketedEnumFunc func(BucketedEnumPlot) (T, error), arrowEnumFunc func(ArrowPlot) (T, error), arrowBucketedEnumFunc func(ArrowPlot) (T, error), pagedLogFunc func(PagedLogPlot) (T, error), logPointFunc func(*LogPoint) (T, error), arrowLogFunc func(ArrowPlot) (T, error), cartesianFunc func(CartesianPlot) (T, error), bucketedCartesianFunc func(BucketedCartesianPlot) (T, error), bucketedCartesian3dFunc func(BucketedCartesian3dPlot) (T, error), frequencyDomainFunc func(FrequencyDomainPlot) (T, error), frequencyDomainV2Func func(FrequencyDomainPlotV2) (T, error), bucketedFrequencyDomainFunc func(BucketedFrequencyDomainPlot) (T, error), numericHistogramFunc func(NumericHistogramPlot) (T, error), enumHistogramFunc func(EnumHistogramPlot) (T, error), curveFitFunc func(CurveFitResult) (T, error), curveFitV2Func func(CurveFitResultV2) (T, error), groupedFunc func(GroupedComputeNodeResponses) (T, error), arrayFunc func(ArrowArrayPlot) (T, error), bucketedStructFunc func(ArrowPlot) (T, error), arrowStructFunc func(ArrowPlot) (T, error), fullResolutionFunc func(ArrowPlot) (T, error), arrowBucketedMultivariateFunc func(ArrowPlot) (T, error), multivariateFunc func(BucketedMultivariatePlot) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ComputeNodeResponseWithT[T]) AcceptFuncs(range_Func func([]Range) (T, error), rangesSummaryFunc func(RangesSummary) (T, error), rangeValueFunc func(*Range) (T, error), numericFunc func(NumericPlot) (T, error), bucketedNumericFunc func(BucketedNumericPlot) (T, error), numericPointFunc func(*NumericPoint) (T, error), singlePointFunc func(*SinglePoint) (T, error), arrowNumericFunc func(ArrowPlot) (T, error), arrowBucketedNumericFunc func(ArrowPlot) (T, error), enumFunc func(EnumPlot) (T, error), enumPointFunc func(*EnumPoint) (T, error), bucketedEnumFunc func(BucketedEnumPlot) (T, error), arrowEnumFunc func(ArrowPlot) (T, error), arrowBucketedEnumFunc func(ArrowPlot) (T, error), pagedLogFunc func(PagedLogPlot) (T, error), logPointFunc func(*LogPoint) (T, error), arrowLogFunc func(ArrowPlot) (T, error), cartesianFunc func(CartesianPlot) (T, error), bucketedCartesianFunc func(BucketedCartesianPlot) (T, error), bucketedCartesian3dFunc func(BucketedCartesian3dPlot) (T, error), frequencyDomainFunc func(FrequencyDomainPlot) (T, error), frequencyDomainV2Func func(FrequencyDomainPlotV2) (T, error), spectrogramFunc func(SpectrogramPlot) (T, error), bucketedFrequencyDomainFunc func(BucketedFrequencyDomainPlot) (T, error), numericHistogramFunc func(NumericHistogramPlot) (T, error), enumHistogramFunc func(EnumHistogramPlot) (T, error), curveFitFunc func(CurveFitResult) (T, error), curveFitV2Func func(CurveFitResultV2) (T, error), groupedFunc func(GroupedComputeNodeResponses) (T, error), arrayFunc func(ArrowArrayPlot) (T, error), bucketedStructFunc func(ArrowPlot) (T, error), arrowStructFunc func(ArrowPlot) (T, error), fullResolutionFunc func(ArrowPlot) (T, error), arrowBucketedMultivariateFunc func(ArrowPlot) (T, error), multivariateFunc func(BucketedMultivariatePlot) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -777,6 +782,11 @@ func (u *ComputeNodeResponseWithT[T]) AcceptFuncs(range_Func func([]Range) (T, e
 			return result, fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
 		return frequencyDomainV2Func(*u.frequencyDomainV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return result, fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return spectrogramFunc(*u.spectrogram)
 	case "bucketedFrequencyDomain":
 		if u.bucketedFrequencyDomain == nil {
 			return result, fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
@@ -950,6 +960,11 @@ func (u *ComputeNodeResponseWithT[T]) FrequencyDomainV2NoopSuccess(FrequencyDoma
 	return result, nil
 }
 
+func (u *ComputeNodeResponseWithT[T]) SpectrogramNoopSuccess(SpectrogramPlot) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ComputeNodeResponseWithT[T]) BucketedFrequencyDomainNoopSuccess(BucketedFrequencyDomainPlot) (T, error) {
 	var result T
 	return result, nil
@@ -1038,6 +1053,7 @@ type ComputeNodeResponseVisitorWithT[T any] interface {
 	VisitBucketedCartesian3d(ctx context.Context, v BucketedCartesian3dPlot) (T, error)
 	VisitFrequencyDomain(ctx context.Context, v FrequencyDomainPlot) (T, error)
 	VisitFrequencyDomainV2(ctx context.Context, v FrequencyDomainPlotV2) (T, error)
+	VisitSpectrogram(ctx context.Context, v SpectrogramPlot) (T, error)
 	VisitBucketedFrequencyDomain(ctx context.Context, v BucketedFrequencyDomainPlot) (T, error)
 	VisitNumericHistogram(ctx context.Context, v NumericHistogramPlot) (T, error)
 	VisitEnumHistogram(ctx context.Context, v EnumHistogramPlot) (T, error)
@@ -1633,6 +1649,71 @@ func (u *DecimateStrategyWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type DecimateStrategyVisitorWithT[T any] interface {
 	VisitResolution(ctx context.Context, v DecimateWithResolution) (T, error)
 	VisitBuckets(ctx context.Context, v DecimateWithBuckets) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type DimensionValueWithT[T any] DimensionValue
+
+func (u *DimensionValueWithT[T]) Accept(ctx context.Context, v DimensionValueVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "stringProperty":
+		if u.stringProperty == nil {
+			return result, fmt.Errorf("field \"stringProperty\" is required")
+		}
+		return v.VisitStringProperty(ctx, *u.stringProperty)
+	case "identity":
+		if u.identity == nil {
+			return result, fmt.Errorf("field \"identity\" is required")
+		}
+		return v.VisitIdentity(ctx, *u.identity)
+	}
+}
+
+func (u *DimensionValueWithT[T]) AcceptFuncs(stringPropertyFunc func(StringPropertyDimension) (T, error), identityFunc func(IdentityDimension) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "stringProperty":
+		if u.stringProperty == nil {
+			return result, fmt.Errorf("field \"stringProperty\" is required")
+		}
+		return stringPropertyFunc(*u.stringProperty)
+	case "identity":
+		if u.identity == nil {
+			return result, fmt.Errorf("field \"identity\" is required")
+		}
+		return identityFunc(*u.identity)
+	}
+}
+
+func (u *DimensionValueWithT[T]) StringPropertyNoopSuccess(StringPropertyDimension) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DimensionValueWithT[T]) IdentityNoopSuccess(IdentityDimension) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DimensionValueWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type DimensionValueVisitorWithT[T any] interface {
+	VisitStringProperty(ctx context.Context, v StringPropertyDimension) (T, error)
+	VisitIdentity(ctx context.Context, v IdentityDimension) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

@@ -13,6 +13,181 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// A filter applied to a data scope input.
+type DataScopeInputFilter struct {
+	typ   string
+	tag   *TagDataScopeInputFilter
+	event *EventDataScopeInputFilter
+}
+
+type dataScopeInputFilterDeserializer struct {
+	Type  string                     `json:"type"`
+	Tag   *TagDataScopeInputFilter   `json:"tag"`
+	Event *EventDataScopeInputFilter `json:"event"`
+}
+
+func (u *dataScopeInputFilterDeserializer) toStruct() DataScopeInputFilter {
+	return DataScopeInputFilter{typ: u.Type, tag: u.Tag, event: u.Event}
+}
+
+func (u *DataScopeInputFilter) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "tag":
+		if u.tag == nil {
+			return nil, fmt.Errorf("field \"tag\" is required")
+		}
+		return struct {
+			Type string                  `json:"type"`
+			Tag  TagDataScopeInputFilter `json:"tag"`
+		}{Type: "tag", Tag: *u.tag}, nil
+	case "event":
+		if u.event == nil {
+			return nil, fmt.Errorf("field \"event\" is required")
+		}
+		return struct {
+			Type  string                    `json:"type"`
+			Event EventDataScopeInputFilter `json:"event"`
+		}{Type: "event", Event: *u.event}, nil
+	}
+}
+
+func (u DataScopeInputFilter) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *DataScopeInputFilter) UnmarshalJSON(data []byte) error {
+	var deser dataScopeInputFilterDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "tag":
+		if u.tag == nil {
+			return fmt.Errorf("field \"tag\" is required")
+		}
+	case "event":
+		if u.event == nil {
+			return fmt.Errorf("field \"event\" is required")
+		}
+	}
+	return nil
+}
+
+func (u DataScopeInputFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *DataScopeInputFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *DataScopeInputFilter) AcceptFuncs(tagFunc func(TagDataScopeInputFilter) error, eventFunc func(EventDataScopeInputFilter) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in DataScopeInputFilter type")
+		}
+		return unknownFunc(u.typ)
+	case "tag":
+		if u.tag == nil {
+			return fmt.Errorf("field \"tag\" is required")
+		}
+		return tagFunc(*u.tag)
+	case "event":
+		if u.event == nil {
+			return fmt.Errorf("field \"event\" is required")
+		}
+		return eventFunc(*u.event)
+	}
+}
+
+func (u *DataScopeInputFilter) TagNoopSuccess(_ TagDataScopeInputFilter) error {
+	return nil
+}
+
+func (u *DataScopeInputFilter) EventNoopSuccess(_ EventDataScopeInputFilter) error {
+	return nil
+}
+
+func (u *DataScopeInputFilter) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *DataScopeInputFilter) Accept(v DataScopeInputFilterVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "tag":
+		if u.tag == nil {
+			return fmt.Errorf("field \"tag\" is required")
+		}
+		return v.VisitTag(*u.tag)
+	case "event":
+		if u.event == nil {
+			return fmt.Errorf("field \"event\" is required")
+		}
+		return v.VisitEvent(*u.event)
+	}
+}
+
+type DataScopeInputFilterVisitor interface {
+	VisitTag(v TagDataScopeInputFilter) error
+	VisitEvent(v EventDataScopeInputFilter) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *DataScopeInputFilter) AcceptWithContext(ctx context.Context, v DataScopeInputFilterVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "tag":
+		if u.tag == nil {
+			return fmt.Errorf("field \"tag\" is required")
+		}
+		return v.VisitTagWithContext(ctx, *u.tag)
+	case "event":
+		if u.event == nil {
+			return fmt.Errorf("field \"event\" is required")
+		}
+		return v.VisitEventWithContext(ctx, *u.event)
+	}
+}
+
+type DataScopeInputFilterVisitorWithContext interface {
+	VisitTagWithContext(ctx context.Context, v TagDataScopeInputFilter) error
+	VisitEventWithContext(ctx context.Context, v EventDataScopeInputFilter) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewDataScopeInputFilterFromTag(v TagDataScopeInputFilter) DataScopeInputFilter {
+	return DataScopeInputFilter{typ: "tag", tag: &v}
+}
+
+func NewDataScopeInputFilterFromEvent(v EventDataScopeInputFilter) DataScopeInputFilter {
+	return DataScopeInputFilter{typ: "event", event: &v}
+}
+
 type DataScopeInputValue struct {
 	typ         string
 	asset       *AssetDataScopeInputValue

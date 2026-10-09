@@ -13,6 +13,71 @@ import (
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 )
 
+type DataScopeInputFilterWithT[T any] DataScopeInputFilter
+
+func (u *DataScopeInputFilterWithT[T]) Accept(ctx context.Context, v DataScopeInputFilterVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "tag":
+		if u.tag == nil {
+			return result, fmt.Errorf("field \"tag\" is required")
+		}
+		return v.VisitTag(ctx, *u.tag)
+	case "event":
+		if u.event == nil {
+			return result, fmt.Errorf("field \"event\" is required")
+		}
+		return v.VisitEvent(ctx, *u.event)
+	}
+}
+
+func (u *DataScopeInputFilterWithT[T]) AcceptFuncs(tagFunc func(TagDataScopeInputFilter) (T, error), eventFunc func(EventDataScopeInputFilter) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "tag":
+		if u.tag == nil {
+			return result, fmt.Errorf("field \"tag\" is required")
+		}
+		return tagFunc(*u.tag)
+	case "event":
+		if u.event == nil {
+			return result, fmt.Errorf("field \"event\" is required")
+		}
+		return eventFunc(*u.event)
+	}
+}
+
+func (u *DataScopeInputFilterWithT[T]) TagNoopSuccess(TagDataScopeInputFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DataScopeInputFilterWithT[T]) EventNoopSuccess(EventDataScopeInputFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DataScopeInputFilterWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type DataScopeInputFilterVisitorWithT[T any] interface {
+	VisitTag(ctx context.Context, v TagDataScopeInputFilter) (T, error)
+	VisitEvent(ctx context.Context, v EventDataScopeInputFilter) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type DataScopeInputValueWithT[T any] DataScopeInputValue
 
 func (u *DataScopeInputValueWithT[T]) Accept(ctx context.Context, v DataScopeInputValueVisitorWithT[T]) (T, error) {

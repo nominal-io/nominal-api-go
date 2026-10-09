@@ -511,6 +511,460 @@ func (e *DuplicateDataScopeNames) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type invalidTypeDefinition struct {
+	Reason string `json:"reason"`
+}
+
+func (o invalidTypeDefinition) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidTypeDefinition) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidTypeDefinition returns new instance of InvalidTypeDefinition error.
+func NewInvalidTypeDefinition(reasonArg string) *InvalidTypeDefinition {
+	return &InvalidTypeDefinition{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidTypeDefinition: invalidTypeDefinition{Reason: reasonArg}}
+}
+
+// WrapWithInvalidTypeDefinition returns new instance of InvalidTypeDefinition error wrapping an existing error.
+func WrapWithInvalidTypeDefinition(err error, reasonArg string) *InvalidTypeDefinition {
+	return &InvalidTypeDefinition{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidTypeDefinition: invalidTypeDefinition{Reason: reasonArg}}
+}
+
+// InvalidTypeDefinition is an error type.
+type InvalidTypeDefinition struct {
+	errorInstanceID uuid.UUID
+	invalidTypeDefinition
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidTypeDefinition returns true if err is an instance of InvalidTypeDefinition.
+func IsInvalidTypeDefinition(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidTypeDefinition)
+	return ok
+}
+
+func (e *InvalidTypeDefinition) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Assets:InvalidTypeDefinition (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidTypeDefinition) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidTypeDefinition) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidTypeDefinition) Message() string {
+	return "INVALID_ARGUMENT Assets:InvalidTypeDefinition"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidTypeDefinition) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidTypeDefinition) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidTypeDefinition) Name() string {
+	return "Assets:InvalidTypeDefinition"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidTypeDefinition) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidTypeDefinition) Parameters() map[string]interface{} {
+	return map[string]interface{}{"reason": e.Reason}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidTypeDefinition) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidTypeDefinition) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidTypeDefinition) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"reason": e.Reason}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidTypeDefinition) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidTypeDefinition) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidTypeDefinition)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Assets:InvalidTypeDefinition", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidTypeDefinition) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidTypeDefinition
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidTypeDefinition = parameters
+	return nil
+}
+
+// safelogging:@Safe
+type primaryKeyInUse struct {
+	TypeRid api.TypeRid `json:"typeRid" safelogging:"@Safe"`
+}
+
+func (o primaryKeyInUse) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *primaryKeyInUse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewPrimaryKeyInUse returns new instance of PrimaryKeyInUse error.
+func NewPrimaryKeyInUse(typeRidArg api.TypeRid) *PrimaryKeyInUse {
+	return &PrimaryKeyInUse{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), primaryKeyInUse: primaryKeyInUse{TypeRid: typeRidArg}}
+}
+
+// WrapWithPrimaryKeyInUse returns new instance of PrimaryKeyInUse error wrapping an existing error.
+func WrapWithPrimaryKeyInUse(err error, typeRidArg api.TypeRid) *PrimaryKeyInUse {
+	return &PrimaryKeyInUse{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, primaryKeyInUse: primaryKeyInUse{TypeRid: typeRidArg}}
+}
+
+// PrimaryKeyInUse is an error type.
+// Another active asset already uses this primary key for this type.
+type PrimaryKeyInUse struct {
+	errorInstanceID uuid.UUID
+	primaryKeyInUse
+	cause error
+	stack werror.StackTrace
+}
+
+// IsPrimaryKeyInUse returns true if err is an instance of PrimaryKeyInUse.
+func IsPrimaryKeyInUse(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*PrimaryKeyInUse)
+	return ok
+}
+
+func (e *PrimaryKeyInUse) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Assets:PrimaryKeyInUse (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *PrimaryKeyInUse) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *PrimaryKeyInUse) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *PrimaryKeyInUse) Message() string {
+	return "INVALID_ARGUMENT Assets:PrimaryKeyInUse"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *PrimaryKeyInUse) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *PrimaryKeyInUse) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *PrimaryKeyInUse) Name() string {
+	return "Assets:PrimaryKeyInUse"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *PrimaryKeyInUse) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *PrimaryKeyInUse) Parameters() map[string]interface{} {
+	return map[string]interface{}{"typeRid": e.TypeRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *PrimaryKeyInUse) safeParams() map[string]interface{} {
+	return map[string]interface{}{"typeRid": e.TypeRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *PrimaryKeyInUse) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *PrimaryKeyInUse) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *PrimaryKeyInUse) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e PrimaryKeyInUse) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.primaryKeyInUse)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Assets:PrimaryKeyInUse", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *PrimaryKeyInUse) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters primaryKeyInUse
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.primaryKeyInUse = parameters
+	return nil
+}
+
+type tooManyActiveTypeMembers struct {
+	ActiveMemberCount int `json:"activeMemberCount"`
+	MaxActiveMembers  int `json:"maxActiveMembers"`
+}
+
+func (o tooManyActiveTypeMembers) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *tooManyActiveTypeMembers) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewTooManyActiveTypeMembers returns new instance of TooManyActiveTypeMembers error.
+func NewTooManyActiveTypeMembers(activeMemberCountArg int, maxActiveMembersArg int) *TooManyActiveTypeMembers {
+	return &TooManyActiveTypeMembers{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooManyActiveTypeMembers: tooManyActiveTypeMembers{ActiveMemberCount: activeMemberCountArg, MaxActiveMembers: maxActiveMembersArg}}
+}
+
+// WrapWithTooManyActiveTypeMembers returns new instance of TooManyActiveTypeMembers error wrapping an existing error.
+func WrapWithTooManyActiveTypeMembers(err error, activeMemberCountArg int, maxActiveMembersArg int) *TooManyActiveTypeMembers {
+	return &TooManyActiveTypeMembers{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooManyActiveTypeMembers: tooManyActiveTypeMembers{ActiveMemberCount: activeMemberCountArg, MaxActiveMembers: maxActiveMembersArg}}
+}
+
+// TooManyActiveTypeMembers is an error type.
+/*
+A property or primary-key update cannot be checked because the type has more active members than
+maxActiveMembers.
+*/
+type TooManyActiveTypeMembers struct {
+	errorInstanceID uuid.UUID
+	tooManyActiveTypeMembers
+	cause error
+	stack werror.StackTrace
+}
+
+// IsTooManyActiveTypeMembers returns true if err is an instance of TooManyActiveTypeMembers.
+func IsTooManyActiveTypeMembers(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*TooManyActiveTypeMembers)
+	return ok
+}
+
+func (e *TooManyActiveTypeMembers) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Assets:TooManyActiveTypeMembers (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *TooManyActiveTypeMembers) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *TooManyActiveTypeMembers) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *TooManyActiveTypeMembers) Message() string {
+	return "INVALID_ARGUMENT Assets:TooManyActiveTypeMembers"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *TooManyActiveTypeMembers) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *TooManyActiveTypeMembers) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *TooManyActiveTypeMembers) Name() string {
+	return "Assets:TooManyActiveTypeMembers"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *TooManyActiveTypeMembers) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *TooManyActiveTypeMembers) Parameters() map[string]interface{} {
+	return map[string]interface{}{"activeMemberCount": e.ActiveMemberCount, "maxActiveMembers": e.MaxActiveMembers}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *TooManyActiveTypeMembers) safeParams() map[string]interface{} {
+	return map[string]interface{}{"activeMemberCount": e.ActiveMemberCount, "maxActiveMembers": e.MaxActiveMembers, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyActiveTypeMembers) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *TooManyActiveTypeMembers) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyActiveTypeMembers) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e TooManyActiveTypeMembers) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.tooManyActiveTypeMembers)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Assets:TooManyActiveTypeMembers", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *TooManyActiveTypeMembers) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters tooManyActiveTypeMembers
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.tooManyActiveTypeMembers = parameters
+	return nil
+}
+
 type typeAlreadyExists struct {
 	TypeName string `json:"typeName"`
 }
@@ -662,12 +1116,16 @@ func (e *TypeAlreadyExists) UnmarshalJSON(data []byte) error {
 
 // safelogging:@Unsafe
 type typeCheckFailed struct {
-	MissingProperties []api2.PropertyName `json:"missingProperties" safelogging:"@Unsafe"`
+	MissingProperties        []api2.PropertyName `json:"missingProperties" safelogging:"@Unsafe"`
+	WrongValueTypeProperties []api2.PropertyName `json:"wrongValueTypeProperties" safelogging:"@Unsafe"`
 }
 
 func (o typeCheckFailed) MarshalJSON() ([]byte, error) {
 	if o.MissingProperties == nil {
 		o.MissingProperties = make([]api2.PropertyName, 0)
+	}
+	if o.WrongValueTypeProperties == nil {
+		o.WrongValueTypeProperties = make([]api2.PropertyName, 0)
 	}
 	type _tmptypeCheckFailed typeCheckFailed
 	return safejson.Marshal(_tmptypeCheckFailed(o))
@@ -681,6 +1139,9 @@ func (o *typeCheckFailed) UnmarshalJSON(data []byte) error {
 	}
 	if rawtypeCheckFailed.MissingProperties == nil {
 		rawtypeCheckFailed.MissingProperties = make([]api2.PropertyName, 0)
+	}
+	if rawtypeCheckFailed.WrongValueTypeProperties == nil {
+		rawtypeCheckFailed.WrongValueTypeProperties = make([]api2.PropertyName, 0)
 	}
 	*o = typeCheckFailed(rawtypeCheckFailed)
 	return nil
@@ -703,17 +1164,21 @@ func (o *typeCheckFailed) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 // NewTypeCheckFailed returns new instance of TypeCheckFailed error.
-func NewTypeCheckFailed(missingPropertiesArg []api2.PropertyName) *TypeCheckFailed {
-	return &TypeCheckFailed{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), typeCheckFailed: typeCheckFailed{MissingProperties: missingPropertiesArg}}
+func NewTypeCheckFailed(missingPropertiesArg []api2.PropertyName, wrongValueTypePropertiesArg []api2.PropertyName) *TypeCheckFailed {
+	return &TypeCheckFailed{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), typeCheckFailed: typeCheckFailed{MissingProperties: missingPropertiesArg, WrongValueTypeProperties: wrongValueTypePropertiesArg}}
 }
 
 // WrapWithTypeCheckFailed returns new instance of TypeCheckFailed error wrapping an existing error.
-func WrapWithTypeCheckFailed(err error, missingPropertiesArg []api2.PropertyName) *TypeCheckFailed {
-	return &TypeCheckFailed{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, typeCheckFailed: typeCheckFailed{MissingProperties: missingPropertiesArg}}
+func WrapWithTypeCheckFailed(err error, missingPropertiesArg []api2.PropertyName, wrongValueTypePropertiesArg []api2.PropertyName) *TypeCheckFailed {
+	return &TypeCheckFailed{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, typeCheckFailed: typeCheckFailed{MissingProperties: missingPropertiesArg, WrongValueTypeProperties: wrongValueTypePropertiesArg}}
 }
 
 // TypeCheckFailed is an error type.
-// The type check failed for the following properties.
+/*
+The asset's properties do not satisfy one of its types. missingProperties lists properties the type requires,
+including its primary key, that are absent or blank. wrongValueTypeProperties lists set values whose type does
+not match the type's declared value type for that property.
+*/
 type TypeCheckFailed struct {
 	errorInstanceID uuid.UUID
 	typeCheckFailed
@@ -773,7 +1238,7 @@ func (e *TypeCheckFailed) InstanceID() uuid.UUID {
 
 // Parameters returns a set of named parameters detailing this particular error instance.
 func (e *TypeCheckFailed) Parameters() map[string]interface{} {
-	return map[string]interface{}{"missingProperties": e.MissingProperties}
+	return map[string]interface{}{"missingProperties": e.MissingProperties, "wrongValueTypeProperties": e.WrongValueTypeProperties}
 }
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
@@ -795,7 +1260,7 @@ func (e *TypeCheckFailed) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *TypeCheckFailed) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{"missingProperties": e.MissingProperties}
+	return map[string]interface{}{"missingProperties": e.MissingProperties, "wrongValueTypeProperties": e.WrongValueTypeProperties}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
@@ -1133,12 +1598,188 @@ func (e *TypeReferencedByAssets) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// safelogging:@Safe
+type typeUpdateRejected struct {
+	ExampleAssetRids []api.AssetRid `json:"exampleAssetRids" safelogging:"@Safe"`
+}
+
+func (o typeUpdateRejected) MarshalJSON() ([]byte, error) {
+	if o.ExampleAssetRids == nil {
+		o.ExampleAssetRids = make([]api.AssetRid, 0)
+	}
+	type _tmptypeUpdateRejected typeUpdateRejected
+	return safejson.Marshal(_tmptypeUpdateRejected(o))
+}
+
+func (o *typeUpdateRejected) UnmarshalJSON(data []byte) error {
+	type _tmptypeUpdateRejected typeUpdateRejected
+	var rawtypeUpdateRejected _tmptypeUpdateRejected
+	if err := safejson.Unmarshal(data, &rawtypeUpdateRejected); err != nil {
+		return err
+	}
+	if rawtypeUpdateRejected.ExampleAssetRids == nil {
+		rawtypeUpdateRejected.ExampleAssetRids = make([]api.AssetRid, 0)
+	}
+	*o = typeUpdateRejected(rawtypeUpdateRejected)
+	return nil
+}
+
+func (o typeUpdateRejected) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *typeUpdateRejected) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewTypeUpdateRejected returns new instance of TypeUpdateRejected error.
+func NewTypeUpdateRejected(exampleAssetRidsArg []api.AssetRid) *TypeUpdateRejected {
+	return &TypeUpdateRejected{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), typeUpdateRejected: typeUpdateRejected{ExampleAssetRids: exampleAssetRidsArg}}
+}
+
+// WrapWithTypeUpdateRejected returns new instance of TypeUpdateRejected error wrapping an existing error.
+func WrapWithTypeUpdateRejected(err error, exampleAssetRidsArg []api.AssetRid) *TypeUpdateRejected {
+	return &TypeUpdateRejected{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, typeUpdateRejected: typeUpdateRejected{ExampleAssetRids: exampleAssetRidsArg}}
+}
+
+// TypeUpdateRejected is an error type.
+// Updating the type would leave active members that do not conform. exampleAssetRids is a bounded sample.
+type TypeUpdateRejected struct {
+	errorInstanceID uuid.UUID
+	typeUpdateRejected
+	cause error
+	stack werror.StackTrace
+}
+
+// IsTypeUpdateRejected returns true if err is an instance of TypeUpdateRejected.
+func IsTypeUpdateRejected(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*TypeUpdateRejected)
+	return ok
+}
+
+func (e *TypeUpdateRejected) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Assets:TypeUpdateRejected (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *TypeUpdateRejected) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *TypeUpdateRejected) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *TypeUpdateRejected) Message() string {
+	return "INVALID_ARGUMENT Assets:TypeUpdateRejected"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *TypeUpdateRejected) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *TypeUpdateRejected) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *TypeUpdateRejected) Name() string {
+	return "Assets:TypeUpdateRejected"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *TypeUpdateRejected) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *TypeUpdateRejected) Parameters() map[string]interface{} {
+	return map[string]interface{}{"exampleAssetRids": e.ExampleAssetRids}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *TypeUpdateRejected) safeParams() map[string]interface{} {
+	return map[string]interface{}{"exampleAssetRids": e.ExampleAssetRids, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TypeUpdateRejected) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *TypeUpdateRejected) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TypeUpdateRejected) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e TypeUpdateRejected) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.typeUpdateRejected)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Assets:TypeUpdateRejected", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *TypeUpdateRejected) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters typeUpdateRejected
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.typeUpdateRejected = parameters
+	return nil
+}
+
 func init() {
 	conjureerrors.RegisterErrorType("Assets:AssetNotFound", reflect.TypeOf(AssetNotFound{}))
 	conjureerrors.RegisterErrorType("Assets:AssetsNotFound", reflect.TypeOf(AssetsNotFound{}))
 	conjureerrors.RegisterErrorType("Assets:DuplicateDataScopeNames", reflect.TypeOf(DuplicateDataScopeNames{}))
+	conjureerrors.RegisterErrorType("Assets:InvalidTypeDefinition", reflect.TypeOf(InvalidTypeDefinition{}))
+	conjureerrors.RegisterErrorType("Assets:PrimaryKeyInUse", reflect.TypeOf(PrimaryKeyInUse{}))
+	conjureerrors.RegisterErrorType("Assets:TooManyActiveTypeMembers", reflect.TypeOf(TooManyActiveTypeMembers{}))
 	conjureerrors.RegisterErrorType("Assets:TypeAlreadyExists", reflect.TypeOf(TypeAlreadyExists{}))
 	conjureerrors.RegisterErrorType("Assets:TypeCheckFailed", reflect.TypeOf(TypeCheckFailed{}))
 	conjureerrors.RegisterErrorType("Assets:TypeNotFound", reflect.TypeOf(TypeNotFound{}))
 	conjureerrors.RegisterErrorType("Assets:TypeReferencedByAssets", reflect.TypeOf(TypeReferencedByAssets{}))
+	conjureerrors.RegisterErrorType("Assets:TypeUpdateRejected", reflect.TypeOf(TypeUpdateRejected{}))
 }
