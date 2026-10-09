@@ -20,12 +20,13 @@ const (
 	ResourceType_CHECKLIST         ResourceType_Value = "CHECKLIST"
 	ResourceType_SAVED_VIEW        ResourceType_Value = "SAVED_VIEW"
 	ResourceType_PROCEDURE         ResourceType_Value = "PROCEDURE"
+	ResourceType_PLAN              ResourceType_Value = "PLAN"
 	ResourceType_UNKNOWN           ResourceType_Value = "UNKNOWN"
 )
 
 // ResourceType_Values returns all known variants of ResourceType.
 func ResourceType_Values() []ResourceType_Value {
-	return []ResourceType_Value{ResourceType_ASSET, ResourceType_RUN, ResourceType_NOTEBOOK, ResourceType_NOTEBOOK_TEMPLATE, ResourceType_CHECKLIST, ResourceType_SAVED_VIEW, ResourceType_PROCEDURE}
+	return []ResourceType_Value{ResourceType_ASSET, ResourceType_RUN, ResourceType_NOTEBOOK, ResourceType_NOTEBOOK_TEMPLATE, ResourceType_CHECKLIST, ResourceType_SAVED_VIEW, ResourceType_PROCEDURE, ResourceType_PLAN}
 }
 
 func New_ResourceType(value ResourceType_Value) ResourceType {
@@ -35,7 +36,7 @@ func New_ResourceType(value ResourceType_Value) ResourceType {
 // IsUnknown returns false for all known variants of ResourceType and true otherwise.
 func (e ResourceType) IsUnknown() bool {
 	switch e.val {
-	case ResourceType_ASSET, ResourceType_RUN, ResourceType_NOTEBOOK, ResourceType_NOTEBOOK_TEMPLATE, ResourceType_CHECKLIST, ResourceType_SAVED_VIEW, ResourceType_PROCEDURE:
+	case ResourceType_ASSET, ResourceType_RUN, ResourceType_NOTEBOOK, ResourceType_NOTEBOOK_TEMPLATE, ResourceType_CHECKLIST, ResourceType_SAVED_VIEW, ResourceType_PROCEDURE, ResourceType_PLAN:
 		return false
 	}
 	return true
@@ -74,6 +75,8 @@ func (e *ResourceType) UnmarshalText(data []byte) error {
 		*e = New_ResourceType(ResourceType_SAVED_VIEW)
 	case "PROCEDURE":
 		*e = New_ResourceType(ResourceType_PROCEDURE)
+	case "PLAN":
+		*e = New_ResourceType(ResourceType_PLAN)
 	}
 	return nil
 }

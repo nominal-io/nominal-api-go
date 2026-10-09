@@ -268,6 +268,11 @@ type DatasetResolutionMetadata struct {
 	   offsets from an unanchored zero rather than wall-clock times.
 	*/
 	DatasetIntervals []ResolvedDatasetInterval `json:"datasetIntervals"`
+	/*
+	   The output-domain time each anchor alignment in this dataset lines its runs up on, one entry per
+	   alignByAnchor. Empty when no branch is anchor-aligned.
+	*/
+	AlignmentAnchorTimes []api1.Timestamp `json:"alignmentAnchorTimes"`
 }
 
 func (o DatasetResolutionMetadata) MarshalJSON() ([]byte, error) {
@@ -276,6 +281,9 @@ func (o DatasetResolutionMetadata) MarshalJSON() ([]byte, error) {
 	}
 	if o.DatasetIntervals == nil {
 		o.DatasetIntervals = make([]ResolvedDatasetInterval, 0)
+	}
+	if o.AlignmentAnchorTimes == nil {
+		o.AlignmentAnchorTimes = make([]api1.Timestamp, 0)
 	}
 	type _tmpDatasetResolutionMetadata DatasetResolutionMetadata
 	return safejson.Marshal(_tmpDatasetResolutionMetadata(o))
@@ -292,6 +300,9 @@ func (o *DatasetResolutionMetadata) UnmarshalJSON(data []byte) error {
 	}
 	if rawDatasetResolutionMetadata.DatasetIntervals == nil {
 		rawDatasetResolutionMetadata.DatasetIntervals = make([]ResolvedDatasetInterval, 0)
+	}
+	if rawDatasetResolutionMetadata.AlignmentAnchorTimes == nil {
+		rawDatasetResolutionMetadata.AlignmentAnchorTimes = make([]api1.Timestamp, 0)
 	}
 	*o = DatasetResolutionMetadata(rawDatasetResolutionMetadata)
 	return nil

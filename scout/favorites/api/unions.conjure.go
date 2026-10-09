@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/nominal-io/nominal-api-go/api/rids"
+	api2 "github.com/nominal-io/nominal-api-go/scout/plan/api"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
@@ -22,6 +23,7 @@ type FavoriteResource struct {
 	checklist        *api.ChecklistRid
 	savedView        *api.SavedViewRid
 	procedure        *rids.ProcedureRid
+	plan             *api2.PlanRid
 }
 
 type favoriteResourceDeserializer struct {
@@ -33,10 +35,11 @@ type favoriteResourceDeserializer struct {
 	Checklist        *api.ChecklistRid  `json:"checklist"`
 	SavedView        *api.SavedViewRid  `json:"savedView"`
 	Procedure        *rids.ProcedureRid `json:"procedure"`
+	Plan             *api2.PlanRid      `json:"plan"`
 }
 
 func (u *favoriteResourceDeserializer) toStruct() FavoriteResource {
-	return FavoriteResource{typ: u.Type, asset: u.Asset, run: u.Run, notebook: u.Notebook, notebookTemplate: u.NotebookTemplate, checklist: u.Checklist, savedView: u.SavedView, procedure: u.Procedure}
+	return FavoriteResource{typ: u.Type, asset: u.Asset, run: u.Run, notebook: u.Notebook, notebookTemplate: u.NotebookTemplate, checklist: u.Checklist, savedView: u.SavedView, procedure: u.Procedure, plan: u.Plan}
 }
 
 func (u *FavoriteResource) toSerializer() (interface{}, error) {
@@ -99,6 +102,14 @@ func (u *FavoriteResource) toSerializer() (interface{}, error) {
 			Type      string            `json:"type"`
 			Procedure rids.ProcedureRid `json:"procedure"`
 		}{Type: "procedure", Procedure: *u.procedure}, nil
+	case "plan":
+		if u.plan == nil {
+			return nil, fmt.Errorf("field \"plan\" is required")
+		}
+		return struct {
+			Type string       `json:"type"`
+			Plan api2.PlanRid `json:"plan"`
+		}{Type: "plan", Plan: *u.plan}, nil
 	}
 }
 
@@ -145,6 +156,10 @@ func (u *FavoriteResource) UnmarshalJSON(data []byte) error {
 		if u.procedure == nil {
 			return fmt.Errorf("field \"procedure\" is required")
 		}
+	case "plan":
+		if u.plan == nil {
+			return fmt.Errorf("field \"plan\" is required")
+		}
 	}
 	return nil
 }
@@ -165,7 +180,7 @@ func (u *FavoriteResource) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *FavoriteResource) AcceptFuncs(assetFunc func(api.AssetRid) error, runFunc func(api1.RunRid) error, notebookFunc func(api.NotebookRid) error, notebookTemplateFunc func(api.TemplateRid) error, checklistFunc func(api.ChecklistRid) error, savedViewFunc func(api.SavedViewRid) error, procedureFunc func(rids.ProcedureRid) error, unknownFunc func(string) error) error {
+func (u *FavoriteResource) AcceptFuncs(assetFunc func(api.AssetRid) error, runFunc func(api1.RunRid) error, notebookFunc func(api.NotebookRid) error, notebookTemplateFunc func(api.TemplateRid) error, checklistFunc func(api.ChecklistRid) error, savedViewFunc func(api.SavedViewRid) error, procedureFunc func(rids.ProcedureRid) error, planFunc func(api2.PlanRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -207,6 +222,11 @@ func (u *FavoriteResource) AcceptFuncs(assetFunc func(api.AssetRid) error, runFu
 			return fmt.Errorf("field \"procedure\" is required")
 		}
 		return procedureFunc(*u.procedure)
+	case "plan":
+		if u.plan == nil {
+			return fmt.Errorf("field \"plan\" is required")
+		}
+		return planFunc(*u.plan)
 	}
 }
 
@@ -235,6 +255,10 @@ func (u *FavoriteResource) SavedViewNoopSuccess(_ api.SavedViewRid) error {
 }
 
 func (u *FavoriteResource) ProcedureNoopSuccess(_ rids.ProcedureRid) error {
+	return nil
+}
+
+func (u *FavoriteResource) PlanNoopSuccess(_ api2.PlanRid) error {
 	return nil
 }
 
@@ -284,6 +308,11 @@ func (u *FavoriteResource) Accept(v FavoriteResourceVisitor) error {
 			return fmt.Errorf("field \"procedure\" is required")
 		}
 		return v.VisitProcedure(*u.procedure)
+	case "plan":
+		if u.plan == nil {
+			return fmt.Errorf("field \"plan\" is required")
+		}
+		return v.VisitPlan(*u.plan)
 	}
 }
 
@@ -295,6 +324,7 @@ type FavoriteResourceVisitor interface {
 	VisitChecklist(v api.ChecklistRid) error
 	VisitSavedView(v api.SavedViewRid) error
 	VisitProcedure(v rids.ProcedureRid) error
+	VisitPlan(v api2.PlanRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -340,6 +370,11 @@ func (u *FavoriteResource) AcceptWithContext(ctx context.Context, v FavoriteReso
 			return fmt.Errorf("field \"procedure\" is required")
 		}
 		return v.VisitProcedureWithContext(ctx, *u.procedure)
+	case "plan":
+		if u.plan == nil {
+			return fmt.Errorf("field \"plan\" is required")
+		}
+		return v.VisitPlanWithContext(ctx, *u.plan)
 	}
 }
 
@@ -351,6 +386,7 @@ type FavoriteResourceVisitorWithContext interface {
 	VisitChecklistWithContext(ctx context.Context, v api.ChecklistRid) error
 	VisitSavedViewWithContext(ctx context.Context, v api.SavedViewRid) error
 	VisitProcedureWithContext(ctx context.Context, v rids.ProcedureRid) error
+	VisitPlanWithContext(ctx context.Context, v api2.PlanRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -380,4 +416,8 @@ func NewFavoriteResourceFromSavedView(v api.SavedViewRid) FavoriteResource {
 
 func NewFavoriteResourceFromProcedure(v rids.ProcedureRid) FavoriteResource {
 	return FavoriteResource{typ: "procedure", procedure: &v}
+}
+
+func NewFavoriteResourceFromPlan(v api2.PlanRid) FavoriteResource {
+	return FavoriteResource{typ: "plan", plan: &v}
 }

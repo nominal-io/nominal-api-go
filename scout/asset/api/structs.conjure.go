@@ -86,7 +86,8 @@ type Asset struct {
 	CreatedAt   datetime.DateTime       `json:"createdAt"`
 	UpdatedAt   datetime.DateTime       `json:"updatedAt"`
 	Attachments []rids.AttachmentRid    `json:"attachments" safelogging:"@Safe"`
-	Type        *api.TypeRid            `json:"type,omitempty" safelogging:"@Safe"`
+	// Types attached to the asset. At most 10.
+	Types []api.TypeRid `json:"types" safelogging:"@Safe"`
 	// Auto created assets are considered staged by default.
 	IsStaged   bool `json:"isStaged"`
 	IsArchived bool `json:"isArchived"`
@@ -112,6 +113,9 @@ func (o Asset) MarshalJSON() ([]byte, error) {
 	}
 	if o.Attachments == nil {
 		o.Attachments = make([]rids.AttachmentRid, 0)
+	}
+	if o.Types == nil {
+		o.Types = make([]api.TypeRid, 0)
 	}
 	type _tmpAsset Asset
 	return safejson.Marshal(_tmpAsset(o))
@@ -140,6 +144,9 @@ func (o *Asset) UnmarshalJSON(data []byte) error {
 	}
 	if rawAsset.Attachments == nil {
 		rawAsset.Attachments = make([]rids.AttachmentRid, 0)
+	}
+	if rawAsset.Types == nil {
+		rawAsset.Types = make([]api.TypeRid, 0)
 	}
 	*o = Asset(rawAsset)
 	return nil
@@ -188,32 +195,7 @@ func (o *AssetSortOptions) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type AssetTypeDataScopeConfig struct {
-	SuggestedRefName *string `json:"suggestedRefName,omitempty"`
-	/*
-	   Tag names that should be supplied to downscope data for an asset of the asset type. These are not
-	   enforced.
-	*/
-	Tags TagConfig `json:"tags"`
-}
-
-func (o AssetTypeDataScopeConfig) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *AssetTypeDataScopeConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// returns runs that match any of the provided assetTypes.
+// Matches an asset when any of its types is in assetTypes.
 // safelogging:@Safe
 type AssetTypesFilter struct {
 	AssetTypes []api.TypeRid `json:"assetTypes" safelogging:"@Safe"`
@@ -431,12 +413,13 @@ type CreateAssetRequest struct {
 	// The data scopes associated with the asset.
 	DataScopes  []CreateAssetDataScope `json:"dataScopes"`
 	Attachments []rids.AttachmentRid   `json:"attachments" safelogging:"@Safe"`
-	Type        *api.TypeRid           `json:"type,omitempty" safelogging:"@Safe"`
+	// Types to attach to the asset. Empty attaches none. At most 10 types.
+	Types []api.TypeRid `json:"types" safelogging:"@Safe"`
 	/*
 	   The workspace in which to create the asset. If not provided, the asset will be created in
 	   the default workspace for the user's organization, if the default workspace for the
 	   organization is configured.
-	   All data scopes, attachments, and the optional asset type must be in the same workspace.
+	   All data scopes, attachments, and asset types must be in the same workspace.
 	*/
 	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
@@ -459,6 +442,9 @@ func (o CreateAssetRequest) MarshalJSON() ([]byte, error) {
 	}
 	if o.Attachments == nil {
 		o.Attachments = make([]rids.AttachmentRid, 0)
+	}
+	if o.Types == nil {
+		o.Types = make([]api.TypeRid, 0)
 	}
 	type _tmpCreateAssetRequest CreateAssetRequest
 	return safejson.Marshal(_tmpCreateAssetRequest(o))
@@ -488,6 +474,9 @@ func (o *CreateAssetRequest) UnmarshalJSON(data []byte) error {
 	if rawCreateAssetRequest.Attachments == nil {
 		rawCreateAssetRequest.Attachments = make([]rids.AttachmentRid, 0)
 	}
+	if rawCreateAssetRequest.Types == nil {
+		rawCreateAssetRequest.Types = make([]api.TypeRid, 0)
+	}
 	*o = CreateAssetRequest(rawCreateAssetRequest)
 	return nil
 }
@@ -508,8 +497,10 @@ func (o *CreateAssetRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type CreateTypeRequest struct {
 	Name            string                               `json:"name"`
+	PrimaryKey      api1.PropertyName                    `json:"primaryKey" safelogging:"@Unsafe"`
 	PropertyConfigs map[api1.PropertyName]PropertyConfig `json:"propertyConfigs"`
 	Description     *string                              `json:"description,omitempty"`
 	IconName        *string                              `json:"iconName,omitempty"`
@@ -519,11 +510,6 @@ type CreateTypeRequest struct {
 	   organization is configured.
 	*/
 	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
-	/*
-	   The configuration outlines what a data scope should provide when added to an asset of this type. It is
-	   referenced at data scope creation time, but does not actively modify existing data scopes.
-	*/
-	DatasourceConfigs *map[rids.DataSourceRid]AssetTypeDataScopeConfig `json:"datasourceConfigs,omitempty"`
 }
 
 func (o CreateTypeRequest) MarshalJSON() ([]byte, error) {
@@ -615,8 +601,8 @@ func (o *DataScope) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type PropertyConfig struct {
-	IsRequired  bool    `json:"isRequired"`
-	Description *string `json:"description,omitempty"`
+	Requirement PropertyRequirement `json:"requirement"`
+	ValueType   PropertyValueType   `json:"valueType"`
 }
 
 func (o PropertyConfig) MarshalYAML() (interface{}, error) {
@@ -628,25 +614,6 @@ func (o PropertyConfig) MarshalYAML() (interface{}, error) {
 }
 
 func (o *PropertyConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// The request to remove the type from the asset.
-type RemoveType struct{}
-
-func (o RemoveType) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *RemoveType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -898,6 +865,7 @@ func (o *SortProperty) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// safelogging:@Unsafe
 type Type struct {
 	Rid             api.TypeRid                          `json:"rid" safelogging:"@Safe"`
 	Name            string                               `json:"name"`
@@ -907,18 +875,16 @@ type Type struct {
 	// The name of the icon to display for the type. This name maps to a Lucide icon in the frontend.
 	IconName *string `json:"iconName,omitempty"`
 	/*
-	   The configuration outlines what a data scope should provide when added to an asset of this type. It is
-	   referenced at data scope creation time, but does not actively modify existing data scopes.
+	   The property that identifies an asset of this type. It is a required nonempty string and is not
+	   repeated in propertyConfigs.
 	*/
-	DatasourceConfigs map[rids.DataSourceRid]AssetTypeDataScopeConfig `json:"datasourceConfigs"`
+	PrimaryKey api1.PropertyName `json:"primaryKey" safelogging:"@Unsafe"`
+	IsArchived bool              `json:"isArchived"`
 }
 
 func (o Type) MarshalJSON() ([]byte, error) {
 	if o.PropertyConfigs == nil {
 		o.PropertyConfigs = make(map[api1.PropertyName]PropertyConfig)
-	}
-	if o.DatasourceConfigs == nil {
-		o.DatasourceConfigs = make(map[rids.DataSourceRid]AssetTypeDataScopeConfig)
 	}
 	type _tmpType Type
 	return safejson.Marshal(_tmpType(o))
@@ -932,9 +898,6 @@ func (o *Type) UnmarshalJSON(data []byte) error {
 	}
 	if rawType.PropertyConfigs == nil {
 		rawType.PropertyConfigs = make(map[api1.PropertyName]PropertyConfig)
-	}
-	if rawType.DatasourceConfigs == nil {
-		rawType.DatasourceConfigs = make(map[rids.DataSourceRid]AssetTypeDataScopeConfig)
 	}
 	*o = Type(rawType)
 	return nil
@@ -1028,9 +991,13 @@ type UpdateAssetRequest struct {
 	Labels          *[]api1.Label                                  `json:"labels,omitempty" safelogging:"@Unsafe"`
 	Links           *[]api2.Link                                   `json:"links,omitempty"`
 	// The data scopes for the asset. This will replace all existing data scopes with the scopes specified.
-	DataScopes *[]CreateAssetDataScope  `json:"dataScopes,omitempty"`
-	Type       *UpdateOrRemoveAssetType `json:"type,omitempty"`
-	IsStaged   *bool                    `json:"isStaged,omitempty"`
+	DataScopes *[]CreateAssetDataScope `json:"dataScopes,omitempty"`
+	/*
+	   Types attached to the asset. Absent leaves memberships unchanged.
+	   Present, including empty, replaces them. At most 10 types.
+	*/
+	Types    *[]api.TypeRid `json:"types,omitempty" safelogging:"@Safe"`
+	IsStaged *bool          `json:"isStaged,omitempty"`
 }
 
 func (o UpdateAssetRequest) MarshalYAML() (interface{}, error) {
@@ -1098,20 +1065,14 @@ func (o *UpdateAttachmentsRequest) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-/*
-The request to update a type. The request will replace all existing properties with the properties
-specified in the request.
-*/
+// The request to update a type. Present propertyConfigs replace the whole property set.
+// safelogging:@Unsafe
 type UpdateTypeRequest struct {
 	Name            *string                               `json:"name,omitempty"`
+	PrimaryKey      *api1.PropertyName                    `json:"primaryKey,omitempty" safelogging:"@Unsafe"`
 	PropertyConfigs *map[api1.PropertyName]PropertyConfig `json:"propertyConfigs,omitempty"`
 	Description     *string                               `json:"description,omitempty"`
 	IconName        *string                               `json:"iconName,omitempty"`
-	/*
-	   The configuration outlines what a data scope should provide when added to an asset of this type. It is
-	   referenced at data scope creation time, but does not actively modify existing data scopes.
-	*/
-	DatasourceConfigs *map[rids.DataSourceRid]AssetTypeDataScopeConfig `json:"datasourceConfigs,omitempty"`
 }
 
 func (o UpdateTypeRequest) MarshalYAML() (interface{}, error) {

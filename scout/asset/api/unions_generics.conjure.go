@@ -353,15 +353,10 @@ func (u *SearchTypesQueryWithT[T]) Accept(ctx context.Context, v SearchTypesQuer
 			return result, fmt.Errorf("field \"workspace\" is required")
 		}
 		return v.VisitWorkspace(ctx, *u.workspace)
-	case "configuredDatasource":
-		if u.configuredDatasource == nil {
-			return result, fmt.Errorf("field \"configuredDatasource\" is required")
-		}
-		return v.VisitConfiguredDatasource(ctx, *u.configuredDatasource)
 	}
 }
 
-func (u *SearchTypesQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), propertyFunc func(api.PropertyName) (T, error), andFunc func([]SearchTypesQuery) (T, error), orFunc func([]SearchTypesQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), configuredDatasourceFunc func(rids.DataSourceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchTypesQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, error), propertyFunc func(api.PropertyName) (T, error), andFunc func([]SearchTypesQuery) (T, error), orFunc func([]SearchTypesQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -394,11 +389,6 @@ func (u *SearchTypesQueryWithT[T]) AcceptFuncs(searchTextFunc func(string) (T, e
 			return result, fmt.Errorf("field \"workspace\" is required")
 		}
 		return workspaceFunc(*u.workspace)
-	case "configuredDatasource":
-		if u.configuredDatasource == nil {
-			return result, fmt.Errorf("field \"configuredDatasource\" is required")
-		}
-		return configuredDatasourceFunc(*u.configuredDatasource)
 	}
 }
 
@@ -427,11 +417,6 @@ func (u *SearchTypesQueryWithT[T]) WorkspaceNoopSuccess(rids.WorkspaceRid) (T, e
 	return result, nil
 }
 
-func (u *SearchTypesQueryWithT[T]) ConfiguredDatasourceNoopSuccess(rids.DataSourceRid) (T, error) {
-	var result T
-	return result, nil
-}
-
 func (u *SearchTypesQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -443,7 +428,6 @@ type SearchTypesQueryVisitorWithT[T any] interface {
 	VisitAnd(ctx context.Context, v []SearchTypesQuery) (T, error)
 	VisitOr(ctx context.Context, v []SearchTypesQuery) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
-	VisitConfiguredDatasource(ctx context.Context, v rids.DataSourceRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -525,119 +509,5 @@ type SortKeyVisitorWithT[T any] interface {
 	VisitField(ctx context.Context, v AssetSortField) (T, error)
 	VisitProperty(ctx context.Context, v SortProperty) (T, error)
 	VisitNumericProperty(ctx context.Context, v SortProperty) (T, error)
-	VisitUnknown(ctx context.Context, typ string) (T, error)
-}
-
-type TagConfigWithT[T any] TagConfig
-
-func (u *TagConfigWithT[T]) Accept(ctx context.Context, v TagConfigVisitorWithT[T]) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(ctx, u.typ)
-	case "v1":
-		if u.v1 == nil {
-			return result, fmt.Errorf("field \"v1\" is required")
-		}
-		return v.VisitV1(ctx, *u.v1)
-	}
-}
-
-func (u *TagConfigWithT[T]) AcceptFuncs(v1Func func([]api.TagName) (T, error), unknownFunc func(string) (T, error)) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "v1":
-		if u.v1 == nil {
-			return result, fmt.Errorf("field \"v1\" is required")
-		}
-		return v1Func(*u.v1)
-	}
-}
-
-func (u *TagConfigWithT[T]) V1NoopSuccess([]api.TagName) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *TagConfigWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
-	var result T
-	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-type TagConfigVisitorWithT[T any] interface {
-	VisitV1(ctx context.Context, v []api.TagName) (T, error)
-	VisitUnknown(ctx context.Context, typ string) (T, error)
-}
-
-type UpdateOrRemoveAssetTypeWithT[T any] UpdateOrRemoveAssetType
-
-func (u *UpdateOrRemoveAssetTypeWithT[T]) Accept(ctx context.Context, v UpdateOrRemoveAssetTypeVisitorWithT[T]) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return v.VisitUnknown(ctx, u.typ)
-	case "typeRid":
-		if u.typeRid == nil {
-			return result, fmt.Errorf("field \"typeRid\" is required")
-		}
-		return v.VisitTypeRid(ctx, *u.typeRid)
-	case "removeType":
-		if u.removeType == nil {
-			return result, fmt.Errorf("field \"removeType\" is required")
-		}
-		return v.VisitRemoveType(ctx, *u.removeType)
-	}
-}
-
-func (u *UpdateOrRemoveAssetTypeWithT[T]) AcceptFuncs(typeRidFunc func(api1.TypeRid) (T, error), removeTypeFunc func(RemoveType) (T, error), unknownFunc func(string) (T, error)) (T, error) {
-	var result T
-	switch u.typ {
-	default:
-		if u.typ == "" {
-			return result, fmt.Errorf("invalid value in union type")
-		}
-		return unknownFunc(u.typ)
-	case "typeRid":
-		if u.typeRid == nil {
-			return result, fmt.Errorf("field \"typeRid\" is required")
-		}
-		return typeRidFunc(*u.typeRid)
-	case "removeType":
-		if u.removeType == nil {
-			return result, fmt.Errorf("field \"removeType\" is required")
-		}
-		return removeTypeFunc(*u.removeType)
-	}
-}
-
-func (u *UpdateOrRemoveAssetTypeWithT[T]) TypeRidNoopSuccess(api1.TypeRid) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *UpdateOrRemoveAssetTypeWithT[T]) RemoveTypeNoopSuccess(RemoveType) (T, error) {
-	var result T
-	return result, nil
-}
-
-func (u *UpdateOrRemoveAssetTypeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
-	var result T
-	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
-}
-
-type UpdateOrRemoveAssetTypeVisitorWithT[T any] interface {
-	VisitTypeRid(ctx context.Context, v api1.TypeRid) (T, error)
-	VisitRemoveType(ctx context.Context, v RemoveType) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

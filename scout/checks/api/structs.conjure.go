@@ -6,6 +6,7 @@ import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/event"
+	api6 "github.com/nominal-io/nominal-api-go/modules/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/api"
 	api3 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	"github.com/nominal-io/nominal-api-go/scout/compute/api/deprecated"
@@ -260,6 +261,32 @@ func (o BatchGetJobReportsRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *BatchGetJobReportsRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+The job was cancelled by an explicit `cancelJob` request. Distinct from `Failed`: cancellation is a
+user-initiated terminal state, not an error. `executionStartTime` is absent if the job was cancelled
+before it began executing.
+*/
+type Cancelled struct {
+	ExecutionStartTime *datetime.DateTime `json:"executionStartTime,omitempty"`
+	ExecutionEndTime   datetime.DateTime  `json:"executionEndTime"`
+}
+
+func (o Cancelled) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Cancelled) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -548,6 +575,30 @@ func (o *CommitChecklistRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Compiles a registered UDF for a specific module version.
+type CompileUdfJobSpec struct {
+	WorkspaceRid  rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
+	ModuleRid     api6.ModuleRid    `json:"moduleRid" safelogging:"@Safe"`
+	ModuleVersion int               `json:"moduleVersion"`
+	UdfName       string            `json:"udfName"`
+}
+
+func (o CompileUdfJobSpec) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CompileUdfJobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type ComputeExpressionV1Python struct {
 	/*
 	   The python code string representing the compute. Can be up to 25000 characters long. Inputs are
@@ -572,6 +623,55 @@ func (o ComputeExpressionV1Python) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ComputeExpressionV1Python) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// The result of a compute job.
+type ComputeJobResult struct {
+	Response         api3.ComputeNodeResponse `json:"response"`
+	ExecutionEndTime datetime.DateTime        `json:"executionEndTime"`
+}
+
+func (o ComputeJobResult) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ComputeJobResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Runs a single compute expression asynchronously. The `request` takes the same form as a
+request to the compute service's `compute` endpoint. The job and its result belong to
+`workspaceRid`, and every datasource the request reads must belong to that workspace.
+A job whose result exceeds 1 MiB fails.
+*/
+type ComputeJobSpec struct {
+	Request      api11.ComputeNodeRequest `json:"request"`
+	WorkspaceRid rids.WorkspaceRid        `json:"workspaceRid" safelogging:"@Safe"`
+}
+
+func (o ComputeJobSpec) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ComputeJobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1345,6 +1445,28 @@ func (o SubmittedJob) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SubmittedJob) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UdfCompilationJobResult struct {
+	ArtifactHandle api1.S3Handle `json:"artifactHandle"`
+	ManifestHandle api1.S3Handle `json:"manifestHandle"`
+	CompileKey     string        `json:"compileKey"`
+}
+
+func (o UdfCompilationJobResult) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UdfCompilationJobResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

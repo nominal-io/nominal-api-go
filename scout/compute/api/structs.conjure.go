@@ -1625,6 +1625,30 @@ func (o *DecimateWithResolution) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A value derived per asset or run, injected as a tag.
+type Dimension struct {
+	// The tag key to inject the value under. Defaults to the key derived by `value`.
+	TagKey *StringConstant `json:"tagKey,omitempty"`
+	// The value to inject.
+	Value DimensionValue `json:"value"`
+}
+
+func (o Dimension) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Dimension) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Uses the driver series timestamps as the alignment grid.
 type DriverSeries struct{}
 
@@ -2800,6 +2824,33 @@ func (o HistogramChannelCount) MarshalYAML() (interface{}, error) {
 }
 
 func (o *HistogramChannelCount) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Injects the value of a type's primary key, under a tag key equal to the primary key's property name by
+default. The primary key is read when the query runs, so it follows changes to the type. Only asset
+branches of an asset with the type have a value; every other branch, including run branches, gets the
+reserved value `NOMINAL_ABSENT`.
+*/
+type IdentityDimension struct {
+	// Resource identifier of the type whose primary key identifies the asset.
+	TypeRid StringConstant `json:"typeRid"`
+}
+
+func (o IdentityDimension) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *IdentityDimension) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -4639,6 +4690,155 @@ func (o *SpatialDecimateStrategy) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+The output's time and frequency buckets: at most `maxTimeBuckets` rows and `maxFrequencyBuckets`
+columns over the frequency band, with the values that share a row or column combined by
+`timeReduction` and `frequencyReduction`. Invalid values fail with `InvalidExpression`.
+*/
+type SpectrogramBucketing struct {
+	/*
+	   Maximum number of rows, further lowered so that rows × columns is at most 262,144.
+	   Defaults to 256.
+	*/
+	MaxTimeBuckets *int `json:"maxTimeBuckets,omitempty"`
+	// Maximum number of columns. Defaults to 512.
+	MaxFrequencyBuckets *int `json:"maxFrequencyBuckets,omitempty"`
+	// Inclusive lower bound of the band in Hz. Defaults to 0.
+	MinFrequency *float64 `json:"minFrequency,omitempty"`
+	// Exclusive upper bound of the band in Hz. Defaults to including the Nyquist frequency.
+	MaxFrequency *float64 `json:"maxFrequency,omitempty"`
+	// Combines the windows that share a row. Defaults to MEAN.
+	TimeReduction *SpectrogramReduction `json:"timeReduction,omitempty"`
+	// Combines the frequency bins that share a column. Defaults to MEAN.
+	FrequencyReduction *SpectrogramReduction `json:"frequencyReduction,omitempty"`
+}
+
+func (o SpectrogramBucketing) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpectrogramBucketing) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Values on a time-frequency grid. Columns are frequency buckets and rows are the time buckets
+that hold data, in ascending time.
+*/
+type SpectrogramPlot struct {
+	// Center frequency in Hz of each column.
+	FrequencyCenters []float64 `json:"frequencyCenters"`
+	/*
+	   Column boundaries in Hz, one more than `frequencyCenters`: column `c` spans
+	   `frequencyEdges[c]` to `frequencyEdges[c + 1]`. Columns may differ in width.
+	*/
+	FrequencyEdges []float64        `json:"frequencyEdges"`
+	Rows           []SpectrogramRow `json:"rows"`
+}
+
+func (o SpectrogramPlot) MarshalJSON() ([]byte, error) {
+	if o.FrequencyCenters == nil {
+		o.FrequencyCenters = make([]float64, 0)
+	}
+	if o.FrequencyEdges == nil {
+		o.FrequencyEdges = make([]float64, 0)
+	}
+	if o.Rows == nil {
+		o.Rows = make([]SpectrogramRow, 0)
+	}
+	type _tmpSpectrogramPlot SpectrogramPlot
+	return safejson.Marshal(_tmpSpectrogramPlot(o))
+}
+
+func (o *SpectrogramPlot) UnmarshalJSON(data []byte) error {
+	type _tmpSpectrogramPlot SpectrogramPlot
+	var rawSpectrogramPlot _tmpSpectrogramPlot
+	if err := safejson.Unmarshal(data, &rawSpectrogramPlot); err != nil {
+		return err
+	}
+	if rawSpectrogramPlot.FrequencyCenters == nil {
+		rawSpectrogramPlot.FrequencyCenters = make([]float64, 0)
+	}
+	if rawSpectrogramPlot.FrequencyEdges == nil {
+		rawSpectrogramPlot.FrequencyEdges = make([]float64, 0)
+	}
+	if rawSpectrogramPlot.Rows == nil {
+		rawSpectrogramPlot.Rows = make([]SpectrogramRow, 0)
+	}
+	*o = SpectrogramPlot(rawSpectrogramPlot)
+	return nil
+}
+
+func (o SpectrogramPlot) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpectrogramPlot) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type SpectrogramRow struct {
+	// Start of the time span this row covers.
+	Start api.Timestamp `json:"start" safelogging:"@Safe"`
+	// End of the time span this row covers.
+	End api.Timestamp `json:"end" safelogging:"@Safe"`
+	// One value per column
+	Values []float64 `json:"values"`
+}
+
+func (o SpectrogramRow) MarshalJSON() ([]byte, error) {
+	if o.Values == nil {
+		o.Values = make([]float64, 0)
+	}
+	type _tmpSpectrogramRow SpectrogramRow
+	return safejson.Marshal(_tmpSpectrogramRow(o))
+}
+
+func (o *SpectrogramRow) UnmarshalJSON(data []byte) error {
+	type _tmpSpectrogramRow SpectrogramRow
+	var rawSpectrogramRow _tmpSpectrogramRow
+	if err := safejson.Unmarshal(data, &rawSpectrogramRow); err != nil {
+		return err
+	}
+	if rawSpectrogramRow.Values == nil {
+		rawSpectrogramRow.Values = make([]float64, 0)
+	}
+	*o = SpectrogramRow(rawSpectrogramRow)
+	return nil
+}
+
+func (o SpectrogramRow) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpectrogramRow) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // The standard deviation of points inside the time window.
 type StandardDeviation struct{}
 
@@ -4685,6 +4885,34 @@ func (o StftOptions) MarshalYAML() (interface{}, error) {
 }
 
 func (o *StftOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Injects the value of a string property, under a tag key equal to the property name by default. Only
+supported on asset and run branches: asset branches read the asset's properties, and run branches,
+including run branches backed by an asset, read the run's properties, matching `SelectProperty`. Values
+are injected as is. A branch without the property, or whose property holds a numeric value, gets the
+reserved value `NOMINAL_ABSENT`.
+*/
+type StringPropertyDimension struct {
+	// Name of the property whose value to inject. Also the default tag key.
+	PropertyName StringConstant `json:"propertyName"`
+}
+
+func (o StringPropertyDimension) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StringPropertyDimension) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

@@ -464,6 +464,11 @@ func (u *ComputableNodeWithT[T]) Accept(ctx context.Context, v ComputableNodeVis
 			return result, fmt.Errorf("field \"frequencyV2\" is required")
 		}
 		return v.VisitFrequencyV2(ctx, *u.frequencyV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return result, fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return v.VisitSpectrogram(ctx, *u.spectrogram)
 	case "histogram":
 		if u.histogram == nil {
 			return result, fmt.Errorf("field \"histogram\" is required")
@@ -487,7 +492,7 @@ func (u *ComputableNodeWithT[T]) Accept(ctx context.Context, v ComputableNodeVis
 	}
 }
 
-func (u *ComputableNodeWithT[T]) AcceptFuncs(rangesFunc func(SummarizeRanges) (T, error), seriesFunc func(SummarizeSeries) (T, error), valueFunc func(SelectValue) (T, error), cartesianFunc func(SummarizeCartesian) (T, error), cartesian3dFunc func(SummarizeCartesian3d) (T, error), frequencyFunc func(FrequencyDomain) (T, error), frequencyV2Func func(FrequencyDomainV2) (T, error), histogramFunc func(Histogram) (T, error), curveV2Func func(CurveFitV2) (T, error), curveFunc func(CurveFit) (T, error), multivariateFunc func(SummarizeMultivariate) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ComputableNodeWithT[T]) AcceptFuncs(rangesFunc func(SummarizeRanges) (T, error), seriesFunc func(SummarizeSeries) (T, error), valueFunc func(SelectValue) (T, error), cartesianFunc func(SummarizeCartesian) (T, error), cartesian3dFunc func(SummarizeCartesian3d) (T, error), frequencyFunc func(FrequencyDomain) (T, error), frequencyV2Func func(FrequencyDomainV2) (T, error), spectrogramFunc func(Spectrogram) (T, error), histogramFunc func(Histogram) (T, error), curveV2Func func(CurveFitV2) (T, error), curveFunc func(CurveFit) (T, error), multivariateFunc func(SummarizeMultivariate) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -530,6 +535,11 @@ func (u *ComputableNodeWithT[T]) AcceptFuncs(rangesFunc func(SummarizeRanges) (T
 			return result, fmt.Errorf("field \"frequencyV2\" is required")
 		}
 		return frequencyV2Func(*u.frequencyV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return result, fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return spectrogramFunc(*u.spectrogram)
 	case "histogram":
 		if u.histogram == nil {
 			return result, fmt.Errorf("field \"histogram\" is required")
@@ -588,6 +598,11 @@ func (u *ComputableNodeWithT[T]) FrequencyV2NoopSuccess(FrequencyDomainV2) (T, e
 	return result, nil
 }
 
+func (u *ComputableNodeWithT[T]) SpectrogramNoopSuccess(Spectrogram) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ComputableNodeWithT[T]) HistogramNoopSuccess(Histogram) (T, error) {
 	var result T
 	return result, nil
@@ -621,6 +636,7 @@ type ComputableNodeVisitorWithT[T any] interface {
 	VisitCartesian3d(ctx context.Context, v SummarizeCartesian3d) (T, error)
 	VisitFrequency(ctx context.Context, v FrequencyDomain) (T, error)
 	VisitFrequencyV2(ctx context.Context, v FrequencyDomainV2) (T, error)
+	VisitSpectrogram(ctx context.Context, v Spectrogram) (T, error)
 	VisitHistogram(ctx context.Context, v Histogram) (T, error)
 	VisitCurveV2(ctx context.Context, v CurveFitV2) (T, error)
 	VisitCurve(ctx context.Context, v CurveFit) (T, error)
@@ -1173,15 +1189,25 @@ func (u *DatasetWithT[T]) Accept(ctx context.Context, v DatasetVisitorWithT[T]) 
 			return result, fmt.Errorf("field \"withSeries\" is required")
 		}
 		return v.VisitWithSeries(ctx, *u.withSeries)
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return result, fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return v.VisitDropSeries(ctx, *u.dropSeries)
 	case "reference":
 		if u.reference == nil {
 			return result, fmt.Errorf("field \"reference\" is required")
 		}
 		return v.VisitReference(ctx, *u.reference)
+	case "withDimensions":
+		if u.withDimensions == nil {
+			return result, fmt.Errorf("field \"withDimensions\" is required")
+		}
+		return v.VisitWithDimensions(ctx, *u.withDimensions)
 	}
 }
 
-func (u *DatasetWithT[T]) AcceptFuncs(assetFunc func(api.Asset) (T, error), runFunc func(api.Run) (T, error), savedFunc func(api.SavedDataset) (T, error), searchFunc func(SearchDataset) (T, error), combineFunc func(CombinedDataset) (T, error), tagFunc func(TaggedDataset) (T, error), filterFunc func(FilteredDataset) (T, error), timeShiftFunc func(TimeShiftedDataset) (T, error), alignByAnchorFunc func(AnchorAlignedDataset) (T, error), withSeriesFunc func(WithSeriesDataset) (T, error), referenceFunc func(api.DatasetReference) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *DatasetWithT[T]) AcceptFuncs(assetFunc func(api.Asset) (T, error), runFunc func(api.Run) (T, error), savedFunc func(api.SavedDataset) (T, error), searchFunc func(SearchDataset) (T, error), combineFunc func(CombinedDataset) (T, error), tagFunc func(TaggedDataset) (T, error), filterFunc func(FilteredDataset) (T, error), timeShiftFunc func(TimeShiftedDataset) (T, error), alignByAnchorFunc func(AnchorAlignedDataset) (T, error), withSeriesFunc func(WithSeriesDataset) (T, error), dropSeriesFunc func(DropSeriesDataset) (T, error), referenceFunc func(api.DatasetReference) (T, error), withDimensionsFunc func(DimensionsDataset) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1239,11 +1265,21 @@ func (u *DatasetWithT[T]) AcceptFuncs(assetFunc func(api.Asset) (T, error), runF
 			return result, fmt.Errorf("field \"withSeries\" is required")
 		}
 		return withSeriesFunc(*u.withSeries)
+	case "dropSeries":
+		if u.dropSeries == nil {
+			return result, fmt.Errorf("field \"dropSeries\" is required")
+		}
+		return dropSeriesFunc(*u.dropSeries)
 	case "reference":
 		if u.reference == nil {
 			return result, fmt.Errorf("field \"reference\" is required")
 		}
 		return referenceFunc(*u.reference)
+	case "withDimensions":
+		if u.withDimensions == nil {
+			return result, fmt.Errorf("field \"withDimensions\" is required")
+		}
+		return withDimensionsFunc(*u.withDimensions)
 	}
 }
 
@@ -1297,7 +1333,17 @@ func (u *DatasetWithT[T]) WithSeriesNoopSuccess(WithSeriesDataset) (T, error) {
 	return result, nil
 }
 
+func (u *DatasetWithT[T]) DropSeriesNoopSuccess(DropSeriesDataset) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *DatasetWithT[T]) ReferenceNoopSuccess(api.DatasetReference) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DatasetWithT[T]) WithDimensionsNoopSuccess(DimensionsDataset) (T, error) {
 	var result T
 	return result, nil
 }
@@ -1318,7 +1364,9 @@ type DatasetVisitorWithT[T any] interface {
 	VisitTimeShift(ctx context.Context, v TimeShiftedDataset) (T, error)
 	VisitAlignByAnchor(ctx context.Context, v AnchorAlignedDataset) (T, error)
 	VisitWithSeries(ctx context.Context, v WithSeriesDataset) (T, error)
+	VisitDropSeries(ctx context.Context, v DropSeriesDataset) (T, error)
 	VisitReference(ctx context.Context, v api.DatasetReference) (T, error)
+	VisitWithDimensions(ctx context.Context, v DimensionsDataset) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
