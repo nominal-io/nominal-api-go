@@ -11100,6 +11100,157 @@ func (e *SourceBlocked) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type spectrogramUnsupportedInput struct{}
+
+func (o spectrogramUnsupportedInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *spectrogramUnsupportedInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewSpectrogramUnsupportedInput returns new instance of SpectrogramUnsupportedInput error.
+func NewSpectrogramUnsupportedInput() *SpectrogramUnsupportedInput {
+	return &SpectrogramUnsupportedInput{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), spectrogramUnsupportedInput: spectrogramUnsupportedInput{}}
+}
+
+// WrapWithSpectrogramUnsupportedInput returns new instance of SpectrogramUnsupportedInput error wrapping an existing error.
+func WrapWithSpectrogramUnsupportedInput(err error) *SpectrogramUnsupportedInput {
+	return &SpectrogramUnsupportedInput{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, spectrogramUnsupportedInput: spectrogramUnsupportedInput{}}
+}
+
+// SpectrogramUnsupportedInput is an error type.
+/*
+The spectrogram input reads from more than one data source or uses an operation spectrograms do
+not support.
+*/
+type SpectrogramUnsupportedInput struct {
+	errorInstanceID uuid.UUID
+	spectrogramUnsupportedInput
+	cause error
+	stack werror.StackTrace
+}
+
+// IsSpectrogramUnsupportedInput returns true if err is an instance of SpectrogramUnsupportedInput.
+func IsSpectrogramUnsupportedInput(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*SpectrogramUnsupportedInput)
+	return ok
+}
+
+func (e *SpectrogramUnsupportedInput) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:SpectrogramUnsupportedInput (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *SpectrogramUnsupportedInput) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *SpectrogramUnsupportedInput) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *SpectrogramUnsupportedInput) Message() string {
+	return "INVALID_ARGUMENT Compute:SpectrogramUnsupportedInput"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *SpectrogramUnsupportedInput) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *SpectrogramUnsupportedInput) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *SpectrogramUnsupportedInput) Name() string {
+	return "Compute:SpectrogramUnsupportedInput"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *SpectrogramUnsupportedInput) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *SpectrogramUnsupportedInput) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *SpectrogramUnsupportedInput) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *SpectrogramUnsupportedInput) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *SpectrogramUnsupportedInput) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *SpectrogramUnsupportedInput) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e SpectrogramUnsupportedInput) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.spectrogramUnsupportedInput)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:SpectrogramUnsupportedInput", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *SpectrogramUnsupportedInput) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters spectrogramUnsupportedInput
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.spectrogramUnsupportedInput = parameters
+	return nil
+}
+
 type timeoutExceeded struct {
 	QueryId uuid.UUID `json:"queryId"`
 }
@@ -14940,6 +15091,7 @@ func init() {
 	conjureerrors.RegisterErrorType("Compute:SignalFilterNonPositiveCutoffFrequency", reflect.TypeOf(SignalFilterNonPositiveCutoffFrequency{}))
 	conjureerrors.RegisterErrorType("Compute:SignalFilterNotEnoughData", reflect.TypeOf(SignalFilterNotEnoughData{}))
 	conjureerrors.RegisterErrorType("Compute:SourceBlocked", reflect.TypeOf(SourceBlocked{}))
+	conjureerrors.RegisterErrorType("Compute:SpectrogramUnsupportedInput", reflect.TypeOf(SpectrogramUnsupportedInput{}))
 	conjureerrors.RegisterErrorType("Compute:TimeoutExceeded", reflect.TypeOf(TimeoutExceeded{}))
 	conjureerrors.RegisterErrorType("Compute:TooFewInputs", reflect.TypeOf(TooFewInputs{}))
 	conjureerrors.RegisterErrorType("Compute:TooManyBuckets", reflect.TypeOf(TooManyBuckets{}))

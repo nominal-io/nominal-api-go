@@ -435,6 +435,55 @@ type BucketDisplayStatVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type BurstDiscVizDefinitionWithT[T any] BurstDiscVizDefinition
+
+func (u *BurstDiscVizDefinitionWithT[T]) Accept(ctx context.Context, v BurstDiscVizDefinitionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *BurstDiscVizDefinitionWithT[T]) AcceptFuncs(v1Func func(BurstDiscVizDefinitionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *BurstDiscVizDefinitionWithT[T]) V1NoopSuccess(BurstDiscVizDefinitionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BurstDiscVizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type BurstDiscVizDefinitionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v BurstDiscVizDefinitionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type ButtonVizDefinitionWithT[T any] ButtonVizDefinition
 
 func (u *ButtonVizDefinitionWithT[T]) Accept(ctx context.Context, v ButtonVizDefinitionVisitorWithT[T]) (T, error) {
@@ -2419,6 +2468,55 @@ type GeoVizDefinitionVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type HeatExchangerVizDefinitionWithT[T any] HeatExchangerVizDefinition
+
+func (u *HeatExchangerVizDefinitionWithT[T]) Accept(ctx context.Context, v HeatExchangerVizDefinitionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *HeatExchangerVizDefinitionWithT[T]) AcceptFuncs(v1Func func(HeatExchangerVizDefinitionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *HeatExchangerVizDefinitionWithT[T]) V1NoopSuccess(HeatExchangerVizDefinitionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *HeatExchangerVizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type HeatExchangerVizDefinitionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v HeatExchangerVizDefinitionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type HideEmptySeriesWithT[T any] HideEmptySeries
 
 func (u *HideEmptySeriesWithT[T]) Accept(ctx context.Context, v HideEmptySeriesVisitorWithT[T]) (T, error) {
@@ -2595,6 +2693,169 @@ func (u *ImageVizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) 
 
 type ImageVizDefinitionVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v ImageVizDefinitionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type InstrumentDividerWithT[T any] InstrumentDivider
+
+func (u *InstrumentDividerWithT[T]) Accept(ctx context.Context, v InstrumentDividerVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "solid":
+		if u.solid == nil {
+			return result, fmt.Errorf("field \"solid\" is required")
+		}
+		return v.VisitSolid(ctx, *u.solid)
+	}
+}
+
+func (u *InstrumentDividerWithT[T]) AcceptFuncs(solidFunc func(SolidInstrumentDivider) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "solid":
+		if u.solid == nil {
+			return result, fmt.Errorf("field \"solid\" is required")
+		}
+		return solidFunc(*u.solid)
+	}
+}
+
+func (u *InstrumentDividerWithT[T]) SolidNoopSuccess(SolidInstrumentDivider) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *InstrumentDividerWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type InstrumentDividerVisitorWithT[T any] interface {
+	VisitSolid(ctx context.Context, v SolidInstrumentDivider) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type InstrumentLayoutWithT[T any] InstrumentLayout
+
+func (u *InstrumentLayoutWithT[T]) Accept(ctx context.Context, v InstrumentLayoutVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "centered":
+		if u.centered == nil {
+			return result, fmt.Errorf("field \"centered\" is required")
+		}
+		return v.VisitCentered(ctx, *u.centered)
+	case "twoRow":
+		if u.twoRow == nil {
+			return result, fmt.Errorf("field \"twoRow\" is required")
+		}
+		return v.VisitTwoRow(ctx, *u.twoRow)
+	}
+}
+
+func (u *InstrumentLayoutWithT[T]) AcceptFuncs(centeredFunc func(CenteredInstrumentLayout) (T, error), twoRowFunc func(TwoRowInstrumentLayout) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "centered":
+		if u.centered == nil {
+			return result, fmt.Errorf("field \"centered\" is required")
+		}
+		return centeredFunc(*u.centered)
+	case "twoRow":
+		if u.twoRow == nil {
+			return result, fmt.Errorf("field \"twoRow\" is required")
+		}
+		return twoRowFunc(*u.twoRow)
+	}
+}
+
+func (u *InstrumentLayoutWithT[T]) CenteredNoopSuccess(CenteredInstrumentLayout) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *InstrumentLayoutWithT[T]) TwoRowNoopSuccess(TwoRowInstrumentLayout) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *InstrumentLayoutWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type InstrumentLayoutVisitorWithT[T any] interface {
+	VisitCentered(ctx context.Context, v CenteredInstrumentLayout) (T, error)
+	VisitTwoRow(ctx context.Context, v TwoRowInstrumentLayout) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type InstrumentVizDefinitionWithT[T any] InstrumentVizDefinition
+
+func (u *InstrumentVizDefinitionWithT[T]) Accept(ctx context.Context, v InstrumentVizDefinitionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *InstrumentVizDefinitionWithT[T]) AcceptFuncs(v1Func func(InstrumentVizDefinitionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *InstrumentVizDefinitionWithT[T]) V1NoopSuccess(InstrumentVizDefinitionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *InstrumentVizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type InstrumentVizDefinitionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v InstrumentVizDefinitionV1) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -2791,6 +3052,71 @@ func (u *MarkdownPanelDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, er
 
 type MarkdownPanelDefinitionVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v MarkdownPanelDefinitionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type MarkerAppearanceWithT[T any] MarkerAppearance
+
+func (u *MarkerAppearanceWithT[T]) Accept(ctx context.Context, v MarkerAppearanceVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "fullSize":
+		if u.fullSize == nil {
+			return result, fmt.Errorf("field \"fullSize\" is required")
+		}
+		return v.VisitFullSize(ctx, *u.fullSize)
+	case "hidden":
+		if u.hidden == nil {
+			return result, fmt.Errorf("field \"hidden\" is required")
+		}
+		return v.VisitHidden(ctx, *u.hidden)
+	}
+}
+
+func (u *MarkerAppearanceWithT[T]) AcceptFuncs(fullSizeFunc func(FullSizeMarkerAppearance) (T, error), hiddenFunc func(HiddenMarkerAppearance) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "fullSize":
+		if u.fullSize == nil {
+			return result, fmt.Errorf("field \"fullSize\" is required")
+		}
+		return fullSizeFunc(*u.fullSize)
+	case "hidden":
+		if u.hidden == nil {
+			return result, fmt.Errorf("field \"hidden\" is required")
+		}
+		return hiddenFunc(*u.hidden)
+	}
+}
+
+func (u *MarkerAppearanceWithT[T]) FullSizeNoopSuccess(FullSizeMarkerAppearance) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *MarkerAppearanceWithT[T]) HiddenNoopSuccess(HiddenMarkerAppearance) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *MarkerAppearanceWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type MarkerAppearanceVisitorWithT[T any] interface {
+	VisitFullSize(ctx context.Context, v FullSizeMarkerAppearance) (T, error)
+	VisitHidden(ctx context.Context, v HiddenMarkerAppearance) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -3164,6 +3490,55 @@ func (u *NumericValueVisualisationV2WithT[T]) ErrorOnUnknown(typeName string) (T
 type NumericValueVisualisationV2VisitorWithT[T any] interface {
 	VisitRaw(ctx context.Context, v NumericRawVisualisationV2) (T, error)
 	VisitBar(ctx context.Context, v NumericBarVisualisationV2) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type OrificeVizDefinitionWithT[T any] OrificeVizDefinition
+
+func (u *OrificeVizDefinitionWithT[T]) Accept(ctx context.Context, v OrificeVizDefinitionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *OrificeVizDefinitionWithT[T]) AcceptFuncs(v1Func func(OrificeVizDefinitionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *OrificeVizDefinitionWithT[T]) V1NoopSuccess(OrificeVizDefinitionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *OrificeVizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type OrificeVizDefinitionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v OrificeVizDefinitionV1) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -3750,6 +4125,55 @@ func (u *RangeValueVisualisationWithT[T]) ErrorOnUnknown(typeName string) (T, er
 
 type RangeValueVisualisationVisitorWithT[T any] interface {
 	VisitRaw(ctx context.Context, v RangeRawVisualisation) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type RegulatorVizDefinitionWithT[T any] RegulatorVizDefinition
+
+func (u *RegulatorVizDefinitionWithT[T]) Accept(ctx context.Context, v RegulatorVizDefinitionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *RegulatorVizDefinitionWithT[T]) AcceptFuncs(v1Func func(RegulatorVizDefinitionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *RegulatorVizDefinitionWithT[T]) V1NoopSuccess(RegulatorVizDefinitionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *RegulatorVizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type RegulatorVizDefinitionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v RegulatorVizDefinitionV1) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -4823,6 +5247,87 @@ type TableColumnNumericAggregationVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type TableColumnNumericIndicatorWithT[T any] TableColumnNumericIndicator
+
+func (u *TableColumnNumericIndicatorWithT[T]) Accept(ctx context.Context, v TableColumnNumericIndicatorVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "none":
+		if u.none == nil {
+			return result, fmt.Errorf("field \"none\" is required")
+		}
+		return v.VisitNone(ctx, *u.none)
+	case "bars":
+		if u.bars == nil {
+			return result, fmt.Errorf("field \"bars\" is required")
+		}
+		return v.VisitBars(ctx, *u.bars)
+	case "color":
+		if u.color == nil {
+			return result, fmt.Errorf("field \"color\" is required")
+		}
+		return v.VisitColor(ctx, *u.color)
+	}
+}
+
+func (u *TableColumnNumericIndicatorWithT[T]) AcceptFuncs(noneFunc func(NoConfigIndicator) (T, error), barsFunc func(NoConfigIndicator) (T, error), colorFunc func(NoConfigIndicator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "none":
+		if u.none == nil {
+			return result, fmt.Errorf("field \"none\" is required")
+		}
+		return noneFunc(*u.none)
+	case "bars":
+		if u.bars == nil {
+			return result, fmt.Errorf("field \"bars\" is required")
+		}
+		return barsFunc(*u.bars)
+	case "color":
+		if u.color == nil {
+			return result, fmt.Errorf("field \"color\" is required")
+		}
+		return colorFunc(*u.color)
+	}
+}
+
+func (u *TableColumnNumericIndicatorWithT[T]) NoneNoopSuccess(NoConfigIndicator) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *TableColumnNumericIndicatorWithT[T]) BarsNoopSuccess(NoConfigIndicator) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *TableColumnNumericIndicatorWithT[T]) ColorNoopSuccess(NoConfigIndicator) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *TableColumnNumericIndicatorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type TableColumnNumericIndicatorVisitorWithT[T any] interface {
+	VisitNone(ctx context.Context, v NoConfigIndicator) (T, error)
+	VisitBars(ctx context.Context, v NoConfigIndicator) (T, error)
+	VisitColor(ctx context.Context, v NoConfigIndicator) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type TableColumnRangeAggregationWithT[T any] TableColumnRangeAggregation
 
 func (u *TableColumnRangeAggregationWithT[T]) Accept(ctx context.Context, v TableColumnRangeAggregationVisitorWithT[T]) (T, error) {
@@ -5096,6 +5601,55 @@ func (u *TankVizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type TankVizDefinitionVisitorWithT[T any] interface {
 	VisitV1(ctx context.Context, v TankVizDefinitionV1) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type ThrustChamberVizDefinitionWithT[T any] ThrustChamberVizDefinition
+
+func (u *ThrustChamberVizDefinitionWithT[T]) Accept(ctx context.Context, v ThrustChamberVizDefinitionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *ThrustChamberVizDefinitionWithT[T]) AcceptFuncs(v1Func func(ThrustChamberVizDefinitionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *ThrustChamberVizDefinitionWithT[T]) V1NoopSuccess(ThrustChamberVizDefinitionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ThrustChamberVizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ThrustChamberVizDefinitionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v ThrustChamberVizDefinitionV1) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -5925,10 +6479,20 @@ func (u *ValveWithT[T]) Accept(ctx context.Context, v ValveVisitorWithT[T]) (T, 
 			return result, fmt.Errorf("field \"standard\" is required")
 		}
 		return v.VisitStandard(ctx, *u.standard)
+	case "relief":
+		if u.relief == nil {
+			return result, fmt.Errorf("field \"relief\" is required")
+		}
+		return v.VisitRelief(ctx, *u.relief)
+	case "check":
+		if u.check == nil {
+			return result, fmt.Errorf("field \"check\" is required")
+		}
+		return v.VisitCheck(ctx, *u.check)
 	}
 }
 
-func (u *ValveWithT[T]) AcceptFuncs(standardFunc func(StandardValve) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ValveWithT[T]) AcceptFuncs(standardFunc func(StandardValve) (T, error), reliefFunc func(ReliefValve) (T, error), checkFunc func(CheckValve) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -5941,10 +6505,30 @@ func (u *ValveWithT[T]) AcceptFuncs(standardFunc func(StandardValve) (T, error),
 			return result, fmt.Errorf("field \"standard\" is required")
 		}
 		return standardFunc(*u.standard)
+	case "relief":
+		if u.relief == nil {
+			return result, fmt.Errorf("field \"relief\" is required")
+		}
+		return reliefFunc(*u.relief)
+	case "check":
+		if u.check == nil {
+			return result, fmt.Errorf("field \"check\" is required")
+		}
+		return checkFunc(*u.check)
 	}
 }
 
 func (u *ValveWithT[T]) StandardNoopSuccess(StandardValve) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValveWithT[T]) ReliefNoopSuccess(ReliefValve) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValveWithT[T]) CheckNoopSuccess(CheckValve) (T, error) {
 	var result T
 	return result, nil
 }
@@ -5956,6 +6540,73 @@ func (u *ValveWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type ValveVisitorWithT[T any] interface {
 	VisitStandard(ctx context.Context, v StandardValve) (T, error)
+	VisitRelief(ctx context.Context, v ReliefValve) (T, error)
+	VisitCheck(ctx context.Context, v CheckValve) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type ValveNormalPositionWithT[T any] ValveNormalPosition
+
+func (u *ValveNormalPositionWithT[T]) Accept(ctx context.Context, v ValveNormalPositionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "normallyOpen":
+		if u.normallyOpen == nil {
+			return result, fmt.Errorf("field \"normallyOpen\" is required")
+		}
+		return v.VisitNormallyOpen(ctx, *u.normallyOpen)
+	case "normallyClosed":
+		if u.normallyClosed == nil {
+			return result, fmt.Errorf("field \"normallyClosed\" is required")
+		}
+		return v.VisitNormallyClosed(ctx, *u.normallyClosed)
+	}
+}
+
+func (u *ValveNormalPositionWithT[T]) AcceptFuncs(normallyOpenFunc func(NormallyOpenValvePosition) (T, error), normallyClosedFunc func(NormallyClosedValvePosition) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "normallyOpen":
+		if u.normallyOpen == nil {
+			return result, fmt.Errorf("field \"normallyOpen\" is required")
+		}
+		return normallyOpenFunc(*u.normallyOpen)
+	case "normallyClosed":
+		if u.normallyClosed == nil {
+			return result, fmt.Errorf("field \"normallyClosed\" is required")
+		}
+		return normallyClosedFunc(*u.normallyClosed)
+	}
+}
+
+func (u *ValveNormalPositionWithT[T]) NormallyOpenNoopSuccess(NormallyOpenValvePosition) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValveNormalPositionWithT[T]) NormallyClosedNoopSuccess(NormallyClosedValvePosition) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *ValveNormalPositionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type ValveNormalPositionVisitorWithT[T any] interface {
+	VisitNormallyOpen(ctx context.Context, v NormallyOpenValvePosition) (T, error)
+	VisitNormallyClosed(ctx context.Context, v NormallyClosedValvePosition) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -6186,6 +6837,11 @@ func (u *VizDefinitionWithT[T]) Accept(ctx context.Context, v VizDefinitionVisit
 			return result, fmt.Errorf("field \"boundary\" is required")
 		}
 		return v.VisitBoundary(ctx, *u.boundary)
+	case "burstDisc":
+		if u.burstDisc == nil {
+			return result, fmt.Errorf("field \"burstDisc\" is required")
+		}
+		return v.VisitBurstDisc(ctx, *u.burstDisc)
 	case "button":
 		if u.button == nil {
 			return result, fmt.Errorf("field \"button\" is required")
@@ -6221,6 +6877,11 @@ func (u *VizDefinitionWithT[T]) Accept(ctx context.Context, v VizDefinitionVisit
 			return result, fmt.Errorf("field \"geo3d\" is required")
 		}
 		return v.VisitGeo3d(ctx, *u.geo3d)
+	case "heatExchanger":
+		if u.heatExchanger == nil {
+			return result, fmt.Errorf("field \"heatExchanger\" is required")
+		}
+		return v.VisitHeatExchanger(ctx, *u.heatExchanger)
 	case "histogram":
 		if u.histogram == nil {
 			return result, fmt.Errorf("field \"histogram\" is required")
@@ -6231,6 +6892,11 @@ func (u *VizDefinitionWithT[T]) Accept(ctx context.Context, v VizDefinitionVisit
 			return result, fmt.Errorf("field \"image\" is required")
 		}
 		return v.VisitImage(ctx, *u.image)
+	case "instrument":
+		if u.instrument == nil {
+			return result, fmt.Errorf("field \"instrument\" is required")
+		}
+		return v.VisitInstrument(ctx, *u.instrument)
 	case "log":
 		if u.log == nil {
 			return result, fmt.Errorf("field \"log\" is required")
@@ -6241,6 +6907,11 @@ func (u *VizDefinitionWithT[T]) Accept(ctx context.Context, v VizDefinitionVisit
 			return result, fmt.Errorf("field \"markdown\" is required")
 		}
 		return v.VisitMarkdown(ctx, *u.markdown)
+	case "orifice":
+		if u.orifice == nil {
+			return result, fmt.Errorf("field \"orifice\" is required")
+		}
+		return v.VisitOrifice(ctx, *u.orifice)
 	case "plotly":
 		if u.plotly == nil {
 			return result, fmt.Errorf("field \"plotly\" is required")
@@ -6256,6 +6927,11 @@ func (u *VizDefinitionWithT[T]) Accept(ctx context.Context, v VizDefinitionVisit
 			return result, fmt.Errorf("field \"pump\" is required")
 		}
 		return v.VisitPump(ctx, *u.pump)
+	case "regulator":
+		if u.regulator == nil {
+			return result, fmt.Errorf("field \"regulator\" is required")
+		}
+		return v.VisitRegulator(ctx, *u.regulator)
 	case "shape":
 		if u.shape == nil {
 			return result, fmt.Errorf("field \"shape\" is required")
@@ -6266,6 +6942,11 @@ func (u *VizDefinitionWithT[T]) Accept(ctx context.Context, v VizDefinitionVisit
 			return result, fmt.Errorf("field \"tank\" is required")
 		}
 		return v.VisitTank(ctx, *u.tank)
+	case "thrustChamber":
+		if u.thrustChamber == nil {
+			return result, fmt.Errorf("field \"thrustChamber\" is required")
+		}
+		return v.VisitThrustChamber(ctx, *u.thrustChamber)
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return result, fmt.Errorf("field \"timeSeries\" is required")
@@ -6294,7 +6975,7 @@ func (u *VizDefinitionWithT[T]) Accept(ctx context.Context, v VizDefinitionVisit
 	}
 }
 
-func (u *VizDefinitionWithT[T]) AcceptFuncs(boundaryFunc func(BoundaryVizDefinition) (T, error), buttonFunc func(ButtonVizDefinition) (T, error), cartesianFunc func(CartesianChartDefinition) (T, error), checklistFunc func(ChecklistChartDefinition) (T, error), endNodeFunc func(EndNodeVizDefinition) (T, error), frequencyFunc func(FrequencyChartDefinition) (T, error), geoFunc func(GeoVizDefinition) (T, error), geo3dFunc func(Geo3dDefinition) (T, error), histogramFunc func(HistogramChartDefinition) (T, error), imageFunc func(ImageVizDefinition) (T, error), logFunc func(LogPanelDefinition) (T, error), markdownFunc func(MarkdownPanelDefinition) (T, error), plotlyFunc func(PlotlyPanelDefinition) (T, error), procedureFunc func(ProcedureVizDefinition) (T, error), pumpFunc func(PumpVizDefinition) (T, error), shapeFunc func(ShapeVizDefinition) (T, error), tankFunc func(TankVizDefinition) (T, error), timeSeriesFunc func(TimeSeriesChartDefinition) (T, error), timeSeriesTableFunc func(TimeSeriesTablePanelDefinition) (T, error), valueTableFunc func(ValueTableDefinition) (T, error), valveFunc func(ValveVizDefinition) (T, error), videoFunc func(VideoVizDefinition) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *VizDefinitionWithT[T]) AcceptFuncs(boundaryFunc func(BoundaryVizDefinition) (T, error), burstDiscFunc func(BurstDiscVizDefinition) (T, error), buttonFunc func(ButtonVizDefinition) (T, error), cartesianFunc func(CartesianChartDefinition) (T, error), checklistFunc func(ChecklistChartDefinition) (T, error), endNodeFunc func(EndNodeVizDefinition) (T, error), frequencyFunc func(FrequencyChartDefinition) (T, error), geoFunc func(GeoVizDefinition) (T, error), geo3dFunc func(Geo3dDefinition) (T, error), heatExchangerFunc func(HeatExchangerVizDefinition) (T, error), histogramFunc func(HistogramChartDefinition) (T, error), imageFunc func(ImageVizDefinition) (T, error), instrumentFunc func(InstrumentVizDefinition) (T, error), logFunc func(LogPanelDefinition) (T, error), markdownFunc func(MarkdownPanelDefinition) (T, error), orificeFunc func(OrificeVizDefinition) (T, error), plotlyFunc func(PlotlyPanelDefinition) (T, error), procedureFunc func(ProcedureVizDefinition) (T, error), pumpFunc func(PumpVizDefinition) (T, error), regulatorFunc func(RegulatorVizDefinition) (T, error), shapeFunc func(ShapeVizDefinition) (T, error), tankFunc func(TankVizDefinition) (T, error), thrustChamberFunc func(ThrustChamberVizDefinition) (T, error), timeSeriesFunc func(TimeSeriesChartDefinition) (T, error), timeSeriesTableFunc func(TimeSeriesTablePanelDefinition) (T, error), valueTableFunc func(ValueTableDefinition) (T, error), valveFunc func(ValveVizDefinition) (T, error), videoFunc func(VideoVizDefinition) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -6307,6 +6988,11 @@ func (u *VizDefinitionWithT[T]) AcceptFuncs(boundaryFunc func(BoundaryVizDefinit
 			return result, fmt.Errorf("field \"boundary\" is required")
 		}
 		return boundaryFunc(*u.boundary)
+	case "burstDisc":
+		if u.burstDisc == nil {
+			return result, fmt.Errorf("field \"burstDisc\" is required")
+		}
+		return burstDiscFunc(*u.burstDisc)
 	case "button":
 		if u.button == nil {
 			return result, fmt.Errorf("field \"button\" is required")
@@ -6342,6 +7028,11 @@ func (u *VizDefinitionWithT[T]) AcceptFuncs(boundaryFunc func(BoundaryVizDefinit
 			return result, fmt.Errorf("field \"geo3d\" is required")
 		}
 		return geo3dFunc(*u.geo3d)
+	case "heatExchanger":
+		if u.heatExchanger == nil {
+			return result, fmt.Errorf("field \"heatExchanger\" is required")
+		}
+		return heatExchangerFunc(*u.heatExchanger)
 	case "histogram":
 		if u.histogram == nil {
 			return result, fmt.Errorf("field \"histogram\" is required")
@@ -6352,6 +7043,11 @@ func (u *VizDefinitionWithT[T]) AcceptFuncs(boundaryFunc func(BoundaryVizDefinit
 			return result, fmt.Errorf("field \"image\" is required")
 		}
 		return imageFunc(*u.image)
+	case "instrument":
+		if u.instrument == nil {
+			return result, fmt.Errorf("field \"instrument\" is required")
+		}
+		return instrumentFunc(*u.instrument)
 	case "log":
 		if u.log == nil {
 			return result, fmt.Errorf("field \"log\" is required")
@@ -6362,6 +7058,11 @@ func (u *VizDefinitionWithT[T]) AcceptFuncs(boundaryFunc func(BoundaryVizDefinit
 			return result, fmt.Errorf("field \"markdown\" is required")
 		}
 		return markdownFunc(*u.markdown)
+	case "orifice":
+		if u.orifice == nil {
+			return result, fmt.Errorf("field \"orifice\" is required")
+		}
+		return orificeFunc(*u.orifice)
 	case "plotly":
 		if u.plotly == nil {
 			return result, fmt.Errorf("field \"plotly\" is required")
@@ -6377,6 +7078,11 @@ func (u *VizDefinitionWithT[T]) AcceptFuncs(boundaryFunc func(BoundaryVizDefinit
 			return result, fmt.Errorf("field \"pump\" is required")
 		}
 		return pumpFunc(*u.pump)
+	case "regulator":
+		if u.regulator == nil {
+			return result, fmt.Errorf("field \"regulator\" is required")
+		}
+		return regulatorFunc(*u.regulator)
 	case "shape":
 		if u.shape == nil {
 			return result, fmt.Errorf("field \"shape\" is required")
@@ -6387,6 +7093,11 @@ func (u *VizDefinitionWithT[T]) AcceptFuncs(boundaryFunc func(BoundaryVizDefinit
 			return result, fmt.Errorf("field \"tank\" is required")
 		}
 		return tankFunc(*u.tank)
+	case "thrustChamber":
+		if u.thrustChamber == nil {
+			return result, fmt.Errorf("field \"thrustChamber\" is required")
+		}
+		return thrustChamberFunc(*u.thrustChamber)
 	case "timeSeries":
 		if u.timeSeries == nil {
 			return result, fmt.Errorf("field \"timeSeries\" is required")
@@ -6416,6 +7127,11 @@ func (u *VizDefinitionWithT[T]) AcceptFuncs(boundaryFunc func(BoundaryVizDefinit
 }
 
 func (u *VizDefinitionWithT[T]) BoundaryNoopSuccess(BoundaryVizDefinition) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *VizDefinitionWithT[T]) BurstDiscNoopSuccess(BurstDiscVizDefinition) (T, error) {
 	var result T
 	return result, nil
 }
@@ -6455,6 +7171,11 @@ func (u *VizDefinitionWithT[T]) Geo3dNoopSuccess(Geo3dDefinition) (T, error) {
 	return result, nil
 }
 
+func (u *VizDefinitionWithT[T]) HeatExchangerNoopSuccess(HeatExchangerVizDefinition) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *VizDefinitionWithT[T]) HistogramNoopSuccess(HistogramChartDefinition) (T, error) {
 	var result T
 	return result, nil
@@ -6465,12 +7186,22 @@ func (u *VizDefinitionWithT[T]) ImageNoopSuccess(ImageVizDefinition) (T, error) 
 	return result, nil
 }
 
+func (u *VizDefinitionWithT[T]) InstrumentNoopSuccess(InstrumentVizDefinition) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *VizDefinitionWithT[T]) LogNoopSuccess(LogPanelDefinition) (T, error) {
 	var result T
 	return result, nil
 }
 
 func (u *VizDefinitionWithT[T]) MarkdownNoopSuccess(MarkdownPanelDefinition) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *VizDefinitionWithT[T]) OrificeNoopSuccess(OrificeVizDefinition) (T, error) {
 	var result T
 	return result, nil
 }
@@ -6490,12 +7221,22 @@ func (u *VizDefinitionWithT[T]) PumpNoopSuccess(PumpVizDefinition) (T, error) {
 	return result, nil
 }
 
+func (u *VizDefinitionWithT[T]) RegulatorNoopSuccess(RegulatorVizDefinition) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *VizDefinitionWithT[T]) ShapeNoopSuccess(ShapeVizDefinition) (T, error) {
 	var result T
 	return result, nil
 }
 
 func (u *VizDefinitionWithT[T]) TankNoopSuccess(TankVizDefinition) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *VizDefinitionWithT[T]) ThrustChamberNoopSuccess(ThrustChamberVizDefinition) (T, error) {
 	var result T
 	return result, nil
 }
@@ -6532,6 +7273,7 @@ func (u *VizDefinitionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type VizDefinitionVisitorWithT[T any] interface {
 	VisitBoundary(ctx context.Context, v BoundaryVizDefinition) (T, error)
+	VisitBurstDisc(ctx context.Context, v BurstDiscVizDefinition) (T, error)
 	VisitButton(ctx context.Context, v ButtonVizDefinition) (T, error)
 	VisitCartesian(ctx context.Context, v CartesianChartDefinition) (T, error)
 	VisitChecklist(ctx context.Context, v ChecklistChartDefinition) (T, error)
@@ -6539,15 +7281,20 @@ type VizDefinitionVisitorWithT[T any] interface {
 	VisitFrequency(ctx context.Context, v FrequencyChartDefinition) (T, error)
 	VisitGeo(ctx context.Context, v GeoVizDefinition) (T, error)
 	VisitGeo3d(ctx context.Context, v Geo3dDefinition) (T, error)
+	VisitHeatExchanger(ctx context.Context, v HeatExchangerVizDefinition) (T, error)
 	VisitHistogram(ctx context.Context, v HistogramChartDefinition) (T, error)
 	VisitImage(ctx context.Context, v ImageVizDefinition) (T, error)
+	VisitInstrument(ctx context.Context, v InstrumentVizDefinition) (T, error)
 	VisitLog(ctx context.Context, v LogPanelDefinition) (T, error)
 	VisitMarkdown(ctx context.Context, v MarkdownPanelDefinition) (T, error)
+	VisitOrifice(ctx context.Context, v OrificeVizDefinition) (T, error)
 	VisitPlotly(ctx context.Context, v PlotlyPanelDefinition) (T, error)
 	VisitProcedure(ctx context.Context, v ProcedureVizDefinition) (T, error)
 	VisitPump(ctx context.Context, v PumpVizDefinition) (T, error)
+	VisitRegulator(ctx context.Context, v RegulatorVizDefinition) (T, error)
 	VisitShape(ctx context.Context, v ShapeVizDefinition) (T, error)
 	VisitTank(ctx context.Context, v TankVizDefinition) (T, error)
+	VisitThrustChamber(ctx context.Context, v ThrustChamberVizDefinition) (T, error)
 	VisitTimeSeries(ctx context.Context, v TimeSeriesChartDefinition) (T, error)
 	VisitTimeSeriesTable(ctx context.Context, v TimeSeriesTablePanelDefinition) (T, error)
 	VisitValueTable(ctx context.Context, v ValueTableDefinition) (T, error)

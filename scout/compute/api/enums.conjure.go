@@ -1831,12 +1831,13 @@ const (
 	QuerySource_DERIVED_SERIES_TAG_SEARCH QuerySource_Value = "DERIVED_SERIES_TAG_SEARCH"
 	QuerySource_SQL_EXPORT                QuerySource_Value = "SQL_EXPORT"
 	QuerySource_PG_WIRE                   QuerySource_Value = "PG_WIRE"
+	QuerySource_DATASET                   QuerySource_Value = "DATASET"
 	QuerySource_UNKNOWN                   QuerySource_Value = "UNKNOWN"
 )
 
 // QuerySource_Values returns all known variants of QuerySource.
 func QuerySource_Values() []QuerySource_Value {
-	return []QuerySource_Value{QuerySource_WORKBOOK, QuerySource_CHECKLIST, QuerySource_STREAMING_CHECKLIST, QuerySource_EXPORT, QuerySource_PERSISTENT_COMPUTE, QuerySource_SQL_QUERY, QuerySource_CHANNEL_SEARCH, QuerySource_DERIVED_SERIES_TAG_SEARCH, QuerySource_SQL_EXPORT, QuerySource_PG_WIRE}
+	return []QuerySource_Value{QuerySource_WORKBOOK, QuerySource_CHECKLIST, QuerySource_STREAMING_CHECKLIST, QuerySource_EXPORT, QuerySource_PERSISTENT_COMPUTE, QuerySource_SQL_QUERY, QuerySource_CHANNEL_SEARCH, QuerySource_DERIVED_SERIES_TAG_SEARCH, QuerySource_SQL_EXPORT, QuerySource_PG_WIRE, QuerySource_DATASET}
 }
 
 func New_QuerySource(value QuerySource_Value) QuerySource {
@@ -1846,7 +1847,7 @@ func New_QuerySource(value QuerySource_Value) QuerySource {
 // IsUnknown returns false for all known variants of QuerySource and true otherwise.
 func (e QuerySource) IsUnknown() bool {
 	switch e.val {
-	case QuerySource_WORKBOOK, QuerySource_CHECKLIST, QuerySource_STREAMING_CHECKLIST, QuerySource_EXPORT, QuerySource_PERSISTENT_COMPUTE, QuerySource_SQL_QUERY, QuerySource_CHANNEL_SEARCH, QuerySource_DERIVED_SERIES_TAG_SEARCH, QuerySource_SQL_EXPORT, QuerySource_PG_WIRE:
+	case QuerySource_WORKBOOK, QuerySource_CHECKLIST, QuerySource_STREAMING_CHECKLIST, QuerySource_EXPORT, QuerySource_PERSISTENT_COMPUTE, QuerySource_SQL_QUERY, QuerySource_CHANNEL_SEARCH, QuerySource_DERIVED_SERIES_TAG_SEARCH, QuerySource_SQL_EXPORT, QuerySource_PG_WIRE, QuerySource_DATASET:
 		return false
 	}
 	return true
@@ -1891,6 +1892,8 @@ func (e *QuerySource) UnmarshalText(data []byte) error {
 		*e = New_QuerySource(QuerySource_SQL_EXPORT)
 	case "PG_WIRE":
 		*e = New_QuerySource(QuerySource_PG_WIRE)
+	case "DATASET":
+		*e = New_QuerySource(QuerySource_DATASET)
 	}
 	return nil
 }
@@ -2235,12 +2238,14 @@ const (
 	RefpropSubstance_CARBON_DIOXIDE  RefpropSubstance_Value = "CARBON_DIOXIDE"
 	RefpropSubstance_ARGON           RefpropSubstance_Value = "ARGON"
 	RefpropSubstance_CARBON_MONOXIDE RefpropSubstance_Value = "CARBON_MONOXIDE"
+	RefpropSubstance_JET_A_4658      RefpropSubstance_Value = "JET_A_4658"
+	RefpropSubstance_JET_A_3638      RefpropSubstance_Value = "JET_A_3638"
 	RefpropSubstance_UNKNOWN         RefpropSubstance_Value = "UNKNOWN"
 )
 
 // RefpropSubstance_Values returns all known variants of RefpropSubstance.
 func RefpropSubstance_Values() []RefpropSubstance_Value {
-	return []RefpropSubstance_Value{RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR, RefpropSubstance_CARBON_DIOXIDE, RefpropSubstance_ARGON, RefpropSubstance_CARBON_MONOXIDE}
+	return []RefpropSubstance_Value{RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR, RefpropSubstance_CARBON_DIOXIDE, RefpropSubstance_ARGON, RefpropSubstance_CARBON_MONOXIDE, RefpropSubstance_JET_A_4658, RefpropSubstance_JET_A_3638}
 }
 
 func New_RefpropSubstance(value RefpropSubstance_Value) RefpropSubstance {
@@ -2250,7 +2255,7 @@ func New_RefpropSubstance(value RefpropSubstance_Value) RefpropSubstance {
 // IsUnknown returns false for all known variants of RefpropSubstance and true otherwise.
 func (e RefpropSubstance) IsUnknown() bool {
 	switch e.val {
-	case RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR, RefpropSubstance_CARBON_DIOXIDE, RefpropSubstance_ARGON, RefpropSubstance_CARBON_MONOXIDE:
+	case RefpropSubstance_NITROGEN, RefpropSubstance_OXYGEN, RefpropSubstance_HELIUM, RefpropSubstance_HYDROGEN, RefpropSubstance_METHANE, RefpropSubstance_PROPANE, RefpropSubstance_BUTANE, RefpropSubstance_WATER, RefpropSubstance_XENON, RefpropSubstance_AIR, RefpropSubstance_CARBON_DIOXIDE, RefpropSubstance_ARGON, RefpropSubstance_CARBON_MONOXIDE, RefpropSubstance_JET_A_4658, RefpropSubstance_JET_A_3638:
 		return false
 	}
 	return true
@@ -2301,6 +2306,10 @@ func (e *RefpropSubstance) UnmarshalText(data []byte) error {
 		*e = New_RefpropSubstance(RefpropSubstance_ARGON)
 	case "CARBON_MONOXIDE":
 		*e = New_RefpropSubstance(RefpropSubstance_CARBON_MONOXIDE)
+	case "JET_A_4658":
+		*e = New_RefpropSubstance(RefpropSubstance_JET_A_4658)
+	case "JET_A_3638":
+		*e = New_RefpropSubstance(RefpropSubstance_JET_A_3638)
 	}
 	return nil
 }
@@ -2388,6 +2397,66 @@ func (e *ReservedTagKey) UnmarshalText(data []byte) error {
 		*e = New_ReservedTagKey(ReservedTagKey_EVENT_LABEL_PREFIX)
 	case "NOMINAL_CHANNEL":
 		*e = New_ReservedTagKey(ReservedTagKey_NOMINAL_CHANNEL)
+	}
+	return nil
+}
+
+/*
+Tag values reserved by the compute system.
+Notes:
+  - NOMINAL_ABSENT is emitted by `Dataset.withDimensions` for a dimension that has no value on a branch, so
+    that branches without the value still group together under an explicit key.
+*/
+type ReservedTagValue struct {
+	val ReservedTagValue_Value
+}
+
+type ReservedTagValue_Value string
+
+const (
+	ReservedTagValue_NOMINAL_ABSENT ReservedTagValue_Value = "NOMINAL_ABSENT"
+	ReservedTagValue_UNKNOWN        ReservedTagValue_Value = "UNKNOWN"
+)
+
+// ReservedTagValue_Values returns all known variants of ReservedTagValue.
+func ReservedTagValue_Values() []ReservedTagValue_Value {
+	return []ReservedTagValue_Value{ReservedTagValue_NOMINAL_ABSENT}
+}
+
+func New_ReservedTagValue(value ReservedTagValue_Value) ReservedTagValue {
+	return ReservedTagValue{val: value}
+}
+
+// IsUnknown returns false for all known variants of ReservedTagValue and true otherwise.
+func (e ReservedTagValue) IsUnknown() bool {
+	switch e.val {
+	case ReservedTagValue_NOMINAL_ABSENT:
+		return false
+	}
+	return true
+}
+
+func (e ReservedTagValue) Value() ReservedTagValue_Value {
+	if e.IsUnknown() {
+		return ReservedTagValue_UNKNOWN
+	}
+	return e.val
+}
+
+func (e ReservedTagValue) String() string {
+	return string(e.val)
+}
+
+func (e ReservedTagValue) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *ReservedTagValue) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_ReservedTagValue(ReservedTagValue_Value(v))
+	case "NOMINAL_ABSENT":
+		*e = New_ReservedTagValue(ReservedTagValue_NOMINAL_ABSENT)
 	}
 	return nil
 }
@@ -2517,6 +2586,130 @@ func (e *SeriesStorage) UnmarshalText(data []byte) error {
 		*e = New_SeriesStorage(SeriesStorage_ICEBERG)
 	case "CLICKHOUSE":
 		*e = New_SeriesStorage(SeriesStorage_CLICKHOUSE)
+	}
+	return nil
+}
+
+// What a spectrogram cell measures.
+type SpectrogramQuantity struct {
+	val SpectrogramQuantity_Value
+}
+
+type SpectrogramQuantity_Value string
+
+const (
+	// Power spectral density, in the input unit squared per Hz.
+	SpectrogramQuantity_PSD SpectrogramQuantity_Value = "PSD"
+	// Peak amplitude, in the input unit.
+	SpectrogramQuantity_AMPLITUDE SpectrogramQuantity_Value = "AMPLITUDE"
+	SpectrogramQuantity_UNKNOWN   SpectrogramQuantity_Value = "UNKNOWN"
+)
+
+// SpectrogramQuantity_Values returns all known variants of SpectrogramQuantity.
+func SpectrogramQuantity_Values() []SpectrogramQuantity_Value {
+	return []SpectrogramQuantity_Value{SpectrogramQuantity_PSD, SpectrogramQuantity_AMPLITUDE}
+}
+
+func New_SpectrogramQuantity(value SpectrogramQuantity_Value) SpectrogramQuantity {
+	return SpectrogramQuantity{val: value}
+}
+
+// IsUnknown returns false for all known variants of SpectrogramQuantity and true otherwise.
+func (e SpectrogramQuantity) IsUnknown() bool {
+	switch e.val {
+	case SpectrogramQuantity_PSD, SpectrogramQuantity_AMPLITUDE:
+		return false
+	}
+	return true
+}
+
+func (e SpectrogramQuantity) Value() SpectrogramQuantity_Value {
+	if e.IsUnknown() {
+		return SpectrogramQuantity_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SpectrogramQuantity) String() string {
+	return string(e.val)
+}
+
+func (e SpectrogramQuantity) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SpectrogramQuantity) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SpectrogramQuantity(SpectrogramQuantity_Value(v))
+	case "PSD":
+		*e = New_SpectrogramQuantity(SpectrogramQuantity_PSD)
+	case "AMPLITUDE":
+		*e = New_SpectrogramQuantity(SpectrogramQuantity_AMPLITUDE)
+	}
+	return nil
+}
+
+// How the values that share one output row or column are combined, before scaling.
+type SpectrogramReduction struct {
+	val SpectrogramReduction_Value
+}
+
+type SpectrogramReduction_Value string
+
+const (
+	// Arithmetic mean.
+	SpectrogramReduction_MEAN SpectrogramReduction_Value = "MEAN"
+	// Maximum, which keeps short transients visible.
+	SpectrogramReduction_MAX SpectrogramReduction_Value = "MAX"
+	// Geometric mean, which suits decibel displays with a wide dynamic range.
+	SpectrogramReduction_GEOMETRIC_MEAN SpectrogramReduction_Value = "GEOMETRIC_MEAN"
+	SpectrogramReduction_UNKNOWN        SpectrogramReduction_Value = "UNKNOWN"
+)
+
+// SpectrogramReduction_Values returns all known variants of SpectrogramReduction.
+func SpectrogramReduction_Values() []SpectrogramReduction_Value {
+	return []SpectrogramReduction_Value{SpectrogramReduction_MEAN, SpectrogramReduction_MAX, SpectrogramReduction_GEOMETRIC_MEAN}
+}
+
+func New_SpectrogramReduction(value SpectrogramReduction_Value) SpectrogramReduction {
+	return SpectrogramReduction{val: value}
+}
+
+// IsUnknown returns false for all known variants of SpectrogramReduction and true otherwise.
+func (e SpectrogramReduction) IsUnknown() bool {
+	switch e.val {
+	case SpectrogramReduction_MEAN, SpectrogramReduction_MAX, SpectrogramReduction_GEOMETRIC_MEAN:
+		return false
+	}
+	return true
+}
+
+func (e SpectrogramReduction) Value() SpectrogramReduction_Value {
+	if e.IsUnknown() {
+		return SpectrogramReduction_UNKNOWN
+	}
+	return e.val
+}
+
+func (e SpectrogramReduction) String() string {
+	return string(e.val)
+}
+
+func (e SpectrogramReduction) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *SpectrogramReduction) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_SpectrogramReduction(SpectrogramReduction_Value(v))
+	case "MEAN":
+		*e = New_SpectrogramReduction(SpectrogramReduction_MEAN)
+	case "MAX":
+		*e = New_SpectrogramReduction(SpectrogramReduction_MAX)
+	case "GEOMETRIC_MEAN":
+		*e = New_SpectrogramReduction(SpectrogramReduction_GEOMETRIC_MEAN)
 	}
 	return nil
 }

@@ -4,11 +4,12 @@ package api
 
 import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
-	api3 "github.com/nominal-io/nominal-api-go/io/nominal/api"
+	api4 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/io/nominal/event"
 	api1 "github.com/nominal-io/nominal-api-go/scout/api"
-	api4 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
-	api5 "github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
+	api5 "github.com/nominal-io/nominal-api-go/scout/channelvariables/api"
+	api6 "github.com/nominal-io/nominal-api-go/scout/chartdefinition/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	api11 "github.com/nominal-io/nominal-api-go/scout/compute/api1"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	api2 "github.com/nominal-io/nominal-api-go/scout/run/api"
@@ -341,6 +342,30 @@ func (o *EventAlignment) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Restricts an input to all time ranges of events matching a query.
+type EventDataScopeInputFilter struct {
+	// Stable client-provided identifier for the filter.
+	Id uuid.UUID `json:"id"`
+	// Event search query, using the same query type as event-based input alignment.
+	Query api.ComputeEventQuery `json:"query"`
+}
+
+func (o EventDataScopeInputFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EventDataScopeInputFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type EventReference struct {
 	// Deprecated: Please use the rid field instead.
 	EventUuid *uuid.UUID `json:"eventUuid,omitempty"`
@@ -650,6 +675,39 @@ func (o *Tag) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Filters an input's datasets by a tag key and set of values.
+The key and values can be literals or workbook variable references.
+For IN, the tag must match at least one value. For NOT_IN, it must not match any value.
+*/
+type TagDataScopeInputFilter struct {
+	// Stable client-provided identifier for the filter.
+	Id       uuid.UUID              `json:"id"`
+	Key      api3.StringConstant    `json:"key"`
+	Operator api3.TagFilterOperator `json:"operator"`
+	/*
+	   Tag values to include or exclude. An empty set matches no datasets for either operator.
+	   Absent values impose no restriction and match all datasets.
+	*/
+	Values *[]api3.StringConstant `json:"values,omitempty"`
+}
+
+func (o TagDataScopeInputFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TagDataScopeInputFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // A literal string value
 type TagStringLiteral struct {
 	/*
@@ -678,11 +736,14 @@ func (o *TagStringLiteral) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// A time range input that can be applied to panel(s)
+/*
+A time range input that can be applied to panel(s)
+Deprecated: use TimeRange instead.
+*/
 type TimeRangeInput struct {
 	// The label of the input for display purposes.
 	Label     *string    `json:"label,omitempty"`
-	TimeRange api3.Range `json:"timeRange" safelogging:"@Safe"`
+	TimeRange api4.Range `json:"timeRange" safelogging:"@Safe"`
 	// The type of time range to use for the input.
 	TimeRangeType WorkbookTimeRangeType `json:"timeRangeType"`
 }
@@ -696,6 +757,27 @@ func (o TimeRangeInput) MarshalYAML() (interface{}, error) {
 }
 
 func (o *TimeRangeInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type TimeRangeV1 struct {
+	Label *string              `json:"label,omitempty"`
+	Time  api.LiteralTimeRange `json:"time"`
+}
+
+func (o TimeRangeV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *TimeRangeV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -722,13 +804,15 @@ func (o *UnionAlignment) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type WorkbookContent struct {
-	ChannelVariables api4.WorkbookChannelVariableMap `json:"channelVariables"`
+	ChannelVariables api5.WorkbookChannelVariableMap `json:"channelVariables"`
 	Inputs           *WorkbookInputs                 `json:"inputs,omitempty"`
 	// map of visualizations. Previously termed "charts"
-	Charts          api5.WorkbookVizDefinitionMap `json:"charts"`
+	Charts          api6.WorkbookVizDefinitionMap `json:"charts"`
 	Settings        *WorkbookSettings             `json:"settings,omitempty"`
 	DataScopeInputs *WorkbookDataScopeInputs      `json:"dataScopeInputs,omitempty"`
+	// Deprecated: Deprecated, use timeRanges instead.
 	TimeRangeInputs *map[uuid.UUID]TimeRangeInput `json:"timeRangeInputs,omitempty"`
+	TimeRanges      *map[uuid.UUID]TimeRange      `json:"timeRanges,omitempty"`
 	ReportContent   *string                       `json:"reportContent,omitempty"`
 	/*
 	   Schema version this content was last written with, as a semver
@@ -741,10 +825,10 @@ type WorkbookContent struct {
 
 func (o WorkbookContent) MarshalJSON() ([]byte, error) {
 	if o.ChannelVariables == nil {
-		o.ChannelVariables = make(map[api4.ChannelVariableName]api4.ChannelVariable)
+		o.ChannelVariables = make(map[api5.ChannelVariableName]api5.ChannelVariable)
 	}
 	if o.Charts == nil {
-		o.Charts = make(map[api.VizId]api5.VizDefinition)
+		o.Charts = make(map[api.VizId]api6.VizDefinition)
 	}
 	type _tmpWorkbookContent WorkbookContent
 	return safejson.Marshal(_tmpWorkbookContent(o))
@@ -757,10 +841,10 @@ func (o *WorkbookContent) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawWorkbookContent.ChannelVariables == nil {
-		rawWorkbookContent.ChannelVariables = make(map[api4.ChannelVariableName]api4.ChannelVariable)
+		rawWorkbookContent.ChannelVariables = make(map[api5.ChannelVariableName]api5.ChannelVariable)
 	}
 	if rawWorkbookContent.Charts == nil {
-		rawWorkbookContent.Charts = make(map[api.VizId]api5.VizDefinition)
+		rawWorkbookContent.Charts = make(map[api.VizId]api6.VizDefinition)
 	}
 	*o = WorkbookContent(rawWorkbookContent)
 	return nil
@@ -803,6 +887,11 @@ type WorkbookDataScopeInput struct {
 	   Absent means the input uses the dataset's source timestamps.
 	*/
 	Alignment *api11.DatasetAnchor `json:"alignment,omitempty"`
+	/*
+	   Filters applied to the input's datasets. All filters must match.
+	   Absent or empty means the input is unfiltered.
+	*/
+	Filters *[]DataScopeInputFilter `json:"filters,omitempty"`
 }
 
 func (o WorkbookDataScopeInput) MarshalYAML() (interface{}, error) {
@@ -1000,7 +1089,7 @@ type WorkbookSettings struct {
 	   Default staleness configuration for new time series panels in the workbook.
 	   When set, new time series panels will use this instead of the 1-second default.
 	*/
-	DefaultStalenessConfiguration *api5.StalenessConfiguration `json:"defaultStalenessConfiguration,omitempty"`
+	DefaultStalenessConfiguration *api6.StalenessConfiguration `json:"defaultStalenessConfiguration,omitempty"`
 	// Workbook-wide fill strategy for compute requests. When unset, compute falls back to its default.
 	FillStrategy *WorkbookFillStrategy `json:"fillStrategy,omitempty"`
 	// Workbook-wide alignment strategy for compute requests. When unset, compute falls back to its default.
@@ -1033,20 +1122,20 @@ type WorkbookTimeSettingsV1 struct {
 	// The time range type of the workbook
 	TimeRangeType WorkbookTimeRangeType `json:"timeRangeType"`
 	// The global time range a workbook falls back to.
-	GlobalTimeRange *TimeRange `json:"globalTimeRange,omitempty"`
+	GlobalTimeRange *api4.Range `json:"globalTimeRange,omitempty"`
 	/*
 	   If true, workbook will default to globalTimeRange for all tabs.
 	   If false, will attempt to use tabTime to populate the workbook time range.
 	*/
-	IsGlobalTime  bool                 `json:"isGlobalTime"`
-	TabTimeRanges map[string]TimeRange `json:"tabTimeRanges"`
+	IsGlobalTime  bool                  `json:"isGlobalTime"`
+	TabTimeRanges map[string]api4.Range `json:"tabTimeRanges"`
 	// Relative timestamp display preference. Missing values inherit the user's preference.
 	RelativeTimestampFormat *WorkbookRelativeTimestampFormat `json:"relativeTimestampFormat,omitempty"`
 }
 
 func (o WorkbookTimeSettingsV1) MarshalJSON() ([]byte, error) {
 	if o.TabTimeRanges == nil {
-		o.TabTimeRanges = make(map[string]TimeRange)
+		o.TabTimeRanges = make(map[string]api4.Range)
 	}
 	type _tmpWorkbookTimeSettingsV1 WorkbookTimeSettingsV1
 	return safejson.Marshal(_tmpWorkbookTimeSettingsV1(o))
@@ -1059,7 +1148,7 @@ func (o *WorkbookTimeSettingsV1) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawWorkbookTimeSettingsV1.TabTimeRanges == nil {
-		rawWorkbookTimeSettingsV1.TabTimeRanges = make(map[string]TimeRange)
+		rawWorkbookTimeSettingsV1.TabTimeRanges = make(map[string]api4.Range)
 	}
 	*o = WorkbookTimeSettingsV1(rawWorkbookTimeSettingsV1)
 	return nil

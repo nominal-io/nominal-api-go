@@ -1669,6 +1669,157 @@ func (e *PointsTooLarge) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type reservedTagName struct {
+	DataSourceRid string `json:"dataSourceRid"`
+	TagName       string `json:"tagName"`
+}
+
+func (o reservedTagName) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *reservedTagName) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewReservedTagName returns new instance of ReservedTagName error.
+func NewReservedTagName(dataSourceRidArg string, tagNameArg string) *ReservedTagName {
+	return &ReservedTagName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), reservedTagName: reservedTagName{DataSourceRid: dataSourceRidArg, TagName: tagNameArg}}
+}
+
+// WrapWithReservedTagName returns new instance of ReservedTagName error wrapping an existing error.
+func WrapWithReservedTagName(err error, dataSourceRidArg string, tagNameArg string) *ReservedTagName {
+	return &ReservedTagName{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, reservedTagName: reservedTagName{DataSourceRid: dataSourceRidArg, TagName: tagNameArg}}
+}
+
+// ReservedTagName is an error type.
+// The request uses a tag name that is reserved for internal use. Remove the tag from the request.
+type ReservedTagName struct {
+	errorInstanceID uuid.UUID
+	reservedTagName
+	cause error
+	stack werror.StackTrace
+}
+
+// IsReservedTagName returns true if err is an instance of ReservedTagName.
+func IsReservedTagName(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ReservedTagName)
+	return ok
+}
+
+func (e *ReservedTagName) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT NominalChannelWriter:ReservedTagName (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ReservedTagName) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ReservedTagName) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ReservedTagName) Message() string {
+	return "INVALID_ARGUMENT NominalChannelWriter:ReservedTagName"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ReservedTagName) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ReservedTagName) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *ReservedTagName) Name() string {
+	return "NominalChannelWriter:ReservedTagName"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ReservedTagName) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ReservedTagName) Parameters() map[string]interface{} {
+	return map[string]interface{}{"dataSourceRid": e.DataSourceRid, "tagName": e.TagName}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ReservedTagName) safeParams() map[string]interface{} {
+	return map[string]interface{}{"dataSourceRid": e.DataSourceRid, "tagName": e.TagName, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ReservedTagName) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ReservedTagName) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ReservedTagName) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ReservedTagName) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.reservedTagName)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "NominalChannelWriter:ReservedTagName", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ReservedTagName) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters reservedTagName
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.reservedTagName = parameters
+	return nil
+}
+
 // safelogging:@Safe
 type streamingDisabledOnDataset struct {
 	DatasetRid rids.DatasetRid `json:"datasetRid" safelogging:"@Safe"`
@@ -1817,6 +1968,159 @@ func (e *StreamingDisabledOnDataset) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.streamingDisabledOnDataset = parameters
+	return nil
+}
+
+type streamingSessionRidNotAllowed struct {
+	DataSourceRid string `json:"dataSourceRid"`
+}
+
+func (o streamingSessionRidNotAllowed) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *streamingSessionRidNotAllowed) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewStreamingSessionRidNotAllowed returns new instance of StreamingSessionRidNotAllowed error.
+func NewStreamingSessionRidNotAllowed(dataSourceRidArg string) *StreamingSessionRidNotAllowed {
+	return &StreamingSessionRidNotAllowed{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), streamingSessionRidNotAllowed: streamingSessionRidNotAllowed{DataSourceRid: dataSourceRidArg}}
+}
+
+// WrapWithStreamingSessionRidNotAllowed returns new instance of StreamingSessionRidNotAllowed error wrapping an existing error.
+func WrapWithStreamingSessionRidNotAllowed(err error, dataSourceRidArg string) *StreamingSessionRidNotAllowed {
+	return &StreamingSessionRidNotAllowed{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, streamingSessionRidNotAllowed: streamingSessionRidNotAllowed{DataSourceRid: dataSourceRidArg}}
+}
+
+// StreamingSessionRidNotAllowed is an error type.
+/*
+The request sets a streaming session rid, which is assigned by Nominal and cannot be provided by the
+client.
+*/
+type StreamingSessionRidNotAllowed struct {
+	errorInstanceID uuid.UUID
+	streamingSessionRidNotAllowed
+	cause error
+	stack werror.StackTrace
+}
+
+// IsStreamingSessionRidNotAllowed returns true if err is an instance of StreamingSessionRidNotAllowed.
+func IsStreamingSessionRidNotAllowed(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*StreamingSessionRidNotAllowed)
+	return ok
+}
+
+func (e *StreamingSessionRidNotAllowed) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT NominalChannelWriter:StreamingSessionRidNotAllowed (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *StreamingSessionRidNotAllowed) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *StreamingSessionRidNotAllowed) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *StreamingSessionRidNotAllowed) Message() string {
+	return "INVALID_ARGUMENT NominalChannelWriter:StreamingSessionRidNotAllowed"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *StreamingSessionRidNotAllowed) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *StreamingSessionRidNotAllowed) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *StreamingSessionRidNotAllowed) Name() string {
+	return "NominalChannelWriter:StreamingSessionRidNotAllowed"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *StreamingSessionRidNotAllowed) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *StreamingSessionRidNotAllowed) Parameters() map[string]interface{} {
+	return map[string]interface{}{"dataSourceRid": e.DataSourceRid}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *StreamingSessionRidNotAllowed) safeParams() map[string]interface{} {
+	return map[string]interface{}{"dataSourceRid": e.DataSourceRid, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *StreamingSessionRidNotAllowed) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *StreamingSessionRidNotAllowed) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *StreamingSessionRidNotAllowed) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e StreamingSessionRidNotAllowed) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.streamingSessionRidNotAllowed)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "NominalChannelWriter:StreamingSessionRidNotAllowed", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *StreamingSessionRidNotAllowed) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters streamingSessionRidNotAllowed
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.streamingSessionRidNotAllowed = parameters
 	return nil
 }
 
@@ -2288,7 +2592,9 @@ func init() {
 	conjureerrors.RegisterErrorType("NominalChannelWriter:InvalidTimestamp", reflect.TypeOf(InvalidTimestamp{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:MismatchedTimestampsAndValues", reflect.TypeOf(MismatchedTimestampsAndValues{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:PointsTooLarge", reflect.TypeOf(PointsTooLarge{}))
+	conjureerrors.RegisterErrorType("NominalChannelWriter:ReservedTagName", reflect.TypeOf(ReservedTagName{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:StreamingDisabledOnDataset", reflect.TypeOf(StreamingDisabledOnDataset{}))
+	conjureerrors.RegisterErrorType("NominalChannelWriter:StreamingSessionRidNotAllowed", reflect.TypeOf(StreamingSessionRidNotAllowed{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:StructTooLarge", reflect.TypeOf(StructTooLarge{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:TooManyChannelNameOverrides", reflect.TypeOf(TooManyChannelNameOverrides{}))
 	conjureerrors.RegisterErrorType("NominalChannelWriter:TooManySessionSources", reflect.TypeOf(TooManySessionSources{}))

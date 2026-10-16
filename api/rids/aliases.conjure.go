@@ -911,6 +911,58 @@ func (a *LocalResourceRid) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 /*
+Unique resource identifier for a mesh flag.
+A flag is a label local to a workspace. An artifact flows over a connection when both carry the same flag.
+*/
+type MeshFlagRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a MeshFlagRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a MeshFlagRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *MeshFlagRid) UnmarshalText(data []byte) error {
+	var rawMeshFlagRid rid.ResourceIdentifier
+	if err := rawMeshFlagRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = MeshFlagRid(rawMeshFlagRid)
+	return nil
+}
+
+func (a MeshFlagRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *MeshFlagRid) UnmarshalJSON(data []byte) error {
+	var rawMeshFlagRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawMeshFlagRid); err != nil {
+		return err
+	}
+	*a = MeshFlagRid(rawMeshFlagRid)
+	return nil
+}
+
+func (a MeshFlagRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *MeshFlagRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+/*
 Unique resource identifier for a NominalDataSource or Dataset.
 Though named similarly to a DataSourceRid, a NominalDataSourceRid specifically refers To
 a NominalDataSource, which is a nominal hosted database for streaming writes.
@@ -1159,6 +1211,55 @@ func (a NovaAppVersionRid) MarshalYAML() (interface{}, error) {
 }
 
 func (a *NovaAppVersionRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+// Unique resource identifier for a Dataset Pipeline
+type PipelineRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a PipelineRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a PipelineRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *PipelineRid) UnmarshalText(data []byte) error {
+	var rawPipelineRid rid.ResourceIdentifier
+	if err := rawPipelineRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = PipelineRid(rawPipelineRid)
+	return nil
+}
+
+func (a PipelineRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *PipelineRid) UnmarshalJSON(data []byte) error {
+	var rawPipelineRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawPipelineRid); err != nil {
+		return err
+	}
+	*a = PipelineRid(rawPipelineRid)
+	return nil
+}
+
+func (a PipelineRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *PipelineRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1462,6 +1563,55 @@ func (a SegmentRid) MarshalYAML() (interface{}, error) {
 }
 
 func (a *SegmentRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+// Unique resource identifier for an Analyst skill record.
+type SkillRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a SkillRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a SkillRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *SkillRid) UnmarshalText(data []byte) error {
+	var rawSkillRid rid.ResourceIdentifier
+	if err := rawSkillRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = SkillRid(rawSkillRid)
+	return nil
+}
+
+func (a SkillRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *SkillRid) UnmarshalJSON(data []byte) error {
+	var rawSkillRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawSkillRid); err != nil {
+		return err
+	}
+	*a = SkillRid(rawSkillRid)
+	return nil
+}
+
+func (a SkillRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *SkillRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

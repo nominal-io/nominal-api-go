@@ -13,6 +13,71 @@ import (
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 )
 
+type DataScopeInputFilterWithT[T any] DataScopeInputFilter
+
+func (u *DataScopeInputFilterWithT[T]) Accept(ctx context.Context, v DataScopeInputFilterVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "tag":
+		if u.tag == nil {
+			return result, fmt.Errorf("field \"tag\" is required")
+		}
+		return v.VisitTag(ctx, *u.tag)
+	case "event":
+		if u.event == nil {
+			return result, fmt.Errorf("field \"event\" is required")
+		}
+		return v.VisitEvent(ctx, *u.event)
+	}
+}
+
+func (u *DataScopeInputFilterWithT[T]) AcceptFuncs(tagFunc func(TagDataScopeInputFilter) (T, error), eventFunc func(EventDataScopeInputFilter) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "tag":
+		if u.tag == nil {
+			return result, fmt.Errorf("field \"tag\" is required")
+		}
+		return tagFunc(*u.tag)
+	case "event":
+		if u.event == nil {
+			return result, fmt.Errorf("field \"event\" is required")
+		}
+		return eventFunc(*u.event)
+	}
+}
+
+func (u *DataScopeInputFilterWithT[T]) TagNoopSuccess(TagDataScopeInputFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DataScopeInputFilterWithT[T]) EventNoopSuccess(EventDataScopeInputFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *DataScopeInputFilterWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type DataScopeInputFilterVisitorWithT[T any] interface {
+	VisitTag(ctx context.Context, v TagDataScopeInputFilter) (T, error)
+	VisitEvent(ctx context.Context, v EventDataScopeInputFilter) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type DataScopeInputValueWithT[T any] DataScopeInputValue
 
 func (u *DataScopeInputValueWithT[T]) Accept(ctx context.Context, v DataScopeInputValueVisitorWithT[T]) (T, error) {
@@ -334,6 +399,55 @@ func (u *TagStringWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type TagStringVisitorWithT[T any] interface {
 	VisitLiteral(ctx context.Context, v TagStringLiteral) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type TimeRangeWithT[T any] TimeRange
+
+func (u *TimeRangeWithT[T]) Accept(ctx context.Context, v TimeRangeVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "timeRangeV1":
+		if u.timeRangeV1 == nil {
+			return result, fmt.Errorf("field \"timeRangeV1\" is required")
+		}
+		return v.VisitTimeRangeV1(ctx, *u.timeRangeV1)
+	}
+}
+
+func (u *TimeRangeWithT[T]) AcceptFuncs(timeRangeV1Func func(TimeRangeV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "timeRangeV1":
+		if u.timeRangeV1 == nil {
+			return result, fmt.Errorf("field \"timeRangeV1\" is required")
+		}
+		return timeRangeV1Func(*u.timeRangeV1)
+	}
+}
+
+func (u *TimeRangeWithT[T]) TimeRangeV1NoopSuccess(TimeRangeV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *TimeRangeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type TimeRangeVisitorWithT[T any] interface {
+	VisitTimeRangeV1(ctx context.Context, v TimeRangeV1) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

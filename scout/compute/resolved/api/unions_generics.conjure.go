@@ -2914,6 +2914,11 @@ func (u *ResolvedNodeWithT[T]) Accept(ctx context.Context, v ResolvedNodeVisitor
 			return result, fmt.Errorf("field \"frequencyV2\" is required")
 		}
 		return v.VisitFrequencyV2(ctx, *u.frequencyV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return result, fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return v.VisitSpectrogram(ctx, *u.spectrogram)
 	case "histogram":
 		if u.histogram == nil {
 			return result, fmt.Errorf("field \"histogram\" is required")
@@ -2937,7 +2942,7 @@ func (u *ResolvedNodeWithT[T]) Accept(ctx context.Context, v ResolvedNodeVisitor
 	}
 }
 
-func (u *ResolvedNodeWithT[T]) AcceptFuncs(rangesFunc func(SummarizeRangesNode) (T, error), seriesFunc func(SummarizeSeriesNode) (T, error), valueFunc func(SelectValueNode) (T, error), cartesianFunc func(SummarizeCartesianNode) (T, error), cartesian3dFunc func(SummarizeCartesian3dNode) (T, error), frequencyFunc func(FrequencyDomainNode) (T, error), frequencyV2Func func(FrequencyDomainNodeV2) (T, error), histogramFunc func(HistogramNode) (T, error), curveFunc func(CurveFitV2Node) (T, error), curveV2Func func(CurveFitV2Node) (T, error), multivariateFunc func(SummarizeMultivariateNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ResolvedNodeWithT[T]) AcceptFuncs(rangesFunc func(SummarizeRangesNode) (T, error), seriesFunc func(SummarizeSeriesNode) (T, error), valueFunc func(SelectValueNode) (T, error), cartesianFunc func(SummarizeCartesianNode) (T, error), cartesian3dFunc func(SummarizeCartesian3dNode) (T, error), frequencyFunc func(FrequencyDomainNode) (T, error), frequencyV2Func func(FrequencyDomainNodeV2) (T, error), spectrogramFunc func(SpectrogramNode) (T, error), histogramFunc func(HistogramNode) (T, error), curveFunc func(CurveFitV2Node) (T, error), curveV2Func func(CurveFitV2Node) (T, error), multivariateFunc func(SummarizeMultivariateNode) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2980,6 +2985,11 @@ func (u *ResolvedNodeWithT[T]) AcceptFuncs(rangesFunc func(SummarizeRangesNode) 
 			return result, fmt.Errorf("field \"frequencyV2\" is required")
 		}
 		return frequencyV2Func(*u.frequencyV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return result, fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return spectrogramFunc(*u.spectrogram)
 	case "histogram":
 		if u.histogram == nil {
 			return result, fmt.Errorf("field \"histogram\" is required")
@@ -3038,6 +3048,11 @@ func (u *ResolvedNodeWithT[T]) FrequencyV2NoopSuccess(FrequencyDomainNodeV2) (T,
 	return result, nil
 }
 
+func (u *ResolvedNodeWithT[T]) SpectrogramNoopSuccess(SpectrogramNode) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ResolvedNodeWithT[T]) HistogramNoopSuccess(HistogramNode) (T, error) {
 	var result T
 	return result, nil
@@ -3071,6 +3086,7 @@ type ResolvedNodeVisitorWithT[T any] interface {
 	VisitCartesian3d(ctx context.Context, v SummarizeCartesian3dNode) (T, error)
 	VisitFrequency(ctx context.Context, v FrequencyDomainNode) (T, error)
 	VisitFrequencyV2(ctx context.Context, v FrequencyDomainNodeV2) (T, error)
+	VisitSpectrogram(ctx context.Context, v SpectrogramNode) (T, error)
 	VisitHistogram(ctx context.Context, v HistogramNode) (T, error)
 	VisitCurve(ctx context.Context, v CurveFitV2Node) (T, error)
 	VisitCurveV2(ctx context.Context, v CurveFitV2Node) (T, error)
