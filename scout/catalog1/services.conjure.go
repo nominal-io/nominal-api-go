@@ -75,19 +75,26 @@ type CatalogServiceClient interface {
 	*/
 	UpdateDatasetFileMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg catalog.DatasetFileMetadata) (DatasetFile, error)
 	UpdateDatasetMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg catalog.UpdateDatasetMetadata) (catalog.EnrichedDataset, error)
-	// Returns a versioned derived definition. If commit is omitted, returns the latest commit on main.
+	/*
+	   Returns a versioned derived definition. If commit is omitted, returns the latest commit on main.
+	   Where the deployment resolves derived datasets through their same-UUID pipelines, the definition and its
+	   commits are the pipeline's; a commit from the dataset's own earlier history still resolves.
+	*/
 	GetDatasetDerivedDefinition(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, commitArg *api1.CommitId) (catalog.DerivedDefinition, error)
 	/*
 	   Initializes a derived definition on a dataset that is not yet derived and has no ingest or
 	   streaming state (files, create-time handle, bounds, external connection, or streaming sessions).
 	   Subsequent changes use commitDerivedDefinition.
 	   Throws if the dataset is already derived, is non-empty, referenced datasets are unauthorized,
-	   or the definition is nested/unsupported.
+	   or the definition is nested/unsupported. Where the deployment resolves derived datasets through their
+	   pipelines, the same-UUID pipeline is created alongside, and later commits go to it.
 	*/
 	CreateDatasetDerivedDefinition(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, requestArg catalog.CreateDerivedDefinition) (catalog.DerivedDefinition, error)
 	/*
 	   Replaces the current derived definition by creating a permanent commit on main.
 	   Throws if the dataset is not derived, if referenced datasets are unauthorized, or if latestCommit is stale.
+	   Where the deployment resolves derived datasets through their same-UUID pipelines, this commits to the
+	   pipeline, and latestCommit is checked against the pipeline's head.
 	*/
 	CommitDerivedDefinition(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, requestArg catalog.CommitDerivedDefinitionRequest) (catalog.DerivedDefinition, error)
 	/*
@@ -773,19 +780,26 @@ type CatalogServiceClientWithAuth interface {
 	*/
 	UpdateDatasetFileMetadata(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg catalog.DatasetFileMetadata) (DatasetFile, error)
 	UpdateDatasetMetadata(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg catalog.UpdateDatasetMetadata) (catalog.EnrichedDataset, error)
-	// Returns a versioned derived definition. If commit is omitted, returns the latest commit on main.
+	/*
+	   Returns a versioned derived definition. If commit is omitted, returns the latest commit on main.
+	   Where the deployment resolves derived datasets through their same-UUID pipelines, the definition and its
+	   commits are the pipeline's; a commit from the dataset's own earlier history still resolves.
+	*/
 	GetDatasetDerivedDefinition(ctx context.Context, datasetRidArg rids.DatasetRid, commitArg *api1.CommitId) (catalog.DerivedDefinition, error)
 	/*
 	   Initializes a derived definition on a dataset that is not yet derived and has no ingest or
 	   streaming state (files, create-time handle, bounds, external connection, or streaming sessions).
 	   Subsequent changes use commitDerivedDefinition.
 	   Throws if the dataset is already derived, is non-empty, referenced datasets are unauthorized,
-	   or the definition is nested/unsupported.
+	   or the definition is nested/unsupported. Where the deployment resolves derived datasets through their
+	   pipelines, the same-UUID pipeline is created alongside, and later commits go to it.
 	*/
 	CreateDatasetDerivedDefinition(ctx context.Context, datasetRidArg rids.DatasetRid, requestArg catalog.CreateDerivedDefinition) (catalog.DerivedDefinition, error)
 	/*
 	   Replaces the current derived definition by creating a permanent commit on main.
 	   Throws if the dataset is not derived, if referenced datasets are unauthorized, or if latestCommit is stale.
+	   Where the deployment resolves derived datasets through their same-UUID pipelines, this commits to the
+	   pipeline, and latestCommit is checked against the pipeline's head.
 	*/
 	CommitDerivedDefinition(ctx context.Context, datasetRidArg rids.DatasetRid, requestArg catalog.CommitDerivedDefinitionRequest) (catalog.DerivedDefinition, error)
 	/*

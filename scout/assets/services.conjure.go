@@ -51,10 +51,13 @@ type AssetServiceClient interface {
 	UpdateAssetRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, requestArg api.UpdateAssetRefNamesRequest) error
 	// Creates a new type.
 	CreateType(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateTypeRequest) (api.Type, error)
-	// Updates a type. Will throw unless all assets that reference the type pass the updated type check.
+	/*
+	   Updates a type. Will throw unless all assets that reference the type pass the updated type check.
+	   A property or primary-key change throws TooManyActiveTypeMembers when the type has more active members
+	   than that check can scan.
+	*/
 	UpdateType(ctx context.Context, authHeader bearertoken.Token, typeRidArg api1.TypeRid, requestArg api.UpdateTypeRequest) (api.Type, error)
 	GetTypes(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.TypeRid) (map[api1.TypeRid]api.Type, error)
-	GetTypesForDatasource(ctx context.Context, authHeader bearertoken.Token, datasourceRidArg rids.DataSourceRid) ([]api.Type, error)
 	// Deletes a type. The type must not be referenced by any assets.
 	DeleteType(ctx context.Context, authHeader bearertoken.Token, ridArg api1.TypeRid) error
 	ArchiveType(ctx context.Context, authHeader bearertoken.Token, ridArg api1.TypeRid) error
@@ -326,24 +329,6 @@ func (c *assetServiceClient) GetTypes(ctx context.Context, authHeader bearertoke
 	return returnVal, nil
 }
 
-func (c *assetServiceClient) GetTypesForDatasource(ctx context.Context, authHeader bearertoken.Token, datasourceRidArg rids.DataSourceRid) ([]api.Type, error) {
-	var returnVal []api.Type
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("GetTypesForDatasource"))
-	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
-	requestParams = append(requestParams, httpclient.WithPathf("/scout/v1/type/datasource"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(datasourceRidArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return nil, werror.WrapWithContextParams(ctx, err, "getTypesForDatasource failed")
-	}
-	if returnVal == nil {
-		return nil, werror.ErrorWithContextParams(ctx, "getTypesForDatasource response cannot be nil")
-	}
-	return returnVal, nil
-}
-
 func (c *assetServiceClient) DeleteType(ctx context.Context, authHeader bearertoken.Token, ridArg api1.TypeRid) error {
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteType"))
@@ -415,10 +400,13 @@ type AssetServiceClientWithAuth interface {
 	UpdateAssetRefNames(ctx context.Context, ridArg api1.AssetRid, requestArg api.UpdateAssetRefNamesRequest) error
 	// Creates a new type.
 	CreateType(ctx context.Context, requestArg api.CreateTypeRequest) (api.Type, error)
-	// Updates a type. Will throw unless all assets that reference the type pass the updated type check.
+	/*
+	   Updates a type. Will throw unless all assets that reference the type pass the updated type check.
+	   A property or primary-key change throws TooManyActiveTypeMembers when the type has more active members
+	   than that check can scan.
+	*/
 	UpdateType(ctx context.Context, typeRidArg api1.TypeRid, requestArg api.UpdateTypeRequest) (api.Type, error)
 	GetTypes(ctx context.Context, ridsArg []api1.TypeRid) (map[api1.TypeRid]api.Type, error)
-	GetTypesForDatasource(ctx context.Context, datasourceRidArg rids.DataSourceRid) ([]api.Type, error)
 	// Deletes a type. The type must not be referenced by any assets.
 	DeleteType(ctx context.Context, ridArg api1.TypeRid) error
 	ArchiveType(ctx context.Context, ridArg api1.TypeRid) error
@@ -492,10 +480,6 @@ func (c *assetServiceClientWithAuth) UpdateType(ctx context.Context, typeRidArg 
 
 func (c *assetServiceClientWithAuth) GetTypes(ctx context.Context, ridsArg []api1.TypeRid) (map[api1.TypeRid]api.Type, error) {
 	return c.client.GetTypes(ctx, c.authHeader, ridsArg)
-}
-
-func (c *assetServiceClientWithAuth) GetTypesForDatasource(ctx context.Context, datasourceRidArg rids.DataSourceRid) ([]api.Type, error) {
-	return c.client.GetTypesForDatasource(ctx, c.authHeader, datasourceRidArg)
 }
 
 func (c *assetServiceClientWithAuth) DeleteType(ctx context.Context, ridArg api1.TypeRid) error {
@@ -637,14 +621,6 @@ func (c *assetServiceClientWithTokenProvider) GetTypes(ctx context.Context, rids
 		return nil, err
 	}
 	return c.client.GetTypes(ctx, bearertoken.Token(token), ridsArg)
-}
-
-func (c *assetServiceClientWithTokenProvider) GetTypesForDatasource(ctx context.Context, datasourceRidArg rids.DataSourceRid) ([]api.Type, error) {
-	token, err := c.tokenProvider(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return c.client.GetTypesForDatasource(ctx, bearertoken.Token(token), datasourceRidArg)
 }
 
 func (c *assetServiceClientWithTokenProvider) DeleteType(ctx context.Context, ridArg api1.TypeRid) error {

@@ -490,6 +490,54 @@ func (a *GroupRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
+type LinkRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a LinkRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a LinkRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *LinkRid) UnmarshalText(data []byte) error {
+	var rawLinkRid rid.ResourceIdentifier
+	if err := rawLinkRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = LinkRid(rawLinkRid)
+	return nil
+}
+
+func (a LinkRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *LinkRid) UnmarshalJSON(data []byte) error {
+	var rawLinkRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawLinkRid); err != nil {
+		return err
+	}
+	*a = LinkRid(rawLinkRid)
+	return nil
+}
+
+func (a LinkRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *LinkRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
 type MarkingRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a MarkingRid) String() string {

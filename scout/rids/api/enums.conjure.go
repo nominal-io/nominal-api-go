@@ -272,3 +272,60 @@ func (e *SearchEventOriginType) UnmarshalText(data []byte) error {
 	}
 	return nil
 }
+
+type TimeRangeType struct {
+	val TimeRangeType_Value
+}
+
+type TimeRangeType_Value string
+
+const (
+	TimeRangeType_ABSOLUTE TimeRangeType_Value = "ABSOLUTE"
+	TimeRangeType_RELATIVE TimeRangeType_Value = "RELATIVE"
+	TimeRangeType_UNKNOWN  TimeRangeType_Value = "UNKNOWN"
+)
+
+// TimeRangeType_Values returns all known variants of TimeRangeType.
+func TimeRangeType_Values() []TimeRangeType_Value {
+	return []TimeRangeType_Value{TimeRangeType_ABSOLUTE, TimeRangeType_RELATIVE}
+}
+
+func New_TimeRangeType(value TimeRangeType_Value) TimeRangeType {
+	return TimeRangeType{val: value}
+}
+
+// IsUnknown returns false for all known variants of TimeRangeType and true otherwise.
+func (e TimeRangeType) IsUnknown() bool {
+	switch e.val {
+	case TimeRangeType_ABSOLUTE, TimeRangeType_RELATIVE:
+		return false
+	}
+	return true
+}
+
+func (e TimeRangeType) Value() TimeRangeType_Value {
+	if e.IsUnknown() {
+		return TimeRangeType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e TimeRangeType) String() string {
+	return string(e.val)
+}
+
+func (e TimeRangeType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *TimeRangeType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_TimeRangeType(TimeRangeType_Value(v))
+	case "ABSOLUTE":
+		*e = New_TimeRangeType(TimeRangeType_ABSOLUTE)
+	case "RELATIVE":
+		*e = New_TimeRangeType(TimeRangeType_RELATIVE)
+	}
+	return nil
+}

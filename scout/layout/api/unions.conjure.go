@@ -6,8 +6,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
+	"github.com/palantir/pkg/uuid"
 )
 
 type CanvasConnection struct {
@@ -1441,6 +1443,181 @@ func NewPanelFromDocument(v DocumentLayout) Panel {
 
 func NewPanelFromAnalyst(v AnalystLayout) Panel {
 	return Panel{typ: "analyst", analyst: &v}
+}
+
+// Panel's time range, either a literal time range or a time range input.
+type PanelTimeRange struct {
+	typ     string
+	input   *uuid.UUID
+	literal *api.LiteralTimeRange
+}
+
+type panelTimeRangeDeserializer struct {
+	Type    string                `json:"type"`
+	Input   *uuid.UUID            `json:"input"`
+	Literal *api.LiteralTimeRange `json:"literal"`
+}
+
+func (u *panelTimeRangeDeserializer) toStruct() PanelTimeRange {
+	return PanelTimeRange{typ: u.Type, input: u.Input, literal: u.Literal}
+}
+
+func (u *PanelTimeRange) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "input":
+		if u.input == nil {
+			return nil, fmt.Errorf("field \"input\" is required")
+		}
+		return struct {
+			Type  string    `json:"type"`
+			Input uuid.UUID `json:"input"`
+		}{Type: "input", Input: *u.input}, nil
+	case "literal":
+		if u.literal == nil {
+			return nil, fmt.Errorf("field \"literal\" is required")
+		}
+		return struct {
+			Type    string               `json:"type"`
+			Literal api.LiteralTimeRange `json:"literal"`
+		}{Type: "literal", Literal: *u.literal}, nil
+	}
+}
+
+func (u PanelTimeRange) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *PanelTimeRange) UnmarshalJSON(data []byte) error {
+	var deser panelTimeRangeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "input":
+		if u.input == nil {
+			return fmt.Errorf("field \"input\" is required")
+		}
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+	}
+	return nil
+}
+
+func (u PanelTimeRange) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *PanelTimeRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *PanelTimeRange) AcceptFuncs(inputFunc func(uuid.UUID) error, literalFunc func(api.LiteralTimeRange) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in PanelTimeRange type")
+		}
+		return unknownFunc(u.typ)
+	case "input":
+		if u.input == nil {
+			return fmt.Errorf("field \"input\" is required")
+		}
+		return inputFunc(*u.input)
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+		return literalFunc(*u.literal)
+	}
+}
+
+func (u *PanelTimeRange) InputNoopSuccess(_ uuid.UUID) error {
+	return nil
+}
+
+func (u *PanelTimeRange) LiteralNoopSuccess(_ api.LiteralTimeRange) error {
+	return nil
+}
+
+func (u *PanelTimeRange) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *PanelTimeRange) Accept(v PanelTimeRangeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "input":
+		if u.input == nil {
+			return fmt.Errorf("field \"input\" is required")
+		}
+		return v.VisitInput(*u.input)
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+		return v.VisitLiteral(*u.literal)
+	}
+}
+
+type PanelTimeRangeVisitor interface {
+	VisitInput(v uuid.UUID) error
+	VisitLiteral(v api.LiteralTimeRange) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *PanelTimeRange) AcceptWithContext(ctx context.Context, v PanelTimeRangeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "input":
+		if u.input == nil {
+			return fmt.Errorf("field \"input\" is required")
+		}
+		return v.VisitInputWithContext(ctx, *u.input)
+	case "literal":
+		if u.literal == nil {
+			return fmt.Errorf("field \"literal\" is required")
+		}
+		return v.VisitLiteralWithContext(ctx, *u.literal)
+	}
+}
+
+type PanelTimeRangeVisitorWithContext interface {
+	VisitInputWithContext(ctx context.Context, v uuid.UUID) error
+	VisitLiteralWithContext(ctx context.Context, v api.LiteralTimeRange) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewPanelTimeRangeFromInput(v uuid.UUID) PanelTimeRange {
+	return PanelTimeRange{typ: "input", input: &v}
+}
+
+func NewPanelTimeRangeFromLiteral(v api.LiteralTimeRange) PanelTimeRange {
+	return PanelTimeRange{typ: "literal", literal: &v}
 }
 
 type SingleTab struct {

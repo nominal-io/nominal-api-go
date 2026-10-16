@@ -884,7 +884,10 @@ func (o *SearchRunChannelsResponse) UnmarshalYAML(unmarshal func(interface{}) er
 // safelogging:@Unsafe
 type SearchRunsRequest struct {
 	Sort SortOptions `json:"sort"`
-	// Will reject page sizes greater than 1000.
+	/*
+	   Maximum page size is 10000 for searchRuns, and 1000 for searchRunsWithDataReviewMetrics
+	   and searchRunsWithDataReviewSummary. Larger page sizes are rejected.
+	*/
 	PageSize      int         `json:"pageSize"`
 	NextPageToken *api.Token  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Query         SearchQuery `json:"query"`

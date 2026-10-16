@@ -115,6 +115,29 @@ func (o *LabelsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A standard definition of a time range, optional t0 defined for relative time ranges.
+type LiteralTimeRange struct {
+	AbsoluteRange api1.Range      `json:"absoluteRange" safelogging:"@Safe"`
+	TimeRangeType TimeRangeType   `json:"timeRangeType"`
+	T0            *api1.Timestamp `json:"t0,omitempty"`
+}
+
+func (o LiteralTimeRange) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *LiteralTimeRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type PendingReviewAlertState struct{}
 
 func (o PendingReviewAlertState) MarshalYAML() (interface{}, error) {

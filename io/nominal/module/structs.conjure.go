@@ -6,6 +6,8 @@ import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	api2 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/modules/api"
+	api3 "github.com/nominal-io/nominal-api-go/scout/api"
+	api4 "github.com/nominal-io/nominal-api-go/scout/checks/api"
 	api1 "github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
@@ -518,6 +520,63 @@ func (o *PinnedVersionStrategy) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+A registered Rust UDF. The containing Function supplies its name and description, and its parameters must
+be empty because the UDF declares its own inputs. The server compiles sourceCode on every module create/update
+and sets the status which contains the artifact when compilation succeeds.
+*/
+type RegisteredUdf struct {
+	Kind RegisteredUdfKind `json:"kind"`
+	// The declared UDF inputs. Must contain between 1 and 16 parameters.
+	Inputs      []UdfParameter `json:"inputs"`
+	Output      UdfOutputType  `json:"output"`
+	OutputShape UdfOutputShape `json:"outputShape"`
+	// Rust source code to compile into WASM. Limited to 100,000 characters.
+	SourceCode string `json:"sourceCode"`
+	/*
+	   Compilation status, set by the server and always present in responses. A caller-supplied value is
+	   ignored.
+	*/
+	Status *UdfCompilationStatus `json:"status,omitempty"`
+}
+
+func (o RegisteredUdf) MarshalJSON() ([]byte, error) {
+	if o.Inputs == nil {
+		o.Inputs = make([]UdfParameter, 0)
+	}
+	type _tmpRegisteredUdf RegisteredUdf
+	return safejson.Marshal(_tmpRegisteredUdf(o))
+}
+
+func (o *RegisteredUdf) UnmarshalJSON(data []byte) error {
+	type _tmpRegisteredUdf RegisteredUdf
+	var rawRegisteredUdf _tmpRegisteredUdf
+	if err := safejson.Unmarshal(data, &rawRegisteredUdf); err != nil {
+		return err
+	}
+	if rawRegisteredUdf.Inputs == nil {
+		rawRegisteredUdf.Inputs = make([]UdfParameter, 0)
+	}
+	*o = RegisteredUdf(rawRegisteredUdf)
+	return nil
+}
+
+func (o RegisteredUdf) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *RegisteredUdf) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // This is used to refer to modules in requests by name.
 type RequestModuleNameRef struct {
 	ApiName         string          `json:"apiName"`
@@ -645,6 +704,121 @@ func (o SearchModulesSortOptions) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SearchModulesSortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UdfArtifact struct {
+	/*
+	   Content-addressed key for the compiled artifacts, derived from the compiler image, target ABI, UDF
+	   kind, and source. It is also the ClickHouse function name the UDF registers under.
+	*/
+	CompileKey     string        `json:"compileKey"`
+	WasmHandle     api3.S3Handle `json:"wasmHandle"`
+	ManifestHandle api3.S3Handle `json:"manifestHandle"`
+}
+
+func (o UdfArtifact) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UdfArtifact) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Safe
+type UdfCompilationFailed struct {
+	JobRid api4.JobRid `json:"jobRid" safelogging:"@Safe"`
+}
+
+func (o UdfCompilationFailed) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UdfCompilationFailed) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// safelogging:@Safe
+type UdfCompilationPending struct {
+	// The compilation job, set by the server. A caller-supplied value is ignored.
+	JobRid api4.JobRid `json:"jobRid" safelogging:"@Safe"`
+}
+
+func (o UdfCompilationPending) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UdfCompilationPending) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UdfCompilationSuccess struct {
+	JobRid api4.JobRid `json:"jobRid" safelogging:"@Safe"`
+	/*
+	   The compiled artifact, set by the server. A caller-supplied value is ignored and recomputed from
+	   sourceCode.
+	*/
+	Artifact UdfArtifact `json:"artifact"`
+}
+
+func (o UdfCompilationSuccess) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UdfCompilationSuccess) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type UdfParameter struct {
+	Type        UdfDataType    `json:"type"`
+	Cardinality UdfCardinality `json:"cardinality"`
+}
+
+func (o UdfParameter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UdfParameter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

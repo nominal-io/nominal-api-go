@@ -1247,6 +1247,7 @@ type ComputeNodeResponse struct {
 	bucketedCartesian3d       *BucketedCartesian3dPlot
 	frequencyDomain           *FrequencyDomainPlot
 	frequencyDomainV2         *FrequencyDomainPlotV2
+	spectrogram               *SpectrogramPlot
 	bucketedFrequencyDomain   *BucketedFrequencyDomainPlot
 	numericHistogram          *NumericHistogramPlot
 	enumHistogram             *EnumHistogramPlot
@@ -1285,6 +1286,7 @@ type computeNodeResponseDeserializer struct {
 	BucketedCartesian3d       *BucketedCartesian3dPlot     `json:"bucketedCartesian3d"`
 	FrequencyDomain           *FrequencyDomainPlot         `json:"frequencyDomain"`
 	FrequencyDomainV2         *FrequencyDomainPlotV2       `json:"frequencyDomainV2"`
+	Spectrogram               *SpectrogramPlot             `json:"spectrogram"`
 	BucketedFrequencyDomain   *BucketedFrequencyDomainPlot `json:"bucketedFrequencyDomain"`
 	NumericHistogram          *NumericHistogramPlot        `json:"numericHistogram"`
 	EnumHistogram             *EnumHistogramPlot           `json:"enumHistogram"`
@@ -1300,7 +1302,7 @@ type computeNodeResponseDeserializer struct {
 }
 
 func (u *computeNodeResponseDeserializer) toStruct() ComputeNodeResponse {
-	return ComputeNodeResponse{typ: u.Type, range_: u.Range, rangesSummary: u.RangesSummary, rangeValue: u.RangeValue, numeric: u.Numeric, bucketedNumeric: u.BucketedNumeric, numericPoint: u.NumericPoint, singlePoint: u.SinglePoint, arrowNumeric: u.ArrowNumeric, arrowBucketedNumeric: u.ArrowBucketedNumeric, enum: u.Enum, enumPoint: u.EnumPoint, bucketedEnum: u.BucketedEnum, arrowEnum: u.ArrowEnum, arrowBucketedEnum: u.ArrowBucketedEnum, pagedLog: u.PagedLog, logPoint: u.LogPoint, arrowLog: u.ArrowLog, cartesian: u.Cartesian, bucketedCartesian: u.BucketedCartesian, bucketedCartesian3d: u.BucketedCartesian3d, frequencyDomain: u.FrequencyDomain, frequencyDomainV2: u.FrequencyDomainV2, bucketedFrequencyDomain: u.BucketedFrequencyDomain, numericHistogram: u.NumericHistogram, enumHistogram: u.EnumHistogram, curveFit: u.CurveFit, curveFitV2: u.CurveFitV2, grouped: u.Grouped, array: u.Array, bucketedStruct: u.BucketedStruct, arrowStruct: u.ArrowStruct, fullResolution: u.FullResolution, arrowBucketedMultivariate: u.ArrowBucketedMultivariate, multivariate: u.Multivariate}
+	return ComputeNodeResponse{typ: u.Type, range_: u.Range, rangesSummary: u.RangesSummary, rangeValue: u.RangeValue, numeric: u.Numeric, bucketedNumeric: u.BucketedNumeric, numericPoint: u.NumericPoint, singlePoint: u.SinglePoint, arrowNumeric: u.ArrowNumeric, arrowBucketedNumeric: u.ArrowBucketedNumeric, enum: u.Enum, enumPoint: u.EnumPoint, bucketedEnum: u.BucketedEnum, arrowEnum: u.ArrowEnum, arrowBucketedEnum: u.ArrowBucketedEnum, pagedLog: u.PagedLog, logPoint: u.LogPoint, arrowLog: u.ArrowLog, cartesian: u.Cartesian, bucketedCartesian: u.BucketedCartesian, bucketedCartesian3d: u.BucketedCartesian3d, frequencyDomain: u.FrequencyDomain, frequencyDomainV2: u.FrequencyDomainV2, spectrogram: u.Spectrogram, bucketedFrequencyDomain: u.BucketedFrequencyDomain, numericHistogram: u.NumericHistogram, enumHistogram: u.EnumHistogram, curveFit: u.CurveFit, curveFitV2: u.CurveFitV2, grouped: u.Grouped, array: u.Array, bucketedStruct: u.BucketedStruct, arrowStruct: u.ArrowStruct, fullResolution: u.FullResolution, arrowBucketedMultivariate: u.ArrowBucketedMultivariate, multivariate: u.Multivariate}
 }
 
 func (u *ComputeNodeResponse) toSerializer() (interface{}, error) {
@@ -1488,6 +1490,14 @@ func (u *ComputeNodeResponse) toSerializer() (interface{}, error) {
 			Type              string                `json:"type"`
 			FrequencyDomainV2 FrequencyDomainPlotV2 `json:"frequencyDomainV2"`
 		}{Type: "frequencyDomainV2", FrequencyDomainV2: *u.frequencyDomainV2}, nil
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return nil, fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return struct {
+			Type        string          `json:"type"`
+			Spectrogram SpectrogramPlot `json:"spectrogram"`
+		}{Type: "spectrogram", Spectrogram: *u.spectrogram}, nil
 	case "bucketedFrequencyDomain":
 		if u.bucketedFrequencyDomain == nil {
 			return nil, fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
@@ -1675,6 +1685,10 @@ func (u *ComputeNodeResponse) UnmarshalJSON(data []byte) error {
 		if u.frequencyDomainV2 == nil {
 			return fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
 	case "bucketedFrequencyDomain":
 		if u.bucketedFrequencyDomain == nil {
 			return fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
@@ -1743,7 +1757,7 @@ func (u *ComputeNodeResponse) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ComputeNodeResponse) AcceptFuncs(range_Func func([]Range) error, rangesSummaryFunc func(RangesSummary) error, rangeValueFunc func(*Range) error, numericFunc func(NumericPlot) error, bucketedNumericFunc func(BucketedNumericPlot) error, numericPointFunc func(*NumericPoint) error, singlePointFunc func(*SinglePoint) error, arrowNumericFunc func(ArrowPlot) error, arrowBucketedNumericFunc func(ArrowPlot) error, enumFunc func(EnumPlot) error, enumPointFunc func(*EnumPoint) error, bucketedEnumFunc func(BucketedEnumPlot) error, arrowEnumFunc func(ArrowPlot) error, arrowBucketedEnumFunc func(ArrowPlot) error, pagedLogFunc func(PagedLogPlot) error, logPointFunc func(*LogPoint) error, arrowLogFunc func(ArrowPlot) error, cartesianFunc func(CartesianPlot) error, bucketedCartesianFunc func(BucketedCartesianPlot) error, bucketedCartesian3dFunc func(BucketedCartesian3dPlot) error, frequencyDomainFunc func(FrequencyDomainPlot) error, frequencyDomainV2Func func(FrequencyDomainPlotV2) error, bucketedFrequencyDomainFunc func(BucketedFrequencyDomainPlot) error, numericHistogramFunc func(NumericHistogramPlot) error, enumHistogramFunc func(EnumHistogramPlot) error, curveFitFunc func(CurveFitResult) error, curveFitV2Func func(CurveFitResultV2) error, groupedFunc func(GroupedComputeNodeResponses) error, arrayFunc func(ArrowArrayPlot) error, bucketedStructFunc func(ArrowPlot) error, arrowStructFunc func(ArrowPlot) error, fullResolutionFunc func(ArrowPlot) error, arrowBucketedMultivariateFunc func(ArrowPlot) error, multivariateFunc func(BucketedMultivariatePlot) error, unknownFunc func(string) error) error {
+func (u *ComputeNodeResponse) AcceptFuncs(range_Func func([]Range) error, rangesSummaryFunc func(RangesSummary) error, rangeValueFunc func(*Range) error, numericFunc func(NumericPlot) error, bucketedNumericFunc func(BucketedNumericPlot) error, numericPointFunc func(*NumericPoint) error, singlePointFunc func(*SinglePoint) error, arrowNumericFunc func(ArrowPlot) error, arrowBucketedNumericFunc func(ArrowPlot) error, enumFunc func(EnumPlot) error, enumPointFunc func(*EnumPoint) error, bucketedEnumFunc func(BucketedEnumPlot) error, arrowEnumFunc func(ArrowPlot) error, arrowBucketedEnumFunc func(ArrowPlot) error, pagedLogFunc func(PagedLogPlot) error, logPointFunc func(*LogPoint) error, arrowLogFunc func(ArrowPlot) error, cartesianFunc func(CartesianPlot) error, bucketedCartesianFunc func(BucketedCartesianPlot) error, bucketedCartesian3dFunc func(BucketedCartesian3dPlot) error, frequencyDomainFunc func(FrequencyDomainPlot) error, frequencyDomainV2Func func(FrequencyDomainPlotV2) error, spectrogramFunc func(SpectrogramPlot) error, bucketedFrequencyDomainFunc func(BucketedFrequencyDomainPlot) error, numericHistogramFunc func(NumericHistogramPlot) error, enumHistogramFunc func(EnumHistogramPlot) error, curveFitFunc func(CurveFitResult) error, curveFitV2Func func(CurveFitResultV2) error, groupedFunc func(GroupedComputeNodeResponses) error, arrayFunc func(ArrowArrayPlot) error, bucketedStructFunc func(ArrowPlot) error, arrowStructFunc func(ArrowPlot) error, fullResolutionFunc func(ArrowPlot) error, arrowBucketedMultivariateFunc func(ArrowPlot) error, multivariateFunc func(BucketedMultivariatePlot) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1865,6 +1879,11 @@ func (u *ComputeNodeResponse) AcceptFuncs(range_Func func([]Range) error, ranges
 			return fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
 		return frequencyDomainV2Func(*u.frequencyDomainV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return spectrogramFunc(*u.spectrogram)
 	case "bucketedFrequencyDomain":
 		if u.bucketedFrequencyDomain == nil {
 			return fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
@@ -2013,6 +2032,10 @@ func (u *ComputeNodeResponse) FrequencyDomainNoopSuccess(_ FrequencyDomainPlot) 
 }
 
 func (u *ComputeNodeResponse) FrequencyDomainV2NoopSuccess(_ FrequencyDomainPlotV2) error {
+	return nil
+}
+
+func (u *ComputeNodeResponse) SpectrogramNoopSuccess(_ SpectrogramPlot) error {
 	return nil
 }
 
@@ -2190,6 +2213,11 @@ func (u *ComputeNodeResponse) Accept(v ComputeNodeResponseVisitor) error {
 			return fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
 		return v.VisitFrequencyDomainV2(*u.frequencyDomainV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return v.VisitSpectrogram(*u.spectrogram)
 	case "bucketedFrequencyDomain":
 		if u.bucketedFrequencyDomain == nil {
 			return fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
@@ -2276,6 +2304,7 @@ type ComputeNodeResponseVisitor interface {
 	VisitBucketedCartesian3d(v BucketedCartesian3dPlot) error
 	VisitFrequencyDomain(v FrequencyDomainPlot) error
 	VisitFrequencyDomainV2(v FrequencyDomainPlotV2) error
+	VisitSpectrogram(v SpectrogramPlot) error
 	VisitBucketedFrequencyDomain(v BucketedFrequencyDomainPlot) error
 	VisitNumericHistogram(v NumericHistogramPlot) error
 	VisitEnumHistogram(v EnumHistogramPlot) error
@@ -2413,6 +2442,11 @@ func (u *ComputeNodeResponse) AcceptWithContext(ctx context.Context, v ComputeNo
 			return fmt.Errorf("field \"frequencyDomainV2\" is required")
 		}
 		return v.VisitFrequencyDomainV2WithContext(ctx, *u.frequencyDomainV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return v.VisitSpectrogramWithContext(ctx, *u.spectrogram)
 	case "bucketedFrequencyDomain":
 		if u.bucketedFrequencyDomain == nil {
 			return fmt.Errorf("field \"bucketedFrequencyDomain\" is required")
@@ -2499,6 +2533,7 @@ type ComputeNodeResponseVisitorWithContext interface {
 	VisitBucketedCartesian3dWithContext(ctx context.Context, v BucketedCartesian3dPlot) error
 	VisitFrequencyDomainWithContext(ctx context.Context, v FrequencyDomainPlot) error
 	VisitFrequencyDomainV2WithContext(ctx context.Context, v FrequencyDomainPlotV2) error
+	VisitSpectrogramWithContext(ctx context.Context, v SpectrogramPlot) error
 	VisitBucketedFrequencyDomainWithContext(ctx context.Context, v BucketedFrequencyDomainPlot) error
 	VisitNumericHistogramWithContext(ctx context.Context, v NumericHistogramPlot) error
 	VisitEnumHistogramWithContext(ctx context.Context, v EnumHistogramPlot) error
@@ -2600,6 +2635,10 @@ func NewComputeNodeResponseFromFrequencyDomain(v FrequencyDomainPlot) ComputeNod
 
 func NewComputeNodeResponseFromFrequencyDomainV2(v FrequencyDomainPlotV2) ComputeNodeResponse {
 	return ComputeNodeResponse{typ: "frequencyDomainV2", frequencyDomainV2: &v}
+}
+
+func NewComputeNodeResponseFromSpectrogram(v SpectrogramPlot) ComputeNodeResponse {
+	return ComputeNodeResponse{typ: "spectrogram", spectrogram: &v}
 }
 
 func NewComputeNodeResponseFromBucketedFrequencyDomain(v BucketedFrequencyDomainPlot) ComputeNodeResponse {
@@ -4179,6 +4218,180 @@ func NewDecimateStrategyFromResolution(v DecimateWithResolution) DecimateStrateg
 
 func NewDecimateStrategyFromBuckets(v DecimateWithBuckets) DecimateStrategy {
 	return DecimateStrategy{typ: "buckets", buckets: &v}
+}
+
+type DimensionValue struct {
+	typ            string
+	stringProperty *StringPropertyDimension
+	identity       *IdentityDimension
+}
+
+type dimensionValueDeserializer struct {
+	Type           string                   `json:"type"`
+	StringProperty *StringPropertyDimension `json:"stringProperty"`
+	Identity       *IdentityDimension       `json:"identity"`
+}
+
+func (u *dimensionValueDeserializer) toStruct() DimensionValue {
+	return DimensionValue{typ: u.Type, stringProperty: u.StringProperty, identity: u.Identity}
+}
+
+func (u *DimensionValue) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "stringProperty":
+		if u.stringProperty == nil {
+			return nil, fmt.Errorf("field \"stringProperty\" is required")
+		}
+		return struct {
+			Type           string                  `json:"type"`
+			StringProperty StringPropertyDimension `json:"stringProperty"`
+		}{Type: "stringProperty", StringProperty: *u.stringProperty}, nil
+	case "identity":
+		if u.identity == nil {
+			return nil, fmt.Errorf("field \"identity\" is required")
+		}
+		return struct {
+			Type     string            `json:"type"`
+			Identity IdentityDimension `json:"identity"`
+		}{Type: "identity", Identity: *u.identity}, nil
+	}
+}
+
+func (u DimensionValue) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *DimensionValue) UnmarshalJSON(data []byte) error {
+	var deser dimensionValueDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "stringProperty":
+		if u.stringProperty == nil {
+			return fmt.Errorf("field \"stringProperty\" is required")
+		}
+	case "identity":
+		if u.identity == nil {
+			return fmt.Errorf("field \"identity\" is required")
+		}
+	}
+	return nil
+}
+
+func (u DimensionValue) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *DimensionValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *DimensionValue) AcceptFuncs(stringPropertyFunc func(StringPropertyDimension) error, identityFunc func(IdentityDimension) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in DimensionValue type")
+		}
+		return unknownFunc(u.typ)
+	case "stringProperty":
+		if u.stringProperty == nil {
+			return fmt.Errorf("field \"stringProperty\" is required")
+		}
+		return stringPropertyFunc(*u.stringProperty)
+	case "identity":
+		if u.identity == nil {
+			return fmt.Errorf("field \"identity\" is required")
+		}
+		return identityFunc(*u.identity)
+	}
+}
+
+func (u *DimensionValue) StringPropertyNoopSuccess(_ StringPropertyDimension) error {
+	return nil
+}
+
+func (u *DimensionValue) IdentityNoopSuccess(_ IdentityDimension) error {
+	return nil
+}
+
+func (u *DimensionValue) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *DimensionValue) Accept(v DimensionValueVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "stringProperty":
+		if u.stringProperty == nil {
+			return fmt.Errorf("field \"stringProperty\" is required")
+		}
+		return v.VisitStringProperty(*u.stringProperty)
+	case "identity":
+		if u.identity == nil {
+			return fmt.Errorf("field \"identity\" is required")
+		}
+		return v.VisitIdentity(*u.identity)
+	}
+}
+
+type DimensionValueVisitor interface {
+	VisitStringProperty(v StringPropertyDimension) error
+	VisitIdentity(v IdentityDimension) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *DimensionValue) AcceptWithContext(ctx context.Context, v DimensionValueVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "stringProperty":
+		if u.stringProperty == nil {
+			return fmt.Errorf("field \"stringProperty\" is required")
+		}
+		return v.VisitStringPropertyWithContext(ctx, *u.stringProperty)
+	case "identity":
+		if u.identity == nil {
+			return fmt.Errorf("field \"identity\" is required")
+		}
+		return v.VisitIdentityWithContext(ctx, *u.identity)
+	}
+}
+
+type DimensionValueVisitorWithContext interface {
+	VisitStringPropertyWithContext(ctx context.Context, v StringPropertyDimension) error
+	VisitIdentityWithContext(ctx context.Context, v IdentityDimension) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewDimensionValueFromStringProperty(v StringPropertyDimension) DimensionValue {
+	return DimensionValue{typ: "stringProperty", stringProperty: &v}
+}
+
+func NewDimensionValueFromIdentity(v IdentityDimension) DimensionValue {
+	return DimensionValue{typ: "identity", identity: &v}
 }
 
 /*

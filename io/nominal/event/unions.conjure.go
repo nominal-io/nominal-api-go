@@ -1436,93 +1436,97 @@ func NewHistogramFilterQueryFromStepId(v string) HistogramFilterQuery {
 }
 
 type SearchQuery struct {
-	typ                 string
-	archived            *bool
-	searchText          *string
-	exactMatch          *string
-	after               *api3.Timestamp
-	before              *api3.Timestamp
-	advancedTimeFilter  *EventTimeFilter
-	asset               *api1.AssetRid
-	assets              *AssetsFilter
-	template            *api1.TemplateRid
-	workbook            *api1.NotebookRid
-	dataReview          *api1.DataReviewRid
-	dataReviews         *DataReviewsFilter
-	originType          *SearchEventOriginType
-	originTypes         *OriginTypesFilter
-	dataReviewCheck     *api1.CheckRid
-	dataReviewChecks    *DataReviewChecksFilter
-	dispositionStatus   *EventDispositionStatus
-	dispositionStatuses *[]EventDispositionStatus
-	priority            *api2.Priority
-	priorities          *[]api2.Priority
-	assignee            *api1.UserRid
-	assignees           *AssigneesFilter
-	eventType           *EventType
-	eventTypes          *[]EventType
-	createdBy           *api1.UserRid
-	createdByAnyOf      *[]api1.UserRid
-	label               *api3.Label
-	labels              *api1.LabelsFilter
-	property            *api3.Property
-	properties          *api1.PropertiesFilter
-	and                 *[]SearchQuery
-	or                  *[]SearchQuery
-	not                 *SearchQuery
-	workspace           *rids.WorkspaceRid
-	procedure           *rids.ProcedureRid
-	procedureExecution  *rids.ProcedureExecutionRid
-	stepId              *string
-	streamingChecklist  *api1.ChecklistRid
-	streamingCheck      *api1.CheckRid
+	typ                  string
+	archived             *bool
+	searchText           *string
+	exactMatch           *string
+	after                *api3.Timestamp
+	before               *api3.Timestamp
+	advancedTimeFilter   *EventTimeFilter
+	asset                *api1.AssetRid
+	assets               *AssetsFilter
+	template             *api1.TemplateRid
+	workbook             *api1.NotebookRid
+	dataReview           *api1.DataReviewRid
+	dataReviews          *DataReviewsFilter
+	originType           *SearchEventOriginType
+	originTypes          *OriginTypesFilter
+	dataReviewCheck      *api1.CheckRid
+	dataReviewChecks     *DataReviewChecksFilter
+	dispositionStatus    *EventDispositionStatus
+	dispositionStatuses  *[]EventDispositionStatus
+	priority             *api2.Priority
+	priorities           *[]api2.Priority
+	assignee             *api1.UserRid
+	assignees            *AssigneesFilter
+	eventType            *EventType
+	eventTypes           *[]EventType
+	createdBy            *api1.UserRid
+	createdByAnyOf       *[]api1.UserRid
+	label                *api3.Label
+	labels               *api1.LabelsFilter
+	property             *api3.Property
+	properties           *api1.PropertiesFilter
+	and                  *[]SearchQuery
+	or                   *[]SearchQuery
+	not                  *SearchQuery
+	workspace            *rids.WorkspaceRid
+	procedure            *rids.ProcedureRid
+	procedureExecution   *rids.ProcedureExecutionRid
+	stepId               *string
+	streamingChecklist   *api1.ChecklistRid
+	streamingCheck       *api1.CheckRid
+	numericProperty      *api3.NumericPropertyPredicate
+	numericPropertyRange *api3.NumericPropertyRangePredicate
 }
 
 type searchQueryDeserializer struct {
-	Type                string                      `json:"type"`
-	Archived            *bool                       `json:"archived"`
-	SearchText          *string                     `json:"searchText"`
-	ExactMatch          *string                     `json:"exactMatch"`
-	After               *api3.Timestamp             `json:"after"`
-	Before              *api3.Timestamp             `json:"before"`
-	AdvancedTimeFilter  *EventTimeFilter            `json:"advancedTimeFilter"`
-	Asset               *api1.AssetRid              `json:"asset"`
-	Assets              *AssetsFilter               `json:"assets"`
-	Template            *api1.TemplateRid           `json:"template"`
-	Workbook            *api1.NotebookRid           `json:"workbook"`
-	DataReview          *api1.DataReviewRid         `json:"dataReview"`
-	DataReviews         *DataReviewsFilter          `json:"dataReviews"`
-	OriginType          *SearchEventOriginType      `json:"originType"`
-	OriginTypes         *OriginTypesFilter          `json:"originTypes"`
-	DataReviewCheck     *api1.CheckRid              `json:"dataReviewCheck"`
-	DataReviewChecks    *DataReviewChecksFilter     `json:"dataReviewChecks"`
-	DispositionStatus   *EventDispositionStatus     `json:"dispositionStatus"`
-	DispositionStatuses *[]EventDispositionStatus   `json:"dispositionStatuses"`
-	Priority            *api2.Priority              `json:"priority"`
-	Priorities          *[]api2.Priority            `json:"priorities"`
-	Assignee            *api1.UserRid               `json:"assignee"`
-	Assignees           *AssigneesFilter            `json:"assignees"`
-	EventType           *EventType                  `json:"eventType"`
-	EventTypes          *[]EventType                `json:"eventTypes"`
-	CreatedBy           *api1.UserRid               `json:"createdBy"`
-	CreatedByAnyOf      *[]api1.UserRid             `json:"createdByAnyOf"`
-	Label               *api3.Label                 `json:"label"`
-	Labels              *api1.LabelsFilter          `json:"labels"`
-	Property            *api3.Property              `json:"property"`
-	Properties          *api1.PropertiesFilter      `json:"properties"`
-	And                 *[]SearchQuery              `json:"and"`
-	Or                  *[]SearchQuery              `json:"or"`
-	Not                 *SearchQuery                `json:"not"`
-	Workspace           *rids.WorkspaceRid          `json:"workspace"`
-	Procedure           *rids.ProcedureRid          `json:"procedure"`
-	ProcedureExecution  *rids.ProcedureExecutionRid `json:"procedureExecution"`
-	StepId              *string                     `json:"stepId"`
-	StreamingChecklist  *api1.ChecklistRid          `json:"streamingChecklist"`
-	StreamingCheck      *api1.CheckRid              `json:"streamingCheck"`
+	Type                 string                              `json:"type"`
+	Archived             *bool                               `json:"archived"`
+	SearchText           *string                             `json:"searchText"`
+	ExactMatch           *string                             `json:"exactMatch"`
+	After                *api3.Timestamp                     `json:"after"`
+	Before               *api3.Timestamp                     `json:"before"`
+	AdvancedTimeFilter   *EventTimeFilter                    `json:"advancedTimeFilter"`
+	Asset                *api1.AssetRid                      `json:"asset"`
+	Assets               *AssetsFilter                       `json:"assets"`
+	Template             *api1.TemplateRid                   `json:"template"`
+	Workbook             *api1.NotebookRid                   `json:"workbook"`
+	DataReview           *api1.DataReviewRid                 `json:"dataReview"`
+	DataReviews          *DataReviewsFilter                  `json:"dataReviews"`
+	OriginType           *SearchEventOriginType              `json:"originType"`
+	OriginTypes          *OriginTypesFilter                  `json:"originTypes"`
+	DataReviewCheck      *api1.CheckRid                      `json:"dataReviewCheck"`
+	DataReviewChecks     *DataReviewChecksFilter             `json:"dataReviewChecks"`
+	DispositionStatus    *EventDispositionStatus             `json:"dispositionStatus"`
+	DispositionStatuses  *[]EventDispositionStatus           `json:"dispositionStatuses"`
+	Priority             *api2.Priority                      `json:"priority"`
+	Priorities           *[]api2.Priority                    `json:"priorities"`
+	Assignee             *api1.UserRid                       `json:"assignee"`
+	Assignees            *AssigneesFilter                    `json:"assignees"`
+	EventType            *EventType                          `json:"eventType"`
+	EventTypes           *[]EventType                        `json:"eventTypes"`
+	CreatedBy            *api1.UserRid                       `json:"createdBy"`
+	CreatedByAnyOf       *[]api1.UserRid                     `json:"createdByAnyOf"`
+	Label                *api3.Label                         `json:"label"`
+	Labels               *api1.LabelsFilter                  `json:"labels"`
+	Property             *api3.Property                      `json:"property"`
+	Properties           *api1.PropertiesFilter              `json:"properties"`
+	And                  *[]SearchQuery                      `json:"and"`
+	Or                   *[]SearchQuery                      `json:"or"`
+	Not                  *SearchQuery                        `json:"not"`
+	Workspace            *rids.WorkspaceRid                  `json:"workspace"`
+	Procedure            *rids.ProcedureRid                  `json:"procedure"`
+	ProcedureExecution   *rids.ProcedureExecutionRid         `json:"procedureExecution"`
+	StepId               *string                             `json:"stepId"`
+	StreamingChecklist   *api1.ChecklistRid                  `json:"streamingChecklist"`
+	StreamingCheck       *api1.CheckRid                      `json:"streamingCheck"`
+	NumericProperty      *api3.NumericPropertyPredicate      `json:"numericProperty"`
+	NumericPropertyRange *api3.NumericPropertyRangePredicate `json:"numericPropertyRange"`
 }
 
 func (u *searchQueryDeserializer) toStruct() SearchQuery {
-	return SearchQuery{typ: u.Type, archived: u.Archived, searchText: u.SearchText, exactMatch: u.ExactMatch, after: u.After, before: u.Before, advancedTimeFilter: u.AdvancedTimeFilter, asset: u.Asset, assets: u.Assets, template: u.Template, workbook: u.Workbook, dataReview: u.DataReview, dataReviews: u.DataReviews, originType: u.OriginType, originTypes: u.OriginTypes, dataReviewCheck: u.DataReviewCheck, dataReviewChecks: u.DataReviewChecks, dispositionStatus: u.DispositionStatus, dispositionStatuses: u.DispositionStatuses, priority: u.Priority, priorities: u.Priorities, assignee: u.Assignee, assignees: u.Assignees, eventType: u.EventType, eventTypes: u.EventTypes, createdBy: u.CreatedBy, createdByAnyOf: u.CreatedByAnyOf, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, procedure: u.Procedure, procedureExecution: u.ProcedureExecution, stepId: u.StepId, streamingChecklist: u.StreamingChecklist, streamingCheck: u.StreamingCheck}
+	return SearchQuery{typ: u.Type, archived: u.Archived, searchText: u.SearchText, exactMatch: u.ExactMatch, after: u.After, before: u.Before, advancedTimeFilter: u.AdvancedTimeFilter, asset: u.Asset, assets: u.Assets, template: u.Template, workbook: u.Workbook, dataReview: u.DataReview, dataReviews: u.DataReviews, originType: u.OriginType, originTypes: u.OriginTypes, dataReviewCheck: u.DataReviewCheck, dataReviewChecks: u.DataReviewChecks, dispositionStatus: u.DispositionStatus, dispositionStatuses: u.DispositionStatuses, priority: u.Priority, priorities: u.Priorities, assignee: u.Assignee, assignees: u.Assignees, eventType: u.EventType, eventTypes: u.EventTypes, createdBy: u.CreatedBy, createdByAnyOf: u.CreatedByAnyOf, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, procedure: u.Procedure, procedureExecution: u.ProcedureExecution, stepId: u.StepId, streamingChecklist: u.StreamingChecklist, streamingCheck: u.StreamingCheck, numericProperty: u.NumericProperty, numericPropertyRange: u.NumericPropertyRange}
 }
 
 func (u *SearchQuery) toSerializer() (interface{}, error) {
@@ -1841,6 +1845,22 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type           string        `json:"type"`
 			StreamingCheck api1.CheckRid `json:"streamingCheck"`
 		}{Type: "streamingCheck", StreamingCheck: *u.streamingCheck}, nil
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return nil, fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return struct {
+			Type            string                        `json:"type"`
+			NumericProperty api3.NumericPropertyPredicate `json:"numericProperty"`
+		}{Type: "numericProperty", NumericProperty: *u.numericProperty}, nil
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return nil, fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return struct {
+			Type                 string                             `json:"type"`
+			NumericPropertyRange api3.NumericPropertyRangePredicate `json:"numericPropertyRange"`
+		}{Type: "numericPropertyRange", NumericPropertyRange: *u.numericPropertyRange}, nil
 	}
 }
 
@@ -2015,6 +2035,14 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.streamingCheck == nil {
 			return fmt.Errorf("field \"streamingCheck\" is required")
 		}
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
 	}
 	return nil
 }
@@ -2035,7 +2063,7 @@ func (u *SearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchQuery) AcceptFuncs(archivedFunc func(bool) error, searchTextFunc func(string) error, exactMatchFunc func(string) error, afterFunc func(api3.Timestamp) error, beforeFunc func(api3.Timestamp) error, advancedTimeFilterFunc func(EventTimeFilter) error, assetFunc func(api1.AssetRid) error, assetsFunc func(AssetsFilter) error, templateFunc func(api1.TemplateRid) error, workbookFunc func(api1.NotebookRid) error, dataReviewFunc func(api1.DataReviewRid) error, dataReviewsFunc func(DataReviewsFilter) error, originTypeFunc func(SearchEventOriginType) error, originTypesFunc func(OriginTypesFilter) error, dataReviewCheckFunc func(api1.CheckRid) error, dataReviewChecksFunc func(DataReviewChecksFilter) error, dispositionStatusFunc func(EventDispositionStatus) error, dispositionStatusesFunc func([]EventDispositionStatus) error, priorityFunc func(api2.Priority) error, prioritiesFunc func([]api2.Priority) error, assigneeFunc func(api1.UserRid) error, assigneesFunc func(AssigneesFilter) error, eventTypeFunc func(EventType) error, eventTypesFunc func([]EventType) error, createdByFunc func(api1.UserRid) error, createdByAnyOfFunc func([]api1.UserRid) error, labelFunc func(api3.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api3.Property) error, propertiesFunc func(api1.PropertiesFilter) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, procedureFunc func(rids.ProcedureRid) error, procedureExecutionFunc func(rids.ProcedureExecutionRid) error, stepIdFunc func(string) error, streamingChecklistFunc func(api1.ChecklistRid) error, streamingCheckFunc func(api1.CheckRid) error, unknownFunc func(string) error) error {
+func (u *SearchQuery) AcceptFuncs(archivedFunc func(bool) error, searchTextFunc func(string) error, exactMatchFunc func(string) error, afterFunc func(api3.Timestamp) error, beforeFunc func(api3.Timestamp) error, advancedTimeFilterFunc func(EventTimeFilter) error, assetFunc func(api1.AssetRid) error, assetsFunc func(AssetsFilter) error, templateFunc func(api1.TemplateRid) error, workbookFunc func(api1.NotebookRid) error, dataReviewFunc func(api1.DataReviewRid) error, dataReviewsFunc func(DataReviewsFilter) error, originTypeFunc func(SearchEventOriginType) error, originTypesFunc func(OriginTypesFilter) error, dataReviewCheckFunc func(api1.CheckRid) error, dataReviewChecksFunc func(DataReviewChecksFilter) error, dispositionStatusFunc func(EventDispositionStatus) error, dispositionStatusesFunc func([]EventDispositionStatus) error, priorityFunc func(api2.Priority) error, prioritiesFunc func([]api2.Priority) error, assigneeFunc func(api1.UserRid) error, assigneesFunc func(AssigneesFilter) error, eventTypeFunc func(EventType) error, eventTypesFunc func([]EventType) error, createdByFunc func(api1.UserRid) error, createdByAnyOfFunc func([]api1.UserRid) error, labelFunc func(api3.Label) error, labelsFunc func(api1.LabelsFilter) error, propertyFunc func(api3.Property) error, propertiesFunc func(api1.PropertiesFilter) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, procedureFunc func(rids.ProcedureRid) error, procedureExecutionFunc func(rids.ProcedureExecutionRid) error, stepIdFunc func(string) error, streamingChecklistFunc func(api1.ChecklistRid) error, streamingCheckFunc func(api1.CheckRid) error, numericPropertyFunc func(api3.NumericPropertyPredicate) error, numericPropertyRangeFunc func(api3.NumericPropertyRangePredicate) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2237,6 +2265,16 @@ func (u *SearchQuery) AcceptFuncs(archivedFunc func(bool) error, searchTextFunc 
 			return fmt.Errorf("field \"streamingCheck\" is required")
 		}
 		return streamingCheckFunc(*u.streamingCheck)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return numericPropertyFunc(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return numericPropertyRangeFunc(*u.numericPropertyRange)
 	}
 }
 
@@ -2393,6 +2431,14 @@ func (u *SearchQuery) StreamingChecklistNoopSuccess(_ api1.ChecklistRid) error {
 }
 
 func (u *SearchQuery) StreamingCheckNoopSuccess(_ api1.CheckRid) error {
+	return nil
+}
+
+func (u *SearchQuery) NumericPropertyNoopSuccess(_ api3.NumericPropertyPredicate) error {
+	return nil
+}
+
+func (u *SearchQuery) NumericPropertyRangeNoopSuccess(_ api3.NumericPropertyRangePredicate) error {
 	return nil
 }
 
@@ -2602,6 +2648,16 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"streamingCheck\" is required")
 		}
 		return v.VisitStreamingCheck(*u.streamingCheck)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericProperty(*u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRange(*u.numericPropertyRange)
 	}
 }
 
@@ -2645,6 +2701,8 @@ type SearchQueryVisitor interface {
 	VisitStepId(v string) error
 	VisitStreamingChecklist(v api1.ChecklistRid) error
 	VisitStreamingCheck(v api1.CheckRid) error
+	VisitNumericProperty(v api3.NumericPropertyPredicate) error
+	VisitNumericPropertyRange(v api3.NumericPropertyRangePredicate) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2850,6 +2908,16 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"streamingCheck\" is required")
 		}
 		return v.VisitStreamingCheckWithContext(ctx, *u.streamingCheck)
+	case "numericProperty":
+		if u.numericProperty == nil {
+			return fmt.Errorf("field \"numericProperty\" is required")
+		}
+		return v.VisitNumericPropertyWithContext(ctx, *u.numericProperty)
+	case "numericPropertyRange":
+		if u.numericPropertyRange == nil {
+			return fmt.Errorf("field \"numericPropertyRange\" is required")
+		}
+		return v.VisitNumericPropertyRangeWithContext(ctx, *u.numericPropertyRange)
 	}
 }
 
@@ -2893,6 +2961,8 @@ type SearchQueryVisitorWithContext interface {
 	VisitStepIdWithContext(ctx context.Context, v string) error
 	VisitStreamingChecklistWithContext(ctx context.Context, v api1.ChecklistRid) error
 	VisitStreamingCheckWithContext(ctx context.Context, v api1.CheckRid) error
+	VisitNumericPropertyWithContext(ctx context.Context, v api3.NumericPropertyPredicate) error
+	VisitNumericPropertyRangeWithContext(ctx context.Context, v api3.NumericPropertyRangePredicate) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -3050,6 +3120,14 @@ func NewSearchQueryFromStreamingChecklist(v api1.ChecklistRid) SearchQuery {
 
 func NewSearchQueryFromStreamingCheck(v api1.CheckRid) SearchQuery {
 	return SearchQuery{typ: "streamingCheck", streamingCheck: &v}
+}
+
+func NewSearchQueryFromNumericProperty(v api3.NumericPropertyPredicate) SearchQuery {
+	return SearchQuery{typ: "numericProperty", numericProperty: &v}
+}
+
+func NewSearchQueryFromNumericPropertyRange(v api3.NumericPropertyRangePredicate) SearchQuery {
+	return SearchQuery{typ: "numericPropertyRange", numericPropertyRange: &v}
 }
 
 type WorkbookDataAssociation struct {
