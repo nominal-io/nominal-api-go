@@ -2,43 +2,6 @@
 
 package api
 
-import (
-	"github.com/nominal-io/nominal-api-go/io/nominal/api"
-	"github.com/palantir/pkg/safejson"
-	"github.com/palantir/pkg/safeyaml"
-)
-
-type TimeRange api.Range
-
-func (a TimeRange) MarshalJSON() ([]byte, error) {
-	return safejson.Marshal(api.Range(a))
-}
-
-func (a *TimeRange) UnmarshalJSON(data []byte) error {
-	var rawTimeRange api.Range
-	if err := safejson.Unmarshal(data, &rawTimeRange); err != nil {
-		return err
-	}
-	*a = TimeRange(rawTimeRange)
-	return nil
-}
-
-func (a TimeRange) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(a)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (a *TimeRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&a)
-}
-
 // Unique identifier. Needs to be string for back-compatibility but this will usually be a uuid.
 type WorkbookDataScopeInputId string // safelogging:@Unsafe
 

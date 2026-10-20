@@ -274,12 +274,21 @@ func (o *GetUserOrgsRequest) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 type GetUserOrgsResponse struct {
+	// The configured name of each organization the user belongs to, keyed by organization UUID.
 	Orgs map[uuid.UUID]string `json:"orgs"`
+	/*
+	   The display name of each organization in `orgs` that has one, keyed by organization UUID. An
+	   organization without a display name is absent; show its name from `orgs` instead.
+	*/
+	OrgDisplayNames map[uuid.UUID]string `json:"orgDisplayNames"`
 }
 
 func (o GetUserOrgsResponse) MarshalJSON() ([]byte, error) {
 	if o.Orgs == nil {
 		o.Orgs = make(map[uuid.UUID]string)
+	}
+	if o.OrgDisplayNames == nil {
+		o.OrgDisplayNames = make(map[uuid.UUID]string)
 	}
 	type _tmpGetUserOrgsResponse GetUserOrgsResponse
 	return safejson.Marshal(_tmpGetUserOrgsResponse(o))
@@ -294,6 +303,9 @@ func (o *GetUserOrgsResponse) UnmarshalJSON(data []byte) error {
 	if rawGetUserOrgsResponse.Orgs == nil {
 		rawGetUserOrgsResponse.Orgs = make(map[uuid.UUID]string)
 	}
+	if rawGetUserOrgsResponse.OrgDisplayNames == nil {
+		rawGetUserOrgsResponse.OrgDisplayNames = make(map[uuid.UUID]string)
+	}
 	*o = GetUserOrgsResponse(rawGetUserOrgsResponse)
 	return nil
 }
@@ -307,46 +319,6 @@ func (o GetUserOrgsResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *GetUserOrgsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type IsEmailAllowedRequest struct {
-	Email string `json:"email"`
-}
-
-func (o IsEmailAllowedRequest) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *IsEmailAllowedRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-type IsEmailAllowedResponse struct {
-	Allowed bool `json:"allowed"`
-}
-
-func (o IsEmailAllowedResponse) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *IsEmailAllowedResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

@@ -136,6 +136,64 @@ func (e *FileOutputFormat) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// The format of the uploaded files. Every file in one automation shares it.
+type IngestAutomationFileType struct {
+	val IngestAutomationFileType_Value
+}
+
+type IngestAutomationFileType_Value string
+
+const (
+	IngestAutomationFileType_CSV     IngestAutomationFileType_Value = "CSV"
+	IngestAutomationFileType_PARQUET IngestAutomationFileType_Value = "PARQUET"
+	IngestAutomationFileType_UNKNOWN IngestAutomationFileType_Value = "UNKNOWN"
+)
+
+// IngestAutomationFileType_Values returns all known variants of IngestAutomationFileType.
+func IngestAutomationFileType_Values() []IngestAutomationFileType_Value {
+	return []IngestAutomationFileType_Value{IngestAutomationFileType_CSV, IngestAutomationFileType_PARQUET}
+}
+
+func New_IngestAutomationFileType(value IngestAutomationFileType_Value) IngestAutomationFileType {
+	return IngestAutomationFileType{val: value}
+}
+
+// IsUnknown returns false for all known variants of IngestAutomationFileType and true otherwise.
+func (e IngestAutomationFileType) IsUnknown() bool {
+	switch e.val {
+	case IngestAutomationFileType_CSV, IngestAutomationFileType_PARQUET:
+		return false
+	}
+	return true
+}
+
+func (e IngestAutomationFileType) Value() IngestAutomationFileType_Value {
+	if e.IsUnknown() {
+		return IngestAutomationFileType_UNKNOWN
+	}
+	return e.val
+}
+
+func (e IngestAutomationFileType) String() string {
+	return string(e.val)
+}
+
+func (e IngestAutomationFileType) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *IngestAutomationFileType) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_IngestAutomationFileType(IngestAutomationFileType_Value(v))
+	case "CSV":
+		*e = New_IngestAutomationFileType(IngestAutomationFileType_CSV)
+	case "PARQUET":
+		*e = New_IngestAutomationFileType(IngestAutomationFileType_PARQUET)
+	}
+	return nil
+}
+
 /*
 Progress of an ingest automation, in execution order. Statuses map one-to-one onto the
 client's progress checklist. Resources created before a FAILED terminal state persist
@@ -335,18 +393,20 @@ type IngestJobStatus struct {
 type IngestJobStatus_Value string
 
 const (
-	IngestJobStatus_SUBMITTED   IngestJobStatus_Value = "SUBMITTED"
-	IngestJobStatus_QUEUED      IngestJobStatus_Value = "QUEUED"
-	IngestJobStatus_IN_PROGRESS IngestJobStatus_Value = "IN_PROGRESS"
-	IngestJobStatus_COMPLETED   IngestJobStatus_Value = "COMPLETED"
-	IngestJobStatus_FAILED      IngestJobStatus_Value = "FAILED"
-	IngestJobStatus_CANCELLED   IngestJobStatus_Value = "CANCELLED"
-	IngestJobStatus_UNKNOWN     IngestJobStatus_Value = "UNKNOWN"
+	IngestJobStatus_SUBMITTED            IngestJobStatus_Value = "SUBMITTED"
+	IngestJobStatus_QUEUED               IngestJobStatus_Value = "QUEUED"
+	IngestJobStatus_IN_PROGRESS          IngestJobStatus_Value = "IN_PROGRESS"
+	IngestJobStatus_COMPLETED            IngestJobStatus_Value = "COMPLETED"
+	IngestJobStatus_FAILED               IngestJobStatus_Value = "FAILED"
+	IngestJobStatus_CANCELLED            IngestJobStatus_Value = "CANCELLED"
+	IngestJobStatus_DELETION_IN_PROGRESS IngestJobStatus_Value = "DELETION_IN_PROGRESS"
+	IngestJobStatus_DELETED              IngestJobStatus_Value = "DELETED"
+	IngestJobStatus_UNKNOWN              IngestJobStatus_Value = "UNKNOWN"
 )
 
 // IngestJobStatus_Values returns all known variants of IngestJobStatus.
 func IngestJobStatus_Values() []IngestJobStatus_Value {
-	return []IngestJobStatus_Value{IngestJobStatus_SUBMITTED, IngestJobStatus_QUEUED, IngestJobStatus_IN_PROGRESS, IngestJobStatus_COMPLETED, IngestJobStatus_FAILED, IngestJobStatus_CANCELLED}
+	return []IngestJobStatus_Value{IngestJobStatus_SUBMITTED, IngestJobStatus_QUEUED, IngestJobStatus_IN_PROGRESS, IngestJobStatus_COMPLETED, IngestJobStatus_FAILED, IngestJobStatus_CANCELLED, IngestJobStatus_DELETION_IN_PROGRESS, IngestJobStatus_DELETED}
 }
 
 func New_IngestJobStatus(value IngestJobStatus_Value) IngestJobStatus {
@@ -356,7 +416,7 @@ func New_IngestJobStatus(value IngestJobStatus_Value) IngestJobStatus {
 // IsUnknown returns false for all known variants of IngestJobStatus and true otherwise.
 func (e IngestJobStatus) IsUnknown() bool {
 	switch e.val {
-	case IngestJobStatus_SUBMITTED, IngestJobStatus_QUEUED, IngestJobStatus_IN_PROGRESS, IngestJobStatus_COMPLETED, IngestJobStatus_FAILED, IngestJobStatus_CANCELLED:
+	case IngestJobStatus_SUBMITTED, IngestJobStatus_QUEUED, IngestJobStatus_IN_PROGRESS, IngestJobStatus_COMPLETED, IngestJobStatus_FAILED, IngestJobStatus_CANCELLED, IngestJobStatus_DELETION_IN_PROGRESS, IngestJobStatus_DELETED:
 		return false
 	}
 	return true
@@ -393,6 +453,10 @@ func (e *IngestJobStatus) UnmarshalText(data []byte) error {
 		*e = New_IngestJobStatus(IngestJobStatus_FAILED)
 	case "CANCELLED":
 		*e = New_IngestJobStatus(IngestJobStatus_CANCELLED)
+	case "DELETION_IN_PROGRESS":
+		*e = New_IngestJobStatus(IngestJobStatus_DELETION_IN_PROGRESS)
+	case "DELETED":
+		*e = New_IngestJobStatus(IngestJobStatus_DELETED)
 	}
 	return nil
 }

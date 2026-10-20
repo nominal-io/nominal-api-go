@@ -110,6 +110,13 @@ arbitrary string identifier and is returned in diagnostic `requestIds`.
 */
 type BatchGetDatasetMetadataRequest struct {
 	Requests map[string]GetDatasetMetadataRequest `json:"requests"`
+	/*
+	   Caps how long the server spends looking up `latestStandaloneAssetDataTime`, in seconds. If the
+	   lookup does not finish in time it is cancelled and `latestStandaloneAssetDataTime` is empty for the
+	   inputs it would have answered; the rest of the response is unaffected. Must be positive. When
+	   absent, the lookup runs to completion.
+	*/
+	LatestTimeTimeoutSeconds *int `json:"latestTimeTimeoutSeconds,omitempty"`
 }
 
 func (o BatchGetDatasetMetadataRequest) MarshalJSON() ([]byte, error) {
@@ -268,6 +275,11 @@ type DatasetResolutionMetadata struct {
 	   offsets from an unanchored zero rather than wall-clock times.
 	*/
 	DatasetIntervals []ResolvedDatasetInterval `json:"datasetIntervals"`
+	/*
+	   The output-domain time each anchor alignment in this dataset lines its runs up on, one entry per
+	   alignByAnchor. Empty when no branch is anchor-aligned.
+	*/
+	AlignmentAnchorTimes []api1.Timestamp `json:"alignmentAnchorTimes"`
 }
 
 func (o DatasetResolutionMetadata) MarshalJSON() ([]byte, error) {
@@ -276,6 +288,9 @@ func (o DatasetResolutionMetadata) MarshalJSON() ([]byte, error) {
 	}
 	if o.DatasetIntervals == nil {
 		o.DatasetIntervals = make([]ResolvedDatasetInterval, 0)
+	}
+	if o.AlignmentAnchorTimes == nil {
+		o.AlignmentAnchorTimes = make([]api1.Timestamp, 0)
 	}
 	type _tmpDatasetResolutionMetadata DatasetResolutionMetadata
 	return safejson.Marshal(_tmpDatasetResolutionMetadata(o))
@@ -292,6 +307,9 @@ func (o *DatasetResolutionMetadata) UnmarshalJSON(data []byte) error {
 	}
 	if rawDatasetResolutionMetadata.DatasetIntervals == nil {
 		rawDatasetResolutionMetadata.DatasetIntervals = make([]ResolvedDatasetInterval, 0)
+	}
+	if rawDatasetResolutionMetadata.AlignmentAnchorTimes == nil {
+		rawDatasetResolutionMetadata.AlignmentAnchorTimes = make([]api1.Timestamp, 0)
 	}
 	*o = DatasetResolutionMetadata(rawDatasetResolutionMetadata)
 	return nil

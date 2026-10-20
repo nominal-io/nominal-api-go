@@ -1099,7 +1099,7 @@ type ComputeNodeRequest struct {
 	End     api.Timestamp `json:"end" safelogging:"@Safe"`
 	Context Context       `json:"context"`
 	/*
-	   Optional RID identifying the resource that initiated this query (e.g. workbook/notebook RID, checklist RID).
+	   Optional RID identifying the resource that initiated this query (e.g. workbook/notebook RID, checklist RID, dataset RID).
 	   Used for observability only — trusted as-is, no permission checks are performed on this value.
 	*/
 	SourceRid *rid.ResourceIdentifier `json:"sourceRid,omitempty"`
@@ -1502,6 +1502,67 @@ func (o *DerivativeSeries) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Injects one tag per dimension onto every series of the underlying dataset, valued from the asset or run
+the series belongs to. This makes resource metadata usable as a grouping, filtering and aggregation
+dimension with `selectTags`, tag predicates and `groupByTags`. Group by the dimension together with
+`ASSET_RID` (or `RUN_RID`) to keep each resource separate, or by the dimension alone to pivot so that
+resources sharing a value fall into one group.
+
+Dimensions are only supported on asset and run branches. Any other branch, such as a saved dataset or a
+derived series from `withSeries`, gets the reserved value `NOMINAL_ABSENT` for every dimension. To group
+derived series by a dimension, apply `withDimensions` to the `withSeries` input instead, so that the
+series they are computed from carry the dimension tags. A dimension tag replaces a series tag with the
+same key.
+*/
+type DimensionsDataset struct {
+	// The underlying dataset to tag.
+	Input Dataset `json:"input"`
+	/*
+	   The dimensions to inject. Must not be empty, must have at most 10 entries, and every dimension must
+	   have a distinct tag key. A tag key must not be a `ReservedTagKey`, start with `EVENT_LABEL_PREFIX:`,
+	   or start with `NOMINAL_`.
+	*/
+	Dimensions []api1.Dimension `json:"dimensions"`
+}
+
+func (o DimensionsDataset) MarshalJSON() ([]byte, error) {
+	if o.Dimensions == nil {
+		o.Dimensions = make([]api1.Dimension, 0)
+	}
+	type _tmpDimensionsDataset DimensionsDataset
+	return safejson.Marshal(_tmpDimensionsDataset(o))
+}
+
+func (o *DimensionsDataset) UnmarshalJSON(data []byte) error {
+	type _tmpDimensionsDataset DimensionsDataset
+	var rawDimensionsDataset _tmpDimensionsDataset
+	if err := safejson.Unmarshal(data, &rawDimensionsDataset); err != nil {
+		return err
+	}
+	if rawDimensionsDataset.Dimensions == nil {
+		rawDimensionsDataset.Dimensions = make([]api1.Dimension, 0)
+	}
+	*o = DimensionsDataset(rawDimensionsDataset)
+	return nil
+}
+
+func (o DimensionsDataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DimensionsDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Divides left by right pointwise.
 type Divide struct {
 	// Numerator.
@@ -1519,6 +1580,56 @@ func (o Divide) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Divide) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Removes series from the base dataset by name: raw and derived series alike are no longer selectable under
+those names. Dropping a name absent from `input` has no effect. Combined with `WithSeriesDataset`, which
+can expose a series under another name, this renames a series:
+`dropSeries(withSeries(input, [newName = select(oldName)]), [oldName])`.
+*/
+type DropSeriesDataset struct {
+	// The base dataset to drop series from.
+	Input Dataset `json:"input"`
+	// Names of the series to drop.
+	Names []api1.StringConstant `json:"names"`
+}
+
+func (o DropSeriesDataset) MarshalJSON() ([]byte, error) {
+	if o.Names == nil {
+		o.Names = make([]api1.StringConstant, 0)
+	}
+	type _tmpDropSeriesDataset DropSeriesDataset
+	return safejson.Marshal(_tmpDropSeriesDataset(o))
+}
+
+func (o *DropSeriesDataset) UnmarshalJSON(data []byte) error {
+	type _tmpDropSeriesDataset DropSeriesDataset
+	var rawDropSeriesDataset _tmpDropSeriesDataset
+	if err := safejson.Unmarshal(data, &rawDropSeriesDataset); err != nil {
+		return err
+	}
+	if rawDropSeriesDataset.Names == nil {
+		rawDropSeriesDataset.Names = make([]api1.StringConstant, 0)
+	}
+	*o = DropSeriesDataset(rawDropSeriesDataset)
+	return nil
+}
+
+func (o DropSeriesDataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DropSeriesDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -4831,7 +4942,7 @@ type ParameterizedComputeNodeRequest struct {
 	End     api.Timestamp `json:"end" safelogging:"@Safe"`
 	Context Context       `json:"context"`
 	/*
-	   Optional RID identifying the resource that initiated this query (e.g. workbook/notebook RID, checklist RID).
+	   Optional RID identifying the resource that initiated this query (e.g. workbook/notebook RID, checklist RID, dataset RID).
 	   Used for observability only — trusted as-is, no permission checks are performed on this value.
 	*/
 	SourceRid *rid.ResourceIdentifier `json:"sourceRid,omitempty"`
@@ -5635,7 +5746,7 @@ func (o *ScatterCurveFit) UnmarshalYAML(unmarshal func(interface{}) error) error
 type SearchDataset struct {
 	// Whether to search assets or runs and with which query.
 	Target SearchTarget `json:"target"`
-	// Maximum number of assets or runs returned from search. Defaults to 100 when omitted.
+	// Maximum number of assets or runs returned from search. Defaults to 10000 when omitted.
 	MaxResults *int `json:"maxResults,omitempty"`
 }
 
@@ -5993,6 +6104,42 @@ func (o Sin) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Sin) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+The PSD or amplitude of the input over time, from a short-time Fourier transform of
+overlapping windows.
+*/
+type Spectrogram struct {
+	// A numeric series from a single data source. Series grouped by tags are not supported.
+	Input NumericSeries `json:"input"`
+	// Window and FFT parameters.
+	StftOptions *api1.StftOptions `json:"stftOptions,omitempty"`
+	// What each cell measures. Defaults to PSD.
+	Quantity *api1.SpectrogramQuantity `json:"quantity,omitempty"`
+	/*
+	   How each cell's value is scaled. Defaults to decibels: 10·log10 of the PSD, or 20·log10 of
+	   the amplitude.
+	*/
+	MagnitudeScaling *api1.MagnitudeScaling `json:"magnitudeScaling,omitempty"`
+	// The output's time and frequency buckets, frequency band and reductions.
+	Bucketing *api1.SpectrogramBucketing `json:"bucketing,omitempty"`
+}
+
+func (o Spectrogram) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Spectrogram) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

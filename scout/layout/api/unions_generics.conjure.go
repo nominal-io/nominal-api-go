@@ -7,6 +7,9 @@ package api
 import (
 	"context"
 	"fmt"
+
+	"github.com/nominal-io/nominal-api-go/scout/rids/api"
+	"github.com/palantir/pkg/uuid"
 )
 
 type CanvasConnectionWithT[T any] CanvasConnection
@@ -542,6 +545,71 @@ type PanelVisitorWithT[T any] interface {
 	VisitCanvas(ctx context.Context, v CanvasLayout) (T, error)
 	VisitDocument(ctx context.Context, v DocumentLayout) (T, error)
 	VisitAnalyst(ctx context.Context, v AnalystLayout) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type PanelTimeRangeWithT[T any] PanelTimeRange
+
+func (u *PanelTimeRangeWithT[T]) Accept(ctx context.Context, v PanelTimeRangeVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "input":
+		if u.input == nil {
+			return result, fmt.Errorf("field \"input\" is required")
+		}
+		return v.VisitInput(ctx, *u.input)
+	case "literal":
+		if u.literal == nil {
+			return result, fmt.Errorf("field \"literal\" is required")
+		}
+		return v.VisitLiteral(ctx, *u.literal)
+	}
+}
+
+func (u *PanelTimeRangeWithT[T]) AcceptFuncs(inputFunc func(uuid.UUID) (T, error), literalFunc func(api.LiteralTimeRange) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "input":
+		if u.input == nil {
+			return result, fmt.Errorf("field \"input\" is required")
+		}
+		return inputFunc(*u.input)
+	case "literal":
+		if u.literal == nil {
+			return result, fmt.Errorf("field \"literal\" is required")
+		}
+		return literalFunc(*u.literal)
+	}
+}
+
+func (u *PanelTimeRangeWithT[T]) InputNoopSuccess(uuid.UUID) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PanelTimeRangeWithT[T]) LiteralNoopSuccess(api.LiteralTimeRange) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PanelTimeRangeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type PanelTimeRangeVisitorWithT[T any] interface {
+	VisitInput(ctx context.Context, v uuid.UUID) (T, error)
+	VisitLiteral(ctx context.Context, v api.LiteralTimeRange) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

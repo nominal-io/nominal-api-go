@@ -758,6 +758,8 @@ type ResolvedCheckStatus struct {
 	CheckParameterIndex          *int                          `json:"checkParameterIndex,omitempty"`
 	InvalidStreamingComputeNodes []InvalidStreamingComputeNode `json:"invalidStreamingComputeNodes"`
 	Channels                     []ChannelLocatorWithStatus    `json:"channels"`
+	// Why the check's compute graph could not be resolved. A streaming checklist skips this check.
+	ResolutionError *api4.SerializableError `json:"resolutionError,omitempty"`
 }
 
 func (o ResolvedCheckStatus) MarshalJSON() ([]byte, error) {
