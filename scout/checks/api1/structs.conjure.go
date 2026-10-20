@@ -96,7 +96,11 @@ func (o *CheckJobResult) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type Completed struct {
-	Result             JobResult         `json:"result"`
+	/*
+	   Absent if the job's result payload is no longer available. The job still completed
+	   successfully.
+	*/
+	Result             *JobResult        `json:"result,omitempty"`
 	ExecutionStartTime datetime.DateTime `json:"executionStartTime"`
 	ExecutionEndTime   datetime.DateTime `json:"executionEndTime"`
 }

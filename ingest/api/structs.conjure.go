@@ -544,6 +544,11 @@ type CreateIngestAutomationRequest struct {
 	Sources []IngestSource `json:"sources"`
 	// The timestamp column and interpretation the user confirmed in the wizard, applied to every file.
 	TimestampMetadata TimestampMetadata `json:"timestampMetadata"`
+	/*
+	   The format of every file in sources, ingested as wide-format data. Defaults to CSV when
+	   absent.
+	*/
+	FileType *IngestAutomationFileType `json:"fileType,omitempty"`
 	// Maximum length 500 characters (enforced by the handler, like the other titles).
 	AssetTitle string `json:"assetTitle"`
 	// Maximum length 500 characters.
@@ -1235,7 +1240,7 @@ func (o *HeartbeatStreamingSessionRequest) UnmarshalYAML(unmarshal func(interfac
 }
 
 /*
-A server-side workflow that carries one upload (one or more CSV files) through resource
+A server-side workflow that carries one upload (one or more CSV or Parquet files) through resource
 creation, ingest, and channel availability. Started by the upload wizard's "Quick look" mode; the client
 polls getIngestAutomation to drive its progress checklist, and the frontend creates the
 accompanying workbook itself (workbook semantics live in the frontend server — this

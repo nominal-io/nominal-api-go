@@ -18,6 +18,7 @@ type FunctionNode struct {
 	enum    *api1.EnumSeries
 	numeric *api1.NumericSeries
 	ranges  *api1.RangeSeries
+	udf     *RegisteredUdf
 }
 
 type functionNodeDeserializer struct {
@@ -25,10 +26,11 @@ type functionNodeDeserializer struct {
 	Enum    *api1.EnumSeries    `json:"enum"`
 	Numeric *api1.NumericSeries `json:"numeric"`
 	Ranges  *api1.RangeSeries   `json:"ranges"`
+	Udf     *RegisteredUdf      `json:"udf"`
 }
 
 func (u *functionNodeDeserializer) toStruct() FunctionNode {
-	return FunctionNode{typ: u.Type, enum: u.Enum, numeric: u.Numeric, ranges: u.Ranges}
+	return FunctionNode{typ: u.Type, enum: u.Enum, numeric: u.Numeric, ranges: u.Ranges, udf: u.Udf}
 }
 
 func (u *FunctionNode) toSerializer() (interface{}, error) {
@@ -59,6 +61,14 @@ func (u *FunctionNode) toSerializer() (interface{}, error) {
 			Type   string           `json:"type"`
 			Ranges api1.RangeSeries `json:"ranges"`
 		}{Type: "ranges", Ranges: *u.ranges}, nil
+	case "udf":
+		if u.udf == nil {
+			return nil, fmt.Errorf("field \"udf\" is required")
+		}
+		return struct {
+			Type string        `json:"type"`
+			Udf  RegisteredUdf `json:"udf"`
+		}{Type: "udf", Udf: *u.udf}, nil
 	}
 }
 
@@ -89,6 +99,10 @@ func (u *FunctionNode) UnmarshalJSON(data []byte) error {
 		if u.ranges == nil {
 			return fmt.Errorf("field \"ranges\" is required")
 		}
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
 	}
 	return nil
 }
@@ -109,7 +123,7 @@ func (u *FunctionNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *FunctionNode) AcceptFuncs(enumFunc func(api1.EnumSeries) error, numericFunc func(api1.NumericSeries) error, rangesFunc func(api1.RangeSeries) error, unknownFunc func(string) error) error {
+func (u *FunctionNode) AcceptFuncs(enumFunc func(api1.EnumSeries) error, numericFunc func(api1.NumericSeries) error, rangesFunc func(api1.RangeSeries) error, udfFunc func(RegisteredUdf) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -131,6 +145,11 @@ func (u *FunctionNode) AcceptFuncs(enumFunc func(api1.EnumSeries) error, numeric
 			return fmt.Errorf("field \"ranges\" is required")
 		}
 		return rangesFunc(*u.ranges)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return udfFunc(*u.udf)
 	}
 }
 
@@ -143,6 +162,10 @@ func (u *FunctionNode) NumericNoopSuccess(_ api1.NumericSeries) error {
 }
 
 func (u *FunctionNode) RangesNoopSuccess(_ api1.RangeSeries) error {
+	return nil
+}
+
+func (u *FunctionNode) UdfNoopSuccess(_ RegisteredUdf) error {
 	return nil
 }
 
@@ -172,6 +195,11 @@ func (u *FunctionNode) Accept(v FunctionNodeVisitor) error {
 			return fmt.Errorf("field \"ranges\" is required")
 		}
 		return v.VisitRanges(*u.ranges)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return v.VisitUdf(*u.udf)
 	}
 }
 
@@ -179,6 +207,7 @@ type FunctionNodeVisitor interface {
 	VisitEnum(v api1.EnumSeries) error
 	VisitNumeric(v api1.NumericSeries) error
 	VisitRanges(v api1.RangeSeries) error
+	VisitUdf(v RegisteredUdf) error
 	VisitUnknown(typeName string) error
 }
 
@@ -204,6 +233,11 @@ func (u *FunctionNode) AcceptWithContext(ctx context.Context, v FunctionNodeVisi
 			return fmt.Errorf("field \"ranges\" is required")
 		}
 		return v.VisitRangesWithContext(ctx, *u.ranges)
+	case "udf":
+		if u.udf == nil {
+			return fmt.Errorf("field \"udf\" is required")
+		}
+		return v.VisitUdfWithContext(ctx, *u.udf)
 	}
 }
 
@@ -211,6 +245,7 @@ type FunctionNodeVisitorWithContext interface {
 	VisitEnumWithContext(ctx context.Context, v api1.EnumSeries) error
 	VisitNumericWithContext(ctx context.Context, v api1.NumericSeries) error
 	VisitRangesWithContext(ctx context.Context, v api1.RangeSeries) error
+	VisitUdfWithContext(ctx context.Context, v RegisteredUdf) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -224,6 +259,10 @@ func NewFunctionNodeFromNumeric(v api1.NumericSeries) FunctionNode {
 
 func NewFunctionNodeFromRanges(v api1.RangeSeries) FunctionNode {
 	return FunctionNode{typ: "ranges", ranges: &v}
+}
+
+func NewFunctionNodeFromUdf(v RegisteredUdf) FunctionNode {
+	return FunctionNode{typ: "udf", udf: &v}
 }
 
 // Request reference to a module. This is used to refer to modules in requests.
@@ -768,6 +807,219 @@ func NewSearchModulesQueryFromOr(v []SearchModulesQuery) SearchModulesQuery {
 
 func NewSearchModulesQueryFromNot(v SearchModulesQuery) SearchModulesQuery {
 	return SearchModulesQuery{typ: "not", not: &v}
+}
+
+type UdfCompilationStatus struct {
+	typ     string
+	pending *UdfCompilationPending
+	success *UdfCompilationSuccess
+	failed  *UdfCompilationFailed
+}
+
+type udfCompilationStatusDeserializer struct {
+	Type    string                 `json:"type"`
+	Pending *UdfCompilationPending `json:"pending"`
+	Success *UdfCompilationSuccess `json:"success"`
+	Failed  *UdfCompilationFailed  `json:"failed"`
+}
+
+func (u *udfCompilationStatusDeserializer) toStruct() UdfCompilationStatus {
+	return UdfCompilationStatus{typ: u.Type, pending: u.Pending, success: u.Success, failed: u.Failed}
+}
+
+func (u *UdfCompilationStatus) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "pending":
+		if u.pending == nil {
+			return nil, fmt.Errorf("field \"pending\" is required")
+		}
+		return struct {
+			Type    string                `json:"type"`
+			Pending UdfCompilationPending `json:"pending"`
+		}{Type: "pending", Pending: *u.pending}, nil
+	case "success":
+		if u.success == nil {
+			return nil, fmt.Errorf("field \"success\" is required")
+		}
+		return struct {
+			Type    string                `json:"type"`
+			Success UdfCompilationSuccess `json:"success"`
+		}{Type: "success", Success: *u.success}, nil
+	case "failed":
+		if u.failed == nil {
+			return nil, fmt.Errorf("field \"failed\" is required")
+		}
+		return struct {
+			Type   string               `json:"type"`
+			Failed UdfCompilationFailed `json:"failed"`
+		}{Type: "failed", Failed: *u.failed}, nil
+	}
+}
+
+func (u UdfCompilationStatus) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *UdfCompilationStatus) UnmarshalJSON(data []byte) error {
+	var deser udfCompilationStatusDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "pending":
+		if u.pending == nil {
+			return fmt.Errorf("field \"pending\" is required")
+		}
+	case "success":
+		if u.success == nil {
+			return fmt.Errorf("field \"success\" is required")
+		}
+	case "failed":
+		if u.failed == nil {
+			return fmt.Errorf("field \"failed\" is required")
+		}
+	}
+	return nil
+}
+
+func (u UdfCompilationStatus) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *UdfCompilationStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *UdfCompilationStatus) AcceptFuncs(pendingFunc func(UdfCompilationPending) error, successFunc func(UdfCompilationSuccess) error, failedFunc func(UdfCompilationFailed) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in UdfCompilationStatus type")
+		}
+		return unknownFunc(u.typ)
+	case "pending":
+		if u.pending == nil {
+			return fmt.Errorf("field \"pending\" is required")
+		}
+		return pendingFunc(*u.pending)
+	case "success":
+		if u.success == nil {
+			return fmt.Errorf("field \"success\" is required")
+		}
+		return successFunc(*u.success)
+	case "failed":
+		if u.failed == nil {
+			return fmt.Errorf("field \"failed\" is required")
+		}
+		return failedFunc(*u.failed)
+	}
+}
+
+func (u *UdfCompilationStatus) PendingNoopSuccess(_ UdfCompilationPending) error {
+	return nil
+}
+
+func (u *UdfCompilationStatus) SuccessNoopSuccess(_ UdfCompilationSuccess) error {
+	return nil
+}
+
+func (u *UdfCompilationStatus) FailedNoopSuccess(_ UdfCompilationFailed) error {
+	return nil
+}
+
+func (u *UdfCompilationStatus) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *UdfCompilationStatus) Accept(v UdfCompilationStatusVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "pending":
+		if u.pending == nil {
+			return fmt.Errorf("field \"pending\" is required")
+		}
+		return v.VisitPending(*u.pending)
+	case "success":
+		if u.success == nil {
+			return fmt.Errorf("field \"success\" is required")
+		}
+		return v.VisitSuccess(*u.success)
+	case "failed":
+		if u.failed == nil {
+			return fmt.Errorf("field \"failed\" is required")
+		}
+		return v.VisitFailed(*u.failed)
+	}
+}
+
+type UdfCompilationStatusVisitor interface {
+	VisitPending(v UdfCompilationPending) error
+	VisitSuccess(v UdfCompilationSuccess) error
+	VisitFailed(v UdfCompilationFailed) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *UdfCompilationStatus) AcceptWithContext(ctx context.Context, v UdfCompilationStatusVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "pending":
+		if u.pending == nil {
+			return fmt.Errorf("field \"pending\" is required")
+		}
+		return v.VisitPendingWithContext(ctx, *u.pending)
+	case "success":
+		if u.success == nil {
+			return fmt.Errorf("field \"success\" is required")
+		}
+		return v.VisitSuccessWithContext(ctx, *u.success)
+	case "failed":
+		if u.failed == nil {
+			return fmt.Errorf("field \"failed\" is required")
+		}
+		return v.VisitFailedWithContext(ctx, *u.failed)
+	}
+}
+
+type UdfCompilationStatusVisitorWithContext interface {
+	VisitPendingWithContext(ctx context.Context, v UdfCompilationPending) error
+	VisitSuccessWithContext(ctx context.Context, v UdfCompilationSuccess) error
+	VisitFailedWithContext(ctx context.Context, v UdfCompilationFailed) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewUdfCompilationStatusFromPending(v UdfCompilationPending) UdfCompilationStatus {
+	return UdfCompilationStatus{typ: "pending", pending: &v}
+}
+
+func NewUdfCompilationStatusFromSuccess(v UdfCompilationSuccess) UdfCompilationStatus {
+	return UdfCompilationStatus{typ: "success", success: &v}
+}
+
+func NewUdfCompilationStatusFromFailed(v UdfCompilationFailed) UdfCompilationStatus {
+	return UdfCompilationStatus{typ: "failed", failed: &v}
 }
 
 type VersionStrategy struct {

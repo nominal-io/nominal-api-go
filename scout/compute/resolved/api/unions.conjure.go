@@ -7358,6 +7358,7 @@ type ResolvedNode struct {
 	cartesian3d  *SummarizeCartesian3dNode
 	frequency    *FrequencyDomainNode
 	frequencyV2  *FrequencyDomainNodeV2
+	spectrogram  *SpectrogramNode
 	histogram    *HistogramNode
 	curve        *CurveFitV2Node
 	curveV2      *CurveFitV2Node
@@ -7373,6 +7374,7 @@ type resolvedNodeDeserializer struct {
 	Cartesian3d  *SummarizeCartesian3dNode  `json:"cartesian3d"`
 	Frequency    *FrequencyDomainNode       `json:"frequency"`
 	FrequencyV2  *FrequencyDomainNodeV2     `json:"frequencyV2"`
+	Spectrogram  *SpectrogramNode           `json:"spectrogram"`
 	Histogram    *HistogramNode             `json:"histogram"`
 	Curve        *CurveFitV2Node            `json:"curve"`
 	CurveV2      *CurveFitV2Node            `json:"curveV2"`
@@ -7380,7 +7382,7 @@ type resolvedNodeDeserializer struct {
 }
 
 func (u *resolvedNodeDeserializer) toStruct() ResolvedNode {
-	return ResolvedNode{typ: u.Type, ranges: u.Ranges, series: u.Series, value: u.Value, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, frequency: u.Frequency, frequencyV2: u.FrequencyV2, histogram: u.Histogram, curve: u.Curve, curveV2: u.CurveV2, multivariate: u.Multivariate}
+	return ResolvedNode{typ: u.Type, ranges: u.Ranges, series: u.Series, value: u.Value, cartesian: u.Cartesian, cartesian3d: u.Cartesian3d, frequency: u.Frequency, frequencyV2: u.FrequencyV2, spectrogram: u.Spectrogram, histogram: u.Histogram, curve: u.Curve, curveV2: u.CurveV2, multivariate: u.Multivariate}
 }
 
 func (u *ResolvedNode) toSerializer() (interface{}, error) {
@@ -7443,6 +7445,14 @@ func (u *ResolvedNode) toSerializer() (interface{}, error) {
 			Type        string                `json:"type"`
 			FrequencyV2 FrequencyDomainNodeV2 `json:"frequencyV2"`
 		}{Type: "frequencyV2", FrequencyV2: *u.frequencyV2}, nil
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return nil, fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return struct {
+			Type        string          `json:"type"`
+			Spectrogram SpectrogramNode `json:"spectrogram"`
+		}{Type: "spectrogram", Spectrogram: *u.spectrogram}, nil
 	case "histogram":
 		if u.histogram == nil {
 			return nil, fmt.Errorf("field \"histogram\" is required")
@@ -7521,6 +7531,10 @@ func (u *ResolvedNode) UnmarshalJSON(data []byte) error {
 		if u.frequencyV2 == nil {
 			return fmt.Errorf("field \"frequencyV2\" is required")
 		}
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
 	case "histogram":
 		if u.histogram == nil {
 			return fmt.Errorf("field \"histogram\" is required")
@@ -7557,7 +7571,7 @@ func (u *ResolvedNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ResolvedNode) AcceptFuncs(rangesFunc func(SummarizeRangesNode) error, seriesFunc func(SummarizeSeriesNode) error, valueFunc func(SelectValueNode) error, cartesianFunc func(SummarizeCartesianNode) error, cartesian3dFunc func(SummarizeCartesian3dNode) error, frequencyFunc func(FrequencyDomainNode) error, frequencyV2Func func(FrequencyDomainNodeV2) error, histogramFunc func(HistogramNode) error, curveFunc func(CurveFitV2Node) error, curveV2Func func(CurveFitV2Node) error, multivariateFunc func(SummarizeMultivariateNode) error, unknownFunc func(string) error) error {
+func (u *ResolvedNode) AcceptFuncs(rangesFunc func(SummarizeRangesNode) error, seriesFunc func(SummarizeSeriesNode) error, valueFunc func(SelectValueNode) error, cartesianFunc func(SummarizeCartesianNode) error, cartesian3dFunc func(SummarizeCartesian3dNode) error, frequencyFunc func(FrequencyDomainNode) error, frequencyV2Func func(FrequencyDomainNodeV2) error, spectrogramFunc func(SpectrogramNode) error, histogramFunc func(HistogramNode) error, curveFunc func(CurveFitV2Node) error, curveV2Func func(CurveFitV2Node) error, multivariateFunc func(SummarizeMultivariateNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -7599,6 +7613,11 @@ func (u *ResolvedNode) AcceptFuncs(rangesFunc func(SummarizeRangesNode) error, s
 			return fmt.Errorf("field \"frequencyV2\" is required")
 		}
 		return frequencyV2Func(*u.frequencyV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return spectrogramFunc(*u.spectrogram)
 	case "histogram":
 		if u.histogram == nil {
 			return fmt.Errorf("field \"histogram\" is required")
@@ -7647,6 +7666,10 @@ func (u *ResolvedNode) FrequencyNoopSuccess(_ FrequencyDomainNode) error {
 }
 
 func (u *ResolvedNode) FrequencyV2NoopSuccess(_ FrequencyDomainNodeV2) error {
+	return nil
+}
+
+func (u *ResolvedNode) SpectrogramNoopSuccess(_ SpectrogramNode) error {
 	return nil
 }
 
@@ -7712,6 +7735,11 @@ func (u *ResolvedNode) Accept(v ResolvedNodeVisitor) error {
 			return fmt.Errorf("field \"frequencyV2\" is required")
 		}
 		return v.VisitFrequencyV2(*u.frequencyV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return v.VisitSpectrogram(*u.spectrogram)
 	case "histogram":
 		if u.histogram == nil {
 			return fmt.Errorf("field \"histogram\" is required")
@@ -7743,6 +7771,7 @@ type ResolvedNodeVisitor interface {
 	VisitCartesian3d(v SummarizeCartesian3dNode) error
 	VisitFrequency(v FrequencyDomainNode) error
 	VisitFrequencyV2(v FrequencyDomainNodeV2) error
+	VisitSpectrogram(v SpectrogramNode) error
 	VisitHistogram(v HistogramNode) error
 	VisitCurve(v CurveFitV2Node) error
 	VisitCurveV2(v CurveFitV2Node) error
@@ -7792,6 +7821,11 @@ func (u *ResolvedNode) AcceptWithContext(ctx context.Context, v ResolvedNodeVisi
 			return fmt.Errorf("field \"frequencyV2\" is required")
 		}
 		return v.VisitFrequencyV2WithContext(ctx, *u.frequencyV2)
+	case "spectrogram":
+		if u.spectrogram == nil {
+			return fmt.Errorf("field \"spectrogram\" is required")
+		}
+		return v.VisitSpectrogramWithContext(ctx, *u.spectrogram)
 	case "histogram":
 		if u.histogram == nil {
 			return fmt.Errorf("field \"histogram\" is required")
@@ -7823,6 +7857,7 @@ type ResolvedNodeVisitorWithContext interface {
 	VisitCartesian3dWithContext(ctx context.Context, v SummarizeCartesian3dNode) error
 	VisitFrequencyWithContext(ctx context.Context, v FrequencyDomainNode) error
 	VisitFrequencyV2WithContext(ctx context.Context, v FrequencyDomainNodeV2) error
+	VisitSpectrogramWithContext(ctx context.Context, v SpectrogramNode) error
 	VisitHistogramWithContext(ctx context.Context, v HistogramNode) error
 	VisitCurveWithContext(ctx context.Context, v CurveFitV2Node) error
 	VisitCurveV2WithContext(ctx context.Context, v CurveFitV2Node) error
@@ -7856,6 +7891,10 @@ func NewResolvedNodeFromFrequency(v FrequencyDomainNode) ResolvedNode {
 
 func NewResolvedNodeFromFrequencyV2(v FrequencyDomainNodeV2) ResolvedNode {
 	return ResolvedNode{typ: "frequencyV2", frequencyV2: &v}
+}
+
+func NewResolvedNodeFromSpectrogram(v SpectrogramNode) ResolvedNode {
+	return ResolvedNode{typ: "spectrogram", spectrogram: &v}
 }
 
 func NewResolvedNodeFromHistogram(v HistogramNode) ResolvedNode {

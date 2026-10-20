@@ -1186,6 +1186,156 @@ func (e *InvalidParameterNames) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type invalidRegisteredUdf struct {
+	Reason string `json:"reason"`
+}
+
+func (o invalidRegisteredUdf) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidRegisteredUdf) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidRegisteredUdf returns new instance of InvalidRegisteredUdf error.
+func NewInvalidRegisteredUdf(reasonArg string) *InvalidRegisteredUdf {
+	return &InvalidRegisteredUdf{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidRegisteredUdf: invalidRegisteredUdf{Reason: reasonArg}}
+}
+
+// WrapWithInvalidRegisteredUdf returns new instance of InvalidRegisteredUdf error wrapping an existing error.
+func WrapWithInvalidRegisteredUdf(err error, reasonArg string) *InvalidRegisteredUdf {
+	return &InvalidRegisteredUdf{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidRegisteredUdf: invalidRegisteredUdf{Reason: reasonArg}}
+}
+
+// InvalidRegisteredUdf is an error type.
+// The registered UDF request or declared signature is invalid.
+type InvalidRegisteredUdf struct {
+	errorInstanceID uuid.UUID
+	invalidRegisteredUdf
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidRegisteredUdf returns true if err is an instance of InvalidRegisteredUdf.
+func IsInvalidRegisteredUdf(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidRegisteredUdf)
+	return ok
+}
+
+func (e *InvalidRegisteredUdf) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Module:InvalidRegisteredUdf (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidRegisteredUdf) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidRegisteredUdf) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidRegisteredUdf) Message() string {
+	return "INVALID_ARGUMENT Module:InvalidRegisteredUdf"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidRegisteredUdf) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidRegisteredUdf) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidRegisteredUdf) Name() string {
+	return "Module:InvalidRegisteredUdf"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidRegisteredUdf) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidRegisteredUdf) Parameters() map[string]interface{} {
+	return map[string]interface{}{"reason": e.Reason}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidRegisteredUdf) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidRegisteredUdf) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidRegisteredUdf) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"reason": e.Reason}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidRegisteredUdf) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidRegisteredUdf) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidRegisteredUdf)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Module:InvalidRegisteredUdf", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidRegisteredUdf) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidRegisteredUdf
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidRegisteredUdf = parameters
+	return nil
+}
+
 type moduleNameConflict struct {
 	ModuleApiName string `json:"moduleApiName"`
 }
@@ -2179,6 +2329,7 @@ func init() {
 	conjureerrors.RegisterErrorType("Module:InvalidModuleVersionString", reflect.TypeOf(InvalidModuleVersionString{}))
 	conjureerrors.RegisterErrorType("Module:InvalidNestedFunctionReferences", reflect.TypeOf(InvalidNestedFunctionReferences{}))
 	conjureerrors.RegisterErrorType("Module:InvalidParameterNames", reflect.TypeOf(InvalidParameterNames{}))
+	conjureerrors.RegisterErrorType("Module:InvalidRegisteredUdf", reflect.TypeOf(InvalidRegisteredUdf{}))
 	conjureerrors.RegisterErrorType("Module:ModuleNameConflict", reflect.TypeOf(ModuleNameConflict{}))
 	conjureerrors.RegisterErrorType("Module:ModuleRidsNotFound", reflect.TypeOf(ModuleRidsNotFound{}))
 	conjureerrors.RegisterErrorType("Module:ModulesNotFound", reflect.TypeOf(ModulesNotFound{}))

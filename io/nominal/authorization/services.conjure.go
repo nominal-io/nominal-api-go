@@ -43,8 +43,6 @@ type AuthorizationServiceClient interface {
 	   authenticated user is an admin and HTTP 403 otherwise.
 	*/
 	CheckAdmin(ctx context.Context, authHeader bearertoken.Token) error
-	// Checks if the email is allowed to register.
-	IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error)
 	// Checks if the email is allowed to register, following Okta "registration inline hook" API.
 	IsEmailAllowedOkta(ctx context.Context, authHeader bearertoken.Token, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
@@ -165,23 +163,6 @@ func (c *authorizationServiceClient) CheckAdmin(ctx context.Context, authHeader 
 		return werror.WrapWithContextParams(ctx, err, "checkAdmin failed")
 	}
 	return nil
-}
-
-func (c *authorizationServiceClient) IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error) {
-	var returnVal *IsEmailAllowedResponse
-	var requestParams []httpclient.RequestParam
-	requestParams = append(requestParams, httpclient.WithRPCMethodName("IsEmailAllowed"))
-	requestParams = append(requestParams, httpclient.WithPathf("/authorization/v1/is-email-allowed"))
-	requestParams = append(requestParams, httpclient.WithJSONRequest(requestArg))
-	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
-	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
-	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(IsEmailAllowedResponse), werror.WrapWithContextParams(ctx, err, "isEmailAllowed failed")
-	}
-	if returnVal == nil {
-		return *new(IsEmailAllowedResponse), werror.ErrorWithContextParams(ctx, "isEmailAllowed response cannot be nil")
-	}
-	return *returnVal, nil
 }
 
 func (c *authorizationServiceClient) IsEmailAllowedOkta(ctx context.Context, authHeader bearertoken.Token, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
@@ -399,8 +380,6 @@ type AuthorizationServiceClientWithAuth interface {
 	   authenticated user is an admin and HTTP 403 otherwise.
 	*/
 	CheckAdmin(ctx context.Context) error
-	// Checks if the email is allowed to register.
-	IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error)
 	// Checks if the email is allowed to register, following Okta "registration inline hook" API.
 	IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
@@ -477,10 +456,6 @@ func (c *authorizationServiceClientWithAuth) RegisterInWorkspace(ctx context.Con
 
 func (c *authorizationServiceClientWithAuth) CheckAdmin(ctx context.Context) error {
 	return c.client.CheckAdmin(ctx, c.authHeader)
-}
-
-func (c *authorizationServiceClientWithAuth) IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error) {
-	return c.client.IsEmailAllowed(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithAuth) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {
@@ -566,10 +541,6 @@ func (c *authorizationServiceClientWithTokenProvider) CheckAdmin(ctx context.Con
 		return err
 	}
 	return c.client.CheckAdmin(ctx, bearertoken.Token(token))
-}
-
-func (c *authorizationServiceClientWithTokenProvider) IsEmailAllowed(ctx context.Context, requestArg IsEmailAllowedRequest) (IsEmailAllowedResponse, error) {
-	return c.client.IsEmailAllowed(ctx, requestArg)
 }
 
 func (c *authorizationServiceClientWithTokenProvider) IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error) {

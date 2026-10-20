@@ -1706,6 +1706,160 @@ func (e *FailedToDownloadFileUserError) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type fileDeletionNotSupported struct {
+	DatasetRid rids.DatasetRid `json:"datasetRid" safelogging:"@Safe"`
+	FileId     uuid.UUID       `json:"fileId"`
+}
+
+func (o fileDeletionNotSupported) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *fileDeletionNotSupported) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewFileDeletionNotSupported returns new instance of FileDeletionNotSupported error.
+func NewFileDeletionNotSupported(datasetRidArg rids.DatasetRid, fileIdArg uuid.UUID) *FileDeletionNotSupported {
+	return &FileDeletionNotSupported{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), fileDeletionNotSupported: fileDeletionNotSupported{DatasetRid: datasetRidArg, FileId: fileIdArg}}
+}
+
+// WrapWithFileDeletionNotSupported returns new instance of FileDeletionNotSupported error wrapping an existing error.
+func WrapWithFileDeletionNotSupported(err error, datasetRidArg rids.DatasetRid, fileIdArg uuid.UUID) *FileDeletionNotSupported {
+	return &FileDeletionNotSupported{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, fileDeletionNotSupported: fileDeletionNotSupported{DatasetRid: datasetRidArg, FileId: fileIdArg}}
+}
+
+// FileDeletionNotSupported is an error type.
+/*
+The dataset file is part of a multi-file ingest job and cannot be deleted on its own. Delete the entire
+ingest job instead.
+*/
+type FileDeletionNotSupported struct {
+	errorInstanceID uuid.UUID
+	fileDeletionNotSupported
+	cause error
+	stack werror.StackTrace
+}
+
+// IsFileDeletionNotSupported returns true if err is an instance of FileDeletionNotSupported.
+func IsFileDeletionNotSupported(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*FileDeletionNotSupported)
+	return ok
+}
+
+func (e *FileDeletionNotSupported) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT IngestService:FileDeletionNotSupported (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *FileDeletionNotSupported) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *FileDeletionNotSupported) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *FileDeletionNotSupported) Message() string {
+	return "INVALID_ARGUMENT IngestService:FileDeletionNotSupported"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *FileDeletionNotSupported) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *FileDeletionNotSupported) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *FileDeletionNotSupported) Name() string {
+	return "IngestService:FileDeletionNotSupported"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *FileDeletionNotSupported) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *FileDeletionNotSupported) Parameters() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid, "fileId": e.FileId}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *FileDeletionNotSupported) safeParams() map[string]interface{} {
+	return map[string]interface{}{"datasetRid": e.DatasetRid, "fileId": e.FileId, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *FileDeletionNotSupported) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *FileDeletionNotSupported) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *FileDeletionNotSupported) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e FileDeletionNotSupported) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.fileDeletionNotSupported)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "IngestService:FileDeletionNotSupported", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *FileDeletionNotSupported) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters fileDeletionNotSupported
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.fileDeletionNotSupported = parameters
+	return nil
+}
+
 type frameCountTimestampsMismatch struct{}
 
 func (o frameCountTimestampsMismatch) MarshalYAML() (interface{}, error) {
@@ -6997,6 +7151,7 @@ func init() {
 	conjureerrors.RegisterErrorType("UploadService:EmptyMultipartUpload", reflect.TypeOf(EmptyMultipartUpload{}))
 	conjureerrors.RegisterErrorType("IngestService:FailedToDownloadFile", reflect.TypeOf(FailedToDownloadFile{}))
 	conjureerrors.RegisterErrorType("IngestService:FailedToDownloadFileUserError", reflect.TypeOf(FailedToDownloadFileUserError{}))
+	conjureerrors.RegisterErrorType("IngestService:FileDeletionNotSupported", reflect.TypeOf(FileDeletionNotSupported{}))
 	conjureerrors.RegisterErrorType("IngestService:FrameCountTimestampsMismatch", reflect.TypeOf(FrameCountTimestampsMismatch{}))
 	conjureerrors.RegisterErrorType("IngestService:IncompatibleConnectionTypeAndLogQuery", reflect.TypeOf(IncompatibleConnectionTypeAndLogQuery{}))
 	conjureerrors.RegisterErrorType("IngestService:IncompatibleFileForDataset", reflect.TypeOf(IncompatibleFileForDataset{}))

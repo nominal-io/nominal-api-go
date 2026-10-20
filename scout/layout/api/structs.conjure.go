@@ -3,6 +3,7 @@
 package api
 
 import (
+	api1 "github.com/nominal-io/nominal-api-go/scout/api"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
@@ -76,13 +77,16 @@ func (o *AnalystPanel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-/*
-User-configurable visual styling for a canvas connection. Color is not
-persisted: clients currently derive it from the connected objects.
-*/
+// User-configurable visual styling for a canvas connection.
 type CanvasConnectionStyle struct {
 	// Defaults to solid when absent.
 	StrokeStyle *CanvasConnectionStrokeStyle `json:"strokeStyle,omitempty"`
+	/*
+	   Explicit color override for the connection line. When absent, clients use
+	   the default connection color, or the source object's boundary color when
+	   one applies.
+	*/
+	LineColor *api1.HexColor `json:"lineColor,omitempty" safelogging:"@Safe"`
 }
 
 func (o CanvasConnectionStyle) MarshalYAML() (interface{}, error) {
@@ -352,8 +356,10 @@ func (o *DocumentLayout) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type DocumentPanel struct {
-	Dimension        NodeDimension `json:"dimension"`
-	TimeRangeInputId *uuid.UUID    `json:"timeRangeInputId,omitempty"`
+	Dimension NodeDimension `json:"dimension"`
+	// Deprecated: Deprecated, use timeRange instead.
+	TimeRangeInputId *uuid.UUID      `json:"timeRangeInputId,omitempty"`
+	TimeRange        *PanelTimeRange `json:"timeRange,omitempty"`
 }
 
 func (o DocumentPanel) MarshalYAML() (interface{}, error) {

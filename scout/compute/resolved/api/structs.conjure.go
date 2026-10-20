@@ -3074,6 +3074,31 @@ func (o *ResolvedSeries) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+type ResolvedSpectrogramBucketing struct {
+	MaxTimeBuckets      int                       `json:"maxTimeBuckets"`
+	MaxFrequencyBuckets int                       `json:"maxFrequencyBuckets"`
+	MinFrequency        float64                   `json:"minFrequency"`
+	MaxFrequency        *float64                  `json:"maxFrequency,omitempty"`
+	TimeReduction       api1.SpectrogramReduction `json:"timeReduction"`
+	FrequencyReduction  api1.SpectrogramReduction `json:"frequencyReduction"`
+}
+
+func (o ResolvedSpectrogramBucketing) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ResolvedSpectrogramBucketing) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type RollingOperationSeriesNode struct {
 	Input       NumericSeriesNode          `json:"input"`
 	Window      Window                     `json:"window"`
@@ -3405,6 +3430,30 @@ func (o SignalFilterSeriesNode) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SignalFilterSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type SpectrogramNode struct {
+	Input            NumericSeriesNode            `json:"input"`
+	StftOptions      *api1.StftOptions            `json:"stftOptions,omitempty"`
+	Quantity         api1.SpectrogramQuantity     `json:"quantity"`
+	MagnitudeScaling api1.MagnitudeScaling        `json:"magnitudeScaling"`
+	Bucketing        ResolvedSpectrogramBucketing `json:"bucketing"`
+}
+
+func (o SpectrogramNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SpectrogramNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

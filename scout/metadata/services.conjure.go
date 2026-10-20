@@ -45,6 +45,9 @@ type ResourceMetadataServiceClient interface {
 	/*
 	   Returns a paginated list of string and numeric property keys with typed statistics,
 	   filterable by resource type, workspace, and search text.
+	   ALPHABETICAL sort pages efficiently at any workspace size. USAGE_COUNT and PROPERTY_VALUE_COUNT
+	   rank every key in the workspace, so on large workspaces pass searchText or the request may fail
+	   with a 400 MetadataQueryTooBroad error.
 	*/
 	SearchPropertyKeys(ctx context.Context, authHeader bearertoken.Token, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error)
 	/*
@@ -222,6 +225,9 @@ type ResourceMetadataServiceClientWithAuth interface {
 	/*
 	   Returns a paginated list of string and numeric property keys with typed statistics,
 	   filterable by resource type, workspace, and search text.
+	   ALPHABETICAL sort pages efficiently at any workspace size. USAGE_COUNT and PROPERTY_VALUE_COUNT
+	   rank every key in the workspace, so on large workspaces pass searchText or the request may fail
+	   with a 400 MetadataQueryTooBroad error.
 	*/
 	SearchPropertyKeys(ctx context.Context, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error)
 	/*
