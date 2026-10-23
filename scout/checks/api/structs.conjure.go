@@ -575,30 +575,6 @@ func (o *CommitChecklistRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Compiles a registered UDF for a specific module version.
-type CompileUdfJobSpec struct {
-	WorkspaceRid  rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
-	ModuleRid     api6.ModuleRid    `json:"moduleRid" safelogging:"@Safe"`
-	ModuleVersion int               `json:"moduleVersion"`
-	UdfName       string            `json:"udfName"`
-}
-
-func (o CompileUdfJobSpec) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *CompileUdfJobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
 type ComputeExpressionV1Python struct {
 	/*
 	   The python code string representing the compute. Can be up to 25000 characters long. Inputs are
@@ -1467,6 +1443,30 @@ func (o UdfCompilationJobResult) MarshalYAML() (interface{}, error) {
 }
 
 func (o *UdfCompilationJobResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Compiles a registered UDF for a specific module version.
+type UdfCompilationJobSpec struct {
+	WorkspaceRid  rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
+	ModuleRid     api6.ModuleRid    `json:"moduleRid" safelogging:"@Safe"`
+	ModuleVersion int               `json:"moduleVersion"`
+	UdfName       string            `json:"udfName"`
+}
+
+func (o UdfCompilationJobSpec) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UdfCompilationJobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

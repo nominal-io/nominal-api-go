@@ -805,7 +805,7 @@ func (u *JobSpecWithT[T]) Accept(ctx context.Context, v JobSpecVisitorWithT[T]) 
 	}
 }
 
-func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error), computeFunc func(ComputeJobSpec) (T, error), compileUdfJobSpecFunc func(CompileUdfJobSpec) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error), computeFunc func(ComputeJobSpec) (T, error), compileUdfJobSpecFunc func(UdfCompilationJobSpec) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -841,7 +841,7 @@ func (u *JobSpecWithT[T]) ComputeNoopSuccess(ComputeJobSpec) (T, error) {
 	return result, nil
 }
 
-func (u *JobSpecWithT[T]) CompileUdfJobSpecNoopSuccess(CompileUdfJobSpec) (T, error) {
+func (u *JobSpecWithT[T]) CompileUdfJobSpecNoopSuccess(UdfCompilationJobSpec) (T, error) {
 	var result T
 	return result, nil
 }
@@ -854,7 +854,7 @@ func (u *JobSpecWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type JobSpecVisitorWithT[T any] interface {
 	VisitCheckV2(ctx context.Context, v CheckJobSpec) (T, error)
 	VisitCompute(ctx context.Context, v ComputeJobSpec) (T, error)
-	VisitCompileUdfJobSpec(ctx context.Context, v CompileUdfJobSpec) (T, error)
+	VisitCompileUdfJobSpec(ctx context.Context, v UdfCompilationJobSpec) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
