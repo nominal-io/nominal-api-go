@@ -55,3 +55,51 @@ func (a *PlanRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
+
+type PlanSolveJobRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a PlanSolveJobRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a PlanSolveJobRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *PlanSolveJobRid) UnmarshalText(data []byte) error {
+	var rawPlanSolveJobRid rid.ResourceIdentifier
+	if err := rawPlanSolveJobRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = PlanSolveJobRid(rawPlanSolveJobRid)
+	return nil
+}
+
+func (a PlanSolveJobRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *PlanSolveJobRid) UnmarshalJSON(data []byte) error {
+	var rawPlanSolveJobRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawPlanSolveJobRid); err != nil {
+		return err
+	}
+	*a = PlanSolveJobRid(rawPlanSolveJobRid)
+	return nil
+}
+
+func (a PlanSolveJobRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *PlanSolveJobRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}

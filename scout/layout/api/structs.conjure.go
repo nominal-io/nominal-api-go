@@ -87,6 +87,17 @@ type CanvasConnectionStyle struct {
 	   one applies.
 	*/
 	LineColor *api1.HexColor `json:"lineColor,omitempty" safelogging:"@Safe"`
+	/*
+	   Stroke width of the connection line, in logical canvas pixels, so it
+	   scales with canvas zoom. Must be positive. Absent means the client's
+	   default width.
+	*/
+	LineWidth *int `json:"lineWidth,omitempty"`
+	/*
+	   Draws the connection as a plain line with no arrowhead. When omitted,
+	   treat as false.
+	*/
+	HideArrow *bool `json:"hideArrow,omitempty"`
 }
 
 func (o CanvasConnectionStyle) MarshalYAML() (interface{}, error) {
@@ -107,13 +118,11 @@ func (o *CanvasConnectionStyle) UnmarshalYAML(unmarshal func(interface{}) error)
 
 /*
 A connection between two canvas objects. Drawn as a one-way arrow
-from start to end; swap those endpoints to reverse it.
+from start to end unless style.hideArrow is true; swap those endpoints
+to reverse it.
 */
 type CanvasConnectionV1 struct {
-	/*
-	   The source endpoint. The displayed one-way arrow is drawn from
-	   start to end.
-	*/
+	// The source endpoint.
 	Start CanvasEndpoint `json:"start"`
 	// The target endpoint.
 	End CanvasEndpoint `json:"end"`
