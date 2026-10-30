@@ -1915,8 +1915,8 @@ func WrapWithRunsLocked(err error, runRidsArg []RunRid) *RunsLocked {
 
 // RunsLocked is an error type.
 /*
-A run under a retention lock is immutable. The runs named here must be unlocked before
-any of their metadata, data sources, or attachments can be updated. Batch updates are
+A run under a retention lock cannot change its assets or data sources. The runs named here
+must be unlocked before those can be updated. Batch updates are
 rejected in full rather than partially applied, so this lists every locked run in the
 request.
 */

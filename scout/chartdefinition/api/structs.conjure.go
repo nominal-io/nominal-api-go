@@ -588,6 +588,33 @@ func (o *CommandConfirmation) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A channel that receives a value the user enters.
+// safelogging:@Unsafe
+type CommandTarget struct {
+	/*
+	   Channel variable naming the commandable series, resolved by the
+	   document hosting this visualization. Must resolve to a physical
+	   series (VariableLocator.series).
+	*/
+	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
+}
+
+func (o CommandTarget) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *CommandTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // How to draw connecting lines between points
 type ConnectingLineConfiguration struct {
 	Style ConnectingLineStyle `json:"style"`
@@ -981,6 +1008,39 @@ func (o FixedDecimalPlaces) MarshalYAML() (interface{}, error) {
 }
 
 func (o *FixedDecimalPlaces) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Accepts finite floating-point values. All present constraints must be
+finite, and min must be less than or equal to max.
+*/
+type FloatNumberInput struct {
+	// Inclusive lower bound. Absent means unbounded below.
+	Min *float64 `json:"min,omitempty"`
+	// Inclusive upper bound. Absent means unbounded above.
+	Max *float64 `json:"max,omitempty"`
+	/*
+	   Must be greater than zero. Valid values are min + k * step for an
+	   integer k, or k * step when min is absent. Also the increment for
+	   stepper controls. Absent means any value is accepted.
+	*/
+	Step *float64 `json:"step,omitempty"`
+}
+
+func (o FloatNumberInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *FloatNumberInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1476,11 +1536,15 @@ type Geo3dDefinitionV1 struct {
 	Title *string     `json:"title,omitempty"`
 	// Spatial dataset or channel plots in the 3D viewport.
 	SpatialPlots *[]GeoPlot3dSpatial `json:"spatialPlots,omitempty"`
+	// Polygon sets drawn in the 3D viewport, such as keep-out zones.
+	Polygons *[]GeoPlot3dPolygons `json:"polygons,omitempty"`
 	/*
 	   Coordinate reference system for spatial assets in this panel.
 	   Absent means ECEF (the original default).
 	*/
 	Crs *Geo3dCrs `json:"crs,omitempty"`
+	// Tile provider for the terrain basemap and height.
+	TileSource *Geo3dTileSource `json:"tileSource,omitempty"`
 }
 
 func (o Geo3dDefinitionV1) MarshalJSON() ([]byte, error) {
@@ -1625,6 +1689,24 @@ func (o Geo3dOrientationPrincipalAxes) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Geo3dOrientationPrincipalAxes) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type Geo3dPolygonsTerrainFloor struct{}
+
+func (o Geo3dPolygonsTerrainFloor) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dPolygonsTerrainFloor) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1824,6 +1906,7 @@ func (o *Geo3dSensorShapeConic) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 // A rectangular frustum shaped sensor volume, defined by included angles.
+// safelogging:@Unsafe
 type Geo3dSensorShapeRectangularIncludedFov struct {
 	// Full field-of-view (FOV) angle in the sensor's horizontal direction, in degrees.
 	XFov VariableStaticOrChannel `json:"xFov"`
@@ -1831,6 +1914,8 @@ type Geo3dSensorShapeRectangularIncludedFov struct {
 	YFov VariableStaticOrChannel `json:"yFov"`
 	// Length for the projection, in meters.
 	Length VariableStaticOrChannel `json:"length"`
+	// Workbook variable naming a video channel painted on the sensor's image plane.
+	VideoVariable *api2.ChannelVariableName `json:"videoVariable,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o Geo3dSensorShapeRectangularIncludedFov) MarshalYAML() (interface{}, error) {
@@ -1864,6 +1949,65 @@ func (o Geo3dSensorShapeSpherical) MarshalYAML() (interface{}, error) {
 }
 
 func (o *Geo3dSensorShapeSpherical) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A user-supplied XYZ tile provider.
+type Geo3dTileSourceCustom struct {
+	// Imagery tiles. Must be a valid URL containing {z}, {x}, and {y} exactly once each.
+	ColorTemplate string `json:"colorTemplate"`
+	/*
+	   Elevation tiles for terrain. Must be a valid URL containing {z}, {x}, and {y}
+	   exactly once each.
+	*/
+	HeightTemplate *string `json:"heightTemplate,omitempty"`
+	/*
+	   Replaces the {token} placeholder in the tile URLs. Visible to anyone with access to the
+	   field.
+	*/
+	Token *string `json:"token,omitempty"`
+}
+
+func (o Geo3dTileSourceCustom) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dTileSourceCustom) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A built-in tile provider.
+type Geo3dTileSourcePreset struct {
+	// Preset identifier.
+	PresetId string `json:"presetId"`
+	/*
+	   Replaces the {token} placeholder in the tile URLs. Visible to anyone with access to the
+	   field.
+	*/
+	Token *string `json:"token,omitempty"`
+}
+
+func (o Geo3dTileSourcePreset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *Geo3dTileSourcePreset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -1939,6 +2083,40 @@ func (o GeoPlot3d) MarshalYAML() (interface{}, error) {
 }
 
 func (o *GeoPlot3d) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A set of polygons streamed from one channel.
+// safelogging:@Unsafe
+type GeoPlot3dPolygons struct {
+	PolygonsId string  `json:"polygonsId"`
+	Enabled    *bool   `json:"enabled,omitempty"`
+	Label      *string `json:"label,omitempty"`
+	// Channel variable whose values are GeoJSON polygons (https://geojson.org/).
+	ChannelVariableName *api2.ChannelVariableName `json:"channelVariableName,omitempty" safelogging:"@Unsafe"`
+	// Where the floor of the polygons sits.
+	LowerElevation Geo3dPolygonsLowerElevation `json:"lowerElevation"`
+	// Elevation of the ceiling of the polygons, in meters relative to mean sea level.
+	UpperElevation float64      `json:"upperElevation"`
+	FillColor      api.HexColor `json:"fillColor" safelogging:"@Safe"`
+	// Opacity of the fill, from 0 (invisible) to 1 (solid).
+	FillOpacity float64      `json:"fillOpacity"`
+	LineColor   api.HexColor `json:"lineColor" safelogging:"@Safe"`
+}
+
+func (o GeoPlot3dPolygons) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeoPlot3dPolygons) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -2507,6 +2685,36 @@ func (o *InstrumentVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Accepts whole numbers only. min must be less than or equal to max.
+type IntegerNumberInput struct {
+	// Inclusive lower bound. Absent means unbounded below.
+	Min *safelong.SafeLong `json:"min,omitempty"`
+	// Inclusive upper bound. Absent means unbounded above.
+	Max *safelong.SafeLong `json:"max,omitempty"`
+	/*
+	   Must be at least 1. Valid values are min + k * step for an integer
+	   k, or k * step when min is absent. Also the increment for stepper
+	   controls. Absent is treated as 1.
+	*/
+	Step *safelong.SafeLong `json:"step,omitempty"`
+}
+
+func (o IntegerNumberInput) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *IntegerNumberInput) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type Layout struct {
 	/*
 	   The json layout definition according to plotly's schema
@@ -2925,6 +3133,112 @@ func (o NumberFormat) MarshalYAML() (interface{}, error) {
 }
 
 func (o *NumberFormat) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Fires when the user commits an edited value, by blurring the input or pressing Enter.
+type NumberInputCommitTrigger struct{}
+
+func (o NumberInputCommitTrigger) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumberInputCommitTrigger) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+When trigger fires, sends the entered value to every entry in
+targets as a single command service SendCommands request.
+*/
+type NumberInputSendCommandsAction struct {
+	// Absent means commit.
+	Trigger *NumberInputTrigger `json:"trigger,omitempty"`
+	/*
+	   The channels that receive the value. Must be non-empty, contain at
+	   most 32 entries, and name each variable at most once. Every target
+	   receives the same value, so each target's data type must match
+	   numberType.
+	*/
+	Targets []CommandTarget `json:"targets"`
+	/*
+	   If present, the frontend must show a confirmation dialog and
+	   receive an explicit confirmation before sending the value.
+	*/
+	Confirmation *CommandConfirmation `json:"confirmation,omitempty"`
+}
+
+func (o NumberInputSendCommandsAction) MarshalJSON() ([]byte, error) {
+	if o.Targets == nil {
+		o.Targets = make([]CommandTarget, 0)
+	}
+	type _tmpNumberInputSendCommandsAction NumberInputSendCommandsAction
+	return safejson.Marshal(_tmpNumberInputSendCommandsAction(o))
+}
+
+func (o *NumberInputSendCommandsAction) UnmarshalJSON(data []byte) error {
+	type _tmpNumberInputSendCommandsAction NumberInputSendCommandsAction
+	var rawNumberInputSendCommandsAction _tmpNumberInputSendCommandsAction
+	if err := safejson.Unmarshal(data, &rawNumberInputSendCommandsAction); err != nil {
+		return err
+	}
+	if rawNumberInputSendCommandsAction.Targets == nil {
+		rawNumberInputSendCommandsAction.Targets = make([]CommandTarget, 0)
+	}
+	*o = NumberInputSendCommandsAction(rawNumberInputSendCommandsAction)
+	return nil
+}
+
+func (o NumberInputSendCommandsAction) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumberInputSendCommandsAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A number input whose entered value is applied by action. A value that
+violates the constraints of numberType is never applied.
+*/
+type NumberInputVizDefinitionV1 struct {
+	// The label displayed with the input.
+	Title      *string         `json:"title,omitempty"`
+	NumberType NumberInputType `json:"numberType"`
+	// Unit label rendered beside the input, such as "psi". Display only; the value is applied as entered.
+	Unit   *string           `json:"unit,omitempty"`
+	Action NumberInputAction `json:"action"`
+}
+
+func (o NumberInputVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumberInputVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -5910,6 +6224,12 @@ func (o *VideoVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) 
 type VideoVizDefinitionV2 struct {
 	Title    *string                  `json:"title,omitempty"`
 	Variable api2.ChannelVariableName `json:"variable" safelogging:"@Unsafe"`
+	/*
+	   Workbook variables bound to this panel's image-annotation overlay:
+	   struct-typed channels whose samples are messages drawn over the
+	   video image.
+	*/
+	Annotations *[]api2.ChannelVariableName `json:"annotations,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o VideoVizDefinitionV2) MarshalYAML() (interface{}, error) {

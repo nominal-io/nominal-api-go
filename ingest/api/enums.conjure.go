@@ -901,3 +901,74 @@ func (e *UploadDestination) UnmarshalText(data []byte) error {
 	}
 	return nil
 }
+
+/*
+A bound on the output frame size, named by the height of a 16:9 frame. The matching widths are
+640, 1280, 1920, 2560, and 3840. Output keeps the source aspect ratio and fits inside the bound,
+so a 16:9 source bounded to SD_480P comes out 640x360.
+*/
+type VideoResolutionPreset struct {
+	val VideoResolutionPreset_Value
+}
+
+type VideoResolutionPreset_Value string
+
+const (
+	VideoResolutionPreset_SD_480P        VideoResolutionPreset_Value = "SD_480P"
+	VideoResolutionPreset_HD_720P        VideoResolutionPreset_Value = "HD_720P"
+	VideoResolutionPreset_FULL_HD_1080P  VideoResolutionPreset_Value = "FULL_HD_1080P"
+	VideoResolutionPreset_QUAD_HD_1440P  VideoResolutionPreset_Value = "QUAD_HD_1440P"
+	VideoResolutionPreset_ULTRA_HD_2160P VideoResolutionPreset_Value = "ULTRA_HD_2160P"
+	VideoResolutionPreset_UNKNOWN        VideoResolutionPreset_Value = "UNKNOWN"
+)
+
+// VideoResolutionPreset_Values returns all known variants of VideoResolutionPreset.
+func VideoResolutionPreset_Values() []VideoResolutionPreset_Value {
+	return []VideoResolutionPreset_Value{VideoResolutionPreset_SD_480P, VideoResolutionPreset_HD_720P, VideoResolutionPreset_FULL_HD_1080P, VideoResolutionPreset_QUAD_HD_1440P, VideoResolutionPreset_ULTRA_HD_2160P}
+}
+
+func New_VideoResolutionPreset(value VideoResolutionPreset_Value) VideoResolutionPreset {
+	return VideoResolutionPreset{val: value}
+}
+
+// IsUnknown returns false for all known variants of VideoResolutionPreset and true otherwise.
+func (e VideoResolutionPreset) IsUnknown() bool {
+	switch e.val {
+	case VideoResolutionPreset_SD_480P, VideoResolutionPreset_HD_720P, VideoResolutionPreset_FULL_HD_1080P, VideoResolutionPreset_QUAD_HD_1440P, VideoResolutionPreset_ULTRA_HD_2160P:
+		return false
+	}
+	return true
+}
+
+func (e VideoResolutionPreset) Value() VideoResolutionPreset_Value {
+	if e.IsUnknown() {
+		return VideoResolutionPreset_UNKNOWN
+	}
+	return e.val
+}
+
+func (e VideoResolutionPreset) String() string {
+	return string(e.val)
+}
+
+func (e VideoResolutionPreset) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *VideoResolutionPreset) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_Value(v))
+	case "SD_480P":
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_SD_480P)
+	case "HD_720P":
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_HD_720P)
+	case "FULL_HD_1080P":
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_FULL_HD_1080P)
+	case "QUAD_HD_1440P":
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_QUAD_HD_1440P)
+	case "ULTRA_HD_2160P":
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_ULTRA_HD_2160P)
+	}
+	return nil
+}
