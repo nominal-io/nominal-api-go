@@ -420,6 +420,14 @@ type IngestJobServiceClient interface {
 	   semantics match cancelIngestJob. At most 100 jobs may be requested per call.
 	*/
 	BatchCancelIngestJobs(ctx context.Context, authHeader bearertoken.Token, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error)
+	/*
+	   Irreversibly deletes the data an ingest job wrote, by deleting every series in the job's dataset
+	   tagged with the job's RID, and marks the job and its dataset files DELETED. Only COMPLETED or CANCELLED
+	   jobs whose dataset files have all finished ingesting can be deleted, and a DELETION_IN_PROGRESS job can
+	   be deleted again to resume an interrupted deletion; anything else, including a DELETED job, throws
+	   IngestJobNotDeletable.
+	*/
+	DeleteIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) error
 }
 
 type ingestJobServiceClient struct {
@@ -570,6 +578,18 @@ func (c *ingestJobServiceClient) BatchCancelIngestJobs(ctx context.Context, auth
 	return *returnVal, nil
 }
 
+func (c *ingestJobServiceClient) DeleteIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteIngestJob"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-job/%s", url.PathEscape(fmt.Sprint(ingestJobRidArg))))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "deleteIngestJob failed")
+	}
+	return nil
+}
+
 // Public API for querying ingest jobs.
 type IngestJobServiceClientWithAuth interface {
 	// Returns a single ingest job by RID. Does not include the full ingest request details.
@@ -627,6 +647,14 @@ type IngestJobServiceClientWithAuth interface {
 	   semantics match cancelIngestJob. At most 100 jobs may be requested per call.
 	*/
 	BatchCancelIngestJobs(ctx context.Context, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error)
+	/*
+	   Irreversibly deletes the data an ingest job wrote, by deleting every series in the job's dataset
+	   tagged with the job's RID, and marks the job and its dataset files DELETED. Only COMPLETED or CANCELLED
+	   jobs whose dataset files have all finished ingesting can be deleted, and a DELETION_IN_PROGRESS job can
+	   be deleted again to resume an interrupted deletion; anything else, including a DELETED job, throws
+	   IngestJobNotDeletable.
+	*/
+	DeleteIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) error
 }
 
 func NewIngestJobServiceClientWithAuth(client IngestJobServiceClient, authHeader bearertoken.Token) IngestJobServiceClientWithAuth {
@@ -668,6 +696,10 @@ func (c *ingestJobServiceClientWithAuth) CancelIngestJob(ctx context.Context, in
 
 func (c *ingestJobServiceClientWithAuth) BatchCancelIngestJobs(ctx context.Context, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error) {
 	return c.client.BatchCancelIngestJobs(ctx, c.authHeader, requestArg)
+}
+
+func (c *ingestJobServiceClientWithAuth) DeleteIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) error {
+	return c.client.DeleteIngestJob(ctx, c.authHeader, ingestJobRidArg)
 }
 
 func NewIngestJobServiceClientWithTokenProvider(client IngestJobServiceClient, tokenProvider httpclient.TokenProvider) IngestJobServiceClientWithAuth {
@@ -743,6 +775,14 @@ func (c *ingestJobServiceClientWithTokenProvider) BatchCancelIngestJobs(ctx cont
 	return c.client.BatchCancelIngestJobs(ctx, bearertoken.Token(token), requestArg)
 }
 
+func (c *ingestJobServiceClientWithTokenProvider) DeleteIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.DeleteIngestJob(ctx, bearertoken.Token(token), ingestJobRidArg)
+}
+
 // The Ingest Service handles the data ingestion into Nominal/Clickhouse.
 type IngestServiceClient interface {
 	/*
@@ -759,7 +799,13 @@ type IngestServiceClient interface {
 	   the run already in progress. Cancel it first.
 	*/
 	RerunIngest(ctx context.Context, authHeader bearertoken.Token, requestArg RerunIngestRequest) (IngestResponse, error)
-	// Creates a run and ingests data sources to be added to the run.
+	/*
+	   Creates a run and ingests data sources to be added to the run.
+
+	   Native clients compose this from proto/gRPC calls instead: create each new dataset, submit
+	   `nominal.ingest.v2.IngestService/Ingest` into it, then call `nominal.run.v1.RunService/CreateOrUpdateRun`
+	   with the existing and new datasets as data sources.
+	*/
 	IngestRun(ctx context.Context, authHeader bearertoken.Token, requestArg IngestRunRequest) (IngestRunResponse, error)
 	/*
 	   Ingests video data from a S3 Nominal upload bucket.
@@ -771,6 +817,8 @@ type IngestServiceClient interface {
 	   Re-ingests data from provided source datasets into either an existing target dataset, or a new one.
 	   Only supported for CSV and Parquet dataset files.
 	   Will only reingest dataset files and will drop streaming data from datasets.
+
+	   Served natively as `nominal.ingestmanagement.v1.IngestManagementService/ReingestDatasets`.
 	*/
 	ReingestFromDatasets(ctx context.Context, authHeader bearertoken.Token, requestArg ReingestDatasetsRequest) (ReingestDatasetsResponse, error)
 	/*
@@ -910,7 +958,13 @@ type IngestServiceClientWithAuth interface {
 	   the run already in progress. Cancel it first.
 	*/
 	RerunIngest(ctx context.Context, requestArg RerunIngestRequest) (IngestResponse, error)
-	// Creates a run and ingests data sources to be added to the run.
+	/*
+	   Creates a run and ingests data sources to be added to the run.
+
+	   Native clients compose this from proto/gRPC calls instead: create each new dataset, submit
+	   `nominal.ingest.v2.IngestService/Ingest` into it, then call `nominal.run.v1.RunService/CreateOrUpdateRun`
+	   with the existing and new datasets as data sources.
+	*/
 	IngestRun(ctx context.Context, requestArg IngestRunRequest) (IngestRunResponse, error)
 	/*
 	   Ingests video data from a S3 Nominal upload bucket.
@@ -922,6 +976,8 @@ type IngestServiceClientWithAuth interface {
 	   Re-ingests data from provided source datasets into either an existing target dataset, or a new one.
 	   Only supported for CSV and Parquet dataset files.
 	   Will only reingest dataset files and will drop streaming data from datasets.
+
+	   Served natively as `nominal.ingestmanagement.v1.IngestManagementService/ReingestDatasets`.
 	*/
 	ReingestFromDatasets(ctx context.Context, requestArg ReingestDatasetsRequest) (ReingestDatasetsResponse, error)
 	/*

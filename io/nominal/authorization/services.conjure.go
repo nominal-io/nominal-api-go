@@ -26,8 +26,12 @@ type AuthorizationServiceClient interface {
 	*/
 	Authorize(ctx context.Context, authHeader bearertoken.Token, requestArg AuthorizationRequest) ([]rid.ResourceIdentifier, error)
 	/*
-	   Given a set of resources, returns the workspace that each resource belongs to. If a user
-	   is not authorized on the resource, will omit the resource from the response.
+	   Given a set of resources, returns the workspace that each resource belongs to. Omits any
+	   resource the caller cannot view: notebooks, runs, assets and data sources need their own
+	   view action, and every other resource needs `workspace:view` on its workspace. A returned
+	   entry is not authorization to change the resource.
+	   New callers should read the workspace from the resource's own record instead; this
+	   endpoint is slated for deprecation.
 	*/
 	BatchGetWorkspaceForResource(ctx context.Context, authHeader bearertoken.Token, requestArg []rid.ResourceIdentifier) (map[rid.ResourceIdentifier]rids.WorkspaceRid, error)
 	/*
@@ -363,8 +367,12 @@ type AuthorizationServiceClientWithAuth interface {
 	*/
 	Authorize(ctx context.Context, requestArg AuthorizationRequest) ([]rid.ResourceIdentifier, error)
 	/*
-	   Given a set of resources, returns the workspace that each resource belongs to. If a user
-	   is not authorized on the resource, will omit the resource from the response.
+	   Given a set of resources, returns the workspace that each resource belongs to. Omits any
+	   resource the caller cannot view: notebooks, runs, assets and data sources need their own
+	   view action, and every other resource needs `workspace:view` on its workspace. A returned
+	   entry is not authorization to change the resource.
+	   New callers should read the workspace from the resource's own record instead; this
+	   endpoint is slated for deprecation.
 	*/
 	BatchGetWorkspaceForResource(ctx context.Context, requestArg []rid.ResourceIdentifier) (map[rid.ResourceIdentifier]rids.WorkspaceRid, error)
 	/*
