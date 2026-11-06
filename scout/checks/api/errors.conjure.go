@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/nominal-io/nominal-api-go/internal/conjureerrors"
+	api1 "github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/scout/rids/api"
 	"github.com/palantir/conjure-go-runtime/v2/conjure-go-contract/errors"
 	"github.com/palantir/pkg/safejson"
@@ -15,6 +16,348 @@ import (
 	"github.com/palantir/pkg/uuid"
 	werror "github.com/palantir/witchcraft-go-error"
 )
+
+// safelogging:@Safe
+type assetTypesArchived struct {
+	TypeRids []api.TypeRid `json:"typeRids" safelogging:"@Safe"`
+}
+
+func (o assetTypesArchived) MarshalJSON() ([]byte, error) {
+	if o.TypeRids == nil {
+		o.TypeRids = make([]api.TypeRid, 0)
+	}
+	type _tmpassetTypesArchived assetTypesArchived
+	return safejson.Marshal(_tmpassetTypesArchived(o))
+}
+
+func (o *assetTypesArchived) UnmarshalJSON(data []byte) error {
+	type _tmpassetTypesArchived assetTypesArchived
+	var rawassetTypesArchived _tmpassetTypesArchived
+	if err := safejson.Unmarshal(data, &rawassetTypesArchived); err != nil {
+		return err
+	}
+	if rawassetTypesArchived.TypeRids == nil {
+		rawassetTypesArchived.TypeRids = make([]api.TypeRid, 0)
+	}
+	*o = assetTypesArchived(rawassetTypesArchived)
+	return nil
+}
+
+func (o assetTypesArchived) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *assetTypesArchived) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewAssetTypesArchived returns new instance of AssetTypesArchived error.
+func NewAssetTypesArchived(typeRidsArg []api.TypeRid) *AssetTypesArchived {
+	return &AssetTypesArchived{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), assetTypesArchived: assetTypesArchived{TypeRids: typeRidsArg}}
+}
+
+// WrapWithAssetTypesArchived returns new instance of AssetTypesArchived error wrapping an existing error.
+func WrapWithAssetTypesArchived(err error, typeRidsArg []api.TypeRid) *AssetTypesArchived {
+	return &AssetTypesArchived{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, assetTypesArchived: assetTypesArchived{TypeRids: typeRidsArg}}
+}
+
+// AssetTypesArchived is an error type.
+type AssetTypesArchived struct {
+	errorInstanceID uuid.UUID
+	assetTypesArchived
+	cause error
+	stack werror.StackTrace
+}
+
+// IsAssetTypesArchived returns true if err is an instance of AssetTypesArchived.
+func IsAssetTypesArchived(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*AssetTypesArchived)
+	return ok
+}
+
+func (e *AssetTypesArchived) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Checks:AssetTypesArchived (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *AssetTypesArchived) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *AssetTypesArchived) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *AssetTypesArchived) Message() string {
+	return "INVALID_ARGUMENT Checks:AssetTypesArchived"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *AssetTypesArchived) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *AssetTypesArchived) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *AssetTypesArchived) Name() string {
+	return "Checks:AssetTypesArchived"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *AssetTypesArchived) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *AssetTypesArchived) Parameters() map[string]interface{} {
+	return map[string]interface{}{"typeRids": e.TypeRids}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *AssetTypesArchived) safeParams() map[string]interface{} {
+	return map[string]interface{}{"typeRids": e.TypeRids, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *AssetTypesArchived) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *AssetTypesArchived) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *AssetTypesArchived) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e AssetTypesArchived) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.assetTypesArchived)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Checks:AssetTypesArchived", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *AssetTypesArchived) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters assetTypesArchived
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.assetTypesArchived = parameters
+	return nil
+}
+
+// safelogging:@Safe
+type assetTypesNotFound struct {
+	TypeRids []api.TypeRid `json:"typeRids" safelogging:"@Safe"`
+}
+
+func (o assetTypesNotFound) MarshalJSON() ([]byte, error) {
+	if o.TypeRids == nil {
+		o.TypeRids = make([]api.TypeRid, 0)
+	}
+	type _tmpassetTypesNotFound assetTypesNotFound
+	return safejson.Marshal(_tmpassetTypesNotFound(o))
+}
+
+func (o *assetTypesNotFound) UnmarshalJSON(data []byte) error {
+	type _tmpassetTypesNotFound assetTypesNotFound
+	var rawassetTypesNotFound _tmpassetTypesNotFound
+	if err := safejson.Unmarshal(data, &rawassetTypesNotFound); err != nil {
+		return err
+	}
+	if rawassetTypesNotFound.TypeRids == nil {
+		rawassetTypesNotFound.TypeRids = make([]api.TypeRid, 0)
+	}
+	*o = assetTypesNotFound(rawassetTypesNotFound)
+	return nil
+}
+
+func (o assetTypesNotFound) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *assetTypesNotFound) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewAssetTypesNotFound returns new instance of AssetTypesNotFound error.
+func NewAssetTypesNotFound(typeRidsArg []api.TypeRid) *AssetTypesNotFound {
+	return &AssetTypesNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), assetTypesNotFound: assetTypesNotFound{TypeRids: typeRidsArg}}
+}
+
+// WrapWithAssetTypesNotFound returns new instance of AssetTypesNotFound error wrapping an existing error.
+func WrapWithAssetTypesNotFound(err error, typeRidsArg []api.TypeRid) *AssetTypesNotFound {
+	return &AssetTypesNotFound{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, assetTypesNotFound: assetTypesNotFound{TypeRids: typeRidsArg}}
+}
+
+// AssetTypesNotFound is an error type.
+type AssetTypesNotFound struct {
+	errorInstanceID uuid.UUID
+	assetTypesNotFound
+	cause error
+	stack werror.StackTrace
+}
+
+// IsAssetTypesNotFound returns true if err is an instance of AssetTypesNotFound.
+func IsAssetTypesNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*AssetTypesNotFound)
+	return ok
+}
+
+func (e *AssetTypesNotFound) Error() string {
+	return fmt.Sprintf("NOT_FOUND Checks:AssetTypesNotFound (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *AssetTypesNotFound) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *AssetTypesNotFound) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *AssetTypesNotFound) Message() string {
+	return "NOT_FOUND Checks:AssetTypesNotFound"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *AssetTypesNotFound) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *AssetTypesNotFound) Code() errors.ErrorCode {
+	return errors.NotFound
+}
+
+// Name returns an error name identifying error type.
+func (e *AssetTypesNotFound) Name() string {
+	return "Checks:AssetTypesNotFound"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *AssetTypesNotFound) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *AssetTypesNotFound) Parameters() map[string]interface{} {
+	return map[string]interface{}{"typeRids": e.TypeRids}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *AssetTypesNotFound) safeParams() map[string]interface{} {
+	return map[string]interface{}{"typeRids": e.TypeRids, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *AssetTypesNotFound) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *AssetTypesNotFound) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *AssetTypesNotFound) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e AssetTypesNotFound) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.assetTypesNotFound)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.NotFound, ErrorName: "Checks:AssetTypesNotFound", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *AssetTypesNotFound) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters assetTypesNotFound
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.assetTypesNotFound = parameters
+	return nil
+}
 
 // safelogging:@Safe
 type assetsNotFound struct {
@@ -184,6 +527,177 @@ func (e *AssetsNotFound) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.assetsNotFound = parameters
+	return nil
+}
+
+// safelogging:@Unsafe
+type channelsNotRequiredByAssetTypes struct {
+	Channels []api1.Channel `json:"channels" safelogging:"@Unsafe"`
+}
+
+func (o channelsNotRequiredByAssetTypes) MarshalJSON() ([]byte, error) {
+	if o.Channels == nil {
+		o.Channels = make([]api1.Channel, 0)
+	}
+	type _tmpchannelsNotRequiredByAssetTypes channelsNotRequiredByAssetTypes
+	return safejson.Marshal(_tmpchannelsNotRequiredByAssetTypes(o))
+}
+
+func (o *channelsNotRequiredByAssetTypes) UnmarshalJSON(data []byte) error {
+	type _tmpchannelsNotRequiredByAssetTypes channelsNotRequiredByAssetTypes
+	var rawchannelsNotRequiredByAssetTypes _tmpchannelsNotRequiredByAssetTypes
+	if err := safejson.Unmarshal(data, &rawchannelsNotRequiredByAssetTypes); err != nil {
+		return err
+	}
+	if rawchannelsNotRequiredByAssetTypes.Channels == nil {
+		rawchannelsNotRequiredByAssetTypes.Channels = make([]api1.Channel, 0)
+	}
+	*o = channelsNotRequiredByAssetTypes(rawchannelsNotRequiredByAssetTypes)
+	return nil
+}
+
+func (o channelsNotRequiredByAssetTypes) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *channelsNotRequiredByAssetTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewChannelsNotRequiredByAssetTypes returns new instance of ChannelsNotRequiredByAssetTypes error.
+func NewChannelsNotRequiredByAssetTypes(channelsArg []api1.Channel) *ChannelsNotRequiredByAssetTypes {
+	return &ChannelsNotRequiredByAssetTypes{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), channelsNotRequiredByAssetTypes: channelsNotRequiredByAssetTypes{Channels: channelsArg}}
+}
+
+// WrapWithChannelsNotRequiredByAssetTypes returns new instance of ChannelsNotRequiredByAssetTypes error wrapping an existing error.
+func WrapWithChannelsNotRequiredByAssetTypes(err error, channelsArg []api1.Channel) *ChannelsNotRequiredByAssetTypes {
+	return &ChannelsNotRequiredByAssetTypes{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, channelsNotRequiredByAssetTypes: channelsNotRequiredByAssetTypes{Channels: channelsArg}}
+}
+
+// ChannelsNotRequiredByAssetTypes is an error type.
+type ChannelsNotRequiredByAssetTypes struct {
+	errorInstanceID uuid.UUID
+	channelsNotRequiredByAssetTypes
+	cause error
+	stack werror.StackTrace
+}
+
+// IsChannelsNotRequiredByAssetTypes returns true if err is an instance of ChannelsNotRequiredByAssetTypes.
+func IsChannelsNotRequiredByAssetTypes(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*ChannelsNotRequiredByAssetTypes)
+	return ok
+}
+
+func (e *ChannelsNotRequiredByAssetTypes) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Checks:ChannelsNotRequiredByAssetTypes (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *ChannelsNotRequiredByAssetTypes) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *ChannelsNotRequiredByAssetTypes) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *ChannelsNotRequiredByAssetTypes) Message() string {
+	return "INVALID_ARGUMENT Checks:ChannelsNotRequiredByAssetTypes"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *ChannelsNotRequiredByAssetTypes) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *ChannelsNotRequiredByAssetTypes) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *ChannelsNotRequiredByAssetTypes) Name() string {
+	return "Checks:ChannelsNotRequiredByAssetTypes"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *ChannelsNotRequiredByAssetTypes) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *ChannelsNotRequiredByAssetTypes) Parameters() map[string]interface{} {
+	return map[string]interface{}{"channels": e.Channels}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *ChannelsNotRequiredByAssetTypes) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ChannelsNotRequiredByAssetTypes) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *ChannelsNotRequiredByAssetTypes) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"channels": e.Channels}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *ChannelsNotRequiredByAssetTypes) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e ChannelsNotRequiredByAssetTypes) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.channelsNotRequiredByAssetTypes)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Checks:ChannelsNotRequiredByAssetTypes", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *ChannelsNotRequiredByAssetTypes) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters channelsNotRequiredByAssetTypes
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.channelsNotRequiredByAssetTypes = parameters
 	return nil
 }
 
@@ -1276,6 +1790,153 @@ func (e *CommitToArchivedChecklist) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type inlineChannelNotAllowedWithAssetTypes struct{}
+
+func (o inlineChannelNotAllowedWithAssetTypes) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *inlineChannelNotAllowedWithAssetTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInlineChannelNotAllowedWithAssetTypes returns new instance of InlineChannelNotAllowedWithAssetTypes error.
+func NewInlineChannelNotAllowedWithAssetTypes() *InlineChannelNotAllowedWithAssetTypes {
+	return &InlineChannelNotAllowedWithAssetTypes{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), inlineChannelNotAllowedWithAssetTypes: inlineChannelNotAllowedWithAssetTypes{}}
+}
+
+// WrapWithInlineChannelNotAllowedWithAssetTypes returns new instance of InlineChannelNotAllowedWithAssetTypes error wrapping an existing error.
+func WrapWithInlineChannelNotAllowedWithAssetTypes(err error) *InlineChannelNotAllowedWithAssetTypes {
+	return &InlineChannelNotAllowedWithAssetTypes{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, inlineChannelNotAllowedWithAssetTypes: inlineChannelNotAllowedWithAssetTypes{}}
+}
+
+// InlineChannelNotAllowedWithAssetTypes is an error type.
+type InlineChannelNotAllowedWithAssetTypes struct {
+	errorInstanceID uuid.UUID
+	inlineChannelNotAllowedWithAssetTypes
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInlineChannelNotAllowedWithAssetTypes returns true if err is an instance of InlineChannelNotAllowedWithAssetTypes.
+func IsInlineChannelNotAllowedWithAssetTypes(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InlineChannelNotAllowedWithAssetTypes)
+	return ok
+}
+
+func (e *InlineChannelNotAllowedWithAssetTypes) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Checks:InlineChannelNotAllowedWithAssetTypes (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InlineChannelNotAllowedWithAssetTypes) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InlineChannelNotAllowedWithAssetTypes) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InlineChannelNotAllowedWithAssetTypes) Message() string {
+	return "INVALID_ARGUMENT Checks:InlineChannelNotAllowedWithAssetTypes"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InlineChannelNotAllowedWithAssetTypes) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InlineChannelNotAllowedWithAssetTypes) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InlineChannelNotAllowedWithAssetTypes) Name() string {
+	return "Checks:InlineChannelNotAllowedWithAssetTypes"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InlineChannelNotAllowedWithAssetTypes) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InlineChannelNotAllowedWithAssetTypes) Parameters() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InlineChannelNotAllowedWithAssetTypes) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InlineChannelNotAllowedWithAssetTypes) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InlineChannelNotAllowedWithAssetTypes) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InlineChannelNotAllowedWithAssetTypes) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InlineChannelNotAllowedWithAssetTypes) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.inlineChannelNotAllowedWithAssetTypes)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Checks:InlineChannelNotAllowedWithAssetTypes", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InlineChannelNotAllowedWithAssetTypes) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters inlineChannelNotAllowedWithAssetTypes
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.inlineChannelNotAllowedWithAssetTypes = parameters
+	return nil
+}
+
 // safelogging:@Safe
 type jobNotFound struct {
 	JobRid JobRid `json:"jobRid" safelogging:"@Safe"`
@@ -1427,7 +2088,10 @@ func (e *JobNotFound) UnmarshalJSON(data []byte) error {
 }
 
 func init() {
+	conjureerrors.RegisterErrorType("Checks:AssetTypesArchived", reflect.TypeOf(AssetTypesArchived{}))
+	conjureerrors.RegisterErrorType("Checks:AssetTypesNotFound", reflect.TypeOf(AssetTypesNotFound{}))
 	conjureerrors.RegisterErrorType("Checks:AssetsNotFound", reflect.TypeOf(AssetsNotFound{}))
+	conjureerrors.RegisterErrorType("Checks:ChannelsNotRequiredByAssetTypes", reflect.TypeOf(ChannelsNotRequiredByAssetTypes{}))
 	conjureerrors.RegisterErrorType("Checks:CheckNotFound", reflect.TypeOf(CheckNotFound{}))
 	conjureerrors.RegisterErrorType("Checks:ChecklistNotFound", reflect.TypeOf(ChecklistNotFound{}))
 	conjureerrors.RegisterErrorType("Checks:ChecklistsCircularDependency", reflect.TypeOf(ChecklistsCircularDependency{}))
@@ -1435,5 +2099,6 @@ func init() {
 	conjureerrors.RegisterErrorType("Checks:ChecklistsNotFound", reflect.TypeOf(ChecklistsNotFound{}))
 	conjureerrors.RegisterErrorType("Checks:ChecksNotFound", reflect.TypeOf(ChecksNotFound{}))
 	conjureerrors.RegisterErrorType("Checks:CommitToArchivedChecklist", reflect.TypeOf(CommitToArchivedChecklist{}))
+	conjureerrors.RegisterErrorType("Checks:InlineChannelNotAllowedWithAssetTypes", reflect.TypeOf(InlineChannelNotAllowedWithAssetTypes{}))
 	conjureerrors.RegisterErrorType("JobService:JobNotFound", reflect.TypeOf(JobNotFound{}))
 }

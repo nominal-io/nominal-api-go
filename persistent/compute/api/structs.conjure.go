@@ -10,6 +10,7 @@ import (
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/rid"
 	"github.com/palantir/pkg/safejson"
+	"github.com/palantir/pkg/safelong"
 	"github.com/palantir/pkg/safeyaml"
 )
 
@@ -477,6 +478,13 @@ func (o *SubscriptionUpdateError) UnmarshalYAML(unmarshal func(interface{}) erro
 type SubscriptionUpdateMessage struct {
 	SubscriptionId SubscriptionId     `json:"subscriptionId" safelogging:"@Safe"`
 	Update         SubscriptionUpdate `json:"update"`
+	/*
+	   Milliseconds from Nominal accepting the oldest sampled message drained for this update to the server
+	   finishing the update, measured just before it is serialized; serialization and the socket write are
+	   not included. Measured only on server clocks, so a client can add its own receipt-to-render time
+	   without synchronizing clocks. Only a sample of messages is timed; absent when none was drained.
+	*/
+	AcceptedToSendMillis *safelong.SafeLong `json:"acceptedToSendMillis,omitempty"`
 }
 
 func (o SubscriptionUpdateMessage) MarshalYAML() (interface{}, error) {

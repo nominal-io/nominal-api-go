@@ -8241,6 +8241,7 @@ type NumericSeries struct {
 	tagByIntervals              *TagByIntervalsSeries
 	filterByTag                 *NumericTagFilterSeries
 	selectTags                  *NumericSelectTagsSeries
+	pairByTag                   *NumericPairByTagSeries
 	toStartOfInterval           *NumericToStartOfIntervalSeries
 	phaseUnwrap                 *PhaseUnwrapSeries
 	aggregate                   *AggregateNumericSeries
@@ -8332,6 +8333,7 @@ type numericSeriesDeserializer struct {
 	TagByIntervals              *TagByIntervalsSeries                     `json:"tagByIntervals"`
 	FilterByTag                 *NumericTagFilterSeries                   `json:"filterByTag"`
 	SelectTags                  *NumericSelectTagsSeries                  `json:"selectTags"`
+	PairByTag                   *NumericPairByTagSeries                   `json:"pairByTag"`
 	ToStartOfInterval           *NumericToStartOfIntervalSeries           `json:"toStartOfInterval"`
 	PhaseUnwrap                 *PhaseUnwrapSeries                        `json:"phaseUnwrap"`
 	Aggregate                   *AggregateNumericSeries                   `json:"aggregate"`
@@ -8346,7 +8348,7 @@ type numericSeriesDeserializer struct {
 }
 
 func (u *numericSeriesDeserializer) toStruct() NumericSeries {
-	return NumericSeries{typ: u.Type, abs: u.Abs, negate: u.Negate, cos: u.Cos, sin: u.Sin, tan: u.Tan, acos: u.Acos, asin: u.Asin, ln: u.Ln, log10: u.Log10, sqrt: u.Sqrt, add: u.Add, subtract: u.Subtract, multiply: u.Multiply, divide: u.Divide, floorDivide: u.FloorDivide, power: u.Power, modulo: u.Modulo, atan2: u.Atan2, max: u.Max, mean: u.Mean, min: u.Min, sum: u.Sum, union: u.Union, product: u.Product, constant: u.Constant, selectNewestPoints: u.SelectNewestPoints, selectNumeric: u.SelectNumeric, selectNumericProperty: u.SelectNumericProperty, selectOldestPoints: u.SelectOldestPoints, bitAnd: u.BitAnd, bitOr: u.BitOr, bitXor: u.BitXor, bitShiftRight: u.BitShiftRight, bitShiftLeft: u.BitShiftLeft, bitTest: u.BitTest, ifElse: u.IfElse, numericAggregation: u.NumericAggregation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, zScore: u.ZScore, raw: u.Raw, derived: u.Derived, resample: u.Resample, resampleV2: u.ResampleV2, nthPointDownsample: u.NthPointDownsample, largestTriangleThreeBuckets: u.LargestTriangleThreeBuckets, signalFilter: u.SignalFilter, timeDifference: u.TimeDifference, absoluteTimestamp: u.AbsoluteTimestamp, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, timeShiftV2: u.TimeShiftV2, unitConversion: u.UnitConversion, unitOverride: u.UnitOverride, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, filterWhere: u.FilterWhere, thresholdFilter: u.ThresholdFilter, approximateFilter: u.ApproximateFilter, dropNan: u.DropNan, select1dArrayIndex: u.Select1dArrayIndex, aggregateUnderRanges: u.AggregateUnderRanges, rangeDuration: u.RangeDuration, groupWithinRangesV2: u.GroupWithinRangesV2, filterByExpression: u.FilterByExpression, scalarUdf: u.ScalarUdf, enumToNumeric: u.EnumToNumeric, contains: u.Contains, refprop: u.Refprop, refpropV2: u.RefpropV2, extractFromStruct: u.ExtractFromStruct, tagByIntervals: u.TagByIntervals, filterByTag: u.FilterByTag, selectTags: u.SelectTags, toStartOfInterval: u.ToStartOfInterval, phaseUnwrap: u.PhaseUnwrap, aggregate: u.Aggregate, rollingOperation: u.RollingOperation, bitOperation: u.BitOperation, channel: u.Channel, offset: u.Offset, scale: u.Scale, arithmetic: u.Arithmetic, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic}
+	return NumericSeries{typ: u.Type, abs: u.Abs, negate: u.Negate, cos: u.Cos, sin: u.Sin, tan: u.Tan, acos: u.Acos, asin: u.Asin, ln: u.Ln, log10: u.Log10, sqrt: u.Sqrt, add: u.Add, subtract: u.Subtract, multiply: u.Multiply, divide: u.Divide, floorDivide: u.FloorDivide, power: u.Power, modulo: u.Modulo, atan2: u.Atan2, max: u.Max, mean: u.Mean, min: u.Min, sum: u.Sum, union: u.Union, product: u.Product, constant: u.Constant, selectNewestPoints: u.SelectNewestPoints, selectNumeric: u.SelectNumeric, selectNumericProperty: u.SelectNumericProperty, selectOldestPoints: u.SelectOldestPoints, bitAnd: u.BitAnd, bitOr: u.BitOr, bitXor: u.BitXor, bitShiftRight: u.BitShiftRight, bitShiftLeft: u.BitShiftLeft, bitTest: u.BitTest, ifElse: u.IfElse, numericAggregation: u.NumericAggregation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, zScore: u.ZScore, raw: u.Raw, derived: u.Derived, resample: u.Resample, resampleV2: u.ResampleV2, nthPointDownsample: u.NthPointDownsample, largestTriangleThreeBuckets: u.LargestTriangleThreeBuckets, signalFilter: u.SignalFilter, timeDifference: u.TimeDifference, absoluteTimestamp: u.AbsoluteTimestamp, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, timeShiftV2: u.TimeShiftV2, unitConversion: u.UnitConversion, unitOverride: u.UnitOverride, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, filterWhere: u.FilterWhere, thresholdFilter: u.ThresholdFilter, approximateFilter: u.ApproximateFilter, dropNan: u.DropNan, select1dArrayIndex: u.Select1dArrayIndex, aggregateUnderRanges: u.AggregateUnderRanges, rangeDuration: u.RangeDuration, groupWithinRangesV2: u.GroupWithinRangesV2, filterByExpression: u.FilterByExpression, scalarUdf: u.ScalarUdf, enumToNumeric: u.EnumToNumeric, contains: u.Contains, refprop: u.Refprop, refpropV2: u.RefpropV2, extractFromStruct: u.ExtractFromStruct, tagByIntervals: u.TagByIntervals, filterByTag: u.FilterByTag, selectTags: u.SelectTags, pairByTag: u.PairByTag, toStartOfInterval: u.ToStartOfInterval, phaseUnwrap: u.PhaseUnwrap, aggregate: u.Aggregate, rollingOperation: u.RollingOperation, bitOperation: u.BitOperation, channel: u.Channel, offset: u.Offset, scale: u.Scale, arithmetic: u.Arithmetic, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic}
 }
 
 func (u *NumericSeries) toSerializer() (interface{}, error) {
@@ -8961,6 +8963,14 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type       string                  `json:"type"`
 			SelectTags NumericSelectTagsSeries `json:"selectTags"`
 		}{Type: "selectTags", SelectTags: *u.selectTags}, nil
+	case "pairByTag":
+		if u.pairByTag == nil {
+			return nil, fmt.Errorf("field \"pairByTag\" is required")
+		}
+		return struct {
+			Type      string                 `json:"type"`
+			PairByTag NumericPairByTagSeries `json:"pairByTag"`
+		}{Type: "pairByTag", PairByTag: *u.pairByTag}, nil
 	case "toStartOfInterval":
 		if u.toStartOfInterval == nil {
 			return nil, fmt.Errorf("field \"toStartOfInterval\" is required")
@@ -9371,6 +9381,10 @@ func (u *NumericSeries) UnmarshalJSON(data []byte) error {
 		if u.selectTags == nil {
 			return fmt.Errorf("field \"selectTags\" is required")
 		}
+	case "pairByTag":
+		if u.pairByTag == nil {
+			return fmt.Errorf("field \"pairByTag\" is required")
+		}
 	case "toStartOfInterval":
 		if u.toStartOfInterval == nil {
 			return fmt.Errorf("field \"toStartOfInterval\" is required")
@@ -9435,7 +9449,7 @@ func (u *NumericSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Negate) error, cosFunc func(Cos) error, sinFunc func(Sin) error, tanFunc func(Tan) error, acosFunc func(Acos) error, asinFunc func(Asin) error, lnFunc func(Ln) error, log10Func func(Log10) error, sqrtFunc func(Sqrt) error, addFunc func(Add) error, subtractFunc func(Subtract) error, multiplyFunc func(Multiply) error, divideFunc func(Divide) error, floorDivideFunc func(FloorDivide) error, powerFunc func(Power) error, moduloFunc func(Modulo) error, atan2Func func(Atan2) error, maxFunc func(MaxSeries) error, meanFunc func(MeanSeries) error, minFunc func(MinSeries) error, sumFunc func(SumSeries) error, unionFunc func(NumericUnionSeries) error, productFunc func(ProductSeries) error, constantFunc func(api.ConstantNumericSeries) error, selectNewestPointsFunc func(SelectNewestPointsSeries) error, selectNumericFunc func(SelectSeries) error, selectNumericPropertyFunc func(SelectProperty) error, selectOldestPointsFunc func(SelectOldestPointsSeries) error, bitAndFunc func(BitAnd) error, bitOrFunc func(BitOr) error, bitXorFunc func(BitXor) error, bitShiftRightFunc func(BitShiftRight) error, bitShiftLeftFunc func(BitShiftLeft) error, bitTestFunc func(BitTest) error, ifElseFunc func(NumericIfElseSeries) error, numericAggregationFunc func(NumericAggregation) error, countDuplicateFunc func(EnumCountDuplicateSeries) error, cumulativeSumFunc func(CumulativeSumSeries) error, derivativeFunc func(DerivativeSeries) error, integralFunc func(IntegralSeries) error, zScoreFunc func(ZscoreSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, resampleFunc func(NumericResampleSeries) error, resampleV2Func func(NumericResampleSeriesV2) error, nthPointDownsampleFunc func(NumericNthPointDownsampleSeries) error, largestTriangleThreeBucketsFunc func(NumericLargestTriangleThreeBucketsSeries) error, signalFilterFunc func(SignalFilterSeries) error, timeDifferenceFunc func(TimeDifferenceSeries) error, absoluteTimestampFunc func(AbsoluteTimestampSeries) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeries) error, timeShiftFunc func(NumericTimeShiftSeries) error, timeShiftV2Func func(NumericTimeShiftSeriesV2) error, unitConversionFunc func(UnitConversionSeries) error, unitOverrideFunc func(UnitOverrideSeries) error, valueDifferenceFunc func(ValueDifferenceSeries) error, filterTransformationFunc func(NumericFilterTransformationSeries) error, filterWhereFunc func(NumericFilterWhereSeries) error, thresholdFilterFunc func(NumericThresholdFilterSeries) error, approximateFilterFunc func(NumericApproximateFilterSeries) error, dropNanFunc func(NumericNanFilter) error, select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) error, aggregateUnderRangesFunc func(AggregateUnderRangesSeries) error, rangeDurationFunc func(RangeDurationSeries) error, groupWithinRangesV2Func func(GroupWithinRangesSeriesV2) error, filterByExpressionFunc func(FilterByExpressionSeries) error, scalarUdfFunc func(ScalarUdfSeries) error, enumToNumericFunc func(EnumToNumericSeries) error, containsFunc func(ContainsSeries) error, refpropFunc func(RefpropSeries) error, refpropV2Func func(RefpropSeriesV2) error, extractFromStructFunc func(ExtractNumericFromStructSeries) error, tagByIntervalsFunc func(TagByIntervalsSeries) error, filterByTagFunc func(NumericTagFilterSeries) error, selectTagsFunc func(NumericSelectTagsSeries) error, toStartOfIntervalFunc func(NumericToStartOfIntervalSeries) error, phaseUnwrapFunc func(PhaseUnwrapSeries) error, aggregateFunc func(AggregateNumericSeries) error, rollingOperationFunc func(RollingOperationSeries) error, bitOperationFunc func(BitOperationSeries) error, channelFunc func(api.ChannelSeries) error, offsetFunc func(OffsetSeries) error, scaleFunc func(ScaleSeries) error, arithmeticFunc func(ArithmeticSeries) error, unaryArithmeticFunc func(UnaryArithmeticSeries) error, binaryArithmeticFunc func(BinaryArithmeticSeries) error, unknownFunc func(string) error) error {
+func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Negate) error, cosFunc func(Cos) error, sinFunc func(Sin) error, tanFunc func(Tan) error, acosFunc func(Acos) error, asinFunc func(Asin) error, lnFunc func(Ln) error, log10Func func(Log10) error, sqrtFunc func(Sqrt) error, addFunc func(Add) error, subtractFunc func(Subtract) error, multiplyFunc func(Multiply) error, divideFunc func(Divide) error, floorDivideFunc func(FloorDivide) error, powerFunc func(Power) error, moduloFunc func(Modulo) error, atan2Func func(Atan2) error, maxFunc func(MaxSeries) error, meanFunc func(MeanSeries) error, minFunc func(MinSeries) error, sumFunc func(SumSeries) error, unionFunc func(NumericUnionSeries) error, productFunc func(ProductSeries) error, constantFunc func(api.ConstantNumericSeries) error, selectNewestPointsFunc func(SelectNewestPointsSeries) error, selectNumericFunc func(SelectSeries) error, selectNumericPropertyFunc func(SelectProperty) error, selectOldestPointsFunc func(SelectOldestPointsSeries) error, bitAndFunc func(BitAnd) error, bitOrFunc func(BitOr) error, bitXorFunc func(BitXor) error, bitShiftRightFunc func(BitShiftRight) error, bitShiftLeftFunc func(BitShiftLeft) error, bitTestFunc func(BitTest) error, ifElseFunc func(NumericIfElseSeries) error, numericAggregationFunc func(NumericAggregation) error, countDuplicateFunc func(EnumCountDuplicateSeries) error, cumulativeSumFunc func(CumulativeSumSeries) error, derivativeFunc func(DerivativeSeries) error, integralFunc func(IntegralSeries) error, zScoreFunc func(ZscoreSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, resampleFunc func(NumericResampleSeries) error, resampleV2Func func(NumericResampleSeriesV2) error, nthPointDownsampleFunc func(NumericNthPointDownsampleSeries) error, largestTriangleThreeBucketsFunc func(NumericLargestTriangleThreeBucketsSeries) error, signalFilterFunc func(SignalFilterSeries) error, timeDifferenceFunc func(TimeDifferenceSeries) error, absoluteTimestampFunc func(AbsoluteTimestampSeries) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeries) error, timeShiftFunc func(NumericTimeShiftSeries) error, timeShiftV2Func func(NumericTimeShiftSeriesV2) error, unitConversionFunc func(UnitConversionSeries) error, unitOverrideFunc func(UnitOverrideSeries) error, valueDifferenceFunc func(ValueDifferenceSeries) error, filterTransformationFunc func(NumericFilterTransformationSeries) error, filterWhereFunc func(NumericFilterWhereSeries) error, thresholdFilterFunc func(NumericThresholdFilterSeries) error, approximateFilterFunc func(NumericApproximateFilterSeries) error, dropNanFunc func(NumericNanFilter) error, select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) error, aggregateUnderRangesFunc func(AggregateUnderRangesSeries) error, rangeDurationFunc func(RangeDurationSeries) error, groupWithinRangesV2Func func(GroupWithinRangesSeriesV2) error, filterByExpressionFunc func(FilterByExpressionSeries) error, scalarUdfFunc func(ScalarUdfSeries) error, enumToNumericFunc func(EnumToNumericSeries) error, containsFunc func(ContainsSeries) error, refpropFunc func(RefpropSeries) error, refpropV2Func func(RefpropSeriesV2) error, extractFromStructFunc func(ExtractNumericFromStructSeries) error, tagByIntervalsFunc func(TagByIntervalsSeries) error, filterByTagFunc func(NumericTagFilterSeries) error, selectTagsFunc func(NumericSelectTagsSeries) error, pairByTagFunc func(NumericPairByTagSeries) error, toStartOfIntervalFunc func(NumericToStartOfIntervalSeries) error, phaseUnwrapFunc func(PhaseUnwrapSeries) error, aggregateFunc func(AggregateNumericSeries) error, rollingOperationFunc func(RollingOperationSeries) error, bitOperationFunc func(BitOperationSeries) error, channelFunc func(api.ChannelSeries) error, offsetFunc func(OffsetSeries) error, scaleFunc func(ScaleSeries) error, arithmeticFunc func(ArithmeticSeries) error, unaryArithmeticFunc func(UnaryArithmeticSeries) error, binaryArithmeticFunc func(BinaryArithmeticSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -9822,6 +9836,11 @@ func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Neg
 			return fmt.Errorf("field \"selectTags\" is required")
 		}
 		return selectTagsFunc(*u.selectTags)
+	case "pairByTag":
+		if u.pairByTag == nil {
+			return fmt.Errorf("field \"pairByTag\" is required")
+		}
+		return pairByTagFunc(*u.pairByTag)
 	case "toStartOfInterval":
 		if u.toStartOfInterval == nil {
 			return fmt.Errorf("field \"toStartOfInterval\" is required")
@@ -10181,6 +10200,10 @@ func (u *NumericSeries) FilterByTagNoopSuccess(_ NumericTagFilterSeries) error {
 }
 
 func (u *NumericSeries) SelectTagsNoopSuccess(_ NumericSelectTagsSeries) error {
+	return nil
+}
+
+func (u *NumericSeries) PairByTagNoopSuccess(_ NumericPairByTagSeries) error {
 	return nil
 }
 
@@ -10619,6 +10642,11 @@ func (u *NumericSeries) Accept(v NumericSeriesVisitor) error {
 			return fmt.Errorf("field \"selectTags\" is required")
 		}
 		return v.VisitSelectTags(*u.selectTags)
+	case "pairByTag":
+		if u.pairByTag == nil {
+			return fmt.Errorf("field \"pairByTag\" is required")
+		}
+		return v.VisitPairByTag(*u.pairByTag)
 	case "toStartOfInterval":
 		if u.toStartOfInterval == nil {
 			return fmt.Errorf("field \"toStartOfInterval\" is required")
@@ -10754,6 +10782,7 @@ type NumericSeriesVisitor interface {
 	VisitTagByIntervals(v TagByIntervalsSeries) error
 	VisitFilterByTag(v NumericTagFilterSeries) error
 	VisitSelectTags(v NumericSelectTagsSeries) error
+	VisitPairByTag(v NumericPairByTagSeries) error
 	VisitToStartOfInterval(v NumericToStartOfIntervalSeries) error
 	VisitPhaseUnwrap(v PhaseUnwrapSeries) error
 	VisitAggregate(v AggregateNumericSeries) error
@@ -11155,6 +11184,11 @@ func (u *NumericSeries) AcceptWithContext(ctx context.Context, v NumericSeriesVi
 			return fmt.Errorf("field \"selectTags\" is required")
 		}
 		return v.VisitSelectTagsWithContext(ctx, *u.selectTags)
+	case "pairByTag":
+		if u.pairByTag == nil {
+			return fmt.Errorf("field \"pairByTag\" is required")
+		}
+		return v.VisitPairByTagWithContext(ctx, *u.pairByTag)
 	case "toStartOfInterval":
 		if u.toStartOfInterval == nil {
 			return fmt.Errorf("field \"toStartOfInterval\" is required")
@@ -11290,6 +11324,7 @@ type NumericSeriesVisitorWithContext interface {
 	VisitTagByIntervalsWithContext(ctx context.Context, v TagByIntervalsSeries) error
 	VisitFilterByTagWithContext(ctx context.Context, v NumericTagFilterSeries) error
 	VisitSelectTagsWithContext(ctx context.Context, v NumericSelectTagsSeries) error
+	VisitPairByTagWithContext(ctx context.Context, v NumericPairByTagSeries) error
 	VisitToStartOfIntervalWithContext(ctx context.Context, v NumericToStartOfIntervalSeries) error
 	VisitPhaseUnwrapWithContext(ctx context.Context, v PhaseUnwrapSeries) error
 	VisitAggregateWithContext(ctx context.Context, v AggregateNumericSeries) error
@@ -11606,6 +11641,10 @@ func NewNumericSeriesFromFilterByTag(v NumericTagFilterSeries) NumericSeries {
 
 func NewNumericSeriesFromSelectTags(v NumericSelectTagsSeries) NumericSeries {
 	return NumericSeries{typ: "selectTags", selectTags: &v}
+}
+
+func NewNumericSeriesFromPairByTag(v NumericPairByTagSeries) NumericSeries {
+	return NumericSeries{typ: "pairByTag", pairByTag: &v}
 }
 
 func NewNumericSeriesFromToStartOfInterval(v NumericToStartOfIntervalSeries) NumericSeries {

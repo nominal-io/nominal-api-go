@@ -2514,6 +2514,34 @@ func (o *PaddedRangesNode) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Pairs groups that share every tag except `pairKey`, replacing it with `<pairKey>_left` and
+`<pairKey>_right` and carrying the values of the `outputSide` member.
+*/
+// safelogging:@Unsafe
+type PairByTagSeriesNode struct {
+	Input            SeriesNode           `json:"input"`
+	PairKey          api.TagName          `json:"pairKey" safelogging:"@Unsafe"`
+	OutputSide       api1.PairByTagOutput `json:"outputSide"`
+	IncludeSelfPairs bool                 `json:"includeSelfPairs"`
+}
+
+func (o PairByTagSeriesNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PairByTagSeriesNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Unsafe
 type PercentageThreshold struct {
 	Value ResolvedDouble `json:"value" safelogging:"@Unsafe"`

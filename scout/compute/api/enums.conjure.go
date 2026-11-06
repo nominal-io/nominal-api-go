@@ -1591,6 +1591,64 @@ func (e *OutputPhaseUnit) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// Which member of each pair a pair-by-tag node carries values from.
+type PairByTagOutput struct {
+	val PairByTagOutput_Value
+}
+
+type PairByTagOutput_Value string
+
+const (
+	PairByTagOutput_LEFT    PairByTagOutput_Value = "LEFT"
+	PairByTagOutput_RIGHT   PairByTagOutput_Value = "RIGHT"
+	PairByTagOutput_UNKNOWN PairByTagOutput_Value = "UNKNOWN"
+)
+
+// PairByTagOutput_Values returns all known variants of PairByTagOutput.
+func PairByTagOutput_Values() []PairByTagOutput_Value {
+	return []PairByTagOutput_Value{PairByTagOutput_LEFT, PairByTagOutput_RIGHT}
+}
+
+func New_PairByTagOutput(value PairByTagOutput_Value) PairByTagOutput {
+	return PairByTagOutput{val: value}
+}
+
+// IsUnknown returns false for all known variants of PairByTagOutput and true otherwise.
+func (e PairByTagOutput) IsUnknown() bool {
+	switch e.val {
+	case PairByTagOutput_LEFT, PairByTagOutput_RIGHT:
+		return false
+	}
+	return true
+}
+
+func (e PairByTagOutput) Value() PairByTagOutput_Value {
+	if e.IsUnknown() {
+		return PairByTagOutput_UNKNOWN
+	}
+	return e.val
+}
+
+func (e PairByTagOutput) String() string {
+	return string(e.val)
+}
+
+func (e PairByTagOutput) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *PairByTagOutput) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_PairByTagOutput(PairByTagOutput_Value(v))
+	case "LEFT":
+		*e = New_PairByTagOutput(PairByTagOutput_LEFT)
+	case "RIGHT":
+		*e = New_PairByTagOutput(PairByTagOutput_RIGHT)
+	}
+	return nil
+}
+
 type PeakType struct {
 	val PeakType_Value
 }

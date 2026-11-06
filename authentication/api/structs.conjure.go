@@ -411,7 +411,7 @@ func (o *OrgUserLoginActivity) UnmarshalYAML(unmarshal func(interface{}) error) 
 // safelogging:@Unsafe
 type SearchUsersRequest struct {
 	Query SearchUsersQuery `json:"query"`
-	// UPDATED_AT descending by default
+	// NAME ascending by default
 	SortBy        *SortBy     `json:"sortBy,omitempty"`
 	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 100. Will throw if larger than 1_000.

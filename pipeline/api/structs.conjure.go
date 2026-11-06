@@ -6,8 +6,7 @@ import (
 	"github.com/nominal-io/nominal-api-go/api/rids"
 	"github.com/nominal-io/nominal-api-go/io/nominal/api"
 	"github.com/nominal-io/nominal-api-go/scout/catalog"
-	"github.com/nominal-io/nominal-api-go/scout/compute/api1"
-	api2 "github.com/nominal-io/nominal-api-go/scout/versioning/api"
+	api1 "github.com/nominal-io/nominal-api-go/scout/versioning/api"
 	"github.com/palantir/pkg/datetime"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
@@ -109,7 +108,7 @@ type CreatePipelineRequest struct {
 	Description                        *string                                     `json:"description,omitempty"`
 	Labels                             []api.Label                                 `json:"labels" safelogging:"@Unsafe"`
 	Properties                         map[api.PropertyName]api.TypedPropertyValue `json:"properties"`
-	Logic                              api1.Dataset                                `json:"logic"`
+	Definition                         PipelineLogic                               `json:"definition"`
 	ChannelSearchSplitTagKeys          []api.TagName                               `json:"channelSearchSplitTagKeys" safelogging:"@Unsafe"`
 	DefaultGroupByAndAggregationConfig *catalog.DefaultGroupByAndAggregationConfig `json:"defaultGroupByAndAggregationConfig,omitempty"`
 }
@@ -163,7 +162,7 @@ func (o *CreatePipelineRequest) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Creates a new pipeline state commit, either with new logic or by reverting to a previous commit
+// Creates a new pipeline state commit, either with a new graph or by reverting to a previous commit
 type CreatePipelineStateCommitRequest struct {
 	Query   PipelineStateUpdateQuery `json:"query"`
 	Message string                   `json:"message"`
@@ -171,7 +170,7 @@ type CreatePipelineStateCommitRequest struct {
 	   The commit the caller last read. When present, the commit fails with `Scout:CommitConflict` unless it is
 	   still the pipeline's head, so concurrent editors cannot overwrite each other.
 	*/
-	LatestCommit *api2.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
+	LatestCommit *api1.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreatePipelineStateCommitRequest) MarshalYAML() (interface{}, error) {
@@ -191,8 +190,8 @@ func (o *CreatePipelineStateCommitRequest) UnmarshalYAML(unmarshal func(interfac
 }
 
 /*
-A pipeline is a dataset that holds no data of its own. Its channels come from evaluating `state.logic`
-over the source datasets that tree references, so it is searched and queried like any other dataset, and
+A pipeline is a dataset that holds no data of its own. Its channels come from evaluating `state.definition`
+over the source datasets it reads, so it is searched and queried like any other dataset, and
 its `timestampType` and `bounds` are those of its sources. `state` is always the head of the pipeline's
 main branch.
 */
@@ -270,6 +269,57 @@ func (o *PipelineDefinition) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Nodes that read each other by ID, so one node can feed several others. Compute evaluates the tree built by
+inlining each `reference` from `output`. A node reaching one `combine` through two paths contributes its
+points twice. Nodes `output` does not read are not evaluated, but are checked like the rest. The tree
+inlined from each node has at most 200 datasets and a depth of at most 16, counting every dataset in the
+nodes it passes through.
+*/
+type PipelineGraph struct {
+	// 1 to 100 nodes, with no cycles.
+	Nodes map[PipelineNodeId]PipelineNode `json:"nodes"`
+	// The node the pipeline produces.
+	Output PipelineNodeId `json:"output" safelogging:"@Safe"`
+}
+
+func (o PipelineGraph) MarshalJSON() ([]byte, error) {
+	if o.Nodes == nil {
+		o.Nodes = make(map[PipelineNodeId]PipelineNode)
+	}
+	type _tmpPipelineGraph PipelineGraph
+	return safejson.Marshal(_tmpPipelineGraph(o))
+}
+
+func (o *PipelineGraph) UnmarshalJSON(data []byte) error {
+	type _tmpPipelineGraph PipelineGraph
+	var rawPipelineGraph _tmpPipelineGraph
+	if err := safejson.Unmarshal(data, &rawPipelineGraph); err != nil {
+		return err
+	}
+	if rawPipelineGraph.Nodes == nil {
+		rawPipelineGraph.Nodes = make(map[PipelineNodeId]PipelineNode)
+	}
+	*o = PipelineGraph(rawPipelineGraph)
+	return nil
+}
+
+func (o PipelineGraph) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *PipelineGraph) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type PipelineSortOptions struct {
 	IsDescending bool              `json:"isDescending"`
 	Field        PipelineSortField `json:"field"`
@@ -291,14 +341,10 @@ func (o *PipelineSortOptions) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-/*
-The compute `Dataset` tree a pipeline evaluates, and the commit it was taken from. Reading a pipeline's
-channels runs this tree, so whatever the compute API can express, a pipeline can produce. Leaves are the
-source datasets, referenced by RID through `saved`; every other node transforms the nodes beneath it.
-*/
+// The logic a pipeline evaluates, and the commit it was taken from.
 type PipelineState struct {
-	Logic  api1.Dataset `json:"logic"`
-	Commit api2.Commit  `json:"commit"`
+	Definition PipelineLogic `json:"definition"`
+	Commit     api1.Commit   `json:"commit"`
 }
 
 func (o PipelineState) MarshalYAML() (interface{}, error) {

@@ -93,6 +93,8 @@ type Asset struct {
 	IsArchived bool `json:"isArchived"`
 	// The dataset that backs this asset's data. Present when created with datasetRid. May be absent for legacy assets without representable scopes.
 	DatasetRid *rids.DatasetRid `json:"datasetRid,omitempty" safelogging:"@Safe"`
+	// The lucide-icon label of the icon associated with the asset, included when the asset is explicitly typed
+	IconName *string `json:"iconName,omitempty"`
 }
 
 func (o Asset) MarshalJSON() ([]byte, error) {

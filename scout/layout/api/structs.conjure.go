@@ -87,6 +87,17 @@ type CanvasConnectionStyle struct {
 	   one applies.
 	*/
 	LineColor *api1.HexColor `json:"lineColor,omitempty" safelogging:"@Safe"`
+	/*
+	   Stroke width of the connection line, in logical canvas pixels, so it
+	   scales with canvas zoom. Must be positive. Absent means the client's
+	   default width.
+	*/
+	LineWidth *int `json:"lineWidth,omitempty"`
+	/*
+	   Draws the connection as a plain line with no arrowhead. When omitted,
+	   treat as false.
+	*/
+	HideArrow *bool `json:"hideArrow,omitempty"`
 }
 
 func (o CanvasConnectionStyle) MarshalYAML() (interface{}, error) {
@@ -106,14 +117,12 @@ func (o *CanvasConnectionStyle) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 /*
-A connection between two canvas objects. Drawn as a one-way arrow
-from start to end; swap those endpoints to reverse it.
+A connection between two widgets or panels. Drawn as a one-way arrow
+from start to end unless style.hideArrow is true; swap those endpoints
+to reverse it.
 */
 type CanvasConnectionV1 struct {
-	/*
-	   The source endpoint. The displayed one-way arrow is drawn from
-	   start to end.
-	*/
+	// The source endpoint.
 	Start CanvasEndpoint `json:"start"`
 	// The target endpoint.
 	End CanvasEndpoint `json:"end"`
@@ -140,14 +149,14 @@ func (o *CanvasConnectionV1) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 /*
-An endpoint of a canvas connection, identifying an attachment point
-(anchor) on a canvas object.
+An endpoint of a connection, identifying an attachment point (anchor) on an
+HMI widget, or on a canvas panel for a legacy canvas connection.
 */
 type CanvasEndpoint struct {
-	// The canvas object containing the referenced anchor.
+	// The widget or panel containing the referenced anchor.
 	ObjectId uuid.UUID `json:"objectId"`
 	/*
-	   Identifier of the attachment point on the canvas object. Kept as a
+	   Identifier of the attachment point on the widget or panel. Kept as a
 	   string so clients can add custom anchors later without an API change.
 	   The initial well-known values are left, top, bottom, and right.
 	*/
@@ -171,8 +180,8 @@ func (o *CanvasEndpoint) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 /*
-A layout of elements freely placed on a canvas. CanvasPanel entries represent
-visualization nodes, and connection entries represent relationships between nodes.
+A dashboard layout of panels freely placed on a canvas. Panel entries are keyed by the
+viz id of their chart in WorkbookContent.charts.
 */
 type CanvasLayout struct {
 	Id      uuid.UUID                  `json:"id"`
@@ -217,8 +226,8 @@ func (o *CanvasLayout) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 /*
-A panel node or HMI widget placed on a canvas. Other CanvasObject variants may represent
-different node types and have their own behavior.
+A panel node placed on a canvas. Other CanvasObject variants may represent different
+node types and have their own behavior.
 */
 type CanvasPanel struct {
 	Rect CanvasRect `json:"rect"`
@@ -400,6 +409,77 @@ func (o *EmptyPanelV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+A diagram of widgets and the connections between them, freely placed on a canvas.
+Widget entries are keyed by the viz id of their chart in WorkbookContent.charts.
+Connection entries have no content definition.
+*/
+type HmiLayout struct {
+	Id      uuid.UUID               `json:"id"`
+	Objects map[uuid.UUID]HmiObject `json:"objects"`
+}
+
+func (o HmiLayout) MarshalJSON() ([]byte, error) {
+	if o.Objects == nil {
+		o.Objects = make(map[uuid.UUID]HmiObject)
+	}
+	type _tmpHmiLayout HmiLayout
+	return safejson.Marshal(_tmpHmiLayout(o))
+}
+
+func (o *HmiLayout) UnmarshalJSON(data []byte) error {
+	type _tmpHmiLayout HmiLayout
+	var rawHmiLayout _tmpHmiLayout
+	if err := safejson.Unmarshal(data, &rawHmiLayout); err != nil {
+		return err
+	}
+	if rawHmiLayout.Objects == nil {
+		rawHmiLayout.Objects = make(map[uuid.UUID]HmiObject)
+	}
+	*o = HmiLayout(rawHmiLayout)
+	return nil
+}
+
+func (o HmiLayout) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *HmiLayout) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A chart placed on an HMI layout. This can be an HMI component such as a valve, tank or
+pump, or a regular panel such as a time series plot.
+*/
+type HmiWidget struct {
+	Rect CanvasRect `json:"rect"`
+}
+
+func (o HmiWidget) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *HmiWidget) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Dimension of a node in pixels.
 type NodeDimension struct {
 	Width  float64 `json:"width"`
@@ -423,11 +503,12 @@ func (o *NodeDimension) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 /*
-A right-angle route. Each entry is the fixed coordinate of one interior
-segment, in logical canvas coordinates: x for vertical segments, y for
-horizontal ones. Entries alternate axis, starting perpendicular to the stub
-of the lexicographically smaller (objectId, anchorId) endpoint, and are
-independent of arrow direction. Values must be finite.
+A route made of horizontal and vertical segments. Each entry pins one segment
+between the two endpoint stubs, in logical canvas coordinates: an x value for a
+vertical segment, a y value for a horizontal one. Entries alternate between the
+two. The first is perpendicular to the stub of whichever endpoint sorts first by
+(objectId, anchorId), so reversing the arrow does not change the route. Values
+must be finite.
 */
 type OrthogonalConnectionRouting struct {
 	SegmentPositions []float64 `json:"segmentPositions"`

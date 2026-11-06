@@ -4409,6 +4409,38 @@ func (o *NumericNthPointDownsampleSeries) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Pairs the input's groups that share every tag except `pairKey`, for comparing the members of one tag
+dimension against each other (e.g. every pair of assets within a run). The output replaces `pairKey`
+with `<pairKey>_left` and `<pairKey>_right`, and each group carries the values of its `outputSide` member.
+Pairs are unordered: the left value sorts before the right. Applying this node with `LEFT` and `RIGHT`
+yields two series with identical tag sets, which a binary operation aligns pair by pair. Groups that
+share their other tags with no second member produce no output unless `includeSelfPairs` is set.
+*/
+type NumericPairByTagSeries struct {
+	Input      NumericSeries        `json:"input"`
+	PairKey    api1.StringConstant  `json:"pairKey"`
+	OutputSide api1.PairByTagOutput `json:"outputSide"`
+	// Also pair each member with itself.
+	IncludeSelfPairs bool `json:"includeSelfPairs"`
+}
+
+func (o NumericPairByTagSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericPairByTagSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type NumericResampleConfiguration struct {
 	// Interval between resampled points
 	Interval DurationConstant `json:"interval"`

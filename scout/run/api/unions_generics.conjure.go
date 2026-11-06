@@ -293,10 +293,15 @@ func (u *SearchQueryWithT[T]) Accept(ctx context.Context, v SearchQueryVisitorWi
 			return result, fmt.Errorf("field \"datasetRids\" is required")
 		}
 		return v.VisitDatasetRids(ctx, *u.datasetRids)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return result, fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return v.VisitAssetTypes(ctx, *u.assetTypes)
 	}
 }
 
-func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) (T, error), startTimeFunc func(TimeframeFilter) (T, error), endTimeInclusiveFunc func(UtcTimestamp) (T, error), endTimeFunc func(TimeframeFilter) (T, error), timeRangeFunc func(TimeRangeFilter) (T, error), createdAtFunc func(TimeframeFilter) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), assetFunc func(api.AssetRid) (T, error), assetsFunc func(AssetsFilter) (T, error), isSingleAssetFunc func(bool) (T, error), labelFunc func(api1.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api1.Property) (T, error), propertyKeyFunc func(api1.PropertyName) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), numericPropertyFunc func(api1.NumericPropertyPredicate) (T, error), numericPropertyRangeFunc func(api1.NumericPropertyRangePredicate) (T, error), dataSourceSeriesTagFunc func(DataSourceSeriesTag) (T, error), dataSourceRefNameFunc func(api2.DataSourceRefName) (T, error), dataSourceFunc func(DataSource) (T, error), runNumberFunc func(safelong.SafeLong) (T, error), runPrefixFunc func(string) (T, error), checkAlertStatesFilterFunc func(CheckAlertStatesFilter) (T, error), archivedFunc func(bool) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), lockStatusFunc func(LockStatus) (T, error), datasetRidsFunc func([]rids.DatasetRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) (T, error), startTimeFunc func(TimeframeFilter) (T, error), endTimeInclusiveFunc func(UtcTimestamp) (T, error), endTimeFunc func(TimeframeFilter) (T, error), timeRangeFunc func(TimeRangeFilter) (T, error), createdAtFunc func(TimeframeFilter) (T, error), exactMatchFunc func(string) (T, error), searchTextFunc func(string) (T, error), assetFunc func(api.AssetRid) (T, error), assetsFunc func(AssetsFilter) (T, error), isSingleAssetFunc func(bool) (T, error), labelFunc func(api1.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api1.Property) (T, error), propertyKeyFunc func(api1.PropertyName) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), numericPropertyFunc func(api1.NumericPropertyPredicate) (T, error), numericPropertyRangeFunc func(api1.NumericPropertyRangePredicate) (T, error), dataSourceSeriesTagFunc func(DataSourceSeriesTag) (T, error), dataSourceRefNameFunc func(api2.DataSourceRefName) (T, error), dataSourceFunc func(DataSource) (T, error), runNumberFunc func(safelong.SafeLong) (T, error), runPrefixFunc func(string) (T, error), checkAlertStatesFilterFunc func(CheckAlertStatesFilter) (T, error), archivedFunc func(bool) (T, error), andFunc func([]SearchQuery) (T, error), orFunc func([]SearchQuery) (T, error), notFunc func(SearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), lockStatusFunc func(LockStatus) (T, error), datasetRidsFunc func([]rids.DatasetRid) (T, error), assetTypesFunc func([]api.TypeRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -459,6 +464,11 @@ func (u *SearchQueryWithT[T]) AcceptFuncs(startTimeInclusiveFunc func(UtcTimesta
 			return result, fmt.Errorf("field \"datasetRids\" is required")
 		}
 		return datasetRidsFunc(*u.datasetRids)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return result, fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return assetTypesFunc(*u.assetTypes)
 	}
 }
 
@@ -617,6 +627,11 @@ func (u *SearchQueryWithT[T]) DatasetRidsNoopSuccess([]rids.DatasetRid) (T, erro
 	return result, nil
 }
 
+func (u *SearchQueryWithT[T]) AssetTypesNoopSuccess([]api.TypeRid) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *SearchQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -654,6 +669,7 @@ type SearchQueryVisitorWithT[T any] interface {
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
 	VisitLockStatus(ctx context.Context, v LockStatus) (T, error)
 	VisitDatasetRids(ctx context.Context, v []rids.DatasetRid) (T, error)
+	VisitAssetTypes(ctx context.Context, v []api.TypeRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

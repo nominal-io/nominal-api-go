@@ -189,6 +189,12 @@ type GetAccessTokenResponse struct {
 	   Populated by all endpoints; optional for version compatibility.
 	*/
 	IsGuest *bool `json:"isGuest,omitempty"`
+	/*
+	   True only when the user has never logged into any org on this deployment as a
+	   member; guest logins don't count. Populated by getAccessToken; absent or false for
+	   setUserOrg.
+	*/
+	IsFirstLogin *bool `json:"isFirstLogin,omitempty"`
 }
 
 func (o GetAccessTokenResponse) MarshalYAML() (interface{}, error) {

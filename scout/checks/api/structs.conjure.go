@@ -416,6 +416,8 @@ type ChecklistMetadata struct {
 	LastUsed    *datetime.DateTime                       `json:"lastUsed,omitempty"`
 	IsArchived  bool                                     `json:"isArchived"`
 	IsPublished bool                                     `json:"isPublished"`
+	// The asset types this checklist applies to. Empty when the checklist is not tied to any asset type.
+	AssetTypeRids []api.TypeRid `json:"assetTypeRids" safelogging:"@Safe"`
 }
 
 func (o ChecklistMetadata) MarshalJSON() ([]byte, error) {
@@ -424,6 +426,9 @@ func (o ChecklistMetadata) MarshalJSON() ([]byte, error) {
 	}
 	if o.Labels == nil {
 		o.Labels = make([]api2.Label, 0)
+	}
+	if o.AssetTypeRids == nil {
+		o.AssetTypeRids = make([]api.TypeRid, 0)
 	}
 	type _tmpChecklistMetadata ChecklistMetadata
 	return safejson.Marshal(_tmpChecklistMetadata(o))
@@ -440,6 +445,9 @@ func (o *ChecklistMetadata) UnmarshalJSON(data []byte) error {
 	}
 	if rawChecklistMetadata.Labels == nil {
 		rawChecklistMetadata.Labels = make([]api2.Label, 0)
+	}
+	if rawChecklistMetadata.AssetTypeRids == nil {
+		rawChecklistMetadata.AssetTypeRids = make([]api.TypeRid, 0)
 	}
 	*o = ChecklistMetadata(rawChecklistMetadata)
 	return nil
@@ -568,30 +576,6 @@ func (o CommitChecklistRequest) MarshalYAML() (interface{}, error) {
 }
 
 func (o *CommitChecklistRequest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// Compiles a registered UDF for a specific module version.
-type CompileUdfJobSpec struct {
-	WorkspaceRid  rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
-	ModuleRid     api6.ModuleRid    `json:"moduleRid" safelogging:"@Safe"`
-	ModuleVersion int               `json:"moduleVersion"`
-	UdfName       string            `json:"udfName"`
-}
-
-func (o CompileUdfJobSpec) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *CompileUdfJobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -760,6 +744,12 @@ type CreateChecklistRequest struct {
 	   the user's organization, if the default workspace for the organization is configured.
 	*/
 	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
+	/*
+	   The asset types this checklist applies to. When non-empty, every channel the checklist references must be
+	   required by the data requirements of every listed asset type. When absent or empty, the checklist is not
+	   tied to any asset type. At most 10 types.
+	*/
+	AssetTypeRids *[]api.TypeRid `json:"assetTypeRids,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateChecklistRequest) MarshalJSON() ([]byte, error) {
@@ -1474,6 +1464,30 @@ func (o *UdfCompilationJobResult) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Compiles a registered UDF for a specific module version.
+type UdfCompilationJobSpec struct {
+	WorkspaceRid  rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
+	ModuleRid     api6.ModuleRid    `json:"moduleRid" safelogging:"@Safe"`
+	ModuleVersion int               `json:"moduleVersion"`
+	UdfName       string            `json:"udfName"`
+}
+
+func (o UdfCompilationJobSpec) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UdfCompilationJobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // safelogging:@Safe
 type UnarchiveChecklistsRequest struct {
 	Rids []api.ChecklistRid `json:"rids" safelogging:"@Safe"`
@@ -1824,6 +1838,11 @@ type UpdateChecklistMetadataRequest struct {
 	Properties  *map[api2.PropertyName]api2.PropertyValue `json:"properties,omitempty"`
 	Labels      *[]api2.Label                             `json:"labels,omitempty" safelogging:"@Unsafe"`
 	IsPublished *bool                                     `json:"isPublished,omitempty"`
+	/*
+	   Present, including empty, replaces the asset types this checklist applies to. When the new set is non-empty,
+	   the latest commit on main must only reference channels required by every listed asset type. At most 10 types.
+	*/
+	AssetTypeRids *[]api.TypeRid `json:"assetTypeRids,omitempty" safelogging:"@Safe"`
 }
 
 func (o UpdateChecklistMetadataRequest) MarshalYAML() (interface{}, error) {

@@ -46,7 +46,7 @@ type UploadServiceClient interface {
 	   Returns a short-lived signed GET URL for an object already in the uploads bucket.
 	   Use this to hand a freshly-uploaded object's path to an external service (e.g. Dagger)
 	   without giving that service any Scout credentials. The caller must be authorized to
-	   read the workspace that owns the path (encoded as the first segment of the object key).
+	   upload to the workspace that owns the path (encoded as the first segment of the object key).
 	*/
 	SignDownload(ctx context.Context, authHeader bearertoken.Token, requestArg api.SignDownloadRequest) (api.SignDownloadResponse, error)
 	// Uploads a file to S3. Intended for smaller files.
@@ -242,7 +242,7 @@ type UploadServiceClientWithAuth interface {
 	   Returns a short-lived signed GET URL for an object already in the uploads bucket.
 	   Use this to hand a freshly-uploaded object's path to an external service (e.g. Dagger)
 	   without giving that service any Scout credentials. The caller must be authorized to
-	   read the workspace that owns the path (encoded as the first segment of the object key).
+	   upload to the workspace that owns the path (encoded as the first segment of the object key).
 	*/
 	SignDownload(ctx context.Context, requestArg api.SignDownloadRequest) (api.SignDownloadResponse, error)
 	// Uploads a file to S3. Intended for smaller files.
