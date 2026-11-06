@@ -942,6 +942,7 @@ func (o *SortKeyWithDirection) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Set sortKey, or the deprecated field. Requests that set neither are rejected with INVALID_ARGUMENT.
 type SortOptions struct {
 	IsDescending bool `json:"isDescending"`
 	// Deprecated: use SortKey with SortField union type instead

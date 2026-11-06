@@ -166,6 +166,159 @@ func (e *InvalidPageSize) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type invalidPipelineGraph struct {
+	Reason string `json:"reason"`
+}
+
+func (o invalidPipelineGraph) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidPipelineGraph) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidPipelineGraph returns new instance of InvalidPipelineGraph error.
+func NewInvalidPipelineGraph(reasonArg string) *InvalidPipelineGraph {
+	return &InvalidPipelineGraph{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidPipelineGraph: invalidPipelineGraph{Reason: reasonArg}}
+}
+
+// WrapWithInvalidPipelineGraph returns new instance of InvalidPipelineGraph error wrapping an existing error.
+func WrapWithInvalidPipelineGraph(err error, reasonArg string) *InvalidPipelineGraph {
+	return &InvalidPipelineGraph{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidPipelineGraph: invalidPipelineGraph{Reason: reasonArg}}
+}
+
+// InvalidPipelineGraph is an error type.
+/*
+The graph is invalid, for example because it has a cycle or a reference to a missing node, or the pipeline
+has nodes its output does not read and the edit would replace its graph with a tree.
+*/
+type InvalidPipelineGraph struct {
+	errorInstanceID uuid.UUID
+	invalidPipelineGraph
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidPipelineGraph returns true if err is an instance of InvalidPipelineGraph.
+func IsInvalidPipelineGraph(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidPipelineGraph)
+	return ok
+}
+
+func (e *InvalidPipelineGraph) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Pipeline:InvalidPipelineGraph (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidPipelineGraph) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidPipelineGraph) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidPipelineGraph) Message() string {
+	return "INVALID_ARGUMENT Pipeline:InvalidPipelineGraph"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidPipelineGraph) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidPipelineGraph) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidPipelineGraph) Name() string {
+	return "Pipeline:InvalidPipelineGraph"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidPipelineGraph) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidPipelineGraph) Parameters() map[string]interface{} {
+	return map[string]interface{}{"reason": e.Reason}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidPipelineGraph) safeParams() map[string]interface{} {
+	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidPipelineGraph) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidPipelineGraph) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{"reason": e.Reason}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidPipelineGraph) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidPipelineGraph) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidPipelineGraph)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Pipeline:InvalidPipelineGraph", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidPipelineGraph) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidPipelineGraph
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidPipelineGraph = parameters
+	return nil
+}
+
 type invalidPipelineInputs struct {
 	Reason string `json:"reason"`
 }
@@ -197,7 +350,7 @@ func WrapWithInvalidPipelineInputs(err error, reasonArg string) *InvalidPipeline
 }
 
 // InvalidPipelineInputs is an error type.
-// The logic tree is list-shaped but violates the pipeline input rules, such as duplicate split-tag values.
+// The compiled tree is list-shaped but violates the pipeline input rules, such as duplicate split-tag values.
 type InvalidPipelineInputs struct {
 	errorInstanceID uuid.UUID
 	invalidPipelineInputs
@@ -797,7 +950,7 @@ func WrapWithPipelineTimestampTypeMismatch(err error) *PipelineTimestampTypeMism
 
 // PipelineTimestampTypeMismatch is an error type.
 /*
-The logic tree reads from both relative and absolute datasets. A pipeline's series share one time domain,
+The compiled tree reads from both relative and absolute datasets. A pipeline's series share one time domain,
 so every source dataset must have the same timestamp type.
 */
 type PipelineTimestampTypeMismatch struct {
@@ -1070,6 +1223,7 @@ func (e *TooManyPipelineRids) UnmarshalJSON(data []byte) error {
 
 func init() {
 	conjureerrors.RegisterErrorType("Pipeline:InvalidPageSize", reflect.TypeOf(InvalidPageSize{}))
+	conjureerrors.RegisterErrorType("Pipeline:InvalidPipelineGraph", reflect.TypeOf(InvalidPipelineGraph{}))
 	conjureerrors.RegisterErrorType("Pipeline:InvalidPipelineInputs", reflect.TypeOf(InvalidPipelineInputs{}))
 	conjureerrors.RegisterErrorType("Pipeline:MalformedPageToken", reflect.TypeOf(MalformedPageToken{}))
 	conjureerrors.RegisterErrorType("Pipeline:PipelineManagedByDataset", reflect.TypeOf(PipelineManagedByDataset{}))

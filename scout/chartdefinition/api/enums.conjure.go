@@ -369,6 +369,67 @@ func (e *Geo3dDefaultModel) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// Visibility of vehicle labels in the 3D viewport.
+type Geo3dLabelVisibility struct {
+	val Geo3dLabelVisibility_Value
+}
+
+type Geo3dLabelVisibility_Value string
+
+const (
+	Geo3dLabelVisibility_ALWAYS   Geo3dLabelVisibility_Value = "ALWAYS"
+	Geo3dLabelVisibility_ON_HOVER Geo3dLabelVisibility_Value = "ON_HOVER"
+	Geo3dLabelVisibility_HIDDEN   Geo3dLabelVisibility_Value = "HIDDEN"
+	Geo3dLabelVisibility_UNKNOWN  Geo3dLabelVisibility_Value = "UNKNOWN"
+)
+
+// Geo3dLabelVisibility_Values returns all known variants of Geo3dLabelVisibility.
+func Geo3dLabelVisibility_Values() []Geo3dLabelVisibility_Value {
+	return []Geo3dLabelVisibility_Value{Geo3dLabelVisibility_ALWAYS, Geo3dLabelVisibility_ON_HOVER, Geo3dLabelVisibility_HIDDEN}
+}
+
+func New_Geo3dLabelVisibility(value Geo3dLabelVisibility_Value) Geo3dLabelVisibility {
+	return Geo3dLabelVisibility{val: value}
+}
+
+// IsUnknown returns false for all known variants of Geo3dLabelVisibility and true otherwise.
+func (e Geo3dLabelVisibility) IsUnknown() bool {
+	switch e.val {
+	case Geo3dLabelVisibility_ALWAYS, Geo3dLabelVisibility_ON_HOVER, Geo3dLabelVisibility_HIDDEN:
+		return false
+	}
+	return true
+}
+
+func (e Geo3dLabelVisibility) Value() Geo3dLabelVisibility_Value {
+	if e.IsUnknown() {
+		return Geo3dLabelVisibility_UNKNOWN
+	}
+	return e.val
+}
+
+func (e Geo3dLabelVisibility) String() string {
+	return string(e.val)
+}
+
+func (e Geo3dLabelVisibility) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *Geo3dLabelVisibility) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_Geo3dLabelVisibility(Geo3dLabelVisibility_Value(v))
+	case "ALWAYS":
+		*e = New_Geo3dLabelVisibility(Geo3dLabelVisibility_ALWAYS)
+	case "ON_HOVER":
+		*e = New_Geo3dLabelVisibility(Geo3dLabelVisibility_ON_HOVER)
+	case "HIDDEN":
+		*e = New_Geo3dLabelVisibility(Geo3dLabelVisibility_HIDDEN)
+	}
+	return nil
+}
+
 type Geo3dModelAxis struct {
 	val Geo3dModelAxis_Value
 }
@@ -1154,6 +1215,70 @@ func (e *NumberFormatDisplayOption) UnmarshalText(data []byte) error {
 		*e = New_NumberFormatDisplayOption(NumberFormatDisplayOption_LOCALE)
 	case "PLAIN":
 		*e = New_NumberFormatDisplayOption(NumberFormatDisplayOption_PLAIN)
+	}
+	return nil
+}
+
+/*
+A preset size for the input. Each size fixes the input's height and
+text size; it does not constrain the width.
+*/
+type NumberInputSize struct {
+	val NumberInputSize_Value
+}
+
+type NumberInputSize_Value string
+
+const (
+	NumberInputSize_SMALL   NumberInputSize_Value = "SMALL"
+	NumberInputSize_MEDIUM  NumberInputSize_Value = "MEDIUM"
+	NumberInputSize_LARGE   NumberInputSize_Value = "LARGE"
+	NumberInputSize_UNKNOWN NumberInputSize_Value = "UNKNOWN"
+)
+
+// NumberInputSize_Values returns all known variants of NumberInputSize.
+func NumberInputSize_Values() []NumberInputSize_Value {
+	return []NumberInputSize_Value{NumberInputSize_SMALL, NumberInputSize_MEDIUM, NumberInputSize_LARGE}
+}
+
+func New_NumberInputSize(value NumberInputSize_Value) NumberInputSize {
+	return NumberInputSize{val: value}
+}
+
+// IsUnknown returns false for all known variants of NumberInputSize and true otherwise.
+func (e NumberInputSize) IsUnknown() bool {
+	switch e.val {
+	case NumberInputSize_SMALL, NumberInputSize_MEDIUM, NumberInputSize_LARGE:
+		return false
+	}
+	return true
+}
+
+func (e NumberInputSize) Value() NumberInputSize_Value {
+	if e.IsUnknown() {
+		return NumberInputSize_UNKNOWN
+	}
+	return e.val
+}
+
+func (e NumberInputSize) String() string {
+	return string(e.val)
+}
+
+func (e NumberInputSize) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *NumberInputSize) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_NumberInputSize(NumberInputSize_Value(v))
+	case "SMALL":
+		*e = New_NumberInputSize(NumberInputSize_SMALL)
+	case "MEDIUM":
+		*e = New_NumberInputSize(NumberInputSize_MEDIUM)
+	case "LARGE":
+		*e = New_NumberInputSize(NumberInputSize_LARGE)
 	}
 	return nil
 }

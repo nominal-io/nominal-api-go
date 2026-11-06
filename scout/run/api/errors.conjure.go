@@ -919,6 +919,158 @@ func (e *InvalidLogSetRid) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type invalidRunBounds struct {
+	StartTime UtcTimestamp `json:"startTime"`
+	EndTime   UtcTimestamp `json:"endTime"`
+	Message   string       `json:"message"`
+}
+
+func (o invalidRunBounds) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *invalidRunBounds) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewInvalidRunBounds returns new instance of InvalidRunBounds error.
+func NewInvalidRunBounds(startTimeArg UtcTimestamp, endTimeArg UtcTimestamp, messageArg string) *InvalidRunBounds {
+	return &InvalidRunBounds{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), invalidRunBounds: invalidRunBounds{StartTime: startTimeArg, EndTime: endTimeArg, Message: messageArg}}
+}
+
+// WrapWithInvalidRunBounds returns new instance of InvalidRunBounds error wrapping an existing error.
+func WrapWithInvalidRunBounds(err error, startTimeArg UtcTimestamp, endTimeArg UtcTimestamp, messageArg string) *InvalidRunBounds {
+	return &InvalidRunBounds{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, invalidRunBounds: invalidRunBounds{StartTime: startTimeArg, EndTime: endTimeArg, Message: messageArg}}
+}
+
+// InvalidRunBounds is an error type.
+// A run's endTime must be strictly greater than its startTime.
+type InvalidRunBounds struct {
+	errorInstanceID uuid.UUID
+	invalidRunBounds
+	cause error
+	stack werror.StackTrace
+}
+
+// IsInvalidRunBounds returns true if err is an instance of InvalidRunBounds.
+func IsInvalidRunBounds(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*InvalidRunBounds)
+	return ok
+}
+
+func (e *InvalidRunBounds) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Scout:InvalidRunBounds (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *InvalidRunBounds) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *InvalidRunBounds) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *InvalidRunBounds) Message() string {
+	return "INVALID_ARGUMENT Scout:InvalidRunBounds"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *InvalidRunBounds) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *InvalidRunBounds) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *InvalidRunBounds) Name() string {
+	return "Scout:InvalidRunBounds"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *InvalidRunBounds) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *InvalidRunBounds) Parameters() map[string]interface{} {
+	return map[string]interface{}{"startTime": e.StartTime, "endTime": e.EndTime, "message": e.Message}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *InvalidRunBounds) safeParams() map[string]interface{} {
+	return map[string]interface{}{"startTime": e.StartTime, "endTime": e.EndTime, "message": e.Message, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidRunBounds) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *InvalidRunBounds) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *InvalidRunBounds) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e InvalidRunBounds) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.invalidRunBounds)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:InvalidRunBounds", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *InvalidRunBounds) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters invalidRunBounds
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.invalidRunBounds = parameters
+	return nil
+}
+
 // safelogging:@Safe
 type invalidVideoRid struct {
 	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
@@ -1237,156 +1389,6 @@ func (e *RefNamesAlreadyUsed) UnmarshalJSON(data []byte) error {
 	}
 	e.errorInstanceID = serializableError.ErrorInstanceID
 	e.refNamesAlreadyUsed = parameters
-	return nil
-}
-
-type runBoundsInverted struct {
-	StartTime UtcTimestamp `json:"startTime"`
-	EndTime   UtcTimestamp `json:"endTime"`
-}
-
-func (o runBoundsInverted) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *runBoundsInverted) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewRunBoundsInverted returns new instance of RunBoundsInverted error.
-func NewRunBoundsInverted(startTimeArg UtcTimestamp, endTimeArg UtcTimestamp) *RunBoundsInverted {
-	return &RunBoundsInverted{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), runBoundsInverted: runBoundsInverted{StartTime: startTimeArg, EndTime: endTimeArg}}
-}
-
-// WrapWithRunBoundsInverted returns new instance of RunBoundsInverted error wrapping an existing error.
-func WrapWithRunBoundsInverted(err error, startTimeArg UtcTimestamp, endTimeArg UtcTimestamp) *RunBoundsInverted {
-	return &RunBoundsInverted{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, runBoundsInverted: runBoundsInverted{StartTime: startTimeArg, EndTime: endTimeArg}}
-}
-
-// RunBoundsInverted is an error type.
-type RunBoundsInverted struct {
-	errorInstanceID uuid.UUID
-	runBoundsInverted
-	cause error
-	stack werror.StackTrace
-}
-
-// IsRunBoundsInverted returns true if err is an instance of RunBoundsInverted.
-func IsRunBoundsInverted(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*RunBoundsInverted)
-	return ok
-}
-
-func (e *RunBoundsInverted) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT Scout:RunBoundsInverted (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *RunBoundsInverted) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *RunBoundsInverted) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *RunBoundsInverted) Message() string {
-	return "INVALID_ARGUMENT Scout:RunBoundsInverted"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *RunBoundsInverted) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *RunBoundsInverted) Code() errors.ErrorCode {
-	return errors.InvalidArgument
-}
-
-// Name returns an error name identifying error type.
-func (e *RunBoundsInverted) Name() string {
-	return "Scout:RunBoundsInverted"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *RunBoundsInverted) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *RunBoundsInverted) Parameters() map[string]interface{} {
-	return map[string]interface{}{"startTime": e.StartTime, "endTime": e.EndTime}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *RunBoundsInverted) safeParams() map[string]interface{} {
-	return map[string]interface{}{"startTime": e.StartTime, "endTime": e.EndTime, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *RunBoundsInverted) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *RunBoundsInverted) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *RunBoundsInverted) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e RunBoundsInverted) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.runBoundsInverted)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Scout:RunBoundsInverted", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *RunBoundsInverted) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters runBoundsInverted
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.runBoundsInverted = parameters
 	return nil
 }
 
@@ -1915,8 +1917,8 @@ func WrapWithRunsLocked(err error, runRidsArg []RunRid) *RunsLocked {
 
 // RunsLocked is an error type.
 /*
-A run under a retention lock is immutable. The runs named here must be unlocked before
-any of their metadata, data sources, or attachments can be updated. Batch updates are
+A run under a retention lock cannot change its assets or data sources. The runs named here
+must be unlocked before those can be updated. Batch updates are
 rejected in full rather than partially applied, so this lists every locked run in the
 request.
 */
@@ -2195,9 +2197,9 @@ func init() {
 	conjureerrors.RegisterErrorType("Scout:InvalidDataSourceRefNameType", reflect.TypeOf(InvalidDataSourceRefNameType{}))
 	conjureerrors.RegisterErrorType("Scout:InvalidDatasetRid", reflect.TypeOf(InvalidDatasetRid{}))
 	conjureerrors.RegisterErrorType("Scout:InvalidLogSetRid", reflect.TypeOf(InvalidLogSetRid{}))
+	conjureerrors.RegisterErrorType("Scout:InvalidRunBounds", reflect.TypeOf(InvalidRunBounds{}))
 	conjureerrors.RegisterErrorType("Scout:InvalidVideoRid", reflect.TypeOf(InvalidVideoRid{}))
 	conjureerrors.RegisterErrorType("Scout:RefNamesAlreadyUsed", reflect.TypeOf(RefNamesAlreadyUsed{}))
-	conjureerrors.RegisterErrorType("Scout:RunBoundsInverted", reflect.TypeOf(RunBoundsInverted{}))
 	conjureerrors.RegisterErrorType("Scout:RunNotFound", reflect.TypeOf(RunNotFound{}))
 	conjureerrors.RegisterErrorType("Scout:RunNotFoundById", reflect.TypeOf(RunNotFoundById{}))
 	conjureerrors.RegisterErrorType("Scout:RunPropertiesHaveNullValues", reflect.TypeOf(RunPropertiesHaveNullValues{}))

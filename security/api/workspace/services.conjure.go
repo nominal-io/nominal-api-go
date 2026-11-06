@@ -32,9 +32,11 @@ type WorkspaceServiceClient interface {
 	// Updates the settings of the workspace with the specified WorkspaceRid.
 	UpdateWorkspace(ctx context.Context, authHeader bearertoken.Token, ridArg rids.WorkspaceRid, requestArg UpdateWorkspaceRequest) (Workspace, error)
 	/*
-	   Gets the default workspace for the requesting user. If the user belongs to a single workspace,
-	   that workspace is returned. Otherwise, if the user's organization has a default workspace and
-	   the user belongs to it, that will be returned.
+	   Gets the default workspace for the requesting user in their current organization. Candidates are
+	   the workspaces the user is a member of, plus workspaces where the user or one of their groups has a
+	   role binding that grants workspace:view. If there is exactly one candidate, it is returned.
+	   Otherwise, the organization's default workspace is returned if it is a candidate.
+	   The result is a lookup, not an authorization: check the action before acting in the workspace.
 	*/
 	GetDefaultWorkspace(ctx context.Context, authHeader bearertoken.Token) (*Workspace, error)
 }
@@ -139,9 +141,11 @@ type WorkspaceServiceClientWithAuth interface {
 	// Updates the settings of the workspace with the specified WorkspaceRid.
 	UpdateWorkspace(ctx context.Context, ridArg rids.WorkspaceRid, requestArg UpdateWorkspaceRequest) (Workspace, error)
 	/*
-	   Gets the default workspace for the requesting user. If the user belongs to a single workspace,
-	   that workspace is returned. Otherwise, if the user's organization has a default workspace and
-	   the user belongs to it, that will be returned.
+	   Gets the default workspace for the requesting user in their current organization. Candidates are
+	   the workspaces the user is a member of, plus workspaces where the user or one of their groups has a
+	   role binding that grants workspace:view. If there is exactly one candidate, it is returned.
+	   Otherwise, the organization's default workspace is returned if it is a candidate.
+	   The result is a lookup, not an authorization: check the action before acting in the workspace.
 	*/
 	GetDefaultWorkspace(ctx context.Context) (*Workspace, error)
 }

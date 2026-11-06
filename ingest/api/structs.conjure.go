@@ -1270,6 +1270,13 @@ type IngestAutomation struct {
 	   automations. May contain customer-derived content and is therefore not safe to log.
 	*/
 	ErrorMessage *string `json:"errorMessage,omitempty"`
+	/*
+	   A numeric channel suitable for plotting, picked from the ingested data once its channels
+	   became queryable: the first by name among those found, skipping blank names. At most
+	   1024 UTF-16 code units. Absent until then, and absent when nothing numeric was ingested.
+	   A column name from the customer's file and therefore not safe to log.
+	*/
+	PreviewChannel *string `json:"previewChannel,omitempty"`
 }
 
 func (o IngestAutomation) MarshalYAML() (interface{}, error) {
@@ -3985,6 +3992,42 @@ func (o *VideoFileIngestDetails) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Caller overrides for how a video is re-encoded before segmentation. Every field is optional, and an
+absent field keeps the default: re-encode only the streams that fail a playability check, and keep the
+source frame size.
+*/
+type VideoNormalizationOptions struct {
+	/*
+	   If true, audio and video are always re-encoded to H.264/AAC, even when the source passes every
+	   playability check, and decode errors are concealed rather than failing the ingest. For sources
+	   that carry a corrupt bitstream the default would copy into the segments as-is. Slower than the
+	   default.
+	*/
+	ForceNormalization *bool `json:"forceNormalization,omitempty"`
+	/*
+	   Bound on the output frame size. A source larger than the bound is re-encoded to fit inside it,
+	   preserving aspect ratio. A smaller source is never upscaled.
+	*/
+	MaxResolution *VideoResolutionPreset `json:"maxResolution,omitempty"`
+}
+
+func (o VideoNormalizationOptions) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoNormalizationOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type VideoOpts struct {
 	Source            IngestSource                    `json:"source"`
 	Target            VideoIngestTarget               `json:"target"`
@@ -4024,6 +4067,11 @@ type VideoOptsV2 struct {
 	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
 	*/
 	OverWriteSegments *bool `json:"overWriteSegments,omitempty"`
+	/*
+	   Overrides for how the video is re-encoded before segmentation. Absent keeps the defaults
+	   described on VideoNormalizationOptions.
+	*/
+	NormalizationOptions *VideoNormalizationOptions `json:"normalizationOptions,omitempty"`
 }
 
 func (o VideoOptsV2) MarshalJSON() ([]byte, error) {

@@ -11,7 +11,14 @@ import (
 
 // safelogging:@Unsafe
 type ChannelLocator struct {
-	DataSourceRef DataSourceRefName            `json:"dataSourceRef" safelogging:"@Unsafe"`
+	/*
+	   When absent, the channel is selected by name from the underlying dataset/pipeline of the asset or run
+	   the checklist is being applied to. When a pipeline has more than one input dataset with a series with
+	   this name and these tags, the result is their union. To read from a single data scope, include the
+	   dataset's split tag key and the scope's value in the tags. Omitting it is allowed. Only checklists
+	   support an absent dataSourceRef.
+	*/
+	DataSourceRef *DataSourceRefName           `json:"dataSourceRef,omitempty" safelogging:"@Unsafe"`
 	Channel       api.Channel                  `json:"channel" safelogging:"@Unsafe"`
 	Tags          map[api.TagName]api.TagValue `json:"tags"`
 	Asset         *api1.AssetRefName           `json:"asset,omitempty" safelogging:"@Unsafe"`

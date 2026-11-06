@@ -346,6 +346,54 @@ func (a *DataReviewRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
+type FrozenObjectSetRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a FrozenObjectSetRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a FrozenObjectSetRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *FrozenObjectSetRid) UnmarshalText(data []byte) error {
+	var rawFrozenObjectSetRid rid.ResourceIdentifier
+	if err := rawFrozenObjectSetRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = FrozenObjectSetRid(rawFrozenObjectSetRid)
+	return nil
+}
+
+func (a FrozenObjectSetRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *FrozenObjectSetRid) UnmarshalJSON(data []byte) error {
+	var rawFrozenObjectSetRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawFrozenObjectSetRid); err != nil {
+		return err
+	}
+	*a = FrozenObjectSetRid(rawFrozenObjectSetRid)
+	return nil
+}
+
+func (a FrozenObjectSetRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *FrozenObjectSetRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
 type FunctionLineageRid rid.ResourceIdentifier // safelogging:@Safe
 
 func (a FunctionLineageRid) String() string {

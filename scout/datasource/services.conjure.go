@@ -33,6 +33,8 @@ type DataSourceServiceClient interface {
 	   Returns only channels that are direct children of the parent. Returns results sorted alphabetically.
 	   If dataScopeFilters is not provided, the search is bounded to a default one-month lookback ending
 	   now rather than scanning the data source's full history.
+
+	   Deprecated: Use nominal.channelsearch.v1.ChannelSearchService/ListChannelChildren with a data_source scope.
 	*/
 	SearchHierarchicalChannels(ctx context.Context, authHeader bearertoken.Token, queryArg api.SearchHierarchicalChannelsRequest) (api.SearchHierarchicalChannelsResponse, error)
 	/*
@@ -54,6 +56,8 @@ type DataSourceServiceClient interface {
 	/*
 	   Returns the the set of all tag keys and their values that are available for the specified channel given an
 	   initial set of filters.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListChannelTagSets with a data_source scope.
 	*/
 	GetAvailableTagsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetAvailableTagsForChannelRequest) (api.GetAvailableTagsForChannelResponse, error)
 	/*
@@ -77,11 +81,15 @@ type DataSourceServiceClient interface {
 	   Paged endpoint returning the set of all tag keys that are available for the specified channel given an
 	   initial set of filters.
 	   If any tag filters are supplied, their tag keys are omitted from the result.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListTagKeys with a data_source scope.
 	*/
 	GetAvailableTagKeys(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error)
 	/*
 	   Paged endpoint returning the set of all tag values that are available for the specified tag and datasource
 	   given an initial set of filters.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListTagValues with a data_source scope.
 	*/
 	GetAvailableTagValues(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error)
 	/*
@@ -99,6 +107,8 @@ type DataSourceServiceClient interface {
 	   Returns (channel, full-tag-map) entries for a specific channel in a dataset.
 	   If tags are provided, each entry must match all provided key/value pairs; extra tags may still be present.
 	   Only numeric-data series are returned; video series are excluded.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListChannelTagSets with a data_source scope filtered by the tags.
 	*/
 	GetMatchingChannelsWithTags(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error)
 }
@@ -393,6 +403,8 @@ type DataSourceServiceClientWithAuth interface {
 	   Returns only channels that are direct children of the parent. Returns results sorted alphabetically.
 	   If dataScopeFilters is not provided, the search is bounded to a default one-month lookback ending
 	   now rather than scanning the data source's full history.
+
+	   Deprecated: Use nominal.channelsearch.v1.ChannelSearchService/ListChannelChildren with a data_source scope.
 	*/
 	SearchHierarchicalChannels(ctx context.Context, queryArg api.SearchHierarchicalChannelsRequest) (api.SearchHierarchicalChannelsResponse, error)
 	/*
@@ -414,6 +426,8 @@ type DataSourceServiceClientWithAuth interface {
 	/*
 	   Returns the the set of all tag keys and their values that are available for the specified channel given an
 	   initial set of filters.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListChannelTagSets with a data_source scope.
 	*/
 	GetAvailableTagsForChannel(ctx context.Context, requestArg api.GetAvailableTagsForChannelRequest) (api.GetAvailableTagsForChannelResponse, error)
 	/*
@@ -437,11 +451,15 @@ type DataSourceServiceClientWithAuth interface {
 	   Paged endpoint returning the set of all tag keys that are available for the specified channel given an
 	   initial set of filters.
 	   If any tag filters are supplied, their tag keys are omitted from the result.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListTagKeys with a data_source scope.
 	*/
 	GetAvailableTagKeys(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error)
 	/*
 	   Paged endpoint returning the set of all tag values that are available for the specified tag and datasource
 	   given an initial set of filters.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListTagValues with a data_source scope.
 	*/
 	GetAvailableTagValues(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error)
 	/*
@@ -459,6 +477,8 @@ type DataSourceServiceClientWithAuth interface {
 	   Returns (channel, full-tag-map) entries for a specific channel in a dataset.
 	   If tags are provided, each entry must match all provided key/value pairs; extra tags may still be present.
 	   Only numeric-data series are returned; video series are excluded.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListChannelTagSets with a data_source scope filtered by the tags.
 	*/
 	GetMatchingChannelsWithTags(ctx context.Context, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error)
 }

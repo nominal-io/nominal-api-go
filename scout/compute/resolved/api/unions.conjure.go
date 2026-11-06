@@ -2652,6 +2652,7 @@ type GenericTransformNode struct {
 	unionAll          *UnionAllSeriesNode
 	combinedRead      *CombinedSourceReadNode
 	selectTags        *SelectTagsSeriesNode
+	pairByTag         *PairByTagSeriesNode
 	tagByIntervals    *TagByIntervalsSeriesNode
 	tagInjection      *TagInjectionSeriesNode
 	timeRangeFilter   *TimeRangeFilterSeriesNode
@@ -2664,6 +2665,7 @@ type genericTransformNodeDeserializer struct {
 	UnionAll          *UnionAllSeriesNode          `json:"unionAll"`
 	CombinedRead      *CombinedSourceReadNode      `json:"combinedRead"`
 	SelectTags        *SelectTagsSeriesNode        `json:"selectTags"`
+	PairByTag         *PairByTagSeriesNode         `json:"pairByTag"`
 	TagByIntervals    *TagByIntervalsSeriesNode    `json:"tagByIntervals"`
 	TagInjection      *TagInjectionSeriesNode      `json:"tagInjection"`
 	TimeRangeFilter   *TimeRangeFilterSeriesNode   `json:"timeRangeFilter"`
@@ -2672,7 +2674,7 @@ type genericTransformNodeDeserializer struct {
 }
 
 func (u *genericTransformNodeDeserializer) toStruct() GenericTransformNode {
-	return GenericTransformNode{typ: u.Type, unionAll: u.UnionAll, combinedRead: u.CombinedRead, selectTags: u.SelectTags, tagByIntervals: u.TagByIntervals, tagInjection: u.TagInjection, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, toStartOfInterval: u.ToStartOfInterval}
+	return GenericTransformNode{typ: u.Type, unionAll: u.UnionAll, combinedRead: u.CombinedRead, selectTags: u.SelectTags, pairByTag: u.PairByTag, tagByIntervals: u.TagByIntervals, tagInjection: u.TagInjection, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, toStartOfInterval: u.ToStartOfInterval}
 }
 
 func (u *GenericTransformNode) toSerializer() (interface{}, error) {
@@ -2703,6 +2705,14 @@ func (u *GenericTransformNode) toSerializer() (interface{}, error) {
 			Type       string               `json:"type"`
 			SelectTags SelectTagsSeriesNode `json:"selectTags"`
 		}{Type: "selectTags", SelectTags: *u.selectTags}, nil
+	case "pairByTag":
+		if u.pairByTag == nil {
+			return nil, fmt.Errorf("field \"pairByTag\" is required")
+		}
+		return struct {
+			Type      string              `json:"type"`
+			PairByTag PairByTagSeriesNode `json:"pairByTag"`
+		}{Type: "pairByTag", PairByTag: *u.pairByTag}, nil
 	case "tagByIntervals":
 		if u.tagByIntervals == nil {
 			return nil, fmt.Errorf("field \"tagByIntervals\" is required")
@@ -2773,6 +2783,10 @@ func (u *GenericTransformNode) UnmarshalJSON(data []byte) error {
 		if u.selectTags == nil {
 			return fmt.Errorf("field \"selectTags\" is required")
 		}
+	case "pairByTag":
+		if u.pairByTag == nil {
+			return fmt.Errorf("field \"pairByTag\" is required")
+		}
 	case "tagByIntervals":
 		if u.tagByIntervals == nil {
 			return fmt.Errorf("field \"tagByIntervals\" is required")
@@ -2813,7 +2827,7 @@ func (u *GenericTransformNode) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *GenericTransformNode) AcceptFuncs(unionAllFunc func(UnionAllSeriesNode) error, combinedReadFunc func(CombinedSourceReadNode) error, selectTagsFunc func(SelectTagsSeriesNode) error, tagByIntervalsFunc func(TagByIntervalsSeriesNode) error, tagInjectionFunc func(TagInjectionSeriesNode) error, timeRangeFilterFunc func(TimeRangeFilterSeriesNode) error, timeShiftFunc func(TimeShiftSeriesNode) error, toStartOfIntervalFunc func(ToStartOfIntervalSeriesNode) error, unknownFunc func(string) error) error {
+func (u *GenericTransformNode) AcceptFuncs(unionAllFunc func(UnionAllSeriesNode) error, combinedReadFunc func(CombinedSourceReadNode) error, selectTagsFunc func(SelectTagsSeriesNode) error, pairByTagFunc func(PairByTagSeriesNode) error, tagByIntervalsFunc func(TagByIntervalsSeriesNode) error, tagInjectionFunc func(TagInjectionSeriesNode) error, timeRangeFilterFunc func(TimeRangeFilterSeriesNode) error, timeShiftFunc func(TimeShiftSeriesNode) error, toStartOfIntervalFunc func(ToStartOfIntervalSeriesNode) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2835,6 +2849,11 @@ func (u *GenericTransformNode) AcceptFuncs(unionAllFunc func(UnionAllSeriesNode)
 			return fmt.Errorf("field \"selectTags\" is required")
 		}
 		return selectTagsFunc(*u.selectTags)
+	case "pairByTag":
+		if u.pairByTag == nil {
+			return fmt.Errorf("field \"pairByTag\" is required")
+		}
+		return pairByTagFunc(*u.pairByTag)
 	case "tagByIntervals":
 		if u.tagByIntervals == nil {
 			return fmt.Errorf("field \"tagByIntervals\" is required")
@@ -2872,6 +2891,10 @@ func (u *GenericTransformNode) CombinedReadNoopSuccess(_ CombinedSourceReadNode)
 }
 
 func (u *GenericTransformNode) SelectTagsNoopSuccess(_ SelectTagsSeriesNode) error {
+	return nil
+}
+
+func (u *GenericTransformNode) PairByTagNoopSuccess(_ PairByTagSeriesNode) error {
 	return nil
 }
 
@@ -2921,6 +2944,11 @@ func (u *GenericTransformNode) Accept(v GenericTransformNodeVisitor) error {
 			return fmt.Errorf("field \"selectTags\" is required")
 		}
 		return v.VisitSelectTags(*u.selectTags)
+	case "pairByTag":
+		if u.pairByTag == nil {
+			return fmt.Errorf("field \"pairByTag\" is required")
+		}
+		return v.VisitPairByTag(*u.pairByTag)
 	case "tagByIntervals":
 		if u.tagByIntervals == nil {
 			return fmt.Errorf("field \"tagByIntervals\" is required")
@@ -2953,6 +2981,7 @@ type GenericTransformNodeVisitor interface {
 	VisitUnionAll(v UnionAllSeriesNode) error
 	VisitCombinedRead(v CombinedSourceReadNode) error
 	VisitSelectTags(v SelectTagsSeriesNode) error
+	VisitPairByTag(v PairByTagSeriesNode) error
 	VisitTagByIntervals(v TagByIntervalsSeriesNode) error
 	VisitTagInjection(v TagInjectionSeriesNode) error
 	VisitTimeRangeFilter(v TimeRangeFilterSeriesNode) error
@@ -2983,6 +3012,11 @@ func (u *GenericTransformNode) AcceptWithContext(ctx context.Context, v GenericT
 			return fmt.Errorf("field \"selectTags\" is required")
 		}
 		return v.VisitSelectTagsWithContext(ctx, *u.selectTags)
+	case "pairByTag":
+		if u.pairByTag == nil {
+			return fmt.Errorf("field \"pairByTag\" is required")
+		}
+		return v.VisitPairByTagWithContext(ctx, *u.pairByTag)
 	case "tagByIntervals":
 		if u.tagByIntervals == nil {
 			return fmt.Errorf("field \"tagByIntervals\" is required")
@@ -3015,6 +3049,7 @@ type GenericTransformNodeVisitorWithContext interface {
 	VisitUnionAllWithContext(ctx context.Context, v UnionAllSeriesNode) error
 	VisitCombinedReadWithContext(ctx context.Context, v CombinedSourceReadNode) error
 	VisitSelectTagsWithContext(ctx context.Context, v SelectTagsSeriesNode) error
+	VisitPairByTagWithContext(ctx context.Context, v PairByTagSeriesNode) error
 	VisitTagByIntervalsWithContext(ctx context.Context, v TagByIntervalsSeriesNode) error
 	VisitTagInjectionWithContext(ctx context.Context, v TagInjectionSeriesNode) error
 	VisitTimeRangeFilterWithContext(ctx context.Context, v TimeRangeFilterSeriesNode) error
@@ -3033,6 +3068,10 @@ func NewGenericTransformNodeFromCombinedRead(v CombinedSourceReadNode) GenericTr
 
 func NewGenericTransformNodeFromSelectTags(v SelectTagsSeriesNode) GenericTransformNode {
 	return GenericTransformNode{typ: "selectTags", selectTags: &v}
+}
+
+func NewGenericTransformNodeFromPairByTag(v PairByTagSeriesNode) GenericTransformNode {
+	return GenericTransformNode{typ: "pairByTag", pairByTag: &v}
 }
 
 func NewGenericTransformNodeFromTagByIntervals(v TagByIntervalsSeriesNode) GenericTransformNode {

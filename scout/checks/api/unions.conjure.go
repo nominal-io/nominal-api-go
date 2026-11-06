@@ -2023,14 +2023,14 @@ type JobSpec struct {
 	typ               string
 	checkV2           *CheckJobSpec
 	compute           *ComputeJobSpec
-	compileUdfJobSpec *CompileUdfJobSpec
+	compileUdfJobSpec *UdfCompilationJobSpec
 }
 
 type jobSpecDeserializer struct {
-	Type              string             `json:"type"`
-	CheckV2           *CheckJobSpec      `json:"checkV2"`
-	Compute           *ComputeJobSpec    `json:"compute"`
-	CompileUdfJobSpec *CompileUdfJobSpec `json:"compileUdfJobSpec"`
+	Type              string                 `json:"type"`
+	CheckV2           *CheckJobSpec          `json:"checkV2"`
+	Compute           *ComputeJobSpec        `json:"compute"`
+	CompileUdfJobSpec *UdfCompilationJobSpec `json:"compileUdfJobSpec"`
 }
 
 func (u *jobSpecDeserializer) toStruct() JobSpec {
@@ -2062,8 +2062,8 @@ func (u *JobSpec) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"compileUdfJobSpec\" is required")
 		}
 		return struct {
-			Type              string            `json:"type"`
-			CompileUdfJobSpec CompileUdfJobSpec `json:"compileUdfJobSpec"`
+			Type              string                `json:"type"`
+			CompileUdfJobSpec UdfCompilationJobSpec `json:"compileUdfJobSpec"`
 		}{Type: "compileUdfJobSpec", CompileUdfJobSpec: *u.compileUdfJobSpec}, nil
 	}
 }
@@ -2115,7 +2115,7 @@ func (u *JobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, computeFunc func(ComputeJobSpec) error, compileUdfJobSpecFunc func(CompileUdfJobSpec) error, unknownFunc func(string) error) error {
+func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, computeFunc func(ComputeJobSpec) error, compileUdfJobSpecFunc func(UdfCompilationJobSpec) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2148,7 +2148,7 @@ func (u *JobSpec) ComputeNoopSuccess(_ ComputeJobSpec) error {
 	return nil
 }
 
-func (u *JobSpec) CompileUdfJobSpecNoopSuccess(_ CompileUdfJobSpec) error {
+func (u *JobSpec) CompileUdfJobSpecNoopSuccess(_ UdfCompilationJobSpec) error {
 	return nil
 }
 
@@ -2184,7 +2184,7 @@ func (u *JobSpec) Accept(v JobSpecVisitor) error {
 type JobSpecVisitor interface {
 	VisitCheckV2(v CheckJobSpec) error
 	VisitCompute(v ComputeJobSpec) error
-	VisitCompileUdfJobSpec(v CompileUdfJobSpec) error
+	VisitCompileUdfJobSpec(v UdfCompilationJobSpec) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2216,7 +2216,7 @@ func (u *JobSpec) AcceptWithContext(ctx context.Context, v JobSpecVisitorWithCon
 type JobSpecVisitorWithContext interface {
 	VisitCheckV2WithContext(ctx context.Context, v CheckJobSpec) error
 	VisitComputeWithContext(ctx context.Context, v ComputeJobSpec) error
-	VisitCompileUdfJobSpecWithContext(ctx context.Context, v CompileUdfJobSpec) error
+	VisitCompileUdfJobSpecWithContext(ctx context.Context, v UdfCompilationJobSpec) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -2228,7 +2228,7 @@ func NewJobSpecFromCompute(v ComputeJobSpec) JobSpec {
 	return JobSpec{typ: "compute", compute: &v}
 }
 
-func NewJobSpecFromCompileUdfJobSpec(v CompileUdfJobSpec) JobSpec {
+func NewJobSpecFromCompileUdfJobSpec(v UdfCompilationJobSpec) JobSpec {
 	return JobSpec{typ: "compileUdfJobSpec", compileUdfJobSpec: &v}
 }
 
