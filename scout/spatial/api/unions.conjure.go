@@ -12,6 +12,7 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// A filter on point clouds (spatial assets in the API). Exactly one variant is set; and and or combine queries.
 type SearchSpatialsQuery struct {
 	typ         string
 	searchText  *string
@@ -381,7 +382,7 @@ func NewSearchSpatialsQueryFromSpatialType(v SpatialType) SearchSpatialsQuery {
 	return SearchSpatialsQuery{typ: "spatialType", spatialType: &v}
 }
 
-// Type-specific metadata for spatial assets. Each variant holds metadata relevant to a particular spatial asset type.
+// Type-specific metadata for a point cloud. Each variant holds the metadata for one spatial type.
 type SpatialTypeMetadata struct {
 	typ        string
 	pointCloud *PointCloudMetadata

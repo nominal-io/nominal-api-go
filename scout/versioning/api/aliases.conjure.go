@@ -8,6 +8,10 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+/*
+Name of a branch of a versioned resource. For checklists, "main" is the branch that get,
+search, and live checklist executions read by default.
+*/
 type BranchName string // safelogging:@Unsafe
 
 type BranchRid rid.ResourceIdentifier // safelogging:@Safe

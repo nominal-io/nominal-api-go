@@ -147,7 +147,7 @@ func NewCanvasConnectionFromV1(v CanvasConnectionV1) CanvasConnection {
 	return CanvasConnection{typ: "v1", v1: &v}
 }
 
-// A manually edited route. When absent, clients calculate an automatic route.
+// A route the user set by hand. When absent, clients choose the route themselves.
 type CanvasConnectionRouting struct {
 	typ        string
 	orthogonal *OrthogonalConnectionRouting
@@ -1037,6 +1037,180 @@ func NewEmptyPanelFromV1(v EmptyPanelV1) EmptyPanel {
 	return EmptyPanel{typ: "v1", v1: &v}
 }
 
+type HmiObject struct {
+	typ        string
+	widget     *HmiWidget
+	connection *CanvasConnection
+}
+
+type hmiObjectDeserializer struct {
+	Type       string            `json:"type"`
+	Widget     *HmiWidget        `json:"widget"`
+	Connection *CanvasConnection `json:"connection"`
+}
+
+func (u *hmiObjectDeserializer) toStruct() HmiObject {
+	return HmiObject{typ: u.Type, widget: u.Widget, connection: u.Connection}
+}
+
+func (u *HmiObject) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "widget":
+		if u.widget == nil {
+			return nil, fmt.Errorf("field \"widget\" is required")
+		}
+		return struct {
+			Type   string    `json:"type"`
+			Widget HmiWidget `json:"widget"`
+		}{Type: "widget", Widget: *u.widget}, nil
+	case "connection":
+		if u.connection == nil {
+			return nil, fmt.Errorf("field \"connection\" is required")
+		}
+		return struct {
+			Type       string           `json:"type"`
+			Connection CanvasConnection `json:"connection"`
+		}{Type: "connection", Connection: *u.connection}, nil
+	}
+}
+
+func (u HmiObject) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *HmiObject) UnmarshalJSON(data []byte) error {
+	var deser hmiObjectDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "widget":
+		if u.widget == nil {
+			return fmt.Errorf("field \"widget\" is required")
+		}
+	case "connection":
+		if u.connection == nil {
+			return fmt.Errorf("field \"connection\" is required")
+		}
+	}
+	return nil
+}
+
+func (u HmiObject) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *HmiObject) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *HmiObject) AcceptFuncs(widgetFunc func(HmiWidget) error, connectionFunc func(CanvasConnection) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in HmiObject type")
+		}
+		return unknownFunc(u.typ)
+	case "widget":
+		if u.widget == nil {
+			return fmt.Errorf("field \"widget\" is required")
+		}
+		return widgetFunc(*u.widget)
+	case "connection":
+		if u.connection == nil {
+			return fmt.Errorf("field \"connection\" is required")
+		}
+		return connectionFunc(*u.connection)
+	}
+}
+
+func (u *HmiObject) WidgetNoopSuccess(_ HmiWidget) error {
+	return nil
+}
+
+func (u *HmiObject) ConnectionNoopSuccess(_ CanvasConnection) error {
+	return nil
+}
+
+func (u *HmiObject) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *HmiObject) Accept(v HmiObjectVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "widget":
+		if u.widget == nil {
+			return fmt.Errorf("field \"widget\" is required")
+		}
+		return v.VisitWidget(*u.widget)
+	case "connection":
+		if u.connection == nil {
+			return fmt.Errorf("field \"connection\" is required")
+		}
+		return v.VisitConnection(*u.connection)
+	}
+}
+
+type HmiObjectVisitor interface {
+	VisitWidget(v HmiWidget) error
+	VisitConnection(v CanvasConnection) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *HmiObject) AcceptWithContext(ctx context.Context, v HmiObjectVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "widget":
+		if u.widget == nil {
+			return fmt.Errorf("field \"widget\" is required")
+		}
+		return v.VisitWidgetWithContext(ctx, *u.widget)
+	case "connection":
+		if u.connection == nil {
+			return fmt.Errorf("field \"connection\" is required")
+		}
+		return v.VisitConnectionWithContext(ctx, *u.connection)
+	}
+}
+
+type HmiObjectVisitorWithContext interface {
+	VisitWidgetWithContext(ctx context.Context, v HmiWidget) error
+	VisitConnectionWithContext(ctx context.Context, v CanvasConnection) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewHmiObjectFromWidget(v HmiWidget) HmiObject {
+	return HmiObject{typ: "widget", widget: &v}
+}
+
+func NewHmiObjectFromConnection(v CanvasConnection) HmiObject {
+	return HmiObject{typ: "connection", connection: &v}
+}
+
 type Panel struct {
 	typ      string
 	viz      *VizPanel
@@ -1047,6 +1221,7 @@ type Panel struct {
 	canvas   *CanvasLayout
 	document *DocumentLayout
 	analyst  *AnalystLayout
+	hmi      *HmiLayout
 }
 
 type panelDeserializer struct {
@@ -1059,10 +1234,11 @@ type panelDeserializer struct {
 	Canvas   *CanvasLayout   `json:"canvas"`
 	Document *DocumentLayout `json:"document"`
 	Analyst  *AnalystLayout  `json:"analyst"`
+	Hmi      *HmiLayout      `json:"hmi"`
 }
 
 func (u *panelDeserializer) toStruct() Panel {
-	return Panel{typ: u.Type, viz: u.Viz, chart: u.Chart, empty: u.Empty, split: u.Split, tabbed: u.Tabbed, canvas: u.Canvas, document: u.Document, analyst: u.Analyst}
+	return Panel{typ: u.Type, viz: u.Viz, chart: u.Chart, empty: u.Empty, split: u.Split, tabbed: u.Tabbed, canvas: u.Canvas, document: u.Document, analyst: u.Analyst, hmi: u.Hmi}
 }
 
 func (u *Panel) toSerializer() (interface{}, error) {
@@ -1133,6 +1309,14 @@ func (u *Panel) toSerializer() (interface{}, error) {
 			Type    string        `json:"type"`
 			Analyst AnalystLayout `json:"analyst"`
 		}{Type: "analyst", Analyst: *u.analyst}, nil
+	case "hmi":
+		if u.hmi == nil {
+			return nil, fmt.Errorf("field \"hmi\" is required")
+		}
+		return struct {
+			Type string    `json:"type"`
+			Hmi  HmiLayout `json:"hmi"`
+		}{Type: "hmi", Hmi: *u.hmi}, nil
 	}
 }
 
@@ -1183,6 +1367,10 @@ func (u *Panel) UnmarshalJSON(data []byte) error {
 		if u.analyst == nil {
 			return fmt.Errorf("field \"analyst\" is required")
 		}
+	case "hmi":
+		if u.hmi == nil {
+			return fmt.Errorf("field \"hmi\" is required")
+		}
 	}
 	return nil
 }
@@ -1203,7 +1391,7 @@ func (u *Panel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPanel) error, emptyFunc func(EmptyPanel) error, splitFunc func(SplitPanel) error, tabbedFunc func(TabbedPanel) error, canvasFunc func(CanvasLayout) error, documentFunc func(DocumentLayout) error, analystFunc func(AnalystLayout) error, unknownFunc func(string) error) error {
+func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPanel) error, emptyFunc func(EmptyPanel) error, splitFunc func(SplitPanel) error, tabbedFunc func(TabbedPanel) error, canvasFunc func(CanvasLayout) error, documentFunc func(DocumentLayout) error, analystFunc func(AnalystLayout) error, hmiFunc func(HmiLayout) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1250,6 +1438,11 @@ func (u *Panel) AcceptFuncs(vizFunc func(VizPanel) error, chartFunc func(ChartPa
 			return fmt.Errorf("field \"analyst\" is required")
 		}
 		return analystFunc(*u.analyst)
+	case "hmi":
+		if u.hmi == nil {
+			return fmt.Errorf("field \"hmi\" is required")
+		}
+		return hmiFunc(*u.hmi)
 	}
 }
 
@@ -1282,6 +1475,10 @@ func (u *Panel) DocumentNoopSuccess(_ DocumentLayout) error {
 }
 
 func (u *Panel) AnalystNoopSuccess(_ AnalystLayout) error {
+	return nil
+}
+
+func (u *Panel) HmiNoopSuccess(_ HmiLayout) error {
 	return nil
 }
 
@@ -1336,6 +1533,11 @@ func (u *Panel) Accept(v PanelVisitor) error {
 			return fmt.Errorf("field \"analyst\" is required")
 		}
 		return v.VisitAnalyst(*u.analyst)
+	case "hmi":
+		if u.hmi == nil {
+			return fmt.Errorf("field \"hmi\" is required")
+		}
+		return v.VisitHmi(*u.hmi)
 	}
 }
 
@@ -1348,6 +1550,7 @@ type PanelVisitor interface {
 	VisitCanvas(v CanvasLayout) error
 	VisitDocument(v DocumentLayout) error
 	VisitAnalyst(v AnalystLayout) error
+	VisitHmi(v HmiLayout) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1398,6 +1601,11 @@ func (u *Panel) AcceptWithContext(ctx context.Context, v PanelVisitorWithContext
 			return fmt.Errorf("field \"analyst\" is required")
 		}
 		return v.VisitAnalystWithContext(ctx, *u.analyst)
+	case "hmi":
+		if u.hmi == nil {
+			return fmt.Errorf("field \"hmi\" is required")
+		}
+		return v.VisitHmiWithContext(ctx, *u.hmi)
 	}
 }
 
@@ -1410,6 +1618,7 @@ type PanelVisitorWithContext interface {
 	VisitCanvasWithContext(ctx context.Context, v CanvasLayout) error
 	VisitDocumentWithContext(ctx context.Context, v DocumentLayout) error
 	VisitAnalystWithContext(ctx context.Context, v AnalystLayout) error
+	VisitHmiWithContext(ctx context.Context, v HmiLayout) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1443,6 +1652,10 @@ func NewPanelFromDocument(v DocumentLayout) Panel {
 
 func NewPanelFromAnalyst(v AnalystLayout) Panel {
 	return Panel{typ: "analyst", analyst: &v}
+}
+
+func NewPanelFromHmi(v HmiLayout) Panel {
+	return Panel{typ: "hmi", hmi: &v}
 }
 
 // Panel's time range, either a literal time range or a time range input.

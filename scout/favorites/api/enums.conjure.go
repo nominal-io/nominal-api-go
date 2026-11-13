@@ -13,9 +13,11 @@ type ResourceType struct {
 type ResourceType_Value string
 
 const (
-	ResourceType_ASSET             ResourceType_Value = "ASSET"
-	ResourceType_RUN               ResourceType_Value = "RUN"
-	ResourceType_NOTEBOOK          ResourceType_Value = "NOTEBOOK"
+	ResourceType_ASSET ResourceType_Value = "ASSET"
+	ResourceType_RUN   ResourceType_Value = "RUN"
+	// Workbook.
+	ResourceType_NOTEBOOK ResourceType_Value = "NOTEBOOK"
+	// Workbook template.
 	ResourceType_NOTEBOOK_TEMPLATE ResourceType_Value = "NOTEBOOK_TEMPLATE"
 	ResourceType_CHECKLIST         ResourceType_Value = "CHECKLIST"
 	ResourceType_SAVED_VIEW        ResourceType_Value = "SAVED_VIEW"

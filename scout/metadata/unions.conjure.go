@@ -186,6 +186,10 @@ func NewConflictBehaviorFromOverwrite(v OverwriteOnConflict) ConflictBehavior {
 	return ConflictBehavior{typ: "overwrite", overwrite: &v}
 }
 
+/*
+A bulk edit of labels and properties on the resources that use the source labels, keys, or values: rename or
+merge labels, rename or merge property keys, or merge values of one property key.
+*/
 type MetadataChange struct {
 	typ                       string
 	renameLabel               *RenameLabel

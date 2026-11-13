@@ -26,27 +26,144 @@ the Nominal platform. A Dataset is the Nominal representation of data that has b
 a file, primarily CSV.
 */
 type CatalogServiceClient interface {
+	/*
+	   Gets one dataset by UUID, with its labels, properties, data bounds, ingest status, last ingest time, and
+	   external connection details.
+
+	   Archived datasets are returned. Use getDataset for a smaller response.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	*/
 	GetEnrichedDataset(ctx context.Context, authHeader bearertoken.Token, datasetUuidArg uuid.UUID) (catalog.EnrichedDataset, error)
+	/*
+	   Gets datasets by RID, each with its labels, properties, data bounds, ingest status, last ingest time, and
+	   external connection details.
+
+	   Datasets that do not exist, or that the caller cannot read, are omitted instead of failing the call.
+	   Archived datasets are returned. The set has no order. Use getDatasets for a smaller response.
+	*/
 	GetEnrichedDatasets(ctx context.Context, authHeader bearertoken.Token, getDatasetsRequestArg catalog.GetDatasetsRequest) ([]catalog.EnrichedDataset, error)
+	/*
+	   Gets one dataset by UUID, with its labels, properties, data bounds, timestamp type, and derived definition.
+
+	   The response omits ingest status, ingest times, and external connection details. Use getEnrichedDataset
+	   for those.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	*/
 	GetDataset(ctx context.Context, authHeader bearertoken.Token, datasetUuidArg uuid.UUID) (catalog.Dataset, error)
+	/*
+	   Gets datasets by RID, each with its labels, properties, data bounds, timestamp type, and derived definition.
+
+	   Datasets that do not exist, or that the caller cannot read, are omitted instead of failing the call. The
+	   response omits ingest status and ingest times. Use getEnrichedDatasets for those.
+	*/
 	GetDatasets(ctx context.Context, authHeader bearertoken.Token, getDatasetsRequestArg catalog.GetDatasetsRequest) ([]catalog.Dataset, error)
 	// Gets the subset of dataset RIDs that currently have external connection config attached.
 	GetDatasetsWithExternalConnectionConfig(ctx context.Context, authHeader bearertoken.Token, getDatasetsRequestArg catalog.GetDatasetsRequest) ([]rids.DatasetRid, error)
 	// Registers or updates external connection configuration for an existing dataset.
 	RegisterExternalConnectionConfig(ctx context.Context, authHeader bearertoken.Token, requestArg catalog.RegisterExternalConnectionConfigRequest) (catalog.EnrichedDataset, error)
+	/*
+	   Gets one file of a dataset: its name, ingest status, data bounds, upload and ingest times, and storage
+	   handle.
+
+	   A deleted file is still returned, with deletedAt set.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	   - NOT_FOUND (Catalog:DatasetFileNotFound): the file does not exist, or belongs to another dataset.
+	*/
 	GetDatasetFile(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId) (DatasetFile, error)
 	/*
-	   Returns dataset files for the given file IDs within a single dataset. Only returns files that
-	   exist and belong to the specified dataset. Useful for checking ingestion status of many files at once.
+	   Gets files of one dataset by file ID, keyed by file ID. Use it to check the ingest status of many files
+	   at once.
+
+	   File IDs that do not exist, or that belong to another dataset, are omitted. Deleted files are returned.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: the request has more than 1000 file IDs.
 	*/
 	BatchGetDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg catalog.BatchGetDatasetFilesRequest) (map[datasource.DatasetFileId]DatasetFile, error)
+	/*
+	   Lists the dataset files that one ingest job produced, newest upload first.
+
+	   A page holds up to 100 files. Deleted files, files whose upload has not completed, and files in datasets
+	   the caller cannot read are left out, so a page can be short.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestJobNotFound): the job does not exist, or the caller cannot view it.
+	*/
 	GetDatasetFilesForJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error)
+	/*
+	   Searches datasets by text, name, labels, properties, ingest status, creation time, archive status,
+	   workspace, or derived state. Returns a page of datasets with ingest details.
+
+	   Results follow the requested sort order, and a page holds up to 100 datasets unless the request sets a page
+	   size. Only workspaces the caller can view are searched. Archived datasets are included unless the query
+	   filters on archiveStatus. Datasets that Nominal manages itself, such as workspace log datasets, and datasets
+	   the caller cannot read are never returned.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the page size is not between 1 and 1000.
+	*/
 	SearchDatasets(ctx context.Context, authHeader bearertoken.Token, requestArg catalog.SearchDatasetsRequest) (catalog.SearchDatasetsResponse, error)
+	/*
+	   Sets the ingest status of the only file of a dataset and returns the status sent. Use it for a dataset with
+	   exactly one file.
+
+	   A status that the ingest lifecycle does not allow from the file's current status, such as leaving a finished
+	   ingest, is ignored without an error, and the call still returns the status sent. For a dataset with several
+	   files, use markFileIngestSuccessful or markFileIngestError. The caller needs permission to write the
+	   dataset's data.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot write its data.
+	   - INVALID_ARGUMENT: the dataset has no file that is not deleted, or has more than one.
+	*/
 	UpdateDatasetIngestStatusV2(ctx context.Context, authHeader bearertoken.Token, detailsArg catalog.UpdateIngestStatusV2) (api.IngestStatusV2, error)
-	// Deprecated: Deprecated in favor of getDatasetFile.
+	/*
+	   Gets the start time, end time, and status of the ingest of a dataset's most recently uploaded file that
+	   is not deleted.
+
+	   A dataset with no files reports success, with the dataset's creation time as the start. The end time is set
+	   only once the file has an ingest time.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+
+	   Deprecated: Deprecated in favor of getDatasetFile.
+	*/
 	GetIngestProgressV2(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier) (catalog.IngestProgressV2, error)
 	// Deprecated: Returned in Dataset
 	GetHandleForDataset(ctx context.Context, authHeader bearertoken.Token, datasetArg uuid.UUID) (*catalog.Handle, error)
+	/*
+	   Creates a dataset in a workspace and returns it. A dataset created with derivedDefinition is a derived dataset
+	   (composition) built from other datasets.
+
+	   The server assigns the RID and UUID. Without workspace, the dataset goes in the default workspace of the
+	   caller. The caller needs permission to create datasets in the workspace. The dataset gets the markings in
+	   markingRids. Without datasetType, the backing type is the default of the caller's organization.
+	   A derived dataset ingests no files, cannot also set the deprecated handle, and may set channelSearchSplitTagKeys
+	   only to tag keys that its definition produces. The caller must be able to read the datasets that the
+	   definition uses.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the serialized properties exceed 2,000 bytes, or both derivedDefinition and handle are set.
+	   - INVALID_ARGUMENT (Catalog:IcebergNotSupported): the backing type needs Iceberg and it is not enabled in this
+	     deployment.
+	   - NOT_FOUND (Catalog:DatasetNotFound): derivedDefinition uses a dataset that does not exist or that the caller
+	     cannot read.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create datasets in the workspace.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeysWithoutDerivedDefinition): channelSearchSplitTagKeys is
+	     set without a derivedDefinition.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition): a split tag key is not produced
+	     by the derivedDefinition.
+	*/
 	CreateDataset(ctx context.Context, authHeader bearertoken.Token, detailsArg catalog.CreateDataset) (catalog.EnrichedDataset, error)
 	/*
 	   Creates a dataset if the s3 path does not exist, otherwise updates the dataset
@@ -55,44 +172,156 @@ type CatalogServiceClient interface {
 	*/
 	CreateOrUpdateDataset(ctx context.Context, authHeader bearertoken.Token, detailsArg catalog.CreateDataset) (catalog.EnrichedDataset, error)
 	/*
-	   Creates a dataset with a specific UUID. This is useful for migrations and advanced use cases
-	   where the dataset UUID must be controlled by the caller. Throws a conflict error if a dataset
-	   with the specified UUID already exists. This endpoint is not intended for general use. Use /datasets instead to create a new dataset.
+	   Creates a dataset with a specific UUID. This is useful for migrations and advanced use cases where the dataset UUID must be
+	   controlled by the caller. Throws a conflict error if a dataset with the specified UUID already exists. This endpoint is not intended
+	   for general use.
+
+	   Use /datasets instead to create a new dataset.
 	*/
 	CreateDatasetWithUuid(ctx context.Context, authHeader bearertoken.Token, requestArg catalog.CreateDatasetWithUuidRequest) (catalog.EnrichedDataset, error)
-	// Adds a single file to an existing dataset.
+	/*
+	   Adds a file, identified by its object storage handle, to a dataset as a new file, and returns the file. The file has
+	   status in progress. This call does not start an ingest.
+
+	   The file name is the last part of the handle key without its upload timestamp prefix. The server records the
+	   caller as the uploader. The caller needs permission to write the dataset's data. A second file can follow
+	   the latest file only if that file is a video, or has absolute timestamps or relative timestamps with an offset.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot write its data.
+	   - INVALID_ARGUMENT (Catalog:CannotAddFileToDerivedDataset): the dataset is a derived dataset (composition).
+	   - INVALID_ARGUMENT (Catalog:CannotAddToLegacyDataset): the dataset is a legacy dataset that does not support
+	     more than one file.
+	   - CONFLICT (Catalog:InvalidStateForAddingAdditionalFile): the latest file is not a video and has neither
+	     absolute timestamps nor relative timestamps with an offset.
+	*/
 	AddFileToDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg AddFileToDataset) (DatasetFile, error)
+	/*
+	   Lists the files of a dataset, newest upload first. Use searchDatasetFiles to filter by data time range,
+	   upload time, or file tags.
+
+	   A page holds up to 100 files. Deleted files and files whose upload has not completed are left out, so a page
+	   can be short.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	*/
 	ListDatasetFiles(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error)
+	/*
+	   Searches the files of one dataset by data time range, upload time, or file tags, combined with and/or.
+	   Returns a page of files.
+
+	   Files are sorted by upload time, in the requested direction. A page holds up to 100 files unless the
+	   request sets a page size. Deleted files and files whose upload has not completed are excluded.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: the page size is not between 1 and 1000.
+	*/
 	SearchDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg catalog.SearchDatasetFilesRequest) (SearchDatasetFilesResponse, error)
+	/*
+	   Gets a pre-signed URL that downloads the stored file of a dataset file.
+
+	   The download must start within 1 minute. The caller needs permission to read the dataset's data.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its data.
+	   - NOT_FOUND (Catalog:DatasetFileNotFound): the file does not exist, or belongs to another dataset.
+	*/
 	GetDatasetFileUri(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) (catalog.DatasetFileUri, error)
+	/*
+	   Gets a pre-signed URL that downloads the original file of a video file.
+
+	   The download must start within 1 minute. The caller needs permission to read the video's data.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist, or the caller cannot read the video's data.
+	*/
 	GetVideoFileUri(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (catalog.VideoFileUri, error)
+	/*
+	   Lists pre-signed URLs, each with its storage path, for the original files a dataset file was produced from.
+
+	   Each download must start within 1 minute. The list is empty when the file records no origin files. The
+	   caller needs permission to read the dataset's data.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its data.
+	   - NOT_FOUND (Catalog:DatasetFileNotFound): the file does not exist, or belongs to another dataset.
+	*/
 	GetOriginFileUris(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) ([]catalog.OriginFileUri, error)
+	/*
+	   Marks a file of a dataset as ingested, records the time span of its data and its ingest time, and returns
+	   the file.
+
+	   The file moves to succeeded from any status, including failed or deleted, and its progress is cleared. The
+	   dataset's last ingest time moves forward to ingestedAt when ingestedAt is later. The caller needs permission
+	   to write the dataset's data.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot write its data.
+	   - NOT_FOUND (Catalog:DatasetFileNotFound): the file does not exist, or belongs to another dataset.
+	   - CONFLICT (Catalog:ConflictOnDatasetFileCreateOrUpdate): another file has the same ingestedAt.
+	*/
 	MarkFileIngestSuccessful(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg catalog.MarkFileIngestSuccessful) (DatasetFile, error)
+	/*
+	   Marks a file of a dataset as failed, stores the error result, and returns the file.
+
+	   A file that has finished ingest, or that is deleted or being deleted, keeps its status: the call returns
+	   the file unchanged without an error. The caller needs permission to write the dataset's data.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot write its data.
+	   - NOT_FOUND (Catalog:DatasetFileNotFound): the file does not exist, or belongs to another dataset.
+	*/
 	MarkFileIngestError(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg catalog.MarkFileIngestError) (DatasetFile, error)
 	/*
 	   Updates file-type-specific metadata for a dataset file. Currently used to update video segment metadata
 	   after video segmentation is complete.
 	*/
 	UpdateDatasetFileMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg catalog.DatasetFileMetadata) (DatasetFile, error)
+	/*
+	   Updates the name, description, labels, properties, channel-search split tag keys, or default group-by and
+	   aggregation config of a dataset, and returns the dataset.
+
+	   Only the fields that are sent change. A labels or properties value replaces the stored set in full, so an
+	   empty value clears it. The caller needs permission to edit the metadata of the dataset.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot edit its metadata.
+	   - INVALID_ARGUMENT: the serialized properties exceed 2,000 bytes.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeysWithoutDerivedDefinition): channelSearchSplitTagKeys is
+	     sent with keys and the dataset has no derived definition.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition): a split tag key is not produced
+	     by the derived definition.
+	*/
 	UpdateDatasetMetadata(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier, requestArg catalog.UpdateDatasetMetadata) (catalog.EnrichedDataset, error)
 	/*
-	   Returns a versioned derived definition. If commit is omitted, returns the latest commit on main.
-	   Where the deployment resolves derived datasets through their same-UUID pipelines, the definition and its
-	   commits are the pipeline's; a commit from the dataset's own earlier history still resolves.
+	   Gets the derived definition of a derived dataset (a composition): the logic that builds it and the commit
+	   that holds that logic.
+
+	   Returns the latest commit on main unless commit is given. The definition and its commits are those of the
+	   pipeline that shares the dataset's UUID.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT (Catalog:CannotUpdateNonDerivedDataset): the dataset is not derived.
+	   - NOT_FOUND (Scout:CommitNotFound): commit is not in the definition's history.
 	*/
 	GetDatasetDerivedDefinition(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, commitArg *api1.CommitId) (catalog.DerivedDefinition, error)
 	/*
-	   Initializes a derived definition on a dataset that is not yet derived and has no ingest or
-	   streaming state (files, create-time handle, bounds, external connection, or streaming sessions).
-	   Subsequent changes use commitDerivedDefinition.
-	   Throws if the dataset is already derived, is non-empty, referenced datasets are unauthorized,
-	   or the definition is nested/unsupported. Where the deployment resolves derived datasets through their
-	   pipelines, the same-UUID pipeline is created alongside, and later commits go to it.
+	   Initializes a derived definition on a dataset that is not yet derived and has no ingest or streaming
+	   state (files, create-time handle, bounds, external connection, or streaming sessions). Subsequent
+	   changes use commitDerivedDefinition. Throws if the dataset is already derived, is non-empty,
+	   referenced datasets are unauthorized, or the definition is nested/unsupported.
+
+	   Where the deployment resolves derived datasets through their pipelines, the same-UUID pipeline is
+	   created alongside, and later commits go to it.
 	*/
 	CreateDatasetDerivedDefinition(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, requestArg catalog.CreateDerivedDefinition) (catalog.DerivedDefinition, error)
 	/*
-	   Replaces the current derived definition by creating a permanent commit on main.
-	   Throws if the dataset is not derived, if referenced datasets are unauthorized, or if latestCommit is stale.
+	   Replaces the current derived definition by creating a permanent commit on main. Throws if the dataset is
+	   not derived, if referenced datasets are unauthorized, or if latestCommit is stale.
+
 	   Where the deployment resolves derived datasets through their same-UUID pipelines, this commits to the
 	   pipeline, and latestCommit is checked against the pipeline's head.
 	*/
@@ -104,15 +333,37 @@ type CatalogServiceClient interface {
 	*/
 	UpdateGlobalDatasetBounds(ctx context.Context, authHeader bearertoken.Token, ridArg rid.ResourceIdentifier, requestArg catalog.UpdateBoundsRequest) (catalog.Dataset, error)
 	/*
-	   Archives a dataset, which will hide it from search results unless the includeArchived flag is set to true. The
+	   Archives a dataset, which will hide it from search results unless the archiveStatus filter is set in the search query. The
 	   dataset can still be directly accessed by its UUID/rid.
 	*/
 	ArchiveDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier) error
-	// Undoes the archiving of a dataset.
+	/*
+	   Reverses archiveDataset: marks an archived dataset as not archived, so searches include it again.
+
+	   Unarchiving a dataset that is not archived succeeds and changes nothing. The caller needs permission to edit
+	   the metadata of the dataset.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot edit its metadata.
+	*/
 	UnarchiveDataset(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rid.ResourceIdentifier) error
-	// This legacy bulk-list surface returns string property values only.
+	/*
+	   Lists the labels, and the property names with their values, in use on non-archived datasets in the given
+	   workspaces, or in all workspaces the caller can view.
+
+	   Returns at most the 500 most-used labels and, for each property name, its 500 most-used values. Property
+	   values are strings only. Workspaces the caller cannot view are ignored, so the response can be empty.
+	*/
 	GetAllPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (catalog.AllPropertiesAndLabelsResponse, error)
-	// Returns the log dataset RID for the specified workspace if configured and accessible to the caller.
+	/*
+	   Gets the RID of the dataset that holds the logs of a workspace's file extractors (containerized extractors
+	   in the API) and transforms.
+
+	   The result is empty until the workspace's first containerized ingest creates the dataset.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist, or the caller cannot view it.
+	*/
 	GetLogDatasetForWorkspace(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid) (*rids.DatasetRid, error)
 }
 
@@ -731,27 +982,144 @@ the Nominal platform. A Dataset is the Nominal representation of data that has b
 a file, primarily CSV.
 */
 type CatalogServiceClientWithAuth interface {
+	/*
+	   Gets one dataset by UUID, with its labels, properties, data bounds, ingest status, last ingest time, and
+	   external connection details.
+
+	   Archived datasets are returned. Use getDataset for a smaller response.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	*/
 	GetEnrichedDataset(ctx context.Context, datasetUuidArg uuid.UUID) (catalog.EnrichedDataset, error)
+	/*
+	   Gets datasets by RID, each with its labels, properties, data bounds, ingest status, last ingest time, and
+	   external connection details.
+
+	   Datasets that do not exist, or that the caller cannot read, are omitted instead of failing the call.
+	   Archived datasets are returned. The set has no order. Use getDatasets for a smaller response.
+	*/
 	GetEnrichedDatasets(ctx context.Context, getDatasetsRequestArg catalog.GetDatasetsRequest) ([]catalog.EnrichedDataset, error)
+	/*
+	   Gets one dataset by UUID, with its labels, properties, data bounds, timestamp type, and derived definition.
+
+	   The response omits ingest status, ingest times, and external connection details. Use getEnrichedDataset
+	   for those.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	*/
 	GetDataset(ctx context.Context, datasetUuidArg uuid.UUID) (catalog.Dataset, error)
+	/*
+	   Gets datasets by RID, each with its labels, properties, data bounds, timestamp type, and derived definition.
+
+	   Datasets that do not exist, or that the caller cannot read, are omitted instead of failing the call. The
+	   response omits ingest status and ingest times. Use getEnrichedDatasets for those.
+	*/
 	GetDatasets(ctx context.Context, getDatasetsRequestArg catalog.GetDatasetsRequest) ([]catalog.Dataset, error)
 	// Gets the subset of dataset RIDs that currently have external connection config attached.
 	GetDatasetsWithExternalConnectionConfig(ctx context.Context, getDatasetsRequestArg catalog.GetDatasetsRequest) ([]rids.DatasetRid, error)
 	// Registers or updates external connection configuration for an existing dataset.
 	RegisterExternalConnectionConfig(ctx context.Context, requestArg catalog.RegisterExternalConnectionConfigRequest) (catalog.EnrichedDataset, error)
+	/*
+	   Gets one file of a dataset: its name, ingest status, data bounds, upload and ingest times, and storage
+	   handle.
+
+	   A deleted file is still returned, with deletedAt set.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	   - NOT_FOUND (Catalog:DatasetFileNotFound): the file does not exist, or belongs to another dataset.
+	*/
 	GetDatasetFile(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId) (DatasetFile, error)
 	/*
-	   Returns dataset files for the given file IDs within a single dataset. Only returns files that
-	   exist and belong to the specified dataset. Useful for checking ingestion status of many files at once.
+	   Gets files of one dataset by file ID, keyed by file ID. Use it to check the ingest status of many files
+	   at once.
+
+	   File IDs that do not exist, or that belong to another dataset, are omitted. Deleted files are returned.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: the request has more than 1000 file IDs.
 	*/
 	BatchGetDatasetFiles(ctx context.Context, requestArg catalog.BatchGetDatasetFilesRequest) (map[datasource.DatasetFileId]DatasetFile, error)
+	/*
+	   Lists the dataset files that one ingest job produced, newest upload first.
+
+	   A page holds up to 100 files. Deleted files, files whose upload has not completed, and files in datasets
+	   the caller cannot read are left out, so a page can be short.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestJobNotFound): the job does not exist, or the caller cannot view it.
+	*/
 	GetDatasetFilesForJob(ctx context.Context, ingestJobRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error)
+	/*
+	   Searches datasets by text, name, labels, properties, ingest status, creation time, archive status,
+	   workspace, or derived state. Returns a page of datasets with ingest details.
+
+	   Results follow the requested sort order, and a page holds up to 100 datasets unless the request sets a page
+	   size. Only workspaces the caller can view are searched. Archived datasets are included unless the query
+	   filters on archiveStatus. Datasets that Nominal manages itself, such as workspace log datasets, and datasets
+	   the caller cannot read are never returned.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the page size is not between 1 and 1000.
+	*/
 	SearchDatasets(ctx context.Context, requestArg catalog.SearchDatasetsRequest) (catalog.SearchDatasetsResponse, error)
+	/*
+	   Sets the ingest status of the only file of a dataset and returns the status sent. Use it for a dataset with
+	   exactly one file.
+
+	   A status that the ingest lifecycle does not allow from the file's current status, such as leaving a finished
+	   ingest, is ignored without an error, and the call still returns the status sent. For a dataset with several
+	   files, use markFileIngestSuccessful or markFileIngestError. The caller needs permission to write the
+	   dataset's data.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot write its data.
+	   - INVALID_ARGUMENT: the dataset has no file that is not deleted, or has more than one.
+	*/
 	UpdateDatasetIngestStatusV2(ctx context.Context, detailsArg catalog.UpdateIngestStatusV2) (api.IngestStatusV2, error)
-	// Deprecated: Deprecated in favor of getDatasetFile.
+	/*
+	   Gets the start time, end time, and status of the ingest of a dataset's most recently uploaded file that
+	   is not deleted.
+
+	   A dataset with no files reports success, with the dataset's creation time as the start. The end time is set
+	   only once the file has an ingest time.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+
+	   Deprecated: Deprecated in favor of getDatasetFile.
+	*/
 	GetIngestProgressV2(ctx context.Context, datasetRidArg rid.ResourceIdentifier) (catalog.IngestProgressV2, error)
 	// Deprecated: Returned in Dataset
 	GetHandleForDataset(ctx context.Context, datasetArg uuid.UUID) (*catalog.Handle, error)
+	/*
+	   Creates a dataset in a workspace and returns it. A dataset created with derivedDefinition is a derived dataset
+	   (composition) built from other datasets.
+
+	   The server assigns the RID and UUID. Without workspace, the dataset goes in the default workspace of the
+	   caller. The caller needs permission to create datasets in the workspace. The dataset gets the markings in
+	   markingRids. Without datasetType, the backing type is the default of the caller's organization.
+	   A derived dataset ingests no files, cannot also set the deprecated handle, and may set channelSearchSplitTagKeys
+	   only to tag keys that its definition produces. The caller must be able to read the datasets that the
+	   definition uses.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the serialized properties exceed 2,000 bytes, or both derivedDefinition and handle are set.
+	   - INVALID_ARGUMENT (Catalog:IcebergNotSupported): the backing type needs Iceberg and it is not enabled in this
+	     deployment.
+	   - NOT_FOUND (Catalog:DatasetNotFound): derivedDefinition uses a dataset that does not exist or that the caller
+	     cannot read.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create datasets in the workspace.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeysWithoutDerivedDefinition): channelSearchSplitTagKeys is
+	     set without a derivedDefinition.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition): a split tag key is not produced
+	     by the derivedDefinition.
+	*/
 	CreateDataset(ctx context.Context, detailsArg catalog.CreateDataset) (catalog.EnrichedDataset, error)
 	/*
 	   Creates a dataset if the s3 path does not exist, otherwise updates the dataset
@@ -760,44 +1128,156 @@ type CatalogServiceClientWithAuth interface {
 	*/
 	CreateOrUpdateDataset(ctx context.Context, detailsArg catalog.CreateDataset) (catalog.EnrichedDataset, error)
 	/*
-	   Creates a dataset with a specific UUID. This is useful for migrations and advanced use cases
-	   where the dataset UUID must be controlled by the caller. Throws a conflict error if a dataset
-	   with the specified UUID already exists. This endpoint is not intended for general use. Use /datasets instead to create a new dataset.
+	   Creates a dataset with a specific UUID. This is useful for migrations and advanced use cases where the dataset UUID must be
+	   controlled by the caller. Throws a conflict error if a dataset with the specified UUID already exists. This endpoint is not intended
+	   for general use.
+
+	   Use /datasets instead to create a new dataset.
 	*/
 	CreateDatasetWithUuid(ctx context.Context, requestArg catalog.CreateDatasetWithUuidRequest) (catalog.EnrichedDataset, error)
-	// Adds a single file to an existing dataset.
+	/*
+	   Adds a file, identified by its object storage handle, to a dataset as a new file, and returns the file. The file has
+	   status in progress. This call does not start an ingest.
+
+	   The file name is the last part of the handle key without its upload timestamp prefix. The server records the
+	   caller as the uploader. The caller needs permission to write the dataset's data. A second file can follow
+	   the latest file only if that file is a video, or has absolute timestamps or relative timestamps with an offset.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot write its data.
+	   - INVALID_ARGUMENT (Catalog:CannotAddFileToDerivedDataset): the dataset is a derived dataset (composition).
+	   - INVALID_ARGUMENT (Catalog:CannotAddToLegacyDataset): the dataset is a legacy dataset that does not support
+	     more than one file.
+	   - CONFLICT (Catalog:InvalidStateForAddingAdditionalFile): the latest file is not a video and has neither
+	     absolute timestamps nor relative timestamps with an offset.
+	*/
 	AddFileToDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg AddFileToDataset) (DatasetFile, error)
+	/*
+	   Lists the files of a dataset, newest upload first. Use searchDatasetFiles to filter by data time range,
+	   upload time, or file tags.
+
+	   A page holds up to 100 files. Deleted files and files whose upload has not completed are left out, so a page
+	   can be short.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	*/
 	ListDatasetFiles(ctx context.Context, datasetRidArg rid.ResourceIdentifier, nextPageTokenArg *api.Token) (DatasetFilesPage, error)
+	/*
+	   Searches the files of one dataset by data time range, upload time, or file tags, combined with and/or.
+	   Returns a page of files.
+
+	   Files are sorted by upload time, in the requested direction. A page holds up to 100 files unless the
+	   request sets a page size. Deleted files and files whose upload has not completed are excluded.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: the page size is not between 1 and 1000.
+	*/
 	SearchDatasetFiles(ctx context.Context, requestArg catalog.SearchDatasetFilesRequest) (SearchDatasetFilesResponse, error)
+	/*
+	   Gets a pre-signed URL that downloads the stored file of a dataset file.
+
+	   The download must start within 1 minute. The caller needs permission to read the dataset's data.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its data.
+	   - NOT_FOUND (Catalog:DatasetFileNotFound): the file does not exist, or belongs to another dataset.
+	*/
 	GetDatasetFileUri(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) (catalog.DatasetFileUri, error)
+	/*
+	   Gets a pre-signed URL that downloads the original file of a video file.
+
+	   The download must start within 1 minute. The caller needs permission to read the video's data.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist, or the caller cannot read the video's data.
+	*/
 	GetVideoFileUri(ctx context.Context, videoFileRidArg rids.VideoFileRid) (catalog.VideoFileUri, error)
+	/*
+	   Lists pre-signed URLs, each with its storage path, for the original files a dataset file was produced from.
+
+	   Each download must start within 1 minute. The list is empty when the file records no origin files. The
+	   caller needs permission to read the dataset's data.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its data.
+	   - NOT_FOUND (Catalog:DatasetFileNotFound): the file does not exist, or belongs to another dataset.
+	*/
 	GetOriginFileUris(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId) ([]catalog.OriginFileUri, error)
+	/*
+	   Marks a file of a dataset as ingested, records the time span of its data and its ingest time, and returns
+	   the file.
+
+	   The file moves to succeeded from any status, including failed or deleted, and its progress is cleared. The
+	   dataset's last ingest time moves forward to ingestedAt when ingestedAt is later. The caller needs permission
+	   to write the dataset's data.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot write its data.
+	   - NOT_FOUND (Catalog:DatasetFileNotFound): the file does not exist, or belongs to another dataset.
+	   - CONFLICT (Catalog:ConflictOnDatasetFileCreateOrUpdate): another file has the same ingestedAt.
+	*/
 	MarkFileIngestSuccessful(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg catalog.MarkFileIngestSuccessful) (DatasetFile, error)
+	/*
+	   Marks a file of a dataset as failed, stores the error result, and returns the file.
+
+	   A file that has finished ingest, or that is deleted or being deleted, keeps its status: the call returns
+	   the file unchanged without an error. The caller needs permission to write the dataset's data.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot write its data.
+	   - NOT_FOUND (Catalog:DatasetFileNotFound): the file does not exist, or belongs to another dataset.
+	*/
 	MarkFileIngestError(ctx context.Context, datasetRidArg rid.ResourceIdentifier, fileIdArg datasource.DatasetFileId, requestArg catalog.MarkFileIngestError) (DatasetFile, error)
 	/*
 	   Updates file-type-specific metadata for a dataset file. Currently used to update video segment metadata
 	   after video segmentation is complete.
 	*/
 	UpdateDatasetFileMetadata(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg datasource.DatasetFileId, metadataArg catalog.DatasetFileMetadata) (DatasetFile, error)
+	/*
+	   Updates the name, description, labels, properties, channel-search split tag keys, or default group-by and
+	   aggregation config of a dataset, and returns the dataset.
+
+	   Only the fields that are sent change. A labels or properties value replaces the stored set in full, so an
+	   empty value clears it. The caller needs permission to edit the metadata of the dataset.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot edit its metadata.
+	   - INVALID_ARGUMENT: the serialized properties exceed 2,000 bytes.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeysWithoutDerivedDefinition): channelSearchSplitTagKeys is
+	     sent with keys and the dataset has no derived definition.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition): a split tag key is not produced
+	     by the derived definition.
+	*/
 	UpdateDatasetMetadata(ctx context.Context, datasetRidArg rid.ResourceIdentifier, requestArg catalog.UpdateDatasetMetadata) (catalog.EnrichedDataset, error)
 	/*
-	   Returns a versioned derived definition. If commit is omitted, returns the latest commit on main.
-	   Where the deployment resolves derived datasets through their same-UUID pipelines, the definition and its
-	   commits are the pipeline's; a commit from the dataset's own earlier history still resolves.
+	   Gets the derived definition of a derived dataset (a composition): the logic that builds it and the commit
+	   that holds that logic.
+
+	   Returns the latest commit on main unless commit is given. The definition and its commits are those of the
+	   pipeline that shares the dataset's UUID.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT (Catalog:CannotUpdateNonDerivedDataset): the dataset is not derived.
+	   - NOT_FOUND (Scout:CommitNotFound): commit is not in the definition's history.
 	*/
 	GetDatasetDerivedDefinition(ctx context.Context, datasetRidArg rids.DatasetRid, commitArg *api1.CommitId) (catalog.DerivedDefinition, error)
 	/*
-	   Initializes a derived definition on a dataset that is not yet derived and has no ingest or
-	   streaming state (files, create-time handle, bounds, external connection, or streaming sessions).
-	   Subsequent changes use commitDerivedDefinition.
-	   Throws if the dataset is already derived, is non-empty, referenced datasets are unauthorized,
-	   or the definition is nested/unsupported. Where the deployment resolves derived datasets through their
-	   pipelines, the same-UUID pipeline is created alongside, and later commits go to it.
+	   Initializes a derived definition on a dataset that is not yet derived and has no ingest or streaming
+	   state (files, create-time handle, bounds, external connection, or streaming sessions). Subsequent
+	   changes use commitDerivedDefinition. Throws if the dataset is already derived, is non-empty,
+	   referenced datasets are unauthorized, or the definition is nested/unsupported.
+
+	   Where the deployment resolves derived datasets through their pipelines, the same-UUID pipeline is
+	   created alongside, and later commits go to it.
 	*/
 	CreateDatasetDerivedDefinition(ctx context.Context, datasetRidArg rids.DatasetRid, requestArg catalog.CreateDerivedDefinition) (catalog.DerivedDefinition, error)
 	/*
-	   Replaces the current derived definition by creating a permanent commit on main.
-	   Throws if the dataset is not derived, if referenced datasets are unauthorized, or if latestCommit is stale.
+	   Replaces the current derived definition by creating a permanent commit on main. Throws if the dataset is
+	   not derived, if referenced datasets are unauthorized, or if latestCommit is stale.
+
 	   Where the deployment resolves derived datasets through their same-UUID pipelines, this commits to the
 	   pipeline, and latestCommit is checked against the pipeline's head.
 	*/
@@ -809,15 +1289,37 @@ type CatalogServiceClientWithAuth interface {
 	*/
 	UpdateGlobalDatasetBounds(ctx context.Context, ridArg rid.ResourceIdentifier, requestArg catalog.UpdateBoundsRequest) (catalog.Dataset, error)
 	/*
-	   Archives a dataset, which will hide it from search results unless the includeArchived flag is set to true. The
+	   Archives a dataset, which will hide it from search results unless the archiveStatus filter is set in the search query. The
 	   dataset can still be directly accessed by its UUID/rid.
 	*/
 	ArchiveDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier) error
-	// Undoes the archiving of a dataset.
+	/*
+	   Reverses archiveDataset: marks an archived dataset as not archived, so searches include it again.
+
+	   Unarchiving a dataset that is not archived succeeds and changes nothing. The caller needs permission to edit
+	   the metadata of the dataset.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist, or the caller cannot edit its metadata.
+	*/
 	UnarchiveDataset(ctx context.Context, datasetRidArg rid.ResourceIdentifier) error
-	// This legacy bulk-list surface returns string property values only.
+	/*
+	   Lists the labels, and the property names with their values, in use on non-archived datasets in the given
+	   workspaces, or in all workspaces the caller can view.
+
+	   Returns at most the 500 most-used labels and, for each property name, its 500 most-used values. Property
+	   values are strings only. Workspaces the caller cannot view are ignored, so the response can be empty.
+	*/
 	GetAllPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (catalog.AllPropertiesAndLabelsResponse, error)
-	// Returns the log dataset RID for the specified workspace if configured and accessible to the caller.
+	/*
+	   Gets the RID of the dataset that holds the logs of a workspace's file extractors (containerized extractors
+	   in the API) and transforms.
+
+	   The result is empty until the workspace's first containerized ingest creates the dataset.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist, or the caller cannot view it.
+	*/
 	GetLogDatasetForWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (*rids.DatasetRid, error)
 }
 

@@ -3208,6 +3208,160 @@ func (e *IngestJobNotCompatibleForRerun) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type ingestJobNotDeletable struct {
+	IngestJobRid IngestJobRid `json:"ingestJobRid" safelogging:"@Safe"`
+	Status       string       `json:"status"`
+}
+
+func (o ingestJobNotDeletable) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ingestJobNotDeletable) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewIngestJobNotDeletable returns new instance of IngestJobNotDeletable error.
+func NewIngestJobNotDeletable(ingestJobRidArg IngestJobRid, statusArg string) *IngestJobNotDeletable {
+	return &IngestJobNotDeletable{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), ingestJobNotDeletable: ingestJobNotDeletable{IngestJobRid: ingestJobRidArg, Status: statusArg}}
+}
+
+// WrapWithIngestJobNotDeletable returns new instance of IngestJobNotDeletable error wrapping an existing error.
+func WrapWithIngestJobNotDeletable(err error, ingestJobRidArg IngestJobRid, statusArg string) *IngestJobNotDeletable {
+	return &IngestJobNotDeletable{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, ingestJobNotDeletable: ingestJobNotDeletable{IngestJobRid: ingestJobRidArg, Status: statusArg}}
+}
+
+// IngestJobNotDeletable is an error type.
+/*
+The ingest job exists but cannot be deleted: it is not COMPLETED or CANCELLED, some of its dataset
+files are still ingesting, or its data cannot be deleted by ingest job tag.
+*/
+type IngestJobNotDeletable struct {
+	errorInstanceID uuid.UUID
+	ingestJobNotDeletable
+	cause error
+	stack werror.StackTrace
+}
+
+// IsIngestJobNotDeletable returns true if err is an instance of IngestJobNotDeletable.
+func IsIngestJobNotDeletable(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*IngestJobNotDeletable)
+	return ok
+}
+
+func (e *IngestJobNotDeletable) Error() string {
+	return fmt.Sprintf("CONFLICT IngestService:IngestJobNotDeletable (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *IngestJobNotDeletable) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *IngestJobNotDeletable) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *IngestJobNotDeletable) Message() string {
+	return "CONFLICT IngestService:IngestJobNotDeletable"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *IngestJobNotDeletable) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *IngestJobNotDeletable) Code() errors.ErrorCode {
+	return errors.Conflict
+}
+
+// Name returns an error name identifying error type.
+func (e *IngestJobNotDeletable) Name() string {
+	return "IngestService:IngestJobNotDeletable"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *IngestJobNotDeletable) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *IngestJobNotDeletable) Parameters() map[string]interface{} {
+	return map[string]interface{}{"ingestJobRid": e.IngestJobRid, "status": e.Status}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *IngestJobNotDeletable) safeParams() map[string]interface{} {
+	return map[string]interface{}{"ingestJobRid": e.IngestJobRid, "status": e.Status, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *IngestJobNotDeletable) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *IngestJobNotDeletable) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *IngestJobNotDeletable) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e IngestJobNotDeletable) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.ingestJobNotDeletable)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.Conflict, ErrorName: "IngestService:IngestJobNotDeletable", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *IngestJobNotDeletable) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters ingestJobNotDeletable
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.ingestJobNotDeletable = parameters
+	return nil
+}
+
 // safelogging:@Safe
 type ingestJobNotFound struct {
 	IngestJobRid IngestJobRid `json:"ingestJobRid" safelogging:"@Safe"`
@@ -5475,153 +5629,6 @@ func (e *ResourceNotFoundOrUnauthorized) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type runBoundsInverted struct{}
-
-func (o runBoundsInverted) MarshalYAML() (interface{}, error) {
-	jsonBytes, err := safejson.Marshal(o)
-	if err != nil {
-		return nil, err
-	}
-	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
-}
-
-func (o *runBoundsInverted) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
-	if err != nil {
-		return err
-	}
-	return safejson.Unmarshal(jsonBytes, *&o)
-}
-
-// NewRunBoundsInverted returns new instance of RunBoundsInverted error.
-func NewRunBoundsInverted() *RunBoundsInverted {
-	return &RunBoundsInverted{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), runBoundsInverted: runBoundsInverted{}}
-}
-
-// WrapWithRunBoundsInverted returns new instance of RunBoundsInverted error wrapping an existing error.
-func WrapWithRunBoundsInverted(err error) *RunBoundsInverted {
-	return &RunBoundsInverted{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, runBoundsInverted: runBoundsInverted{}}
-}
-
-// RunBoundsInverted is an error type.
-type RunBoundsInverted struct {
-	errorInstanceID uuid.UUID
-	runBoundsInverted
-	cause error
-	stack werror.StackTrace
-}
-
-// IsRunBoundsInverted returns true if err is an instance of RunBoundsInverted.
-func IsRunBoundsInverted(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := errors.GetConjureError(err).(*RunBoundsInverted)
-	return ok
-}
-
-func (e *RunBoundsInverted) Error() string {
-	return fmt.Sprintf("INVALID_ARGUMENT IngestService:RunBoundsInverted (%s)", e.errorInstanceID)
-}
-
-// Cause returns the underlying cause of the error, or nil if none.
-// Note that cause is not serialized and sent over the wire.
-func (e *RunBoundsInverted) Cause() error {
-	return e.cause
-}
-
-// StackTrace returns the StackTrace for the error, or nil if none.
-// Note that stack traces are not serialized and sent over the wire.
-func (e *RunBoundsInverted) StackTrace() werror.StackTrace {
-	return e.stack
-}
-
-// Message returns the message body for the error.
-func (e *RunBoundsInverted) Message() string {
-	return "INVALID_ARGUMENT IngestService:RunBoundsInverted"
-}
-
-// Format implements fmt.Formatter, a requirement of werror.Werror.
-func (e *RunBoundsInverted) Format(state fmt.State, verb rune) {
-	werror.Format(e, e.safeParams(), state, verb)
-}
-
-// Code returns an enum describing error category.
-func (e *RunBoundsInverted) Code() errors.ErrorCode {
-	return errors.InvalidArgument
-}
-
-// Name returns an error name identifying error type.
-func (e *RunBoundsInverted) Name() string {
-	return "IngestService:RunBoundsInverted"
-}
-
-// InstanceID returns unique identifier of this particular error instance.
-func (e *RunBoundsInverted) InstanceID() uuid.UUID {
-	return e.errorInstanceID
-}
-
-// Parameters returns a set of named parameters detailing this particular error instance.
-func (e *RunBoundsInverted) Parameters() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// safeParams returns a set of named safe parameters detailing this particular error instance.
-func (e *RunBoundsInverted) safeParams() map[string]interface{} {
-	return map[string]interface{}{"errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
-}
-
-// SafeParams returns a set of named safe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *RunBoundsInverted) SafeParams() map[string]interface{} {
-	safeParams, _ := werror.ParamsFromError(e.cause)
-	for k, v := range e.safeParams() {
-		if _, exists := safeParams[k]; !exists {
-			safeParams[k] = v
-		}
-	}
-	return safeParams
-}
-
-// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
-func (e *RunBoundsInverted) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
-// any underlying causes.
-func (e *RunBoundsInverted) UnsafeParams() map[string]interface{} {
-	_, unsafeParams := werror.ParamsFromError(e.cause)
-	for k, v := range e.unsafeParams() {
-		if _, exists := unsafeParams[k]; !exists {
-			unsafeParams[k] = v
-		}
-	}
-	return unsafeParams
-}
-
-func (e RunBoundsInverted) MarshalJSON() ([]byte, error) {
-	parameters, err := safejson.Marshal(e.runBoundsInverted)
-	if err != nil {
-		return nil, err
-	}
-	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "IngestService:RunBoundsInverted", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
-}
-
-func (e *RunBoundsInverted) UnmarshalJSON(data []byte) error {
-	var serializableError errors.SerializableError
-	if err := safejson.Unmarshal(data, &serializableError); err != nil {
-		return err
-	}
-	var parameters runBoundsInverted
-	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
-		return err
-	}
-	e.errorInstanceID = serializableError.ErrorInstanceID
-	e.runBoundsInverted = parameters
-	return nil
-}
-
 // safelogging:@Unsafe
 type s3PathNotFound struct {
 	S3Path api.S3Path `json:"s3Path" safelogging:"@Unsafe"`
@@ -6859,11 +6866,7 @@ func WrapWithWorkspaceNotSandbox(err error, workspaceRidArg rids.WorkspaceRid) *
 }
 
 // WorkspaceNotSandbox is an error type.
-/*
-Ingest automations are temporarily restricted to the sandbox workspace while the
-"Quick look" upload mode is gated (see the Quick look upon ingest RFC). Lifting the
-restriction removes this validation.
-*/
+// Ingest automations can run only in the sandbox workspace.
 type WorkspaceNotSandbox struct {
 	errorInstanceID uuid.UUID
 	workspaceNotSandbox
@@ -7161,6 +7164,7 @@ func init() {
 	conjureerrors.RegisterErrorType("IngestService:IngestJobMissingDatasetForIdempotencyKey", reflect.TypeOf(IngestJobMissingDatasetForIdempotencyKey{}))
 	conjureerrors.RegisterErrorType("IngestService:IngestJobNotCancellable", reflect.TypeOf(IngestJobNotCancellable{}))
 	conjureerrors.RegisterErrorType("IngestService:IngestJobNotCompatibleForRerun", reflect.TypeOf(IngestJobNotCompatibleForRerun{}))
+	conjureerrors.RegisterErrorType("IngestService:IngestJobNotDeletable", reflect.TypeOf(IngestJobNotDeletable{}))
 	conjureerrors.RegisterErrorType("IngestService:IngestJobNotFound", reflect.TypeOf(IngestJobNotFound{}))
 	conjureerrors.RegisterErrorType("IngestService:IngestTransformNotFound", reflect.TypeOf(IngestTransformNotFound{}))
 	conjureerrors.RegisterErrorType("IngestService:InvalidBucket", reflect.TypeOf(InvalidBucket{}))
@@ -7176,7 +7180,6 @@ func init() {
 	conjureerrors.RegisterErrorType("IngestService:RecursiveReingest", reflect.TypeOf(RecursiveReingest{}))
 	conjureerrors.RegisterErrorType("IngestService:ReingestTooManyFiles", reflect.TypeOf(ReingestTooManyFiles{}))
 	conjureerrors.RegisterErrorType("UploadService:ResourceNotFoundOrUnauthorized", reflect.TypeOf(ResourceNotFoundOrUnauthorized{}))
-	conjureerrors.RegisterErrorType("IngestService:RunBoundsInverted", reflect.TypeOf(RunBoundsInverted{}))
 	conjureerrors.RegisterErrorType("IngestService:S3PathNotFound", reflect.TypeOf(S3PathNotFound{}))
 	conjureerrors.RegisterErrorType("UploadService:SignDownloadPathOutsideUploadsBucket", reflect.TypeOf(SignDownloadPathOutsideUploadsBucket{}))
 	conjureerrors.RegisterErrorType("UploadService:SignDownloadUnauthorized", reflect.TypeOf(SignDownloadUnauthorized{}))

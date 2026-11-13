@@ -29,28 +29,42 @@ type VideoFileServiceClient interface {
 	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateVideoFileRequest) (api.VideoFile, error)
 	/*
-	   Returns video file metadata associated with a video file RID.
+	   Returns a video file, with its title, description, origin, and segment metadata. Archived video files are
+	   included. The caller needs permission to read the metadata of the video the file belongs to.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist, or the caller cannot read the video
+	     it belongs to.
 
 	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
 	   read the file with CatalogService#getDatasetFile.
 	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (api.VideoFile, error)
 	/*
-	   Returns all video files and their metadata associated with the given RIDs
+	   Returns the video files with the given RIDs, including archived files. RIDs that do not exist, or whose
+	   video the caller cannot read, are left out of the result instead of raising an error.
 
 	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
 	   read the files with CatalogService#batchGetDatasetFiles.
 	*/
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, videoFileRidsArg []rids.VideoFileRid) ([]api.VideoFile, error)
 	/*
-	   Returns all video files and their metadata associated with the given video RID.
+	   Returns every unarchived video file of a video, as an unordered set. Use listFilesInVideoPaginated when a
+	   video may have many files. The caller needs permission to read the video's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist, or the caller cannot read it.
 
 	   Deprecated: Use listFilesInVideoPaginated for legacy videos, or VideoService#listVideoChannelDatasetFiles
 	   for videos as dataset channels.
 	*/
 	ListFilesInVideo(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) ([]api.VideoFile, error)
 	/*
-	   Returns a paginated list of all video files and their metadata associated with the given video RID.
+	   Returns a page of up to 100 unarchived video files of a video, in a stable order. The page size is fixed.
+	   Pass nextPageToken as token to get the next page. The caller needs permission to read the video's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist, or the caller cannot read it.
 
 	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
 	   list the files backing a channel with VideoService#listVideoChannelDatasetFiles.
@@ -87,14 +101,21 @@ type VideoFileServiceClient interface {
 	// Deprecated: Unarchive a previously archived video file, exposing it to the UI and search. Unarchiving functionality will be removed on February 1st, 2026.
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) error
 	/*
-	   Get the latest ingest status for a given video file by RID.
+	   Returns the latest ingest status of a video file: in progress, succeeded, or failed with an error. A file
+	   with no recorded status counts as in progress. The caller needs permission to read the metadata of the video
+	   the file belongs to.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist, or the caller cannot read the video
+	     it belongs to.
 
 	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
 	   ingest status is tracked on the Catalog dataset file (CatalogService#getDatasetFile).
 	*/
 	GetIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (api.GetIngestStatusResponse, error)
 	/*
-	   Get the latest ingest status for a set of given video files by RID.
+	   Returns the latest ingest status of each given video file, keyed by file RID. Files that do not exist, or
+	   whose video the caller cannot read, are left out. A file with no recorded status counts as in progress.
 
 	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
 	   ingest status is tracked on the Catalog dataset file (CatalogService#batchGetDatasetFiles).
@@ -108,13 +129,26 @@ type VideoFileServiceClient interface {
 	*/
 	UpdateIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid, requestArg api.UpdateIngestStatusRequest) error
 	/*
-	   Returns the min and max absolute and media timestamps for each segment in a video file.
-	   To be used during frame-timestamp mapping when playing back videos.
+	   Returns one entry per segment of a video file, earliest first, with the segment's first and last absolute
+	   timestamps and its start and end in media seconds.
+
+	   Used to map frame times during playback. The list is empty before segmentation produces segments, and for
+	   an archived file. The caller needs permission to read the metadata of the video the file belongs to.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist, or the caller cannot read the video
+	     it belongs to.
 	*/
 	GetSegmentSummaries(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) ([]api.SegmentSummary, error)
 	/*
-	   Generate an HLS playlist for a video file with the given RID to enable playback.
-	   The HLS playlist will contain links to all of the video segments in the video in sequential order.
+	   Returns an HLS playlist, as binary, that lists every segment of a video file in playback order with
+	   presigned segment URLs that expire after one hour. The caller needs permission to read the video's data.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist, or the caller cannot read the video
+	     it belongs to.
+	   - INVALID_ARGUMENT (Video:VideoFileIngestNotComplete): the file has no segments yet, or the file is
+	     archived.
 	*/
 	GetPlaylist(ctx context.Context, authHeader bearertoken.Token, videoFileRidArg rids.VideoFileRid) (io.ReadCloser, error)
 }
@@ -377,28 +411,42 @@ type VideoFileServiceClientWithAuth interface {
 	*/
 	Create(ctx context.Context, requestArg api.CreateVideoFileRequest) (api.VideoFile, error)
 	/*
-	   Returns video file metadata associated with a video file RID.
+	   Returns a video file, with its title, description, origin, and segment metadata. Archived video files are
+	   included. The caller needs permission to read the metadata of the video the file belongs to.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist, or the caller cannot read the video
+	     it belongs to.
 
 	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
 	   read the file with CatalogService#getDatasetFile.
 	*/
 	Get(ctx context.Context, videoFileRidArg rids.VideoFileRid) (api.VideoFile, error)
 	/*
-	   Returns all video files and their metadata associated with the given RIDs
+	   Returns the video files with the given RIDs, including archived files. RIDs that do not exist, or whose
+	   video the caller cannot read, are left out of the result instead of raising an error.
 
 	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
 	   read the files with CatalogService#batchGetDatasetFiles.
 	*/
 	BatchGet(ctx context.Context, videoFileRidsArg []rids.VideoFileRid) ([]api.VideoFile, error)
 	/*
-	   Returns all video files and their metadata associated with the given video RID.
+	   Returns every unarchived video file of a video, as an unordered set. Use listFilesInVideoPaginated when a
+	   video may have many files. The caller needs permission to read the video's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist, or the caller cannot read it.
 
 	   Deprecated: Use listFilesInVideoPaginated for legacy videos, or VideoService#listVideoChannelDatasetFiles
 	   for videos as dataset channels.
 	*/
 	ListFilesInVideo(ctx context.Context, videoRidArg rids.VideoRid) ([]api.VideoFile, error)
 	/*
-	   Returns a paginated list of all video files and their metadata associated with the given video RID.
+	   Returns a page of up to 100 unarchived video files of a video, in a stable order. The page size is fixed.
+	   Pass nextPageToken as token to get the next page. The caller needs permission to read the video's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist, or the caller cannot read it.
 
 	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
 	   list the files backing a channel with VideoService#listVideoChannelDatasetFiles.
@@ -435,14 +483,21 @@ type VideoFileServiceClientWithAuth interface {
 	// Deprecated: Unarchive a previously archived video file, exposing it to the UI and search. Unarchiving functionality will be removed on February 1st, 2026.
 	Unarchive(ctx context.Context, videoFileRidArg rids.VideoFileRid) error
 	/*
-	   Get the latest ingest status for a given video file by RID.
+	   Returns the latest ingest status of a video file: in progress, succeeded, or failed with an error. A file
+	   with no recorded status counts as in progress. The caller needs permission to read the metadata of the video
+	   the file belongs to.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist, or the caller cannot read the video
+	     it belongs to.
 
 	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
 	   ingest status is tracked on the Catalog dataset file (CatalogService#getDatasetFile).
 	*/
 	GetIngestStatus(ctx context.Context, videoFileRidArg rids.VideoFileRid) (api.GetIngestStatusResponse, error)
 	/*
-	   Get the latest ingest status for a set of given video files by RID.
+	   Returns the latest ingest status of each given video file, keyed by file RID. Files that do not exist, or
+	   whose video the caller cannot read, are left out. A file with no recorded status counts as in progress.
 
 	   Deprecated: Legacy VideoFile-entity API. Videos are now channels on datasets and their files are Catalog dataset files;
 	   ingest status is tracked on the Catalog dataset file (CatalogService#batchGetDatasetFiles).
@@ -456,13 +511,26 @@ type VideoFileServiceClientWithAuth interface {
 	*/
 	UpdateIngestStatus(ctx context.Context, videoFileRidArg rids.VideoFileRid, requestArg api.UpdateIngestStatusRequest) error
 	/*
-	   Returns the min and max absolute and media timestamps for each segment in a video file.
-	   To be used during frame-timestamp mapping when playing back videos.
+	   Returns one entry per segment of a video file, earliest first, with the segment's first and last absolute
+	   timestamps and its start and end in media seconds.
+
+	   Used to map frame times during playback. The list is empty before segmentation produces segments, and for
+	   an archived file. The caller needs permission to read the metadata of the video the file belongs to.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist, or the caller cannot read the video
+	     it belongs to.
 	*/
 	GetSegmentSummaries(ctx context.Context, videoFileRidArg rids.VideoFileRid) ([]api.SegmentSummary, error)
 	/*
-	   Generate an HLS playlist for a video file with the given RID to enable playback.
-	   The HLS playlist will contain links to all of the video segments in the video in sequential order.
+	   Returns an HLS playlist, as binary, that lists every segment of a video file in playback order with
+	   presigned segment URLs that expire after one hour. The caller needs permission to read the video's data.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist, or the caller cannot read the video
+	     it belongs to.
+	   - INVALID_ARGUMENT (Video:VideoFileIngestNotComplete): the file has no segments yet, or the file is
+	     archived.
 	*/
 	GetPlaylist(ctx context.Context, videoFileRidArg rids.VideoFileRid) (io.ReadCloser, error)
 }
@@ -672,8 +740,34 @@ at the segment-level.
 type VideoSegmentServiceClient interface {
 	// Deprecated: Replaced by createVideoFileSegments. Will be removed after April 15th.
 	CreateSegments(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.CreateSegmentsRequest) error
+	/*
+	   Creates segments for one file of a video and returns them. A new segment that overlaps an existing
+	   segment is rejected unless the caller asks to overwrite.
+
+	   A segment that repeats an existing segment of the file, with the same bounds and metadata, creates
+	   nothing new. A new segment that overlaps an existing segment of the video is rejected, unless
+	   overWriteSegments is true: then overlapping segments from other files of the same video are deleted
+	   first, and the cached segment metadata of those files is recomputed. The seriesUuid field is ignored.
+	   The caller needs permission to write data to the video.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist, or the caller cannot write data to it.
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist and the request stores new segments.
+	   - CONFLICT (Video:SegmentConflict): a new segment overlaps an existing segment of the video.
+	*/
 	CreateVideoFileSegments(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, videoFileRidArg rids.VideoFileRid, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
-	// Creates segments for a video stream. Similar to createVideoFileSegments but for streaming video.
+	/*
+	   Creates segments for a live video stream and returns them. It works like createVideoFileSegments, but
+	   the segments belong to a stream instead of a file.
+
+	   Overlaps of up to 1 millisecond between segments are tolerated, because consecutive live segments can
+	   overlap slightly. The overWriteSegments and seriesUuid fields are ignored. Only Nominal's internal video
+	   segmenter service can call this endpoint.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the caller is not the internal video segmenter service.
+	   - CONFLICT (Video:SegmentConflict): a new segment overlaps an existing segment of the video.
+	*/
 	CreateVideoStreamSegments(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, streamUuidArg uuid.UUID, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
 	/*
 	   Creates segments for a dataset file video. Used for channel-based video ingestion.
@@ -805,8 +899,34 @@ at the segment-level.
 type VideoSegmentServiceClientWithAuth interface {
 	// Deprecated: Replaced by createVideoFileSegments. Will be removed after April 15th.
 	CreateSegments(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.CreateSegmentsRequest) error
+	/*
+	   Creates segments for one file of a video and returns them. A new segment that overlaps an existing
+	   segment is rejected unless the caller asks to overwrite.
+
+	   A segment that repeats an existing segment of the file, with the same bounds and metadata, creates
+	   nothing new. A new segment that overlaps an existing segment of the video is rejected, unless
+	   overWriteSegments is true: then overlapping segments from other files of the same video are deleted
+	   first, and the cached segment metadata of those files is recomputed. The seriesUuid field is ignored.
+	   The caller needs permission to write data to the video.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist, or the caller cannot write data to it.
+	   - NOT_FOUND (Video:VideoFileNotFound): the video file does not exist and the request stores new segments.
+	   - CONFLICT (Video:SegmentConflict): a new segment overlaps an existing segment of the video.
+	*/
 	CreateVideoFileSegments(ctx context.Context, videoRidArg rids.VideoRid, videoFileRidArg rids.VideoFileRid, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
-	// Creates segments for a video stream. Similar to createVideoFileSegments but for streaming video.
+	/*
+	   Creates segments for a live video stream and returns them. It works like createVideoFileSegments, but
+	   the segments belong to a stream instead of a file.
+
+	   Overlaps of up to 1 millisecond between segments are tolerated, because consecutive live segments can
+	   overlap slightly. The overWriteSegments and seriesUuid fields are ignored. Only Nominal's internal video
+	   segmenter service can call this endpoint.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the caller is not the internal video segmenter service.
+	   - CONFLICT (Video:SegmentConflict): a new segment overlaps an existing segment of the video.
+	*/
 	CreateVideoStreamSegments(ctx context.Context, videoRidArg rids.VideoRid, streamUuidArg uuid.UUID, requestArg api.CreateSegmentsRequest) (api.CreateSegmentsResponse, error)
 	/*
 	   Creates segments for a dataset file video. Used for channel-based video ingestion.
@@ -916,21 +1036,38 @@ func (c *videoSegmentServiceClientWithTokenProvider) GetSegmentByTimestamp(ctx c
 // The video service manages videos and video metadata.
 type VideoServiceClient interface {
 	/*
-	   Returns video metadata associated with a video rid.
+	   Returns a legacy video (the video entity that predates video channels on datasets) by RID: title, description, labels, properties, archived flag, and segment metadata.
+
+	   Archived videos are returned. The caller needs permission to read the video's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
 
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; list a channel's files with
 	   listVideoChannelDatasetFiles and read dataset metadata from CatalogService.
 	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.Video, error)
 	/*
-	   Returns video metadata about each video given a set of video rids.
+	   Returns the legacy videos (the video entity that predates video channels on datasets) with the given RIDs.
+
+	   Videos that do not exist, or whose metadata the caller cannot read, are omitted rather than reported as
+	   errors. Use get to fail on a missing video. Archived videos are returned.
 
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; list a channel's files with
 	   listVideoChannelDatasetFiles and read dataset metadata from CatalogService.
 	*/
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetVideosRequest) (api.GetVideosResponse, error)
 	/*
-	   Returns metadata about videos that match a given query.
+	   Searches legacy videos (the video entity that predates video channels on datasets) by text, label, property,
+	   ingest status, or workspace. Returns a page sorted by creation time, in the direction that sortOptions gives.
+
+	   Only workspaces the caller can fully view are searched. Archived videos are excluded unless archivedStatuses
+	   includes them. pageSize defaults to 100. A page can hold fewer videos than pageSize when the caller cannot read
+	   some matches.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is larger than 1,000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): token is not a token from a previous response.
 
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; search datasets with CatalogService#searchDatasets.
 	*/
@@ -952,16 +1089,36 @@ type VideoServiceClient interface {
 	// Deprecated: Replaced by per-file updateIngestStatus. Will be removed after April 15th.
 	UpdateIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.UpdateIngestStatus) error
 	/*
+	   Returns the ingest status of a legacy video (the video entity that predates video channels on datasets): success, in progress, or error with the latest ingest error.
+
+	   A video with no recorded ingest status reports in progress.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
 	   Catalog dataset file (CatalogService#getDatasetFile).
 	*/
 	GetIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.DetailedIngestStatus, error)
 	/*
+	   Returns the ingest status of each legacy video RID given, keyed by RID.
+
+	   Videos that do not exist or whose metadata the caller cannot read are omitted. A video with no recorded ingest
+	   status reports in progress.
+
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
 	   Catalog dataset file (CatalogService#batchGetDatasetFiles).
 	*/
 	BatchGetIngestStatus(ctx context.Context, authHeader bearertoken.Token, videoRidsArg []rids.VideoRid) (map[rids.VideoRid]api.DetailedIngestStatus, error)
 	/*
+	   Returns the ingest status of a legacy video (the video entity that predates video channels on datasets) together with the ingest status of one page of its video files.
+
+	   The page holds up to 100 non-archived files ordered by file ID, with a token for the next page. Returns empty
+	   when the video has no recorded ingest status.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
 	   Catalog dataset file (CatalogService#getDatasetFile).
 	*/
@@ -981,90 +1138,175 @@ type VideoServiceClient interface {
 	*/
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) error
 	/*
-	   Generates an HLS playlist for a video within optional time bounds.
-	   Uses GET with query parameters for HLS.js compatibility.
-	   The HLS playlist will contain links to all of the segments in the video that overlap with the given bounds,
-	   or all segments if no bounds are provided.
+	   Returns an HLS playlist of a legacy video (the video entity that predates video channels on datasets), with a one-hour presigned link to each segment that overlaps the bounds.
 
-	   Note: The start and end parameters must either both be provided or both be omitted.
-	   Providing only one will result in a MissingTimestampBoundPair error.
+	   When start and end are omitted, the playlist covers every segment. Give both as ISO-8601 timestamps, or neither.
+	   Segments of archived files are excluded. Uses GET for HLS.js. The caller needs permission to read the video's data.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Video:MissingTimestampBoundPair): only one of start and end is given.
+	   - INVALID_ARGUMENT (Video:InvalidTimestamp): start or end is not an ISO-8601 timestamp.
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its data.
+	   - INVALID_ARGUMENT: the start of the bounds is not before the end.
+	   - CONFLICT (Video:VideoIngestNotComplete): the video has no segment available and its ingest is in progress or
+	     has no recorded status.
+	   - NOT_FOUND (Video:NoSegmentsInBounds): ingest is not in progress and no segment overlaps the bounds.
+	   - NOT_FOUND (Video:SegmentNotFound): ingest is not in progress and the video has no segment, with no bounds
+	     given.
 
 	   Deprecated: Replaced by getPlaylistV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetPlaylist(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, startArg *string, endArg *string) (io.ReadCloser, error)
 	/*
-	   Returns the min and max absolute and media timestamps for each segment in a video. To be used during
-	   frame-timestamp mapping.
+	   Returns the first and last absolute and media timestamps of each segment of a legacy video (the video entity that predates video channels on datasets), in time order, for mapping frames to timestamps.
+
+	   Media timestamps run cumulatively across the segments from 0. Segments of archived files are excluded. When a
+	   segment overlaps the next one, its last absolute timestamp is cut to the next segment's start.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
 
 	   Deprecated: Replaced by getSegmentSummariesInBounds. Will be removed after April 15th.
 	*/
 	GetSegmentSummaries(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) ([]api.SegmentSummary, error)
 	/*
-	   Generates an HLS playlist for a video with the given video rid to enable playback within an optional set of
-	   bounds. The HLS playlist will contain links to all of the segments in the video that overlap with the given
-	   bounds.
-	   playlist will be limited to the given bounds.
+	   Returns an HLS playlist of a legacy video (the video entity that predates video channels on datasets), with a one-hour presigned link to each segment that overlaps the optional bounds.
+
+	   When bounds are omitted, the playlist covers every segment. Segments of archived files are excluded. The caller
+	   needs permission to read the video's data.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its data.
+	   - INVALID_ARGUMENT: the start of the bounds is not before the end.
+	   - CONFLICT (Video:VideoIngestNotComplete): the video has no segment available and its ingest is in progress or
+	     has no recorded status.
+	   - NOT_FOUND (Video:NoSegmentsInBounds): ingest is not in progress and no segment overlaps the bounds.
+	   - NOT_FOUND (Video:SegmentNotFound): ingest is not in progress and the video has no segment, with no bounds
+	     given.
 
 	   Deprecated: Use getPlaylist (GET) for HLS.js compatibility.
 	*/
 	GetPlaylistInBounds(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetPlaylistInBoundsRequest) (io.ReadCloser, error)
 	/*
-	   Generates an HLS playlist for a video series (identified by channel + tags) within bounds.
+	   Returns an HLS playlist of a video channel (on a dataset or an asset data scope) within bounds, with a presigned link to each overlapping segment.
+
+	   The channel is a channel name plus tag filters, and can resolve to several series. Segments of archived files are
+	   excluded. While the channel's source files are still being converted, the playlist is empty. Same result as
+	   getPlaylistV2, which takes a GET.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series, the start of the bounds is not before the
+	     end, or no segment overlaps the bounds.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	   - CONFLICT (Video:SegmentConflictV2): segments of the channel's series overlap in time.
 
 	   Deprecated: Use getPlaylistV2 (GET) for HLS.js compatibility.
 	*/
 	GetPlaylistInBoundsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error)
 	/*
-	   Generates an HLS playlist for a video series within time bounds.
-	   Specify either dataSourceRid OR (assetRid + dataScopeName) to identify the series source.
+	   Returns an HLS playlist of a video channel within bounds, with a presigned link to each overlapping segment.
 
-	   Note: Both start and end parameters are required and must be provided together.
+	   Give either dataSourceRid or assetRid with dataScopeName to locate the channel. The channel can resolve to several
+	   series. Segments of archived files are excluded. While the channel's source files are still being converted, the
+	   playlist is empty. Uses GET for HLS.js.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Video:InvalidTags): tags is not a JSON map of strings.
+	   - INVALID_ARGUMENT (Video:InvalidChannelSpecification): both dataSourceRid and assetRid are given, assetRid has no
+	     dataScopeName, or neither locator is given.
+	   - INVALID_ARGUMENT (Video:InvalidTimestamp): start or end is not an ISO-8601 timestamp.
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series, the start is not before the end, or no
+	     segment overlaps the bounds.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	   - CONFLICT (Video:SegmentConflictV2): segments of the channel's series overlap in time.
 	*/
 	GetPlaylistV2(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error)
 	/*
-	   Returns the min and max absolute and media timestamps for each segment in a video that overlap with an
-	   optional set of bounds.
+	   Returns the first and last absolute and media timestamps of each segment of a legacy video (the video entity that predates video channels on datasets) that overlaps the optional bounds, in time order.
+
+	   Media timestamps run cumulatively across the returned segments from 0. Segments of archived files are excluded.
+	   When a segment overlaps the next one, its last absolute timestamp is cut to the next segment's start.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: the start of the bounds is not before the end.
 
 	   Deprecated: Replaced by getSegmentSummariesInBoundsV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetSegmentSummariesInBounds(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentSummariesInBoundsRequest) ([]api.SegmentSummary, error)
 	/*
-	   Returns the min and max absolute and media timestamps for each segment matching a video series
-	   (identified by channel + tags) within the specified bounds.
+	   Returns the first and last absolute and media timestamps of each segment of a video channel that overlaps the bounds, in time order, with the dataset file each segment came from.
+
+	   Media timestamps run cumulatively across the returned segments from 0. Segments of archived files are excluded.
+	   Returns an empty list when no segment overlaps the bounds.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series, or the start of the bounds is not before the
+	     end.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	   - CONFLICT (Video:SegmentConflictV2): segments of the channel's series overlap in time.
 	*/
 	GetSegmentSummariesInBoundsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummaryV2, error)
 	/*
-	   Returns aggregated segment metadata for a video channel series, including total frames,
-	   segment count, min/max timestamps, and average frame rate. Optionally filter by time bounds.
+	   Returns frame count, segment count, first and last absolute timestamps, media duration, and frame rate across the segments of a video channel, optionally limited to bounds.
+
+	   The frame rate is the frame count divided by the media duration. Segments of archived files are excluded.
+	   Returns empty when no segment matches.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	   - CONFLICT (Video:SegmentConflictV2): segments of the channel's series overlap in time.
 	*/
 	GetSegmentMetadataV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentMetadataForChannelRequest) (*api.VideoChannelSegmentsMetadata, error)
-	// Returns metadata for the segment within a video series containing the requested absolute timestamp.
+	/*
+	   Returns the segment of a video channel that contains an absolute timestamp, with its frame timestamps.
+
+	   Returns empty when no segment contains the timestamp. Segments of archived files are ignored. Use
+	   getSegmentAtOrAfterTimestampV2 to fall forward to the next segment.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	*/
 	GetSegmentByTimestampV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error)
 	/*
-	   Returns metadata for the segment containing the requested absolute timestamp. If no segment contains
-	   the timestamp, returns the closest segment starting after the timestamp. Returns empty if no segment
-	   is found at or after the timestamp.
+	   Returns the segment of a legacy video (the video entity that predates video channels on datasets) that contains an absolute timestamp, or else the closest segment starting after it.
+
+	   Returns empty when no segment is found at or after the timestamp. Segments of archived files are ignored.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
 
 	   Deprecated: Replaced by getSegmentAtOrAfterTimestampV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetSegmentAtOrAfterTimestamp(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetSegmentAtOrAfterTimestampRequest) (*api.Segment, error)
 	/*
-	   Returns metadata for the segment containing the requested absolute timestamp for a video series
-	   (identified by channel + tags). If no segment contains the timestamp, returns the closest segment
-	   starting after the timestamp. Returns empty if no segment is found at or after the timestamp.
+	   Returns the segment of a video channel that contains an absolute timestamp, or else the closest segment starting after it.
+
+	   Returns empty when no segment is found at or after the timestamp. Segments of archived files are ignored.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
 	*/
 	GetSegmentAtOrAfterTimestampV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSegmentAtOrAfterTimestampV2Request) (*api.SegmentV2, error)
 	/*
-	   Returns the min and max absolute timestamps from non-archived video files associated with a given video that
-	   overlap with an optional set of bounds. The files on the edges of the bounds will be truncated to segments
-	   that are inside or overlap with the bounds.
+	   Returns the first and last absolute timestamps of each non-archived video file of a legacy video (the video entity that predates video channels on datasets) that overlaps the optional bounds, in time order.
+
+	   A file at the edge of the bounds is limited to its segments that overlap them. When bounds are omitted, files
+	   with no cached segment metadata are left out.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: the start of the bounds is not before the end.
 
 	   Deprecated: Replaced by listVideoChannelDatasetFiles, which returns the dataset files backing a video
 	   channel together with the bounds each file contributes.
 	*/
 	GetFileSummaries(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error)
 	/*
-	   Generates a stream ID scoped to a video and returns a WHIP URL with a MediaMTX JWT and ICE servers.
+	   Generates a stream ID scoped to a video and returns a WHIP URL with a publish token and ICE servers.
 	   Enforces write permission on the video.
 
 	   Deprecated: Replaced by generateWhipStreamV2, which addresses a channel-backed live video series instead of a Video rid.
@@ -1072,7 +1314,7 @@ type VideoServiceClient interface {
 	GenerateWhipStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.GenerateWhipStreamResponse, error)
 	/*
 	   Generates a stream ID scoped to a channel-backed live video series and returns a WHIP URL with
-	   a MediaMTX JWT and ICE servers.
+	   a publish token and ICE servers.
 	   Currently only datasource-backed dataset channels are supported.
 	*/
 	GenerateWhipStreamV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GenerateWhipStreamV2Request) (api.GenerateWhipStreamResponse, error)
@@ -1091,41 +1333,60 @@ type VideoServiceClient interface {
 	*/
 	GenerateWhepStreamV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GenerateWhepStreamV2Request) (*api.GenerateWhepStreamResponse, error)
 	/*
-	   Returns stream session metadata for a given stream ID scoped to the video.
-	   Enforces read permission on the video.
+	   Returns a live stream session of a legacy video (the video entity that predates video channels on datasets) by stream ID: status, start and end times, and creation and update times.
+
+	   Returns empty when the stream does not exist for that video.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: streamId is not a valid stream ID.
 	*/
 	GetStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error)
 	/*
-	   Returns all stream sessions for a video that overlap with the specified time bounds.
-	   A stream overlaps if there is any intersection between its [start, end] interval and the provided bounds.
-	   Enforces read permission on the video.
+	   Returns the live stream sessions of a legacy video (the video entity that predates video channels on datasets) that overlap the bounds.
+
+	   Streams are ordered by stream ID and paginated; pageSize defaults to 100. A stream with no start or no end
+	   overlaps on that side.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: pageSize is zero, negative, or larger than 1,000.
 
 	   Deprecated: Replaced by getStreamsInBoundsV2, which addresses a channel-backed live video series instead of a Video rid.
 	*/
 	GetStreamsInBounds(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid, requestArg api.GetStreamsInBoundsRequest) (api.GetStreamsInBoundsResponse, error)
 	/*
-	   Returns all channel-backed stream sessions for a dataset/channel that overlap with the specified time bounds.
-	   A stream overlaps if there is any intersection between its [start, end] interval and the provided bounds.
-	   Enforces read metadata permission on the dataset.
+	   Returns the live stream sessions of a video channel on a dataset that overlap the bounds.
+
+	   Streams are ordered by stream ID and paginated; pageSize defaults to 100. A stream with no start or no end
+	   overlaps on that side. Asset data-scope channels are not supported. The caller needs permission to read the
+	   dataset's metadata.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel is on an asset data scope or on a data source that is not a dataset.
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: pageSize is zero, negative, or larger than 1,000.
 	*/
 	GetStreamsInBoundsV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetStreamsInBoundsForChannelRequest) (api.GetStreamsInBoundsV2Response, error)
 	/*
-	   Returns the dataset files backing a video channel (identified by channel + tags), ordered by
-	   start timestamp ascending and paginated. Each entry carries the min/max absolute timestamps the
-	   file contributes to the channel. Optionally filtered by time bounds. Streamed sessions are not
-	   included; use getStreamsInBoundsV2 for those.
-	   Enforces read metadata permission on the datasource.
+	   Returns the non-archived dataset files that back a video channel, each with the first and last absolute timestamps it contributes to the channel.
+
+	   Files are ordered by start timestamp and paginated; pageSize defaults to 100. Optionally limited to bounds. Live
+	   stream sessions are not included; use getStreamsInBoundsV2.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	   - INVALID_ARGUMENT: pageSize is zero, negative, or larger than 1,000, token is not a token from a previous
+	     response, or the start of the bounds is not before the end.
 	*/
 	ListVideoChannelDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg api.ListVideoChannelDatasetFilesRequest) (api.ListVideoChannelDatasetFilesResponse, error)
 	/*
-	   Updates one or more video dataset files in a channel in a single transaction. Each update may set a new
-	   absolute start timestamp (segments shifted so the earliest starts at the given timestamp), a scale
-	   parameter (frame timestamps rescaled around the file's start), and/or a new title (file name). If a
-	   resulting layout would overlap segments of another file in the channel, no files are updated and
-	   VIDEO_SEGMENT_CONFLICT is thrown (all-or-nothing). Returns the updated files with their new bounds and
-	   persists those bounds to the corresponding Catalog DatasetFile.
-	   Currently only datasource-backed dataset channels are supported.
-	   Enforces write data permission on the datasource.
+	   Updates video files in a dataset-backed video channel in one transaction: a new absolute start time, a
+	   scale factor for frame timestamps, or a new title. If any resulting file would overlap another file in
+	   the channel, nothing is updated and VIDEO_SEGMENT_CONFLICT is thrown.
+
+	   Returns the updated files with their new bounds. Requires write data permission on the dataset.
 	*/
 	BatchUpdateVideoChannelDatasetFiles(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchUpdateVideoChannelDatasetFilesRequest) (api.BatchUpdateVideoChannelDatasetFilesResponse, error)
 	/*
@@ -1137,16 +1398,17 @@ type VideoServiceClient interface {
 	*/
 	EndStream(ctx context.Context, authHeader bearertoken.Token, videoRidArg rids.VideoRid) (api.EndStreamResponse, error)
 	/*
-	   Marks the active stream session as ended for a channel-backed live video series.
-	   Returns empty when no active stream exists, so a publisher-disconnect hook that fires
-	   more than once — or races the reaper — is a no-op rather than an error.
-	   Currently only datasource-backed dataset channels are supported.
+	   Marks the active stream session as ended for a channel-backed live video series. Returns
+	   empty when no active stream exists, so a publisher-disconnect hook that fires more than
+	   once — or races the reaper — is a no-op rather than an error. Currently only
+	   datasource-backed dataset channels are supported.
+
 	   Enforces write permission on the data source.
 	*/
 	EndStreamV2(ctx context.Context, authHeader bearertoken.Token, requestArg api.EndStreamV2Request) (*api.EndStreamResponse, error)
 	/*
-	   MediaMTX segment upload endpoint. Receives video segments from MediaMTX hooks.
-	   Validates JWT and logs session. Future: create video segments from uploaded files.
+	   Stores a recorded segment of a live video stream, given the stream ID, segment file name, duration, start
+	   time, and size. The request body holds the segment bytes.
 	*/
 	UploadSegmentFromMediaMtx(ctx context.Context, authHeader bearertoken.Token, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error
 }
@@ -1755,21 +2017,38 @@ func (c *videoServiceClient) UploadSegmentFromMediaMtx(ctx context.Context, auth
 // The video service manages videos and video metadata.
 type VideoServiceClientWithAuth interface {
 	/*
-	   Returns video metadata associated with a video rid.
+	   Returns a legacy video (the video entity that predates video channels on datasets) by RID: title, description, labels, properties, archived flag, and segment metadata.
+
+	   Archived videos are returned. The caller needs permission to read the video's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
 
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; list a channel's files with
 	   listVideoChannelDatasetFiles and read dataset metadata from CatalogService.
 	*/
 	Get(ctx context.Context, videoRidArg rids.VideoRid) (api.Video, error)
 	/*
-	   Returns video metadata about each video given a set of video rids.
+	   Returns the legacy videos (the video entity that predates video channels on datasets) with the given RIDs.
+
+	   Videos that do not exist, or whose metadata the caller cannot read, are omitted rather than reported as
+	   errors. Use get to fail on a missing video. Archived videos are returned.
 
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; list a channel's files with
 	   listVideoChannelDatasetFiles and read dataset metadata from CatalogService.
 	*/
 	BatchGet(ctx context.Context, requestArg api.GetVideosRequest) (api.GetVideosResponse, error)
 	/*
-	   Returns metadata about videos that match a given query.
+	   Searches legacy videos (the video entity that predates video channels on datasets) by text, label, property,
+	   ingest status, or workspace. Returns a page sorted by creation time, in the direction that sortOptions gives.
+
+	   Only workspaces the caller can fully view are searched. Archived videos are excluded unless archivedStatuses
+	   includes them. pageSize defaults to 100. A page can hold fewer videos than pageSize when the caller cannot read
+	   some matches.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is larger than 1,000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): token is not a token from a previous response.
 
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; search datasets with CatalogService#searchDatasets.
 	*/
@@ -1791,16 +2070,36 @@ type VideoServiceClientWithAuth interface {
 	// Deprecated: Replaced by per-file updateIngestStatus. Will be removed after April 15th.
 	UpdateIngestStatus(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.UpdateIngestStatus) error
 	/*
+	   Returns the ingest status of a legacy video (the video entity that predates video channels on datasets): success, in progress, or error with the latest ingest error.
+
+	   A video with no recorded ingest status reports in progress.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
 	   Catalog dataset file (CatalogService#getDatasetFile).
 	*/
 	GetIngestStatus(ctx context.Context, videoRidArg rids.VideoRid) (api.DetailedIngestStatus, error)
 	/*
+	   Returns the ingest status of each legacy video RID given, keyed by RID.
+
+	   Videos that do not exist or whose metadata the caller cannot read are omitted. A video with no recorded ingest
+	   status reports in progress.
+
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
 	   Catalog dataset file (CatalogService#batchGetDatasetFiles).
 	*/
 	BatchGetIngestStatus(ctx context.Context, videoRidsArg []rids.VideoRid) (map[rids.VideoRid]api.DetailedIngestStatus, error)
 	/*
+	   Returns the ingest status of a legacy video (the video entity that predates video channels on datasets) together with the ingest status of one page of its video files.
+
+	   The page holds up to 100 non-archived files ordered by file ID, with a token for the next page. Returns empty
+	   when the video has no recorded ingest status.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+
 	   Deprecated: Legacy Video-entity API. Videos are now channels on datasets; ingest status is tracked per file on the
 	   Catalog dataset file (CatalogService#getDatasetFile).
 	*/
@@ -1820,90 +2119,175 @@ type VideoServiceClientWithAuth interface {
 	*/
 	Unarchive(ctx context.Context, videoRidArg rids.VideoRid) error
 	/*
-	   Generates an HLS playlist for a video within optional time bounds.
-	   Uses GET with query parameters for HLS.js compatibility.
-	   The HLS playlist will contain links to all of the segments in the video that overlap with the given bounds,
-	   or all segments if no bounds are provided.
+	   Returns an HLS playlist of a legacy video (the video entity that predates video channels on datasets), with a one-hour presigned link to each segment that overlaps the bounds.
 
-	   Note: The start and end parameters must either both be provided or both be omitted.
-	   Providing only one will result in a MissingTimestampBoundPair error.
+	   When start and end are omitted, the playlist covers every segment. Give both as ISO-8601 timestamps, or neither.
+	   Segments of archived files are excluded. Uses GET for HLS.js. The caller needs permission to read the video's data.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Video:MissingTimestampBoundPair): only one of start and end is given.
+	   - INVALID_ARGUMENT (Video:InvalidTimestamp): start or end is not an ISO-8601 timestamp.
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its data.
+	   - INVALID_ARGUMENT: the start of the bounds is not before the end.
+	   - CONFLICT (Video:VideoIngestNotComplete): the video has no segment available and its ingest is in progress or
+	     has no recorded status.
+	   - NOT_FOUND (Video:NoSegmentsInBounds): ingest is not in progress and no segment overlaps the bounds.
+	   - NOT_FOUND (Video:SegmentNotFound): ingest is not in progress and the video has no segment, with no bounds
+	     given.
 
 	   Deprecated: Replaced by getPlaylistV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetPlaylist(ctx context.Context, videoRidArg rids.VideoRid, startArg *string, endArg *string) (io.ReadCloser, error)
 	/*
-	   Returns the min and max absolute and media timestamps for each segment in a video. To be used during
-	   frame-timestamp mapping.
+	   Returns the first and last absolute and media timestamps of each segment of a legacy video (the video entity that predates video channels on datasets), in time order, for mapping frames to timestamps.
+
+	   Media timestamps run cumulatively across the segments from 0. Segments of archived files are excluded. When a
+	   segment overlaps the next one, its last absolute timestamp is cut to the next segment's start.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
 
 	   Deprecated: Replaced by getSegmentSummariesInBounds. Will be removed after April 15th.
 	*/
 	GetSegmentSummaries(ctx context.Context, videoRidArg rids.VideoRid) ([]api.SegmentSummary, error)
 	/*
-	   Generates an HLS playlist for a video with the given video rid to enable playback within an optional set of
-	   bounds. The HLS playlist will contain links to all of the segments in the video that overlap with the given
-	   bounds.
-	   playlist will be limited to the given bounds.
+	   Returns an HLS playlist of a legacy video (the video entity that predates video channels on datasets), with a one-hour presigned link to each segment that overlaps the optional bounds.
+
+	   When bounds are omitted, the playlist covers every segment. Segments of archived files are excluded. The caller
+	   needs permission to read the video's data.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its data.
+	   - INVALID_ARGUMENT: the start of the bounds is not before the end.
+	   - CONFLICT (Video:VideoIngestNotComplete): the video has no segment available and its ingest is in progress or
+	     has no recorded status.
+	   - NOT_FOUND (Video:NoSegmentsInBounds): ingest is not in progress and no segment overlaps the bounds.
+	   - NOT_FOUND (Video:SegmentNotFound): ingest is not in progress and the video has no segment, with no bounds
+	     given.
 
 	   Deprecated: Use getPlaylist (GET) for HLS.js compatibility.
 	*/
 	GetPlaylistInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetPlaylistInBoundsRequest) (io.ReadCloser, error)
 	/*
-	   Generates an HLS playlist for a video series (identified by channel + tags) within bounds.
+	   Returns an HLS playlist of a video channel (on a dataset or an asset data scope) within bounds, with a presigned link to each overlapping segment.
+
+	   The channel is a channel name plus tag filters, and can resolve to several series. Segments of archived files are
+	   excluded. While the channel's source files are still being converted, the playlist is empty. Same result as
+	   getPlaylistV2, which takes a GET.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series, the start of the bounds is not before the
+	     end, or no segment overlaps the bounds.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	   - CONFLICT (Video:SegmentConflictV2): segments of the channel's series overlap in time.
 
 	   Deprecated: Use getPlaylistV2 (GET) for HLS.js compatibility.
 	*/
 	GetPlaylistInBoundsV2(ctx context.Context, requestArg api.GetPlaylistInBoundsForChannelRequest) (io.ReadCloser, error)
 	/*
-	   Generates an HLS playlist for a video series within time bounds.
-	   Specify either dataSourceRid OR (assetRid + dataScopeName) to identify the series source.
+	   Returns an HLS playlist of a video channel within bounds, with a presigned link to each overlapping segment.
 
-	   Note: Both start and end parameters are required and must be provided together.
+	   Give either dataSourceRid or assetRid with dataScopeName to locate the channel. The channel can resolve to several
+	   series. Segments of archived files are excluded. While the channel's source files are still being converted, the
+	   playlist is empty. Uses GET for HLS.js.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Video:InvalidTags): tags is not a JSON map of strings.
+	   - INVALID_ARGUMENT (Video:InvalidChannelSpecification): both dataSourceRid and assetRid are given, assetRid has no
+	     dataScopeName, or neither locator is given.
+	   - INVALID_ARGUMENT (Video:InvalidTimestamp): start or end is not an ISO-8601 timestamp.
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series, the start is not before the end, or no
+	     segment overlaps the bounds.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	   - CONFLICT (Video:SegmentConflictV2): segments of the channel's series overlap in time.
 	*/
 	GetPlaylistV2(ctx context.Context, dataSourceRidArg *rids.DataSourceRid, assetRidArg *api1.AssetRid, dataScopeNameArg *string, channelArg string, tagsArg *string, startArg string, endArg string) (io.ReadCloser, error)
 	/*
-	   Returns the min and max absolute and media timestamps for each segment in a video that overlap with an
-	   optional set of bounds.
+	   Returns the first and last absolute and media timestamps of each segment of a legacy video (the video entity that predates video channels on datasets) that overlaps the optional bounds, in time order.
+
+	   Media timestamps run cumulatively across the returned segments from 0. Segments of archived files are excluded.
+	   When a segment overlaps the next one, its last absolute timestamp is cut to the next segment's start.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: the start of the bounds is not before the end.
 
 	   Deprecated: Replaced by getSegmentSummariesInBoundsV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetSegmentSummariesInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentSummariesInBoundsRequest) ([]api.SegmentSummary, error)
 	/*
-	   Returns the min and max absolute and media timestamps for each segment matching a video series
-	   (identified by channel + tags) within the specified bounds.
+	   Returns the first and last absolute and media timestamps of each segment of a video channel that overlaps the bounds, in time order, with the dataset file each segment came from.
+
+	   Media timestamps run cumulatively across the returned segments from 0. Segments of archived files are excluded.
+	   Returns an empty list when no segment overlaps the bounds.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series, or the start of the bounds is not before the
+	     end.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	   - CONFLICT (Video:SegmentConflictV2): segments of the channel's series overlap in time.
 	*/
 	GetSegmentSummariesInBoundsV2(ctx context.Context, requestArg api.GetSegmentSummariesInBoundsForChannelRequest) ([]api.SegmentSummaryV2, error)
 	/*
-	   Returns aggregated segment metadata for a video channel series, including total frames,
-	   segment count, min/max timestamps, and average frame rate. Optionally filter by time bounds.
+	   Returns frame count, segment count, first and last absolute timestamps, media duration, and frame rate across the segments of a video channel, optionally limited to bounds.
+
+	   The frame rate is the frame count divided by the media duration. Segments of archived files are excluded.
+	   Returns empty when no segment matches.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	   - CONFLICT (Video:SegmentConflictV2): segments of the channel's series overlap in time.
 	*/
 	GetSegmentMetadataV2(ctx context.Context, requestArg api.GetSegmentMetadataForChannelRequest) (*api.VideoChannelSegmentsMetadata, error)
-	// Returns metadata for the segment within a video series containing the requested absolute timestamp.
+	/*
+	   Returns the segment of a video channel that contains an absolute timestamp, with its frame timestamps.
+
+	   Returns empty when no segment contains the timestamp. Segments of archived files are ignored. Use
+	   getSegmentAtOrAfterTimestampV2 to fall forward to the next segment.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	*/
 	GetSegmentByTimestampV2(ctx context.Context, requestArg api.GetSegmentByTimestampV2Request) (*api.SegmentV2, error)
 	/*
-	   Returns metadata for the segment containing the requested absolute timestamp. If no segment contains
-	   the timestamp, returns the closest segment starting after the timestamp. Returns empty if no segment
-	   is found at or after the timestamp.
+	   Returns the segment of a legacy video (the video entity that predates video channels on datasets) that contains an absolute timestamp, or else the closest segment starting after it.
+
+	   Returns empty when no segment is found at or after the timestamp. Segments of archived files are ignored.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
 
 	   Deprecated: Replaced by getSegmentAtOrAfterTimestampV2, which addresses the video channel series (channel + tags) instead of a Video rid.
 	*/
 	GetSegmentAtOrAfterTimestamp(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetSegmentAtOrAfterTimestampRequest) (*api.Segment, error)
 	/*
-	   Returns metadata for the segment containing the requested absolute timestamp for a video series
-	   (identified by channel + tags). If no segment contains the timestamp, returns the closest segment
-	   starting after the timestamp. Returns empty if no segment is found at or after the timestamp.
+	   Returns the segment of a video channel that contains an absolute timestamp, or else the closest segment starting after it.
+
+	   Returns empty when no segment is found at or after the timestamp. Segments of archived files are ignored.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
 	*/
 	GetSegmentAtOrAfterTimestampV2(ctx context.Context, requestArg api.GetSegmentAtOrAfterTimestampV2Request) (*api.SegmentV2, error)
 	/*
-	   Returns the min and max absolute timestamps from non-archived video files associated with a given video that
-	   overlap with an optional set of bounds. The files on the edges of the bounds will be truncated to segments
-	   that are inside or overlap with the bounds.
+	   Returns the first and last absolute timestamps of each non-archived video file of a legacy video (the video entity that predates video channels on datasets) that overlaps the optional bounds, in time order.
+
+	   A file at the edge of the bounds is limited to its segments that overlap them. When bounds are omitted, files
+	   with no cached segment metadata are left out.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: the start of the bounds is not before the end.
 
 	   Deprecated: Replaced by listVideoChannelDatasetFiles, which returns the dataset files backing a video
 	   channel together with the bounds each file contributes.
 	*/
 	GetFileSummaries(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetFileSummariesRequest) (api.GetFileSummariesResponse, error)
 	/*
-	   Generates a stream ID scoped to a video and returns a WHIP URL with a MediaMTX JWT and ICE servers.
+	   Generates a stream ID scoped to a video and returns a WHIP URL with a publish token and ICE servers.
 	   Enforces write permission on the video.
 
 	   Deprecated: Replaced by generateWhipStreamV2, which addresses a channel-backed live video series instead of a Video rid.
@@ -1911,7 +2295,7 @@ type VideoServiceClientWithAuth interface {
 	GenerateWhipStream(ctx context.Context, videoRidArg rids.VideoRid) (api.GenerateWhipStreamResponse, error)
 	/*
 	   Generates a stream ID scoped to a channel-backed live video series and returns a WHIP URL with
-	   a MediaMTX JWT and ICE servers.
+	   a publish token and ICE servers.
 	   Currently only datasource-backed dataset channels are supported.
 	*/
 	GenerateWhipStreamV2(ctx context.Context, requestArg api.GenerateWhipStreamV2Request) (api.GenerateWhipStreamResponse, error)
@@ -1930,41 +2314,60 @@ type VideoServiceClientWithAuth interface {
 	*/
 	GenerateWhepStreamV2(ctx context.Context, requestArg api.GenerateWhepStreamV2Request) (*api.GenerateWhepStreamResponse, error)
 	/*
-	   Returns stream session metadata for a given stream ID scoped to the video.
-	   Enforces read permission on the video.
+	   Returns a live stream session of a legacy video (the video entity that predates video channels on datasets) by stream ID: status, start and end times, and creation and update times.
+
+	   Returns empty when the stream does not exist for that video.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: streamId is not a valid stream ID.
 	*/
 	GetStream(ctx context.Context, videoRidArg rids.VideoRid, streamIdArg string) (*api.VideoStream, error)
 	/*
-	   Returns all stream sessions for a video that overlap with the specified time bounds.
-	   A stream overlaps if there is any intersection between its [start, end] interval and the provided bounds.
-	   Enforces read permission on the video.
+	   Returns the live stream sessions of a legacy video (the video entity that predates video channels on datasets) that overlap the bounds.
+
+	   Streams are ordered by stream ID and paginated; pageSize defaults to 100. A stream with no start or no end
+	   overlaps on that side.
+
+	   Errors:
+	   - NOT_FOUND (Video:VideoNotFound): the video does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: pageSize is zero, negative, or larger than 1,000.
 
 	   Deprecated: Replaced by getStreamsInBoundsV2, which addresses a channel-backed live video series instead of a Video rid.
 	*/
 	GetStreamsInBounds(ctx context.Context, videoRidArg rids.VideoRid, requestArg api.GetStreamsInBoundsRequest) (api.GetStreamsInBoundsResponse, error)
 	/*
-	   Returns all channel-backed stream sessions for a dataset/channel that overlap with the specified time bounds.
-	   A stream overlaps if there is any intersection between its [start, end] interval and the provided bounds.
-	   Enforces read metadata permission on the dataset.
+	   Returns the live stream sessions of a video channel on a dataset that overlap the bounds.
+
+	   Streams are ordered by stream ID and paginated; pageSize defaults to 100. A stream with no start or no end
+	   overlaps on that side. Asset data-scope channels are not supported. The caller needs permission to read the
+	   dataset's metadata.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel is on an asset data scope or on a data source that is not a dataset.
+	   - NOT_FOUND (Catalog:DatasetNotFound): the dataset does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT: pageSize is zero, negative, or larger than 1,000.
 	*/
 	GetStreamsInBoundsV2(ctx context.Context, requestArg api.GetStreamsInBoundsForChannelRequest) (api.GetStreamsInBoundsV2Response, error)
 	/*
-	   Returns the dataset files backing a video channel (identified by channel + tags), ordered by
-	   start timestamp ascending and paginated. Each entry carries the min/max absolute timestamps the
-	   file contributes to the channel. Optionally filtered by time bounds. Streamed sessions are not
-	   included; use getStreamsInBoundsV2 for those.
-	   Enforces read metadata permission on the datasource.
+	   Returns the non-archived dataset files that back a video channel, each with the first and last absolute timestamps it contributes to the channel.
+
+	   Files are ordered by start timestamp and paginated; pageSize defaults to 100. Optionally limited to bounds. Live
+	   stream sessions are not included; use getStreamsInBoundsV2.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel does not resolve to any video series.
+	   - PERMISSION_DENIED (Video:NotAuthorized): the caller cannot read the data of a dataset that backs the channel.
+	   - INVALID_ARGUMENT: pageSize is zero, negative, or larger than 1,000, token is not a token from a previous
+	     response, or the start of the bounds is not before the end.
 	*/
 	ListVideoChannelDatasetFiles(ctx context.Context, requestArg api.ListVideoChannelDatasetFilesRequest) (api.ListVideoChannelDatasetFilesResponse, error)
 	/*
-	   Updates one or more video dataset files in a channel in a single transaction. Each update may set a new
-	   absolute start timestamp (segments shifted so the earliest starts at the given timestamp), a scale
-	   parameter (frame timestamps rescaled around the file's start), and/or a new title (file name). If a
-	   resulting layout would overlap segments of another file in the channel, no files are updated and
-	   VIDEO_SEGMENT_CONFLICT is thrown (all-or-nothing). Returns the updated files with their new bounds and
-	   persists those bounds to the corresponding Catalog DatasetFile.
-	   Currently only datasource-backed dataset channels are supported.
-	   Enforces write data permission on the datasource.
+	   Updates video files in a dataset-backed video channel in one transaction: a new absolute start time, a
+	   scale factor for frame timestamps, or a new title. If any resulting file would overlap another file in
+	   the channel, nothing is updated and VIDEO_SEGMENT_CONFLICT is thrown.
+
+	   Returns the updated files with their new bounds. Requires write data permission on the dataset.
 	*/
 	BatchUpdateVideoChannelDatasetFiles(ctx context.Context, requestArg api.BatchUpdateVideoChannelDatasetFilesRequest) (api.BatchUpdateVideoChannelDatasetFilesResponse, error)
 	/*
@@ -1976,16 +2379,17 @@ type VideoServiceClientWithAuth interface {
 	*/
 	EndStream(ctx context.Context, videoRidArg rids.VideoRid) (api.EndStreamResponse, error)
 	/*
-	   Marks the active stream session as ended for a channel-backed live video series.
-	   Returns empty when no active stream exists, so a publisher-disconnect hook that fires
-	   more than once — or races the reaper — is a no-op rather than an error.
-	   Currently only datasource-backed dataset channels are supported.
+	   Marks the active stream session as ended for a channel-backed live video series. Returns
+	   empty when no active stream exists, so a publisher-disconnect hook that fires more than
+	   once — or races the reaper — is a no-op rather than an error. Currently only
+	   datasource-backed dataset channels are supported.
+
 	   Enforces write permission on the data source.
 	*/
 	EndStreamV2(ctx context.Context, requestArg api.EndStreamV2Request) (*api.EndStreamResponse, error)
 	/*
-	   MediaMTX segment upload endpoint. Receives video segments from MediaMTX hooks.
-	   Validates JWT and logs session. Future: create video segments from uploaded files.
+	   Stores a recorded segment of a live video stream, given the stream ID, segment file name, duration, start
+	   time, and size. The request body holds the segment bytes.
 	*/
 	UploadSegmentFromMediaMtx(ctx context.Context, streamPathArg string, filePathArg string, durationArg string, minTimestampSecondsArg safelong.SafeLong, minTimestampNanosArg safelong.SafeLong, contentLengthArg safelong.SafeLong, bodyArg httpclient.RequestBody) error
 }

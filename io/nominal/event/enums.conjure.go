@@ -13,9 +13,11 @@ type AggregateType struct {
 type AggregateType_Value string
 
 const (
+	// Sum of the durations of the matching events.
 	AggregateType_TOTAL_DURATION AggregateType_Value = "TOTAL_DURATION"
-	AggregateType_TOTAL_COUNT    AggregateType_Value = "TOTAL_COUNT"
-	AggregateType_UNKNOWN        AggregateType_Value = "UNKNOWN"
+	// Number of matching events.
+	AggregateType_TOTAL_COUNT AggregateType_Value = "TOTAL_COUNT"
+	AggregateType_UNKNOWN     AggregateType_Value = "UNKNOWN"
 )
 
 // AggregateType_Values returns all known variants of AggregateType.
@@ -73,8 +75,9 @@ const (
 	EventDispositionStatus_PENDING_REVIEW                 EventDispositionStatus_Value = "PENDING_REVIEW"
 	EventDispositionStatus_CLOSED_IGNORED                 EventDispositionStatus_Value = "CLOSED_IGNORED"
 	EventDispositionStatus_CLOSED_REQUIRES_FURTHER_ACTION EventDispositionStatus_Value = "CLOSED_REQUIRES_FURTHER_ACTION"
-	EventDispositionStatus_NO_DISPOSITION                 EventDispositionStatus_Value = "NO_DISPOSITION"
-	EventDispositionStatus_UNKNOWN                        EventDispositionStatus_Value = "UNKNOWN"
+	// The event has no disposition.
+	EventDispositionStatus_NO_DISPOSITION EventDispositionStatus_Value = "NO_DISPOSITION"
+	EventDispositionStatus_UNKNOWN        EventDispositionStatus_Value = "UNKNOWN"
 )
 
 // EventDispositionStatus_Values returns all known variants of EventDispositionStatus.

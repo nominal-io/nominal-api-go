@@ -20,7 +20,24 @@ type IntegrationsServiceClient interface {
 	GenerateSlackWebhookLink(ctx context.Context, authHeader bearertoken.Token, workspaceArg *rids.WorkspaceRid, isGovSlackArg *bool) (GenerateSlackWebhookResponse, error)
 	// Creates a new Slack integration. Called internally after Slack authorization.
 	CreateSlackWebhook(ctx context.Context, authHeader bearertoken.Token, codeArg string, stateArg string) error
-	// Creates a new integration.
+	/*
+	   Creates an integration to an external service (Opsgenie, PagerDuty, a Microsoft Teams webhook, or a
+	   simple webhook) and returns it. Slack integrations are created through the Slack authorization flow.
+
+	   The integration is created in the given workspace, or in the caller's default workspace when none is
+	   given. The caller needs permission to edit integrations in that workspace. The webhook URL, API key,
+	   or routing key is stored as a secret in the workspace, and the response does not return it. A simple
+	   webhook can also take a signing secret, which is stored as a second secret. Webhook URLs must use
+	   HTTPS and must not target localhost, internal services, or blocked IP ranges.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no
+	     default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist or the caller cannot edit
+	     its integrations.
+	   - INVALID_ARGUMENT (Scout:InvalidWebhookUrl): a webhook URL is not allowed.
+	   - INVALID_ARGUMENT: the integration details, Opsgenie region, or content type is not recognized.
+	*/
 	CreateIntegration(ctx context.Context, authHeader bearertoken.Token, createIntegrationRequestArg CreateIntegrationRequest) (Integration, error)
 	/*
 	   Creates a new webhook integration with HMAC signing.
@@ -34,16 +51,41 @@ type IntegrationsServiceClient interface {
 	   Request configuration overrides take precedence over integration's stored configuration.
 	*/
 	SendSecureWebhookMessage(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid, requestArg SendSecureWebhookMessageRequest) (SendSecureWebhookMessageResponse, error)
-	// Deletes an integration by archiving.
+	/*
+	   Archives an integration. The integration is not removed: it no longer appears in listIntegrations,
+	   and getIntegration still returns it with isArchived set to true. The caller needs permission to edit
+	   integrations in the integration's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:IntegrationNotFound): the integration does not exist or the caller cannot edit
+	     integrations in its workspace.
+	*/
 	DeleteIntegration(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid) error
-	// Updates the metadata of an integration.
+	/*
+	   Changes the name or description of an integration and returns it.
+
+	   A field that is not set keeps its current value, so this operation cannot clear a description. Use
+	   updateIntegrationDetails to change the webhook URL, API key, or routing key. The caller needs
+	   permission to edit integrations in the integration's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:IntegrationNotFound): the integration does not exist or the caller cannot edit
+	     integrations in its workspace.
+	*/
 	UpdateIntegrationMetadata(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid, requestArg UpdateIntegrationRequest) (Integration, error)
 	/*
 	   Updates the integration details for an integration.
 	   Intended to allow changing webhooks or rotating API keys.
 	*/
 	UpdateIntegrationDetails(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid, requestArg UpdateIntegrationDetailsRequest) (Integration, error)
-	// Retrieves an integration with the specified integration RID.
+	/*
+	   Returns an integration by RID, including an archived one, which has isArchived set to true. The
+	   caller needs permission to view the integration's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:IntegrationNotFound): the integration does not exist or the caller cannot view
+	     its workspace.
+	*/
 	GetIntegration(ctx context.Context, authHeader bearertoken.Token, integrationRidArg IntegrationRid) (Integration, error)
 	// Lists all integrations. Archived integrations are not included.
 	ListIntegrations(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) ([]Integration, error)
@@ -283,7 +325,24 @@ type IntegrationsServiceClientWithAuth interface {
 	GenerateSlackWebhookLink(ctx context.Context, workspaceArg *rids.WorkspaceRid, isGovSlackArg *bool) (GenerateSlackWebhookResponse, error)
 	// Creates a new Slack integration. Called internally after Slack authorization.
 	CreateSlackWebhook(ctx context.Context, codeArg string, stateArg string) error
-	// Creates a new integration.
+	/*
+	   Creates an integration to an external service (Opsgenie, PagerDuty, a Microsoft Teams webhook, or a
+	   simple webhook) and returns it. Slack integrations are created through the Slack authorization flow.
+
+	   The integration is created in the given workspace, or in the caller's default workspace when none is
+	   given. The caller needs permission to edit integrations in that workspace. The webhook URL, API key,
+	   or routing key is stored as a secret in the workspace, and the response does not return it. A simple
+	   webhook can also take a signing secret, which is stored as a second secret. Webhook URLs must use
+	   HTTPS and must not target localhost, internal services, or blocked IP ranges.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no
+	     default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist or the caller cannot edit
+	     its integrations.
+	   - INVALID_ARGUMENT (Scout:InvalidWebhookUrl): a webhook URL is not allowed.
+	   - INVALID_ARGUMENT: the integration details, Opsgenie region, or content type is not recognized.
+	*/
 	CreateIntegration(ctx context.Context, createIntegrationRequestArg CreateIntegrationRequest) (Integration, error)
 	/*
 	   Creates a new webhook integration with HMAC signing.
@@ -297,16 +356,41 @@ type IntegrationsServiceClientWithAuth interface {
 	   Request configuration overrides take precedence over integration's stored configuration.
 	*/
 	SendSecureWebhookMessage(ctx context.Context, integrationRidArg IntegrationRid, requestArg SendSecureWebhookMessageRequest) (SendSecureWebhookMessageResponse, error)
-	// Deletes an integration by archiving.
+	/*
+	   Archives an integration. The integration is not removed: it no longer appears in listIntegrations,
+	   and getIntegration still returns it with isArchived set to true. The caller needs permission to edit
+	   integrations in the integration's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:IntegrationNotFound): the integration does not exist or the caller cannot edit
+	     integrations in its workspace.
+	*/
 	DeleteIntegration(ctx context.Context, integrationRidArg IntegrationRid) error
-	// Updates the metadata of an integration.
+	/*
+	   Changes the name or description of an integration and returns it.
+
+	   A field that is not set keeps its current value, so this operation cannot clear a description. Use
+	   updateIntegrationDetails to change the webhook URL, API key, or routing key. The caller needs
+	   permission to edit integrations in the integration's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:IntegrationNotFound): the integration does not exist or the caller cannot edit
+	     integrations in its workspace.
+	*/
 	UpdateIntegrationMetadata(ctx context.Context, integrationRidArg IntegrationRid, requestArg UpdateIntegrationRequest) (Integration, error)
 	/*
 	   Updates the integration details for an integration.
 	   Intended to allow changing webhooks or rotating API keys.
 	*/
 	UpdateIntegrationDetails(ctx context.Context, integrationRidArg IntegrationRid, requestArg UpdateIntegrationDetailsRequest) (Integration, error)
-	// Retrieves an integration with the specified integration RID.
+	/*
+	   Returns an integration by RID, including an archived one, which has isArchived set to true. The
+	   caller needs permission to view the integration's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:IntegrationNotFound): the integration does not exist or the caller cannot view
+	     its workspace.
+	*/
 	GetIntegration(ctx context.Context, integrationRidArg IntegrationRid) (Integration, error)
 	// Lists all integrations. Archived integrations are not included.
 	ListIntegrations(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]Integration, error)

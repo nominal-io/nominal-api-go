@@ -260,7 +260,7 @@ type UploadMetadata struct {
 	S3Key string `json:"s3Key"`
 	// S3 bucket name where the file was uploaded
 	S3Bucket string `json:"s3Bucket"`
-	// The original manifest entry from the container's manifest.yaml
+	// The original manifest entry from the container's manifest.json
 	ManifestOutput ManifestOutput `json:"manifestOutput"`
 }
 

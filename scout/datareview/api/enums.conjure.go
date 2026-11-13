@@ -13,8 +13,11 @@ type CheckAlertStatus struct {
 type CheckAlertStatus_Value string
 
 const (
-	CheckAlertStatus_PENDING_REVIEW                 CheckAlertStatus_Value = "PENDING_REVIEW"
-	CheckAlertStatus_CLOSED_IGNORED                 CheckAlertStatus_Value = "CLOSED_IGNORED"
+	// Not yet reviewed.
+	CheckAlertStatus_PENDING_REVIEW CheckAlertStatus_Value = "PENDING_REVIEW"
+	// Closed as accepted.
+	CheckAlertStatus_CLOSED_IGNORED CheckAlertStatus_Value = "CLOSED_IGNORED"
+	// Closed because it needs further action.
 	CheckAlertStatus_CLOSED_REQUIRES_FURTHER_ACTION CheckAlertStatus_Value = "CLOSED_REQUIRES_FURTHER_ACTION"
 	CheckAlertStatus_UNKNOWN                        CheckAlertStatus_Value = "UNKNOWN"
 )

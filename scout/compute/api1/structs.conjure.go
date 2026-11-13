@@ -492,6 +492,7 @@ func (o *BatchComputeUnitsRequest) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 type BatchComputeWithUnitsRequest struct {
+	// More than 300 requests are rejected.
 	Requests []ComputeNodeRequest `json:"requests"`
 }
 
@@ -1091,6 +1092,7 @@ func (o *ComputeNodeFromReferenceRequest) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A compute graph to evaluate over a time range, with the context that resolves its variables and datasets.
 type ComputeNodeRequest struct {
 	Node ComputableNode `json:"node"`
 	// The start of the time range (inclusive).
@@ -1187,6 +1189,10 @@ func (o *ContainsSeries) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+The variable values and named dataset references that a request resolves a compute graph or dataset
+against, with default fill and alignment strategies for multi-input graphs.
+*/
 type Context struct {
 	Variables map[api1.VariableName]VariableValue `json:"variables"`
 	// Deprecated: This field is deprecated and will be removed in a future version.
@@ -4409,6 +4415,38 @@ func (o *NumericNthPointDownsampleSeries) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Pairs the input's groups that share every tag except `pairKey`, for comparing the members of one tag
+dimension against each other (e.g. every pair of assets within a run). The output replaces `pairKey`
+with `<pairKey>_left` and `<pairKey>_right`, and each group carries the values of its `outputSide` member.
+Pairs are unordered: the left value sorts before the right. Applying this node with `LEFT` and `RIGHT`
+yields two series with identical tag sets, which a binary operation aligns pair by pair. Groups that
+share their other tags with no second member produce no output unless `includeSelfPairs` is set.
+*/
+type NumericPairByTagSeries struct {
+	Input      NumericSeries        `json:"input"`
+	PairKey    api1.StringConstant  `json:"pairKey"`
+	OutputSide api1.PairByTagOutput `json:"outputSide"`
+	// Also pair each member with itself.
+	IncludeSelfPairs bool `json:"includeSelfPairs"`
+}
+
+func (o NumericPairByTagSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumericPairByTagSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type NumericResampleConfiguration struct {
 	// Interval between resampled points
 	Interval DurationConstant `json:"interval"`
@@ -4970,7 +5008,10 @@ func (o *ParameterizedComputeNodeRequest) UnmarshalYAML(unmarshal func(interface
 }
 
 type ParameterizedContext struct {
-	// Each parameter input provides a satisfying set of values for the parameterized compute node.
+	/*
+	   Each parameter input provides a satisfying set of values for the parameterized compute node, and the
+	   graph is evaluated once for each. More than 300 are rejected.
+	*/
 	ParameterInputs []ParameterInput `json:"parameterInputs"`
 }
 
@@ -5077,12 +5118,12 @@ minDuration conditions must be satisfied.
 */
 type PersistenceWindowConfiguration struct {
 	/*
-	   The minimum number of points for which this condition be must satisfied to include the time range in the
+	   The minimum number of points for which this condition must be satisfied to include the time range in the
 	   output. Must be non-negative. If not present, will default to 1.
 	*/
 	MinPoints *api1.IntegerConstant `json:"minPoints,omitempty"`
 	/*
-	   The minimum number of points for which this condition must be satisfied to include the time range in the
+	   The minimum duration for which this condition must be satisfied to include the time range in the
 	   output. Must be non-negative. If not present, will default to 1 nanosecond.
 	*/
 	MinDuration *DurationConstant `json:"minDuration,omitempty"`

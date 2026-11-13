@@ -28,7 +28,10 @@ type AuthenticationServiceV2Client interface {
 	UpdateMySettings(ctx context.Context, authHeader bearertoken.Token, userSettingsArg UserSettings) (UserSettings, error)
 	// Gets the settings of the org of the authenticated user.
 	GetMyOrgSettings(ctx context.Context, authHeader bearertoken.Token) (OrgSettings, error)
-	// Updates the settings of the org of the authenticated user.
+	/*
+	   Updates the settings of the org of the authenticated user. The caller must be an admin of their
+	   organization.
+	*/
 	UpdateMyOrgSettings(ctx context.Context, authHeader bearertoken.Token, orgSettingsArg OrgSettings) (OrgSettings, error)
 	// Searches for users by email and displayName.
 	SearchUsersV2(ctx context.Context, authHeader bearertoken.Token, requestArg SearchUsersRequest) (SearchUsersResponseV2, error)
@@ -351,7 +354,10 @@ type AuthenticationServiceV2ClientWithAuth interface {
 	UpdateMySettings(ctx context.Context, userSettingsArg UserSettings) (UserSettings, error)
 	// Gets the settings of the org of the authenticated user.
 	GetMyOrgSettings(ctx context.Context) (OrgSettings, error)
-	// Updates the settings of the org of the authenticated user.
+	/*
+	   Updates the settings of the org of the authenticated user. The caller must be an admin of their
+	   organization.
+	*/
 	UpdateMyOrgSettings(ctx context.Context, orgSettingsArg OrgSettings) (OrgSettings, error)
 	// Searches for users by email and displayName.
 	SearchUsersV2(ctx context.Context, requestArg SearchUsersRequest) (SearchUsersResponseV2, error)

@@ -16,18 +16,99 @@ import (
 
 /*
 Create and edit a pipeline by handing it the compute `Dataset` tree you want it to evaluate. Every write
-commits a new revision on the pipeline's main branch and returns the whole pipeline, so you never need to
-re-read after a mutation.
-
-This service is temporary. It exists until the proto PipelineService can express the full definition,
-and will be removed once it does.
+returns the whole pipeline, so you never need to re-read after a mutation. A graph change commits a new
+revision on the pipeline's main branch.
 */
 type PipelineServiceClient interface {
+	/*
+	   Creates a pipeline (composition in the app) in a workspace. A pipeline is a dataset with no data of its own,
+	   whose channels come from evaluating a graph over input datasets. Returns the pipeline with its first commit.
+
+	   Every input must be in the same workspace as the pipeline, and the caller must be able to read the metadata
+	   of each input dataset. An input can be another pipeline, but pipelines cannot form a cycle or exceed the limits
+	   on nesting depth and size. Inputs that have data must share one timestamp type. Each channelSearchSplitTagKeys
+	   entry must be a tag key that the graph adds. The caller needs permission to create datasets in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): workspaceRid is omitted and the caller has no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create datasets in the workspace, or it does not exist.
+	   - INVALID_ARGUMENT (Pipeline:InvalidPipelineGraph): the graph has no nodes or over 100, a cycle, a reference to a missing node, a missing output, or a compiled size over the limits.
+	   - INVALID_ARGUMENT (Catalog:CannotCreateUnsupportedDerivedDataset): a node uses an asset, run, search, alignByAnchor, or withDimensions dataset.
+	   - NOT_FOUND (Catalog:DatasetNotFound): an input dataset does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition): a split tag key is not added by the graph.
+	   - INVALID_ARGUMENT: an input is in another workspace, or the pipelines form a cycle or exceed the nesting limit.
+	   - INVALID_ARGUMENT (Pipeline:PipelineTimestampTypeMismatch): inputs with data have different timestamp types.
+	*/
 	CreatePipeline(ctx context.Context, authHeader bearertoken.Token, requestArg CreatePipelineRequest) (PipelineDefinition, error)
+	/*
+	   Updates the name, description, labels, properties, channel search split tag keys, or default group-by and
+	   aggregation config of a pipeline (composition in the app). Does not change its graph; use
+	   createPipelineStateCommit for that. Returns the pipeline.
+
+	   Absent fields are unchanged, and a collection that is present replaces the current one in full. An update
+	   cannot unset the description or the default group-by and aggregation config. The caller needs permission to
+	   create datasets in the pipeline's workspace and read access to the metadata of every input dataset.
+
+	   Errors:
+	   - NOT_FOUND (Pipeline:PipelineNotFound): the pipeline does not exist, or the caller lacks that permission or access.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition): a split tag key, new or stored, is not a tag key that the graph adds with a tag dataset.
+	*/
 	UpdatePipelineMetadata(ctx context.Context, authHeader bearertoken.Token, pipelineRidArg rids.PipelineRid, requestArg UpdatePipelineMetadataRequest) (PipelineDefinition, error)
+	/*
+	   Gets a pipeline (composition in the app): its metadata, the graph at the head of its main branch, its
+	   timestamp type, and its data bounds. Archived pipelines are returned.
+
+	   The timestamp type is PENDING and the bounds are empty until an input dataset has data.
+
+	   Errors:
+	   - NOT_FOUND (Pipeline:PipelineNotFound): the pipeline does not exist, or the caller cannot view its workspace or cannot read the metadata of every input dataset.
+	*/
 	GetPipeline(ctx context.Context, authHeader bearertoken.Token, pipelineRidArg rids.PipelineRid) (PipelineDefinition, error)
+	/*
+	   Gets several pipelines (compositions in the app) by RID, with the fields getPipeline returns. Archived
+	   pipelines are included.
+
+	   A pipeline that does not exist or that the caller cannot see, by the rules of getPipeline, is omitted rather than
+	   failing the batch. At most 1000 pipelineRids.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Pipeline:TooManyPipelineRids): more than 1000 RIDs are requested.
+	*/
 	BatchGetPipelines(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetPipelinesRequest) (BatchGetPipelinesResponse, error)
+	/*
+	   Searches pipelines (compositions in the app) by text, labels, properties, workspace, or archived flag, combined
+	   with and, or, and not. Returns one page of pipelines sorted by the requested field.
+
+	   Only workspaces where the caller can view the whole workspace are searched. Archived pipelines are excluded unless
+	   archivedStatuses includes ARCHIVED. Pipelines whose input datasets the caller cannot read are left out, so a page
+	   can hold fewer results than pageSize. When includeMatchCount is set, totalCount counts every matching pipeline,
+	   including those left out.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Pipeline:InvalidPageSize): pageSize is below 1 or over 1000.
+	   - INVALID_ARGUMENT (Pipeline:MalformedPageToken): nextPageToken is not a token from a previous response.
+	*/
 	SearchPipelines(ctx context.Context, authHeader bearertoken.Token, requestArg SearchPipelinesRequest) (SearchPipelinesResponse, error)
+	/*
+	   Commits a new graph to the main branch of a pipeline (composition in the app), or reverts to the graph of an
+	   earlier commit. Returns the pipeline at the resulting commit.
+
+	   Committing the head's graph again changes nothing. A revert commits the earlier graph as a new commit. A new
+	   graph follows the graph limits of createPipeline, and a new graph or a revert follows its input rules. The
+	   caller needs permission to create datasets in the pipeline's workspace and read access to the metadata of
+	   every input dataset, in the current graph and in the new one.
+
+	   Errors:
+	   - NOT_FOUND (Pipeline:PipelineNotFound): the pipeline does not exist, or the caller lacks that permission or access.
+	   - CONFLICT (Scout:CommitConflict): latestCommit is set and is no longer the head.
+	   - INVALID_ARGUMENT (Pipeline:InvalidPipelineGraph): the new graph is invalid, as in createPipeline.
+	   - NOT_FOUND (Scout:CommitNotFound): previousCommit is not a commit of this pipeline.
+	   - INVALID_ARGUMENT (Catalog:CannotCreateUnsupportedDerivedDataset): a node uses an asset, run, search, alignByAnchor, or withDimensions dataset.
+	   - NOT_FOUND (Catalog:DatasetNotFound): an input dataset of the new graph does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT (Pipeline:InvalidPipelineInputs): the new graph is list-shaped but breaks the pipeline input rules, such as duplicate split-tag values.
+	   - INVALID_ARGUMENT: an input is in another workspace, or the pipelines form a cycle or exceed the nesting limit.
+	   - INVALID_ARGUMENT (Pipeline:PipelineTimestampTypeMismatch): inputs with data have different timestamp types.
+	*/
 	CreatePipelineStateCommit(ctx context.Context, authHeader bearertoken.Token, pipelineRidArg rids.PipelineRid, requestArg CreatePipelineStateCommitRequest) (PipelineDefinition, error)
 }
 
@@ -148,18 +229,99 @@ func (c *pipelineServiceClient) CreatePipelineStateCommit(ctx context.Context, a
 
 /*
 Create and edit a pipeline by handing it the compute `Dataset` tree you want it to evaluate. Every write
-commits a new revision on the pipeline's main branch and returns the whole pipeline, so you never need to
-re-read after a mutation.
-
-This service is temporary. It exists until the proto PipelineService can express the full definition,
-and will be removed once it does.
+returns the whole pipeline, so you never need to re-read after a mutation. A graph change commits a new
+revision on the pipeline's main branch.
 */
 type PipelineServiceClientWithAuth interface {
+	/*
+	   Creates a pipeline (composition in the app) in a workspace. A pipeline is a dataset with no data of its own,
+	   whose channels come from evaluating a graph over input datasets. Returns the pipeline with its first commit.
+
+	   Every input must be in the same workspace as the pipeline, and the caller must be able to read the metadata
+	   of each input dataset. An input can be another pipeline, but pipelines cannot form a cycle or exceed the limits
+	   on nesting depth and size. Inputs that have data must share one timestamp type. Each channelSearchSplitTagKeys
+	   entry must be a tag key that the graph adds. The caller needs permission to create datasets in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): workspaceRid is omitted and the caller has no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create datasets in the workspace, or it does not exist.
+	   - INVALID_ARGUMENT (Pipeline:InvalidPipelineGraph): the graph has no nodes or over 100, a cycle, a reference to a missing node, a missing output, or a compiled size over the limits.
+	   - INVALID_ARGUMENT (Catalog:CannotCreateUnsupportedDerivedDataset): a node uses an asset, run, search, alignByAnchor, or withDimensions dataset.
+	   - NOT_FOUND (Catalog:DatasetNotFound): an input dataset does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition): a split tag key is not added by the graph.
+	   - INVALID_ARGUMENT: an input is in another workspace, or the pipelines form a cycle or exceed the nesting limit.
+	   - INVALID_ARGUMENT (Pipeline:PipelineTimestampTypeMismatch): inputs with data have different timestamp types.
+	*/
 	CreatePipeline(ctx context.Context, requestArg CreatePipelineRequest) (PipelineDefinition, error)
+	/*
+	   Updates the name, description, labels, properties, channel search split tag keys, or default group-by and
+	   aggregation config of a pipeline (composition in the app). Does not change its graph; use
+	   createPipelineStateCommit for that. Returns the pipeline.
+
+	   Absent fields are unchanged, and a collection that is present replaces the current one in full. An update
+	   cannot unset the description or the default group-by and aggregation config. The caller needs permission to
+	   create datasets in the pipeline's workspace and read access to the metadata of every input dataset.
+
+	   Errors:
+	   - NOT_FOUND (Pipeline:PipelineNotFound): the pipeline does not exist, or the caller lacks that permission or access.
+	   - INVALID_ARGUMENT (Catalog:ChannelSearchSplitTagKeyNotInDerivedDefinition): a split tag key, new or stored, is not a tag key that the graph adds with a tag dataset.
+	*/
 	UpdatePipelineMetadata(ctx context.Context, pipelineRidArg rids.PipelineRid, requestArg UpdatePipelineMetadataRequest) (PipelineDefinition, error)
+	/*
+	   Gets a pipeline (composition in the app): its metadata, the graph at the head of its main branch, its
+	   timestamp type, and its data bounds. Archived pipelines are returned.
+
+	   The timestamp type is PENDING and the bounds are empty until an input dataset has data.
+
+	   Errors:
+	   - NOT_FOUND (Pipeline:PipelineNotFound): the pipeline does not exist, or the caller cannot view its workspace or cannot read the metadata of every input dataset.
+	*/
 	GetPipeline(ctx context.Context, pipelineRidArg rids.PipelineRid) (PipelineDefinition, error)
+	/*
+	   Gets several pipelines (compositions in the app) by RID, with the fields getPipeline returns. Archived
+	   pipelines are included.
+
+	   A pipeline that does not exist or that the caller cannot see, by the rules of getPipeline, is omitted rather than
+	   failing the batch. At most 1000 pipelineRids.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Pipeline:TooManyPipelineRids): more than 1000 RIDs are requested.
+	*/
 	BatchGetPipelines(ctx context.Context, requestArg BatchGetPipelinesRequest) (BatchGetPipelinesResponse, error)
+	/*
+	   Searches pipelines (compositions in the app) by text, labels, properties, workspace, or archived flag, combined
+	   with and, or, and not. Returns one page of pipelines sorted by the requested field.
+
+	   Only workspaces where the caller can view the whole workspace are searched. Archived pipelines are excluded unless
+	   archivedStatuses includes ARCHIVED. Pipelines whose input datasets the caller cannot read are left out, so a page
+	   can hold fewer results than pageSize. When includeMatchCount is set, totalCount counts every matching pipeline,
+	   including those left out.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Pipeline:InvalidPageSize): pageSize is below 1 or over 1000.
+	   - INVALID_ARGUMENT (Pipeline:MalformedPageToken): nextPageToken is not a token from a previous response.
+	*/
 	SearchPipelines(ctx context.Context, requestArg SearchPipelinesRequest) (SearchPipelinesResponse, error)
+	/*
+	   Commits a new graph to the main branch of a pipeline (composition in the app), or reverts to the graph of an
+	   earlier commit. Returns the pipeline at the resulting commit.
+
+	   Committing the head's graph again changes nothing. A revert commits the earlier graph as a new commit. A new
+	   graph follows the graph limits of createPipeline, and a new graph or a revert follows its input rules. The
+	   caller needs permission to create datasets in the pipeline's workspace and read access to the metadata of
+	   every input dataset, in the current graph and in the new one.
+
+	   Errors:
+	   - NOT_FOUND (Pipeline:PipelineNotFound): the pipeline does not exist, or the caller lacks that permission or access.
+	   - CONFLICT (Scout:CommitConflict): latestCommit is set and is no longer the head.
+	   - INVALID_ARGUMENT (Pipeline:InvalidPipelineGraph): the new graph is invalid, as in createPipeline.
+	   - NOT_FOUND (Scout:CommitNotFound): previousCommit is not a commit of this pipeline.
+	   - INVALID_ARGUMENT (Catalog:CannotCreateUnsupportedDerivedDataset): a node uses an asset, run, search, alignByAnchor, or withDimensions dataset.
+	   - NOT_FOUND (Catalog:DatasetNotFound): an input dataset of the new graph does not exist or the caller cannot read its metadata.
+	   - INVALID_ARGUMENT (Pipeline:InvalidPipelineInputs): the new graph is list-shaped but breaks the pipeline input rules, such as duplicate split-tag values.
+	   - INVALID_ARGUMENT: an input is in another workspace, or the pipelines form a cycle or exceed the nesting limit.
+	   - INVALID_ARGUMENT (Pipeline:PipelineTimestampTypeMismatch): inputs with data have different timestamp types.
+	*/
 	CreatePipelineStateCommit(ctx context.Context, pipelineRidArg rids.PipelineRid, requestArg CreatePipelineStateCommitRequest) (PipelineDefinition, error)
 }
 

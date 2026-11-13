@@ -88,22 +88,72 @@ func (c *internalSecretServiceClientWithTokenProvider) GetDecrypted(ctx context.
 
 // The secrets service provides functionality for creating and retrieving customer secrets (e.g. influx passwords, API keys, etc)
 type SecretServiceClient interface {
-	// Create a new secret.
+	/*
+	   Creates a secret in a workspace. A secret stores a sensitive value, such as a password or API key,
+	   with a name, description, labels, and properties.
+
+	   The server sets the RID, the creator, and the creation time. The value is stored encrypted, and no
+	   operation of this service returns it. If workspace is not set, the secret goes in the caller's default
+	   workspace. The caller needs permission to edit secrets in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): workspace is not set and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist or the caller cannot edit secrets
+	     in it.
+	   - FAILED_PRECONDITION (Secrets:UnableToEncryptSecret): the server could not encrypt the value.
+	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg CreateSecretRequest) (Secret, error)
-	// Get secret by rid.
+	/*
+	   Returns the metadata of one secret by RID. The response does not include the secret value. Archived
+	   secrets are returned. The caller needs permission to view the secret's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Secrets:SecretNotFound): the secret does not exist or the caller cannot view its workspace.
+	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) (Secret, error)
-	// Get secrets by a set of rids.
+	/*
+	   Returns the metadata of the secrets with the given RIDs. The response does not include secret values.
+
+	   A RID that does not exist, or whose workspace the caller cannot view, is omitted from the response. It
+	   is not reported as an error. Archived secrets are returned.
+	*/
 	GetBatch(ctx context.Context, authHeader bearertoken.Token, requestArg GetSecretsRequest) (GetSecretsResponse, error)
-	// Update a secret by rid.
+	/*
+	   Updates a secret by RID and returns the updated secret. Only the fields that are set change.
+
+	   A set name, description, or decryptedValue replaces the stored value. A set labels or properties value
+	   replaces all stored labels or properties, so an empty value clears them. The RID, creator, creation
+	   time, and workspace cannot change. The caller needs permission to edit secrets in the secret's
+	   workspace.
+
+	   Errors:
+	   - NOT_FOUND (Secrets:SecretNotFound): the secret does not exist or the caller cannot edit secrets in its
+	     workspace.
+	*/
 	Update(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid, requestArg UpdateSecretRequest) (Secret, error)
 	/*
 	   Delete a secret by rid. This is a permanent deletion. To perform a soft delete,
 	   use the archive endpoint.
 	*/
 	Delete(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) error
-	// Archive a secret by rid.
+	/*
+	   Archives a secret by RID. The secret stays readable by RID, and search excludes it unless the search
+	   asks for archived secrets. Archiving an archived secret has no effect. Use unarchive to restore it.
+
+	   Errors:
+	   - NOT_FOUND (Secrets:SecretNotFound): the secret does not exist or the caller cannot edit secrets in its
+	     workspace.
+	*/
 	Archive(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) error
-	// Unarchive a secret by rid.
+	/*
+	   Unarchives a secret by RID, so that search returns it again. Unarchiving a secret that is not archived
+	   has no effect.
+
+	   Errors:
+	   - NOT_FOUND (Secrets:SecretNotFound): the secret does not exist or the caller cannot edit secrets in its
+	     workspace.
+	*/
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg SecretRid) error
 	// Returns metadata about secrets that match a given query.
 	Search(ctx context.Context, authHeader bearertoken.Token, requestArg SearchSecretsRequest) (SearchSecretsResponse, error)
@@ -244,22 +294,72 @@ func (c *secretServiceClient) Search(ctx context.Context, authHeader bearertoken
 
 // The secrets service provides functionality for creating and retrieving customer secrets (e.g. influx passwords, API keys, etc)
 type SecretServiceClientWithAuth interface {
-	// Create a new secret.
+	/*
+	   Creates a secret in a workspace. A secret stores a sensitive value, such as a password or API key,
+	   with a name, description, labels, and properties.
+
+	   The server sets the RID, the creator, and the creation time. The value is stored encrypted, and no
+	   operation of this service returns it. If workspace is not set, the secret goes in the caller's default
+	   workspace. The caller needs permission to edit secrets in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): workspace is not set and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist or the caller cannot edit secrets
+	     in it.
+	   - FAILED_PRECONDITION (Secrets:UnableToEncryptSecret): the server could not encrypt the value.
+	*/
 	Create(ctx context.Context, requestArg CreateSecretRequest) (Secret, error)
-	// Get secret by rid.
+	/*
+	   Returns the metadata of one secret by RID. The response does not include the secret value. Archived
+	   secrets are returned. The caller needs permission to view the secret's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Secrets:SecretNotFound): the secret does not exist or the caller cannot view its workspace.
+	*/
 	Get(ctx context.Context, ridArg SecretRid) (Secret, error)
-	// Get secrets by a set of rids.
+	/*
+	   Returns the metadata of the secrets with the given RIDs. The response does not include secret values.
+
+	   A RID that does not exist, or whose workspace the caller cannot view, is omitted from the response. It
+	   is not reported as an error. Archived secrets are returned.
+	*/
 	GetBatch(ctx context.Context, requestArg GetSecretsRequest) (GetSecretsResponse, error)
-	// Update a secret by rid.
+	/*
+	   Updates a secret by RID and returns the updated secret. Only the fields that are set change.
+
+	   A set name, description, or decryptedValue replaces the stored value. A set labels or properties value
+	   replaces all stored labels or properties, so an empty value clears them. The RID, creator, creation
+	   time, and workspace cannot change. The caller needs permission to edit secrets in the secret's
+	   workspace.
+
+	   Errors:
+	   - NOT_FOUND (Secrets:SecretNotFound): the secret does not exist or the caller cannot edit secrets in its
+	     workspace.
+	*/
 	Update(ctx context.Context, ridArg SecretRid, requestArg UpdateSecretRequest) (Secret, error)
 	/*
 	   Delete a secret by rid. This is a permanent deletion. To perform a soft delete,
 	   use the archive endpoint.
 	*/
 	Delete(ctx context.Context, ridArg SecretRid) error
-	// Archive a secret by rid.
+	/*
+	   Archives a secret by RID. The secret stays readable by RID, and search excludes it unless the search
+	   asks for archived secrets. Archiving an archived secret has no effect. Use unarchive to restore it.
+
+	   Errors:
+	   - NOT_FOUND (Secrets:SecretNotFound): the secret does not exist or the caller cannot edit secrets in its
+	     workspace.
+	*/
 	Archive(ctx context.Context, ridArg SecretRid) error
-	// Unarchive a secret by rid.
+	/*
+	   Unarchives a secret by RID, so that search returns it again. Unarchiving a secret that is not archived
+	   has no effect.
+
+	   Errors:
+	   - NOT_FOUND (Secrets:SecretNotFound): the secret does not exist or the caller cannot edit secrets in its
+	     workspace.
+	*/
 	Unarchive(ctx context.Context, ridArg SecretRid) error
 	// Returns metadata about secrets that match a given query.
 	Search(ctx context.Context, requestArg SearchSecretsRequest) (SearchSecretsResponse, error)

@@ -32,11 +32,13 @@ func (o *BatchGetAvailableTagKeysEntry) UnmarshalYAML(unmarshal func(interface{}
 
 // safelogging:@Unsafe
 type BatchGetAvailableTagKeysRequest struct {
+	// Scopes to search, keyed by a caller-chosen request id. At most 100.
 	Requests map[string]BatchGetAvailableTagKeysEntry `json:"requests"`
 	Filters  TagSearchFilters                         `json:"filters" safelogging:"@Unsafe"`
 	// Page token per request id. Absent ids start from the first page.
 	PageTokens map[string]api.TagName `json:"pageTokens"`
-	PageSize   *int                   `json:"pageSize,omitempty"`
+	// Defaults to 1000. Will throw if larger than 1000.
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o BatchGetAvailableTagKeysRequest) MarshalJSON() ([]byte, error) {
@@ -154,12 +156,14 @@ func (o *BatchGetAvailableTagValuesEntry) UnmarshalYAML(unmarshal func(interface
 
 // safelogging:@Unsafe
 type BatchGetAvailableTagValuesRequest struct {
+	// Scopes to search, keyed by a caller-chosen request id. At most 100.
 	Requests map[string]BatchGetAvailableTagValuesEntry `json:"requests"`
 	TagName  api.TagName                                `json:"tagName" safelogging:"@Unsafe"`
 	Filters  TagSearchFilters                           `json:"filters" safelogging:"@Unsafe"`
 	// Page token per request id. Absent ids start from the first page.
 	PageTokens map[string]api.TagValue `json:"pageTokens"`
-	PageSize   *int                    `json:"pageSize,omitempty"`
+	// Defaults to 1000. Will throw if larger than 1000.
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o BatchGetAvailableTagValuesRequest) MarshalJSON() ([]byte, error) {
@@ -278,15 +282,11 @@ func (o *BatchGetAvailableTagsAcrossScopeEntry) UnmarshalYAML(unmarshal func(int
 // safelogging:@Unsafe
 type BatchGetAvailableTagsAcrossScopeRequest struct {
 	Requests map[string]BatchGetAvailableTagsAcrossScopeEntry `json:"requests"`
-	// If empty, returns all available tag keys.
+	// If omitted, returns all available tag keys.
 	TagKeys *[]api.TagName `json:"tagKeys,omitempty" safelogging:"@Unsafe"`
-	/*
-	   For Nominal data sources, a time range can be provided to filter tag values to those present within the
-	   months spanned by the range. If left empty, this defaults to the last month. For external data sources,
-	   the range must not be specified, as all tag values are returned.
-	*/
+	// Limits tag values to those present within the months the range spans. Defaults to the last month.
 	Range *api.Range `json:"range,omitempty"`
-	// If supplied, caps the number of values per key at the specified value.
+	// Caps the number of values per key. Defaults to 5000.
 	MaxValuesPerKey *int `json:"maxValuesPerKey,omitempty"`
 }
 
@@ -487,7 +487,8 @@ type GetAvailableTagKeysRequest struct {
 	Context       api1.Context     `json:"context"`
 	Filters       TagSearchFilters `json:"filters" safelogging:"@Unsafe"`
 	NextPageToken *api.TagName     `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
-	PageSize      *int             `json:"pageSize,omitempty"`
+	// Defaults to 1000. Will throw if larger than 1000.
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o GetAvailableTagKeysRequest) MarshalYAML() (interface{}, error) {
@@ -556,7 +557,8 @@ type GetAvailableTagValuesRequest struct {
 	TagName       api.TagName      `json:"tagName" safelogging:"@Unsafe"`
 	Filters       TagSearchFilters `json:"filters" safelogging:"@Unsafe"`
 	NextPageToken *api.TagValue    `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
-	PageSize      *int             `json:"pageSize,omitempty"`
+	// Defaults to 1000. Will throw if larger than 1000.
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o GetAvailableTagValuesRequest) MarshalYAML() (interface{}, error) {
@@ -622,15 +624,11 @@ func (o *GetAvailableTagValuesResponse) UnmarshalYAML(unmarshal func(interface{}
 type GetAvailableTagsAcrossScopeRequest struct {
 	Scope   api1.Dataset `json:"scope"`
 	Context api1.Context `json:"context"`
-	// If empty, returns all available tag keys.
+	// If omitted, returns all available tag keys.
 	TagKeys *[]api.TagName `json:"tagKeys,omitempty" safelogging:"@Unsafe"`
-	/*
-	   For Nominal data sources, a time range can be provided to filter tag values to those present within the
-	   months spanned by the range. If left empty, this defaults to the last month. For external data sources,
-	   the range must not be specified, as all tag values are returned.
-	*/
+	// Limits tag values to those present within the months the range spans. Defaults to the last month.
 	Range *api.Range `json:"range,omitempty"`
-	// If supplied, caps the number of values per key at the specified value.
+	// Caps the number of values per key. Defaults to 5000.
 	MaxValuesPerKey *int `json:"maxValuesPerKey,omitempty"`
 }
 
@@ -738,12 +736,15 @@ func (o *GetAvailableTagsForChannelResponse) UnmarshalYAML(unmarshal func(interf
 
 // safelogging:@Unsafe
 type GetFullTagsForChannelRequest struct {
-	Scope     api1.Dataset                 `json:"scope"`
-	Context   api1.Context                 `json:"context"`
-	Channel   api.Channel                  `json:"channel" safelogging:"@Unsafe"`
-	Tags      map[api.TagName]api.TagValue `json:"tags"`
-	PageToken *string                      `json:"pageToken,omitempty"`
-	PageSize  *int                         `json:"pageSize,omitempty"`
+	Scope   api1.Dataset `json:"scope"`
+	Context api1.Context `json:"context"`
+	Channel api.Channel  `json:"channel" safelogging:"@Unsafe"`
+	// Tag key and value pairs that every returned tag set must have. Empty means no tag filter.
+	Tags map[api.TagName]api.TagValue `json:"tags"`
+	// The nextPageToken of the previous response. Omit for the first page.
+	PageToken *string `json:"pageToken,omitempty"`
+	// Defaults to 1000. Will throw if larger than 1000.
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o GetFullTagsForChannelRequest) MarshalJSON() ([]byte, error) {
@@ -835,7 +836,8 @@ type TagSearchFilters struct {
 	Channel *api.Channel `json:"channel,omitempty" safelogging:"@Unsafe"`
 	// Optional, defaults to no tag filter. Tag keys present here are omitted from tag-key results.
 	TagFilters map[api.TagName]api.TagValue `json:"tagFilters"`
-	Range      api.Range                    `json:"range" safelogging:"@Safe"`
+	// Time range in which to search for tags.
+	Range api.Range `json:"range" safelogging:"@Safe"`
 }
 
 func (o TagSearchFilters) MarshalJSON() ([]byte, error) {
@@ -916,6 +918,7 @@ func (o *TagsWithAllValues) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// One tag set, the tag key and value pairs of one series of a channel.
 type TagsWithValues struct {
 	Tags map[api.TagName]api.TagValue `json:"tags"`
 }

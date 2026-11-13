@@ -20,36 +20,114 @@ import (
 // The Upload Service manages file uploads to object storage.
 type UploadServiceClient interface {
 	/*
-	   Initiates a multipart upload to object storage.
-	   Returns an uploadId that should be used with listParts, signPart, and completeMultipartUpload.
+	   Opens a multipart upload of one file to Nominal object storage in a workspace. Returns the upload ID,
+	   the object key, and the `bucket` destination handle that the other multipart calls need.
+
+	   Use the upload ID with listParts, signPart, and completeMultipartUpload: upload each part to a URL from
+	   signPart, then complete. The workspace is the one that resource belongs to, otherwise workspace,
+	   otherwise the caller's default workspace. The caller needs permission to create data sources in it.
+
+	   Errors:
+	   - NOT_FOUND (UploadService:ResourceNotFoundOrUnauthorized): resource does not exist, or the caller
+	     cannot create data sources in its workspace.
+	   - INVALID_ARGUMENT (UploadService:WorkspaceResourceMismatch): workspace and resource name different
+	     workspaces.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace or resource is given and the caller
+	     has no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in workspace.
 	*/
 	InitiateMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadRequestArg api.InitiateMultipartUploadRequest) (api.InitiateMultipartUploadResponse, error)
-	// Lists the parts that have been uploaded for a given uploadId.
+	/*
+	   Lists the parts uploaded so far for an open multipart upload, each with its part number, ETag, and size
+	   in bytes.
+
+	   The caller needs permission to create data sources in the upload's workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (UploadService:UploadBucketNotAllowed): bucket is not the value that
+	     initiateMultipartUpload returned.
+	   - NOT_FOUND (UploadService:UploadObjectNotFound): key is malformed, names no File Store object, or is in
+	     a workspace where the caller cannot create data sources.
+	*/
 	ListParts(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, bucketArg *string) ([]api.PartWithSize, error)
 	/*
-	   Signs an upload request for a single part.
-	   Returns a URL that will execute the upload without further authentication.
+	   Signs the upload of one part of an open multipart upload. Returns a URL that accepts the part's bytes
+	   without further authentication, and how many seconds it stays valid.
+
+	   The URL is valid for 5 minutes. Record the ETag the storage provider returns for the part;
+	   completeMultipartUpload needs it. The caller needs permission to create data sources in the upload's
+	   workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (UploadService:UploadBucketNotAllowed): bucket is not the value that
+	     initiateMultipartUpload returned.
+	   - NOT_FOUND (UploadService:UploadObjectNotFound): key is malformed, names no File Store object, or is in
+	     a workspace where the caller cannot create data sources.
 	*/
 	SignPart(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, partNumberArg int, bucketArg *string) (api.SignPartResponse, error)
 	/*
-	   Completes a multipart upload to object storage.
-	   This should be called after all parts have been uploaded.
-	   Will throw EmptyMultipartUpload if there are 0 parts.
+	   Completes a multipart upload once every part is uploaded, and returns the completed object's path as
+	   `location`. A FILE_STORE upload is then committed as a File Store file revision with
+	   FilesService.ApplyFileChanges.
+
+	   Pass every part with its part number and the ETag from its upload. The caller needs permission to create
+	   data sources in the upload's workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (UploadService:NullKey): key is missing.
+	   - INVALID_ARGUMENT (UploadService:EmptyMultipartUpload): no parts are given.
+	   - INVALID_ARGUMENT (UploadService:UploadBucketNotAllowed): bucket is not the value that
+	     initiateMultipartUpload returned.
+	   - NOT_FOUND (UploadService:UploadObjectNotFound): key is malformed, names no File Store object, or is in
+	     a workspace where the caller cannot create data sources.
 	*/
 	CompleteMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, bucketArg *string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error)
 	/*
-	   Aborts a multipart upload to S3.
-	   Frees storage used by previously uploaded parts and prevents further uploads to the same uploadId.
+	   Aborts an open multipart upload. Frees the storage used by the parts already uploaded and prevents
+	   further uploads to the same upload ID.
+
+	   For a FILE_STORE upload, it also removes the upload's File Store object record. The caller needs
+	   permission to create data sources in the upload's workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (UploadService:UploadBucketNotAllowed): bucket is not the value that
+	     initiateMultipartUpload returned.
+	   - NOT_FOUND (UploadService:UploadObjectNotFound): key is malformed, names no File Store object, or is in
+	     a workspace where the caller cannot create data sources.
 	*/
 	AbortMultipartUpload(ctx context.Context, authHeader bearertoken.Token, uploadIdArg string, keyArg string, bucketArg *string) error
 	/*
-	   Returns a short-lived signed GET URL for an object already in the uploads bucket.
-	   Use this to hand a freshly-uploaded object's path to an external service (e.g. Dagger)
-	   without giving that service any Scout credentials. The caller must be authorized to
-	   read the workspace that owns the path (encoded as the first segment of the object key).
+	   Returns a signed download URL, valid for 15 minutes, for an object in the Nominal uploads bucket, so an
+	   external service can read an uploaded file without Nominal credentials.
+
+	   The caller must be able to upload to the workspace named by the path's first segment, which needs
+	   permission to create data sources there. Paths outside the uploads bucket, including File Store
+	   objects, are rejected.
+
+	   Errors:
+	   - INVALID_ARGUMENT: path is not a valid S3 path, or its first segment is not a workspace ID.
+	   - INVALID_ARGUMENT (UploadService:SignDownloadPathOutsideUploadsBucket): path is outside the uploads
+	     bucket or is a File Store object.
+	   - PERMISSION_DENIED (UploadService:SignDownloadUnauthorized): the caller cannot upload to the workspace.
 	*/
 	SignDownload(ctx context.Context, authHeader bearertoken.Token, requestArg api.SignDownloadRequest) (api.SignDownloadResponse, error)
-	// Uploads a file to S3. Intended for smaller files.
+	/*
+	   Uploads one file, sent as the request body, to the Nominal uploads bucket in a workspace. Returns the
+	   object's path, which an ingest or an attachment can then use.
+
+	   Intended for smaller files. The path holds the workspace, a timestamp, and fileName. Without sizeBytes
+	   the body is read into memory and must be at most 100,000 bytes; with it the body is streamed. The
+	   content type is text/csv when fileName ends with csv, otherwise application/octet-stream. The caller
+	   needs permission to create data sources in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no
+	     default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - INVALID_ARGUMENT: sizeBytes is not between 1 and 9,999,999,999, or the body is over 100,000 bytes
+	     without sizeBytes.
+	   - INVALID_ARGUMENT (UploadService:IncorrectSizeBytes): sizeBytes does not match the body length.
+	*/
 	UploadFile(ctx context.Context, authHeader bearertoken.Token, fileNameArg string, sizeBytesArg *safelong.SafeLong, workspaceArg *rids.WorkspaceRid, bodyArg httpclient.RequestBody) (api1.S3Path, error)
 }
 
@@ -216,36 +294,114 @@ func (c *uploadServiceClient) UploadFile(ctx context.Context, authHeader bearert
 // The Upload Service manages file uploads to object storage.
 type UploadServiceClientWithAuth interface {
 	/*
-	   Initiates a multipart upload to object storage.
-	   Returns an uploadId that should be used with listParts, signPart, and completeMultipartUpload.
+	   Opens a multipart upload of one file to Nominal object storage in a workspace. Returns the upload ID,
+	   the object key, and the `bucket` destination handle that the other multipart calls need.
+
+	   Use the upload ID with listParts, signPart, and completeMultipartUpload: upload each part to a URL from
+	   signPart, then complete. The workspace is the one that resource belongs to, otherwise workspace,
+	   otherwise the caller's default workspace. The caller needs permission to create data sources in it.
+
+	   Errors:
+	   - NOT_FOUND (UploadService:ResourceNotFoundOrUnauthorized): resource does not exist, or the caller
+	     cannot create data sources in its workspace.
+	   - INVALID_ARGUMENT (UploadService:WorkspaceResourceMismatch): workspace and resource name different
+	     workspaces.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace or resource is given and the caller
+	     has no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in workspace.
 	*/
 	InitiateMultipartUpload(ctx context.Context, uploadRequestArg api.InitiateMultipartUploadRequest) (api.InitiateMultipartUploadResponse, error)
-	// Lists the parts that have been uploaded for a given uploadId.
+	/*
+	   Lists the parts uploaded so far for an open multipart upload, each with its part number, ETag, and size
+	   in bytes.
+
+	   The caller needs permission to create data sources in the upload's workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (UploadService:UploadBucketNotAllowed): bucket is not the value that
+	     initiateMultipartUpload returned.
+	   - NOT_FOUND (UploadService:UploadObjectNotFound): key is malformed, names no File Store object, or is in
+	     a workspace where the caller cannot create data sources.
+	*/
 	ListParts(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string) ([]api.PartWithSize, error)
 	/*
-	   Signs an upload request for a single part.
-	   Returns a URL that will execute the upload without further authentication.
+	   Signs the upload of one part of an open multipart upload. Returns a URL that accepts the part's bytes
+	   without further authentication, and how many seconds it stays valid.
+
+	   The URL is valid for 5 minutes. Record the ETag the storage provider returns for the part;
+	   completeMultipartUpload needs it. The caller needs permission to create data sources in the upload's
+	   workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (UploadService:UploadBucketNotAllowed): bucket is not the value that
+	     initiateMultipartUpload returned.
+	   - NOT_FOUND (UploadService:UploadObjectNotFound): key is malformed, names no File Store object, or is in
+	     a workspace where the caller cannot create data sources.
 	*/
 	SignPart(ctx context.Context, uploadIdArg string, keyArg string, partNumberArg int, bucketArg *string) (api.SignPartResponse, error)
 	/*
-	   Completes a multipart upload to object storage.
-	   This should be called after all parts have been uploaded.
-	   Will throw EmptyMultipartUpload if there are 0 parts.
+	   Completes a multipart upload once every part is uploaded, and returns the completed object's path as
+	   `location`. A FILE_STORE upload is then committed as a File Store file revision with
+	   FilesService.ApplyFileChanges.
+
+	   Pass every part with its part number and the ETag from its upload. The caller needs permission to create
+	   data sources in the upload's workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (UploadService:NullKey): key is missing.
+	   - INVALID_ARGUMENT (UploadService:EmptyMultipartUpload): no parts are given.
+	   - INVALID_ARGUMENT (UploadService:UploadBucketNotAllowed): bucket is not the value that
+	     initiateMultipartUpload returned.
+	   - NOT_FOUND (UploadService:UploadObjectNotFound): key is malformed, names no File Store object, or is in
+	     a workspace where the caller cannot create data sources.
 	*/
 	CompleteMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string, partsArg []api.Part) (api.CompleteMultipartUploadResponse, error)
 	/*
-	   Aborts a multipart upload to S3.
-	   Frees storage used by previously uploaded parts and prevents further uploads to the same uploadId.
+	   Aborts an open multipart upload. Frees the storage used by the parts already uploaded and prevents
+	   further uploads to the same upload ID.
+
+	   For a FILE_STORE upload, it also removes the upload's File Store object record. The caller needs
+	   permission to create data sources in the upload's workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (UploadService:UploadBucketNotAllowed): bucket is not the value that
+	     initiateMultipartUpload returned.
+	   - NOT_FOUND (UploadService:UploadObjectNotFound): key is malformed, names no File Store object, or is in
+	     a workspace where the caller cannot create data sources.
 	*/
 	AbortMultipartUpload(ctx context.Context, uploadIdArg string, keyArg string, bucketArg *string) error
 	/*
-	   Returns a short-lived signed GET URL for an object already in the uploads bucket.
-	   Use this to hand a freshly-uploaded object's path to an external service (e.g. Dagger)
-	   without giving that service any Scout credentials. The caller must be authorized to
-	   read the workspace that owns the path (encoded as the first segment of the object key).
+	   Returns a signed download URL, valid for 15 minutes, for an object in the Nominal uploads bucket, so an
+	   external service can read an uploaded file without Nominal credentials.
+
+	   The caller must be able to upload to the workspace named by the path's first segment, which needs
+	   permission to create data sources there. Paths outside the uploads bucket, including File Store
+	   objects, are rejected.
+
+	   Errors:
+	   - INVALID_ARGUMENT: path is not a valid S3 path, or its first segment is not a workspace ID.
+	   - INVALID_ARGUMENT (UploadService:SignDownloadPathOutsideUploadsBucket): path is outside the uploads
+	     bucket or is a File Store object.
+	   - PERMISSION_DENIED (UploadService:SignDownloadUnauthorized): the caller cannot upload to the workspace.
 	*/
 	SignDownload(ctx context.Context, requestArg api.SignDownloadRequest) (api.SignDownloadResponse, error)
-	// Uploads a file to S3. Intended for smaller files.
+	/*
+	   Uploads one file, sent as the request body, to the Nominal uploads bucket in a workspace. Returns the
+	   object's path, which an ingest or an attachment can then use.
+
+	   Intended for smaller files. The path holds the workspace, a timestamp, and fileName. Without sizeBytes
+	   the body is read into memory and must be at most 100,000 bytes; with it the body is streamed. The
+	   content type is text/csv when fileName ends with csv, otherwise application/octet-stream. The caller
+	   needs permission to create data sources in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no
+	     default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - INVALID_ARGUMENT: sizeBytes is not between 1 and 9,999,999,999, or the body is over 100,000 bytes
+	     without sizeBytes.
+	   - INVALID_ARGUMENT (UploadService:IncorrectSizeBytes): sizeBytes does not match the body length.
+	*/
 	UploadFile(ctx context.Context, fileNameArg string, sizeBytesArg *safelong.SafeLong, workspaceArg *rids.WorkspaceRid, bodyArg httpclient.RequestBody) (api1.S3Path, error)
 }
 

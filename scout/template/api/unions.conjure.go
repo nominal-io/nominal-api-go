@@ -694,10 +694,7 @@ func NewSearchTemplatesQueryFromAuthorRids(v []api1.UserRid) SearchTemplatesQuer
 	return SearchTemplatesQuery{typ: "authorRids", authorRids: &v}
 }
 
-/*
-Selects the templates an archive or unarchive request applies to. Only an explicit set of
-rids is supported today; a query variant can be added later without breaking callers.
-*/
+// Selects the templates an archive or unarchive request applies to, as an explicit set of RIDs.
 type TemplateArchiveTarget struct {
 	typ  string
 	rids *[]api1.TemplateRid

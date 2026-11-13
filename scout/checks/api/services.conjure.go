@@ -61,7 +61,13 @@ type ChecklistServiceClient interface {
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, checklistRefsArg []PinnedChecklistRef) ([]VersionedChecklist, error)
 	// Returns the metadata for each provided checklist.
 	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetChecklistMetadataRequest) (BatchGetChecklistMetadataResponse, error)
-	// Results will be the latest commit on main for each checklist.
+	/*
+	   Results will be the latest commit on main for each checklist.
+	   Check conditions and checklist variables are omitted to keep search results lightweight. An
+	   omitted condition in a search result does not indicate a manual check, and an empty
+	   checklistVariables list does not indicate a checklist without variables. Use get, getCheck,
+	   or batchGet for conditions and variables.
+	*/
 	Search(ctx context.Context, authHeader bearertoken.Token, requestArg SearchChecklistsRequest) (VersionedChecklistPage, error)
 	// Archives the provided checklists.
 	Archive(ctx context.Context, authHeader bearertoken.Token, requestArg ArchiveChecklistsRequest) error
@@ -435,7 +441,13 @@ type ChecklistServiceClientWithAuth interface {
 	BatchGet(ctx context.Context, checklistRefsArg []PinnedChecklistRef) ([]VersionedChecklist, error)
 	// Returns the metadata for each provided checklist.
 	BatchGetMetadata(ctx context.Context, requestArg BatchGetChecklistMetadataRequest) (BatchGetChecklistMetadataResponse, error)
-	// Results will be the latest commit on main for each checklist.
+	/*
+	   Results will be the latest commit on main for each checklist.
+	   Check conditions and checklist variables are omitted to keep search results lightweight. An
+	   omitted condition in a search result does not indicate a manual check, and an empty
+	   checklistVariables list does not indicate a checklist without variables. Use get, getCheck,
+	   or batchGet for conditions and variables.
+	*/
 	Search(ctx context.Context, requestArg SearchChecklistsRequest) (VersionedChecklistPage, error)
 	// Archives the provided checklists.
 	Archive(ctx context.Context, requestArg ArchiveChecklistsRequest) error

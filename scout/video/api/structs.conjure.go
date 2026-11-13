@@ -865,6 +865,7 @@ func (o *GetEnrichedVideoIngestStatusRequest) UnmarshalYAML(unmarshal func(inter
 }
 
 type GetFileSummariesRequest struct {
+	// Absolute time range. Only files that overlap it are included. When omitted, all are included.
 	Bounds *Bounds `json:"bounds,omitempty"`
 }
 
@@ -971,6 +972,7 @@ func (o *GetPlaylistInBoundsForChannelRequest) UnmarshalYAML(unmarshal func(inte
 }
 
 type GetPlaylistInBoundsRequest struct {
+	// Absolute time range. Only segments that overlap it are included. When omitted, all are included.
 	Bounds *Bounds `json:"bounds,omitempty"`
 }
 
@@ -1145,6 +1147,7 @@ func (o *GetSegmentSummariesInBoundsForChannelRequest) UnmarshalYAML(unmarshal f
 }
 
 type GetSegmentSummariesInBoundsRequest struct {
+	// Absolute time range. Only segments that overlap it are included. When omitted, all are included.
 	Bounds *Bounds `json:"bounds,omitempty"`
 }
 
@@ -1168,7 +1171,8 @@ func (o *GetSegmentSummariesInBoundsRequest) UnmarshalYAML(unmarshal func(interf
 // safelogging:@Unsafe
 type GetStreamsInBoundsForChannelRequest struct {
 	ChannelSeries VideoChannelSeries `json:"channelSeries"`
-	Bounds        Bounds             `json:"bounds" safelogging:"@Safe"`
+	// Absolute time range. Streams that overlap it are returned; a stream with no start or no end overlaps on that side.
+	Bounds Bounds `json:"bounds" safelogging:"@Safe"`
 	// Defaults to 100. Will throw if larger than 1_000.
 	PageSize *int       `json:"pageSize,omitempty"`
 	Token    *api.Token `json:"token,omitempty" safelogging:"@Unsafe"`
@@ -1192,6 +1196,7 @@ func (o *GetStreamsInBoundsForChannelRequest) UnmarshalYAML(unmarshal func(inter
 
 // safelogging:@Unsafe
 type GetStreamsInBoundsRequest struct {
+	// Absolute time range. Streams that overlap it are returned; a stream with no start or no end overlaps on that side.
 	Bounds Bounds `json:"bounds" safelogging:"@Safe"`
 	// Defaults to 100. Will throw if larger than 1_000.
 	PageSize *int       `json:"pageSize,omitempty"`
@@ -1452,7 +1457,8 @@ func (o *IngestError) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // safelogging:@Unsafe
 type ListFilesInVideoRequest struct {
 	VideoRid rids.VideoRid `json:"videoRid" safelogging:"@Safe"`
-	Token    *api.Token    `json:"token,omitempty" safelogging:"@Unsafe"`
+	// The nextPageToken from the previous page. Omit for the first page.
+	Token *api.Token `json:"token,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o ListFilesInVideoRequest) MarshalYAML() (interface{}, error) {
@@ -1736,10 +1742,7 @@ func (o *Segment) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-/*
-Bounding timestamps for the frames within a segment. For non-frame-mapped videos, the min and max media
-timestamps will be empty.
-*/
+// Bounding timestamps for the frames within a segment.
 type SegmentSummary struct {
 	MinAbsoluteTimestamp api.Timestamp `json:"minAbsoluteTimestamp" safelogging:"@Safe"`
 	MaxAbsoluteTimestamp api.Timestamp `json:"maxAbsoluteTimestamp" safelogging:"@Safe"`
@@ -2088,10 +2091,12 @@ func (o *VideoAllSegmentsMetadata) UnmarshalYAML(unmarshal func(interface{}) err
 
 // Reference a video channel via an Asset's data scope
 type VideoAssetChannel struct {
-	AssetRid      string                       `json:"assetRid"`
-	DataScopeName string                       `json:"dataScopeName"`
-	Channel       string                       `json:"channel"`
-	Tags          map[api.TagName]api.TagValue `json:"tags"`
+	AssetRid string `json:"assetRid"`
+	// Name of the asset's data scope that selects the dataset holding the channel.
+	DataScopeName string `json:"dataScopeName"`
+	Channel       string `json:"channel"`
+	// Tag filters that narrow the channel to matching series.
+	Tags map[api.TagName]api.TagValue `json:"tags"`
 }
 
 func (o VideoAssetChannel) MarshalJSON() ([]byte, error) {
@@ -2224,9 +2229,11 @@ func (o *VideoChannelSegmentsMetadata) UnmarshalYAML(unmarshal func(interface{})
 
 // Reference a video channel directly from a datasource/dataset
 type VideoDataSourceChannel struct {
-	DataSourceRid string                       `json:"dataSourceRid"`
-	Channel       string                       `json:"channel"`
-	Tags          map[api.TagName]api.TagValue `json:"tags"`
+	// RID of the dataset (data source) that holds the channel. Live stream operations accept only datasets.
+	DataSourceRid string `json:"dataSourceRid"`
+	Channel       string `json:"channel"`
+	// Tag filters that narrow the channel to matching series.
+	Tags map[api.TagName]api.TagValue `json:"tags"`
 }
 
 func (o VideoDataSourceChannel) MarshalJSON() ([]byte, error) {

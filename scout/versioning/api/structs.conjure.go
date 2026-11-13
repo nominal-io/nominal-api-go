@@ -11,15 +11,18 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// A named pointer to a commit of a versioned resource. It moves when new commits are saved on it.
 // safelogging:@Unsafe
 type Branch struct {
-	Rid         BranchRid              `json:"rid" safelogging:"@Safe"`
-	Name        BranchName             `json:"name" safelogging:"@Unsafe"`
+	Rid  BranchRid  `json:"rid" safelogging:"@Safe"`
+	Name BranchName `json:"name" safelogging:"@Unsafe"`
+	// RID of the versioned resource this branch belongs to.
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
-	Commit      CommitId               `json:"commit" safelogging:"@Safe"`
-	CreatedBy   api.UserRid            `json:"createdBy" safelogging:"@Safe"`
-	CreatedAt   datetime.DateTime      `json:"createdAt"`
-	UpdatedAt   datetime.DateTime      `json:"updatedAt"`
+	// The commit the branch currently points to.
+	Commit    CommitId          `json:"commit" safelogging:"@Safe"`
+	CreatedBy api.UserRid       `json:"createdBy" safelogging:"@Safe"`
+	CreatedAt datetime.DateTime `json:"createdAt"`
+	UpdatedAt datetime.DateTime `json:"updatedAt"`
 }
 
 func (o Branch) MarshalYAML() (interface{}, error) {
@@ -60,16 +63,17 @@ func (o *BranchAndCommit) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A saved version of a versioned resource, such as a checklist or workbook template.
 type Commit struct {
-	Id                CommitId               `json:"id" safelogging:"@Safe"`
-	ResourceRid       rid.ResourceIdentifier `json:"resourceRid"`
-	ParentCommit      *CommitId              `json:"parentCommit,omitempty" safelogging:"@Safe"`
-	MergeParentCommit *CommitId              `json:"mergeParentCommit,omitempty" safelogging:"@Safe"`
-	Message           string                 `json:"message"`
-	/*
-	   A working state commit is created via the `saveWorkingState` endpoint
-	   and is non-permanent. In the future, it may be compacted and not exist.
-	*/
+	Id CommitId `json:"id" safelogging:"@Safe"`
+	// RID of the versioned resource this commit belongs to.
+	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
+	// The commit this one was made from. Empty for the first commit of the resource.
+	ParentCommit *CommitId `json:"parentCommit,omitempty" safelogging:"@Safe"`
+	// A second commit merged into this one. Empty when the commit is not a merge.
+	MergeParentCommit *CommitId `json:"mergeParentCommit,omitempty" safelogging:"@Safe"`
+	Message           string    `json:"message"`
+	// True for a working-state commit, which is not permanent and may be removed later.
 	IsWorkingState bool              `json:"isWorkingState"`
 	CommittedBy    api.UserRid       `json:"committedBy" safelogging:"@Safe"`
 	CommittedAt    datetime.DateTime `json:"committedAt"`
@@ -91,9 +95,11 @@ func (o *Commit) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A page of commits, newest first.
 // safelogging:@Unsafe
 type CommitHistory struct {
-	History       []Commit    `json:"history"`
+	History []Commit `json:"history"`
+	// Pass as nextPageToken to get the next page. Empty on the last page.
 	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 }
 
@@ -339,14 +345,17 @@ func (o *SaveWorkingStateRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A named, fixed pointer to a commit of a versioned resource.
 // safelogging:@Unsafe
 type Tag struct {
-	Rid         TagRid                 `json:"rid" safelogging:"@Safe"`
-	Name        TagName                `json:"name" safelogging:"@Unsafe"`
+	Rid  TagRid  `json:"rid" safelogging:"@Safe"`
+	Name TagName `json:"name" safelogging:"@Unsafe"`
+	// RID of the versioned resource this tag belongs to.
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
-	Commit      CommitId               `json:"commit" safelogging:"@Safe"`
-	CreatedBy   api.UserRid            `json:"createdBy" safelogging:"@Safe"`
-	CreatedAt   datetime.DateTime      `json:"createdAt"`
+	// The commit the tag points to.
+	Commit    CommitId          `json:"commit" safelogging:"@Safe"`
+	CreatedBy api.UserRid       `json:"createdBy" safelogging:"@Safe"`
+	CreatedAt datetime.DateTime `json:"createdAt"`
 }
 
 func (o Tag) MarshalYAML() (interface{}, error) {

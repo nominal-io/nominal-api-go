@@ -67,7 +67,7 @@ func (o *AllRunsPropertiesAndLabelsResponse) UnmarshalYAML(unmarshal func(interf
 type ArchiveRunsRequest struct {
 	Rids []RunRid `json:"rids" safelogging:"@Safe"`
 	/*
-	   If true, all auto-archived workbooks that are linked to run will be unarchived as well.
+	   If true, all workbooks that are linked to the runs will be archived as well.
 	   Defaults to false.
 	*/
 	IncludeLinkedWorkbooks *bool `json:"includeLinkedWorkbooks,omitempty"`
@@ -532,6 +532,7 @@ func (o *DataReviewCheckMetrics) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Counts of a run's check evaluations and violations (check alerts) by data review status.
 type DataReviewMetrics struct {
 	Checks DataReviewCheckMetrics `json:"checks"`
 	Alerts DataReviewAlertMetrics `json:"alerts"`
@@ -598,7 +599,8 @@ func (o *Duration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type GetRunByIdRequest struct {
 	RunNumber safelong.SafeLong `json:"runNumber"`
-	RunPrefix *string           `json:"runPrefix,omitempty"`
+	// The run prefix of the run. Omit to match a run that has no prefix.
+	RunPrefix *string `json:"runPrefix,omitempty"`
 	/*
 	   The workspace in which to query for the run. If not provided, the run
 	   will be queried in the default workspace for the user's organization,
@@ -625,8 +627,9 @@ func (o *GetRunByIdRequest) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 type GetRunsByAssetRequest struct {
-	Asset         api1.AssetRid `json:"asset" safelogging:"@Safe"`
-	NextPageToken *uuid.UUID    `json:"nextPageToken,omitempty"`
+	Asset api1.AssetRid `json:"asset" safelogging:"@Safe"`
+	// The nextPageToken from the previous response. Omit to get the first page.
+	NextPageToken *uuid.UUID `json:"nextPageToken,omitempty"`
 }
 
 func (o GetRunsByAssetRequest) MarshalYAML() (interface{}, error) {
@@ -942,6 +945,7 @@ func (o *SortKeyWithDirection) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Set sortKey, or the deprecated field. Requests that set neither are rejected with INVALID_ARGUMENT.
 type SortOptions struct {
 	IsDescending bool `json:"isDescending"`
 	// Deprecated: use SortKey with SortField union type instead

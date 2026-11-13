@@ -13,8 +13,11 @@ type MetadataSortField struct {
 type MetadataSortField_Value string
 
 const (
-	MetadataSortField_ALPHABETICAL         MetadataSortField_Value = "ALPHABETICAL"
-	MetadataSortField_USAGE_COUNT          MetadataSortField_Value = "USAGE_COUNT"
+	// By label, property key, or property value text.
+	MetadataSortField_ALPHABETICAL MetadataSortField_Value = "ALPHABETICAL"
+	// By the number of resources that use the item.
+	MetadataSortField_USAGE_COUNT MetadataSortField_Value = "USAGE_COUNT"
+	// By the number of distinct values of a property key. Accepted only by searchPropertyKeys.
 	MetadataSortField_PROPERTY_VALUE_COUNT MetadataSortField_Value = "PROPERTY_VALUE_COUNT"
 	MetadataSortField_UNKNOWN              MetadataSortField_Value = "UNKNOWN"
 )

@@ -21,24 +21,87 @@ assets, runs, checklists, and more. They can be favorited, archived, and shared 
 */
 type SavedViewServiceClient interface {
 	/*
-	   Creates a new saved view in the given workspace. If no workspace is specified,
-	   it is created in the user's default workspace.
+	   Creates a saved view, a shared set of filters, columns, and sort order for an index table of assets,
+	   runs, workbooks, checklists, workbook templates, procedures, or procedure executions.
+
+	   The server assigns the RID, records the caller as the creator, and puts the saved view last in the
+	   user-defined order. The kind of search state sets the resource type. The saved view goes in the given
+	   workspace, or in the caller's default workspace when none is given. The caller needs permission to edit
+	   the configuration of that workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - PERMISSION_DENIED: the caller cannot edit the configuration of the workspace.
+	   - INVALID_ARGUMENT (SavedView:TooManyActiveSavedViews): the workspace already holds 10,000 active saved
+	     views of the same resource type.
 	*/
 	CreateSavedView(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSavedViewRequest) (api.CreateSavedViewResponse, error)
-	// Fetches a saved view by RID. Throws NOT_FOUND if it does not exist.
+	/*
+	   Gets one saved view with its filters, sort order, and column settings, including an archived one. The
+	   caller needs permission to view the saved view's workspace.
+
+	   Errors:
+	   - NOT_FOUND (SavedView:SavedViewNotFoundError): the saved view does not exist, or the caller cannot view
+	     its workspace.
+	*/
 	GetSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid) (api.GetSavedViewResponse, error)
-	// Retrieves multiple saved views. Any invalid or unknown RIDs are omitted from the response.
+	/*
+	   Gets several saved views by RID, including archived ones. RIDs that do not exist, or whose workspace the
+	   caller cannot view, are omitted from the response instead of failing the call.
+	*/
 	BatchGetSavedViews(ctx context.Context, authHeader bearertoken.Token, savedViewRidsArg []api1.SavedViewRid) (api.BatchGetSavedViewsResponse, error)
-	// Searches for saved views using a nested query expression. Supports pagination.
+	/*
+	   Searches saved views in the workspaces the caller can view by title text, resource type, or workspace,
+	   combined with and, or, and not. Returns a page of saved view metadata without filters or columns, in the
+	   requested sort order.
+
+	   Archived saved views are excluded unless requested. Use getSavedView for the full configuration.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is more than 1,000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a previous
+	     page.
+	*/
 	SearchSavedViews(ctx context.Context, authHeader bearertoken.Token, requestArg api.SearchSavedViewsRequest) (api.SearchSavedViewsResponse, error)
 	/*
-	   Updates metadata, search filters, or display settings for an existing saved view.
-	   Throws NOT_FOUND if the view doesn't exist and INVALID_ARGUMENT if it is archived.
+	   Updates a saved view's title, symbol, color, filters, columns, or position in the user-defined order.
+
+	   Fields that are not set keep their current values. A symbol or color is removed with clearSymbol or
+	   clearColor. The new search state must be the same kind as the current one, because a saved view cannot
+	   change its resource type. The caller needs permission to edit the configuration of the saved view's
+	   workspace.
+
+	   Errors:
+	   - NOT_FOUND (SavedView:SavedViewNotFoundError): the saved view does not exist.
+	   - PERMISSION_DENIED: the caller cannot edit the configuration of the saved view's workspace.
+	   - INVALID_ARGUMENT (SavedView:CannotUpdateArchivedSavedView): the saved view is archived.
+	   - INVALID_ARGUMENT (SavedView:CannotChangeSavedViewResourceType): the new search state is for a different
+	     resource type.
+	   - INVALID_ARGUMENT (SavedView:InvalidIndex): index is negative or past the last active saved view of the
+	     workspace and resource type.
 	*/
 	UpdateSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid, requestArg api.UpdateSavedViewRequest) (api.UpdateSavedViewResponse, error)
-	// Archives the specified saved view. Archived views are hidden from search.
+	/*
+	   Archives a saved view. Search excludes archived saved views by default, and they cannot be updated.
+	   Archiving removes the saved view from the user-defined order. The caller needs permission to edit the
+	   configuration of the saved view's workspace.
+
+	   Errors:
+	   - NOT_FOUND (SavedView:SavedViewNotFoundError): the saved view does not exist.
+	   - PERMISSION_DENIED: the caller cannot edit the configuration of the saved view's workspace.
+	*/
 	ArchiveSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid) error
-	// Restores archived saved view, making them discoverable in search again.
+	/*
+	   Restores an archived saved view, so that search returns it again, and puts it last in the user-defined
+	   order. The caller needs permission to edit the configuration of the saved view's workspace.
+
+	   Errors:
+	   - NOT_FOUND (SavedView:SavedViewNotFoundError): the saved view does not exist.
+	   - PERMISSION_DENIED: the caller cannot edit the configuration of the saved view's workspace.
+	   - INVALID_ARGUMENT (SavedView:TooManyActiveSavedViews): the workspace already holds 10,000 active saved
+	     views of the same resource type.
+	*/
 	UnarchiveSavedView(ctx context.Context, authHeader bearertoken.Token, savedViewRidArg api1.SavedViewRid) error
 }
 
@@ -169,24 +232,87 @@ assets, runs, checklists, and more. They can be favorited, archived, and shared 
 */
 type SavedViewServiceClientWithAuth interface {
 	/*
-	   Creates a new saved view in the given workspace. If no workspace is specified,
-	   it is created in the user's default workspace.
+	   Creates a saved view, a shared set of filters, columns, and sort order for an index table of assets,
+	   runs, workbooks, checklists, workbook templates, procedures, or procedure executions.
+
+	   The server assigns the RID, records the caller as the creator, and puts the saved view last in the
+	   user-defined order. The kind of search state sets the resource type. The saved view goes in the given
+	   workspace, or in the caller's default workspace when none is given. The caller needs permission to edit
+	   the configuration of that workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - PERMISSION_DENIED: the caller cannot edit the configuration of the workspace.
+	   - INVALID_ARGUMENT (SavedView:TooManyActiveSavedViews): the workspace already holds 10,000 active saved
+	     views of the same resource type.
 	*/
 	CreateSavedView(ctx context.Context, requestArg api.CreateSavedViewRequest) (api.CreateSavedViewResponse, error)
-	// Fetches a saved view by RID. Throws NOT_FOUND if it does not exist.
+	/*
+	   Gets one saved view with its filters, sort order, and column settings, including an archived one. The
+	   caller needs permission to view the saved view's workspace.
+
+	   Errors:
+	   - NOT_FOUND (SavedView:SavedViewNotFoundError): the saved view does not exist, or the caller cannot view
+	     its workspace.
+	*/
 	GetSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid) (api.GetSavedViewResponse, error)
-	// Retrieves multiple saved views. Any invalid or unknown RIDs are omitted from the response.
+	/*
+	   Gets several saved views by RID, including archived ones. RIDs that do not exist, or whose workspace the
+	   caller cannot view, are omitted from the response instead of failing the call.
+	*/
 	BatchGetSavedViews(ctx context.Context, savedViewRidsArg []api1.SavedViewRid) (api.BatchGetSavedViewsResponse, error)
-	// Searches for saved views using a nested query expression. Supports pagination.
+	/*
+	   Searches saved views in the workspaces the caller can view by title text, resource type, or workspace,
+	   combined with and, or, and not. Returns a page of saved view metadata without filters or columns, in the
+	   requested sort order.
+
+	   Archived saved views are excluded unless requested. Use getSavedView for the full configuration.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is more than 1,000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a previous
+	     page.
+	*/
 	SearchSavedViews(ctx context.Context, requestArg api.SearchSavedViewsRequest) (api.SearchSavedViewsResponse, error)
 	/*
-	   Updates metadata, search filters, or display settings for an existing saved view.
-	   Throws NOT_FOUND if the view doesn't exist and INVALID_ARGUMENT if it is archived.
+	   Updates a saved view's title, symbol, color, filters, columns, or position in the user-defined order.
+
+	   Fields that are not set keep their current values. A symbol or color is removed with clearSymbol or
+	   clearColor. The new search state must be the same kind as the current one, because a saved view cannot
+	   change its resource type. The caller needs permission to edit the configuration of the saved view's
+	   workspace.
+
+	   Errors:
+	   - NOT_FOUND (SavedView:SavedViewNotFoundError): the saved view does not exist.
+	   - PERMISSION_DENIED: the caller cannot edit the configuration of the saved view's workspace.
+	   - INVALID_ARGUMENT (SavedView:CannotUpdateArchivedSavedView): the saved view is archived.
+	   - INVALID_ARGUMENT (SavedView:CannotChangeSavedViewResourceType): the new search state is for a different
+	     resource type.
+	   - INVALID_ARGUMENT (SavedView:InvalidIndex): index is negative or past the last active saved view of the
+	     workspace and resource type.
 	*/
 	UpdateSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid, requestArg api.UpdateSavedViewRequest) (api.UpdateSavedViewResponse, error)
-	// Archives the specified saved view. Archived views are hidden from search.
+	/*
+	   Archives a saved view. Search excludes archived saved views by default, and they cannot be updated.
+	   Archiving removes the saved view from the user-defined order. The caller needs permission to edit the
+	   configuration of the saved view's workspace.
+
+	   Errors:
+	   - NOT_FOUND (SavedView:SavedViewNotFoundError): the saved view does not exist.
+	   - PERMISSION_DENIED: the caller cannot edit the configuration of the saved view's workspace.
+	*/
 	ArchiveSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid) error
-	// Restores archived saved view, making them discoverable in search again.
+	/*
+	   Restores an archived saved view, so that search returns it again, and puts it last in the user-defined
+	   order. The caller needs permission to edit the configuration of the saved view's workspace.
+
+	   Errors:
+	   - NOT_FOUND (SavedView:SavedViewNotFoundError): the saved view does not exist.
+	   - PERMISSION_DENIED: the caller cannot edit the configuration of the saved view's workspace.
+	   - INVALID_ARGUMENT (SavedView:TooManyActiveSavedViews): the workspace already holds 10,000 active saved
+	     views of the same resource type.
+	*/
 	UnarchiveSavedView(ctx context.Context, savedViewRidArg api1.SavedViewRid) error
 }
 

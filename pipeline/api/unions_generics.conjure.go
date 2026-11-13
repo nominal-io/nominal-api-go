@@ -15,6 +15,104 @@ import (
 	"github.com/nominal-io/nominal-api-go/scout/versioning/api"
 )
 
+type PipelineLogicWithT[T any] PipelineLogic
+
+func (u *PipelineLogicWithT[T]) Accept(ctx context.Context, v PipelineLogicVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "graph":
+		if u.graph == nil {
+			return result, fmt.Errorf("field \"graph\" is required")
+		}
+		return v.VisitGraph(ctx, *u.graph)
+	}
+}
+
+func (u *PipelineLogicWithT[T]) AcceptFuncs(graphFunc func(PipelineGraph) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "graph":
+		if u.graph == nil {
+			return result, fmt.Errorf("field \"graph\" is required")
+		}
+		return graphFunc(*u.graph)
+	}
+}
+
+func (u *PipelineLogicWithT[T]) GraphNoopSuccess(PipelineGraph) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PipelineLogicWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type PipelineLogicVisitorWithT[T any] interface {
+	VisitGraph(ctx context.Context, v PipelineGraph) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type PipelineNodeWithT[T any] PipelineNode
+
+func (u *PipelineNodeWithT[T]) Accept(ctx context.Context, v PipelineNodeVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "dataset":
+		if u.dataset == nil {
+			return result, fmt.Errorf("field \"dataset\" is required")
+		}
+		return v.VisitDataset(ctx, *u.dataset)
+	}
+}
+
+func (u *PipelineNodeWithT[T]) AcceptFuncs(datasetFunc func(api1.Dataset) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "dataset":
+		if u.dataset == nil {
+			return result, fmt.Errorf("field \"dataset\" is required")
+		}
+		return datasetFunc(*u.dataset)
+	}
+}
+
+func (u *PipelineNodeWithT[T]) DatasetNoopSuccess(api1.Dataset) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PipelineNodeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type PipelineNodeVisitorWithT[T any] interface {
+	VisitDataset(ctx context.Context, v api1.Dataset) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type PipelineStateUpdateQueryWithT[T any] PipelineStateUpdateQuery
 
 func (u *PipelineStateUpdateQueryWithT[T]) Accept(ctx context.Context, v PipelineStateUpdateQueryVisitorWithT[T]) (T, error) {
@@ -25,11 +123,11 @@ func (u *PipelineStateUpdateQueryWithT[T]) Accept(ctx context.Context, v Pipelin
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(ctx, u.typ)
-	case "logic":
-		if u.logic == nil {
-			return result, fmt.Errorf("field \"logic\" is required")
+	case "graph":
+		if u.graph == nil {
+			return result, fmt.Errorf("field \"graph\" is required")
 		}
-		return v.VisitLogic(ctx, *u.logic)
+		return v.VisitGraph(ctx, *u.graph)
 	case "previousCommit":
 		if u.previousCommit == nil {
 			return result, fmt.Errorf("field \"previousCommit\" is required")
@@ -38,7 +136,7 @@ func (u *PipelineStateUpdateQueryWithT[T]) Accept(ctx context.Context, v Pipelin
 	}
 }
 
-func (u *PipelineStateUpdateQueryWithT[T]) AcceptFuncs(logicFunc func(api1.Dataset) (T, error), previousCommitFunc func(api.CommitId) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *PipelineStateUpdateQueryWithT[T]) AcceptFuncs(graphFunc func(PipelineGraph) (T, error), previousCommitFunc func(api.CommitId) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -46,11 +144,11 @@ func (u *PipelineStateUpdateQueryWithT[T]) AcceptFuncs(logicFunc func(api1.Datas
 			return result, fmt.Errorf("invalid value in union type")
 		}
 		return unknownFunc(u.typ)
-	case "logic":
-		if u.logic == nil {
-			return result, fmt.Errorf("field \"logic\" is required")
+	case "graph":
+		if u.graph == nil {
+			return result, fmt.Errorf("field \"graph\" is required")
 		}
-		return logicFunc(*u.logic)
+		return graphFunc(*u.graph)
 	case "previousCommit":
 		if u.previousCommit == nil {
 			return result, fmt.Errorf("field \"previousCommit\" is required")
@@ -59,7 +157,7 @@ func (u *PipelineStateUpdateQueryWithT[T]) AcceptFuncs(logicFunc func(api1.Datas
 	}
 }
 
-func (u *PipelineStateUpdateQueryWithT[T]) LogicNoopSuccess(api1.Dataset) (T, error) {
+func (u *PipelineStateUpdateQueryWithT[T]) GraphNoopSuccess(PipelineGraph) (T, error) {
 	var result T
 	return result, nil
 }
@@ -75,7 +173,7 @@ func (u *PipelineStateUpdateQueryWithT[T]) ErrorOnUnknown(typeName string) (T, e
 }
 
 type PipelineStateUpdateQueryVisitorWithT[T any] interface {
-	VisitLogic(ctx context.Context, v api1.Dataset) (T, error)
+	VisitGraph(ctx context.Context, v PipelineGraph) (T, error)
 	VisitPreviousCommit(ctx context.Context, v api.CommitId) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

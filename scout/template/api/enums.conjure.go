@@ -14,11 +14,15 @@ type SortByField struct {
 type SortByField_Value string
 
 const (
-	SortByField_NAME       SortByField_Value = "NAME"
+	// Template title.
+	SortByField_NAME SortByField_Value = "NAME"
+	// Time the template was created.
 	SortByField_CREATED_AT SortByField_Value = "CREATED_AT"
+	// Same as EDITED_AT.
 	SortByField_UPDATED_AT SortByField_Value = "UPDATED_AT"
-	SortByField_EDITED_AT  SortByField_Value = "EDITED_AT"
-	SortByField_UNKNOWN    SortByField_Value = "UNKNOWN"
+	// The editedAt metadata field.
+	SortByField_EDITED_AT SortByField_Value = "EDITED_AT"
+	SortByField_UNKNOWN   SortByField_Value = "UNKNOWN"
 )
 
 // SortByField_Values returns all known variants of SortByField.

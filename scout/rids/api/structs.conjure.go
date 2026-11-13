@@ -72,6 +72,10 @@ func (o *EventTimeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Matches resources that carry every listed label when the operator is AND, or at least one of them when it
+is OR.
+*/
 // safelogging:@Unsafe
 type LabelsFilter struct {
 	Operator api1.SetOperator `json:"operator"`
@@ -156,6 +160,7 @@ func (o *PendingReviewAlertState) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Matches resources whose property with this name has any one of the listed values.
 // safelogging:@Unsafe
 type PropertiesFilter struct {
 	Name   api1.PropertyName    `json:"name" safelogging:"@Unsafe"`

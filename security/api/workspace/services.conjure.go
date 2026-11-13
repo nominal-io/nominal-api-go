@@ -20,21 +20,43 @@ Nominal live within a workspace.
 */
 type WorkspaceServiceClient interface {
 	/*
-	   Gets all workspaces that the requesting user belongs to. Filters results to workspaces in the user's session org,
-	   unless otherwise specified.
+	   Lists the workspaces the caller is a member of. Returns only workspaces in the caller's session organization,
+	   unless filterBySessionOrg is false, and leaves out guest workspaces unless includeGuestWorkspaces is true.
+
+	   A workspace that the caller reaches only through a role binding is not listed. getWorkspace and
+	   getDefaultWorkspace include it.
 	*/
 	GetWorkspaces(ctx context.Context, authHeader bearertoken.Token, filterBySessionOrgArg *bool, includeGuestWorkspacesArg *bool) ([]Workspace, error)
 	/*
-	   Gets the workspace with the specified WorkspaceRid. Throws if the requesting user does not have
-	   access to the workspace based on their current session.
+	   Gets a workspace by RID, with its display name, symbol, and settings.
+
+	   A workspace is visible to a user who is a member of it, or who has view permission on it through a role binding.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist, or the caller has no access to it.
 	*/
 	GetWorkspace(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid) (Workspace, error)
-	// Updates the settings of the workspace with the specified WorkspaceRid.
+	/*
+	   Updates the display name, symbol, or settings of a workspace. Returns the updated workspace.
+
+	   Only the parts you supply change, and a removal request clears the display name or symbol. In settings, a field
+	   you omit keeps its current value, and a field you set replaces it in full. Changing or clearing the display name
+	   needs an organization admin. The caller also needs access to the workspace: membership, or permission to edit
+	   its configuration.
+
+	   Errors:
+	   - PERMISSION_DENIED (Authorization:NotAuthorizedAdmin): the request sets the display name and the caller is not an organization admin.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist, or the caller has no access to edit it.
+	*/
 	UpdateWorkspace(ctx context.Context, authHeader bearertoken.Token, ridArg rids.WorkspaceRid, requestArg UpdateWorkspaceRequest) (Workspace, error)
 	/*
-	   Gets the default workspace for the requesting user. If the user belongs to a single workspace,
-	   that workspace is returned. Otherwise, if the user's organization has a default workspace and
-	   the user belongs to it, that will be returned.
+	   Gets the caller's default workspace in the current organization, or nothing when there is none. The candidates
+	   are the caller's workspaces plus those where the caller or one of the caller's groups has a role binding that
+	   grants workspace view.
+
+	   With one candidate, it is returned. With several, the organization's default workspace is returned if it is a
+	   candidate. Otherwise nothing is returned. The result is a lookup, not an authorization: check the permission
+	   for an action before acting in the workspace.
 	*/
 	GetDefaultWorkspace(ctx context.Context, authHeader bearertoken.Token) (*Workspace, error)
 }
@@ -127,21 +149,43 @@ Nominal live within a workspace.
 */
 type WorkspaceServiceClientWithAuth interface {
 	/*
-	   Gets all workspaces that the requesting user belongs to. Filters results to workspaces in the user's session org,
-	   unless otherwise specified.
+	   Lists the workspaces the caller is a member of. Returns only workspaces in the caller's session organization,
+	   unless filterBySessionOrg is false, and leaves out guest workspaces unless includeGuestWorkspaces is true.
+
+	   A workspace that the caller reaches only through a role binding is not listed. getWorkspace and
+	   getDefaultWorkspace include it.
 	*/
 	GetWorkspaces(ctx context.Context, filterBySessionOrgArg *bool, includeGuestWorkspacesArg *bool) ([]Workspace, error)
 	/*
-	   Gets the workspace with the specified WorkspaceRid. Throws if the requesting user does not have
-	   access to the workspace based on their current session.
+	   Gets a workspace by RID, with its display name, symbol, and settings.
+
+	   A workspace is visible to a user who is a member of it, or who has view permission on it through a role binding.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist, or the caller has no access to it.
 	*/
 	GetWorkspace(ctx context.Context, workspaceRidArg rids.WorkspaceRid) (Workspace, error)
-	// Updates the settings of the workspace with the specified WorkspaceRid.
+	/*
+	   Updates the display name, symbol, or settings of a workspace. Returns the updated workspace.
+
+	   Only the parts you supply change, and a removal request clears the display name or symbol. In settings, a field
+	   you omit keeps its current value, and a field you set replaces it in full. Changing or clearing the display name
+	   needs an organization admin. The caller also needs access to the workspace: membership, or permission to edit
+	   its configuration.
+
+	   Errors:
+	   - PERMISSION_DENIED (Authorization:NotAuthorizedAdmin): the request sets the display name and the caller is not an organization admin.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist, or the caller has no access to edit it.
+	*/
 	UpdateWorkspace(ctx context.Context, ridArg rids.WorkspaceRid, requestArg UpdateWorkspaceRequest) (Workspace, error)
 	/*
-	   Gets the default workspace for the requesting user. If the user belongs to a single workspace,
-	   that workspace is returned. Otherwise, if the user's organization has a default workspace and
-	   the user belongs to it, that will be returned.
+	   Gets the caller's default workspace in the current organization, or nothing when there is none. The candidates
+	   are the caller's workspaces plus those where the caller or one of the caller's groups has a role binding that
+	   grants workspace view.
+
+	   With one candidate, it is returned. With several, the organization's default workspace is returned if it is a
+	   candidate. Otherwise nothing is returned. The result is a lookup, not an authorization: check the permission
+	   for an action before acting in the workspace.
 	*/
 	GetDefaultWorkspace(ctx context.Context) (*Workspace, error)
 }

@@ -17,8 +17,21 @@ import (
 // The Checklist Execution Service checks the status of checklist executions.
 type ChecklistExecutionServiceClient interface {
 	/*
-	   For each request, get the latest status for each check in a streaming checklist against the given asset.
-	   Requests with more than 10,000 checklists will be rejected.
+	   Returns the live status of streaming checklists (checklists executing continuously on assets), one
+	   per checklist and asset pair given. A running status holds each check's latest state; the others are
+	   initializing and failed.
+
+	   The whole batch fails if any pair is not streaming or if a checklist or asset is not viewable by the
+	   caller. The status is failed when the checklist's streaming run is not active or cannot be queried.
+	   Requests are returned in the order given.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the request has more than 10,000 pairs.
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a checklist does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: the checklist's workspace edition does not include checklists.
+	   - NOT_FOUND (Checks:AssetsNotFound): an asset does not exist or the caller cannot view it.
+	   - NOT_FOUND (ChecklistExecution:StreamingChecklistNotFoundForAsset): the checklist is not streaming
+	     on the asset.
 	*/
 	ChecklistLiveStatus(ctx context.Context, authHeader bearertoken.Token, requestArg BatchChecklistLiveStatusRequest) (BatchChecklistLiveStatusResponse, error)
 	/*
@@ -26,24 +39,106 @@ type ChecklistExecutionServiceClient interface {
 	   If the checklist is already running for the given asset, replace the existing configuration with the one specified by the request.
 	*/
 	ExecuteStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, requestArg ExecuteChecklistForAssetsRequest) error
-	// Lists all running streaming checklists.
+	/*
+	   Lists the RIDs of checklists that are streaming (executing continuously on assets), in the given
+	   workspaces or in all workspaces the caller can view. Use getStreamingChecklist for the assets and
+	   settings of one checklist.
+
+	   Returns one page ordered by checklist ID ascending. The default page size is 100. Requested workspaces
+	   that the caller cannot view are left out, and so are workspaces whose edition does not include
+	   checklists.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is above 10,000.
+	*/
 	ListStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, requestArg ListStreamingChecklistRequest) (ListStreamingChecklistResponse, error)
-	// Retrieves all streaming checklists for a given asset.
+	/*
+	   Lists the RIDs of checklists that are streaming on one asset, one page at a time.
+
+	   Returns one page ordered by checklist ID ascending. The default page size is 100. Checklists the
+	   caller cannot view, and checklists in workspaces whose edition does not include checklists, are
+	   dropped after paging, so a page can hold fewer than pageSize.
+
+	   Errors:
+	   - NOT_FOUND (Checks:AssetsNotFound): the asset does not exist or the caller cannot view it.
+	   - INVALID_ARGUMENT: pageSize is above 10,000.
+	*/
 	ListStreamingChecklistForAsset(ctx context.Context, authHeader bearertoken.Token, requestArg ListStreamingChecklistForAssetRequest) (ListStreamingChecklistForAssetResponse, error)
-	// Retrieves the set of assets and their execution configurations for a streaming checklist specified by the checklistRid.
+	/*
+	   Returns the assets a checklist is streaming on and the settings for each asset: notifications,
+	   evaluation and recovery delays, and automatic event creation.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): the checklist does not exist or the caller cannot view it.
+	   - NOT_FOUND (ChecklistExecution:StreamingChecklistNotFound): the checklist is not streaming.
+	   - PERMISSION_DENIED: the checklist's workspace edition does not include checklists.
+	*/
 	GetStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid) (StreamingChecklistInfo, error)
 	/*
-	   Retrieves the set of assets and their execution configurations for all streaming checklists specified by the request.
-	   If a streaming checklist is not found, it will not be included in the response.
+	   Returns, keyed by checklist RID, the assets each given checklist is streaming on and the settings
+	   for each asset. A checklist that is not streaming is omitted.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a RID does not exist or the caller cannot view it. The
+	     error names every such RID.
+	   - PERMISSION_DENIED: a checklist's workspace edition does not include checklists.
 	*/
 	BatchGetStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetStreamingChecklistRequest) (BatchGetStreamingChecklistResponse, error)
-	// Stops the execution of a streaming checklist on all assets.
+	/*
+	   Stops a streaming checklist (a checklist executing continuously on assets) on every asset it is
+	   streaming on.
+
+	   The stored streaming settings for all of its assets are deleted and the running execution ends.
+	   Stopping a checklist that is not streaming succeeds and changes nothing. The caller needs permission
+	   to execute checklists in the checklist's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): the checklist does not exist or the caller cannot execute
+	     it.
+	   - PERMISSION_DENIED: the checklist's workspace edition does not include checklists.
+	*/
 	StopStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid) error
-	// Stops the execution of a streaming checklist for a given set of assets.
+	/*
+	   Stops a streaming checklist (a checklist executing continuously on assets) on the given assets only.
+	   It deletes their stored streaming settings and keeps running on other assets.
+
+	   The stored streaming settings for those assets are deleted, and the checklist keeps streaming on its
+	   other assets. The caller needs permission to execute checklists in the checklist's workspace and to
+	   view every given asset.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): the checklist does not exist or the caller cannot execute
+	     it.
+	   - PERMISSION_DENIED: the checklist's workspace edition does not include checklists.
+	   - NOT_FOUND (Checks:AssetsNotFound): a given asset does not exist or the caller cannot view it.
+	   - NOT_FOUND (ChecklistExecution:StreamingChecklistNotFound): the checklist is not streaming.
+	*/
 	StopStreamingChecklistForAssets(ctx context.Context, authHeader bearertoken.Token, requestArg StopStreamingChecklistForAssetsRequest) error
-	// Reloads the state of the streaming checklist for the given checklistRid.
+	/*
+	   Restarts the execution of a streaming checklist (a checklist executing continuously on assets) on
+	   the assets it is streaming on.
+
+	   The stored streaming settings are kept. Reloading a checklist that is not streaming succeeds and
+	   changes nothing. The caller needs permission to execute checklists in the checklist's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): the checklist does not exist or the caller cannot execute
+	     it.
+	   - PERMISSION_DENIED: the checklist's workspace edition does not include checklists.
+	*/
 	ReloadStreamingChecklist(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid) error
-	// Validates that the channels referenced by the checklist can be resolved against the data sources.
+	/*
+	   For each checklist and asset pair, checks whether the channels read by each check resolve against
+	   the asset's data, and which compute nodes streaming cannot run. Returns one status per check.
+
+	   Each check is validated at the commit in commitId, or at the latest commit on main when commitId is
+	   not set.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a checklist does not exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:AssetsNotFound): an asset does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: a checklist's workspace edition does not include checklists.
+	*/
 	ValidateChecklistResolution(ctx context.Context, authHeader bearertoken.Token, requestArg BatchValidateChecklistResolutionRequest) (BatchValidateChecklistResolutionResponse, error)
 }
 
@@ -215,8 +310,21 @@ func (c *checklistExecutionServiceClient) ValidateChecklistResolution(ctx contex
 // The Checklist Execution Service checks the status of checklist executions.
 type ChecklistExecutionServiceClientWithAuth interface {
 	/*
-	   For each request, get the latest status for each check in a streaming checklist against the given asset.
-	   Requests with more than 10,000 checklists will be rejected.
+	   Returns the live status of streaming checklists (checklists executing continuously on assets), one
+	   per checklist and asset pair given. A running status holds each check's latest state; the others are
+	   initializing and failed.
+
+	   The whole batch fails if any pair is not streaming or if a checklist or asset is not viewable by the
+	   caller. The status is failed when the checklist's streaming run is not active or cannot be queried.
+	   Requests are returned in the order given.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the request has more than 10,000 pairs.
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a checklist does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: the checklist's workspace edition does not include checklists.
+	   - NOT_FOUND (Checks:AssetsNotFound): an asset does not exist or the caller cannot view it.
+	   - NOT_FOUND (ChecklistExecution:StreamingChecklistNotFoundForAsset): the checklist is not streaming
+	     on the asset.
 	*/
 	ChecklistLiveStatus(ctx context.Context, requestArg BatchChecklistLiveStatusRequest) (BatchChecklistLiveStatusResponse, error)
 	/*
@@ -224,24 +332,106 @@ type ChecklistExecutionServiceClientWithAuth interface {
 	   If the checklist is already running for the given asset, replace the existing configuration with the one specified by the request.
 	*/
 	ExecuteStreamingChecklist(ctx context.Context, requestArg ExecuteChecklistForAssetsRequest) error
-	// Lists all running streaming checklists.
+	/*
+	   Lists the RIDs of checklists that are streaming (executing continuously on assets), in the given
+	   workspaces or in all workspaces the caller can view. Use getStreamingChecklist for the assets and
+	   settings of one checklist.
+
+	   Returns one page ordered by checklist ID ascending. The default page size is 100. Requested workspaces
+	   that the caller cannot view are left out, and so are workspaces whose edition does not include
+	   checklists.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is above 10,000.
+	*/
 	ListStreamingChecklist(ctx context.Context, requestArg ListStreamingChecklistRequest) (ListStreamingChecklistResponse, error)
-	// Retrieves all streaming checklists for a given asset.
+	/*
+	   Lists the RIDs of checklists that are streaming on one asset, one page at a time.
+
+	   Returns one page ordered by checklist ID ascending. The default page size is 100. Checklists the
+	   caller cannot view, and checklists in workspaces whose edition does not include checklists, are
+	   dropped after paging, so a page can hold fewer than pageSize.
+
+	   Errors:
+	   - NOT_FOUND (Checks:AssetsNotFound): the asset does not exist or the caller cannot view it.
+	   - INVALID_ARGUMENT: pageSize is above 10,000.
+	*/
 	ListStreamingChecklistForAsset(ctx context.Context, requestArg ListStreamingChecklistForAssetRequest) (ListStreamingChecklistForAssetResponse, error)
-	// Retrieves the set of assets and their execution configurations for a streaming checklist specified by the checklistRid.
+	/*
+	   Returns the assets a checklist is streaming on and the settings for each asset: notifications,
+	   evaluation and recovery delays, and automatic event creation.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): the checklist does not exist or the caller cannot view it.
+	   - NOT_FOUND (ChecklistExecution:StreamingChecklistNotFound): the checklist is not streaming.
+	   - PERMISSION_DENIED: the checklist's workspace edition does not include checklists.
+	*/
 	GetStreamingChecklist(ctx context.Context, checklistRidArg api.ChecklistRid) (StreamingChecklistInfo, error)
 	/*
-	   Retrieves the set of assets and their execution configurations for all streaming checklists specified by the request.
-	   If a streaming checklist is not found, it will not be included in the response.
+	   Returns, keyed by checklist RID, the assets each given checklist is streaming on and the settings
+	   for each asset. A checklist that is not streaming is omitted.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a RID does not exist or the caller cannot view it. The
+	     error names every such RID.
+	   - PERMISSION_DENIED: a checklist's workspace edition does not include checklists.
 	*/
 	BatchGetStreamingChecklist(ctx context.Context, requestArg BatchGetStreamingChecklistRequest) (BatchGetStreamingChecklistResponse, error)
-	// Stops the execution of a streaming checklist on all assets.
+	/*
+	   Stops a streaming checklist (a checklist executing continuously on assets) on every asset it is
+	   streaming on.
+
+	   The stored streaming settings for all of its assets are deleted and the running execution ends.
+	   Stopping a checklist that is not streaming succeeds and changes nothing. The caller needs permission
+	   to execute checklists in the checklist's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): the checklist does not exist or the caller cannot execute
+	     it.
+	   - PERMISSION_DENIED: the checklist's workspace edition does not include checklists.
+	*/
 	StopStreamingChecklist(ctx context.Context, checklistRidArg api.ChecklistRid) error
-	// Stops the execution of a streaming checklist for a given set of assets.
+	/*
+	   Stops a streaming checklist (a checklist executing continuously on assets) on the given assets only.
+	   It deletes their stored streaming settings and keeps running on other assets.
+
+	   The stored streaming settings for those assets are deleted, and the checklist keeps streaming on its
+	   other assets. The caller needs permission to execute checklists in the checklist's workspace and to
+	   view every given asset.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): the checklist does not exist or the caller cannot execute
+	     it.
+	   - PERMISSION_DENIED: the checklist's workspace edition does not include checklists.
+	   - NOT_FOUND (Checks:AssetsNotFound): a given asset does not exist or the caller cannot view it.
+	   - NOT_FOUND (ChecklistExecution:StreamingChecklistNotFound): the checklist is not streaming.
+	*/
 	StopStreamingChecklistForAssets(ctx context.Context, requestArg StopStreamingChecklistForAssetsRequest) error
-	// Reloads the state of the streaming checklist for the given checklistRid.
+	/*
+	   Restarts the execution of a streaming checklist (a checklist executing continuously on assets) on
+	   the assets it is streaming on.
+
+	   The stored streaming settings are kept. Reloading a checklist that is not streaming succeeds and
+	   changes nothing. The caller needs permission to execute checklists in the checklist's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): the checklist does not exist or the caller cannot execute
+	     it.
+	   - PERMISSION_DENIED: the checklist's workspace edition does not include checklists.
+	*/
 	ReloadStreamingChecklist(ctx context.Context, checklistRidArg api.ChecklistRid) error
-	// Validates that the channels referenced by the checklist can be resolved against the data sources.
+	/*
+	   For each checklist and asset pair, checks whether the channels read by each check resolve against
+	   the asset's data, and which compute nodes streaming cannot run. Returns one status per check.
+
+	   Each check is validated at the commit in commitId, or at the latest commit on main when commitId is
+	   not set.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a checklist does not exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:AssetsNotFound): an asset does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: a checklist's workspace edition does not include checklists.
+	*/
 	ValidateChecklistResolution(ctx context.Context, requestArg BatchValidateChecklistResolutionRequest) (BatchValidateChecklistResolutionResponse, error)
 }
 

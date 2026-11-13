@@ -135,6 +135,7 @@ func (o *ArchiveEvent) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type AssetsFilter struct {
+	// AND matches events linked to every listed asset; OR matches events linked to any of them.
 	Operator api.SetOperator `json:"operator"`
 	Assets   []api1.AssetRid `json:"assets" safelogging:"@Safe"`
 }
@@ -715,6 +716,7 @@ func (o *DataReviewsFilter) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A marked moment or time range on one or more assets (a flag event in the app).
 // safelogging:@Unsafe
 type Event struct {
 	// Deprecated: This field is deprecated. Use the rid field instead.
@@ -723,8 +725,10 @@ type Event struct {
 	// A set of asset rids associated with the event.
 	AssetRids []api1.AssetRid `json:"assetRids" safelogging:"@Safe"`
 	// A set of origins associated with the event.
-	Origins     []EventOrigin `json:"origins"`
-	Timestamp   api.Timestamp `json:"timestamp" safelogging:"@Safe"`
+	Origins []EventOrigin `json:"origins"`
+	// Start time of the event.
+	Timestamp api.Timestamp `json:"timestamp" safelogging:"@Safe"`
+	// Length of the event, measured from timestamp.
 	Duration    api2.Duration `json:"duration"`
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
@@ -898,10 +902,7 @@ type EventsHistogramRequest struct {
 	EndExclusive   api.Timestamp `json:"endExclusive" safelogging:"@Safe"`
 	// The query to filter the events to be included in the histogram.
 	FilterQuery *HistogramFilterQuery `json:"filterQuery,omitempty"`
-	/*
-	   Filters search on check alerts based on the archived statuses provided.
-	   Default is NOT_ARCHIVED only if none are provided.
-	*/
+	// Ignored. The histogram counts only unarchived events.
 	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
 	/*
 	   Defaults to 100. Throws if larger than 1_000.
@@ -909,8 +910,8 @@ type EventsHistogramRequest struct {
 	*/
 	NumBins *int `json:"numBins,omitempty"`
 	/*
-	   Limits the number of events to be included in the histogram.
-	   Defaults to 1_000. Throws if larger than 10_000.
+	   Maximum number of events counted, earliest start first.
+	   Defaults to 10_000. Throws if smaller than 1 or larger than 10_000.
 	*/
 	EventLimit *int `json:"eventLimit,omitempty"`
 }
@@ -1102,11 +1103,14 @@ func (o *ProcedureEventOrigin) UnmarshalYAML(unmarshal func(interface{}) error) 
 // safelogging:@Unsafe
 type SearchEventsRequest struct {
 	Sort SortOptions `json:"sort"`
-	// Will reject page sizes greater than 10k.
+	// Between 1 and 10_000.
 	PageSize      int         `json:"pageSize"`
 	NextPageToken *api.Token  `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Query         SearchQuery `json:"query"`
-	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived events in search.
+	/*
+	   Archived statuses to include. Defaults to NOT_ARCHIVED only. Ignored when the query
+	   contains an archived filter outside a not filter, which then decides.
+	*/
 	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 

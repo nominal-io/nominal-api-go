@@ -58,7 +58,8 @@ func (o *DataScopes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type GetRunsByAssetResponse struct {
-	Results       []Run      `json:"results"`
+	Results []Run `json:"results"`
+	// Absent on the last page.
 	NextPageToken *uuid.UUID `json:"nextPageToken,omitempty"`
 }
 
@@ -99,10 +100,16 @@ func (o *GetRunsByAssetResponse) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+A time-bounded period of interest on one or more assets that groups data from datasets and other
+data sources.
+*/
 // safelogging:@Unsafe
 type Run struct {
-	Rid         api2.RunRid        `json:"rid" safelogging:"@Safe"`
-	RunNumber   safelong.SafeLong  `json:"runNumber"`
+	Rid api2.RunRid `json:"rid" safelogging:"@Safe"`
+	// Number assigned by the service; unique within its workspace and runPrefix. Changes when the run's prefix changes.
+	RunNumber safelong.SafeLong `json:"runNumber"`
+	// Optional text that namespaces runNumber, so each prefix has its own numbering.
 	RunPrefix   *string            `json:"runPrefix,omitempty"`
 	Title       string             `json:"title"`
 	Description string             `json:"description"`
@@ -238,6 +245,7 @@ func (o *RunWithDataReviewMetrics) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A run with an overall data review status and violation counts.
 // safelogging:@Unsafe
 type RunWithDataReviewSummary struct {
 	Run               Run                       `json:"run" safelogging:"@Unsafe"`

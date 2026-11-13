@@ -174,6 +174,7 @@ func (o *BatchUpdateChannelMetadataResponse) UnmarshalYAML(unmarshal func(interf
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A channel, named within its data source (dataset).
 // safelogging:@Unsafe
 type ChannelIdentifier struct {
 	ChannelName   api.Channel        `json:"channelName" safelogging:"@Unsafe"`
@@ -196,6 +197,7 @@ func (o *ChannelIdentifier) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// The description, unit, data type, and kind of a channel.
 // safelogging:@Unsafe
 type ChannelMetadata struct {
 	ChannelIdentifier ChannelIdentifier   `json:"channelIdentifier" safelogging:"@Unsafe"`
@@ -247,8 +249,10 @@ func (o *GetChannelMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) er
 // safelogging:@Unsafe
 type UpdateChannelMetadataRequest struct {
 	ChannelIdentifier ChannelIdentifier `json:"channelIdentifier" safelogging:"@Unsafe"`
-	Description       *string           `json:"description,omitempty"`
-	UnitUpdate        *api1.UnitUpdate  `json:"unitUpdate,omitempty"`
+	// The new description. If omitted, the description stays unchanged.
+	Description *string `json:"description,omitempty"`
+	// Sets the unit or clears it. If omitted, the unit stays unchanged.
+	UnitUpdate *api1.UnitUpdate `json:"unitUpdate,omitempty"`
 }
 
 func (o UpdateChannelMetadataRequest) MarshalYAML() (interface{}, error) {

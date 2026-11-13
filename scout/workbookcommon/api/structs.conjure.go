@@ -806,7 +806,7 @@ func (o *UnionAlignment) UnmarshalYAML(unmarshal func(interface{}) error) error 
 type WorkbookContent struct {
 	ChannelVariables api5.WorkbookChannelVariableMap `json:"channelVariables"`
 	Inputs           *WorkbookInputs                 `json:"inputs,omitempty"`
-	// map of visualizations. Previously termed "charts"
+	// map of visualizations.
 	Charts          api6.WorkbookVizDefinitionMap `json:"charts"`
 	Settings        *WorkbookSettings             `json:"settings,omitempty"`
 	DataScopeInputs *WorkbookDataScopeInputs      `json:"dataScopeInputs,omitempty"`

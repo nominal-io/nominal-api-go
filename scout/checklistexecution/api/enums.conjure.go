@@ -63,6 +63,7 @@ func (e *ChannelResolutionStatus) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// Compute nodes that streaming evaluation cannot run.
 type InvalidStreamingComputeNode struct {
 	val InvalidStreamingComputeNode_Value
 }

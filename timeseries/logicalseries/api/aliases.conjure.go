@@ -2,26 +2,35 @@
 
 package api
 
+// Name of an Amazon Timestream measure attribute.
 type AttributeName string // safelogging:@Unsafe
 
+// Name of an InfluxDB 2 bucket.
 type BucketName string // safelogging:@Unsafe
 
+// Name of a column in a TimescaleDB or BigQuery table.
 type ColumnName string // safelogging:@Unsafe
 
+// Name of an InfluxDB 1 database.
 type DatabaseName string // safelogging:@Unsafe
 
 type DatasetName string // safelogging:@Unsafe
 
 type FieldName string // safelogging:@Unsafe
 
+// A location that Visual Crossing resolves to weather data.
 type LocationName string // safelogging:@Unsafe
 
+// Name of an Amazon Timestream measure.
 type MeasureName string // safelogging:@Unsafe
 
+// Name of an InfluxDB measurement.
 type MeasurementName string // safelogging:@Unsafe
 
 type ProjectName string // safelogging:@Unsafe
 
+// Name of a TimescaleDB schema.
 type SchemaName string // safelogging:@Unsafe
 
+// Name of a TimescaleDB or Amazon Timestream table.
 type TableName string // safelogging:@Unsafe

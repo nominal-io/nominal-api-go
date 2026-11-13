@@ -83,18 +83,42 @@ func (c *internalJobServiceClientWithTokenProvider) SubmitJobs(ctx context.Conte
 	return c.client.SubmitJobs(ctx, bearertoken.Token(token), requestArg)
 }
 
-// The Job Service is responsible for returning information about jobs for checklist executions.
+/*
+Reports the status and result of asynchronous jobs: checklist check evaluations, compute jobs, UDF compilations,
+and SQL exports.
+*/
 type JobServiceClient interface {
-	// Fetches the job report for a job RID. Throws ResourcesNotFound if no job exists with this job RID.
+	/*
+	   Returns the status report of one job: in progress, completed with its result, failed, or cancelled. A job
+	   is an asynchronous check evaluation, compute, user-defined function (UDF) compilation, or SQL export.
+
+	   To read several jobs at once, use batchGetJobReports. A completed compute job whose stored result is no
+	   longer available still reports completed, without a result. The caller needs permission to view the
+	   workspace of the job.
+
+	   Errors:
+	   - NOT_FOUND (JobService:JobNotFound): the job does not exist or the caller cannot view its workspace.
+	*/
 	GetJobReport(ctx context.Context, authHeader bearertoken.Token, jobRidArg api.JobRid) (api1.JobReport, error)
 	/*
-	   Fetches the job reports for a set of job RIDs. Omits any job reports the user is not permitted to see from
-	   the response.
+	   Returns the status reports of a set of jobs, keyed by job RID. A job is an asynchronous check evaluation,
+	   compute, user-defined function (UDF) compilation, or SQL export.
+
+	   Jobs that do not exist, or whose workspace the caller cannot view, are left out of the response, not
+	   reported as errors. As in getJobReport, a completed compute job whose stored result is gone reports
+	   completed without a result.
 	*/
 	BatchGetJobReports(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetJobReportsRequest) (api1.BatchGetJobReportsResponse, error)
 	/*
-	   Cancels an in-progress job. For compute jobs this also stops the running computation.
-	   A no-op for jobs already in a terminal state. Returns the resulting report.
+	   Cancels an in-progress job and returns its report.
+
+	   For a compute job, this also tries to stop the running query. A job that already completed, failed, or was
+	   cancelled is left unchanged, so a repeat call is safe. A job that finishes after the cancel keeps the
+	   cancelled state, and its result is discarded. The caller can cancel a job they submitted if they can view
+	   its workspace, and any job if they can execute checklists in its workspace.
+
+	   Errors:
+	   - NOT_FOUND (JobService:JobNotFound): the job does not exist or the caller may not cancel it.
 	*/
 	CancelJob(ctx context.Context, authHeader bearertoken.Token, jobRidArg api.JobRid) (api1.JobReport, error)
 }
@@ -159,18 +183,42 @@ func (c *jobServiceClient) CancelJob(ctx context.Context, authHeader bearertoken
 	return *returnVal, nil
 }
 
-// The Job Service is responsible for returning information about jobs for checklist executions.
+/*
+Reports the status and result of asynchronous jobs: checklist check evaluations, compute jobs, UDF compilations,
+and SQL exports.
+*/
 type JobServiceClientWithAuth interface {
-	// Fetches the job report for a job RID. Throws ResourcesNotFound if no job exists with this job RID.
+	/*
+	   Returns the status report of one job: in progress, completed with its result, failed, or cancelled. A job
+	   is an asynchronous check evaluation, compute, user-defined function (UDF) compilation, or SQL export.
+
+	   To read several jobs at once, use batchGetJobReports. A completed compute job whose stored result is no
+	   longer available still reports completed, without a result. The caller needs permission to view the
+	   workspace of the job.
+
+	   Errors:
+	   - NOT_FOUND (JobService:JobNotFound): the job does not exist or the caller cannot view its workspace.
+	*/
 	GetJobReport(ctx context.Context, jobRidArg api.JobRid) (api1.JobReport, error)
 	/*
-	   Fetches the job reports for a set of job RIDs. Omits any job reports the user is not permitted to see from
-	   the response.
+	   Returns the status reports of a set of jobs, keyed by job RID. A job is an asynchronous check evaluation,
+	   compute, user-defined function (UDF) compilation, or SQL export.
+
+	   Jobs that do not exist, or whose workspace the caller cannot view, are left out of the response, not
+	   reported as errors. As in getJobReport, a completed compute job whose stored result is gone reports
+	   completed without a result.
 	*/
 	BatchGetJobReports(ctx context.Context, requestArg api.BatchGetJobReportsRequest) (api1.BatchGetJobReportsResponse, error)
 	/*
-	   Cancels an in-progress job. For compute jobs this also stops the running computation.
-	   A no-op for jobs already in a terminal state. Returns the resulting report.
+	   Cancels an in-progress job and returns its report.
+
+	   For a compute job, this also tries to stop the running query. A job that already completed, failed, or was
+	   cancelled is left unchanged, so a repeat call is safe. A job that finishes after the cancel keeps the
+	   cancelled state, and its result is discarded. The caller can cancel a job they submitted if they can view
+	   its workspace, and any job if they can execute checklists in its workspace.
+
+	   Errors:
+	   - NOT_FOUND (JobService:JobNotFound): the job does not exist or the caller may not cancel it.
 	*/
 	CancelJob(ctx context.Context, jobRidArg api.JobRid) (api1.JobReport, error)
 }

@@ -24,55 +24,137 @@ type DataReviewServiceClient interface {
 	BatchInitiate(ctx context.Context, authHeader bearertoken.Token, requestArg BatchInitiateDataReviewRequest) (BatchInitiateDataReviewResponse, error)
 	// Re-executes the most recent failed automatic checks for the data review.
 	RerunFailedAutomaticChecks(ctx context.Context, authHeader bearertoken.Token, requestArg RerunFailedAutomaticChecksRequest) error
-	// Returns the data reviews under the provided search parameters.
+	/*
+	   Searches data reviews (checklists applied to a run) by run, asset, and checklist. Returns a page of the
+	   data reviews the caller can view, newest first.
+
+	   With no runs, assets, or checklists the page is empty. Assets are replaced by their runs, so every data
+	   review of those runs is returned; set filterByBothRunsAndAssets to match only the listed assets. A
+	   checklist reference without a commit matches every commit of that checklist. Archived data reviews are
+	   excluded unless archivedStatuses or showArchived includes them; showArchived wins when both are set. A
+	   page can hold fewer than pageSize items, because data reviews the caller cannot view are removed after
+	   the page is read.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - INVALID_ARGUMENT (DataReview:InvalidPageToken): nextPageToken is not a valid token.
+	   - NOT_FOUND (Assets:AssetNotFound): filterByBothRunsAndAssets is not set and a requested asset does not
+	     exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:AssetsNotFound): filterByBothRunsAndAssets is set and a requested asset does not
+	     exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:RunsNotFound): a requested run does not exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a requested checklist does not exist or the caller cannot view it.
+	*/
 	FindDataReviews(ctx context.Context, authHeader bearertoken.Token, requestArg FindDataReviewsRequest) (DataReviewPage, error)
-	// Throws if not found.
+	/*
+	   Gets one data review (a checklist applied to a run) with its checklist and the state of each check
+	   evaluation. Archived data reviews are returned.
+
+	   The caller needs permission to view the run and its workspace.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:DataReviewNotFound): the data review does not exist or the caller cannot view it.
+	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, dataReviewRidArg api.DataReviewRid) (DataReview, error)
 	/*
-	   Throws if not found.
+	   Gets one violation (check alert in the API), a time period where a check condition was met, from a data
+	   review. Violations of archived data reviews are returned.
+
+	   The caller needs permission to view the run of the violation's data review and its workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataReview:CheckAlertNotFound): the violation does not exist or the caller cannot view its data review.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	GetCheckAlert(ctx context.Context, authHeader bearertoken.Token, checkAlertRidArg api.CheckAlertRid) (CheckAlert, error)
 	/*
-	   Gets all check alerts from the provided data review.
+	   Lists all violations (check alerts in the API) of one data review, in no set order. Violations of an
+	   archived data review are returned.
+
+	   The caller needs permission to view the run of the data review and its workspace.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:DataReviewNotFound): the data review does not exist or the caller cannot view it.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	GetCheckAlertsForDataReview(ctx context.Context, authHeader bearertoken.Token, dataReviewRidArg api.DataReviewRid) ([]CheckAlert, error)
 	/*
-	   Returns a histogram of alerts that occur across the provided runs or assets. At least one run or asset must be specified.
+	   Counts violations (check alerts in the API) in time buckets by start time, for runs and assets. Can split
+	   each bucket by priority or status.
+
+	   At least one run or asset is required; assets include all their runs. The time range from startTimeAfter
+	   to startTimeBefore is divided into numBins equal buckets, 100 by default and at most 1000. Buckets with
+	   no violations are omitted. Violations of archived data reviews are excluded unless archivedStatuses or
+	   showArchived includes them; showArchived wins when both are set.
+
+	   Errors:
+	   - INVALID_ARGUMENT: numBins is not between 1 and 1000, or no run or asset is given.
+	   - NOT_FOUND (Assets:AssetNotFound): a requested asset does not exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:RunsNotFound): a requested run does not exist or the caller cannot view it.
+	   - INVALID_ARGUMENT: startTimeBefore is not after startTimeAfter, or searchText contains a null character.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	GetCheckAlertsHistogram(ctx context.Context, authHeader bearertoken.Token, requestArg CheckAlertsHistogramRequest) (CheckAlertsHistogramResponse, error)
 	/*
-	   Returns the check alerts under the provided search parameters. At least one run or asset must be specified.
+	   Searches violations (check alerts in the API) of runs and assets by check name, time, status, assignee,
+	   priority, checklist, or workbook. Returns a page, oldest start first by default.
+
+	   At least one run or asset is required; assets include all their runs. sortBy orders the page by check
+	   name, start, end, status, priority, or duration. Violations of archived data reviews are excluded unless
+	   archivedStatuses or showArchived includes them; showArchived wins when both are set. Violations whose data
+	   review the caller cannot view are omitted, so a page can hold fewer than pageSize items.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is above 1000, or no run or asset is given.
+	   - NOT_FOUND (Assets:AssetNotFound): a requested asset does not exist or the caller cannot view it.
+	   - INVALID_ARGUMENT: searchText contains a null character.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	SearchCheckAlerts(ctx context.Context, authHeader bearertoken.Token, requestArg SearchCheckAlertsRequest) (SearchCheckAlertsResponse, error)
 	/*
-	   Returns a record of the historical actions taken on the provided check alert.
+	   Lists the review actions taken on one violation (check alert in the API), such as closing or
+	   reassigning, with who did each and when.
+
+	   The caller needs permission to view the run of the violation's data review and its workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataReview:CheckAlertNotFound): the violation does not exist or the caller cannot view its data review.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	GetCheckAlertActionLog(ctx context.Context, authHeader bearertoken.Token, checkAlertRidArg api.CheckAlertRid) (CheckAlertActionLog, error)
 	/*
-	   Returns the number of alerts attached to each provided notebook.
+	   Counts the violations (check alerts in the API) linked to each given workbook (notebook in the API).
+
+	   The caller needs permission to view each workbook. A workbook with no linked violations maps to 0.
+	   Violations of archived data reviews are not counted.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:NotebooksNotFound): a workbook does not exist or the caller cannot view it.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	GetCheckAlertCountsForNotebooks(ctx context.Context, authHeader bearertoken.Token, ridsArg []api.NotebookRid) (map[api.NotebookRid]int, error)
 	/*
-	   Returns the check alert status of any linked violations for the provided notebooks. If none exist, an empty
-	   optional is returned.
+	   Gets the review status of the violations (check alerts in the API) linked to each given workbook
+	   (notebook in the API).
+
+	   The caller needs permission to view each workbook. A workbook with no linked violation maps to null.
+	   Violations of archived data reviews are ignored.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:NotebooksNotFound): a workbook does not exist or the caller cannot view it.
+	   - INTERNAL: the violations linked to one workbook have different statuses.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
@@ -102,6 +184,14 @@ type DataReviewServiceClient interface {
 	*/
 	BatchPerformAutomaticCheckEvaluationReviewAction(ctx context.Context, authHeader bearertoken.Token, requestArg BatchAutomaticCheckEvaluationActionRequest) (BatchAutomaticCheckEvaluationActionResponse, error)
 	/*
+	   Lists the execution events of one automatic check evaluation (one check run in a data review): started,
+	   finished, failed to run, or re-run.
+
+	   The caller needs permission to view the run of the data review and its workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataReview:AutomaticCheckEvaluationNotFound): the evaluation does not exist or the caller cannot view its data review.
+
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
@@ -114,17 +204,71 @@ type DataReviewServiceClient interface {
 	*/
 	BatchPerformManualCheckAlertAction(ctx context.Context, authHeader bearertoken.Token, requestArg BatchManualCheckEvaluationActionRequest) error
 	/*
-	   Returns a record of the historical manual actions taken on the provided check evaluation.
+	   Lists the review actions taken on one manual check evaluation of a data review, with who did each and
+	   when.
+
+	   The caller needs permission to view the run of the data review and its workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataReview:ManualCheckEvaluationNotFound): the evaluation does not exist or the caller cannot view its data review.
 
 	   Deprecated: No longer in use
 	*/
 	GetManualCheckEvaluationActionLog(ctx context.Context, authHeader bearertoken.Token, ridArg ManualCheckEvaluationRid) (ManualCheckEvaluationActionLog, error)
-	// Archives the data review with the given rid.
+	/*
+	   Archives a data review (the checklist results and violations for one run). Searches then leave
+	   out the data review and its violations unless they ask for archived ones, and counts by run or
+	   asset skip them.
+
+	   The data review's violations get an archive entry in their action log. Always returns true on
+	   success. The caller needs the permission to edit data reviews in the run's workspace and
+	   permission to view the run. Use unarchiveDataReview to undo it.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:DataReviewNotFound): the data review does not exist or the caller cannot
+	     edit it.
+	*/
 	ArchiveDataReview(ctx context.Context, authHeader bearertoken.Token, dataReviewRidArg api.DataReviewRid) (bool, error)
-	// Batch archives the data reviews with the given rids.
+	/*
+	   Archives several data reviews (the checklist results and violations for a run) in one request.
+	   Searches then leave out these data reviews and their violations unless they ask for archived
+	   ones, and counts by run or asset skip them.
+
+	   The request is all or nothing: if the caller cannot edit one of the data reviews, none is
+	   archived. The violations of each data review get an archive entry in their action log. The
+	   caller needs the permission to edit data reviews in each run's workspace and permission to view
+	   each run.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:DataReviewsNotFound): a data review does not exist or the caller cannot
+	     edit it. The error names those RIDs.
+	*/
 	BatchArchiveDataReview(ctx context.Context, authHeader bearertoken.Token, ridsArg []api.DataReviewRid) error
-	// Unarchives the data review with the given rid.
+	/*
+	   Unarchives a data review (the checklist results and violations for one run), so searches and
+	   counts include it and its violations again.
+
+	   The data review's violations get an unarchive entry in their action log. The caller needs the
+	   permission to edit data reviews in the run's workspace and permission to view the run. Use
+	   archiveDataReview or batchArchiveDataReview to archive.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:DataReviewNotFound): the data review does not exist or the caller cannot
+	     edit it.
+	*/
 	UnarchiveDataReview(ctx context.Context, authHeader bearertoken.Token, dataReviewRidArg api.DataReviewRid) error
+	/*
+	   Counts the automatic check evaluations and their events (violations) by state for one run, asset, or data
+	   review.
+
+	   A run or asset scope counts only evaluations of data reviews that are not archived. A data review scope
+	   counts that data review even when it is archived.
+
+	   Errors:
+	   - NOT_FOUND (Checks:RunsNotFound): the run does not exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:AssetsNotFound): the asset does not exist or the caller cannot view it.
+	   - NOT_FOUND (DataReview:DataReviewNotFound): the data review does not exist or the caller cannot view it.
+	*/
 	GetDataReviewCheckMetrics(ctx context.Context, authHeader bearertoken.Token, requestArg GetDataReviewCheckMetricsRequest) (GetDataReviewCheckMetricsResponse, error)
 }
 
@@ -495,55 +639,137 @@ type DataReviewServiceClientWithAuth interface {
 	BatchInitiate(ctx context.Context, requestArg BatchInitiateDataReviewRequest) (BatchInitiateDataReviewResponse, error)
 	// Re-executes the most recent failed automatic checks for the data review.
 	RerunFailedAutomaticChecks(ctx context.Context, requestArg RerunFailedAutomaticChecksRequest) error
-	// Returns the data reviews under the provided search parameters.
+	/*
+	   Searches data reviews (checklists applied to a run) by run, asset, and checklist. Returns a page of the
+	   data reviews the caller can view, newest first.
+
+	   With no runs, assets, or checklists the page is empty. Assets are replaced by their runs, so every data
+	   review of those runs is returned; set filterByBothRunsAndAssets to match only the listed assets. A
+	   checklist reference without a commit matches every commit of that checklist. Archived data reviews are
+	   excluded unless archivedStatuses or showArchived includes them; showArchived wins when both are set. A
+	   page can hold fewer than pageSize items, because data reviews the caller cannot view are removed after
+	   the page is read.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - INVALID_ARGUMENT (DataReview:InvalidPageToken): nextPageToken is not a valid token.
+	   - NOT_FOUND (Assets:AssetNotFound): filterByBothRunsAndAssets is not set and a requested asset does not
+	     exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:AssetsNotFound): filterByBothRunsAndAssets is set and a requested asset does not
+	     exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:RunsNotFound): a requested run does not exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a requested checklist does not exist or the caller cannot view it.
+	*/
 	FindDataReviews(ctx context.Context, requestArg FindDataReviewsRequest) (DataReviewPage, error)
-	// Throws if not found.
+	/*
+	   Gets one data review (a checklist applied to a run) with its checklist and the state of each check
+	   evaluation. Archived data reviews are returned.
+
+	   The caller needs permission to view the run and its workspace.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:DataReviewNotFound): the data review does not exist or the caller cannot view it.
+	*/
 	Get(ctx context.Context, dataReviewRidArg api.DataReviewRid) (DataReview, error)
 	/*
-	   Throws if not found.
+	   Gets one violation (check alert in the API), a time period where a check condition was met, from a data
+	   review. Violations of archived data reviews are returned.
+
+	   The caller needs permission to view the run of the violation's data review and its workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataReview:CheckAlertNotFound): the violation does not exist or the caller cannot view its data review.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	GetCheckAlert(ctx context.Context, checkAlertRidArg api.CheckAlertRid) (CheckAlert, error)
 	/*
-	   Gets all check alerts from the provided data review.
+	   Lists all violations (check alerts in the API) of one data review, in no set order. Violations of an
+	   archived data review are returned.
+
+	   The caller needs permission to view the run of the data review and its workspace.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:DataReviewNotFound): the data review does not exist or the caller cannot view it.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	GetCheckAlertsForDataReview(ctx context.Context, dataReviewRidArg api.DataReviewRid) ([]CheckAlert, error)
 	/*
-	   Returns a histogram of alerts that occur across the provided runs or assets. At least one run or asset must be specified.
+	   Counts violations (check alerts in the API) in time buckets by start time, for runs and assets. Can split
+	   each bucket by priority or status.
+
+	   At least one run or asset is required; assets include all their runs. The time range from startTimeAfter
+	   to startTimeBefore is divided into numBins equal buckets, 100 by default and at most 1000. Buckets with
+	   no violations are omitted. Violations of archived data reviews are excluded unless archivedStatuses or
+	   showArchived includes them; showArchived wins when both are set.
+
+	   Errors:
+	   - INVALID_ARGUMENT: numBins is not between 1 and 1000, or no run or asset is given.
+	   - NOT_FOUND (Assets:AssetNotFound): a requested asset does not exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:RunsNotFound): a requested run does not exist or the caller cannot view it.
+	   - INVALID_ARGUMENT: startTimeBefore is not after startTimeAfter, or searchText contains a null character.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	GetCheckAlertsHistogram(ctx context.Context, requestArg CheckAlertsHistogramRequest) (CheckAlertsHistogramResponse, error)
 	/*
-	   Returns the check alerts under the provided search parameters. At least one run or asset must be specified.
+	   Searches violations (check alerts in the API) of runs and assets by check name, time, status, assignee,
+	   priority, checklist, or workbook. Returns a page, oldest start first by default.
+
+	   At least one run or asset is required; assets include all their runs. sortBy orders the page by check
+	   name, start, end, status, priority, or duration. Violations of archived data reviews are excluded unless
+	   archivedStatuses or showArchived includes them; showArchived wins when both are set. Violations whose data
+	   review the caller cannot view are omitted, so a page can hold fewer than pageSize items.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is above 1000, or no run or asset is given.
+	   - NOT_FOUND (Assets:AssetNotFound): a requested asset does not exist or the caller cannot view it.
+	   - INVALID_ARGUMENT: searchText contains a null character.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	SearchCheckAlerts(ctx context.Context, requestArg SearchCheckAlertsRequest) (SearchCheckAlertsResponse, error)
 	/*
-	   Returns a record of the historical actions taken on the provided check alert.
+	   Lists the review actions taken on one violation (check alert in the API), such as closing or
+	   reassigning, with who did each and when.
+
+	   The caller needs permission to view the run of the violation's data review and its workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataReview:CheckAlertNotFound): the violation does not exist or the caller cannot view its data review.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	GetCheckAlertActionLog(ctx context.Context, checkAlertRidArg api.CheckAlertRid) (CheckAlertActionLog, error)
 	/*
-	   Returns the number of alerts attached to each provided notebook.
+	   Counts the violations (check alerts in the API) linked to each given workbook (notebook in the API).
+
+	   The caller needs permission to view each workbook. A workbook with no linked violations maps to 0.
+	   Violations of archived data reviews are not counted.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:NotebooksNotFound): a workbook does not exist or the caller cannot view it.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
 	GetCheckAlertCountsForNotebooks(ctx context.Context, ridsArg []api.NotebookRid) (map[api.NotebookRid]int, error)
 	/*
-	   Returns the check alert status of any linked violations for the provided notebooks. If none exist, an empty
-	   optional is returned.
+	   Gets the review status of the violations (check alerts in the API) linked to each given workbook
+	   (notebook in the API).
+
+	   The caller needs permission to view each workbook. A workbook with no linked violation maps to null.
+	   Violations of archived data reviews are ignored.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:NotebooksNotFound): a workbook does not exist or the caller cannot view it.
+	   - INTERNAL: the violations linked to one workbook have different statuses.
 
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
@@ -573,6 +799,14 @@ type DataReviewServiceClientWithAuth interface {
 	*/
 	BatchPerformAutomaticCheckEvaluationReviewAction(ctx context.Context, requestArg BatchAutomaticCheckEvaluationActionRequest) (BatchAutomaticCheckEvaluationActionResponse, error)
 	/*
+	   Lists the execution events of one automatic check evaluation (one check run in a data review): started,
+	   finished, failed to run, or re-run.
+
+	   The caller needs permission to view the run of the data review and its workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataReview:AutomaticCheckEvaluationNotFound): the evaluation does not exist or the caller cannot view its data review.
+
 	   Deprecated: CheckAlerts have been replaced by Events.
 	   Please use the EventService instead.
 	*/
@@ -585,17 +819,71 @@ type DataReviewServiceClientWithAuth interface {
 	*/
 	BatchPerformManualCheckAlertAction(ctx context.Context, requestArg BatchManualCheckEvaluationActionRequest) error
 	/*
-	   Returns a record of the historical manual actions taken on the provided check evaluation.
+	   Lists the review actions taken on one manual check evaluation of a data review, with who did each and
+	   when.
+
+	   The caller needs permission to view the run of the data review and its workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataReview:ManualCheckEvaluationNotFound): the evaluation does not exist or the caller cannot view its data review.
 
 	   Deprecated: No longer in use
 	*/
 	GetManualCheckEvaluationActionLog(ctx context.Context, ridArg ManualCheckEvaluationRid) (ManualCheckEvaluationActionLog, error)
-	// Archives the data review with the given rid.
+	/*
+	   Archives a data review (the checklist results and violations for one run). Searches then leave
+	   out the data review and its violations unless they ask for archived ones, and counts by run or
+	   asset skip them.
+
+	   The data review's violations get an archive entry in their action log. Always returns true on
+	   success. The caller needs the permission to edit data reviews in the run's workspace and
+	   permission to view the run. Use unarchiveDataReview to undo it.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:DataReviewNotFound): the data review does not exist or the caller cannot
+	     edit it.
+	*/
 	ArchiveDataReview(ctx context.Context, dataReviewRidArg api.DataReviewRid) (bool, error)
-	// Batch archives the data reviews with the given rids.
+	/*
+	   Archives several data reviews (the checklist results and violations for a run) in one request.
+	   Searches then leave out these data reviews and their violations unless they ask for archived
+	   ones, and counts by run or asset skip them.
+
+	   The request is all or nothing: if the caller cannot edit one of the data reviews, none is
+	   archived. The violations of each data review get an archive entry in their action log. The
+	   caller needs the permission to edit data reviews in each run's workspace and permission to view
+	   each run.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:DataReviewsNotFound): a data review does not exist or the caller cannot
+	     edit it. The error names those RIDs.
+	*/
 	BatchArchiveDataReview(ctx context.Context, ridsArg []api.DataReviewRid) error
-	// Unarchives the data review with the given rid.
+	/*
+	   Unarchives a data review (the checklist results and violations for one run), so searches and
+	   counts include it and its violations again.
+
+	   The data review's violations get an unarchive entry in their action log. The caller needs the
+	   permission to edit data reviews in the run's workspace and permission to view the run. Use
+	   archiveDataReview or batchArchiveDataReview to archive.
+
+	   Errors:
+	   - NOT_FOUND (DataReview:DataReviewNotFound): the data review does not exist or the caller cannot
+	     edit it.
+	*/
 	UnarchiveDataReview(ctx context.Context, dataReviewRidArg api.DataReviewRid) error
+	/*
+	   Counts the automatic check evaluations and their events (violations) by state for one run, asset, or data
+	   review.
+
+	   A run or asset scope counts only evaluations of data reviews that are not archived. A data review scope
+	   counts that data review even when it is archived.
+
+	   Errors:
+	   - NOT_FOUND (Checks:RunsNotFound): the run does not exist or the caller cannot view it.
+	   - NOT_FOUND (Checks:AssetsNotFound): the asset does not exist or the caller cannot view it.
+	   - NOT_FOUND (DataReview:DataReviewNotFound): the data review does not exist or the caller cannot view it.
+	*/
 	GetDataReviewCheckMetrics(ctx context.Context, requestArg GetDataReviewCheckMetricsRequest) (GetDataReviewCheckMetricsResponse, error)
 }
 

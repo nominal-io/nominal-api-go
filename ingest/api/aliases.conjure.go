@@ -121,7 +121,7 @@ type FileSuffix string // safelogging:@Safe
 
 /*
 Unique resource identifier for an Ingest Automation, a server-side workflow that carries a
-single upload from resource creation through ingest to a seeded workbook.
+single upload from resource creation through ingest to channel availability.
 */
 type IngestAutomationRid rid.ResourceIdentifier // safelogging:@Safe
 

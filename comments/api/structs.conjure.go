@@ -23,7 +23,7 @@ type Comment struct {
 	EditedAt *datetime.DateTime `json:"editedAt,omitempty"`
 	// The time the comment was deleted. Empty if the comment has not been deleted.
 	DeletedAt *datetime.DateTime `json:"deletedAt,omitempty"`
-	// The markdown content of the comment.
+	// The markdown content of the comment. Empty for a deleted comment.
 	Content string `json:"content"`
 	// The user who pinned the comment. Empty if the comment is not pinned.
 	PinnedBy *rid.ResourceIdentifier `json:"pinnedBy,omitempty"`
@@ -103,7 +103,7 @@ func (o *CommentParentComment) UnmarshalYAML(unmarshal func(interface{}) error) 
 type CommentParentResource struct {
 	// The type of resource that the comment is associated with
 	ResourceType ResourceType `json:"resourceType"`
-	// The resource identifier for the resource that the comment is associated with. For example, a run or a workbook.
+	// The resource identifier for the resource that the comment is associated with. For example, a run or an event.
 	ResourceRid rid.ResourceIdentifier `json:"resourceRid"`
 }
 
@@ -129,8 +129,8 @@ type Conversation struct {
 	// The type of the resource that the conversation is associated with.
 	ResourceType ResourceType `json:"resourceType"`
 	/*
-	   The comments on the conversation ordered by creation time.
-	   Empty if the comment has no replies.
+	   The comments on the resource, oldest first, each with its replies. Includes deleted comments.
+	   Empty if the resource has no comments.
 	*/
 	Comments []ConversationNode `json:"comments"`
 }
@@ -217,6 +217,7 @@ func (o *ConversationNode) UnmarshalYAML(unmarshal func(interface{}) error) erro
 }
 
 type CreateCommentRequest struct {
+	// The run or event to comment on, or the comment to reply to.
 	Parent CommentParent `json:"parent"`
 	// The content of the comment. Markdown supported.
 	Content string `json:"content"`
@@ -264,7 +265,7 @@ func (o *CreateCommentRequest) UnmarshalYAML(unmarshal func(interface{}) error) 
 type EditCommentRequest struct {
 	// The content of the comment. Markdown supported.
 	Content string `json:"content"`
-	// Attachments to the comment.
+	// Attachments to the comment. Replaces the comment's existing attachments.
 	Attachments []rids.AttachmentRid `json:"attachments" safelogging:"@Safe"`
 }
 

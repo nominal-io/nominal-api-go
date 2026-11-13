@@ -263,6 +263,10 @@ func (o *ChannelConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type CompleteMultipartUploadResponse struct {
+	/*
+	   Path of the completed object, for an UPLOADS destination. Pass it as an S3 ingest source or to
+	   signDownload. For a FILE_STORE upload, use the `key` from initiateMultipartUpload instead.
+	*/
 	Location *string `json:"location,omitempty"`
 }
 
@@ -350,7 +354,7 @@ type ContainerizedExtractor struct {
 	   If not set, timestamp metadata must be provided at ingest time.
 	*/
 	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
-	// The format of the output file. Currently only "parquet", "csv", "parquet.tar" are supported
+	// The format of the output file. See FileOutputFormat for supported values.
 	OutputFileFormat FileOutputFormat `json:"outputFileFormat"`
 	/*
 	   Fallback exit-code-to-error mappings for extractors that cannot emit a structured
@@ -530,30 +534,26 @@ func (o *CountIngestJobsResponse) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-/*
-Everything the workflow needs to run without the client: the uploaded files' locations and
-timestamp interpretation, plus the titles for the resources it creates (the client derives
-them from the uploaded filename before creating the automation).
-*/
+// The locations and timestamp interpretation of the uploaded files, and the titles of the resources to create.
 type CreateIngestAutomationRequest struct {
 	WorkspaceRid rids.WorkspaceRid `json:"workspaceRid" safelogging:"@Safe"`
 	/*
 	   Locations of the already-uploaded files, all ingested into the same dataset. At least
-	   one; at most 20 (enforced by the handler). Only s3 sources are supported today.
+	   one and at most 20. Only s3 sources are supported.
 	*/
 	Sources []IngestSource `json:"sources"`
-	// The timestamp column and interpretation the user confirmed in the wizard, applied to every file.
+	// The timestamp column and how to interpret it, applied to every file.
 	TimestampMetadata TimestampMetadata `json:"timestampMetadata"`
 	/*
 	   The format of every file in sources, ingested as wide-format data. Defaults to CSV when
 	   absent.
 	*/
 	FileType *IngestAutomationFileType `json:"fileType,omitempty"`
-	// Maximum length 500 characters (enforced by the handler, like the other titles).
+	// Title of the asset to create. At most 500 characters.
 	AssetTitle string `json:"assetTitle"`
-	// Maximum length 500 characters.
+	// Title of the dataset to create. At most 500 characters.
 	DatasetTitle string `json:"datasetTitle"`
-	// Maximum length 500 characters.
+	// Title of the run to create. At most 500 characters.
 	RunTitle string `json:"runTitle"`
 	/*
 	   Data scope name linking the created asset and dataset (typically "default").
@@ -1240,13 +1240,9 @@ func (o *HeartbeatStreamingSessionRequest) UnmarshalYAML(unmarshal func(interfac
 }
 
 /*
-A server-side workflow that carries one upload (one or more CSV or Parquet files) through resource
-creation, ingest, and channel availability. Started by the upload wizard's "Quick look" mode; the client
-polls getIngestAutomation to drive its progress checklist, and the frontend creates the
-accompanying workbook itself (workbook semantics live in the frontend server — this
-service deliberately has no notion of workbooks). The workflow keeps running if the
-client disconnects — every created resource RID is recorded here so a returning client
-can pick up where it left off.
+A background workflow that takes an upload of CSV or Parquet files through resource creation, ingest,
+and channel availability. It keeps running if the client disconnects, and it records the RID of each
+resource it creates.
 */
 type IngestAutomation struct {
 	Rid          IngestAutomationRid    `json:"rid" safelogging:"@Safe"`
@@ -1270,6 +1266,13 @@ type IngestAutomation struct {
 	   automations. May contain customer-derived content and is therefore not safe to log.
 	*/
 	ErrorMessage *string `json:"errorMessage,omitempty"`
+	/*
+	   A numeric channel suitable for plotting, picked from the ingested data once its channels
+	   became queryable: the first by name among those found, skipping blank names. At most
+	   1024 UTF-16 code units. Absent until then, and absent when nothing numeric was ingested.
+	   A column name from the customer's file and therefore not safe to log.
+	*/
+	PreviewChannel *string `json:"previewChannel,omitempty"`
 }
 
 func (o IngestAutomation) MarshalYAML() (interface{}, error) {
@@ -1313,7 +1316,8 @@ func (o *IngestDatasetFileDetails) UnmarshalYAML(unmarshal func(interface{}) err
 type IngestJob struct {
 	IngestJobRid IngestJobRid    `json:"ingestJobRid" safelogging:"@Safe"`
 	Status       IngestJobStatus `json:"status"`
-	OriginFiles  *[]string       `json:"originFiles,omitempty"`
+	// Paths of the source files the job ingests.
+	OriginFiles *[]string `json:"originFiles,omitempty"`
 	// Deprecated: use createdByRid instead
 	CreatedBy    uuid.UUID          `json:"createdBy"`
 	CreatedByRid *api2.UserRid      `json:"createdByRid,omitempty" safelogging:"@Safe"`
@@ -1368,7 +1372,7 @@ func (o *IngestJobSortOptions) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Filters ingest jobs by start time. The lower bound is inclusive; the upper bound is exclusive.
+// Filters ingest jobs by the time they were created, not by their start time. The lower bound is inclusive; the upper bound is exclusive.
 type IngestJobStartTimeRange struct {
 	StartTimeAfter  *datetime.DateTime `json:"startTimeAfter,omitempty"`
 	StartTimeBefore *datetime.DateTime `json:"startTimeBefore,omitempty"`
@@ -1675,8 +1679,12 @@ func (o *IngestRuleTriggerer) UnmarshalYAML(unmarshal func(interface{}) error) e
 }
 
 type IngestRunDataSource struct {
-	DataSource     IngestDataSource `json:"dataSource"`
-	TimeOffsetSpec *TimeOffsetSpec  `json:"timeOffsetSpec,omitempty"`
+	DataSource IngestDataSource `json:"dataSource"`
+	/*
+	   Offset for small time-sync corrections. It does not move a relative data source to the
+	   start of the run.
+	*/
+	TimeOffsetSpec *TimeOffsetSpec `json:"timeOffsetSpec,omitempty"`
 }
 
 func (o IngestRunDataSource) MarshalYAML() (interface{}, error) {
@@ -1706,11 +1714,13 @@ type IngestRunRequest struct {
 	Properties  map[api.PropertyName]api.PropertyValue `json:"properties"`
 	Labels      []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	// for example, SIM, HTL, FLT
-	RunPrefix   *string                                   `json:"runPrefix,omitempty"`
+	RunPrefix *string `json:"runPrefix,omitempty"`
+	// The run's data sources, keyed by the reference name each has on the run.
 	DataSources map[DataSourceRefName]IngestRunDataSource `json:"dataSources"`
 	/*
-	   The workspace in which to create the dataset. If not provided, the dataset will be created in the default workspace for
-	   the user's organization, if the default workspace for the organization is configured.
+	   The workspace in which to create the run and any new datasets. If not provided, they will be created in the
+	   default workspace for the user's organization, if the default workspace for the organization is configured.
+	   Must match the workspace of any existing data sources.
 	*/
 	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
@@ -2010,7 +2020,8 @@ func (o *IngestVideoResponse) UnmarshalYAML(unmarshal func(interface{}) error) e
 type InitiateMultipartUploadRequest struct {
 	/*
 	   The desired name of the file in object storage. The final name will be
-	   prefixed with a timestamp to ensure uniqueness.
+	   prefixed with a timestamp to ensure uniqueness. For a FILE_STORE destination,
+	   only the file extension is kept.
 	*/
 	Filename string `json:"filename"`
 	/*
@@ -2021,7 +2032,8 @@ type InitiateMultipartUploadRequest struct {
 	/*
 	   The workspace in which to upload the file. If not provided, the file will be uploaded to
 	   the default workspace for the user's organization, if that is configured and the user
-	   has access to it. Ignored if `resource` is provided.
+	   has access to it. If `resource` is also provided, it must resolve to this workspace,
+	   otherwise the call fails with WorkspaceResourceMismatch.
 	*/
 	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 	/*
@@ -2031,7 +2043,7 @@ type InitiateMultipartUploadRequest struct {
 	   default-fallback. Use this in flows where the caller already knows the target resource
 	   (e.g. mesh file ingest into an existing remote dataset); this avoids the
 	   `Security:WorkspaceNotSpecified` failure for API keys whose user has no default
-	   workspace. If both `resource` and `workspace` are set, `resource` takes precedence.
+	   workspace. If both `resource` and `workspace` are set, they must name the same workspace.
 	*/
 	Resource *rid.ResourceIdentifier `json:"resource,omitempty"`
 	/*
@@ -2702,8 +2714,9 @@ func (o *ParquetOpts) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type Part struct {
-	PartNumber int    `json:"partNumber"`
-	Etag       string `json:"etag"`
+	PartNumber int `json:"partNumber"`
+	// The ETag the storage provider returned when this part was uploaded to its signed URL.
+	Etag string `json:"etag"`
 }
 
 func (o Part) MarshalYAML() (interface{}, error) {
@@ -2723,9 +2736,10 @@ func (o *Part) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type PartWithSize struct {
-	PartNumber int               `json:"partNumber"`
-	Etag       string            `json:"etag"`
-	Size       safelong.SafeLong `json:"size"`
+	PartNumber int    `json:"partNumber"`
+	Etag       string `json:"etag"`
+	// Size of the part in bytes.
+	Size safelong.SafeLong `json:"size"`
 }
 
 func (o PartWithSize) MarshalYAML() (interface{}, error) {
@@ -2744,26 +2758,14 @@ func (o *PartWithSize) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Options for ingesting point cloud data into Dagger via Scout.
+// Options for ingesting point cloud data.
 // safelogging:@Unsafe
 type PointCloudOpts struct {
 	Source IngestSource           `json:"source"`
 	Target PointCloudIngestTarget `json:"target"`
 	/*
-	   The Dagger **v2** `ImportRequest` body — everything from that
-	   schema except `source_uri`, which Scout fills in from the
-	   resolved presigned URL for `source`. Forwarded to Dagger's
-	   `POST /v2/imports/{model_uuid}`. Construct via the language's
-	   generated dagger-client types (e.g.
-	   `dagger_client.models.ImportRequest` in Python). Carries the
-	   required `archetype` (attribute definitions and sampler
-	   configuration), an optional `format` (the source format and its
-	   format-specific parameters, including the `geometry_type` and
-	   `columns` a CSV source needs; omit it to let Dagger infer the
-	   format from the file extension), and an optional
-	   `quiche_config` — all of which are domain knowledge the client
-	   owns when it produced the file. The legacy v1 shape, with
-	   `geometry_type` and `columns` at the top level, is rejected.
+	   Import settings for the point cloud, as a JSON object. Leave `source_uri` out; Nominal sets it
+	   from `source`. A value that does not parse as import settings is rejected as an invalid argument.
 	*/
 	DaggerImportConfig interface{} `json:"daggerImportConfig"`
 	// Sensor metadata to associate with the point cloud.
@@ -2879,7 +2881,7 @@ type RegisterContainerizedExtractorRequest struct {
 	   If not set, timestamp metadata must be provided at ingest time.
 	*/
 	TimestampMetadata *TimestampMetadata `json:"timestampMetadata,omitempty"`
-	// The format of the output file. Currently only "parquet", "csv", "parquet.tar" are supported
+	// The format of the output file. Defaults to PARQUET.
 	OutputFileFormat *FileOutputFormat `json:"outputFileFormat,omitempty"`
 }
 
@@ -3200,6 +3202,10 @@ func (o *ResolveStreamingSessionResponse) UnmarshalYAML(unmarshal func(interface
 }
 
 type S3IngestSource struct {
+	/*
+	   Either a full `s3://bucket/key` path, or a path relative to the workspace's folder in the
+	   Nominal uploads bucket.
+	*/
 	Path string `json:"path"`
 }
 
@@ -3245,7 +3251,7 @@ type SearchIngestJobsRequest struct {
 	PageSize      *int                   `json:"pageSize,omitempty"`
 	NextPageToken *api.Token             `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Filter        *IngestJobSearchFilter `json:"filter,omitempty"`
-	// Defaults to most recent created_at first when omitted.
+	// Defaults to newest created first when omitted.
 	Sort *IngestJobSortOptions `json:"sort,omitempty"`
 }
 
@@ -3526,7 +3532,7 @@ func (o *SearchStreamingSourcesResponse) UnmarshalYAML(unmarshal func(interface{
 // safelogging:@Unsafe
 type SignDownloadRequest struct {
 	/*
-	   Path of an object in the Scout uploads bucket, in the form returned by
+	   Path of an object in the Nominal uploads bucket, in the form returned by
 	   CompleteMultipartUploadResponse.location. The caller must be authorized to
 	   read the workspace whose UUID prefixes the object key.
 	*/
@@ -3621,15 +3627,16 @@ func (o *SignPartResponse) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Public view of a streaming ingest session.
+// A record of data streamed into one dataset, attributed to a source when one was given, with its status, data bounds, and point count.
 type StreamingSession struct {
-	SessionRid  StreamingSessionRid     `json:"sessionRid" safelogging:"@Safe"`
-	DatasetRid  rids.DatasetRid         `json:"datasetRid" safelogging:"@Safe"`
-	Status      StreamingSessionStatus  `json:"status"`
-	Source      *StreamingSessionSource `json:"source,omitempty"`
-	Bounds      *api.Range              `json:"bounds,omitempty"`
-	PointsCount safelong.SafeLong       `json:"pointsCount"`
-	CreatedAt   api.Timestamp           `json:"createdAt" safelogging:"@Safe"`
+	SessionRid StreamingSessionRid     `json:"sessionRid" safelogging:"@Safe"`
+	DatasetRid rids.DatasetRid         `json:"datasetRid" safelogging:"@Safe"`
+	Status     StreamingSessionStatus  `json:"status"`
+	Source     *StreamingSessionSource `json:"source,omitempty"`
+	// Time range of the session's data points. Absent until the session has data.
+	Bounds      *api.Range        `json:"bounds,omitempty"`
+	PointsCount safelong.SafeLong `json:"pointsCount"`
+	CreatedAt   api.Timestamp     `json:"createdAt" safelogging:"@Safe"`
 	// Time of the most recent heartbeat for this session.
 	LastSeenAt api.Timestamp `json:"lastSeenAt" safelogging:"@Safe"`
 	// Time the session was completed. Absent while the session is in progress.
@@ -3759,8 +3766,10 @@ func (o *StreamingSourceFilter) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 type TagDetails struct {
-	Tags       []string `json:"tags"`
-	DefaultTag string   `json:"defaultTag"`
+	// Image tags available for the extractor.
+	Tags []string `json:"tags"`
+	// The tag the extractor runs by default. Must be one of tags.
+	DefaultTag string `json:"defaultTag"`
 }
 
 func (o TagDetails) MarshalJSON() ([]byte, error) {
@@ -3880,9 +3889,10 @@ type UpdateContainerizedExtractorRequest struct {
 	Registry          *string                                 `json:"registry,omitempty"`
 	Repository        *string                                 `json:"repository,omitempty"`
 	Tags              *[]string                               `json:"tags,omitempty"`
-	DefaultTag        *string                                 `json:"defaultTag,omitempty"`
-	Authentication    *Authentication                         `json:"authentication,omitempty"`
-	Command           *string                                 `json:"command,omitempty"`
+	// Must be one of the extractor's tags, using the new tags when tags is also set.
+	DefaultTag     *string         `json:"defaultTag,omitempty"`
+	Authentication *Authentication `json:"authentication,omitempty"`
+	Command        *string         `json:"command,omitempty"`
 }
 
 func (o UpdateContainerizedExtractorRequest) MarshalYAML() (interface{}, error) {
@@ -3985,6 +3995,42 @@ func (o *VideoFileIngestDetails) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Caller overrides for how a video is re-encoded before segmentation. Every field is optional, and an
+absent field keeps the default: re-encode only the streams that fail a playability check, and keep the
+source frame size.
+*/
+type VideoNormalizationOptions struct {
+	/*
+	   If true, audio and video are always re-encoded to H.264/AAC, even when the source passes every
+	   playability check, and decode errors are concealed rather than failing the ingest. For sources
+	   that carry a corrupt bitstream the default would copy into the segments as-is. Slower than the
+	   default.
+	*/
+	ForceNormalization *bool `json:"forceNormalization,omitempty"`
+	/*
+	   Bound on the output frame size. A source larger than the bound is re-encoded to fit inside it,
+	   preserving aspect ratio. A smaller source is never upscaled.
+	*/
+	MaxResolution *VideoResolutionPreset `json:"maxResolution,omitempty"`
+}
+
+func (o VideoNormalizationOptions) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *VideoNormalizationOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type VideoOpts struct {
 	Source            IngestSource                    `json:"source"`
 	Target            VideoIngestTarget               `json:"target"`
@@ -4024,6 +4070,11 @@ type VideoOptsV2 struct {
 	   before inserting new segments. The cached segment metadata for affected files will be recomputed.
 	*/
 	OverWriteSegments *bool `json:"overWriteSegments,omitempty"`
+	/*
+	   Overrides for how the video is re-encoded before segmentation. Absent keeps the defaults
+	   described on VideoNormalizationOptions.
+	*/
+	NormalizationOptions *VideoNormalizationOptions `json:"normalizationOptions,omitempty"`
 }
 
 func (o VideoOptsV2) MarshalJSON() ([]byte, error) {

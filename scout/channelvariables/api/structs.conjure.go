@@ -3,8 +3,9 @@
 package api
 
 import (
-	"github.com/nominal-io/nominal-api-go/scout/compute/api"
+	api2 "github.com/nominal-io/nominal-api-go/scout/compute/api"
 	"github.com/nominal-io/nominal-api-go/scout/compute/api1"
+	"github.com/nominal-io/nominal-api-go/scout/run/api"
 	"github.com/palantir/pkg/safejson"
 	"github.com/palantir/pkg/safeyaml"
 )
@@ -16,6 +17,12 @@ type ChannelVariable struct {
 	ComputeSpec  ComputeSpec         `json:"computeSpec"`
 	// optional for backcompatibility. If empty, fall back to computeSpec.
 	ComputeSpecV2 *ComputeNodeWithContext `json:"computeSpecV2,omitempty"`
+	/*
+	   How long live streaming waits for late or out-of-order points in this variable's series.
+	   If not present, each series inherits its dataset's allowed lateness.
+	   Must be at most 5 minutes, half the longest streaming window.
+	*/
+	AllowedLateness *api.Duration `json:"allowedLateness,omitempty"`
 }
 
 func (o ChannelVariable) MarshalYAML() (interface{}, error) {
@@ -136,12 +143,12 @@ func (o *ComputeNodeWithContext) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 type WorkbookContext struct {
-	Variables map[api.VariableName]VariableLocator `json:"variables"`
+	Variables map[api2.VariableName]VariableLocator `json:"variables"`
 }
 
 func (o WorkbookContext) MarshalJSON() ([]byte, error) {
 	if o.Variables == nil {
-		o.Variables = make(map[api.VariableName]VariableLocator)
+		o.Variables = make(map[api2.VariableName]VariableLocator)
 	}
 	type _tmpWorkbookContext WorkbookContext
 	return safejson.Marshal(_tmpWorkbookContext(o))
@@ -154,7 +161,7 @@ func (o *WorkbookContext) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if rawWorkbookContext.Variables == nil {
-		rawWorkbookContext.Variables = make(map[api.VariableName]VariableLocator)
+		rawWorkbookContext.Variables = make(map[api2.VariableName]VariableLocator)
 	}
 	*o = WorkbookContext(rawWorkbookContext)
 	return nil

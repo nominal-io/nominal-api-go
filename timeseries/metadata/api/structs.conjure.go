@@ -265,7 +265,6 @@ func (o *BigQueryLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) erro
 
 /*
 This request changes the nominal data type used for one channel in one data source.
-The operator is expected to be a workspace admin for the workspace containing the data source.
 The request includes the expected current type so retries and stale caller intent fail visibly.
 */
 // safelogging:@Unsafe
@@ -336,7 +335,7 @@ type CreateSeriesMetadataRequest struct {
 	// Classifies how the channel is used. Omitted values default to STANDARD.
 	ChannelKind *api.ChannelKind `json:"channelKind,omitempty"`
 	/*
-	   Tags specified here will take precedence over tags specified in the RunDatasource, in the case that both specify the same TagName.
+	   Ignored. The server does not store tags sent in a create request.
 
 	   Deprecated: Deprecated. Should not be used.
 	*/
@@ -386,8 +385,9 @@ Returns the SeriesMetadataRid of the created or existing series metadata.
 */
 // safelogging:@Unsafe
 type CreateVideoSeriesRequest struct {
-	DatasetRid rids.DatasetRid              `json:"datasetRid" safelogging:"@Safe"`
-	Channel    api.Channel                  `json:"channel" safelogging:"@Unsafe"`
+	DatasetRid rids.DatasetRid `json:"datasetRid" safelogging:"@Safe"`
+	Channel    api.Channel     `json:"channel" safelogging:"@Unsafe"`
+	// Tag key and value pairs that identify the video series within the channel.
 	Tags       map[api.TagName]api.TagValue `json:"tags"`
 	TimeBounds TimeBounds                   `json:"timeBounds" safelogging:"@Safe"`
 }
@@ -522,6 +522,7 @@ func (o *NominalLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// The definition of one channel in a data source: its name, locator, unit, description, and data type.
 // safelogging:@Unsafe
 type SeriesMetadata struct {
 	Rid           api.SeriesMetadataRid `json:"rid" safelogging:"@Safe"`
@@ -531,12 +532,13 @@ type SeriesMetadata struct {
 	Unit          *api.Unit             `json:"unit,omitempty" safelogging:"@Unsafe"`
 	Description   *string               `json:"description,omitempty"`
 	/*
-	   Tags specified here will take precedence over tags specified in the RunDatasource, in the case that both specify the same TagName.
+	   Tags specified here will take precedence over tags specified in the DataSource, in the case that both specify the same TagName.
 
 	   Deprecated: Deprecated. Should not be used.
 	*/
-	Tags           map[api.TagName]api.TagValue `json:"tags"`
-	SeriesDataType *api.SeriesDataType          `json:"seriesDataType,omitempty"`
+	Tags map[api.TagName]api.TagValue `json:"tags"`
+	// The data type that the locator implies.
+	SeriesDataType *api.SeriesDataType `json:"seriesDataType,omitempty"`
 	// Classifies how the channel is used. Omitted values should be treated as STANDARD.
 	ChannelKind *api.ChannelKind `json:"channelKind,omitempty"`
 }
@@ -675,9 +677,10 @@ func (o *TimestreamLocatorTemplate) UnmarshalYAML(unmarshal func(interface{}) er
 // safelogging:@Unsafe
 type UpdateSeriesMetadataRequest struct {
 	// Deprecated: Deprecated. Use unitUpdate instead.
-	Unit        *api.Unit        `json:"unit,omitempty" safelogging:"@Unsafe"`
-	UnitUpdate  *api1.UnitUpdate `json:"unitUpdate,omitempty"`
-	Description *string          `json:"description,omitempty"`
+	Unit       *api.Unit        `json:"unit,omitempty" safelogging:"@Unsafe"`
+	UnitUpdate *api1.UnitUpdate `json:"unitUpdate,omitempty"`
+	// Omit to keep the current description.
+	Description *string `json:"description,omitempty"`
 	// Updates the channel kind. Omitted values preserve the current setting.
 	ChannelKind *api.ChannelKind `json:"channelKind,omitempty"`
 }

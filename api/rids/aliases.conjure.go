@@ -357,6 +357,55 @@ func (a *ContainerImageRid) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
+// Unique resource identifier for an AI conversation.
+type ConversationRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a ConversationRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a ConversationRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *ConversationRid) UnmarshalText(data []byte) error {
+	var rawConversationRid rid.ResourceIdentifier
+	if err := rawConversationRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = ConversationRid(rawConversationRid)
+	return nil
+}
+
+func (a ConversationRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *ConversationRid) UnmarshalJSON(data []byte) error {
+	var rawConversationRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawConversationRid); err != nil {
+		return err
+	}
+	*a = ConversationRid(rawConversationRid)
+	return nil
+}
+
+func (a ConversationRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *ConversationRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
 // Unique resource identifier for a Data Connector.
 type DataConnectorRid rid.ResourceIdentifier // safelogging:@Safe
 

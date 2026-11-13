@@ -69,6 +69,7 @@ func (e *ScanPattern) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// The field that search results are sorted by.
 type SortField struct {
 	val SortField_Value
 }
@@ -76,6 +77,7 @@ type SortField struct {
 type SortField_Value string
 
 const (
+	// The time the point cloud was created.
 	SortField_CREATED_AT SortField_Value = "CREATED_AT"
 	SortField_UNKNOWN    SortField_Value = "UNKNOWN"
 )
@@ -123,7 +125,7 @@ func (e *SortField) UnmarshalText(data []byte) error {
 	return nil
 }
 
-// The type of spatial data stored in a spatial asset.
+// The type of spatial data that a point cloud (a spatial asset in the API) holds.
 type SpatialType struct {
 	val SpatialType_Value
 }

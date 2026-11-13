@@ -10,6 +10,7 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// Saved style settings for chart image exports (an export theme in the app).
 type ChartTheme struct {
 	// Unique resource identifier for the theme.
 	Rid ChartThemeRid `json:"rid" safelogging:"@Safe"`
@@ -21,7 +22,7 @@ type ChartTheme struct {
 	CreatedAt datetime.DateTime `json:"createdAt"`
 	// The rid of the user who last updated the theme.
 	UpdatedBy *rid.ResourceIdentifier `json:"updatedBy,omitempty"`
-	// The rid of the user who last updated the theme.
+	// The time the theme was last updated. Absent until the first update.
 	UpdatedAt *datetime.DateTime `json:"updatedAt,omitempty"`
 	// Specifies the chart theme styling (e.g. font, legends, axes)
 	Content ChartThemeContent `json:"content"`
@@ -163,7 +164,7 @@ type TimeSeriesChartThemeV1 struct {
 	YAxisTitleFontSize int `json:"yAxisTitleFontSize"`
 	// The font size of the y-axis ticks.
 	YAxisTickFontSize int `json:"yAxisTickFontSize"`
-	// The line thickness in px of the threshold line.
+	// The line thickness in px of the threshold line. Stored as 1 when omitted.
 	ThresholdLineWidth *int `json:"thresholdLineWidth,omitempty"`
 }
 

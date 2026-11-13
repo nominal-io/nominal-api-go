@@ -18,16 +18,37 @@ import (
 // Manages data sources (logical groupings of series) that are stored by Nominal.
 type NominalDataSourceServiceClient interface {
 	/*
-	   Creates a data source.
+	   Creates a Nominal data source, a logical grouping of series, in a workspace, together with a dataset
+	   that has the same UUID. Returns the data source.
+
+	   The server assigns the RID. The workspace is the given one, or the caller's default workspace when none is
+	   given. The dataset is named by the data source id, and both objects are placed in that workspace.
+	   Granularity defaults to nanoseconds. The caller needs permission to create data sources in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - CONFLICT (NominalDataSource:NominalDataSourceConflict): the workspace already has a data source with
+	     this id.
 
 	   Deprecated: Use CatalogService#createDataset instead.
 	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg CreateNominalDataSourceRequest) (NominalDataSource, error)
+	/*
+	   Sets inMemoryStreamingEnabled on a Nominal data source and returns the updated data source. No other
+	   field of the data source changes.
+
+	   Errors:
+	   - NOT_FOUND (NominalDataSource:DataSourcesNotFound): the caller cannot access the data source.
+	*/
 	Update(ctx context.Context, authHeader bearertoken.Token, ridArg rids.NominalDataSourceRid, requestArg UpdateNominalDataSourceRequest) (NominalDataSource, error)
 	/*
-	   Retrieves the data sources for the given data source RIDs.
+	   Gets Nominal data sources by RID. The caller must be able to read the data of every requested data source.
 
-	   Excludes data sources that do not exist or are unauthorized. A maximum of 1000 rids can be requested.
+	   Errors:
+	   - NOT_FOUND (NominalDataSource:DataSourcesNotFound): the caller cannot read the data of at least one
+	     requested data source. The error names them, and the call does not skip them.
 	*/
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, ridsArg []rids.NominalDataSourceRid) ([]NominalDataSource, error)
 	// Sets the timestamp that the Nominal Data Source in question was last written to. Only needs to be called once per minute.
@@ -135,16 +156,37 @@ func (c *nominalDataSourceServiceClient) EnsureDatasetForDataSource(ctx context.
 // Manages data sources (logical groupings of series) that are stored by Nominal.
 type NominalDataSourceServiceClientWithAuth interface {
 	/*
-	   Creates a data source.
+	   Creates a Nominal data source, a logical grouping of series, in a workspace, together with a dataset
+	   that has the same UUID. Returns the data source.
+
+	   The server assigns the RID. The workspace is the given one, or the caller's default workspace when none is
+	   given. The dataset is named by the data source id, and both objects are placed in that workspace.
+	   Granularity defaults to nanoseconds. The caller needs permission to create data sources in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - CONFLICT (NominalDataSource:NominalDataSourceConflict): the workspace already has a data source with
+	     this id.
 
 	   Deprecated: Use CatalogService#createDataset instead.
 	*/
 	Create(ctx context.Context, requestArg CreateNominalDataSourceRequest) (NominalDataSource, error)
+	/*
+	   Sets inMemoryStreamingEnabled on a Nominal data source and returns the updated data source. No other
+	   field of the data source changes.
+
+	   Errors:
+	   - NOT_FOUND (NominalDataSource:DataSourcesNotFound): the caller cannot access the data source.
+	*/
 	Update(ctx context.Context, ridArg rids.NominalDataSourceRid, requestArg UpdateNominalDataSourceRequest) (NominalDataSource, error)
 	/*
-	   Retrieves the data sources for the given data source RIDs.
+	   Gets Nominal data sources by RID. The caller must be able to read the data of every requested data source.
 
-	   Excludes data sources that do not exist or are unauthorized. A maximum of 1000 rids can be requested.
+	   Errors:
+	   - NOT_FOUND (NominalDataSource:DataSourcesNotFound): the caller cannot read the data of at least one
+	     requested data source. The error names them, and the call does not skip them.
 	*/
 	BatchGet(ctx context.Context, ridsArg []rids.NominalDataSourceRid) ([]NominalDataSource, error)
 	// Sets the timestamp that the Nominal Data Source in question was last written to. Only needs to be called once per minute.

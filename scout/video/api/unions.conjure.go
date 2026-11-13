@@ -807,12 +807,7 @@ func NewSearchVideosQueryFromWorkspace(v rids.WorkspaceRid) SearchVideosQuery {
 	return SearchVideosQuery{typ: "workspace", workspace: &v}
 }
 
-/*
-A video segment will either contain timestamps or timestamp mappings depending on whether it is intended to
-be frame-mapped. Without a frame-timestamp mapping manifest file, a list of absolute timestamps will be
-automatically assigned to each segment based on media timestamps.. Otherwise, media timestamps will be
-extracted and mapped to those in the provided manifest.
-*/
+// The frame timestamps of a video segment, as a mapping of media time to absolute time for each frame.
 type SegmentTimestamps struct {
 	typ               string
 	timestampMappings *TimestampMappings
@@ -1163,7 +1158,7 @@ func NewUpdateIngestStatusFromInProgress(v api.Empty) UpdateIngestStatus {
 
 /*
 Union type for referencing a video channel. Allows querying video data via
-datasource/channel, asset data scopes, or run data scopes.
+datasource/channel or asset data scopes.
 */
 type VideoChannelSeries struct {
 	typ        string
@@ -1339,6 +1334,7 @@ func NewVideoChannelSeriesFromAsset(v VideoAssetChannel) VideoChannelSeries {
 	return VideoChannelSeries{typ: "asset", asset: &v}
 }
 
+// Ingest state of one video file, either success, in progress, or an error with an error type and message.
 type VideoFileIngestStatus struct {
 	typ        string
 	success    *SuccessIngestStatus

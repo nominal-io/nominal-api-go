@@ -506,6 +506,7 @@ func (e *SeriesDataType) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// How a filter combines the items it lists.
 type SetOperator struct {
 	val SetOperator_Value
 }
@@ -513,7 +514,9 @@ type SetOperator struct {
 type SetOperator_Value string
 
 const (
-	SetOperator_AND     SetOperator_Value = "AND"
+	// Matches only when every listed item matches.
+	SetOperator_AND SetOperator_Value = "AND"
+	// Matches when at least one listed item matches.
 	SetOperator_OR      SetOperator_Value = "OR"
 	SetOperator_UNKNOWN SetOperator_Value = "UNKNOWN"
 )

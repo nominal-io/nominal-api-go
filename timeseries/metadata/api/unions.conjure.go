@@ -10,6 +10,10 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+/*
+Where the values of a series are stored: a Nominal dataset channel, an external database or service, a video
+channel, or a spatial channel.
+*/
 type LocatorTemplate struct {
 	typ            string
 	timescaleDb    *TimescaleDbLocatorTemplate

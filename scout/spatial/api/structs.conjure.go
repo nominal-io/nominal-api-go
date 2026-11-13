@@ -16,28 +16,22 @@ import (
 // safelogging:@Unsafe
 type CreateSpatialRequest struct {
 	Title string `json:"title"`
-	/*
-	   UUID of the Dagger model that backs this spatial asset. Callers must create the
-	   model in Dagger before calling create.
-	*/
+	// UUID of the stored model that holds the point cloud data.
 	DaggerUuid   uuid.UUID                              `json:"daggerUuid"`
 	TypeMetadata SpatialTypeMetadata                    `json:"typeMetadata"`
 	Labels       []api.Label                            `json:"labels" safelogging:"@Unsafe"`
 	Properties   map[api.PropertyName]api.PropertyValue `json:"properties"`
-	/*
-	   The markings to apply to the created spatial asset.
-	   If not provided, the asset will be visible to all users in the same workspace.
-	*/
+	// The markings to apply to the created point cloud.
 	MarkingRids []api1.MarkingRid `json:"markingRids" safelogging:"@Safe"`
 	Description *string           `json:"description,omitempty"`
-	// Start of the time range covered by this spatial asset.
+	// Start of the time range covered by this point cloud.
 	StartTimestamp *api.Timestamp `json:"startTimestamp,omitempty"`
-	// End of the time range covered by this spatial asset.
+	// End of the time range covered by this point cloud.
 	EndTimestamp *api.Timestamp `json:"endTimestamp,omitempty"`
 	// Optional reference to the original source data (e.g., S3 path) for provenance tracking.
 	SourceHandle *api.Handle `json:"sourceHandle,omitempty"`
 	/*
-	   The workspace in which to create the spatial asset. If not provided, the asset will be created in
+	   The workspace in which to create the point cloud. If not provided, the point cloud will be created in
 	   the default workspace for the user's organization, if the default workspace is configured.
 	*/
 	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
@@ -210,7 +204,7 @@ type SearchSpatialsRequest struct {
 	PageSize    *int        `json:"pageSize,omitempty"`
 	Token       *api.Token  `json:"token,omitempty" safelogging:"@Unsafe"`
 	SortOptions SortOptions `json:"sortOptions"`
-	// Default search status is NOT_ARCHIVED if none are provided.
+	// Defaults to NOT_ARCHIVED when omitted.
 	ArchivedStatuses *[]api.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
@@ -273,7 +267,9 @@ func (o *SearchSpatialsResponse) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// The sort order of point cloud search results.
 type SortOptions struct {
+	// When true, sorts newest first by creation time. When false, sorts the oldest first.
 	IsDescending bool      `json:"isDescending"`
 	Field        SortField `json:"field"`
 }
@@ -294,10 +290,10 @@ func (o *SortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// A spatial asset representing 3D or geospatial data (e.g. point clouds).
+// A point cloud (a spatial asset in the API), the 3D spatial data that a Geo 3D panel draws.
 // safelogging:@Unsafe
 type Spatial struct {
-	// Unique resource identifier for this spatial asset.
+	// Unique resource identifier for this point cloud.
 	Rid rids.SpatialRid `json:"rid" safelogging:"@Safe"`
 	// Human-readable name.
 	Title string `json:"title"`
@@ -307,24 +303,24 @@ type Spatial struct {
 	Labels []api.Label `json:"labels" safelogging:"@Unsafe"`
 	// Arbitrary key-value metadata.
 	Properties map[api.PropertyName]api.PropertyValue `json:"properties"`
-	// RID of the user who created this asset.
+	// RID of the user who created this point cloud.
 	CreatedBy rid.ResourceIdentifier `json:"createdBy"`
-	// When this asset was created.
+	// When this point cloud was created.
 	CreatedAt datetime.DateTime `json:"createdAt"`
-	// When this asset was last modified.
+	// When this point cloud was last modified.
 	UpdatedAt datetime.DateTime `json:"updatedAt"`
-	// Whether this asset has been archived.
+	// Whether this point cloud has been archived.
 	IsArchived bool `json:"isArchived"`
-	// The UUID of the Dagger model containing this asset's data. Supplied by the caller at create time.
+	// UUID of the stored model that holds this point cloud's data. The caller supplies it when creating the point cloud.
 	DaggerUuid uuid.UUID `json:"daggerUuid"`
 	/*
 	   Type-specific metadata (e.g. sensor metadata for point clouds). The variant of this
 	   union also serves as the type discriminator — there is no separate spatialType field.
 	*/
 	TypeMetadata SpatialTypeMetadata `json:"typeMetadata"`
-	// Start of the time range covered by this spatial asset.
+	// Start of the time range that this point cloud covers.
 	StartTimestamp *api.Timestamp `json:"startTimestamp,omitempty"`
-	// End of the time range covered by this spatial asset.
+	// End of the time range that this point cloud covers.
 	EndTimestamp *api.Timestamp `json:"endTimestamp,omitempty"`
 	// Optional reference to the original source data (e.g., S3 path) for provenance tracking.
 	SourceHandle *api.Handle `json:"sourceHandle,omitempty"`
@@ -373,6 +369,10 @@ func (o *Spatial) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Fields left out keep their current value. A provided labels or properties value replaces the existing one
+as a whole.
+*/
 // safelogging:@Unsafe
 type UpdateSpatialMetadataRequest struct {
 	Title          *string                                 `json:"title,omitempty"`

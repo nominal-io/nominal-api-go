@@ -15,39 +15,68 @@ import (
 
 // The Compute Service provides the ability to compute the output of compute graphs.
 type ComputeServiceClient interface {
-	// Computes the output of the compute graph specified by a ComputeNodeRequest.
+	/*
+	   Evaluates a compute graph, the formulas and transforms behind a variable, over a time range. Returns the output, such as a numeric series or ranges.
+
+	   The start and end of the range are inclusive. The caller needs permission to read the data of every data source the graph uses, and all of them must be in one workspace. sourceRid is used only to label the query and is not checked for permission. requestId, when set, is the handle that batchKillRequests and batchGetRequestProgress use for this request.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Compute:SourceBlocked): queries from sourceRid are temporarily blocked.
+	   - INVALID_ARGUMENT: end is before start, or the graph cannot be evaluated, for example a variable has no value (Compute:MissingVariable), a ranges output sets maxRanges above the limit of 10,000 (Compute:TooManyRanges), or the query timed out (Compute:TimeoutExceeded).
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read the data of a data source the graph uses.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the graph uses data sources from more than one workspace, or a data source that is not in a workspace.
+	*/
 	Compute(ctx context.Context, authHeader bearertoken.Token, requestArg ComputeNodeRequest) (api.ComputeNodeResponse, error)
 	/*
-	   Computes the output of the compute graph specified by a ParameterizedComputeNodeRequest. A parameterized
-	   compute request supports multiple values for a single variable, supplied by the ParameterizedContext.
-	   Results are returned in the same order of the request.
+	   Evaluates one compute graph once for each set of variable values in the parameterized context. Returns one result per set, in request order.
+
+	   A set that fails returns an error result and the other sets still return. A set can override the start and end of the range; the check that end is not before start uses the range of the request. Data source access and workspace rules are the same as for compute, and are checked across all sets that resolve. Rejects more than 300 sets.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Compute:SourceBlocked): queries from sourceRid are temporarily blocked.
+	   - INVALID_ARGUMENT: end is before start.
+	   - INVALID_ARGUMENT (Compute:TooManySubrequests): the request has more than 300 sets.
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read the data of a data source that a set uses.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the sets use data sources from more than one workspace.
 	*/
 	ParameterizedCompute(ctx context.Context, authHeader bearertoken.Token, requestArg ParameterizedComputeNodeRequest) (api.ParameterizedComputeNodeResponse, error)
 	/*
-	   Returns the resulting unit for the output of a compute graph. If the resulting unit is equivalent to exactly
-	   one existing unit in the system, it will be returned (for example, a series in Coulombs divided by a series
-	   in Volts will return an output of Farads). If the output does not have units (for example, a range output,)
-	   the unit result will return noUnitAvailable, and if the computation was not successful, corresponding errors
-	   are returned.
+	   Gets the unit of the output of a compute graph without computing its data. A derived unit that equals exactly one cataloged unit is returned as that unit: a series in coulombs divided by a series in volts gives farads.
+
+	   The result is noUnitAvailable when the output has no unit, such as ranges, or when the units cannot be combined; the errors are listed in the result. The caller needs permission to read the data of every data source the graph uses, and all of them must be in one workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the graph cannot be resolved, for example a variable has no value (Compute:MissingVariable).
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read the data of a data source the graph uses.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the graph uses data sources from more than one workspace.
 	*/
 	ComputeUnits(ctx context.Context, authHeader bearertoken.Token, requestArg ComputeUnitsRequest) (api.ComputeUnitResult, error)
 	/*
-	   Computes the output of compute graphs specified by BatchComputeNodeRequest. Results are returned in the same
-	   order as the request.
+	   Evaluates up to 300 compute graphs and returns each output with its unit, in request order. For one graph, use computeWithUnits.
+
+	   A graph that fails returns an error result with noUnitAvailable, and the others still return. Each graph follows the data source access and workspace rules of compute, and a failure of those checks is also returned in that graph's result.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Compute:SourceBlocked): queries from the sourceRid of any request are temporarily blocked. The whole call fails.
+	   - INVALID_ARGUMENT (Compute:TooManySubrequests): the request has more than 300 graphs.
 	*/
 	BatchComputeWithUnits(ctx context.Context, authHeader bearertoken.Token, requestArg BatchComputeWithUnitsRequest) (api.BatchComputeWithUnitsResponse, error)
 	/*
-	   Same as computeUnits, however this endpoint functions on a batch of requests for wire efficiency purposes. An
-	   extra note is that this method will serialize underlying conjure errors into the BatchComputeUnitResult type,
-	   meaning callers are required to check for errors explicitly (rather than relying on exceptions being thrown).
+	   Gets the units of the outputs of several compute graphs, in request order, as computeUnits does for one.
+
+	   A graph that fails does not fail the call: its result is noUnitAvailable with the error, so check every result. No call-level errors are returned for the graphs.
 	*/
 	BatchComputeUnits(ctx context.Context, authHeader bearertoken.Token, requestArg BatchComputeUnitsRequest) (api.BatchComputeUnitResult, error)
 	/*
-	   Computes the output of the compute graph specified by a ComputeNodeRequest, as well as providing the resulting
-	   unit for the output of a compute graph. If the resulting unit is equivalent to exactly one existing unit in the
-	   system, it will be returned (for example, a series in Coulombs divided by a series in Volts will return an
-	   output of Farads). If the output does not have units (for example, a range output,) the unit result will return
-	   noUnitAvailable, and if the computation was not successful, corresponding errors are returned.
+	   Evaluates one compute graph as compute does, and also returns the unit of its output as computeUnits does. For many graphs, use batchComputeWithUnits.
+
+	   The unit is noUnitAvailable, with the errors, when the output has no unit, such as ranges, or when the units cannot be combined. The call fails if the computation fails. Data source access and workspace rules are the same as for compute.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Compute:SourceBlocked): queries from sourceRid are temporarily blocked.
+	   - INVALID_ARGUMENT: end is before start, or the graph cannot be evaluated, as for compute.
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read the data of a data source the graph uses.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the graph uses data sources from more than one workspace.
 	*/
 	ComputeWithUnits(ctx context.Context, authHeader bearertoken.Token, requestArg ComputeWithUnitsRequest) (api.ComputeWithUnitsResponse, error)
 	/*
@@ -57,22 +86,18 @@ type ComputeServiceClient interface {
 	*/
 	BatchKillRequests(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchKillRequestsRequest) error
 	/*
-	   Returns a point-in-time snapshot of progress for the given active compute requests. Each
-	   ID should be the request ID that the client originally passed when starting the request.
-	   Intended to be polled (roughly once per second) for requests that have been running
-	   longer than the slow-query threshold.
+	   Gets a snapshot of the progress of the caller's own running compute requests, by the request ID passed to the compute call. Returns an entry for every ID: rows read and an approximate total, or inactive when no query is running.
 
-	   A request with no active queries is not necessarily finished: its underlying queries may
-	   not have started yet, the request may be in a post-processing phase, or the request's
-	   work may be executed somewhere that does not report progress — in which case it stays
-	   inactive for its entire duration. Clients should derive progress from the raw row
-	   counters and must not assume monotonicity, since totalRowsApprox can grow while a
-	   request runs.
+	   Inactive means no query of the request was running when the call sampled. The queries may not have started, the request may be finishing, or its work may run where progress is not reported. For a request that fans out into several queries, the counts are summed across them, and the approximate total can grow while the request runs. Repeated IDs return one entry.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Compute:TooManySubrequests): the request has more than 300 IDs.
 	*/
 	BatchGetRequestProgress(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetRequestProgressRequest) (api.BatchGetRequestProgressResponse, error)
 	/*
-	   Returns the calling user's compute quota usage for their current organization, one entry
-	   per quota window. Returns no intervals when quotas are not enabled for the organization.
+	   Gets the compute quota usage of the caller in their organization, one entry per quota window, with the amount used and the limit for resources such as rows read, bytes read, queries, errors, and execution time.
+
+	   Returns no entries when the organization has no compute quotas.
 	*/
 	GetQuotaUsage(ctx context.Context, authHeader bearertoken.Token) (api.GetQuotaUsageResponse, error)
 }
@@ -243,39 +268,68 @@ func (c *computeServiceClient) GetQuotaUsage(ctx context.Context, authHeader bea
 
 // The Compute Service provides the ability to compute the output of compute graphs.
 type ComputeServiceClientWithAuth interface {
-	// Computes the output of the compute graph specified by a ComputeNodeRequest.
+	/*
+	   Evaluates a compute graph, the formulas and transforms behind a variable, over a time range. Returns the output, such as a numeric series or ranges.
+
+	   The start and end of the range are inclusive. The caller needs permission to read the data of every data source the graph uses, and all of them must be in one workspace. sourceRid is used only to label the query and is not checked for permission. requestId, when set, is the handle that batchKillRequests and batchGetRequestProgress use for this request.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Compute:SourceBlocked): queries from sourceRid are temporarily blocked.
+	   - INVALID_ARGUMENT: end is before start, or the graph cannot be evaluated, for example a variable has no value (Compute:MissingVariable), a ranges output sets maxRanges above the limit of 10,000 (Compute:TooManyRanges), or the query timed out (Compute:TimeoutExceeded).
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read the data of a data source the graph uses.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the graph uses data sources from more than one workspace, or a data source that is not in a workspace.
+	*/
 	Compute(ctx context.Context, requestArg ComputeNodeRequest) (api.ComputeNodeResponse, error)
 	/*
-	   Computes the output of the compute graph specified by a ParameterizedComputeNodeRequest. A parameterized
-	   compute request supports multiple values for a single variable, supplied by the ParameterizedContext.
-	   Results are returned in the same order of the request.
+	   Evaluates one compute graph once for each set of variable values in the parameterized context. Returns one result per set, in request order.
+
+	   A set that fails returns an error result and the other sets still return. A set can override the start and end of the range; the check that end is not before start uses the range of the request. Data source access and workspace rules are the same as for compute, and are checked across all sets that resolve. Rejects more than 300 sets.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Compute:SourceBlocked): queries from sourceRid are temporarily blocked.
+	   - INVALID_ARGUMENT: end is before start.
+	   - INVALID_ARGUMENT (Compute:TooManySubrequests): the request has more than 300 sets.
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read the data of a data source that a set uses.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the sets use data sources from more than one workspace.
 	*/
 	ParameterizedCompute(ctx context.Context, requestArg ParameterizedComputeNodeRequest) (api.ParameterizedComputeNodeResponse, error)
 	/*
-	   Returns the resulting unit for the output of a compute graph. If the resulting unit is equivalent to exactly
-	   one existing unit in the system, it will be returned (for example, a series in Coulombs divided by a series
-	   in Volts will return an output of Farads). If the output does not have units (for example, a range output,)
-	   the unit result will return noUnitAvailable, and if the computation was not successful, corresponding errors
-	   are returned.
+	   Gets the unit of the output of a compute graph without computing its data. A derived unit that equals exactly one cataloged unit is returned as that unit: a series in coulombs divided by a series in volts gives farads.
+
+	   The result is noUnitAvailable when the output has no unit, such as ranges, or when the units cannot be combined; the errors are listed in the result. The caller needs permission to read the data of every data source the graph uses, and all of them must be in one workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the graph cannot be resolved, for example a variable has no value (Compute:MissingVariable).
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read the data of a data source the graph uses.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the graph uses data sources from more than one workspace.
 	*/
 	ComputeUnits(ctx context.Context, requestArg ComputeUnitsRequest) (api.ComputeUnitResult, error)
 	/*
-	   Computes the output of compute graphs specified by BatchComputeNodeRequest. Results are returned in the same
-	   order as the request.
+	   Evaluates up to 300 compute graphs and returns each output with its unit, in request order. For one graph, use computeWithUnits.
+
+	   A graph that fails returns an error result with noUnitAvailable, and the others still return. Each graph follows the data source access and workspace rules of compute, and a failure of those checks is also returned in that graph's result.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Compute:SourceBlocked): queries from the sourceRid of any request are temporarily blocked. The whole call fails.
+	   - INVALID_ARGUMENT (Compute:TooManySubrequests): the request has more than 300 graphs.
 	*/
 	BatchComputeWithUnits(ctx context.Context, requestArg BatchComputeWithUnitsRequest) (api.BatchComputeWithUnitsResponse, error)
 	/*
-	   Same as computeUnits, however this endpoint functions on a batch of requests for wire efficiency purposes. An
-	   extra note is that this method will serialize underlying conjure errors into the BatchComputeUnitResult type,
-	   meaning callers are required to check for errors explicitly (rather than relying on exceptions being thrown).
+	   Gets the units of the outputs of several compute graphs, in request order, as computeUnits does for one.
+
+	   A graph that fails does not fail the call: its result is noUnitAvailable with the error, so check every result. No call-level errors are returned for the graphs.
 	*/
 	BatchComputeUnits(ctx context.Context, requestArg BatchComputeUnitsRequest) (api.BatchComputeUnitResult, error)
 	/*
-	   Computes the output of the compute graph specified by a ComputeNodeRequest, as well as providing the resulting
-	   unit for the output of a compute graph. If the resulting unit is equivalent to exactly one existing unit in the
-	   system, it will be returned (for example, a series in Coulombs divided by a series in Volts will return an
-	   output of Farads). If the output does not have units (for example, a range output,) the unit result will return
-	   noUnitAvailable, and if the computation was not successful, corresponding errors are returned.
+	   Evaluates one compute graph as compute does, and also returns the unit of its output as computeUnits does. For many graphs, use batchComputeWithUnits.
+
+	   The unit is noUnitAvailable, with the errors, when the output has no unit, such as ranges, or when the units cannot be combined. The call fails if the computation fails. Data source access and workspace rules are the same as for compute.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Compute:SourceBlocked): queries from sourceRid are temporarily blocked.
+	   - INVALID_ARGUMENT: end is before start, or the graph cannot be evaluated, as for compute.
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read the data of a data source the graph uses.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the graph uses data sources from more than one workspace.
 	*/
 	ComputeWithUnits(ctx context.Context, requestArg ComputeWithUnitsRequest) (api.ComputeWithUnitsResponse, error)
 	/*
@@ -285,22 +339,18 @@ type ComputeServiceClientWithAuth interface {
 	*/
 	BatchKillRequests(ctx context.Context, requestArg api.BatchKillRequestsRequest) error
 	/*
-	   Returns a point-in-time snapshot of progress for the given active compute requests. Each
-	   ID should be the request ID that the client originally passed when starting the request.
-	   Intended to be polled (roughly once per second) for requests that have been running
-	   longer than the slow-query threshold.
+	   Gets a snapshot of the progress of the caller's own running compute requests, by the request ID passed to the compute call. Returns an entry for every ID: rows read and an approximate total, or inactive when no query is running.
 
-	   A request with no active queries is not necessarily finished: its underlying queries may
-	   not have started yet, the request may be in a post-processing phase, or the request's
-	   work may be executed somewhere that does not report progress — in which case it stays
-	   inactive for its entire duration. Clients should derive progress from the raw row
-	   counters and must not assume monotonicity, since totalRowsApprox can grow while a
-	   request runs.
+	   Inactive means no query of the request was running when the call sampled. The queries may not have started, the request may be finishing, or its work may run where progress is not reported. For a request that fans out into several queries, the counts are summed across them, and the approximate total can grow while the request runs. Repeated IDs return one entry.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Compute:TooManySubrequests): the request has more than 300 IDs.
 	*/
 	BatchGetRequestProgress(ctx context.Context, requestArg api.BatchGetRequestProgressRequest) (api.BatchGetRequestProgressResponse, error)
 	/*
-	   Returns the calling user's compute quota usage for their current organization, one entry
-	   per quota window. Returns no intervals when quotas are not enabled for the organization.
+	   Gets the compute quota usage of the caller in their organization, one entry per quota window, with the amount used and the limit for resources such as rows read, bytes read, queries, errors, and execution time.
+
+	   Returns no entries when the organization has no compute quotas.
 	*/
 	GetQuotaUsage(ctx context.Context) (api.GetQuotaUsageResponse, error)
 }

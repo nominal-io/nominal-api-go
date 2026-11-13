@@ -14,7 +14,19 @@ import (
 
 // This service provides internal APIs related to modules.
 type InternalModuleServiceClient interface {
-	// Returns the module definition for the given module reference.
+	/*
+	   Returns the compute definition of each module named in the request: its API name, RID, version, and
+	   functions. A module is a shared collection of compute functions.
+
+	   Each reference names a module by API name, in the caller's organization, at a pinned version or at its
+	   latest version. Archived modules are included. The results are in no fixed order. The caller needs
+	   permission to view the workspace of each module.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Module:InvalidModuleVersionString): a pinned version is not a number or dot-separated numbers.
+	   - NOT_FOUND (Module:ModulesNotFound): a reference matches no module or no such version, or the caller
+	     cannot view the module's workspace.
+	*/
 	BatchGetUnresolvedModuleDefinition(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetUnresolvedModuleDefinitionsRequest) (BatchGetUnresolvedModuleDefinitionsResponse, error)
 }
 
@@ -46,7 +58,19 @@ func (c *internalModuleServiceClient) BatchGetUnresolvedModuleDefinition(ctx con
 
 // This service provides internal APIs related to modules.
 type InternalModuleServiceClientWithAuth interface {
-	// Returns the module definition for the given module reference.
+	/*
+	   Returns the compute definition of each module named in the request: its API name, RID, version, and
+	   functions. A module is a shared collection of compute functions.
+
+	   Each reference names a module by API name, in the caller's organization, at a pinned version or at its
+	   latest version. Archived modules are included. The results are in no fixed order. The caller needs
+	   permission to view the workspace of each module.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Module:InvalidModuleVersionString): a pinned version is not a number or dot-separated numbers.
+	   - NOT_FOUND (Module:ModulesNotFound): a reference matches no module or no such version, or the caller
+	     cannot view the module's workspace.
+	*/
 	BatchGetUnresolvedModuleDefinition(ctx context.Context, requestArg BatchGetUnresolvedModuleDefinitionsRequest) (BatchGetUnresolvedModuleDefinitionsResponse, error)
 }
 

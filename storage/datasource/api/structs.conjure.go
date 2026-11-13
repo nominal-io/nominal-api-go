@@ -12,7 +12,7 @@ import (
 
 // safelogging:@Unsafe
 type CreateNominalDataSourceRequest struct {
-	// A human readable identifier. Must be unique within an organization.
+	// A human readable identifier. Must be unique within the workspace.
 	Id          NominalDataSourceId `json:"id" safelogging:"@Unsafe"`
 	Description *string             `json:"description,omitempty"`
 	/*

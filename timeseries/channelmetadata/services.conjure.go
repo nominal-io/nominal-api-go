@@ -15,18 +15,46 @@ import (
 
 // Endpoints for retrieving and updating channel metadata.
 type ChannelMetadataServiceClient interface {
-	// Get the metadata for a channel.
+	/*
+	   Returns the description, unit, data type, and kind of one channel in a data source (dataset).
+
+	   The caller needs permission to read the metadata of the data source.
+
+	   Errors:
+	   - NOT_FOUND (ChannelMetadata:ChannelsNotFound): the channel does not exist in the data source, or the caller
+	     cannot read its metadata.
+	*/
 	GetChannelMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetChannelMetadataRequest) (api.ChannelMetadata, error)
 	/*
-	   Batch get the metadata for multiple channels. If some channels cannot be found or authorized,
-	   they will be omitted from the response.
+	   Returns the metadata of each given channel in its data source (dataset), one entry per distinct channel.
+
+	   Channels that do not exist, or whose data source the caller cannot read the metadata of, are omitted without
+	   an error. Use getChannelMetadata to fail when a channel is missing.
 	*/
 	BatchGetChannelMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetChannelMetadataRequest) (api.BatchGetChannelMetadataResponse, error)
-	// Update the metadata for a channel.
+	/*
+	   Changes the description or unit of one channel in a data source (dataset). Returns the updated metadata.
+
+	   Only the fields given change: an omitted description or unitUpdate leaves the stored value as it is. A
+	   unitUpdate sets the unit or clears it. A request that sets neither returns the current metadata. The caller
+	   needs permission to edit the metadata of the data source.
+
+	   Errors:
+	   - NOT_FOUND (ChannelMetadata:ChannelsNotFound): the channel does not exist in the data source, or the caller
+	     cannot edit its metadata.
+	*/
 	UpdateChannelMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.UpdateChannelMetadataRequest) (api.ChannelMetadata, error)
 	/*
-	   Batch update the metadata for multiple channels. If some channels cannot be found or authorized,
-	   no metadata will be updated for any of the channels in the request.
+	   Changes the description or unit of several channels in data sources (datasets) in one all-or-nothing call.
+	   Returns the updated metadata.
+
+	   Each update follows updateChannelMetadata. A channel can appear once per call, and a call accepts at most
+	   10,000 updates. If any update fails, none is applied.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the call has more than 10,000 updates, or a channel appears more than once.
+	   - NOT_FOUND (ChannelMetadata:ChannelsNotFound): a channel does not exist, or the caller cannot edit the
+	     metadata of its data source.
 	*/
 	BatchUpdateChannelMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchUpdateChannelMetadataRequest) (api.BatchUpdateChannelMetadataResponse, error)
 }
@@ -113,18 +141,46 @@ func (c *channelMetadataServiceClient) BatchUpdateChannelMetadata(ctx context.Co
 
 // Endpoints for retrieving and updating channel metadata.
 type ChannelMetadataServiceClientWithAuth interface {
-	// Get the metadata for a channel.
+	/*
+	   Returns the description, unit, data type, and kind of one channel in a data source (dataset).
+
+	   The caller needs permission to read the metadata of the data source.
+
+	   Errors:
+	   - NOT_FOUND (ChannelMetadata:ChannelsNotFound): the channel does not exist in the data source, or the caller
+	     cannot read its metadata.
+	*/
 	GetChannelMetadata(ctx context.Context, requestArg api.GetChannelMetadataRequest) (api.ChannelMetadata, error)
 	/*
-	   Batch get the metadata for multiple channels. If some channels cannot be found or authorized,
-	   they will be omitted from the response.
+	   Returns the metadata of each given channel in its data source (dataset), one entry per distinct channel.
+
+	   Channels that do not exist, or whose data source the caller cannot read the metadata of, are omitted without
+	   an error. Use getChannelMetadata to fail when a channel is missing.
 	*/
 	BatchGetChannelMetadata(ctx context.Context, requestArg api.BatchGetChannelMetadataRequest) (api.BatchGetChannelMetadataResponse, error)
-	// Update the metadata for a channel.
+	/*
+	   Changes the description or unit of one channel in a data source (dataset). Returns the updated metadata.
+
+	   Only the fields given change: an omitted description or unitUpdate leaves the stored value as it is. A
+	   unitUpdate sets the unit or clears it. A request that sets neither returns the current metadata. The caller
+	   needs permission to edit the metadata of the data source.
+
+	   Errors:
+	   - NOT_FOUND (ChannelMetadata:ChannelsNotFound): the channel does not exist in the data source, or the caller
+	     cannot edit its metadata.
+	*/
 	UpdateChannelMetadata(ctx context.Context, requestArg api.UpdateChannelMetadataRequest) (api.ChannelMetadata, error)
 	/*
-	   Batch update the metadata for multiple channels. If some channels cannot be found or authorized,
-	   no metadata will be updated for any of the channels in the request.
+	   Changes the description or unit of several channels in data sources (datasets) in one all-or-nothing call.
+	   Returns the updated metadata.
+
+	   Each update follows updateChannelMetadata. A channel can appear once per call, and a call accepts at most
+	   10,000 updates. If any update fails, none is applied.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the call has more than 10,000 updates, or a channel appears more than once.
+	   - NOT_FOUND (ChannelMetadata:ChannelsNotFound): a channel does not exist, or the caller cannot edit the
+	     metadata of its data source.
 	*/
 	BatchUpdateChannelMetadata(ctx context.Context, requestArg api.BatchUpdateChannelMetadataRequest) (api.BatchUpdateChannelMetadataResponse, error)
 }

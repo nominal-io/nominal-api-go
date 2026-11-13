@@ -62,6 +62,7 @@ func (o *AddDataScopesToAssetRequest) UnmarshalYAML(unmarshal func(interface{}) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A physical or simulated system under test, with its properties, labels, data scopes, and asset types.
 // safelogging:@Unsafe
 type Asset struct {
 	Rid         api.AssetRid `json:"rid" safelogging:"@Safe"`
@@ -93,6 +94,8 @@ type Asset struct {
 	IsArchived bool `json:"isArchived"`
 	// The dataset that backs this asset's data. Present when created with datasetRid. May be absent for legacy assets without representable scopes.
 	DatasetRid *rids.DatasetRid `json:"datasetRid,omitempty" safelogging:"@Safe"`
+	// The lucide-icon label of the icon associated with the asset, included when the asset is explicitly typed
+	IconName *string `json:"iconName,omitempty"`
 }
 
 func (o Asset) MarshalJSON() ([]byte, error) {
@@ -348,7 +351,8 @@ type CreateAssetDataScope struct {
 	// The name of the data scope. The name is guaranteed to be be unique within the context of an asset.
 	DataScopeName api3.DataSourceRefName `json:"dataScopeName" safelogging:"@Unsafe"`
 	DataSource    api2.DataSource        `json:"dataSource"`
-	Offset        *api2.Duration         `json:"offset,omitempty"`
+	// Time shift applied to the data source's timestamps. Zero when omitted.
+	Offset *api2.Duration `json:"offset,omitempty"`
 	/*
 	   Filters the data source to series matching these tag values. The filtered set of series should be
 	   the ones that belong to the asset.
@@ -556,6 +560,7 @@ type DataScope struct {
 	// The name of the data scope. The name is guaranteed to be be unique within the context of an asset.
 	DataScopeName api3.DataSourceRefName `json:"dataScopeName" safelogging:"@Unsafe"`
 	DataSource    api2.DataSource        `json:"dataSource"`
+	// Time shift applied to the data source's timestamps.
 	Offset        *api2.Duration         `json:"offset,omitempty"`
 	TimestampType api2.WeakTimestampType `json:"timestampType"`
 	/*
@@ -629,7 +634,7 @@ type SearchAssetChannelsRequest struct {
 	// If not empty, will filter to channels from the selected data scope names.
 	DataScopeNameFilter *[]api3.DataSourceRefName `json:"dataScopeNameFilter,omitempty" safelogging:"@Unsafe"`
 	NextPageToken       *api1.Token               `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
-	// Defaults to 1000. Will throw if larger than 10000. Default pageSize is 100.
+	// Will throw if larger than 10000.
 	PageSize *int `json:"pageSize,omitempty"`
 }
 
@@ -699,7 +704,10 @@ type SearchAssetsRequest struct {
 	PageSize      *int              `json:"pageSize,omitempty"`
 	NextPageToken *api1.Token       `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Query         SearchAssetsQuery `json:"query"`
-	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search.
+	/*
+	   Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search.
+	   Ignored when the query has an archived arm.
+	*/
 	ArchivedStatuses *[]api1.ArchivedStatus `json:"archivedStatuses,omitempty"`
 	/*
 	   When true, the response populates totalCount with the number of assets matching the query. Defaults to
@@ -780,10 +788,7 @@ type SearchTypesRequest struct {
 	PageSize      *int             `json:"pageSize,omitempty"`
 	NextPageToken *api1.Token      `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Query         SearchTypesQuery `json:"query"`
-	/*
-	   Deprecated: Use the isArchived search query option instead. If no filter is applied and this field is empty, the
-	   default search status is NOT_ARCHIVED.
-	*/
+	// Deprecated: If this field is empty, the default search status is NOT_ARCHIVED.
 	ArchivedStatuses *[]api1.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
@@ -937,11 +942,16 @@ func (o *SortProperty) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+An asset type: a reusable definition of the properties, primary key, and optional data requirements that
+assets of one kind share.
+*/
 // safelogging:@Unsafe
 type Type struct {
-	Rid             api.TypeRid                          `json:"rid" safelogging:"@Safe"`
-	Name            string                               `json:"name"`
-	Description     *string                              `json:"description,omitempty"`
+	Rid         api.TypeRid `json:"rid" safelogging:"@Safe"`
+	Name        string      `json:"name"`
+	Description *string     `json:"description,omitempty"`
+	// The requirement and value type of each property other than the primary key.
 	PropertyConfigs map[api1.PropertyName]PropertyConfig `json:"propertyConfigs"`
 	CreatedAt       datetime.DateTime                    `json:"createdAt"`
 	// The name of the icon to display for the type. This name maps to a Lucide icon in the frontend.
@@ -1018,6 +1028,7 @@ func (o *TypeSortOptions) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 type UpdateAssetRefNamesRequest struct {
+	// Maps each current data scope name to its new name. The new names must differ from each other.
 	DataScopeRefNameUpdates map[api3.DataSourceRefName]api3.DataSourceRefName `json:"dataScopeRefNameUpdates"`
 }
 

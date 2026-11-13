@@ -17,9 +17,33 @@ Dataset metadata lookup. This includes metadata about the data sources
 reachable from the dataset.
 */
 type DatasetMetadataServiceClient interface {
-	// Resolves metadata for the dataset.
+	/*
+	   Resolves a dataset definition (the assets, runs, and data sources it draws from) and returns whether live
+	   streaming is supported plus its time bounds: run intervals, dataset intervals, and latest asset data time.
+
+	   Streaming is supported when every data source the dataset reaches allows it. Each data source that does not
+	   is listed with the reason. The caller needs permission to read data from every data source the dataset reaches.
+
+	   Errors:
+	   - NOT_FOUND: an asset, run, or asset type in the dataset definition does not exist or the caller cannot see it.
+	   - INVALID_ARGUMENT: the dataset definition is not valid.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source the dataset reaches.
+	*/
 	GetDatasetMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg GetDatasetMetadataRequest) (DatasetMetadata, error)
-	// Batched form of `getDatasetMetadata`.
+	/*
+	   Resolves several dataset definitions in one call and returns streaming support and time bounds for each, keyed
+	   by the request id you chose. Use this to avoid many single calls.
+
+	   The streaming result covers all requests together, and each data source that does not support streaming lists
+	   the request ids that reach it. The permission need is the same as getDatasetMetadata. latestTimeTimeoutSeconds
+	   limits how long the lookup of the latest asset data time runs.
+
+	   Errors:
+	   - INVALID_ARGUMENT: latestTimeTimeoutSeconds is not positive.
+	   - NOT_FOUND: an asset, run, or asset type in a dataset definition does not exist or the caller cannot see it.
+	   - INVALID_ARGUMENT: a dataset definition is not valid.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source a dataset reaches.
+	*/
 	BatchGetDatasetMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetDatasetMetadataRequest) (BatchDatasetMetadata, error)
 }
 
@@ -72,9 +96,33 @@ Dataset metadata lookup. This includes metadata about the data sources
 reachable from the dataset.
 */
 type DatasetMetadataServiceClientWithAuth interface {
-	// Resolves metadata for the dataset.
+	/*
+	   Resolves a dataset definition (the assets, runs, and data sources it draws from) and returns whether live
+	   streaming is supported plus its time bounds: run intervals, dataset intervals, and latest asset data time.
+
+	   Streaming is supported when every data source the dataset reaches allows it. Each data source that does not
+	   is listed with the reason. The caller needs permission to read data from every data source the dataset reaches.
+
+	   Errors:
+	   - NOT_FOUND: an asset, run, or asset type in the dataset definition does not exist or the caller cannot see it.
+	   - INVALID_ARGUMENT: the dataset definition is not valid.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source the dataset reaches.
+	*/
 	GetDatasetMetadata(ctx context.Context, requestArg GetDatasetMetadataRequest) (DatasetMetadata, error)
-	// Batched form of `getDatasetMetadata`.
+	/*
+	   Resolves several dataset definitions in one call and returns streaming support and time bounds for each, keyed
+	   by the request id you chose. Use this to avoid many single calls.
+
+	   The streaming result covers all requests together, and each data source that does not support streaming lists
+	   the request ids that reach it. The permission need is the same as getDatasetMetadata. latestTimeTimeoutSeconds
+	   limits how long the lookup of the latest asset data time runs.
+
+	   Errors:
+	   - INVALID_ARGUMENT: latestTimeTimeoutSeconds is not positive.
+	   - NOT_FOUND: an asset, run, or asset type in a dataset definition does not exist or the caller cannot see it.
+	   - INVALID_ARGUMENT: a dataset definition is not valid.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source a dataset reaches.
+	*/
 	BatchGetDatasetMetadata(ctx context.Context, requestArg BatchGetDatasetMetadataRequest) (BatchDatasetMetadata, error)
 }
 

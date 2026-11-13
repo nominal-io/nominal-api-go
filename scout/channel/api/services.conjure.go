@@ -15,31 +15,99 @@ import (
 // Channel search over a `Dataset`, which can expand to multiple locators.
 type ChannelSearchServiceClient interface {
 	/*
-	   Returns the expanded locator topology for a dataset plus per-locator delimiter
-	   info.
+	   Expands a dataset scope into its locators, the data sources behind its channels with their asset, run, and
+	   data scope. Returns each locator with the delimiter that splits its channel names into a hierarchy.
+
+	   The delimiter is absent when the locator's data source has no indexed prefix tree. The list is empty when the
+	   scope expands to no data. The caller needs permission to read data on every data source in the scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
 	*/
 	GetLocatorDelimiters(ctx context.Context, authHeader bearertoken.Token, requestArg GetLocatorDelimitersRequest) (GetLocatorDelimitersResponse, error)
 	/*
-	   Lazy one-level hierarchical expansion under `parent`. Returns a mix of leaf
-	   channels and prefix nodes, each labelled with the set of locators where they
-	   exist.
+	   Browses channel names one level under a parent path; an empty parent is the top level. Returns the channels
+	   and name-prefix nodes directly under it, each with the locators where it exists.
+
+	   Stored channels are limited to 200, and only channels with data in the time range appear. Derived channels
+	   defined in the scope are included. Entries are ordered by name, ignoring case. To find a channel by text, use
+	   searchChannels. The caller needs permission to read data on every data source in the scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
+	   - INVALID_ARGUMENT (DataSource:NoPrefixTreeForDataSources): no data source in the scope has an indexed prefix
+	     tree.
 	*/
 	ListChannelChildren(ctx context.Context, authHeader bearertoken.Token, requestArg ListChannelChildrenRequest) (ListChannelChildrenResponse, error)
 	/*
-	   Flat text search across the dataset. Returns matching channels (and properties when
-	   `includeProperties` is true), each labelled with the set of locators in which they exist.
+	   Searches channel names across a dataset scope by substring, subsequence, or fuzzy text. Returns up to 200
+	   channels ranked by relevance, each with its metadata at every locator where it exists. Asset and run
+	   properties are included as well when includeProperties is true.
+
+	   A stored channel appears only if it has data in the time range. The response also lists every locator the
+	   scope expands to, including those with no match. To browse by prefix, use listChannelChildren. The caller needs
+	   permission to read data on every data source in the scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
 	*/
 	SearchChannels(ctx context.Context, authHeader bearertoken.Token, requestArg SearchChannelsRequest) (SearchChannelsResponse, error)
-	// Batched form of `getLocatorDelimiters`.
+	/*
+	   Runs getLocatorDelimiters for several dataset scopes at once, keyed by request id. Returns each locator once,
+	   tagged with the request ids whose scope expanded to it.
+
+	   The caller needs permission to read data on every data source in every scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
+	*/
 	BatchGetLocatorDelimiters(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetLocatorDelimitersRequest) (BatchGetLocatorDelimitersResponse, error)
 	/*
-	   Batched form of `searchChannels`. The channel search is performed across the
-	   union of all entry scopes and so is the limit and top-n selection by relevance.
+	   Runs searchChannels for several dataset scopes at once, keyed by request id, with one shared query and time
+	   range. Searches the union of the scopes and returns up to 1000 channels ranked together, with locators tagged
+	   by request id.
+
+	   The caller needs permission to read data on every data source in every scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
 	*/
 	BatchSearchChannels(ctx context.Context, authHeader bearertoken.Token, requestArg BatchSearchChannelsRequest) (BatchSearchChannelsResponse, error)
 	/*
-	   Batched form of `listChannelChildren`. The hierarchical expansion is performed
-	   across the union of all entry scopes for the shared `parent` path.
+	   Runs listChannelChildren for several dataset scopes at once, keyed by request id, under one shared parent
+	   path. Returns the merged channels and name-prefix nodes, with locators tagged by request id.
+
+	   The browse is performed across the union of the scopes, so the 200-channel limit applies to the merged result.
+	   The caller needs permission to read data on every data source in every scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
+	   - INVALID_ARGUMENT (DataSource:NoPrefixTreeForDataSources): no data source in any scope has an indexed prefix
+	     tree.
 	*/
 	BatchListChannelChildren(ctx context.Context, authHeader bearertoken.Token, requestArg BatchListChannelChildrenRequest) (BatchListChannelChildrenResponse, error)
 }
@@ -163,31 +231,99 @@ func (c *channelSearchServiceClient) BatchListChannelChildren(ctx context.Contex
 // Channel search over a `Dataset`, which can expand to multiple locators.
 type ChannelSearchServiceClientWithAuth interface {
 	/*
-	   Returns the expanded locator topology for a dataset plus per-locator delimiter
-	   info.
+	   Expands a dataset scope into its locators, the data sources behind its channels with their asset, run, and
+	   data scope. Returns each locator with the delimiter that splits its channel names into a hierarchy.
+
+	   The delimiter is absent when the locator's data source has no indexed prefix tree. The list is empty when the
+	   scope expands to no data. The caller needs permission to read data on every data source in the scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
 	*/
 	GetLocatorDelimiters(ctx context.Context, requestArg GetLocatorDelimitersRequest) (GetLocatorDelimitersResponse, error)
 	/*
-	   Lazy one-level hierarchical expansion under `parent`. Returns a mix of leaf
-	   channels and prefix nodes, each labelled with the set of locators where they
-	   exist.
+	   Browses channel names one level under a parent path; an empty parent is the top level. Returns the channels
+	   and name-prefix nodes directly under it, each with the locators where it exists.
+
+	   Stored channels are limited to 200, and only channels with data in the time range appear. Derived channels
+	   defined in the scope are included. Entries are ordered by name, ignoring case. To find a channel by text, use
+	   searchChannels. The caller needs permission to read data on every data source in the scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
+	   - INVALID_ARGUMENT (DataSource:NoPrefixTreeForDataSources): no data source in the scope has an indexed prefix
+	     tree.
 	*/
 	ListChannelChildren(ctx context.Context, requestArg ListChannelChildrenRequest) (ListChannelChildrenResponse, error)
 	/*
-	   Flat text search across the dataset. Returns matching channels (and properties when
-	   `includeProperties` is true), each labelled with the set of locators in which they exist.
+	   Searches channel names across a dataset scope by substring, subsequence, or fuzzy text. Returns up to 200
+	   channels ranked by relevance, each with its metadata at every locator where it exists. Asset and run
+	   properties are included as well when includeProperties is true.
+
+	   A stored channel appears only if it has data in the time range. The response also lists every locator the
+	   scope expands to, including those with no match. To browse by prefix, use listChannelChildren. The caller needs
+	   permission to read data on every data source in the scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
 	*/
 	SearchChannels(ctx context.Context, requestArg SearchChannelsRequest) (SearchChannelsResponse, error)
-	// Batched form of `getLocatorDelimiters`.
+	/*
+	   Runs getLocatorDelimiters for several dataset scopes at once, keyed by request id. Returns each locator once,
+	   tagged with the request ids whose scope expanded to it.
+
+	   The caller needs permission to read data on every data source in every scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
+	*/
 	BatchGetLocatorDelimiters(ctx context.Context, requestArg BatchGetLocatorDelimitersRequest) (BatchGetLocatorDelimitersResponse, error)
 	/*
-	   Batched form of `searchChannels`. The channel search is performed across the
-	   union of all entry scopes and so is the limit and top-n selection by relevance.
+	   Runs searchChannels for several dataset scopes at once, keyed by request id, with one shared query and time
+	   range. Searches the union of the scopes and returns up to 1000 channels ranked together, with locators tagged
+	   by request id.
+
+	   The caller needs permission to read data on every data source in every scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
 	*/
 	BatchSearchChannels(ctx context.Context, requestArg BatchSearchChannelsRequest) (BatchSearchChannelsResponse, error)
 	/*
-	   Batched form of `listChannelChildren`. The hierarchical expansion is performed
-	   across the union of all entry scopes for the shared `parent` path.
+	   Runs listChannelChildren for several dataset scopes at once, keyed by request id, under one shared parent
+	   path. Returns the merged channels and name-prefix nodes, with locators tagged by request id.
+
+	   The browse is performed across the union of the scopes, so the 200-channel limit applies to the merged result.
+	   The caller needs permission to read data on every data source in every scope.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): an asset in a scope does not exist.
+	   - NOT_FOUND (Scout:RunNotFound): a run in a scope does not exist.
+	   - INVALID_ARGUMENT (Compute:TooManySearchResults): an asset or run search in a scope matches more than one page
+	     of results.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data on a data source in a scope.
+	   - INVALID_ARGUMENT (DataSource:NoPrefixTreeForDataSources): no data source in any scope has an indexed prefix
+	     tree.
 	*/
 	BatchListChannelChildren(ctx context.Context, requestArg BatchListChannelChildrenRequest) (BatchListChannelChildrenResponse, error)
 }

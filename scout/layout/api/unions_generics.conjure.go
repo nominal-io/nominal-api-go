@@ -387,6 +387,71 @@ type EmptyPanelVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type HmiObjectWithT[T any] HmiObject
+
+func (u *HmiObjectWithT[T]) Accept(ctx context.Context, v HmiObjectVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "widget":
+		if u.widget == nil {
+			return result, fmt.Errorf("field \"widget\" is required")
+		}
+		return v.VisitWidget(ctx, *u.widget)
+	case "connection":
+		if u.connection == nil {
+			return result, fmt.Errorf("field \"connection\" is required")
+		}
+		return v.VisitConnection(ctx, *u.connection)
+	}
+}
+
+func (u *HmiObjectWithT[T]) AcceptFuncs(widgetFunc func(HmiWidget) (T, error), connectionFunc func(CanvasConnection) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "widget":
+		if u.widget == nil {
+			return result, fmt.Errorf("field \"widget\" is required")
+		}
+		return widgetFunc(*u.widget)
+	case "connection":
+		if u.connection == nil {
+			return result, fmt.Errorf("field \"connection\" is required")
+		}
+		return connectionFunc(*u.connection)
+	}
+}
+
+func (u *HmiObjectWithT[T]) WidgetNoopSuccess(HmiWidget) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *HmiObjectWithT[T]) ConnectionNoopSuccess(CanvasConnection) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *HmiObjectWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type HmiObjectVisitorWithT[T any] interface {
+	VisitWidget(ctx context.Context, v HmiWidget) (T, error)
+	VisitConnection(ctx context.Context, v CanvasConnection) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type PanelWithT[T any] Panel
 
 func (u *PanelWithT[T]) Accept(ctx context.Context, v PanelVisitorWithT[T]) (T, error) {
@@ -437,10 +502,15 @@ func (u *PanelWithT[T]) Accept(ctx context.Context, v PanelVisitorWithT[T]) (T, 
 			return result, fmt.Errorf("field \"analyst\" is required")
 		}
 		return v.VisitAnalyst(ctx, *u.analyst)
+	case "hmi":
+		if u.hmi == nil {
+			return result, fmt.Errorf("field \"hmi\" is required")
+		}
+		return v.VisitHmi(ctx, *u.hmi)
 	}
 }
 
-func (u *PanelWithT[T]) AcceptFuncs(vizFunc func(VizPanel) (T, error), chartFunc func(ChartPanel) (T, error), emptyFunc func(EmptyPanel) (T, error), splitFunc func(SplitPanel) (T, error), tabbedFunc func(TabbedPanel) (T, error), canvasFunc func(CanvasLayout) (T, error), documentFunc func(DocumentLayout) (T, error), analystFunc func(AnalystLayout) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *PanelWithT[T]) AcceptFuncs(vizFunc func(VizPanel) (T, error), chartFunc func(ChartPanel) (T, error), emptyFunc func(EmptyPanel) (T, error), splitFunc func(SplitPanel) (T, error), tabbedFunc func(TabbedPanel) (T, error), canvasFunc func(CanvasLayout) (T, error), documentFunc func(DocumentLayout) (T, error), analystFunc func(AnalystLayout) (T, error), hmiFunc func(HmiLayout) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -488,6 +558,11 @@ func (u *PanelWithT[T]) AcceptFuncs(vizFunc func(VizPanel) (T, error), chartFunc
 			return result, fmt.Errorf("field \"analyst\" is required")
 		}
 		return analystFunc(*u.analyst)
+	case "hmi":
+		if u.hmi == nil {
+			return result, fmt.Errorf("field \"hmi\" is required")
+		}
+		return hmiFunc(*u.hmi)
 	}
 }
 
@@ -531,6 +606,11 @@ func (u *PanelWithT[T]) AnalystNoopSuccess(AnalystLayout) (T, error) {
 	return result, nil
 }
 
+func (u *PanelWithT[T]) HmiNoopSuccess(HmiLayout) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *PanelWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -545,6 +625,7 @@ type PanelVisitorWithT[T any] interface {
 	VisitCanvas(ctx context.Context, v CanvasLayout) (T, error)
 	VisitDocument(ctx context.Context, v DocumentLayout) (T, error)
 	VisitAnalyst(ctx context.Context, v AnalystLayout) (T, error)
+	VisitHmi(ctx context.Context, v HmiLayout) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
