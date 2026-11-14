@@ -153,6 +153,7 @@ func NewNotebookArchiveTargetFromRids(v []api.NotebookRid) NotebookArchiveTarget
 	return NotebookArchiveTarget{typ: "rids", rids: &v}
 }
 
+// The runs or assets that a workbook is built on.
 type NotebookDataScope struct {
 	typ       string
 	runRids   *[]api1.RunRid

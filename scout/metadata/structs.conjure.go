@@ -34,9 +34,12 @@ func (o *CreatedAtQuery) UnmarshalYAML(unmarshal func(interface{}) error) error 
 
 // safelogging:@Unsafe
 type FindSimilarLabelMatchesRequest struct {
-	// If omitted, all resource types are included.
+	// If omitted, all resource types are included. An empty set returns no results.
 	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
-	// If omitted, results will come from all workspaces the user belongs to.
+	/*
+	   If omitted, uses all workspaces where the caller has full view access. Listed workspaces the caller
+	   cannot view are ignored.
+	*/
 	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
 	Labels     []api1.Label         `json:"labels" safelogging:"@Unsafe"`
 }
@@ -121,9 +124,12 @@ func (o *FindSimilarLabelMatchesResponse) UnmarshalYAML(unmarshal func(interface
 
 // safelogging:@Unsafe
 type FindSimilarPropertyKeyMatchesRequest struct {
-	// If omitted, all resource types are included.
+	// If omitted, all resource types are included. An empty set returns no results.
 	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
-	// If omitted, results will come from all workspaces the user belongs to.
+	/*
+	   If omitted, uses all workspaces where the caller has full view access. Listed workspaces the caller
+	   cannot view are ignored.
+	*/
 	Workspaces   *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
 	PropertyKeys []api1.PropertyName  `json:"propertyKeys" safelogging:"@Unsafe"`
 }
@@ -208,9 +214,12 @@ func (o *FindSimilarPropertyKeyMatchesResponse) UnmarshalYAML(unmarshal func(int
 
 type GetMetadataUsageCountRequest struct {
 	Query MetadataUsageQuery `json:"query"`
-	// If omitted, all resource types are included.
+	// If omitted, all resource types are included. An empty set returns no results.
 	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
-	// If omitted, results will come from all workspaces the user belongs to.
+	/*
+	   If omitted, uses all workspaces where the caller has full view access. Listed workspaces the caller
+	   cannot view are ignored.
+	*/
 	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
 }
 
@@ -252,8 +261,9 @@ func (o *GetMetadataUsageCountResponse) UnmarshalYAML(unmarshal func(interface{}
 
 // safelogging:@Unsafe
 type LabelWithCount struct {
-	Label         api1.Label `json:"label" safelogging:"@Unsafe"`
-	DocumentCount int        `json:"documentCount"`
+	Label api1.Label `json:"label" safelogging:"@Unsafe"`
+	// Number of resources that have this label.
+	DocumentCount int `json:"documentCount"`
 }
 
 func (o LabelWithCount) MarshalYAML() (interface{}, error) {
@@ -273,9 +283,12 @@ func (o *LabelWithCount) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type ListPropertiesAndLabelsRequest struct {
-	// If omitted, all resource types are included.
+	// If omitted, all resource types are included. An empty set returns no results.
 	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
-	// If omitted, results will come from all workspaces the user belongs to.
+	/*
+	   If omitted, uses all workspaces where the caller has full view access. Listed workspaces the caller
+	   cannot view are ignored.
+	*/
 	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
 }
 
@@ -349,9 +362,11 @@ func (o *ListPropertiesAndLabelsResponse) UnmarshalYAML(unmarshal func(interface
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A near-duplicate spelling and the number of resources that use it.
 type MatchCount struct {
-	Value         string `json:"value"`
-	DocumentCount int    `json:"documentCount"`
+	Value string `json:"value"`
+	// Number of resources that use this spelling.
+	DocumentCount int `json:"documentCount"`
 }
 
 func (o MatchCount) MarshalYAML() (interface{}, error) {
@@ -522,7 +537,8 @@ func (o *PropertyKeyWithCount) UnmarshalYAML(unmarshal func(interface{}) error) 
 // safelogging:@Unsafe
 type PropertyValueWithCount struct {
 	PropertyValue api1.PropertyValue `json:"propertyValue" safelogging:"@Unsafe"`
-	DocumentCount int                `json:"documentCount"`
+	// Number of resources that have this value for the key.
+	DocumentCount int `json:"documentCount"`
 }
 
 func (o PropertyValueWithCount) MarshalYAML() (interface{}, error) {
@@ -588,7 +604,6 @@ func (o *RenameLabel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 /*
 Rename one or more source property keys to a single target key.
 Existing values are preserved under the new key.
-The rename should be skipped in the service for resources w/ conflicting keys.
 */
 // safelogging:@Unsafe
 type RenamePropertyKey struct {
@@ -679,13 +694,16 @@ func (o *SearchLabelsResponse) UnmarshalYAML(unmarshal func(interface{}) error) 
 
 // safelogging:@Unsafe
 type SearchMetadataRequest struct {
-	// If omitted, all resource types are included.
+	// If omitted, all resource types are included. An empty set returns no results.
 	ResourceTypes *[]ResourceType `json:"resourceTypes,omitempty"`
-	// If omitted, results will come from all workspaces the user belongs to.
+	/*
+	   If omitted, uses all workspaces where the caller has full view access. Listed workspaces the caller
+	   cannot view are ignored.
+	*/
 	Workspaces *[]rids.WorkspaceRid `json:"workspaces,omitempty" safelogging:"@Safe"`
 	// Case-insensitive substring filter.
 	SearchText *string `json:"searchText,omitempty"`
-	// Maximum number of items per page. Defaults to 1000 if not specified.
+	// Maximum number of items per page, from 1 to 10000. Defaults to 1000.
 	PageSize *int `json:"pageSize,omitempty"`
 	// Token for fetching the next page of results.
 	PageToken *api1.Token       `json:"pageToken,omitempty" safelogging:"@Unsafe"`

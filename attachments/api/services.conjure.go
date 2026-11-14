@@ -17,21 +17,103 @@ import (
 
 // The attachment service provides functionality for creating, updating, and archiving attachments uploaded to S3.
 type AttachmentServiceClient interface {
-	// Create a new attachment. Assumes the file is already uploaded to S3 through the upload service.
+	/*
+	   Creates an attachment, a file with a title, description, labels, and properties, from a file that is
+	   already uploaded to Nominal's upload storage. Returns the attachment.
+
+	   The server assigns the RID, records the caller as the creator, and sets the attachment as not
+	   archived. The attachment is created in the workspace in the request, or in the caller's default
+	   workspace when the request names none. The file must be in Nominal's upload storage under that
+	   workspace's upload prefix. The caller needs permission to create data sources in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): the request names no workspace and the caller
+	     has no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - INVALID_ARGUMENT (Attachment:InvalidS3Path): s3Path is not a valid path, is not in Nominal's
+	     upload storage, or does not start with a workspace prefix.
+	   - NOT_FOUND (Attachment:S3FileNotFound): the file is under the upload prefix of a different
+	     workspace.
+	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg CreateAttachmentRequest) (Attachment, error)
-	// Get an attachment by its RID.
+	/*
+	   Returns one attachment with its title, description, labels, properties, and archived state.
+
+	   Archived attachments are returned. An attachment is visible only to callers who can view its
+	   workspace.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller cannot
+	     view its workspace.
+	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) (Attachment, error)
-	// Get a set of attachments by their RIDs.
+	/*
+	   Returns the attachments with the given RIDs, in no particular order.
+
+	   Archived attachments are returned. The request is all or nothing: if any RID does not exist or is in
+	   a workspace the caller cannot view, no attachments are returned.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): one or more RIDs do not exist or are in a workspace
+	     the caller cannot view. The error names those RIDs.
+	*/
 	GetBatch(ctx context.Context, authHeader bearertoken.Token, requestArg GetAttachmentsRequest) (GetAttachmentsResponse, error)
-	// Get the binary content of an attachment.
+	/*
+	   Returns the stored file of an attachment as raw bytes.
+
+	   Use getUri to download through a short-lived link instead. The content is served as
+	   application/octet-stream. Archived attachments can be read.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller cannot
+	     view its workspace.
+	*/
 	GetContent(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) (io.ReadCloser, error)
-	// Get a pre-signed URI to download an attachment. The link expires in 1 minute.
+	/*
+	   Returns a pre-signed link that downloads the file of an attachment, and the time the link expires.
+
+	   The link expires after two minutes. The downloaded file is named after the attachment title, with
+	   the extension of the stored file added when the title has none. Use getContent to stream the bytes
+	   instead. Archived attachments can be read.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller cannot
+	     view its workspace.
+	*/
 	GetUri(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) (AttachmentUri, error)
-	// Update an attachment. Only the fields that are set in the request will be updated.
+	/*
+	   Changes the title, description, labels, or properties of an attachment. Returns the updated
+	   attachment.
+
+	   Only fields that are set change. A set labels or properties value replaces the whole stored set or
+	   map. The file, the creator, and the archived state do not change; use archive and unarchive for the
+	   archived state. The caller needs permission to change the attachment.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller is not
+	     authorized to change it.
+	*/
 	Update(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid, requestArg UpdateAttachmentRequest) (Attachment, error)
-	// Archive an attachment.
+	/*
+	   Marks an attachment as archived, keeping the attachment and its file.
+
+	   The attachment and its file are kept and can still be read by RID. Undo with unarchive. The caller
+	   needs permission to change the attachment.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller is not
+	     authorized to change it.
+	*/
 	Archive(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) error
-	// Unarchive an attachment.
+	/*
+	   Clears the archived mark of an attachment, so it is no longer archived.
+
+	   The caller needs permission to change the attachment.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller is not
+	     authorized to change it.
+	*/
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) error
 }
 
@@ -171,21 +253,103 @@ func (c *attachmentServiceClient) Unarchive(ctx context.Context, authHeader bear
 
 // The attachment service provides functionality for creating, updating, and archiving attachments uploaded to S3.
 type AttachmentServiceClientWithAuth interface {
-	// Create a new attachment. Assumes the file is already uploaded to S3 through the upload service.
+	/*
+	   Creates an attachment, a file with a title, description, labels, and properties, from a file that is
+	   already uploaded to Nominal's upload storage. Returns the attachment.
+
+	   The server assigns the RID, records the caller as the creator, and sets the attachment as not
+	   archived. The attachment is created in the workspace in the request, or in the caller's default
+	   workspace when the request names none. The file must be in Nominal's upload storage under that
+	   workspace's upload prefix. The caller needs permission to create data sources in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): the request names no workspace and the caller
+	     has no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - INVALID_ARGUMENT (Attachment:InvalidS3Path): s3Path is not a valid path, is not in Nominal's
+	     upload storage, or does not start with a workspace prefix.
+	   - NOT_FOUND (Attachment:S3FileNotFound): the file is under the upload prefix of a different
+	     workspace.
+	*/
 	Create(ctx context.Context, requestArg CreateAttachmentRequest) (Attachment, error)
-	// Get an attachment by its RID.
+	/*
+	   Returns one attachment with its title, description, labels, properties, and archived state.
+
+	   Archived attachments are returned. An attachment is visible only to callers who can view its
+	   workspace.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller cannot
+	     view its workspace.
+	*/
 	Get(ctx context.Context, ridArg rids.AttachmentRid) (Attachment, error)
-	// Get a set of attachments by their RIDs.
+	/*
+	   Returns the attachments with the given RIDs, in no particular order.
+
+	   Archived attachments are returned. The request is all or nothing: if any RID does not exist or is in
+	   a workspace the caller cannot view, no attachments are returned.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): one or more RIDs do not exist or are in a workspace
+	     the caller cannot view. The error names those RIDs.
+	*/
 	GetBatch(ctx context.Context, requestArg GetAttachmentsRequest) (GetAttachmentsResponse, error)
-	// Get the binary content of an attachment.
+	/*
+	   Returns the stored file of an attachment as raw bytes.
+
+	   Use getUri to download through a short-lived link instead. The content is served as
+	   application/octet-stream. Archived attachments can be read.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller cannot
+	     view its workspace.
+	*/
 	GetContent(ctx context.Context, ridArg rids.AttachmentRid) (io.ReadCloser, error)
-	// Get a pre-signed URI to download an attachment. The link expires in 1 minute.
+	/*
+	   Returns a pre-signed link that downloads the file of an attachment, and the time the link expires.
+
+	   The link expires after two minutes. The downloaded file is named after the attachment title, with
+	   the extension of the stored file added when the title has none. Use getContent to stream the bytes
+	   instead. Archived attachments can be read.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller cannot
+	     view its workspace.
+	*/
 	GetUri(ctx context.Context, ridArg rids.AttachmentRid) (AttachmentUri, error)
-	// Update an attachment. Only the fields that are set in the request will be updated.
+	/*
+	   Changes the title, description, labels, or properties of an attachment. Returns the updated
+	   attachment.
+
+	   Only fields that are set change. A set labels or properties value replaces the whole stored set or
+	   map. The file, the creator, and the archived state do not change; use archive and unarchive for the
+	   archived state. The caller needs permission to change the attachment.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller is not
+	     authorized to change it.
+	*/
 	Update(ctx context.Context, ridArg rids.AttachmentRid, requestArg UpdateAttachmentRequest) (Attachment, error)
-	// Archive an attachment.
+	/*
+	   Marks an attachment as archived, keeping the attachment and its file.
+
+	   The attachment and its file are kept and can still be read by RID. Undo with unarchive. The caller
+	   needs permission to change the attachment.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller is not
+	     authorized to change it.
+	*/
 	Archive(ctx context.Context, ridArg rids.AttachmentRid) error
-	// Unarchive an attachment.
+	/*
+	   Clears the archived mark of an attachment, so it is no longer archived.
+
+	   The caller needs permission to change the attachment.
+
+	   Errors:
+	   - NOT_FOUND (Attachment:AttachmentNotFound): the attachment does not exist, or the caller is not
+	     authorized to change it.
+	*/
 	Unarchive(ctx context.Context, ridArg rids.AttachmentRid) error
 }
 

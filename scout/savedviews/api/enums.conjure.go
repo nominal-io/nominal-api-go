@@ -370,10 +370,11 @@ type ResourceType struct {
 type ResourceType_Value string
 
 const (
-	ResourceType_ASSET               ResourceType_Value = "ASSET"
-	ResourceType_RUN                 ResourceType_Value = "RUN"
-	ResourceType_WORKBOOK            ResourceType_Value = "WORKBOOK"
-	ResourceType_CHECKLIST           ResourceType_Value = "CHECKLIST"
+	ResourceType_ASSET     ResourceType_Value = "ASSET"
+	ResourceType_RUN       ResourceType_Value = "RUN"
+	ResourceType_WORKBOOK  ResourceType_Value = "WORKBOOK"
+	ResourceType_CHECKLIST ResourceType_Value = "CHECKLIST"
+	// Workbook templates.
 	ResourceType_TEMPLATE            ResourceType_Value = "TEMPLATE"
 	ResourceType_PROCEDURE           ResourceType_Value = "PROCEDURE"
 	ResourceType_PROCEDURE_EXECUTION ResourceType_Value = "PROCEDURE_EXECUTION"
@@ -442,8 +443,9 @@ type SortField struct {
 type SortField_Value string
 
 const (
-	SortField_TITLE        SortField_Value = "TITLE"
-	SortField_CREATED_AT   SortField_Value = "CREATED_AT"
+	SortField_TITLE      SortField_Value = "TITLE"
+	SortField_CREATED_AT SortField_Value = "CREATED_AT"
+	// The order set by the index on UpdateSavedViewRequest, with new saved views last. Archived saved views have no position in it.
 	SortField_USER_DEFINED SortField_Value = "USER_DEFINED"
 	SortField_UNKNOWN      SortField_Value = "UNKNOWN"
 )

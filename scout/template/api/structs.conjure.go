@@ -96,7 +96,8 @@ type CreateTemplateRequest struct {
 	Charts  *[]api.VersionedVizId `json:"charts,omitempty"`
 	Layout  api1.WorkbookLayout   `json:"layout"`
 	Content api2.WorkbookContent  `json:"content"`
-	Message string                `json:"message"`
+	// Message recorded on the initial commit.
+	Message string `json:"message"`
 	// Theme-aware preview image for the template. Falls back to a default illustration if not provided.
 	PreviewImage *api4.ThemeAwareImage `json:"previewImage,omitempty"`
 	/*
@@ -250,7 +251,7 @@ func (o *GetAllLabelsAndPropertiesResponse) UnmarshalYAML(unmarshal func(interfa
 
 // safelogging:@Unsafe
 type MergeToMainRequest struct {
-	// If "main", the request will throw.
+	// Branch to merge into main, then delete. Cannot be "main".
 	BranchName api3.BranchName `json:"branchName" safelogging:"@Unsafe"`
 	Message    string          `json:"message"`
 	/*
@@ -399,11 +400,13 @@ func (o *SortBy) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A workbook template (template in the API) at one commit, with its layout and content.
 // safelogging:@Unsafe
 type Template struct {
 	Rid      api.TemplateRid  `json:"rid" safelogging:"@Safe"`
 	Metadata TemplateMetadata `json:"metadata" safelogging:"@Unsafe"`
-	Commit   api3.Commit      `json:"commit"`
+	// The commit whose layout and content this template holds.
+	Commit api3.Commit `json:"commit"`
 	// Deprecated: charts are no longer versioned resources. They are stored in workbook content.
 	Charts  []api.VersionedVizId `json:"charts"`
 	Layout  api1.WorkbookLayout  `json:"layout"`
@@ -447,20 +450,20 @@ func (o *Template) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Descriptive and state fields of a workbook template, without its layout or content.
 // safelogging:@Unsafe
 type TemplateMetadata struct {
-	Title       string                                   `json:"title"`
-	Description string                                   `json:"description"`
-	Labels      []api4.Label                             `json:"labels" safelogging:"@Unsafe"`
-	Properties  map[api4.PropertyName]api4.PropertyValue `json:"properties"`
-	IsArchived  bool                                     `json:"isArchived"`
-	IsPublished bool                                     `json:"isPublished"`
-	CreatedBy   api.UserRid                              `json:"createdBy" safelogging:"@Safe"`
-	CreatedAt   datetime.DateTime                        `json:"createdAt"`
-	UpdatedAt   datetime.DateTime                        `json:"updatedAt"`
-	// The time of the last permanent commit to the main branch.
-	EditedAt     datetime.DateTime     `json:"editedAt"`
-	PreviewImage *api4.ThemeAwareImage `json:"previewImage,omitempty"`
+	Title        string                                   `json:"title"`
+	Description  string                                   `json:"description"`
+	Labels       []api4.Label                             `json:"labels" safelogging:"@Unsafe"`
+	Properties   map[api4.PropertyName]api4.PropertyValue `json:"properties"`
+	IsArchived   bool                                     `json:"isArchived"`
+	IsPublished  bool                                     `json:"isPublished"`
+	CreatedBy    api.UserRid                              `json:"createdBy" safelogging:"@Safe"`
+	CreatedAt    datetime.DateTime                        `json:"createdAt"`
+	UpdatedAt    datetime.DateTime                        `json:"updatedAt"`
+	EditedAt     datetime.DateTime                        `json:"editedAt"`
+	PreviewImage *api4.ThemeAwareImage                    `json:"previewImage,omitempty"`
 }
 
 func (o TemplateMetadata) MarshalJSON() ([]byte, error) {
@@ -506,6 +509,7 @@ func (o *TemplateMetadata) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A workbook template's RID and metadata.
 // safelogging:@Unsafe
 type TemplateSummary struct {
 	Rid      api.TemplateRid  `json:"rid" safelogging:"@Safe"`
@@ -530,9 +534,11 @@ func (o *TemplateSummary) UnmarshalYAML(unmarshal func(interface{}) error) error
 
 // safelogging:@Unsafe
 type UpdateMetadataRequest struct {
-	Title       *string                                   `json:"title,omitempty"`
-	Description *string                                   `json:"description,omitempty"`
-	Labels      *[]api4.Label                             `json:"labels,omitempty" safelogging:"@Unsafe"`
+	Title       *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+	// When provided, replaces all labels.
+	Labels *[]api4.Label `json:"labels,omitempty" safelogging:"@Unsafe"`
+	// When provided, replaces all properties.
 	Properties  *map[api4.PropertyName]api4.PropertyValue `json:"properties,omitempty"`
 	IsArchived  *bool                                     `json:"isArchived,omitempty"`
 	IsPublished *bool                                     `json:"isPublished,omitempty"`
@@ -557,11 +563,9 @@ func (o *UpdateMetadataRequest) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 type UpdateRefNameRequest struct {
+	// Maps each existing data source ref name to its replacement. Other ref names are unchanged.
 	RefNameUpdates map[api5.DataSourceRefName]api5.DataSourceRefName `json:"refNameUpdates"`
-	/*
-	   If present, will validate that the latest commit matches this id,
-	   and otherwise throw CommitConflict.
-	*/
+	// Ignored. The update applies on top of the branch's current latest commit.
 	LatestCommit *api3.CommitId `json:"latestCommit,omitempty" safelogging:"@Safe"`
 }
 

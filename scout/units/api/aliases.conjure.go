@@ -8,6 +8,7 @@ type UnitName string // safelogging:@Unsafe
 // The physical quality that the unit measures (Electric Current, Time, Angle, etc.)
 type UnitProperty string // safelogging:@Unsafe
 
+// A unit symbol in UCUM notation.
 type UnitSymbol string // safelogging:@Unsafe
 
 // The units system that the unit is defined in.

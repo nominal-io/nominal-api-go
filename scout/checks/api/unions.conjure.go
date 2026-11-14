@@ -2023,18 +2023,20 @@ type JobSpec struct {
 	typ               string
 	checkV2           *CheckJobSpec
 	compute           *ComputeJobSpec
-	compileUdfJobSpec *CompileUdfJobSpec
+	compileUdfJobSpec *UdfCompilationJobSpec
+	sqlExport         *SqlExportJobSpec
 }
 
 type jobSpecDeserializer struct {
-	Type              string             `json:"type"`
-	CheckV2           *CheckJobSpec      `json:"checkV2"`
-	Compute           *ComputeJobSpec    `json:"compute"`
-	CompileUdfJobSpec *CompileUdfJobSpec `json:"compileUdfJobSpec"`
+	Type              string                 `json:"type"`
+	CheckV2           *CheckJobSpec          `json:"checkV2"`
+	Compute           *ComputeJobSpec        `json:"compute"`
+	CompileUdfJobSpec *UdfCompilationJobSpec `json:"compileUdfJobSpec"`
+	SqlExport         *SqlExportJobSpec      `json:"sqlExport"`
 }
 
 func (u *jobSpecDeserializer) toStruct() JobSpec {
-	return JobSpec{typ: u.Type, checkV2: u.CheckV2, compute: u.Compute, compileUdfJobSpec: u.CompileUdfJobSpec}
+	return JobSpec{typ: u.Type, checkV2: u.CheckV2, compute: u.Compute, compileUdfJobSpec: u.CompileUdfJobSpec, sqlExport: u.SqlExport}
 }
 
 func (u *JobSpec) toSerializer() (interface{}, error) {
@@ -2062,9 +2064,17 @@ func (u *JobSpec) toSerializer() (interface{}, error) {
 			return nil, fmt.Errorf("field \"compileUdfJobSpec\" is required")
 		}
 		return struct {
-			Type              string            `json:"type"`
-			CompileUdfJobSpec CompileUdfJobSpec `json:"compileUdfJobSpec"`
+			Type              string                `json:"type"`
+			CompileUdfJobSpec UdfCompilationJobSpec `json:"compileUdfJobSpec"`
 		}{Type: "compileUdfJobSpec", CompileUdfJobSpec: *u.compileUdfJobSpec}, nil
+	case "sqlExport":
+		if u.sqlExport == nil {
+			return nil, fmt.Errorf("field \"sqlExport\" is required")
+		}
+		return struct {
+			Type      string           `json:"type"`
+			SqlExport SqlExportJobSpec `json:"sqlExport"`
+		}{Type: "sqlExport", SqlExport: *u.sqlExport}, nil
 	}
 }
 
@@ -2095,6 +2105,10 @@ func (u *JobSpec) UnmarshalJSON(data []byte) error {
 		if u.compileUdfJobSpec == nil {
 			return fmt.Errorf("field \"compileUdfJobSpec\" is required")
 		}
+	case "sqlExport":
+		if u.sqlExport == nil {
+			return fmt.Errorf("field \"sqlExport\" is required")
+		}
 	}
 	return nil
 }
@@ -2115,7 +2129,7 @@ func (u *JobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, computeFunc func(ComputeJobSpec) error, compileUdfJobSpecFunc func(CompileUdfJobSpec) error, unknownFunc func(string) error) error {
+func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, computeFunc func(ComputeJobSpec) error, compileUdfJobSpecFunc func(UdfCompilationJobSpec) error, sqlExportFunc func(SqlExportJobSpec) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2137,6 +2151,11 @@ func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, computeFunc 
 			return fmt.Errorf("field \"compileUdfJobSpec\" is required")
 		}
 		return compileUdfJobSpecFunc(*u.compileUdfJobSpec)
+	case "sqlExport":
+		if u.sqlExport == nil {
+			return fmt.Errorf("field \"sqlExport\" is required")
+		}
+		return sqlExportFunc(*u.sqlExport)
 	}
 }
 
@@ -2148,7 +2167,11 @@ func (u *JobSpec) ComputeNoopSuccess(_ ComputeJobSpec) error {
 	return nil
 }
 
-func (u *JobSpec) CompileUdfJobSpecNoopSuccess(_ CompileUdfJobSpec) error {
+func (u *JobSpec) CompileUdfJobSpecNoopSuccess(_ UdfCompilationJobSpec) error {
+	return nil
+}
+
+func (u *JobSpec) SqlExportNoopSuccess(_ SqlExportJobSpec) error {
 	return nil
 }
 
@@ -2178,13 +2201,19 @@ func (u *JobSpec) Accept(v JobSpecVisitor) error {
 			return fmt.Errorf("field \"compileUdfJobSpec\" is required")
 		}
 		return v.VisitCompileUdfJobSpec(*u.compileUdfJobSpec)
+	case "sqlExport":
+		if u.sqlExport == nil {
+			return fmt.Errorf("field \"sqlExport\" is required")
+		}
+		return v.VisitSqlExport(*u.sqlExport)
 	}
 }
 
 type JobSpecVisitor interface {
 	VisitCheckV2(v CheckJobSpec) error
 	VisitCompute(v ComputeJobSpec) error
-	VisitCompileUdfJobSpec(v CompileUdfJobSpec) error
+	VisitCompileUdfJobSpec(v UdfCompilationJobSpec) error
+	VisitSqlExport(v SqlExportJobSpec) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2210,13 +2239,19 @@ func (u *JobSpec) AcceptWithContext(ctx context.Context, v JobSpecVisitorWithCon
 			return fmt.Errorf("field \"compileUdfJobSpec\" is required")
 		}
 		return v.VisitCompileUdfJobSpecWithContext(ctx, *u.compileUdfJobSpec)
+	case "sqlExport":
+		if u.sqlExport == nil {
+			return fmt.Errorf("field \"sqlExport\" is required")
+		}
+		return v.VisitSqlExportWithContext(ctx, *u.sqlExport)
 	}
 }
 
 type JobSpecVisitorWithContext interface {
 	VisitCheckV2WithContext(ctx context.Context, v CheckJobSpec) error
 	VisitComputeWithContext(ctx context.Context, v ComputeJobSpec) error
-	VisitCompileUdfJobSpecWithContext(ctx context.Context, v CompileUdfJobSpec) error
+	VisitCompileUdfJobSpecWithContext(ctx context.Context, v UdfCompilationJobSpec) error
+	VisitSqlExportWithContext(ctx context.Context, v SqlExportJobSpec) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -2228,8 +2263,147 @@ func NewJobSpecFromCompute(v ComputeJobSpec) JobSpec {
 	return JobSpec{typ: "compute", compute: &v}
 }
 
-func NewJobSpecFromCompileUdfJobSpec(v CompileUdfJobSpec) JobSpec {
+func NewJobSpecFromCompileUdfJobSpec(v UdfCompilationJobSpec) JobSpec {
 	return JobSpec{typ: "compileUdfJobSpec", compileUdfJobSpec: &v}
+}
+
+func NewJobSpecFromSqlExport(v SqlExportJobSpec) JobSpec {
+	return JobSpec{typ: "sqlExport", sqlExport: &v}
+}
+
+type PropertyType struct {
+	typ     string
+	numeric *NumericPropertyType
+}
+
+type propertyTypeDeserializer struct {
+	Type    string               `json:"type"`
+	Numeric *NumericPropertyType `json:"numeric"`
+}
+
+func (u *propertyTypeDeserializer) toStruct() PropertyType {
+	return PropertyType{typ: u.Type, numeric: u.Numeric}
+}
+
+func (u *PropertyType) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return nil, fmt.Errorf("field \"numeric\" is required")
+		}
+		return struct {
+			Type    string              `json:"type"`
+			Numeric NumericPropertyType `json:"numeric"`
+		}{Type: "numeric", Numeric: *u.numeric}, nil
+	}
+}
+
+func (u PropertyType) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *PropertyType) UnmarshalJSON(data []byte) error {
+	var deser propertyTypeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+	}
+	return nil
+}
+
+func (u PropertyType) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *PropertyType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *PropertyType) AcceptFuncs(numericFunc func(NumericPropertyType) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in PropertyType type")
+		}
+		return unknownFunc(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return numericFunc(*u.numeric)
+	}
+}
+
+func (u *PropertyType) NumericNoopSuccess(_ NumericPropertyType) error {
+	return nil
+}
+
+func (u *PropertyType) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *PropertyType) Accept(v PropertyTypeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumeric(*u.numeric)
+	}
+}
+
+type PropertyTypeVisitor interface {
+	VisitNumeric(v NumericPropertyType) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *PropertyType) AcceptWithContext(ctx context.Context, v PropertyTypeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumericWithContext(ctx, *u.numeric)
+	}
+}
+
+type PropertyTypeVisitorWithContext interface {
+	VisitNumericWithContext(ctx context.Context, v NumericPropertyType) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewPropertyTypeFromNumeric(v NumericPropertyType) PropertyType {
+	return PropertyType{typ: "numeric", numeric: &v}
 }
 
 type UnresolvedCheckCondition struct {
@@ -2451,6 +2625,7 @@ type UnresolvedVariableLocator struct {
 	computeNode       *UnresolvedComputeNodeWithContext
 	series            *api3.ChannelLocator
 	timestamp         *TimestampLocator
+	property          *PropertyLocator
 }
 
 type unresolvedVariableLocatorDeserializer struct {
@@ -2459,10 +2634,11 @@ type unresolvedVariableLocatorDeserializer struct {
 	ComputeNode       *UnresolvedComputeNodeWithContext `json:"computeNode"`
 	Series            *api3.ChannelLocator              `json:"series"`
 	Timestamp         *TimestampLocator                 `json:"timestamp"`
+	Property          *PropertyLocator                  `json:"property"`
 }
 
 func (u *unresolvedVariableLocatorDeserializer) toStruct() UnresolvedVariableLocator {
-	return UnresolvedVariableLocator{typ: u.Type, checklistVariable: u.ChecklistVariable, computeNode: u.ComputeNode, series: u.Series, timestamp: u.Timestamp}
+	return UnresolvedVariableLocator{typ: u.Type, checklistVariable: u.ChecklistVariable, computeNode: u.ComputeNode, series: u.Series, timestamp: u.Timestamp, property: u.Property}
 }
 
 func (u *UnresolvedVariableLocator) toSerializer() (interface{}, error) {
@@ -2501,6 +2677,14 @@ func (u *UnresolvedVariableLocator) toSerializer() (interface{}, error) {
 			Type      string           `json:"type"`
 			Timestamp TimestampLocator `json:"timestamp"`
 		}{Type: "timestamp", Timestamp: *u.timestamp}, nil
+	case "property":
+		if u.property == nil {
+			return nil, fmt.Errorf("field \"property\" is required")
+		}
+		return struct {
+			Type     string          `json:"type"`
+			Property PropertyLocator `json:"property"`
+		}{Type: "property", Property: *u.property}, nil
 	}
 }
 
@@ -2535,6 +2719,10 @@ func (u *UnresolvedVariableLocator) UnmarshalJSON(data []byte) error {
 		if u.timestamp == nil {
 			return fmt.Errorf("field \"timestamp\" is required")
 		}
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
 	}
 	return nil
 }
@@ -2555,7 +2743,7 @@ func (u *UnresolvedVariableLocator) UnmarshalYAML(unmarshal func(interface{}) er
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *UnresolvedVariableLocator) AcceptFuncs(checklistVariableFunc func(api2.VariableName) error, computeNodeFunc func(UnresolvedComputeNodeWithContext) error, seriesFunc func(api3.ChannelLocator) error, timestampFunc func(TimestampLocator) error, unknownFunc func(string) error) error {
+func (u *UnresolvedVariableLocator) AcceptFuncs(checklistVariableFunc func(api2.VariableName) error, computeNodeFunc func(UnresolvedComputeNodeWithContext) error, seriesFunc func(api3.ChannelLocator) error, timestampFunc func(TimestampLocator) error, propertyFunc func(PropertyLocator) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2582,6 +2770,11 @@ func (u *UnresolvedVariableLocator) AcceptFuncs(checklistVariableFunc func(api2.
 			return fmt.Errorf("field \"timestamp\" is required")
 		}
 		return timestampFunc(*u.timestamp)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return propertyFunc(*u.property)
 	}
 }
 
@@ -2598,6 +2791,10 @@ func (u *UnresolvedVariableLocator) SeriesNoopSuccess(_ api3.ChannelLocator) err
 }
 
 func (u *UnresolvedVariableLocator) TimestampNoopSuccess(_ TimestampLocator) error {
+	return nil
+}
+
+func (u *UnresolvedVariableLocator) PropertyNoopSuccess(_ PropertyLocator) error {
 	return nil
 }
 
@@ -2632,6 +2829,11 @@ func (u *UnresolvedVariableLocator) Accept(v UnresolvedVariableLocatorVisitor) e
 			return fmt.Errorf("field \"timestamp\" is required")
 		}
 		return v.VisitTimestamp(*u.timestamp)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitProperty(*u.property)
 	}
 }
 
@@ -2640,6 +2842,7 @@ type UnresolvedVariableLocatorVisitor interface {
 	VisitComputeNode(v UnresolvedComputeNodeWithContext) error
 	VisitSeries(v api3.ChannelLocator) error
 	VisitTimestamp(v TimestampLocator) error
+	VisitProperty(v PropertyLocator) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2670,6 +2873,11 @@ func (u *UnresolvedVariableLocator) AcceptWithContext(ctx context.Context, v Unr
 			return fmt.Errorf("field \"timestamp\" is required")
 		}
 		return v.VisitTimestampWithContext(ctx, *u.timestamp)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitPropertyWithContext(ctx, *u.property)
 	}
 }
 
@@ -2678,6 +2886,7 @@ type UnresolvedVariableLocatorVisitorWithContext interface {
 	VisitComputeNodeWithContext(ctx context.Context, v UnresolvedComputeNodeWithContext) error
 	VisitSeriesWithContext(ctx context.Context, v api3.ChannelLocator) error
 	VisitTimestampWithContext(ctx context.Context, v TimestampLocator) error
+	VisitPropertyWithContext(ctx context.Context, v PropertyLocator) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -2695,6 +2904,10 @@ func NewUnresolvedVariableLocatorFromSeries(v api3.ChannelLocator) UnresolvedVar
 
 func NewUnresolvedVariableLocatorFromTimestamp(v TimestampLocator) UnresolvedVariableLocator {
 	return UnresolvedVariableLocator{typ: "timestamp", timestamp: &v}
+}
+
+func NewUnresolvedVariableLocatorFromProperty(v PropertyLocator) UnresolvedVariableLocator {
+	return UnresolvedVariableLocator{typ: "property", property: &v}
 }
 
 type UpdateChecklistEntryRequest struct {
@@ -2877,6 +3090,7 @@ type VariableLocator struct {
 	computeNode       *ComputeNodeWithContext
 	series            *api3.ChannelLocator
 	timestamp         *TimestampLocator
+	property          *PropertyLocator
 }
 
 type variableLocatorDeserializer struct {
@@ -2885,10 +3099,11 @@ type variableLocatorDeserializer struct {
 	ComputeNode       *ComputeNodeWithContext `json:"computeNode"`
 	Series            *api3.ChannelLocator    `json:"series"`
 	Timestamp         *TimestampLocator       `json:"timestamp"`
+	Property          *PropertyLocator        `json:"property"`
 }
 
 func (u *variableLocatorDeserializer) toStruct() VariableLocator {
-	return VariableLocator{typ: u.Type, checklistVariable: u.ChecklistVariable, computeNode: u.ComputeNode, series: u.Series, timestamp: u.Timestamp}
+	return VariableLocator{typ: u.Type, checklistVariable: u.ChecklistVariable, computeNode: u.ComputeNode, series: u.Series, timestamp: u.Timestamp, property: u.Property}
 }
 
 func (u *VariableLocator) toSerializer() (interface{}, error) {
@@ -2927,6 +3142,14 @@ func (u *VariableLocator) toSerializer() (interface{}, error) {
 			Type      string           `json:"type"`
 			Timestamp TimestampLocator `json:"timestamp"`
 		}{Type: "timestamp", Timestamp: *u.timestamp}, nil
+	case "property":
+		if u.property == nil {
+			return nil, fmt.Errorf("field \"property\" is required")
+		}
+		return struct {
+			Type     string          `json:"type"`
+			Property PropertyLocator `json:"property"`
+		}{Type: "property", Property: *u.property}, nil
 	}
 }
 
@@ -2961,6 +3184,10 @@ func (u *VariableLocator) UnmarshalJSON(data []byte) error {
 		if u.timestamp == nil {
 			return fmt.Errorf("field \"timestamp\" is required")
 		}
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
 	}
 	return nil
 }
@@ -2981,7 +3208,7 @@ func (u *VariableLocator) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *VariableLocator) AcceptFuncs(checklistVariableFunc func(api2.VariableName) error, computeNodeFunc func(ComputeNodeWithContext) error, seriesFunc func(api3.ChannelLocator) error, timestampFunc func(TimestampLocator) error, unknownFunc func(string) error) error {
+func (u *VariableLocator) AcceptFuncs(checklistVariableFunc func(api2.VariableName) error, computeNodeFunc func(ComputeNodeWithContext) error, seriesFunc func(api3.ChannelLocator) error, timestampFunc func(TimestampLocator) error, propertyFunc func(PropertyLocator) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -3008,6 +3235,11 @@ func (u *VariableLocator) AcceptFuncs(checklistVariableFunc func(api2.VariableNa
 			return fmt.Errorf("field \"timestamp\" is required")
 		}
 		return timestampFunc(*u.timestamp)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return propertyFunc(*u.property)
 	}
 }
 
@@ -3024,6 +3256,10 @@ func (u *VariableLocator) SeriesNoopSuccess(_ api3.ChannelLocator) error {
 }
 
 func (u *VariableLocator) TimestampNoopSuccess(_ TimestampLocator) error {
+	return nil
+}
+
+func (u *VariableLocator) PropertyNoopSuccess(_ PropertyLocator) error {
 	return nil
 }
 
@@ -3058,6 +3294,11 @@ func (u *VariableLocator) Accept(v VariableLocatorVisitor) error {
 			return fmt.Errorf("field \"timestamp\" is required")
 		}
 		return v.VisitTimestamp(*u.timestamp)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitProperty(*u.property)
 	}
 }
 
@@ -3066,6 +3307,7 @@ type VariableLocatorVisitor interface {
 	VisitComputeNode(v ComputeNodeWithContext) error
 	VisitSeries(v api3.ChannelLocator) error
 	VisitTimestamp(v TimestampLocator) error
+	VisitProperty(v PropertyLocator) error
 	VisitUnknown(typeName string) error
 }
 
@@ -3096,6 +3338,11 @@ func (u *VariableLocator) AcceptWithContext(ctx context.Context, v VariableLocat
 			return fmt.Errorf("field \"timestamp\" is required")
 		}
 		return v.VisitTimestampWithContext(ctx, *u.timestamp)
+	case "property":
+		if u.property == nil {
+			return fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitPropertyWithContext(ctx, *u.property)
 	}
 }
 
@@ -3104,6 +3351,7 @@ type VariableLocatorVisitorWithContext interface {
 	VisitComputeNodeWithContext(ctx context.Context, v ComputeNodeWithContext) error
 	VisitSeriesWithContext(ctx context.Context, v api3.ChannelLocator) error
 	VisitTimestampWithContext(ctx context.Context, v TimestampLocator) error
+	VisitPropertyWithContext(ctx context.Context, v PropertyLocator) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -3121,4 +3369,8 @@ func NewVariableLocatorFromSeries(v api3.ChannelLocator) VariableLocator {
 
 func NewVariableLocatorFromTimestamp(v TimestampLocator) VariableLocator {
 	return VariableLocator{typ: "timestamp", timestamp: &v}
+}
+
+func NewVariableLocatorFromProperty(v PropertyLocator) VariableLocator {
+	return VariableLocator{typ: "property", property: &v}
 }

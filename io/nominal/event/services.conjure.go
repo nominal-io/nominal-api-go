@@ -19,17 +19,53 @@ An Event is an annotated moment or time range.
 The Event Service is responsible for creating and retrieving events for a particular data source.
 */
 type EventServiceClient interface {
-	// Creates an event.
+	/*
+	   Creates an event (a flag event in the app) on one or more assets. Returns the new event.
+
+	   The server assigns the RID and records the caller as the creator. A description that is not
+	   set defaults to an empty string, and origins that are empty default to the API origin. The
+	   assets and any origin resources, such as a workbook, must all be in one workspace, and the
+	   caller needs permission to edit events in that workspace. The duration cannot be negative.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:MissingAssetRid): assetRids has no valid asset RID.
+	   - INVALID_ARGUMENT: assetRids contains a RID that is not an asset RID, or the duration is
+	     negative, or the start time or end time is out of range.
+	   - NOT_FOUND (Scout:RidsNotFound): an asset or origin resource does not exist or the caller
+	     cannot view it.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the assets and origin
+	     resources are in different workspaces.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot edit events in the workspace.
+	*/
 	CreateEvent(ctx context.Context, authHeader bearertoken.Token, requestArg CreateEvent) (Event, error)
 	/*
-	   Gets a set of events by UUIDs
+	   Gets events (flag events in the app) by UUID, archived events included. Returns the events that
+	   exist and that the caller can view; other UUIDs are omitted without error.
+
+	   The caller can view an event when the caller can view every asset linked to it. An event created
+	   in a workbook also needs view access to that workbook. An event created from a template, data
+	   review, procedure execution, or streaming checklist needs view access to the event's workspace.
 
 	   Deprecated: This endpoint is deprecated. Use the batchGetEvents endpoint instead.
 	*/
 	GetEvents(ctx context.Context, authHeader bearertoken.Token, requestArg GetEvents) ([]Event, error)
-	// Gets a set of events by RID.
+	/*
+	   Gets events (flag events in the app) by RID, archived events included. Returns the events that
+	   exist and that the caller can view; other RIDs are omitted without error.
+
+	   The caller can view an event when the caller can view every asset linked to it. An event created
+	   in a workbook also needs view access to that workbook. An event created from a template, data
+	   review, procedure execution, or streaming checklist needs view access to the event's workspace.
+	*/
 	BatchGetEvents(ctx context.Context, authHeader bearertoken.Token, requestArg []rids.EventRid) ([]Event, error)
-	// Gets a filtered set of events by RID and search filters.
+	/*
+	   Gets the events (flag events in the app) among the given RIDs that match a search query.
+	   Returns the matches that the caller can view as one unordered set; other RIDs are omitted
+	   without error.
+
+	   Archived events are included unless the query excludes them. The caller can view an event under
+	   the same rules as batchGetEvents.
+	*/
 	BatchFilterEvents(ctx context.Context, authHeader bearertoken.Token, requestArg BatchFilterEventsRequest) ([]Event, error)
 	/*
 	   Updates the fields of an event. Empty fields are left unchanged.
@@ -42,33 +78,115 @@ type EventServiceClient interface {
 	   Empty fields in the UpdateEventRequest are left unchanged.
 	*/
 	BatchUpdateEvent(ctx context.Context, authHeader bearertoken.Token, requestArg BatchUpdateEventRequest) (BatchUpdateEventResponse, error)
-	// Updates the disposition of an event.
+	/*
+	   Sets the disposition (priority, state, and assignees) of each listed event (flag event).
+	   Returns the updated events.
+
+	   Each request replaces the whole disposition of its event. A request with no disposition
+	   removes the event's disposition. The caller needs permission to edit events in the
+	   workspace of every listed event.
+
+	   Errors:
+	   - NOT_FOUND (Scout:EventsNotFound): an event does not exist or the caller cannot edit it.
+	     No event is changed.
+	*/
 	BatchUpdateDisposition(ctx context.Context, authHeader bearertoken.Token, requestArg BatchUpdateDispositionRequest) (BatchUpdateDispositionResponse, error)
 	/*
 	   Archives an event
 
-	   Deprecated: This endpoint is deprecated. Use the batchArchiveEvents endpoint instead.
+	   Deprecated: This endpoint is deprecated. Use the batchArchiveEvent endpoint instead.
 	*/
 	ArchiveEvent(ctx context.Context, authHeader bearertoken.Token, requestArg ArchiveEvent) error
-	// Archives a set of events
+	/*
+	   Archives events (flag events in the app). Searches exclude archived events unless the
+	   query asks for them, and the events stay readable by RID.
+
+	   The caller needs permission to edit events in the workspace of every listed event. Archiving
+	   an event that is already archived has no effect. Use batchUnarchiveEvent to restore events.
+
+	   Errors:
+	   - NOT_FOUND (Scout:EventsNotFound): an event does not exist or the caller cannot edit it.
+	     No event is changed.
+	*/
 	BatchArchiveEvent(ctx context.Context, authHeader bearertoken.Token, requestArg []rids.EventRid) error
-	// Unarchives a set of events
+	/*
+	   Restores archived events (flag events in the app), so that searches include them again by
+	   default.
+
+	   The caller needs permission to edit events in the workspace of every listed event.
+	   Unarchiving an event that is not archived has no effect.
+
+	   Errors:
+	   - NOT_FOUND (Scout:EventsNotFound): an event does not exist or the caller cannot edit it.
+	     No event is changed.
+	*/
 	BatchUnarchiveEvent(ctx context.Context, authHeader bearertoken.Token, requestArg []rids.EventRid) error
-	// Searches for events that match the given filters.
+	/*
+	   Searches events (flag events in the app) in workspaces the caller can view in full, by text,
+	   time range, assets, origin, disposition, priority, type, labels, or properties. Returns a
+	   sorted page of events and a token for the next page.
+
+	   A page may hold fewer than pageSize events, even when more results exist, because events the
+	   caller cannot view are removed from the page. Archived events are excluded unless
+	   archivedStatuses or an archived filter includes them.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is less than 1.
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is over 10000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a
+	     previous response.
+	   - INVALID_ARGUMENT: the search times out and the query has no resource filter, no closed time
+	     window (both after and before), and no time bound on the axis it sorts by.
+	*/
 	SearchEvents(ctx context.Context, authHeader bearertoken.Token, requestArg SearchEventsRequest) (SearchEventsResponse, error)
-	// Searches for events matching the given filter and aggregates them based on the requested functions.
+	/*
+	   Totals the number or the combined duration of events (flag events in the app) that match a
+	   query, in workspaces the caller can view in full. Returns one value per requested aggregate
+	   type.
+
+	   Archived events are excluded unless the query has an archived filter.
+
+	   Errors:
+	   - INVALID_ARGUMENT: no aggregate type is requested.
+	   - INVALID_ARGUMENT: the aggregation times out and the query has no resource filter and no closed
+	     time window (both after and before).
+	*/
 	AggregateEvents(ctx context.Context, authHeader bearertoken.Token, requestArg AggregateEventsRequest) (AggregateEventsResponse, error)
 	/*
-	   Searches for events matching the given filter and aggregates them based on the requested functions.
-	   Returns a list of responses in same order as the batched requests.
+	   Runs aggregateEvents for several requests in one call. Returns one response per request, in
+	   request order.
+
+	   Archived events are excluded unless that request's query has an archived filter.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the batch times out and a query has no resource filter and no closed time
+	     window (both after and before).
 	*/
 	BatchAggregateEvents(ctx context.Context, authHeader bearertoken.Token, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error)
-	// Gets a histogram of events that match the given filters.
+	/*
+	   Counts unarchived events (flag events in the app) in equal-width time bins over a window, for
+	   events that match an optional filter and that the caller can view. Returns the bins in time
+	   order.
+
+	   An event is counted in the bin that holds its start time. Considers at most eventLimit events,
+	   earliest start first, including events that start before startInclusive and end after it. In a
+	   window wider than zero, an event that starts one bin width or more before startInclusive is not
+	   counted, but it still counts toward eventLimit. An earlier-starting event within one bin width is
+	   counted in the first bin. If startInclusive equals endExclusive, the response has one bin that
+	   counts every considered event.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:IllegalEventLimitRequested): eventLimit is below 1 or above 10000.
+	   - INVALID_ARGUMENT (Scout:IllegalBinCountRequested): numBins is below 1 or above 1000.
+	*/
 	GetEventsHistogram(ctx context.Context, authHeader bearertoken.Token, requestArg EventsHistogramRequest) (EventsHistogramResponse, error)
 	/*
-	   Lists the properties and labels of active events in the provided workspaces.
-	   Returns up to 500 of the most-used labels, and up to 500 of the most-used values for each property key.
-	   Property keys are not capped. Response maps and sets are unordered.
+	   Lists the labels and property values used by unarchived events (flag events in the app) in the
+	   given workspaces, or in all workspaces the caller can view in full if none are given.
+
+	   Returns up to 500 of the most-used labels and, for each property name, up to 500 of the
+	   most-used values. Property names are not capped. Results are unordered. Given workspaces that
+	   the caller cannot view are left out without error.
 	*/
 	ListPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, requestArg ListPropertiesAndLabelsRequest) (metadata.ListPropertiesAndLabelsResponse, error)
 }
@@ -341,17 +459,53 @@ An Event is an annotated moment or time range.
 The Event Service is responsible for creating and retrieving events for a particular data source.
 */
 type EventServiceClientWithAuth interface {
-	// Creates an event.
+	/*
+	   Creates an event (a flag event in the app) on one or more assets. Returns the new event.
+
+	   The server assigns the RID and records the caller as the creator. A description that is not
+	   set defaults to an empty string, and origins that are empty default to the API origin. The
+	   assets and any origin resources, such as a workbook, must all be in one workspace, and the
+	   caller needs permission to edit events in that workspace. The duration cannot be negative.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:MissingAssetRid): assetRids has no valid asset RID.
+	   - INVALID_ARGUMENT: assetRids contains a RID that is not an asset RID, or the duration is
+	     negative, or the start time or end time is out of range.
+	   - NOT_FOUND (Scout:RidsNotFound): an asset or origin resource does not exist or the caller
+	     cannot view it.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the assets and origin
+	     resources are in different workspaces.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot edit events in the workspace.
+	*/
 	CreateEvent(ctx context.Context, requestArg CreateEvent) (Event, error)
 	/*
-	   Gets a set of events by UUIDs
+	   Gets events (flag events in the app) by UUID, archived events included. Returns the events that
+	   exist and that the caller can view; other UUIDs are omitted without error.
+
+	   The caller can view an event when the caller can view every asset linked to it. An event created
+	   in a workbook also needs view access to that workbook. An event created from a template, data
+	   review, procedure execution, or streaming checklist needs view access to the event's workspace.
 
 	   Deprecated: This endpoint is deprecated. Use the batchGetEvents endpoint instead.
 	*/
 	GetEvents(ctx context.Context, requestArg GetEvents) ([]Event, error)
-	// Gets a set of events by RID.
+	/*
+	   Gets events (flag events in the app) by RID, archived events included. Returns the events that
+	   exist and that the caller can view; other RIDs are omitted without error.
+
+	   The caller can view an event when the caller can view every asset linked to it. An event created
+	   in a workbook also needs view access to that workbook. An event created from a template, data
+	   review, procedure execution, or streaming checklist needs view access to the event's workspace.
+	*/
 	BatchGetEvents(ctx context.Context, requestArg []rids.EventRid) ([]Event, error)
-	// Gets a filtered set of events by RID and search filters.
+	/*
+	   Gets the events (flag events in the app) among the given RIDs that match a search query.
+	   Returns the matches that the caller can view as one unordered set; other RIDs are omitted
+	   without error.
+
+	   Archived events are included unless the query excludes them. The caller can view an event under
+	   the same rules as batchGetEvents.
+	*/
 	BatchFilterEvents(ctx context.Context, requestArg BatchFilterEventsRequest) ([]Event, error)
 	/*
 	   Updates the fields of an event. Empty fields are left unchanged.
@@ -364,33 +518,115 @@ type EventServiceClientWithAuth interface {
 	   Empty fields in the UpdateEventRequest are left unchanged.
 	*/
 	BatchUpdateEvent(ctx context.Context, requestArg BatchUpdateEventRequest) (BatchUpdateEventResponse, error)
-	// Updates the disposition of an event.
+	/*
+	   Sets the disposition (priority, state, and assignees) of each listed event (flag event).
+	   Returns the updated events.
+
+	   Each request replaces the whole disposition of its event. A request with no disposition
+	   removes the event's disposition. The caller needs permission to edit events in the
+	   workspace of every listed event.
+
+	   Errors:
+	   - NOT_FOUND (Scout:EventsNotFound): an event does not exist or the caller cannot edit it.
+	     No event is changed.
+	*/
 	BatchUpdateDisposition(ctx context.Context, requestArg BatchUpdateDispositionRequest) (BatchUpdateDispositionResponse, error)
 	/*
 	   Archives an event
 
-	   Deprecated: This endpoint is deprecated. Use the batchArchiveEvents endpoint instead.
+	   Deprecated: This endpoint is deprecated. Use the batchArchiveEvent endpoint instead.
 	*/
 	ArchiveEvent(ctx context.Context, requestArg ArchiveEvent) error
-	// Archives a set of events
+	/*
+	   Archives events (flag events in the app). Searches exclude archived events unless the
+	   query asks for them, and the events stay readable by RID.
+
+	   The caller needs permission to edit events in the workspace of every listed event. Archiving
+	   an event that is already archived has no effect. Use batchUnarchiveEvent to restore events.
+
+	   Errors:
+	   - NOT_FOUND (Scout:EventsNotFound): an event does not exist or the caller cannot edit it.
+	     No event is changed.
+	*/
 	BatchArchiveEvent(ctx context.Context, requestArg []rids.EventRid) error
-	// Unarchives a set of events
+	/*
+	   Restores archived events (flag events in the app), so that searches include them again by
+	   default.
+
+	   The caller needs permission to edit events in the workspace of every listed event.
+	   Unarchiving an event that is not archived has no effect.
+
+	   Errors:
+	   - NOT_FOUND (Scout:EventsNotFound): an event does not exist or the caller cannot edit it.
+	     No event is changed.
+	*/
 	BatchUnarchiveEvent(ctx context.Context, requestArg []rids.EventRid) error
-	// Searches for events that match the given filters.
+	/*
+	   Searches events (flag events in the app) in workspaces the caller can view in full, by text,
+	   time range, assets, origin, disposition, priority, type, labels, or properties. Returns a
+	   sorted page of events and a token for the next page.
+
+	   A page may hold fewer than pageSize events, even when more results exist, because events the
+	   caller cannot view are removed from the page. Archived events are excluded unless
+	   archivedStatuses or an archived filter includes them.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is less than 1.
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is over 10000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a
+	     previous response.
+	   - INVALID_ARGUMENT: the search times out and the query has no resource filter, no closed time
+	     window (both after and before), and no time bound on the axis it sorts by.
+	*/
 	SearchEvents(ctx context.Context, requestArg SearchEventsRequest) (SearchEventsResponse, error)
-	// Searches for events matching the given filter and aggregates them based on the requested functions.
+	/*
+	   Totals the number or the combined duration of events (flag events in the app) that match a
+	   query, in workspaces the caller can view in full. Returns one value per requested aggregate
+	   type.
+
+	   Archived events are excluded unless the query has an archived filter.
+
+	   Errors:
+	   - INVALID_ARGUMENT: no aggregate type is requested.
+	   - INVALID_ARGUMENT: the aggregation times out and the query has no resource filter and no closed
+	     time window (both after and before).
+	*/
 	AggregateEvents(ctx context.Context, requestArg AggregateEventsRequest) (AggregateEventsResponse, error)
 	/*
-	   Searches for events matching the given filter and aggregates them based on the requested functions.
-	   Returns a list of responses in same order as the batched requests.
+	   Runs aggregateEvents for several requests in one call. Returns one response per request, in
+	   request order.
+
+	   Archived events are excluded unless that request's query has an archived filter.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the batch times out and a query has no resource filter and no closed time
+	     window (both after and before).
 	*/
 	BatchAggregateEvents(ctx context.Context, requestArg BatchAggregateEventsRequest) (BatchAggregateEventsResponse, error)
-	// Gets a histogram of events that match the given filters.
+	/*
+	   Counts unarchived events (flag events in the app) in equal-width time bins over a window, for
+	   events that match an optional filter and that the caller can view. Returns the bins in time
+	   order.
+
+	   An event is counted in the bin that holds its start time. Considers at most eventLimit events,
+	   earliest start first, including events that start before startInclusive and end after it. In a
+	   window wider than zero, an event that starts one bin width or more before startInclusive is not
+	   counted, but it still counts toward eventLimit. An earlier-starting event within one bin width is
+	   counted in the first bin. If startInclusive equals endExclusive, the response has one bin that
+	   counts every considered event.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:IllegalEventLimitRequested): eventLimit is below 1 or above 10000.
+	   - INVALID_ARGUMENT (Scout:IllegalBinCountRequested): numBins is below 1 or above 1000.
+	*/
 	GetEventsHistogram(ctx context.Context, requestArg EventsHistogramRequest) (EventsHistogramResponse, error)
 	/*
-	   Lists the properties and labels of active events in the provided workspaces.
-	   Returns up to 500 of the most-used labels, and up to 500 of the most-used values for each property key.
-	   Property keys are not capped. Response maps and sets are unordered.
+	   Lists the labels and property values used by unarchived events (flag events in the app) in the
+	   given workspaces, or in all workspaces the caller can view in full if none are given.
+
+	   Returns up to 500 of the most-used labels and, for each property name, up to 500 of the
+	   most-used values. Property names are not capped. Results are unordered. Given workspaces that
+	   the caller cannot view are left out without error.
 	*/
 	ListPropertiesAndLabels(ctx context.Context, requestArg ListPropertiesAndLabelsRequest) (metadata.ListPropertiesAndLabelsResponse, error)
 }

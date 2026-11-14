@@ -802,10 +802,15 @@ func (u *JobSpecWithT[T]) Accept(ctx context.Context, v JobSpecVisitorWithT[T]) 
 			return result, fmt.Errorf("field \"compileUdfJobSpec\" is required")
 		}
 		return v.VisitCompileUdfJobSpec(ctx, *u.compileUdfJobSpec)
+	case "sqlExport":
+		if u.sqlExport == nil {
+			return result, fmt.Errorf("field \"sqlExport\" is required")
+		}
+		return v.VisitSqlExport(ctx, *u.sqlExport)
 	}
 }
 
-func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error), computeFunc func(ComputeJobSpec) (T, error), compileUdfJobSpecFunc func(CompileUdfJobSpec) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error), computeFunc func(ComputeJobSpec) (T, error), compileUdfJobSpecFunc func(UdfCompilationJobSpec) (T, error), sqlExportFunc func(SqlExportJobSpec) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -828,6 +833,11 @@ func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error),
 			return result, fmt.Errorf("field \"compileUdfJobSpec\" is required")
 		}
 		return compileUdfJobSpecFunc(*u.compileUdfJobSpec)
+	case "sqlExport":
+		if u.sqlExport == nil {
+			return result, fmt.Errorf("field \"sqlExport\" is required")
+		}
+		return sqlExportFunc(*u.sqlExport)
 	}
 }
 
@@ -841,7 +851,12 @@ func (u *JobSpecWithT[T]) ComputeNoopSuccess(ComputeJobSpec) (T, error) {
 	return result, nil
 }
 
-func (u *JobSpecWithT[T]) CompileUdfJobSpecNoopSuccess(CompileUdfJobSpec) (T, error) {
+func (u *JobSpecWithT[T]) CompileUdfJobSpecNoopSuccess(UdfCompilationJobSpec) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *JobSpecWithT[T]) SqlExportNoopSuccess(SqlExportJobSpec) (T, error) {
 	var result T
 	return result, nil
 }
@@ -854,7 +869,57 @@ func (u *JobSpecWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type JobSpecVisitorWithT[T any] interface {
 	VisitCheckV2(ctx context.Context, v CheckJobSpec) (T, error)
 	VisitCompute(ctx context.Context, v ComputeJobSpec) (T, error)
-	VisitCompileUdfJobSpec(ctx context.Context, v CompileUdfJobSpec) (T, error)
+	VisitCompileUdfJobSpec(ctx context.Context, v UdfCompilationJobSpec) (T, error)
+	VisitSqlExport(ctx context.Context, v SqlExportJobSpec) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type PropertyTypeWithT[T any] PropertyType
+
+func (u *PropertyTypeWithT[T]) Accept(ctx context.Context, v PropertyTypeVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return result, fmt.Errorf("field \"numeric\" is required")
+		}
+		return v.VisitNumeric(ctx, *u.numeric)
+	}
+}
+
+func (u *PropertyTypeWithT[T]) AcceptFuncs(numericFunc func(NumericPropertyType) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "numeric":
+		if u.numeric == nil {
+			return result, fmt.Errorf("field \"numeric\" is required")
+		}
+		return numericFunc(*u.numeric)
+	}
+}
+
+func (u *PropertyTypeWithT[T]) NumericNoopSuccess(NumericPropertyType) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *PropertyTypeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type PropertyTypeVisitorWithT[T any] interface {
+	VisitNumeric(ctx context.Context, v NumericPropertyType) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -969,10 +1034,15 @@ func (u *UnresolvedVariableLocatorWithT[T]) Accept(ctx context.Context, v Unreso
 			return result, fmt.Errorf("field \"timestamp\" is required")
 		}
 		return v.VisitTimestamp(ctx, *u.timestamp)
+	case "property":
+		if u.property == nil {
+			return result, fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitProperty(ctx, *u.property)
 	}
 }
 
-func (u *UnresolvedVariableLocatorWithT[T]) AcceptFuncs(checklistVariableFunc func(api2.VariableName) (T, error), computeNodeFunc func(UnresolvedComputeNodeWithContext) (T, error), seriesFunc func(api3.ChannelLocator) (T, error), timestampFunc func(TimestampLocator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *UnresolvedVariableLocatorWithT[T]) AcceptFuncs(checklistVariableFunc func(api2.VariableName) (T, error), computeNodeFunc func(UnresolvedComputeNodeWithContext) (T, error), seriesFunc func(api3.ChannelLocator) (T, error), timestampFunc func(TimestampLocator) (T, error), propertyFunc func(PropertyLocator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1000,6 +1070,11 @@ func (u *UnresolvedVariableLocatorWithT[T]) AcceptFuncs(checklistVariableFunc fu
 			return result, fmt.Errorf("field \"timestamp\" is required")
 		}
 		return timestampFunc(*u.timestamp)
+	case "property":
+		if u.property == nil {
+			return result, fmt.Errorf("field \"property\" is required")
+		}
+		return propertyFunc(*u.property)
 	}
 }
 
@@ -1023,6 +1098,11 @@ func (u *UnresolvedVariableLocatorWithT[T]) TimestampNoopSuccess(TimestampLocato
 	return result, nil
 }
 
+func (u *UnresolvedVariableLocatorWithT[T]) PropertyNoopSuccess(PropertyLocator) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *UnresolvedVariableLocatorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -1033,6 +1113,7 @@ type UnresolvedVariableLocatorVisitorWithT[T any] interface {
 	VisitComputeNode(ctx context.Context, v UnresolvedComputeNodeWithContext) (T, error)
 	VisitSeries(ctx context.Context, v api3.ChannelLocator) (T, error)
 	VisitTimestamp(ctx context.Context, v TimestampLocator) (T, error)
+	VisitProperty(ctx context.Context, v PropertyLocator) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -1131,10 +1212,15 @@ func (u *VariableLocatorWithT[T]) Accept(ctx context.Context, v VariableLocatorV
 			return result, fmt.Errorf("field \"timestamp\" is required")
 		}
 		return v.VisitTimestamp(ctx, *u.timestamp)
+	case "property":
+		if u.property == nil {
+			return result, fmt.Errorf("field \"property\" is required")
+		}
+		return v.VisitProperty(ctx, *u.property)
 	}
 }
 
-func (u *VariableLocatorWithT[T]) AcceptFuncs(checklistVariableFunc func(api2.VariableName) (T, error), computeNodeFunc func(ComputeNodeWithContext) (T, error), seriesFunc func(api3.ChannelLocator) (T, error), timestampFunc func(TimestampLocator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *VariableLocatorWithT[T]) AcceptFuncs(checklistVariableFunc func(api2.VariableName) (T, error), computeNodeFunc func(ComputeNodeWithContext) (T, error), seriesFunc func(api3.ChannelLocator) (T, error), timestampFunc func(TimestampLocator) (T, error), propertyFunc func(PropertyLocator) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1162,6 +1248,11 @@ func (u *VariableLocatorWithT[T]) AcceptFuncs(checklistVariableFunc func(api2.Va
 			return result, fmt.Errorf("field \"timestamp\" is required")
 		}
 		return timestampFunc(*u.timestamp)
+	case "property":
+		if u.property == nil {
+			return result, fmt.Errorf("field \"property\" is required")
+		}
+		return propertyFunc(*u.property)
 	}
 }
 
@@ -1185,6 +1276,11 @@ func (u *VariableLocatorWithT[T]) TimestampNoopSuccess(TimestampLocator) (T, err
 	return result, nil
 }
 
+func (u *VariableLocatorWithT[T]) PropertyNoopSuccess(PropertyLocator) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *VariableLocatorWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -1195,5 +1291,6 @@ type VariableLocatorVisitorWithT[T any] interface {
 	VisitComputeNode(ctx context.Context, v ComputeNodeWithContext) (T, error)
 	VisitSeries(ctx context.Context, v api3.ChannelLocator) (T, error)
 	VisitTimestamp(ctx context.Context, v TimestampLocator) (T, error)
+	VisitProperty(ctx context.Context, v PropertyLocator) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }

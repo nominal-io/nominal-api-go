@@ -16,10 +16,14 @@ import (
 )
 
 type AssetStreamConfiguration struct {
+	// Integrations that receive violation notifications. If empty, no notifications are sent.
 	NotificationConfigurations []api.NotificationConfiguration `json:"notificationConfigurations"`
-	EvaluationDelay            api1.Duration                   `json:"evaluationDelay"`
-	RecoveryDelay              api1.Duration                   `json:"recoveryDelay"`
-	AutoCreateEvents           bool                            `json:"autoCreateEvents"`
+	// How long evaluation is delayed, to allow for late data.
+	EvaluationDelay api1.Duration `json:"evaluationDelay"`
+	// The minimum time that must pass before a check can recover from a failure.
+	RecoveryDelay api1.Duration `json:"recoveryDelay"`
+	// Whether events are created when checks fail and recover.
+	AutoCreateEvents bool `json:"autoCreateEvents"`
 }
 
 func (o AssetStreamConfiguration) MarshalJSON() ([]byte, error) {
@@ -605,7 +609,11 @@ func (o *ListStreamingChecklistForAssetResponse) UnmarshalYAML(unmarshal func(in
 
 type ListStreamingChecklistRequest struct {
 	// Page sizes greater than 10_000 will be rejected. Default pageSize is 100.
-	PageSize   *int                `json:"pageSize,omitempty"`
+	PageSize *int `json:"pageSize,omitempty"`
+	/*
+	   Limits the list to these workspaces, leaving out any the caller cannot view. If empty, uses every workspace
+	   the caller can view. Workspaces where checklists are not available are skipped.
+	*/
 	Workspaces []rids.WorkspaceRid `json:"workspaces" safelogging:"@Safe"`
 	PageToken  *uuid.UUID          `json:"pageToken,omitempty"`
 }
@@ -755,9 +763,11 @@ type ResolvedCheckStatus struct {
 	   Checks can define a single range computation which can evaluate over multiple implementations of a context.
 	   The check implementation index will correspond to the implementation index of the check condition.
 	*/
-	CheckParameterIndex          *int                          `json:"checkParameterIndex,omitempty"`
+	CheckParameterIndex *int `json:"checkParameterIndex,omitempty"`
+	// Compute nodes in the check that streaming evaluation cannot run. Empty when there are none.
 	InvalidStreamingComputeNodes []InvalidStreamingComputeNode `json:"invalidStreamingComputeNodes"`
-	Channels                     []ChannelLocatorWithStatus    `json:"channels"`
+	// The channels the check reads, each marked as resolved or unresolved against the asset's data.
+	Channels []ChannelLocatorWithStatus `json:"channels"`
 	// Why the check's compute graph could not be resolved. A streaming checklist skips this check.
 	ResolutionError *api4.SerializableError `json:"resolutionError,omitempty"`
 }
@@ -884,6 +894,7 @@ func (o *StreamingChecklistFailed) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// The assets a checklist is streaming on, with the configuration for each asset.
 type StreamingChecklistInfo struct {
 	ChecklistRid        api2.ChecklistRid                          `json:"checklistRid" safelogging:"@Safe"`
 	AssetConfigurations map[api2.AssetRid]AssetStreamConfiguration `json:"assetConfigurations"`
@@ -1015,8 +1026,9 @@ func (o *ValidateChecklistResolutionRequest) UnmarshalYAML(unmarshal func(interf
 }
 
 type ValidateChecklistResolutionResponse struct {
-	ChecklistRid     api2.ChecklistRid     `json:"checklistRid" safelogging:"@Safe"`
-	AssetRid         api2.AssetRid         `json:"assetRid" safelogging:"@Safe"`
+	ChecklistRid api2.ChecklistRid `json:"checklistRid" safelogging:"@Safe"`
+	AssetRid     api2.AssetRid     `json:"assetRid" safelogging:"@Safe"`
+	// One entry per check, identified by checkRid and checkParameterIndex.
 	ResolutionStatus []ResolvedCheckStatus `json:"resolutionStatus"`
 }
 

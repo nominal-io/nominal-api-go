@@ -13,8 +13,9 @@ type AssetSortField struct {
 type AssetSortField_Value string
 
 const (
-	AssetSortField_NAME                  AssetSortField_Value = "NAME"
-	AssetSortField_CREATED_AT            AssetSortField_Value = "CREATED_AT"
+	AssetSortField_NAME       AssetSortField_Value = "NAME"
+	AssetSortField_CREATED_AT AssetSortField_Value = "CREATED_AT"
+	// Start time of the asset's most recent run. Assets with no runs sort last.
 	AssetSortField_MOST_RECENT_RUN_START AssetSortField_Value = "MOST_RECENT_RUN_START"
 	AssetSortField_UNKNOWN               AssetSortField_Value = "UNKNOWN"
 )
@@ -73,7 +74,9 @@ type PropertyRequirement struct {
 type PropertyRequirement_Value string
 
 const (
-	PropertyRequirement_REQUIRED  PropertyRequirement_Value = "REQUIRED"
+	// An asset with the type must set the property.
+	PropertyRequirement_REQUIRED PropertyRequirement_Value = "REQUIRED"
+	// An asset may omit the property. A value that is set must still match the value type.
 	PropertyRequirement_SUGGESTED PropertyRequirement_Value = "SUGGESTED"
 	PropertyRequirement_UNKNOWN   PropertyRequirement_Value = "UNKNOWN"
 )

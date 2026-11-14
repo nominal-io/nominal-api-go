@@ -15,34 +15,306 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// How a pipeline's logic is defined. Further representations may be added as new arms.
+type PipelineLogic struct {
+	typ   string
+	graph *PipelineGraph
+}
+
+type pipelineLogicDeserializer struct {
+	Type  string         `json:"type"`
+	Graph *PipelineGraph `json:"graph"`
+}
+
+func (u *pipelineLogicDeserializer) toStruct() PipelineLogic {
+	return PipelineLogic{typ: u.Type, graph: u.Graph}
+}
+
+func (u *PipelineLogic) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "graph":
+		if u.graph == nil {
+			return nil, fmt.Errorf("field \"graph\" is required")
+		}
+		return struct {
+			Type  string        `json:"type"`
+			Graph PipelineGraph `json:"graph"`
+		}{Type: "graph", Graph: *u.graph}, nil
+	}
+}
+
+func (u PipelineLogic) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *PipelineLogic) UnmarshalJSON(data []byte) error {
+	var deser pipelineLogicDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "graph":
+		if u.graph == nil {
+			return fmt.Errorf("field \"graph\" is required")
+		}
+	}
+	return nil
+}
+
+func (u PipelineLogic) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *PipelineLogic) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *PipelineLogic) AcceptFuncs(graphFunc func(PipelineGraph) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in PipelineLogic type")
+		}
+		return unknownFunc(u.typ)
+	case "graph":
+		if u.graph == nil {
+			return fmt.Errorf("field \"graph\" is required")
+		}
+		return graphFunc(*u.graph)
+	}
+}
+
+func (u *PipelineLogic) GraphNoopSuccess(_ PipelineGraph) error {
+	return nil
+}
+
+func (u *PipelineLogic) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *PipelineLogic) Accept(v PipelineLogicVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "graph":
+		if u.graph == nil {
+			return fmt.Errorf("field \"graph\" is required")
+		}
+		return v.VisitGraph(*u.graph)
+	}
+}
+
+type PipelineLogicVisitor interface {
+	VisitGraph(v PipelineGraph) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *PipelineLogic) AcceptWithContext(ctx context.Context, v PipelineLogicVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "graph":
+		if u.graph == nil {
+			return fmt.Errorf("field \"graph\" is required")
+		}
+		return v.VisitGraphWithContext(ctx, *u.graph)
+	}
+}
+
+type PipelineLogicVisitorWithContext interface {
+	VisitGraphWithContext(ctx context.Context, v PipelineGraph) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewPipelineLogicFromGraph(v PipelineGraph) PipelineLogic {
+	return PipelineLogic{typ: "graph", graph: &v}
+}
+
+// One step of a pipeline graph. Further kinds of node may be added as new arms.
+type PipelineNode struct {
+	typ     string
+	dataset *api1.Dataset
+}
+
+type pipelineNodeDeserializer struct {
+	Type    string        `json:"type"`
+	Dataset *api1.Dataset `json:"dataset"`
+}
+
+func (u *pipelineNodeDeserializer) toStruct() PipelineNode {
+	return PipelineNode{typ: u.Type, dataset: u.Dataset}
+}
+
+func (u *PipelineNode) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "dataset":
+		if u.dataset == nil {
+			return nil, fmt.Errorf("field \"dataset\" is required")
+		}
+		return struct {
+			Type    string       `json:"type"`
+			Dataset api1.Dataset `json:"dataset"`
+		}{Type: "dataset", Dataset: *u.dataset}, nil
+	}
+}
+
+func (u PipelineNode) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *PipelineNode) UnmarshalJSON(data []byte) error {
+	var deser pipelineNodeDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "dataset":
+		if u.dataset == nil {
+			return fmt.Errorf("field \"dataset\" is required")
+		}
+	}
+	return nil
+}
+
+func (u PipelineNode) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *PipelineNode) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *PipelineNode) AcceptFuncs(datasetFunc func(api1.Dataset) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in PipelineNode type")
+		}
+		return unknownFunc(u.typ)
+	case "dataset":
+		if u.dataset == nil {
+			return fmt.Errorf("field \"dataset\" is required")
+		}
+		return datasetFunc(*u.dataset)
+	}
+}
+
+func (u *PipelineNode) DatasetNoopSuccess(_ api1.Dataset) error {
+	return nil
+}
+
+func (u *PipelineNode) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *PipelineNode) Accept(v PipelineNodeVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "dataset":
+		if u.dataset == nil {
+			return fmt.Errorf("field \"dataset\" is required")
+		}
+		return v.VisitDataset(*u.dataset)
+	}
+}
+
+type PipelineNodeVisitor interface {
+	VisitDataset(v api1.Dataset) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *PipelineNode) AcceptWithContext(ctx context.Context, v PipelineNodeVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "dataset":
+		if u.dataset == nil {
+			return fmt.Errorf("field \"dataset\" is required")
+		}
+		return v.VisitDatasetWithContext(ctx, *u.dataset)
+	}
+}
+
+type PipelineNodeVisitorWithContext interface {
+	VisitDatasetWithContext(ctx context.Context, v api1.Dataset) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewPipelineNodeFromDataset(v api1.Dataset) PipelineNode {
+	return PipelineNode{typ: "dataset", dataset: &v}
+}
+
 type PipelineStateUpdateQuery struct {
 	typ            string
-	logic          *api1.Dataset
+	graph          *PipelineGraph
 	previousCommit *api.CommitId
 }
 
 type pipelineStateUpdateQueryDeserializer struct {
-	Type           string        `json:"type"`
-	Logic          *api1.Dataset `json:"logic"`
-	PreviousCommit *api.CommitId `json:"previousCommit"`
+	Type           string         `json:"type"`
+	Graph          *PipelineGraph `json:"graph"`
+	PreviousCommit *api.CommitId  `json:"previousCommit"`
 }
 
 func (u *pipelineStateUpdateQueryDeserializer) toStruct() PipelineStateUpdateQuery {
-	return PipelineStateUpdateQuery{typ: u.Type, logic: u.Logic, previousCommit: u.PreviousCommit}
+	return PipelineStateUpdateQuery{typ: u.Type, graph: u.Graph, previousCommit: u.PreviousCommit}
 }
 
 func (u *PipelineStateUpdateQuery) toSerializer() (interface{}, error) {
 	switch u.typ {
 	default:
 		return nil, fmt.Errorf("unknown type %q", u.typ)
-	case "logic":
-		if u.logic == nil {
-			return nil, fmt.Errorf("field \"logic\" is required")
+	case "graph":
+		if u.graph == nil {
+			return nil, fmt.Errorf("field \"graph\" is required")
 		}
 		return struct {
-			Type  string       `json:"type"`
-			Logic api1.Dataset `json:"logic"`
-		}{Type: "logic", Logic: *u.logic}, nil
+			Type  string        `json:"type"`
+			Graph PipelineGraph `json:"graph"`
+		}{Type: "graph", Graph: *u.graph}, nil
 	case "previousCommit":
 		if u.previousCommit == nil {
 			return nil, fmt.Errorf("field \"previousCommit\" is required")
@@ -69,9 +341,9 @@ func (u *PipelineStateUpdateQuery) UnmarshalJSON(data []byte) error {
 	}
 	*u = deser.toStruct()
 	switch u.typ {
-	case "logic":
-		if u.logic == nil {
-			return fmt.Errorf("field \"logic\" is required")
+	case "graph":
+		if u.graph == nil {
+			return fmt.Errorf("field \"graph\" is required")
 		}
 	case "previousCommit":
 		if u.previousCommit == nil {
@@ -97,18 +369,18 @@ func (u *PipelineStateUpdateQuery) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *PipelineStateUpdateQuery) AcceptFuncs(logicFunc func(api1.Dataset) error, previousCommitFunc func(api.CommitId) error, unknownFunc func(string) error) error {
+func (u *PipelineStateUpdateQuery) AcceptFuncs(graphFunc func(PipelineGraph) error, previousCommitFunc func(api.CommitId) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
 			return fmt.Errorf("invalid value in PipelineStateUpdateQuery type")
 		}
 		return unknownFunc(u.typ)
-	case "logic":
-		if u.logic == nil {
-			return fmt.Errorf("field \"logic\" is required")
+	case "graph":
+		if u.graph == nil {
+			return fmt.Errorf("field \"graph\" is required")
 		}
-		return logicFunc(*u.logic)
+		return graphFunc(*u.graph)
 	case "previousCommit":
 		if u.previousCommit == nil {
 			return fmt.Errorf("field \"previousCommit\" is required")
@@ -117,7 +389,7 @@ func (u *PipelineStateUpdateQuery) AcceptFuncs(logicFunc func(api1.Dataset) erro
 	}
 }
 
-func (u *PipelineStateUpdateQuery) LogicNoopSuccess(_ api1.Dataset) error {
+func (u *PipelineStateUpdateQuery) GraphNoopSuccess(_ PipelineGraph) error {
 	return nil
 }
 
@@ -136,11 +408,11 @@ func (u *PipelineStateUpdateQuery) Accept(v PipelineStateUpdateQueryVisitor) err
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknown(u.typ)
-	case "logic":
-		if u.logic == nil {
-			return fmt.Errorf("field \"logic\" is required")
+	case "graph":
+		if u.graph == nil {
+			return fmt.Errorf("field \"graph\" is required")
 		}
-		return v.VisitLogic(*u.logic)
+		return v.VisitGraph(*u.graph)
 	case "previousCommit":
 		if u.previousCommit == nil {
 			return fmt.Errorf("field \"previousCommit\" is required")
@@ -150,7 +422,7 @@ func (u *PipelineStateUpdateQuery) Accept(v PipelineStateUpdateQueryVisitor) err
 }
 
 type PipelineStateUpdateQueryVisitor interface {
-	VisitLogic(v api1.Dataset) error
+	VisitGraph(v PipelineGraph) error
 	VisitPreviousCommit(v api.CommitId) error
 	VisitUnknown(typeName string) error
 }
@@ -162,11 +434,11 @@ func (u *PipelineStateUpdateQuery) AcceptWithContext(ctx context.Context, v Pipe
 			return fmt.Errorf("invalid value in union type")
 		}
 		return v.VisitUnknownWithContext(ctx, u.typ)
-	case "logic":
-		if u.logic == nil {
-			return fmt.Errorf("field \"logic\" is required")
+	case "graph":
+		if u.graph == nil {
+			return fmt.Errorf("field \"graph\" is required")
 		}
-		return v.VisitLogicWithContext(ctx, *u.logic)
+		return v.VisitGraphWithContext(ctx, *u.graph)
 	case "previousCommit":
 		if u.previousCommit == nil {
 			return fmt.Errorf("field \"previousCommit\" is required")
@@ -176,13 +448,13 @@ func (u *PipelineStateUpdateQuery) AcceptWithContext(ctx context.Context, v Pipe
 }
 
 type PipelineStateUpdateQueryVisitorWithContext interface {
-	VisitLogicWithContext(ctx context.Context, v api1.Dataset) error
+	VisitGraphWithContext(ctx context.Context, v PipelineGraph) error
 	VisitPreviousCommitWithContext(ctx context.Context, v api.CommitId) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
-func NewPipelineStateUpdateQueryFromLogic(v api1.Dataset) PipelineStateUpdateQuery {
-	return PipelineStateUpdateQuery{typ: "logic", logic: &v}
+func NewPipelineStateUpdateQueryFromGraph(v PipelineGraph) PipelineStateUpdateQuery {
+	return PipelineStateUpdateQuery{typ: "graph", graph: &v}
 }
 
 func NewPipelineStateUpdateQueryFromPreviousCommit(v api.CommitId) PipelineStateUpdateQuery {

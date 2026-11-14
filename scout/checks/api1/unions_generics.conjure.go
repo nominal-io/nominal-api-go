@@ -36,10 +36,15 @@ func (u *JobResultWithT[T]) Accept(ctx context.Context, v JobResultVisitorWithT[
 			return result, fmt.Errorf("field \"udfCompilationJobResult\" is required")
 		}
 		return v.VisitUdfCompilationJobResult(ctx, *u.udfCompilationJobResult)
+	case "exportJobResult":
+		if u.exportJobResult == nil {
+			return result, fmt.Errorf("field \"exportJobResult\" is required")
+		}
+		return v.VisitExportJobResult(ctx, *u.exportJobResult)
 	}
 }
 
-func (u *JobResultWithT[T]) AcceptFuncs(checkJobResultFunc func(CheckJobResult) (T, error), computeJobResultFunc func(api.ComputeJobResult) (T, error), udfCompilationJobResultFunc func(api.UdfCompilationJobResult) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *JobResultWithT[T]) AcceptFuncs(checkJobResultFunc func(CheckJobResult) (T, error), computeJobResultFunc func(api.ComputeJobResult) (T, error), udfCompilationJobResultFunc func(api.UdfCompilationJobResult) (T, error), exportJobResultFunc func(api.ExportJobResult) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -62,6 +67,11 @@ func (u *JobResultWithT[T]) AcceptFuncs(checkJobResultFunc func(CheckJobResult) 
 			return result, fmt.Errorf("field \"udfCompilationJobResult\" is required")
 		}
 		return udfCompilationJobResultFunc(*u.udfCompilationJobResult)
+	case "exportJobResult":
+		if u.exportJobResult == nil {
+			return result, fmt.Errorf("field \"exportJobResult\" is required")
+		}
+		return exportJobResultFunc(*u.exportJobResult)
 	}
 }
 
@@ -80,6 +90,11 @@ func (u *JobResultWithT[T]) UdfCompilationJobResultNoopSuccess(api.UdfCompilatio
 	return result, nil
 }
 
+func (u *JobResultWithT[T]) ExportJobResultNoopSuccess(api.ExportJobResult) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *JobResultWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -89,6 +104,7 @@ type JobResultVisitorWithT[T any] interface {
 	VisitCheckJobResult(ctx context.Context, v CheckJobResult) (T, error)
 	VisitComputeJobResult(ctx context.Context, v api.ComputeJobResult) (T, error)
 	VisitUdfCompilationJobResult(ctx context.Context, v api.UdfCompilationJobResult) (T, error)
+	VisitExportJobResult(ctx context.Context, v api.ExportJobResult) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

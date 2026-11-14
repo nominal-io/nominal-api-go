@@ -22,35 +22,132 @@ description, and the tags. Series metadata can be used to query points from spec
 value selections.
 */
 type SeriesMetadataServiceClient interface {
-	// Batch get series metadata by DataSourceRid.
+	/*
+	   Returns the series metadata (channel definitions: name, locator, unit, description, data type, tags) of
+	   every channel in each listed data source, grouped by data source.
+
+	   The response is not paged. A data source with no series metadata is omitted from the response. The caller
+	   needs permission to read the metadata of each listed data source.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read the metadata of a listed data source.
+	*/
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetSeriesMetadataRequest) (api.BatchGetSeriesMetadataResponse, error)
-	// Create new series metadata.
+	/*
+	   Creates the series metadata (channel definition) for one channel of a dataset or connection.
+
+	   The channel name must be unique in the data source. If the channel already has series metadata, the call
+	   leaves it unchanged and succeeds. The channel kind is STANDARD when omitted. Tags in the request are
+	   ignored. The caller needs permission to edit the metadata of the data source. Returns nothing.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:InvalidDataSource): the data source is not a dataset or connection.
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): the data source does not exist, or the caller cannot
+	     edit its metadata.
+	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSeriesMetadataRequest) error
-	// Idempotently creates series metadata.
+	/*
+	   Creates the series metadata (channel definitions) for several channels, each in a dataset or connection.
+
+	   Channels that already have series metadata are left unchanged, so retries are safe. The channel kind is
+	   STANDARD when omitted, and tags in the requests are ignored. The call checks every request and the
+	   caller's permission before it creates anything. The caller needs permission to edit the metadata of every
+	   data source. Returns nothing.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:InvalidDataSource): a data source is not a dataset or connection.
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): a data source does not exist, or the caller cannot
+	     edit its metadata.
+	*/
 	BatchCreate(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchCreateSeriesMetadataRequest) error
 	/*
-	   Upserts series metadata. Creates new series metadata if it does not exist for the given channel and data
-	   source. If it already exists, updates the locator and any provided unit and description fields while
-	   preserving existing values for fields not supplied.
+	   Creates the series metadata (channel definition) for a channel, or updates it when the channel already has
+	   series metadata in that data source.
+
+	   On create, the channel kind is STANDARD when omitted. On update, the locator and the data type it implies
+	   are replaced, and a supplied unit or description replaces the stored value. An omitted unit or description
+	   keeps its stored value, and the channel kind does not change. The update cannot change the locator type or
+	   switch between numeric and non-numeric data. Tags in the request are ignored. The caller needs permission
+	   to edit the metadata of the data source. Returns nothing.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:InvalidDataSource): the data source is not a dataset or connection.
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): the data source does not exist, or the caller cannot
+	     edit its metadata.
+	   - INVALID_ARGUMENT (SeriesMetadata:IncompatibleSeriesMetadataUpdate): the update changes the locator type
+	     or switches between numeric and non-numeric data.
 	*/
 	CreateOrUpdate(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSeriesMetadataRequest) error
-	// Batch version of createOrUpdate.
+	/*
+	   Creates or updates the series metadata (channel definitions) of several channels, with the rules of
+	   createOrUpdate.
+
+	   The call checks every request and the caller's permission before it writes anything. The caller needs
+	   permission to edit the metadata of every data source. Returns nothing.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:InvalidDataSource): a data source is not a dataset or connection.
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): a data source does not exist, or the caller cannot
+	     edit its metadata.
+	   - INVALID_ARGUMENT (SeriesMetadata:IncompatibleSeriesMetadataUpdate): one channel of a data source appears
+	     twice in the request, or an update changes the locator type or switches between numeric and non-numeric
+	     data.
+	*/
 	BatchCreateOrUpdate(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchCreateSeriesMetadataRequest) error
-	// Get series metadata from its series metadata rid.
+	/*
+	   Returns the series metadata (channel definition: name, data source, locator, unit, description, data type,
+	   tags) with the given RID.
+
+	   The caller needs permission to read the metadata of the data source.
+
+	   Errors:
+	   - NOT_FOUND (SeriesMetadata:SeriesMetadataNotFound): the series metadata does not exist, or the caller
+	     cannot read the metadata of its data source.
+	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, ridArg api1.SeriesMetadataRid) (api.SeriesMetadata, error)
 	/*
-	   Update existing series metadata.
-	   Throws SeriesMetadataNotFound if the series metadata does not exist.
+	   Changes the unit, description, or channel kind of the series metadata (channel definition) with the given
+	   RID. Returns the updated series metadata.
+
+	   Fields that are omitted keep their values. unitUpdate takes precedence over the deprecated unit, and it can
+	   clear the unit. A new unit or description also applies to the series already created from this series
+	   metadata. The caller needs permission to edit the metadata of the data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel kind is not a known value.
+	   - NOT_FOUND (SeriesMetadata:SeriesMetadataNotFound): the series metadata does not exist, or the caller
+	     cannot edit the metadata of its data source.
 	*/
 	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api1.SeriesMetadataRid, requestArg api.UpdateSeriesMetadataRequest) (api.SeriesMetadata, error)
 	/*
-	   This endpoint lets an authorized workspace caller change how one nominal dataset channel is interpreted.
-	   This updates metadata and future series resolution. It does not rewrite historical point rows.
+	   Changes the data type that interprets one channel of a Nominal dataset. Returns the series metadata RID and
+	   the old and new types.
+
+	   The change applies to data ingested afterward. Stored points are not rewritten, and the series already
+	   resolved for the channel are discarded and resolve again with the new type. The channel must have a
+	   Nominal locator, and neither type can be video or spatial. The caller needs permission to edit the metadata
+	   of the data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:IncompatibleSeriesMetadataUpdate): newType equals expectedCurrentType,
+	     either type is video or spatial, the channel does not have a Nominal locator, or the channel's current
+	     type differs from expectedCurrentType.
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): the data source does not exist, or the caller cannot
+	     edit its metadata.
+	   - NOT_FOUND (SeriesMetadata:SeriesMetadataNotFound): the data source has no series metadata for the channel.
 	*/
 	ChangeDataType(ctx context.Context, authHeader bearertoken.Token, requestArg api.ChangeDataTypeRequest) (api.ChangeDataTypeResponse, error)
 	/*
-	   Batch creates series metadata for video channels if they don't exist.
-	   Idempotent - returns existing SeriesMetadataRid if already exists.
+	   Creates the series metadata and series of video channels in datasets, and records the time bounds of each
+	   series. Returns one entry per request, in request order, with the series metadata RID and the series UUID.
+
+	   A channel that already has series metadata keeps it, and its RID is returned, so retries are safe. The
+	   series is identified by the request's channel and tags, even when the channel already has series metadata.
+	   The caller needs permission to edit the metadata of every dataset.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): a dataset does not exist, or the caller cannot edit
+	     its metadata.
 	*/
 	BatchCreateVideoSeries(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchCreateVideoSeriesRequest) (api.BatchCreateVideoSeriesResponse, error)
 }
@@ -211,35 +308,132 @@ description, and the tags. Series metadata can be used to query points from spec
 value selections.
 */
 type SeriesMetadataServiceClientWithAuth interface {
-	// Batch get series metadata by DataSourceRid.
+	/*
+	   Returns the series metadata (channel definitions: name, locator, unit, description, data type, tags) of
+	   every channel in each listed data source, grouped by data source.
+
+	   The response is not paged. A data source with no series metadata is omitted from the response. The caller
+	   needs permission to read the metadata of each listed data source.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read the metadata of a listed data source.
+	*/
 	BatchGet(ctx context.Context, requestArg api.BatchGetSeriesMetadataRequest) (api.BatchGetSeriesMetadataResponse, error)
-	// Create new series metadata.
+	/*
+	   Creates the series metadata (channel definition) for one channel of a dataset or connection.
+
+	   The channel name must be unique in the data source. If the channel already has series metadata, the call
+	   leaves it unchanged and succeeds. The channel kind is STANDARD when omitted. Tags in the request are
+	   ignored. The caller needs permission to edit the metadata of the data source. Returns nothing.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:InvalidDataSource): the data source is not a dataset or connection.
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): the data source does not exist, or the caller cannot
+	     edit its metadata.
+	*/
 	Create(ctx context.Context, requestArg api.CreateSeriesMetadataRequest) error
-	// Idempotently creates series metadata.
+	/*
+	   Creates the series metadata (channel definitions) for several channels, each in a dataset or connection.
+
+	   Channels that already have series metadata are left unchanged, so retries are safe. The channel kind is
+	   STANDARD when omitted, and tags in the requests are ignored. The call checks every request and the
+	   caller's permission before it creates anything. The caller needs permission to edit the metadata of every
+	   data source. Returns nothing.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:InvalidDataSource): a data source is not a dataset or connection.
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): a data source does not exist, or the caller cannot
+	     edit its metadata.
+	*/
 	BatchCreate(ctx context.Context, requestArg api.BatchCreateSeriesMetadataRequest) error
 	/*
-	   Upserts series metadata. Creates new series metadata if it does not exist for the given channel and data
-	   source. If it already exists, updates the locator and any provided unit and description fields while
-	   preserving existing values for fields not supplied.
+	   Creates the series metadata (channel definition) for a channel, or updates it when the channel already has
+	   series metadata in that data source.
+
+	   On create, the channel kind is STANDARD when omitted. On update, the locator and the data type it implies
+	   are replaced, and a supplied unit or description replaces the stored value. An omitted unit or description
+	   keeps its stored value, and the channel kind does not change. The update cannot change the locator type or
+	   switch between numeric and non-numeric data. Tags in the request are ignored. The caller needs permission
+	   to edit the metadata of the data source. Returns nothing.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:InvalidDataSource): the data source is not a dataset or connection.
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): the data source does not exist, or the caller cannot
+	     edit its metadata.
+	   - INVALID_ARGUMENT (SeriesMetadata:IncompatibleSeriesMetadataUpdate): the update changes the locator type
+	     or switches between numeric and non-numeric data.
 	*/
 	CreateOrUpdate(ctx context.Context, requestArg api.CreateSeriesMetadataRequest) error
-	// Batch version of createOrUpdate.
+	/*
+	   Creates or updates the series metadata (channel definitions) of several channels, with the rules of
+	   createOrUpdate.
+
+	   The call checks every request and the caller's permission before it writes anything. The caller needs
+	   permission to edit the metadata of every data source. Returns nothing.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:InvalidDataSource): a data source is not a dataset or connection.
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): a data source does not exist, or the caller cannot
+	     edit its metadata.
+	   - INVALID_ARGUMENT (SeriesMetadata:IncompatibleSeriesMetadataUpdate): one channel of a data source appears
+	     twice in the request, or an update changes the locator type or switches between numeric and non-numeric
+	     data.
+	*/
 	BatchCreateOrUpdate(ctx context.Context, requestArg api.BatchCreateSeriesMetadataRequest) error
-	// Get series metadata from its series metadata rid.
+	/*
+	   Returns the series metadata (channel definition: name, data source, locator, unit, description, data type,
+	   tags) with the given RID.
+
+	   The caller needs permission to read the metadata of the data source.
+
+	   Errors:
+	   - NOT_FOUND (SeriesMetadata:SeriesMetadataNotFound): the series metadata does not exist, or the caller
+	     cannot read the metadata of its data source.
+	*/
 	Get(ctx context.Context, ridArg api1.SeriesMetadataRid) (api.SeriesMetadata, error)
 	/*
-	   Update existing series metadata.
-	   Throws SeriesMetadataNotFound if the series metadata does not exist.
+	   Changes the unit, description, or channel kind of the series metadata (channel definition) with the given
+	   RID. Returns the updated series metadata.
+
+	   Fields that are omitted keep their values. unitUpdate takes precedence over the deprecated unit, and it can
+	   clear the unit. A new unit or description also applies to the series already created from this series
+	   metadata. The caller needs permission to edit the metadata of the data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the channel kind is not a known value.
+	   - NOT_FOUND (SeriesMetadata:SeriesMetadataNotFound): the series metadata does not exist, or the caller
+	     cannot edit the metadata of its data source.
 	*/
 	UpdateMetadata(ctx context.Context, ridArg api1.SeriesMetadataRid, requestArg api.UpdateSeriesMetadataRequest) (api.SeriesMetadata, error)
 	/*
-	   This endpoint lets an authorized workspace caller change how one nominal dataset channel is interpreted.
-	   This updates metadata and future series resolution. It does not rewrite historical point rows.
+	   Changes the data type that interprets one channel of a Nominal dataset. Returns the series metadata RID and
+	   the old and new types.
+
+	   The change applies to data ingested afterward. Stored points are not rewritten, and the series already
+	   resolved for the channel are discarded and resolve again with the new type. The channel must have a
+	   Nominal locator, and neither type can be video or spatial. The caller needs permission to edit the metadata
+	   of the data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:IncompatibleSeriesMetadataUpdate): newType equals expectedCurrentType,
+	     either type is video or spatial, the channel does not have a Nominal locator, or the channel's current
+	     type differs from expectedCurrentType.
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): the data source does not exist, or the caller cannot
+	     edit its metadata.
+	   - NOT_FOUND (SeriesMetadata:SeriesMetadataNotFound): the data source has no series metadata for the channel.
 	*/
 	ChangeDataType(ctx context.Context, requestArg api.ChangeDataTypeRequest) (api.ChangeDataTypeResponse, error)
 	/*
-	   Batch creates series metadata for video channels if they don't exist.
-	   Idempotent - returns existing SeriesMetadataRid if already exists.
+	   Creates the series metadata and series of video channels in datasets, and records the time bounds of each
+	   series. Returns one entry per request, in request order, with the series metadata RID and the series UUID.
+
+	   A channel that already has series metadata keeps it, and its RID is returned, so retries are safe. The
+	   series is identified by the request's channel and tags, even when the channel already has series metadata.
+	   The caller needs permission to edit the metadata of every dataset.
+
+	   Errors:
+	   - INVALID_ARGUMENT (SeriesMetadata:DataSourcesNotFound): a dataset does not exist, or the caller cannot edit
+	     its metadata.
 	*/
 	BatchCreateVideoSeries(ctx context.Context, requestArg api.BatchCreateVideoSeriesRequest) (api.BatchCreateVideoSeriesResponse, error)
 }

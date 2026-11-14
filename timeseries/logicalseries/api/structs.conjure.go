@@ -301,6 +301,7 @@ func (o *BatchUpdateExternalStorageLocatorResponse) UnmarshalYAML(unmarshal func
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A series in a Google BigQuery table, read from a value column and a time column and filtered by tag values.
 // safelogging:@Unsafe
 type BigQueryLocator struct {
 	// The name of the column which has the values for this series
@@ -459,6 +460,7 @@ func (o *ExternalStorageLocator) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A series in an InfluxDB 1 database, identified by measurement, field, and tags.
 // safelogging:@Unsafe
 type Influx1Locator struct {
 	Database    DatabaseName                 `json:"database" safelogging:"@Unsafe"`
@@ -505,6 +507,7 @@ func (o *Influx1Locator) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A series in an InfluxDB 2 bucket, identified by measurement, field, and tags.
 // safelogging:@Unsafe
 type Influx2Locator struct {
 	Bucket      BucketName      `json:"bucket" safelogging:"@Unsafe"`
@@ -683,6 +686,7 @@ func (o *ResolveSeriesRequest) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A series in a TimescaleDB table, read from a value column and a time column and filtered by dimension values.
 // safelogging:@Unsafe
 type TimescaleDbLocator struct {
 	Table      TableName                    `json:"table" safelogging:"@Unsafe"`
@@ -730,6 +734,7 @@ func (o *TimescaleDbLocator) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A series in an Amazon Timestream table, identified by measure and filtered by dimension values.
 // safelogging:@Unsafe
 type TimestreamLocator struct {
 	Table      TableName                    `json:"table" safelogging:"@Unsafe"`
@@ -802,6 +807,7 @@ func (o *UpdateExternalStorageLocator) UnmarshalYAML(unmarshal func(interface{})
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A weather series from the Visual Crossing weather service for one location and field.
 // safelogging:@Unsafe
 type VisualCrossingLocator struct {
 	/*

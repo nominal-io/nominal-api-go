@@ -14,7 +14,9 @@ import (
 )
 
 type BatchGetLocatorDelimitersEntry struct {
-	Scope   api1.Dataset `json:"scope"`
+	// Dataset scope to expand, such as an asset, a run, or a transformation of them.
+	Scope api1.Dataset `json:"scope"`
+	// Variables and named dataset references that `scope` can refer to.
 	Context api1.Context `json:"context"`
 }
 
@@ -39,8 +41,9 @@ Batched form of `getLocatorDelimiters`. The map key of `requests` can be an arbi
 identifier. It will be returned in the response as part of `BatchedLocatorWithDelimiter`.
 */
 type BatchGetLocatorDelimitersRequest struct {
-	Requests  map[string]BatchGetLocatorDelimitersEntry `json:"requests"`
-	TimeRange api.Range                                 `json:"timeRange" safelogging:"@Safe"`
+	Requests map[string]BatchGetLocatorDelimitersEntry `json:"requests"`
+	// Time range used to resolve each scope into locators.
+	TimeRange api.Range `json:"timeRange" safelogging:"@Safe"`
 }
 
 func (o BatchGetLocatorDelimitersRequest) MarshalJSON() ([]byte, error) {
@@ -122,7 +125,9 @@ func (o *BatchGetLocatorDelimitersResponse) UnmarshalYAML(unmarshal func(interfa
 }
 
 type BatchListChannelChildrenEntry struct {
-	Scope   api1.Dataset `json:"scope"`
+	// Dataset scope to browse, such as an asset, a run, or a transformation of them.
+	Scope api1.Dataset `json:"scope"`
+	// Variables and named dataset references that `scope` can refer to.
 	Context api1.Context `json:"context"`
 }
 
@@ -257,7 +262,9 @@ func (o *BatchListChannelChildrenResponse) UnmarshalYAML(unmarshal func(interfac
 }
 
 type BatchSearchChannelsEntry struct {
-	Scope   api1.Dataset `json:"scope"`
+	// Dataset scope to search, such as an asset, a run, or a transformation of them.
+	Scope api1.Dataset `json:"scope"`
+	// Variables and named dataset references that `scope` can refer to.
 	Context api1.Context `json:"context"`
 }
 
@@ -583,6 +590,7 @@ locators where this prefix exists, each tagged with the set of entry ids whose s
 expanded to that locator.
 */
 type BatchedPrefixEntry struct {
+	// Next segment of channel names under the parent path.
 	Part              string           `json:"part"`
 	PresentAtLocators []BatchedLocator `json:"presentAtLocators"`
 }
@@ -678,9 +686,12 @@ Returns the expanded locators of a dataset plus per-locator delimiter (if that l
 data source has an indexed prefix tree).
 */
 type GetLocatorDelimitersRequest struct {
-	Scope     api1.Dataset `json:"scope"`
-	Context   api1.Context `json:"context"`
-	TimeRange api.Range    `json:"timeRange" safelogging:"@Safe"`
+	// Dataset scope to expand, such as an asset, a run, or a transformation of them.
+	Scope api1.Dataset `json:"scope"`
+	// Variables and named dataset references that `scope` can refer to.
+	Context api1.Context `json:"context"`
+	// Time range used to resolve the scope into locators.
+	TimeRange api.Range `json:"timeRange" safelogging:"@Safe"`
 }
 
 func (o GetLocatorDelimitersRequest) MarshalYAML() (interface{}, error) {
@@ -745,9 +756,11 @@ Lazy one-level expansion of the dataset's channel namespace under `parent`.
 For the root, pass an empty list.
 */
 type ListChannelChildrenRequest struct {
+	// Dataset scope to browse, such as an asset, a run, or a transformation of them.
 	Scope api1.Dataset `json:"scope"`
 	// Ancestor parts. Empty means top-level.
-	Parent  []string     `json:"parent"`
+	Parent []string `json:"parent"`
+	// Variables and named dataset references that `scope` can refer to.
 	Context api1.Context `json:"context"`
 	/*
 	   Time filter applied to the search. Only channels with data within this time range will be returned.
@@ -983,6 +996,7 @@ A prefix node collapsed across locators. `presentAtLocators` lists the locators 
 prefix exists.
 */
 type PrefixEntry struct {
+	// Next segment of channel names under the parent path.
 	Part              string    `json:"part"`
 	PresentAtLocators []Locator `json:"presentAtLocators"`
 }
@@ -1025,9 +1039,11 @@ func (o *PrefixEntry) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type SearchChannelsRequest struct {
-	Scope   api1.Dataset       `json:"scope"`
-	Query   ChannelSearchQuery `json:"query"`
-	Context api1.Context       `json:"context"`
+	// Dataset scope to search, such as an asset, a run, or a transformation of them.
+	Scope api1.Dataset       `json:"scope"`
+	Query ChannelSearchQuery `json:"query"`
+	// Variables and named dataset references that `scope` can refer to.
+	Context api1.Context `json:"context"`
 	/*
 	   Time filter applied to the search. Only channels with data within this time range will be returned.
 	   A shorter time range will improve performance!

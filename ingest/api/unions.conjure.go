@@ -1940,8 +1940,8 @@ func NewIngestJobRequestFromIngestRequest(v IngestRequest) IngestJobRequest {
 }
 
 /*
-Filter for ingest-job search. A filter type that is not provided defaults to matching all jobs.
-Jobs without a persisted dataset UUID are not returned.
+Filter for ingest-job search. A filter type that is not provided defaults to matching all jobs, and so does an
+empty list in any filter type except `or`, which matches no jobs. Jobs without a dataset are not returned.
 */
 type IngestJobSearchFilter struct {
 	typ                      string

@@ -48,6 +48,7 @@ func (o *GetUnitsResponse) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A unit of measurement that a channel can have.
 // safelogging:@Unsafe
 type Unit struct {
 	Name   *UnitName  `json:"name,omitempty" safelogging:"@Unsafe"`

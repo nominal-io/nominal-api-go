@@ -24,77 +24,239 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
-// NotebookService manages workbooks (formerly known as notebooks).
+/*
+NotebookService manages workbooks (notebooks in the API), including reports and comparison workbooks, and their
+saved snapshots.
+*/
 type NotebookServiceClient interface {
 	/*
-	   Creates a new workbook. The workbook will be associated with the provided run. If the run does not exist,
-	   a RunNotFound error will be thrown.
+	   Creates a workbook (notebook in the API) of the given notebookType, such as a report or a comparison
+	   workbook, from content, layout, data scope, labels, and properties. Returns the new workbook with its first
+	   saved snapshot.
+
+	   The data scope (the runs or assets the workbook is built on) is required unless the deprecated runRid is set.
+	   The content is required: set contentV2 or the deprecated content. Its visualization IDs must match the layout.
+	   The server assigns the RID and sets the caller as the author. The workbook goes in the given workspace, or in
+	   the default workspace of the caller's organization when none is given. Blank labels and property keys are
+	   dropped. The caller needs permission to create workbooks in that workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default workspace.
+	   - PERMISSION_DENIED: the caller cannot create workbooks in the workspace, or the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT: neither dataScope nor runRid is set.
+	   - NOT_FOUND (Scout:RunsNotFound): a run in the data scope does not exist or the caller cannot see it.
+	   - NOT_FOUND (Scout:AssetsNotFound): an asset in the data scope does not exist or the caller cannot see it.
+	   - INVALID_ARGUMENT: the content is missing, or its visualization IDs do not match the layout.
 	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateNotebookRequest) (api.Notebook, error)
-	// Updates the contents of a workbook.
+	/*
+	   Updates the contents of a workbook (notebook in the API) by saving a new snapshot of its content, layout,
+	   and pinned events. Returns the workbook with the new snapshot.
+
+	   The new snapshot replaces the previous contents, so send the full state. Title, description, labels,
+	   properties, and data scope do not change: use updateMetadata for those. The content is required: set
+	   contentV2 or the deprecated content. Its visualization IDs must match the layout, and the layout root
+	   must be a tabbed panel. eventRefs replaces the pinned events. If checkAlertRefs is not set, the workbook
+	   keeps its current check alerts. A blank snapshotMessage is treated as not set. The caller needs
+	   permission to edit the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - CONFLICT (Scout:NotebookLocked): the workbook is locked.
+	   - INVALID_ARGUMENT: the content is missing, its visualization IDs do not match the layout, the layout root
+	     is not a tabbed panel, a Python formula expression is over 25,000 characters, an allowed lateness is
+	     outside 0 to 5 minutes, or snapshotMessage is longer than 4096 characters.
+	   - CONFLICT (Scout:SaveNotebookConflict): latestSnapshotRid is set and is no longer the latest snapshot.
+	*/
 	Update(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.UpdateNotebookRequest) (api.Notebook, error)
+	/*
+	   Returns a workbook (notebook in the API) with its metadata and content, from the latest saved snapshot or from
+	   the snapshot given in snapshot. Archived workbooks are returned. Use batchGetMetadata when content is not
+	   needed.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - NOT_FOUND (Scout:SnapshotNotFound): the snapshot does not exist for this workbook.
+	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, snapshotArg *api1.SnapshotRid) (api.Notebook, error)
+	/*
+	   Returns the workbooks (notebooks in the API) with the given RIDs, each with its metadata and content. Archived
+	   workbooks are returned. Use batchGetMetadata when content is not needed.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebooksNotFound): one or more workbooks do not exist or the caller cannot view them. No workbook is returned.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.NotebookRid) ([]api.Notebook, error)
+	/*
+	   Returns the metadata (title, description, labels, properties, data scope, lock and draft state) of the
+	   workbooks (notebooks in the API) with the given RIDs, without their content. Archived workbooks are returned.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebooksNotFound): one or more workbooks do not exist or the caller cannot view them. No metadata is returned.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.NotebookRid) ([]api.NotebookMetadataWithRid, error)
-	// Updates metadata about a workbook, but not its contents.
+	/*
+	   Changes the metadata of a workbook (notebook in the API) without touching its saved content: title,
+	   description, labels, properties, draft state, data scope, preview image, or lock. Returns the updated metadata.
+
+	   Fields that are not set stay unchanged. Labels and properties, when set, replace the existing ones, and blank
+	   labels and property keys are dropped. Setting dataScope replaces the stored data scope only. Setting isDraft
+	   to false publishes the workbook. Setting isLocked locks or unlocks the workbook, and when the lock state changes the
+	   server records the caller and the time. Metadata stays editable while the workbook is locked. The caller needs edit permission
+	   on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT (Scout:DemoWorkbookCannotBeUnlocked): the request unlocks a demo workbook.
+	   - INVALID_ARGUMENT (Scout:DemoWorkbookCannotBeUnpublished): the request sets isDraft to true on a demo workbook.
+	*/
 	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.UpdateNotebookMetadataRequest) (api.NotebookMetadata, error)
-	// Returns the set of all ref names used by the workbook.
+	/*
+	   Returns the data scope names (ref names) used by the variables of a workbook (notebook in the API). Works on
+	   workbooks and reports. Does not support comparison workbooks.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT: the workbook is a comparison workbook.
+	   - CONFLICT (Scout:CannotReadNotebookRefNames): a variable of the workbook cannot be read for ref names.
+	*/
 	GetUsedRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) ([]api2.DataSourceRefName, error)
 	// Updates the data source ref names for all variables used in the workbook.
 	UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.UpdateRefNameRequest) (api.Notebook, error)
 	/*
-	   Returns all properties (key value pairs) and labels that have been previously used on workbook. These can
-	   be used to organize workbooks.
+	   Returns every label and every property (name with its values) used on workbooks (notebooks in the API) in
+	   the given workspaces.
+
+	   If workspaces is empty, the result covers every workspace the caller can fully view. Workspaces that the
+	   caller cannot view are ignored, and the result is empty when the caller can view none of them.
 	*/
 	GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api.GetAllLabelsAndPropertiesResponse, error)
+	/*
+	   Searches workbooks (notebooks in the API) by text, labels, properties, assets, runs, author, type, or
+	   workspace, in workspaces the caller can fully view. Returns a page of workbook metadata, most recently
+	   updated first by default.
+
+	   Drafts and archived workbooks are excluded unless showDrafts or showArchived is set. Pass nextPageToken from
+	   the previous response to get the next page. The page size defaults to 100.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is over 1000, the search text contains a null character, or nextPageToken is not valid.
+	*/
 	Search(ctx context.Context, authHeader bearertoken.Token, requestArg api.SearchNotebooksRequest) (api.SearchNotebooksResponse, error)
 	/*
-	   Batch edits metadata across multiple workbooks. Supports rename/merge for labels and properties.
-	   If more than 1000 workbooks are targeted, this endpoint will throw a 400.
+	   Fails on every call because batch editing of workbook (notebook in the API) metadata is not implemented. Use
+	   updateMetadata on each workbook instead.
 	*/
 	BatchEditNotebookMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchEditNotebookMetadataRequest) (api.BatchEditNotebookMetadataResponse, error)
 	/*
-	   Makes a workbook uneditable.
-	   Deprecated: use the isLocked field on updateMetadata instead.
+	   Locks a workbook (notebook in the API) so its content cannot be saved until it is unlocked. Its metadata
+	   stays editable. The caller needs edit permission on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 
 	   Deprecated: Prefer the isLocked field on updateMetadata.
 	*/
 	Lock(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error
 	/*
-	   Unlocks a workbook for editing.
-	   Deprecated: use the isLocked field on updateMetadata instead.
+	   Unlocks a workbook (notebook in the API) so its content can be saved again. The caller needs edit permission
+	   on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT (Scout:DemoWorkbookCannotBeUnlocked): the workbook is a demo workbook.
 
 	   Deprecated: Prefer the isLocked field on updateMetadata.
 	*/
 	Unlock(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error
 	/*
-	   Archives a workbook, which excludes it from search and hides it from being publicly visible, but does not
-	   permanently delete it. Archived workbooks can be unarchived.
+	   Archives a workbook (notebook in the API). It drops out of search by default but can still be read by RID
+	   and can be unarchived. Use delete to remove it permanently.
+
+	   The server records the caller and the time as the archiver. Archiving an archived workbook again replaces
+	   them. The caller needs edit permission on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	Archive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error
-	// Makes a previously archived workbook searchable.
+	/*
+	   Restores an archived workbook (notebook in the API) so that search returns it again. A workbook that is not
+	   archived is left unchanged. The caller needs edit permission on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error
 	/*
-	   Archives the provided workbooks. Already-archived workbooks are left unchanged (their
-	   archiving user and timestamp are preserved). Throws if any of the workbooks don't exist.
+	   Archives the workbooks (notebooks in the API) with the given RIDs.
+
+	   Already-archived workbooks are left unchanged, including their archiving user and time. The caller needs edit
+	   permission on every workbook. If any check fails, no workbook is archived.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:TooManyNotebooksRequested): more than 1000 workbooks are given.
+	   - NOT_FOUND (Scout:NotebooksNotFound): one or more workbooks do not exist or the caller cannot edit them.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	BatchArchive(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchArchiveNotebooksRequest) error
 	/*
-	   Unarchives the provided workbooks. Workbooks that are not archived are left unchanged.
-	   Throws if any of the workbooks don't exist.
+	   Restores the archived workbooks (notebooks in the API) with the given RIDs.
+
+	   Workbooks that are not archived are left unchanged. The caller needs edit permission on every workbook. If
+	   any check fails, no workbook is restored.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:TooManyNotebooksRequested): more than 1000 workbooks are given.
+	   - NOT_FOUND (Scout:NotebooksNotFound): one or more workbooks do not exist or the caller cannot edit them.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	BatchUnarchive(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchUnarchiveNotebooksRequest) error
-	// The workbook will be deleted and is not recoverable. For soft deletion, use archive.
+	/*
+	   Permanently deletes a workbook (notebook in the API) and all its saved snapshots. This cannot be undone; use
+	   archive to hide a workbook instead. The caller needs edit permission on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	Delete(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid) error
 	/*
-	   Duplicates an existing workbook, copying its content (layout, charts, variables, pinned events)
-	   and optionally overriding metadata fields such as title, description, data scope, labels,
-	   and properties. Returns the newly created workbook.
+	   Creates a new workbook (notebook in the API) in the requested workspace by copying the latest saved content
+	   (layout, charts, variables, pinned events) of an existing one, with optional metadata overrides. Returns the new
+	   workbook.
+
+	   The copy has the same type as the source, the caller as its author, and a title generated from the source title
+	   unless title is set. Metadata that is not overridden is copied from the source. A locked source is copied
+	   unlocked unless isLocked is true. Overriding dataScope also rebuilds the content's data scope inputs from the new
+	   scope. The caller needs edit permission on the source and permission to create workbooks in the target workspace.
+
+	   Errors:
+	   - PERMISSION_DENIED: the caller cannot create workbooks in the target workspace, or its edition does not include workbooks.
+	   - NOT_FOUND (Scout:NotebookNotFound): the source workbook does not exist or the caller cannot edit it.
+	   - NOT_FOUND (Scout:RunsNotFound): a run in the copied or overriding data scope does not exist or the caller cannot see it.
+	   - NOT_FOUND (Scout:AssetsNotFound): an asset in the copied or overriding data scope does not exist or the caller cannot see it.
 	*/
 	Duplicate(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.DuplicateNotebookRequest) (api.Notebook, error)
 	/*
-	   Retrieves the snapshot history for a given workbook. These are sorted in reverse chronological order. Results
-	   are limited by page size.
+	   Lists the saved snapshots of a workbook (notebook in the API), newest first, each with its author, time, and
+	   save message. Pass nextPageToken from the previous response to get the next page. The page size defaults to
+	   100.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT: pageSize is below 1 or over 1000, or nextPageToken is not valid.
 	*/
 	GetSnapshotHistory(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSnapshotHistoryRequest) (api.GetSnapshotHistoryResponse, error)
 }
@@ -434,77 +596,239 @@ func (c *notebookServiceClient) GetSnapshotHistory(ctx context.Context, authHead
 	return *returnVal, nil
 }
 
-// NotebookService manages workbooks (formerly known as notebooks).
+/*
+NotebookService manages workbooks (notebooks in the API), including reports and comparison workbooks, and their
+saved snapshots.
+*/
 type NotebookServiceClientWithAuth interface {
 	/*
-	   Creates a new workbook. The workbook will be associated with the provided run. If the run does not exist,
-	   a RunNotFound error will be thrown.
+	   Creates a workbook (notebook in the API) of the given notebookType, such as a report or a comparison
+	   workbook, from content, layout, data scope, labels, and properties. Returns the new workbook with its first
+	   saved snapshot.
+
+	   The data scope (the runs or assets the workbook is built on) is required unless the deprecated runRid is set.
+	   The content is required: set contentV2 or the deprecated content. Its visualization IDs must match the layout.
+	   The server assigns the RID and sets the caller as the author. The workbook goes in the given workspace, or in
+	   the default workspace of the caller's organization when none is given. Blank labels and property keys are
+	   dropped. The caller needs permission to create workbooks in that workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default workspace.
+	   - PERMISSION_DENIED: the caller cannot create workbooks in the workspace, or the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT: neither dataScope nor runRid is set.
+	   - NOT_FOUND (Scout:RunsNotFound): a run in the data scope does not exist or the caller cannot see it.
+	   - NOT_FOUND (Scout:AssetsNotFound): an asset in the data scope does not exist or the caller cannot see it.
+	   - INVALID_ARGUMENT: the content is missing, or its visualization IDs do not match the layout.
 	*/
 	Create(ctx context.Context, requestArg api.CreateNotebookRequest) (api.Notebook, error)
-	// Updates the contents of a workbook.
+	/*
+	   Updates the contents of a workbook (notebook in the API) by saving a new snapshot of its content, layout,
+	   and pinned events. Returns the workbook with the new snapshot.
+
+	   The new snapshot replaces the previous contents, so send the full state. Title, description, labels,
+	   properties, and data scope do not change: use updateMetadata for those. The content is required: set
+	   contentV2 or the deprecated content. Its visualization IDs must match the layout, and the layout root
+	   must be a tabbed panel. eventRefs replaces the pinned events. If checkAlertRefs is not set, the workbook
+	   keeps its current check alerts. A blank snapshotMessage is treated as not set. The caller needs
+	   permission to edit the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - CONFLICT (Scout:NotebookLocked): the workbook is locked.
+	   - INVALID_ARGUMENT: the content is missing, its visualization IDs do not match the layout, the layout root
+	     is not a tabbed panel, a Python formula expression is over 25,000 characters, an allowed lateness is
+	     outside 0 to 5 minutes, or snapshotMessage is longer than 4096 characters.
+	   - CONFLICT (Scout:SaveNotebookConflict): latestSnapshotRid is set and is no longer the latest snapshot.
+	*/
 	Update(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateNotebookRequest) (api.Notebook, error)
+	/*
+	   Returns a workbook (notebook in the API) with its metadata and content, from the latest saved snapshot or from
+	   the snapshot given in snapshot. Archived workbooks are returned. Use batchGetMetadata when content is not
+	   needed.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - NOT_FOUND (Scout:SnapshotNotFound): the snapshot does not exist for this workbook.
+	*/
 	Get(ctx context.Context, ridArg api1.NotebookRid, snapshotArg *api1.SnapshotRid) (api.Notebook, error)
+	/*
+	   Returns the workbooks (notebooks in the API) with the given RIDs, each with its metadata and content. Archived
+	   workbooks are returned. Use batchGetMetadata when content is not needed.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebooksNotFound): one or more workbooks do not exist or the caller cannot view them. No workbook is returned.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	BatchGet(ctx context.Context, ridsArg []api1.NotebookRid) ([]api.Notebook, error)
+	/*
+	   Returns the metadata (title, description, labels, properties, data scope, lock and draft state) of the
+	   workbooks (notebooks in the API) with the given RIDs, without their content. Archived workbooks are returned.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebooksNotFound): one or more workbooks do not exist or the caller cannot view them. No metadata is returned.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	BatchGetMetadata(ctx context.Context, ridsArg []api1.NotebookRid) ([]api.NotebookMetadataWithRid, error)
-	// Updates metadata about a workbook, but not its contents.
+	/*
+	   Changes the metadata of a workbook (notebook in the API) without touching its saved content: title,
+	   description, labels, properties, draft state, data scope, preview image, or lock. Returns the updated metadata.
+
+	   Fields that are not set stay unchanged. Labels and properties, when set, replace the existing ones, and blank
+	   labels and property keys are dropped. Setting dataScope replaces the stored data scope only. Setting isDraft
+	   to false publishes the workbook. Setting isLocked locks or unlocks the workbook, and when the lock state changes the
+	   server records the caller and the time. Metadata stays editable while the workbook is locked. The caller needs edit permission
+	   on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT (Scout:DemoWorkbookCannotBeUnlocked): the request unlocks a demo workbook.
+	   - INVALID_ARGUMENT (Scout:DemoWorkbookCannotBeUnpublished): the request sets isDraft to true on a demo workbook.
+	*/
 	UpdateMetadata(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateNotebookMetadataRequest) (api.NotebookMetadata, error)
-	// Returns the set of all ref names used by the workbook.
+	/*
+	   Returns the data scope names (ref names) used by the variables of a workbook (notebook in the API). Works on
+	   workbooks and reports. Does not support comparison workbooks.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT: the workbook is a comparison workbook.
+	   - CONFLICT (Scout:CannotReadNotebookRefNames): a variable of the workbook cannot be read for ref names.
+	*/
 	GetUsedRefNames(ctx context.Context, ridArg api1.NotebookRid) ([]api2.DataSourceRefName, error)
 	// Updates the data source ref names for all variables used in the workbook.
 	UpdateRefNames(ctx context.Context, ridArg api1.NotebookRid, requestArg api.UpdateRefNameRequest) (api.Notebook, error)
 	/*
-	   Returns all properties (key value pairs) and labels that have been previously used on workbook. These can
-	   be used to organize workbooks.
+	   Returns every label and every property (name with its values) used on workbooks (notebooks in the API) in
+	   the given workspaces.
+
+	   If workspaces is empty, the result covers every workspace the caller can fully view. Workspaces that the
+	   caller cannot view are ignored, and the result is empty when the caller can view none of them.
 	*/
 	GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api.GetAllLabelsAndPropertiesResponse, error)
+	/*
+	   Searches workbooks (notebooks in the API) by text, labels, properties, assets, runs, author, type, or
+	   workspace, in workspaces the caller can fully view. Returns a page of workbook metadata, most recently
+	   updated first by default.
+
+	   Drafts and archived workbooks are excluded unless showDrafts or showArchived is set. Pass nextPageToken from
+	   the previous response to get the next page. The page size defaults to 100.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is over 1000, the search text contains a null character, or nextPageToken is not valid.
+	*/
 	Search(ctx context.Context, requestArg api.SearchNotebooksRequest) (api.SearchNotebooksResponse, error)
 	/*
-	   Batch edits metadata across multiple workbooks. Supports rename/merge for labels and properties.
-	   If more than 1000 workbooks are targeted, this endpoint will throw a 400.
+	   Fails on every call because batch editing of workbook (notebook in the API) metadata is not implemented. Use
+	   updateMetadata on each workbook instead.
 	*/
 	BatchEditNotebookMetadata(ctx context.Context, requestArg api.BatchEditNotebookMetadataRequest) (api.BatchEditNotebookMetadataResponse, error)
 	/*
-	   Makes a workbook uneditable.
-	   Deprecated: use the isLocked field on updateMetadata instead.
+	   Locks a workbook (notebook in the API) so its content cannot be saved until it is unlocked. Its metadata
+	   stays editable. The caller needs edit permission on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 
 	   Deprecated: Prefer the isLocked field on updateMetadata.
 	*/
 	Lock(ctx context.Context, ridArg api1.NotebookRid) error
 	/*
-	   Unlocks a workbook for editing.
-	   Deprecated: use the isLocked field on updateMetadata instead.
+	   Unlocks a workbook (notebook in the API) so its content can be saved again. The caller needs edit permission
+	   on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT (Scout:DemoWorkbookCannotBeUnlocked): the workbook is a demo workbook.
 
 	   Deprecated: Prefer the isLocked field on updateMetadata.
 	*/
 	Unlock(ctx context.Context, ridArg api1.NotebookRid) error
 	/*
-	   Archives a workbook, which excludes it from search and hides it from being publicly visible, but does not
-	   permanently delete it. Archived workbooks can be unarchived.
+	   Archives a workbook (notebook in the API). It drops out of search by default but can still be read by RID
+	   and can be unarchived. Use delete to remove it permanently.
+
+	   The server records the caller and the time as the archiver. Archiving an archived workbook again replaces
+	   them. The caller needs edit permission on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	Archive(ctx context.Context, ridArg api1.NotebookRid) error
-	// Makes a previously archived workbook searchable.
+	/*
+	   Restores an archived workbook (notebook in the API) so that search returns it again. A workbook that is not
+	   archived is left unchanged. The caller needs edit permission on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	Unarchive(ctx context.Context, ridArg api1.NotebookRid) error
 	/*
-	   Archives the provided workbooks. Already-archived workbooks are left unchanged (their
-	   archiving user and timestamp are preserved). Throws if any of the workbooks don't exist.
+	   Archives the workbooks (notebooks in the API) with the given RIDs.
+
+	   Already-archived workbooks are left unchanged, including their archiving user and time. The caller needs edit
+	   permission on every workbook. If any check fails, no workbook is archived.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:TooManyNotebooksRequested): more than 1000 workbooks are given.
+	   - NOT_FOUND (Scout:NotebooksNotFound): one or more workbooks do not exist or the caller cannot edit them.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	BatchArchive(ctx context.Context, requestArg api.BatchArchiveNotebooksRequest) error
 	/*
-	   Unarchives the provided workbooks. Workbooks that are not archived are left unchanged.
-	   Throws if any of the workbooks don't exist.
+	   Restores the archived workbooks (notebooks in the API) with the given RIDs.
+
+	   Workbooks that are not archived are left unchanged. The caller needs edit permission on every workbook. If
+	   any check fails, no workbook is restored.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:TooManyNotebooksRequested): more than 1000 workbooks are given.
+	   - NOT_FOUND (Scout:NotebooksNotFound): one or more workbooks do not exist or the caller cannot edit them.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	BatchUnarchive(ctx context.Context, requestArg api.BatchUnarchiveNotebooksRequest) error
-	// The workbook will be deleted and is not recoverable. For soft deletion, use archive.
+	/*
+	   Permanently deletes a workbook (notebook in the API) and all its saved snapshots. This cannot be undone; use
+	   archive to hide a workbook instead. The caller needs edit permission on the workbook.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	Delete(ctx context.Context, ridArg api1.NotebookRid) error
 	/*
-	   Duplicates an existing workbook, copying its content (layout, charts, variables, pinned events)
-	   and optionally overriding metadata fields such as title, description, data scope, labels,
-	   and properties. Returns the newly created workbook.
+	   Creates a new workbook (notebook in the API) in the requested workspace by copying the latest saved content
+	   (layout, charts, variables, pinned events) of an existing one, with optional metadata overrides. Returns the new
+	   workbook.
+
+	   The copy has the same type as the source, the caller as its author, and a title generated from the source title
+	   unless title is set. Metadata that is not overridden is copied from the source. A locked source is copied
+	   unlocked unless isLocked is true. Overriding dataScope also rebuilds the content's data scope inputs from the new
+	   scope. The caller needs edit permission on the source and permission to create workbooks in the target workspace.
+
+	   Errors:
+	   - PERMISSION_DENIED: the caller cannot create workbooks in the target workspace, or its edition does not include workbooks.
+	   - NOT_FOUND (Scout:NotebookNotFound): the source workbook does not exist or the caller cannot edit it.
+	   - NOT_FOUND (Scout:RunsNotFound): a run in the copied or overriding data scope does not exist or the caller cannot see it.
+	   - NOT_FOUND (Scout:AssetsNotFound): an asset in the copied or overriding data scope does not exist or the caller cannot see it.
 	*/
 	Duplicate(ctx context.Context, ridArg api1.NotebookRid, requestArg api.DuplicateNotebookRequest) (api.Notebook, error)
 	/*
-	   Retrieves the snapshot history for a given workbook. These are sorted in reverse chronological order. Results
-	   are limited by page size.
+	   Lists the saved snapshots of a workbook (notebook in the API), newest first, each with its author, time, and
+	   save message. Pass nextPageToken from the previous response to get the next page. The page size defaults to
+	   100.
+
+	   Errors:
+	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT: pageSize is below 1 or over 1000, or nextPageToken is not valid.
 	*/
 	GetSnapshotHistory(ctx context.Context, requestArg api.GetSnapshotHistoryRequest) (api.GetSnapshotHistoryResponse, error)
 }
@@ -774,13 +1098,13 @@ manage runs in the Nominal app.
 */
 type RunServiceClient interface {
 	/*
-	   Create a new run in Nominal.
+	   Creates a new run in Nominal for a start and end time.
 
 	   Throws if start is equal to or after end.
 	*/
 	CreateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api3.CreateRunRequest) (api11.Run, error)
 	/*
-	   Updates an existing run based on its RID.
+	   Updates an existing run by its RID, including its start and end time.
 
 	   Throws if start is equal to or after end.
 	*/
@@ -791,7 +1115,7 @@ type RunServiceClient interface {
 	*/
 	BatchEditRunMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api3.BatchEditRunMetadataRequest) (api3.BatchEditRunMetadataResponse, error)
 	/*
-	   Adds datasources to the run in question.
+	   Adds datasources to the run in question, each under its own ref name.
 
 	   Throws if any of the ref names conflict with existing data sources or each other.
 	*/
@@ -801,58 +1125,192 @@ type RunServiceClient interface {
 	   Will throw if the workspace of an existing run is different from the workspace of the request.
 	*/
 	CreateOrUpdateRun(ctx context.Context, authHeader bearertoken.Token, detailsArg api3.CreateOrUpdateRunRequest) (api11.Run, error)
-	// Fetches details about the run in question based on its RID.
+	/*
+	   Gets a run by RID, with its title, time range, assets, data sources, properties, labels, and
+	   attachments.
+
+	   Data scopes on data sources the caller cannot read are omitted from the run. To get many runs at once,
+	   use getRuns.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): the run does not exist or the caller cannot view it.
+	*/
 	GetRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid) (api11.Run, error)
 	/*
-	   Fetches details about the run in question based on its RID,
-	   including metrics for check and violation review status.
+	   Gets a run together with counts of its check evaluations and violations by data review status.
+
+	   Data scopes on data sources the caller cannot read are omitted from the run.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): the run does not exist or the caller cannot view it.
 	*/
 	GetRunWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid) (api11.RunWithDataReviewMetrics, error)
-	// Fetches details about the run in question based on its RID, including a summary of the data review status.
+	/*
+	   Gets a run together with its overall data review status and violation counts.
+
+	   Data scopes on data sources the caller cannot read are omitted from the run. Use
+	   getRunWithDataReviewMetrics for counts by review status.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): the run does not exist or the caller cannot view it.
+	*/
 	GetRunWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid) (api11.RunWithDataReviewSummary, error)
-	// Fetches a run based on the run number, rather than RID.
+	/*
+	   Gets a run by its run number and optional run prefix within one workspace, instead of by RID.
+
+	   Omit the prefix to match a run that has none. Omit the workspace to use the caller's default
+	   workspace. Data scopes on data sources the caller cannot read are omitted from the run.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Scout:RunNotFoundById): no run has this number and prefix in the workspace, or the caller
+	     cannot view it.
+	*/
 	GetRunById(ctx context.Context, authHeader bearertoken.Token, getRunByIdRequestArg api3.GetRunByIdRequest) (api11.Run, error)
-	// Fetches a list of run details based on a list of RIDs.
+	/*
+	   Gets several runs by RID. Returns a map from run RID to run.
+
+	   Data scopes on data sources the caller cannot read are omitted from each run.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): any requested run does not exist or cannot be viewed by the caller. No
+	     runs are returned.
+	*/
 	GetRuns(ctx context.Context, authHeader bearertoken.Token, ridsArg []api3.RunRid) (map[api3.RunRid]api11.Run, error)
-	// Fetches the runs with the given asset.
+	/*
+	   Lists the runs that include one asset, including archived runs and multi-asset runs.
+
+	   Returns up to 1000 runs per page, ordered by run RID rather than by time. Pass the nextPageToken of the
+	   previous response to get the next page. Runs the caller cannot view are omitted, so a page can hold fewer
+	   runs than the limit. Data scopes on data sources the caller cannot read are omitted from each run.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot view it.
+	   - INVALID_ARGUMENT: nextPageToken is not a token from a previous response.
+	*/
 	GetRunsByAsset(ctx context.Context, authHeader bearertoken.Token, requestArg api3.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error)
 	/*
-	   Fetches the latest run for each requested asset.
-	   Assets without associated runs will not be included in response.
+	   Gets, for each requested asset, its unarchived run with the latest start time. Returns a map from asset
+	   RID to run.
+
+	   Assets with no unarchived runs are omitted from the map. An empty request returns an empty map. Data scopes
+	   on data sources the caller cannot read are omitted from each run.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): a requested asset does not exist or the caller cannot view it.
 	*/
 	GetLatestRunForAssets(ctx context.Context, authHeader bearertoken.Token, requestArg []api1.AssetRid) (map[api1.AssetRid]api11.Run, error)
 	/*
-	   This legacy bulk-list surface returns string property values only.
+	   Lists every property name with its string values, and every label, in use on runs in the given
+	   workspaces. Typed property values are not returned.
 
-	   Deprecated: Deprecated in favor of MetadataService#listPropertiesAndLabels
+	   Without workspaces, covers all workspaces the caller can view. Workspaces the caller cannot view are
+	   dropped.
+
+	   Deprecated: Deprecated in favor of ResourceMetadataService#listPropertiesAndLabels
 	*/
 	GetAllRunsPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api3.AllRunsPropertiesAndLabelsResponse, error)
 	/*
-	   Searches for runs that match the given filters. Defaults to returning un-archived runs, absent an archive
-	   filter.
+	   Searches runs by text, time range, assets, asset types, datasets, labels, properties, violation review
+	   states, and other filters. Returns one sorted page of runs with a page token.
+
+	   Searches the workspaces where the caller can view the whole workspace. Archived runs are excluded unless the
+	   query includes them. Set the sort key; a request with no sort is rejected. The page size is at most 10000.
+	   Set includeMatchCount to also get the total number of matching runs. At most one asset types filter is
+	   allowed, the dataset RID and asset type filters each take at most 10 values, and neither can sit inside an
+	   or or not filter. Data scopes on data sources the caller cannot read are omitted from each run.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the sort is not set, the page size is above the limit, the query breaks a filter limit
+	     or has a node with no filter, the search text contains a null character, or the page token cannot be
+	     read.
 	*/
 	SearchRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api3.SearchRunsRequest) (api11.SearchRunsResponse, error)
 	/*
-	   Searches for runs that match the given filters and
-	   includes metrics for check and violation review status. Defaults to returning un-archived runs, absent an
-	   archive filter.
+	   Searches runs like searchRuns and returns each run with counts of its check evaluations and violations by
+	   data review status.
+
+	   The page size is at most 1000. Archived runs are excluded unless the query includes them.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the same conditions as searchRuns, with the page size limit of 1000.
 	*/
 	SearchRunsWithDataReviewMetrics(ctx context.Context, authHeader bearertoken.Token, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error)
 	/*
-	   Searches for runs that match the given filters and includes a summary of the data review status. Defaults to
-	   returning un-archived runs, absent an archive filter.
+	   Searches runs like searchRuns and returns each run with its overall data review status and violation
+	   counts.
+
+	   The page size is at most 1000. Archived runs are excluded unless the query includes them. Use
+	   searchRunsWithDataReviewMetrics for counts by review status.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the same conditions as searchRuns, with the page size limit of 1000.
 
 	   Deprecated: Deprecated in favor of searchRunsWithDataReviewMetrics
 	*/
 	SearchRunsWithDataReviewSummary(ctx context.Context, authHeader bearertoken.Token, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error)
 	// Soft-deletes a run. Runs still exist in the database but are no longer visible.
 	ArchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
+	/*
+	   Unarchives a run, so searches that exclude archived runs include it again. Optionally unarchives
+	   its linked workbooks too.
+
+	   Linked workbooks are unarchived only when includeLinkedWorkbooks is true, and then only those that
+	   were archived along with a run or asset; workbooks archived by hand stay archived.
+	   Always returns true on success. Use unarchiveRuns to unarchive several runs in one request.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): the run does not exist or the caller cannot edit it.
+	*/
 	UnarchiveRun(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
+	/*
+	   Archives several runs in one request, so searches that exclude archived runs omit them.
+	   Optionally archives their linked workbooks too.
+
+	   Unarchived workbooks linked to any of the runs are archived only when includeLinkedWorkbooks
+	   is true; archiving them this way marks them so that unarchiveRuns can restore them. The request is all or nothing: if the caller cannot edit one of the runs, no run is
+	   archived. Use archiveRun for a single run.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): a run does not exist or the caller cannot edit it.
+	*/
 	ArchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api3.ArchiveRunsRequest) error
+	/*
+	   Unarchives several runs in one request, so searches that exclude archived runs include them
+	   again. Optionally unarchives their linked workbooks too.
+
+	   Linked workbooks are unarchived only when includeLinkedWorkbooks is true, and then only those that
+	   were archived along with a run or asset; workbooks archived by hand stay archived.
+
+	   The request is all or nothing: if the caller cannot edit one of the runs, no run is
+	   unarchived. Use unarchiveRun for a single run.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): a run does not exist or the caller cannot edit it.
+	*/
 	UnarchiveRuns(ctx context.Context, authHeader bearertoken.Token, requestArg api3.UnarchiveRunsRequest) error
-	// Returns the list of ref names that are in use across specified and authorized workspaces.
+	/*
+	   Lists the data scope ref names in use on unarchived assets, each with its data source type.
+
+	   Covers the given workspaces, or all workspaces the caller can view when none are given. Workspaces the
+	   caller cannot view are dropped.
+	*/
 	GetDataSourceRefNameAndTypeList(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) ([]api3.RefNameAndType, error)
-	// Updates the attachments associated with a run.
+	/*
+	   Adds attachments to a run and removes attachments from it. Attachments are files that give
+	   context to the run, such as a PDF or a note.
+
+	   The run keeps its other attachments. Removing an attachment that the run does not have has
+	   no effect, and adding one it already has has no effect. The caller needs edit permission on
+	   the run.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the same attachment is in both attachmentsToAdd and attachmentsToRemove.
+	   - NOT_FOUND (Scout:RunNotFound): the run does not exist or the caller cannot edit it.
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): an attachment to add or remove does not exist
+	     or the caller cannot access it.
+	*/
 	UpdateRunAttachment(ctx context.Context, authHeader bearertoken.Token, ridArg api3.RunRid, requestArg api3.UpdateAttachmentsRequest) error
 }
 
@@ -1265,13 +1723,13 @@ manage runs in the Nominal app.
 */
 type RunServiceClientWithAuth interface {
 	/*
-	   Create a new run in Nominal.
+	   Creates a new run in Nominal for a start and end time.
 
 	   Throws if start is equal to or after end.
 	*/
 	CreateRun(ctx context.Context, detailsArg api3.CreateRunRequest) (api11.Run, error)
 	/*
-	   Updates an existing run based on its RID.
+	   Updates an existing run by its RID, including its start and end time.
 
 	   Throws if start is equal to or after end.
 	*/
@@ -1282,7 +1740,7 @@ type RunServiceClientWithAuth interface {
 	*/
 	BatchEditRunMetadata(ctx context.Context, requestArg api3.BatchEditRunMetadataRequest) (api3.BatchEditRunMetadataResponse, error)
 	/*
-	   Adds datasources to the run in question.
+	   Adds datasources to the run in question, each under its own ref name.
 
 	   Throws if any of the ref names conflict with existing data sources or each other.
 	*/
@@ -1292,58 +1750,192 @@ type RunServiceClientWithAuth interface {
 	   Will throw if the workspace of an existing run is different from the workspace of the request.
 	*/
 	CreateOrUpdateRun(ctx context.Context, detailsArg api3.CreateOrUpdateRunRequest) (api11.Run, error)
-	// Fetches details about the run in question based on its RID.
+	/*
+	   Gets a run by RID, with its title, time range, assets, data sources, properties, labels, and
+	   attachments.
+
+	   Data scopes on data sources the caller cannot read are omitted from the run. To get many runs at once,
+	   use getRuns.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): the run does not exist or the caller cannot view it.
+	*/
 	GetRun(ctx context.Context, ridArg api3.RunRid) (api11.Run, error)
 	/*
-	   Fetches details about the run in question based on its RID,
-	   including metrics for check and violation review status.
+	   Gets a run together with counts of its check evaluations and violations by data review status.
+
+	   Data scopes on data sources the caller cannot read are omitted from the run.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): the run does not exist or the caller cannot view it.
 	*/
 	GetRunWithDataReviewMetrics(ctx context.Context, ridArg api3.RunRid) (api11.RunWithDataReviewMetrics, error)
-	// Fetches details about the run in question based on its RID, including a summary of the data review status.
+	/*
+	   Gets a run together with its overall data review status and violation counts.
+
+	   Data scopes on data sources the caller cannot read are omitted from the run. Use
+	   getRunWithDataReviewMetrics for counts by review status.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): the run does not exist or the caller cannot view it.
+	*/
 	GetRunWithDataReviewSummary(ctx context.Context, ridArg api3.RunRid) (api11.RunWithDataReviewSummary, error)
-	// Fetches a run based on the run number, rather than RID.
+	/*
+	   Gets a run by its run number and optional run prefix within one workspace, instead of by RID.
+
+	   Omit the prefix to match a run that has none. Omit the workspace to use the caller's default
+	   workspace. Data scopes on data sources the caller cannot read are omitted from the run.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Scout:RunNotFoundById): no run has this number and prefix in the workspace, or the caller
+	     cannot view it.
+	*/
 	GetRunById(ctx context.Context, getRunByIdRequestArg api3.GetRunByIdRequest) (api11.Run, error)
-	// Fetches a list of run details based on a list of RIDs.
+	/*
+	   Gets several runs by RID. Returns a map from run RID to run.
+
+	   Data scopes on data sources the caller cannot read are omitted from each run.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): any requested run does not exist or cannot be viewed by the caller. No
+	     runs are returned.
+	*/
 	GetRuns(ctx context.Context, ridsArg []api3.RunRid) (map[api3.RunRid]api11.Run, error)
-	// Fetches the runs with the given asset.
+	/*
+	   Lists the runs that include one asset, including archived runs and multi-asset runs.
+
+	   Returns up to 1000 runs per page, ordered by run RID rather than by time. Pass the nextPageToken of the
+	   previous response to get the next page. Runs the caller cannot view are omitted, so a page can hold fewer
+	   runs than the limit. Data scopes on data sources the caller cannot read are omitted from each run.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot view it.
+	   - INVALID_ARGUMENT: nextPageToken is not a token from a previous response.
+	*/
 	GetRunsByAsset(ctx context.Context, requestArg api3.GetRunsByAssetRequest) (api11.GetRunsByAssetResponse, error)
 	/*
-	   Fetches the latest run for each requested asset.
-	   Assets without associated runs will not be included in response.
+	   Gets, for each requested asset, its unarchived run with the latest start time. Returns a map from asset
+	   RID to run.
+
+	   Assets with no unarchived runs are omitted from the map. An empty request returns an empty map. Data scopes
+	   on data sources the caller cannot read are omitted from each run.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): a requested asset does not exist or the caller cannot view it.
 	*/
 	GetLatestRunForAssets(ctx context.Context, requestArg []api1.AssetRid) (map[api1.AssetRid]api11.Run, error)
 	/*
-	   This legacy bulk-list surface returns string property values only.
+	   Lists every property name with its string values, and every label, in use on runs in the given
+	   workspaces. Typed property values are not returned.
 
-	   Deprecated: Deprecated in favor of MetadataService#listPropertiesAndLabels
+	   Without workspaces, covers all workspaces the caller can view. Workspaces the caller cannot view are
+	   dropped.
+
+	   Deprecated: Deprecated in favor of ResourceMetadataService#listPropertiesAndLabels
 	*/
 	GetAllRunsPropertiesAndLabels(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api3.AllRunsPropertiesAndLabelsResponse, error)
 	/*
-	   Searches for runs that match the given filters. Defaults to returning un-archived runs, absent an archive
-	   filter.
+	   Searches runs by text, time range, assets, asset types, datasets, labels, properties, violation review
+	   states, and other filters. Returns one sorted page of runs with a page token.
+
+	   Searches the workspaces where the caller can view the whole workspace. Archived runs are excluded unless the
+	   query includes them. Set the sort key; a request with no sort is rejected. The page size is at most 10000.
+	   Set includeMatchCount to also get the total number of matching runs. At most one asset types filter is
+	   allowed, the dataset RID and asset type filters each take at most 10 values, and neither can sit inside an
+	   or or not filter. Data scopes on data sources the caller cannot read are omitted from each run.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the sort is not set, the page size is above the limit, the query breaks a filter limit
+	     or has a node with no filter, the search text contains a null character, or the page token cannot be
+	     read.
 	*/
 	SearchRuns(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsResponse, error)
 	/*
-	   Searches for runs that match the given filters and
-	   includes metrics for check and violation review status. Defaults to returning un-archived runs, absent an
-	   archive filter.
+	   Searches runs like searchRuns and returns each run with counts of its check evaluations and violations by
+	   data review status.
+
+	   The page size is at most 1000. Archived runs are excluded unless the query includes them.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the same conditions as searchRuns, with the page size limit of 1000.
 	*/
 	SearchRunsWithDataReviewMetrics(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewMetricsResponse, error)
 	/*
-	   Searches for runs that match the given filters and includes a summary of the data review status. Defaults to
-	   returning un-archived runs, absent an archive filter.
+	   Searches runs like searchRuns and returns each run with its overall data review status and violation
+	   counts.
+
+	   The page size is at most 1000. Archived runs are excluded unless the query includes them. Use
+	   searchRunsWithDataReviewMetrics for counts by review status.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the same conditions as searchRuns, with the page size limit of 1000.
 
 	   Deprecated: Deprecated in favor of searchRunsWithDataReviewMetrics
 	*/
 	SearchRunsWithDataReviewSummary(ctx context.Context, requestArg api3.SearchRunsRequest) (api11.SearchRunsWithDataReviewSummaryResponse, error)
 	// Soft-deletes a run. Runs still exist in the database but are no longer visible.
 	ArchiveRun(ctx context.Context, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
+	/*
+	   Unarchives a run, so searches that exclude archived runs include it again. Optionally unarchives
+	   its linked workbooks too.
+
+	   Linked workbooks are unarchived only when includeLinkedWorkbooks is true, and then only those that
+	   were archived along with a run or asset; workbooks archived by hand stay archived.
+	   Always returns true on success. Use unarchiveRuns to unarchive several runs in one request.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): the run does not exist or the caller cannot edit it.
+	*/
 	UnarchiveRun(ctx context.Context, ridArg api3.RunRid, includeLinkedWorkbooksArg *bool) (bool, error)
+	/*
+	   Archives several runs in one request, so searches that exclude archived runs omit them.
+	   Optionally archives their linked workbooks too.
+
+	   Unarchived workbooks linked to any of the runs are archived only when includeLinkedWorkbooks
+	   is true; archiving them this way marks them so that unarchiveRuns can restore them. The request is all or nothing: if the caller cannot edit one of the runs, no run is
+	   archived. Use archiveRun for a single run.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): a run does not exist or the caller cannot edit it.
+	*/
 	ArchiveRuns(ctx context.Context, requestArg api3.ArchiveRunsRequest) error
+	/*
+	   Unarchives several runs in one request, so searches that exclude archived runs include them
+	   again. Optionally unarchives their linked workbooks too.
+
+	   Linked workbooks are unarchived only when includeLinkedWorkbooks is true, and then only those that
+	   were archived along with a run or asset; workbooks archived by hand stay archived.
+
+	   The request is all or nothing: if the caller cannot edit one of the runs, no run is
+	   unarchived. Use unarchiveRun for a single run.
+
+	   Errors:
+	   - NOT_FOUND (Scout:RunNotFound): a run does not exist or the caller cannot edit it.
+	*/
 	UnarchiveRuns(ctx context.Context, requestArg api3.UnarchiveRunsRequest) error
-	// Returns the list of ref names that are in use across specified and authorized workspaces.
+	/*
+	   Lists the data scope ref names in use on unarchived assets, each with its data source type.
+
+	   Covers the given workspaces, or all workspaces the caller can view when none are given. Workspaces the
+	   caller cannot view are dropped.
+	*/
 	GetDataSourceRefNameAndTypeList(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]api3.RefNameAndType, error)
-	// Updates the attachments associated with a run.
+	/*
+	   Adds attachments to a run and removes attachments from it. Attachments are files that give
+	   context to the run, such as a PDF or a note.
+
+	   The run keeps its other attachments. Removing an attachment that the run does not have has
+	   no effect, and adding one it already has has no effect. The caller needs edit permission on
+	   the run.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the same attachment is in both attachmentsToAdd and attachmentsToRemove.
+	   - NOT_FOUND (Scout:RunNotFound): the run does not exist or the caller cannot edit it.
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): an attachment to add or remove does not exist
+	     or the caller cannot access it.
+	*/
 	UpdateRunAttachment(ctx context.Context, ridArg api3.RunRid, requestArg api3.UpdateAttachmentsRequest) error
 }
 
@@ -1634,58 +2226,220 @@ TemplateService manages templates, which are workbooks that
 can be re-used across runs. Templates are versioned.
 */
 type TemplateServiceClient interface {
-	// Creates a new template.
+	/*
+	   Creates a workbook template (a template in the API) from a layout and content, with an initial commit on
+	   the main branch. Returns the template at that commit.
+
+	   The server assigns the RID, records the caller as the creator, and sets isPublished to true unless the
+	   request says otherwise. The template goes in the given workspace, or in the caller's default workspace
+	   when none is given. The caller needs permission to edit templates in that workspace. The layout and
+	   content must pass these checks: the root panel is a tabbed panel, the visualization IDs in the content
+	   match those in the layout, each variable expression has at most 25,000 characters, and each allowed
+	   lateness is from 0 to 5 minutes.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot edit templates in the workspace.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT: the layout and content fail a check above.
+	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api4.CreateTemplateRequest) (api4.Template, error)
 	/*
-	   Must only pass one of (branch, commit). If neither are passed,
-	   the latest commit on the "main" branch is returned.
-	   Throws if the template, branch, or commit doesn't exist.
+	   Gets a workbook template with its layout, content, and commit. Returns the latest commit on the main
+	   branch unless a branch or a commit is given.
+
+	   Pass at most one of branch and commit. The caller needs permission to view the template. Archived
+	   templates can be read.
+
+	   Errors:
+	   - INVALID_ARGUMENT: both branch and commit are given.
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - NOT_FOUND (Scout:CommitNotFound): the commit does not exist for this template.
 	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) (api4.Template, error)
+	/*
+	   Gets the metadata of several workbook templates by RID, without layout or content. Returns a summary for
+	   each.
+
+	   The caller needs permission to view every template.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): a template does not exist or the caller cannot view it. The error
+	     lists those RIDs, and no summaries are returned.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.TemplateRid) ([]api4.TemplateSummary, error)
 	/*
-	   Creates a commit that may be compacted, e.g cleaned up and not exist anymore.
-	   Throws if the template or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you save to an archived template.
+	   Saves a new layout and content to a workbook template branch (main by default) as an auto-save commit.
+	   Returns the updated template.
+
+	   Compaction may later remove an auto-save commit, so use commit for a permanent one. commitMessage
+	   defaults to "auto-save" when it is absent or blank. When latestCommit is set, the save succeeds only if it is the branch's latest
+	   commit. The caller needs permission to edit templates in the template's workspace. The layout and
+	   content must pass these checks: the root panel is a tabbed panel, the visualization IDs in the content
+	   match those in the layout, each variable expression has at most 25,000 characters, and each allowed
+	   lateness is from 0 to 5 minutes.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT (Scout:CommitToArchivedTemplate): the template is archived.
+	   - INVALID_ARGUMENT: the layout and content fail a check above, or commitMessage is longer than 4096
+	     characters.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - CONFLICT (Scout:CommitConflict): latestCommit is not the branch's latest commit.
 	*/
 	SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.SaveTemplateRequest) (api4.Template, error)
-	// Returns the set of all ref names used by the template.
+	/*
+	   Lists the data source ref names that the variables of a workbook template use, read from a branch or a
+	   commit (the latest commit on main by default).
+
+	   Pass at most one of branch and commit. The caller needs permission to view the template.
+
+	   Errors:
+	   - INVALID_ARGUMENT: both branch and commit are given.
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - NOT_FOUND (Scout:CommitNotFound): the commit does not exist for this template.
+	   - CONFLICT (Scout:CannotReadTemplateRefNames): a variable has no v2 compute spec.
+	*/
 	GetUsedRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) ([]api2.DataSourceRefName, error)
-	// Updates the data source ref names for all variables used in the template.
+	/*
+	   Renames data source ref names in every variable of a workbook template and saves the result as a
+	   working-state commit on a branch (main by default). Returns the updated template.
+
+	   Ref names that are not in refNameUpdates stay the same. The request's latestCommit is ignored: the
+	   update applies on the branch's current latest commit. The commit is an auto-save commit that compaction
+	   may later remove, with the message "auto-save". The caller needs permission to edit templates in the
+	   template's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - CONFLICT (Scout:CannotReadTemplateRefNames): a variable has no v2 compute spec.
+	   - INVALID_ARGUMENT (Scout:CommitToArchivedTemplate): the template is archived.
+	*/
 	UpdateRefNames(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.UpdateRefNameRequest) (api4.Template, error)
 	/*
-	   Creates a commit with a commit message.
-	   Throws if the template or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you commit to an archived template.
+	   Commits a new layout and content, with a message, to a workbook template branch (main by default).
+	   Returns the updated template.
+
+	   The commit is permanent; use saveWorkingState for auto-saves. When latestCommit is set, the commit
+	   succeeds only if it is the branch's latest commit. The caller needs permission to edit templates in the
+	   template's workspace. The layout and content must pass these checks: the root panel is a tabbed panel,
+	   the visualization IDs in the content match those in the layout, each variable expression has at most
+	   25,000 characters, and each allowed lateness is from 0 to 5 minutes.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT (Scout:CommitToArchivedTemplate): the template is archived.
+	   - INVALID_ARGUMENT: the layout and content fail a check above.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - CONFLICT (Scout:CommitConflict): latestCommit is not the branch's latest commit.
 	*/
 	Commit(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.CommitTemplateRequest) (api4.Template, error)
-	// Throws if the template doesn't exist.
+	/*
+	   Updates a workbook template's title, description, labels, properties, preview image, and archived or
+	   published state. Returns the template's metadata.
+
+	   Only the fields given change. Labels and properties, when given, replace the whole set. A request with
+	   no fields changes nothing. An archived template can be updated, and isArchived false unarchives it. The
+	   caller needs permission to edit templates in the template's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, requestArg api4.UpdateMetadataRequest) (api4.TemplateMetadata, error)
 	/*
-	   Archives the provided templates. Templates that are already archived are left unchanged.
-	   Throws if any of the templates don't exist.
+	   Archives workbook templates by RID. Templates that are already archived are left unchanged.
+
+	   The caller needs permission to edit templates in the workspace of every template. Either every template
+	   is archived or none is.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:TooManyTemplatesRequested): more than 1000 RIDs are given.
+	   - NOT_FOUND (Scout:TemplatesNotFound): a template does not exist or the caller cannot edit it. The error
+	     lists those RIDs.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	BatchArchive(ctx context.Context, authHeader bearertoken.Token, requestArg api4.BatchArchiveTemplatesRequest) error
 	/*
-	   Unarchives the provided templates. Templates that are not archived are left unchanged.
-	   Throws if any of the templates don't exist.
+	   Unarchives workbook templates by RID. Templates that are not archived are left unchanged.
+
+	   The caller needs permission to edit templates in the workspace of every template. Either every template
+	   is unarchived or none is.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:TooManyTemplatesRequested): more than 1000 RIDs are given.
+	   - NOT_FOUND (Scout:TemplatesNotFound): a template does not exist or the caller cannot edit it. The error
+	     lists those RIDs.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	BatchUnarchive(ctx context.Context, authHeader bearertoken.Token, requestArg api4.BatchUnarchiveTemplatesRequest) error
+	/*
+	   Searches workbook templates by text, labels, properties, author, workspace, and published or archived
+	   state. Returns a page of template summaries, by default sorted by editedAt, newest first.
+
+	   Only templates in workspaces that the caller can view and whose edition includes workbooks are
+	   searched. Archived templates are included unless the query filters on isArchived. The page size defaults to 100 and is at most 1000. Pass nextPageToken
+	   from the previous response to get the next page.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:SearchTemplatesLimitExceeded): pageSize is above 1000.
+	   - INVALID_ARGUMENT: search text contains a null character.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken cannot be read as a search
+	     token.
+	*/
 	SearchTemplates(ctx context.Context, authHeader bearertoken.Token, requestArg api4.SearchTemplatesRequest) (api4.SearchTemplatesResponse, error)
+	/*
+	   Lists the labels, and the property names with their values, used by workbook templates in the given
+	   workspaces. With no workspaces given, covers all workspaces the caller can view.
+
+	   Archived templates are included. Workspaces that the caller cannot view, or whose edition does not
+	   include workbooks, are left out without an error.
+	*/
 	GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (api4.GetAllLabelsAndPropertiesResponse, error)
 	/*
-	   Duplicates an existing template, copying its content (layout, charts, variables)
-	   and optionally overriding metadata fields such as title, description, labels,
-	   and properties. Returns the newly created template.
+	   Copies a workbook template into a new template. Returns the new template.
+
+	   The copy holds the layout and content of the source's latest commit on the main branch. Title,
+	   description, labels, properties, preview image, and workspace can be overridden; the rest comes from the
+	   source, except isPublished, which is false unless set. Without a title, the copy is named from the
+	   source title and titleSuffix, such as "My template - copy". The first commit's message is "Duplicate of"
+	   and the source title. The workspace defaults to the caller's default workspace, not the source's. The
+	   caller needs permission to view the source and to edit templates in the target workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): the source does not exist, or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot edit templates in the target workspace.
 	*/
 	Duplicate(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, requestArg api4.DuplicateTemplateRequest) (api4.Template, error)
 	/*
-	   Merges the given branch to the "main" branch.
-	   Throws if the template or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you merge on an archived template.
+	   Merges a workbook template branch into the main branch, then deletes the merged branch. Returns the
+	   updated template.
+
+	   The merge adds a permanent commit to main, with the given message, that holds the branch's latest layout
+	   and content, and the branch's latest commit also becomes permanent. The branch's state replaces main's;
+	   separate edits are not combined. When latestCommitOnMain is set, the merge succeeds only if it is
+	   main's latest commit. The caller needs permission to edit templates in the template's workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT: branchName is main.
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - INVALID_ARGUMENT (Scout:CommitToArchivedTemplate): the template is archived.
+	   - CONFLICT (Scout:CommitConflict): latestCommitOnMain is not main's latest commit.
 	*/
 	MergeToMain(ctx context.Context, authHeader bearertoken.Token, templateRidArg api1.TemplateRid, requestArg api4.MergeToMainRequest) (api4.Template, error)
 }
@@ -1978,58 +2732,220 @@ TemplateService manages templates, which are workbooks that
 can be re-used across runs. Templates are versioned.
 */
 type TemplateServiceClientWithAuth interface {
-	// Creates a new template.
+	/*
+	   Creates a workbook template (a template in the API) from a layout and content, with an initial commit on
+	   the main branch. Returns the template at that commit.
+
+	   The server assigns the RID, records the caller as the creator, and sets isPublished to true unless the
+	   request says otherwise. The template goes in the given workspace, or in the caller's default workspace
+	   when none is given. The caller needs permission to edit templates in that workspace. The layout and
+	   content must pass these checks: the root panel is a tabbed panel, the visualization IDs in the content
+	   match those in the layout, each variable expression has at most 25,000 characters, and each allowed
+	   lateness is from 0 to 5 minutes.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot edit templates in the workspace.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT: the layout and content fail a check above.
+	*/
 	Create(ctx context.Context, requestArg api4.CreateTemplateRequest) (api4.Template, error)
 	/*
-	   Must only pass one of (branch, commit). If neither are passed,
-	   the latest commit on the "main" branch is returned.
-	   Throws if the template, branch, or commit doesn't exist.
+	   Gets a workbook template with its layout, content, and commit. Returns the latest commit on the main
+	   branch unless a branch or a commit is given.
+
+	   Pass at most one of branch and commit. The caller needs permission to view the template. Archived
+	   templates can be read.
+
+	   Errors:
+	   - INVALID_ARGUMENT: both branch and commit are given.
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - NOT_FOUND (Scout:CommitNotFound): the commit does not exist for this template.
 	*/
 	Get(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) (api4.Template, error)
+	/*
+	   Gets the metadata of several workbook templates by RID, without layout or content. Returns a summary for
+	   each.
+
+	   The caller needs permission to view every template.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): a template does not exist or the caller cannot view it. The error
+	     lists those RIDs, and no summaries are returned.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	BatchGetMetadata(ctx context.Context, ridsArg []api1.TemplateRid) ([]api4.TemplateSummary, error)
 	/*
-	   Creates a commit that may be compacted, e.g cleaned up and not exist anymore.
-	   Throws if the template or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you save to an archived template.
+	   Saves a new layout and content to a workbook template branch (main by default) as an auto-save commit.
+	   Returns the updated template.
+
+	   Compaction may later remove an auto-save commit, so use commit for a permanent one. commitMessage
+	   defaults to "auto-save" when it is absent or blank. When latestCommit is set, the save succeeds only if it is the branch's latest
+	   commit. The caller needs permission to edit templates in the template's workspace. The layout and
+	   content must pass these checks: the root panel is a tabbed panel, the visualization IDs in the content
+	   match those in the layout, each variable expression has at most 25,000 characters, and each allowed
+	   lateness is from 0 to 5 minutes.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT (Scout:CommitToArchivedTemplate): the template is archived.
+	   - INVALID_ARGUMENT: the layout and content fail a check above, or commitMessage is longer than 4096
+	     characters.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - CONFLICT (Scout:CommitConflict): latestCommit is not the branch's latest commit.
 	*/
 	SaveWorkingState(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.SaveTemplateRequest) (api4.Template, error)
-	// Returns the set of all ref names used by the template.
+	/*
+	   Lists the data source ref names that the variables of a workbook template use, read from a branch or a
+	   commit (the latest commit on main by default).
+
+	   Pass at most one of branch and commit. The caller needs permission to view the template.
+
+	   Errors:
+	   - INVALID_ARGUMENT: both branch and commit are given.
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - NOT_FOUND (Scout:CommitNotFound): the commit does not exist for this template.
+	   - CONFLICT (Scout:CannotReadTemplateRefNames): a variable has no v2 compute spec.
+	*/
 	GetUsedRefNames(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, commitArg *api5.CommitId) ([]api2.DataSourceRefName, error)
-	// Updates the data source ref names for all variables used in the template.
+	/*
+	   Renames data source ref names in every variable of a workbook template and saves the result as a
+	   working-state commit on a branch (main by default). Returns the updated template.
+
+	   Ref names that are not in refNameUpdates stay the same. The request's latestCommit is ignored: the
+	   update applies on the branch's current latest commit. The commit is an auto-save commit that compaction
+	   may later remove, with the message "auto-save". The caller needs permission to edit templates in the
+	   template's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - CONFLICT (Scout:CannotReadTemplateRefNames): a variable has no v2 compute spec.
+	   - INVALID_ARGUMENT (Scout:CommitToArchivedTemplate): the template is archived.
+	*/
 	UpdateRefNames(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.UpdateRefNameRequest) (api4.Template, error)
 	/*
-	   Creates a commit with a commit message.
-	   Throws if the template or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you commit to an archived template.
+	   Commits a new layout and content, with a message, to a workbook template branch (main by default).
+	   Returns the updated template.
+
+	   The commit is permanent; use saveWorkingState for auto-saves. When latestCommit is set, the commit
+	   succeeds only if it is the branch's latest commit. The caller needs permission to edit templates in the
+	   template's workspace. The layout and content must pass these checks: the root panel is a tabbed panel,
+	   the visualization IDs in the content match those in the layout, each variable expression has at most
+	   25,000 characters, and each allowed lateness is from 0 to 5 minutes.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT (Scout:CommitToArchivedTemplate): the template is archived.
+	   - INVALID_ARGUMENT: the layout and content fail a check above.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - CONFLICT (Scout:CommitConflict): latestCommit is not the branch's latest commit.
 	*/
 	Commit(ctx context.Context, templateRidArg api1.TemplateRid, branchArg *api5.BranchName, requestArg api4.CommitTemplateRequest) (api4.Template, error)
-	// Throws if the template doesn't exist.
+	/*
+	   Updates a workbook template's title, description, labels, properties, preview image, and archived or
+	   published state. Returns the template's metadata.
+
+	   Only the fields given change. Labels and properties, when given, replace the whole set. A request with
+	   no fields changes nothing. An archived template can be updated, and isArchived false unarchives it. The
+	   caller needs permission to edit templates in the template's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	*/
 	UpdateMetadata(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.UpdateMetadataRequest) (api4.TemplateMetadata, error)
 	/*
-	   Archives the provided templates. Templates that are already archived are left unchanged.
-	   Throws if any of the templates don't exist.
+	   Archives workbook templates by RID. Templates that are already archived are left unchanged.
+
+	   The caller needs permission to edit templates in the workspace of every template. Either every template
+	   is archived or none is.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:TooManyTemplatesRequested): more than 1000 RIDs are given.
+	   - NOT_FOUND (Scout:TemplatesNotFound): a template does not exist or the caller cannot edit it. The error
+	     lists those RIDs.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	BatchArchive(ctx context.Context, requestArg api4.BatchArchiveTemplatesRequest) error
 	/*
-	   Unarchives the provided templates. Templates that are not archived are left unchanged.
-	   Throws if any of the templates don't exist.
+	   Unarchives workbook templates by RID. Templates that are not archived are left unchanged.
+
+	   The caller needs permission to edit templates in the workspace of every template. Either every template
+	   is unarchived or none is.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:TooManyTemplatesRequested): more than 1000 RIDs are given.
+	   - NOT_FOUND (Scout:TemplatesNotFound): a template does not exist or the caller cannot edit it. The error
+	     lists those RIDs.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	BatchUnarchive(ctx context.Context, requestArg api4.BatchUnarchiveTemplatesRequest) error
+	/*
+	   Searches workbook templates by text, labels, properties, author, workspace, and published or archived
+	   state. Returns a page of template summaries, by default sorted by editedAt, newest first.
+
+	   Only templates in workspaces that the caller can view and whose edition includes workbooks are
+	   searched. Archived templates are included unless the query filters on isArchived. The page size defaults to 100 and is at most 1000. Pass nextPageToken
+	   from the previous response to get the next page.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:SearchTemplatesLimitExceeded): pageSize is above 1000.
+	   - INVALID_ARGUMENT: search text contains a null character.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken cannot be read as a search
+	     token.
+	*/
 	SearchTemplates(ctx context.Context, requestArg api4.SearchTemplatesRequest) (api4.SearchTemplatesResponse, error)
+	/*
+	   Lists the labels, and the property names with their values, used by workbook templates in the given
+	   workspaces. With no workspaces given, covers all workspaces the caller can view.
+
+	   Archived templates are included. Workspaces that the caller cannot view, or whose edition does not
+	   include workbooks, are left out without an error.
+	*/
 	GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (api4.GetAllLabelsAndPropertiesResponse, error)
 	/*
-	   Duplicates an existing template, copying its content (layout, charts, variables)
-	   and optionally overriding metadata fields such as title, description, labels,
-	   and properties. Returns the newly created template.
+	   Copies a workbook template into a new template. Returns the new template.
+
+	   The copy holds the layout and content of the source's latest commit on the main branch. Title,
+	   description, labels, properties, preview image, and workspace can be overridden; the rest comes from the
+	   source, except isPublished, which is false unless set. Without a title, the copy is named from the
+	   source title and titleSuffix, such as "My template - copy". The first commit's message is "Duplicate of"
+	   and the source title. The workspace defaults to the caller's default workspace, not the source's. The
+	   caller needs permission to view the source and to edit templates in the target workspace.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TemplatesNotFound): the source does not exist, or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot edit templates in the target workspace.
 	*/
 	Duplicate(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.DuplicateTemplateRequest) (api4.Template, error)
 	/*
-	   Merges the given branch to the "main" branch.
-	   Throws if the template or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you merge on an archived template.
+	   Merges a workbook template branch into the main branch, then deletes the merged branch. Returns the
+	   updated template.
+
+	   The merge adds a permanent commit to main, with the given message, that holds the branch's latest layout
+	   and content, and the branch's latest commit also becomes permanent. The branch's state replaces main's;
+	   separate edits are not combined. When latestCommitOnMain is set, the merge succeeds only if it is
+	   main's latest commit. The caller needs permission to edit templates in the template's workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT: branchName is main.
+	   - NOT_FOUND (Scout:TemplatesNotFound): the template does not exist, or the caller cannot edit it.
+	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - INVALID_ARGUMENT (Scout:CommitToArchivedTemplate): the template is archived.
+	   - CONFLICT (Scout:CommitConflict): latestCommitOnMain is not main's latest commit.
 	*/
 	MergeToMain(ctx context.Context, templateRidArg api1.TemplateRid, requestArg api4.MergeToMainRequest) (api4.Template, error)
 }
@@ -2225,18 +3141,25 @@ The Units Service serves as a comprehensive catalog of the units of measurement 
 default, follow the UCUM convention for representation.
 */
 type UnitsServiceClient interface {
-	// Returns all known units, grouped by the physical property they measure.
+	/*
+	   Returns the catalog of units of measurement, grouped by the physical property each measures, such as time or
+	   angle. Units with no known property are left out.
+	*/
 	GetAllUnits(ctx context.Context, authHeader bearertoken.Token) (api6.GetUnitsResponse, error)
-	// Returns information for a unit symbol if available. Returns as empty if the provided symbol cannot be parsed.
+	/*
+	   Returns the unit for a UCUM symbol, with its name, property, dimension, and unit system where known. Returns
+	   empty when the symbol cannot be parsed.
+	*/
 	GetUnit(ctx context.Context, authHeader bearertoken.Token, unitArg api6.UnitSymbol) (*api6.Unit, error)
 	/*
-	   Returns information for the unit symbols if available. If the provided symbol cannot be parsed, it will be
-	   omitted from the map.
+	   Returns the units for a set of unit symbols, keyed by symbol. Symbols that cannot be parsed are omitted from
+	   the map.
 	*/
 	GetBatchUnits(ctx context.Context, authHeader bearertoken.Token, unitsArg []api6.UnitSymbol) (map[api6.UnitSymbol]api6.Unit, error)
 	/*
-	   Returns the set of cataloged units that can be converted to and from the given unit.
-	   No commensurable units does not imply the unit is invalid. Use /get-unit to check for validity.
+	   Returns the cataloged units that can be converted to and from the given unit, excluding the unit's own symbol.
+	   The set is empty for a symbol that cannot be parsed and for a valid unit with no convertible units; use
+	   getUnit to tell them apart.
 	*/
 	GetCommensurableUnits(ctx context.Context, authHeader bearertoken.Token, unitArg api6.UnitSymbol) ([]api6.Unit, error)
 }
@@ -2322,18 +3245,25 @@ The Units Service serves as a comprehensive catalog of the units of measurement 
 default, follow the UCUM convention for representation.
 */
 type UnitsServiceClientWithAuth interface {
-	// Returns all known units, grouped by the physical property they measure.
+	/*
+	   Returns the catalog of units of measurement, grouped by the physical property each measures, such as time or
+	   angle. Units with no known property are left out.
+	*/
 	GetAllUnits(ctx context.Context) (api6.GetUnitsResponse, error)
-	// Returns information for a unit symbol if available. Returns as empty if the provided symbol cannot be parsed.
+	/*
+	   Returns the unit for a UCUM symbol, with its name, property, dimension, and unit system where known. Returns
+	   empty when the symbol cannot be parsed.
+	*/
 	GetUnit(ctx context.Context, unitArg api6.UnitSymbol) (*api6.Unit, error)
 	/*
-	   Returns information for the unit symbols if available. If the provided symbol cannot be parsed, it will be
-	   omitted from the map.
+	   Returns the units for a set of unit symbols, keyed by symbol. Symbols that cannot be parsed are omitted from
+	   the map.
 	*/
 	GetBatchUnits(ctx context.Context, unitsArg []api6.UnitSymbol) (map[api6.UnitSymbol]api6.Unit, error)
 	/*
-	   Returns the set of cataloged units that can be converted to and from the given unit.
-	   No commensurable units does not imply the unit is invalid. Use /get-unit to check for validity.
+	   Returns the cataloged units that can be converted to and from the given unit, excluding the unit's own symbol.
+	   The set is empty for a symbol that cannot be parsed and for a valid unit with no convertible units; use
+	   getUnit to tell them apart.
 	*/
 	GetCommensurableUnits(ctx context.Context, unitArg api6.UnitSymbol) ([]api6.Unit, error)
 }
@@ -2426,29 +3356,78 @@ type VersioningServiceClient interface {
 	   Throws if the provided commit doesn't exist.
 	*/
 	CreateTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateTagRequest) (api5.Tag, error)
-	// Throws if the commit doesn't exist.
+	/*
+	   Gets one commit (a saved version) of a versioned resource, such as a checklist or workbook
+	   template, by commit id. Returns the commit whether it is permanent or a working-state commit.
+
+	   The caller needs view access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
+	   - NOT_FOUND (Scout:CommitNotFound): the resource has no commit with this id.
+	*/
 	GetCommit(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId) (api5.Commit, error)
-	// Filters out resources that are not authorized.
+	/*
+	   Gets commits (saved versions) of several versioned resources, such as checklists and workbook
+	   templates, each named by resource and commit id.
+
+	   Omits commits of resources the caller cannot view and commits that do not exist, without an
+	   error. Returns an unordered set. Use getCommit for a single commit, which fails when the commit
+	   is missing.
+	*/
 	BatchGetCommits(ctx context.Context, authHeader bearertoken.Token, resourceAndCommitIdsArg []api5.ResourceAndCommitId) ([]api5.Commit, error)
 	/*
-	   Returns the commit pointed to by the branch.
-	   Throws if the branch doesn't exist.
+	   Gets the commit that a branch of a versioned resource, such as a checklist or workbook template,
+	   currently points to.
+
+	   The caller needs view access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:BranchNotFound): the resource has no branch with this name.
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
 	*/
 	GetCommitByBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Commit, error)
 	/*
-	   Returns the commit pointed to by the tag.
-	   Throws if the tag doesn't exist.
+	   Gets the commit that a tag of a versioned resource, such as a checklist or workbook template,
+	   points to.
+
+	   The caller needs view access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TagNotFound): the resource has no tag with this name.
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
 	*/
 	GetCommitByTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Commit, error)
 	/*
-	   Returns the least common ancestor of the two commits.
-	   Throws if either commit doesn't exist.
+	   Finds the nearest commit that two commits of a versioned resource, such as a checklist or
+	   workbook template, share in their parent chains, and returns its commit id.
+
+	   A commit counts as its own ancestor, so when one commit is an ancestor of the other, or both ids
+	   are the same, the result is that commit. Merge parents are not followed. The caller needs view
+	   access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
+	   - NOT_FOUND (Scout:CommitNotFound): either commit does not exist for the resource.
 	*/
 	GetLeastCommonAncestor(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, requestArg api5.GetLeastCommonAncestorRequest) (api5.CommitId, error)
 	/*
-	   Returns the commit history sorted by creation time descending.
-	   Excludes working state commits unless includeWorkingState is true.
-	   Throws if the commit doesn't exist.
+	   Lists the commits (saved versions) of a versioned resource, such as a checklist or workbook
+	   template, newest first, starting at the given commit and walking back through parent commits.
+
+	   The given commit is the first entry, unless it is an excluded working-state commit. Merge
+	   parents are not followed. Working-state commits are excluded unless includeWorkingState is
+	   true; they may later be compacted and cease to exist.
+	   Returns one page of pageSize commits, with a nextPageToken while more remain. Pass the token
+	   unchanged to read the next page; the walk then resumes after the token's commit, and the given
+	   commit is only checked for existence. A pageSize of 0 or less returns at most one commit. The
+	   caller needs view access to the resource.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:HistoryPageSizeTooLarge): pageSize is larger than 1000.
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
+	   - NOT_FOUND (Scout:CommitNotFound): the given commit, or the commit named by nextPageToken, does
+	     not exist for the resource.
 	*/
 	GetCommitHistory(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token, includeWorkingStateArg *bool) (api5.CommitHistory, error)
 	/*
@@ -2457,22 +3436,57 @@ type VersioningServiceClient interface {
 	   or none are (in the case of an error).
 	*/
 	PersistCommits(ctx context.Context, authHeader bearertoken.Token, requestArg []api5.ResourceAndCommitId) error
-	// Throws if the branch doesn't exist.
+	/*
+	   Gets a branch (a named pointer to a commit) of a versioned resource, such as a checklist or
+	   workbook template, by name.
+
+	   The caller needs view access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:BranchNotFound): the resource has no branch with this name.
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
+	*/
 	GetBranch(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Branch, error)
 	/*
-	   Returns all branches for the resource in order of
-	   most recently updated.
+	   Lists all branches of a versioned resource, such as a checklist or workbook template, most
+	   recently updated first, without pagination. Returns an empty list when the resource has no
+	   branches.
+
+	   Errors:
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
 	*/
 	GetBranches(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier) ([]api5.Branch, error)
-	// Omits branches that are not authorized.
+	/*
+	   Gets branches by resource and branch name across several versioned resources.
+
+	   Omits branches that do not exist and branches of resources the caller cannot view, without an
+	   error. Returns an unordered set.
+	*/
 	BatchGetBranches(ctx context.Context, authHeader bearertoken.Token, resourceAndBranchesArg []api5.ResourceAndBranchName) ([]api5.Branch, error)
-	// Throws if the tag doesn't exist.
+	/*
+	   Gets a tag (a fixed named pointer to a commit) of a versioned resource, such as a checklist or
+	   workbook template, by name.
+
+	   The caller needs view access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TagNotFound): the resource has no tag with this name.
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
+	*/
 	GetTag(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Tag, error)
-	// Omits tags that are not authorized.
+	/*
+	   Gets the tags that point at the given commits, each given as a resource and commit id.
+
+	   Omits tags of resources the caller cannot view. A commit with no tag adds nothing to the result,
+	   and a commit with several tags returns all of them. Returns an unordered set.
+	*/
 	BatchGetTags(ctx context.Context, authHeader bearertoken.Token, resourceAndCommitsArg []api5.ResourceAndCommitId) ([]api5.Tag, error)
 	/*
-	   Returns all tags for the resource in order of
-	   most recently created.
+	   Lists all tags of a versioned resource, such as a checklist or workbook template, most recently
+	   created first, without pagination. Returns an empty list when the resource has no tags.
+
+	   Errors:
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
 	*/
 	GetTagsByResource(ctx context.Context, authHeader bearertoken.Token, resourceRidArg rid.ResourceIdentifier) ([]api5.Tag, error)
 	/*
@@ -2830,29 +3844,78 @@ type VersioningServiceClientWithAuth interface {
 	   Throws if the provided commit doesn't exist.
 	*/
 	CreateTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.CreateTagRequest) (api5.Tag, error)
-	// Throws if the commit doesn't exist.
+	/*
+	   Gets one commit (a saved version) of a versioned resource, such as a checklist or workbook
+	   template, by commit id. Returns the commit whether it is permanent or a working-state commit.
+
+	   The caller needs view access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
+	   - NOT_FOUND (Scout:CommitNotFound): the resource has no commit with this id.
+	*/
 	GetCommit(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId) (api5.Commit, error)
-	// Filters out resources that are not authorized.
+	/*
+	   Gets commits (saved versions) of several versioned resources, such as checklists and workbook
+	   templates, each named by resource and commit id.
+
+	   Omits commits of resources the caller cannot view and commits that do not exist, without an
+	   error. Returns an unordered set. Use getCommit for a single commit, which fails when the commit
+	   is missing.
+	*/
 	BatchGetCommits(ctx context.Context, resourceAndCommitIdsArg []api5.ResourceAndCommitId) ([]api5.Commit, error)
 	/*
-	   Returns the commit pointed to by the branch.
-	   Throws if the branch doesn't exist.
+	   Gets the commit that a branch of a versioned resource, such as a checklist or workbook template,
+	   currently points to.
+
+	   The caller needs view access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:BranchNotFound): the resource has no branch with this name.
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
 	*/
 	GetCommitByBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Commit, error)
 	/*
-	   Returns the commit pointed to by the tag.
-	   Throws if the tag doesn't exist.
+	   Gets the commit that a tag of a versioned resource, such as a checklist or workbook template,
+	   points to.
+
+	   The caller needs view access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TagNotFound): the resource has no tag with this name.
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
 	*/
 	GetCommitByTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Commit, error)
 	/*
-	   Returns the least common ancestor of the two commits.
-	   Throws if either commit doesn't exist.
+	   Finds the nearest commit that two commits of a versioned resource, such as a checklist or
+	   workbook template, share in their parent chains, and returns its commit id.
+
+	   A commit counts as its own ancestor, so when one commit is an ancestor of the other, or both ids
+	   are the same, the result is that commit. Merge parents are not followed. The caller needs view
+	   access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
+	   - NOT_FOUND (Scout:CommitNotFound): either commit does not exist for the resource.
 	*/
 	GetLeastCommonAncestor(ctx context.Context, resourceRidArg rid.ResourceIdentifier, requestArg api5.GetLeastCommonAncestorRequest) (api5.CommitId, error)
 	/*
-	   Returns the commit history sorted by creation time descending.
-	   Excludes working state commits unless includeWorkingState is true.
-	   Throws if the commit doesn't exist.
+	   Lists the commits (saved versions) of a versioned resource, such as a checklist or workbook
+	   template, newest first, starting at the given commit and walking back through parent commits.
+
+	   The given commit is the first entry, unless it is an excluded working-state commit. Merge
+	   parents are not followed. Working-state commits are excluded unless includeWorkingState is
+	   true; they may later be compacted and cease to exist.
+	   Returns one page of pageSize commits, with a nextPageToken while more remain. Pass the token
+	   unchanged to read the next page; the walk then resumes after the token's commit, and the given
+	   commit is only checked for existence. A pageSize of 0 or less returns at most one commit. The
+	   caller needs view access to the resource.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:HistoryPageSizeTooLarge): pageSize is larger than 1000.
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
+	   - NOT_FOUND (Scout:CommitNotFound): the given commit, or the commit named by nextPageToken, does
+	     not exist for the resource.
 	*/
 	GetCommitHistory(ctx context.Context, resourceRidArg rid.ResourceIdentifier, commitIdArg api5.CommitId, pageSizeArg *int, nextPageTokenArg *api7.Token, includeWorkingStateArg *bool) (api5.CommitHistory, error)
 	/*
@@ -2861,22 +3924,57 @@ type VersioningServiceClientWithAuth interface {
 	   or none are (in the case of an error).
 	*/
 	PersistCommits(ctx context.Context, requestArg []api5.ResourceAndCommitId) error
-	// Throws if the branch doesn't exist.
+	/*
+	   Gets a branch (a named pointer to a commit) of a versioned resource, such as a checklist or
+	   workbook template, by name.
+
+	   The caller needs view access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:BranchNotFound): the resource has no branch with this name.
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
+	*/
 	GetBranch(ctx context.Context, resourceRidArg rid.ResourceIdentifier, branchNameArg api5.BranchName) (api5.Branch, error)
 	/*
-	   Returns all branches for the resource in order of
-	   most recently updated.
+	   Lists all branches of a versioned resource, such as a checklist or workbook template, most
+	   recently updated first, without pagination. Returns an empty list when the resource has no
+	   branches.
+
+	   Errors:
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
 	*/
 	GetBranches(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api5.Branch, error)
-	// Omits branches that are not authorized.
+	/*
+	   Gets branches by resource and branch name across several versioned resources.
+
+	   Omits branches that do not exist and branches of resources the caller cannot view, without an
+	   error. Returns an unordered set.
+	*/
 	BatchGetBranches(ctx context.Context, resourceAndBranchesArg []api5.ResourceAndBranchName) ([]api5.Branch, error)
-	// Throws if the tag doesn't exist.
+	/*
+	   Gets a tag (a fixed named pointer to a commit) of a versioned resource, such as a checklist or
+	   workbook template, by name.
+
+	   The caller needs view access to the resource.
+
+	   Errors:
+	   - NOT_FOUND (Scout:TagNotFound): the resource has no tag with this name.
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
+	*/
 	GetTag(ctx context.Context, resourceRidArg rid.ResourceIdentifier, tagNameArg api5.TagName) (api5.Tag, error)
-	// Omits tags that are not authorized.
+	/*
+	   Gets the tags that point at the given commits, each given as a resource and commit id.
+
+	   Omits tags of resources the caller cannot view. A commit with no tag adds nothing to the result,
+	   and a commit with several tags returns all of them. Returns an unordered set.
+	*/
 	BatchGetTags(ctx context.Context, resourceAndCommitsArg []api5.ResourceAndCommitId) ([]api5.Tag, error)
 	/*
-	   Returns all tags for the resource in order of
-	   most recently created.
+	   Lists all tags of a versioned resource, such as a checklist or workbook template, most recently
+	   created first, without pagination. Returns an empty list when the resource has no tags.
+
+	   Errors:
+	   - NOT_FOUND (Scout:ResourceNotFound): the caller cannot view the resource.
 	*/
 	GetTagsByResource(ctx context.Context, resourceRidArg rid.ResourceIdentifier) ([]api5.Tag, error)
 	/*

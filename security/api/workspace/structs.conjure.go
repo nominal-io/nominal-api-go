@@ -106,9 +106,12 @@ func (o *RemoveType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type UpdateWorkspaceRequest struct {
+	// Absent leaves the display name unchanged. Changing it needs an organization admin.
 	DisplayName *UpdateOrRemoveWorkspaceDisplayName `json:"displayName,omitempty"`
-	Symbol      *UpdateOrRemoveWorkspaceSymbol      `json:"symbol,omitempty"`
-	Settings    *WorkspaceSettings                  `json:"settings,omitempty"`
+	// Absent leaves the symbol unchanged.
+	Symbol *UpdateOrRemoveWorkspaceSymbol `json:"symbol,omitempty"`
+	// Absent leaves all settings unchanged. A settings field you omit keeps its current value.
+	Settings *WorkspaceSettings `json:"settings,omitempty"`
 }
 
 func (o UpdateWorkspaceRequest) MarshalYAML() (interface{}, error) {
@@ -127,6 +130,7 @@ func (o *UpdateWorkspaceRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// An isolation boundary that holds the assets, data sources, runs, workbooks, and users of a team.
 // safelogging:@Unsafe
 type Workspace struct {
 	// A unique identifier for the workspace within the organization. The workspace ID must be lower case alphanumeric characters, optionally separated by hyphens.
@@ -154,7 +158,9 @@ func (o *Workspace) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Settings that apply to the whole workspace.
 type WorkspaceSettings struct {
+	// Preferred ref names (data scope names), each with the type of data source it names.
 	RefNames   *PreferredRefNameConfiguration `json:"refNames,omitempty"`
 	Procedures *ProcedureSettings             `json:"procedures,omitempty"`
 }

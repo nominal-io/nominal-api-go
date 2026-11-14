@@ -17,13 +17,25 @@ import (
 
 // The Series Cache service manages internal chunks of data cached by Nominal's backend.
 type SeriesCacheServiceClient interface {
-	/*
-	   Fetches "chunks" of series that are stored as Arrow files in S3.
-	   This endpoint is being deprecated for new series in favor of batchGetCachedSeries
-	*/
+	// Fetches "chunks" of series that are stored as Arrow files in S3.
 	GetChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, getChunksParametersArg api1.GetChunksParameters) (api1.GetChunksResponse, error)
 	// Deprecated: Deprecated in favor of batchCreateChunks
 	CreateChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, createChunksParametersArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error)
+	/*
+	   Registers chunks (Arrow files in S3 that hold cached series data) for one or more series, and
+	   returns the new chunk RIDs in the same order as the requests.
+
+	   The server assigns each chunk RID and does not read or check the files. The caller needs permission
+	   to edit metadata on the data source behind every series in the request. Each chunk is identified by
+	   its series, start time, end time, and resolution, and a series cannot hold two chunks with the same
+	   four values.
+
+	   Errors:
+	   - NOT_FOUND (LogicalSeries:LogicalSeriesNotFound): a series does not exist, or the caller cannot edit
+	     the data source behind it.
+	   - CONFLICT (SeriesCache:ChunkAlreadyExists): a chunk with the same series, start time, end time, and
+	     resolution already exists.
+	*/
 	BatchCreateChunks(ctx context.Context, authHeader bearertoken.Token, requestArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error)
 	// Deletes the chunks that intersect the given time range. Does not delete the corresponding files from S3.
 	DeleteChunks(ctx context.Context, authHeader bearertoken.Token, logicalSeriesRidArg api.LogicalSeriesRid, requestArg api1.DeleteChunksParameters) (api1.DeleteChunksResponse, error)
@@ -111,13 +123,25 @@ func (c *seriesCacheServiceClient) DeleteChunks(ctx context.Context, authHeader 
 
 // The Series Cache service manages internal chunks of data cached by Nominal's backend.
 type SeriesCacheServiceClientWithAuth interface {
-	/*
-	   Fetches "chunks" of series that are stored as Arrow files in S3.
-	   This endpoint is being deprecated for new series in favor of batchGetCachedSeries
-	*/
+	// Fetches "chunks" of series that are stored as Arrow files in S3.
 	GetChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, getChunksParametersArg api1.GetChunksParameters) (api1.GetChunksResponse, error)
 	// Deprecated: Deprecated in favor of batchCreateChunks
 	CreateChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, createChunksParametersArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error)
+	/*
+	   Registers chunks (Arrow files in S3 that hold cached series data) for one or more series, and
+	   returns the new chunk RIDs in the same order as the requests.
+
+	   The server assigns each chunk RID and does not read or check the files. The caller needs permission
+	   to edit metadata on the data source behind every series in the request. Each chunk is identified by
+	   its series, start time, end time, and resolution, and a series cannot hold two chunks with the same
+	   four values.
+
+	   Errors:
+	   - NOT_FOUND (LogicalSeries:LogicalSeriesNotFound): a series does not exist, or the caller cannot edit
+	     the data source behind it.
+	   - CONFLICT (SeriesCache:ChunkAlreadyExists): a chunk with the same series, start time, end time, and
+	     resolution already exists.
+	*/
 	BatchCreateChunks(ctx context.Context, requestArg api1.CreateChunksParameters) (api1.CreateChunksResponse, error)
 	// Deletes the chunks that intersect the given time range. Does not delete the corresponding files from S3.
 	DeleteChunks(ctx context.Context, logicalSeriesRidArg api.LogicalSeriesRid, requestArg api1.DeleteChunksParameters) (api1.DeleteChunksResponse, error)

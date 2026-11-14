@@ -20,9 +20,31 @@ Creating favorites allows users to pin specific resources (i.e. assets, workbook
 quick access within search pages throughout the application for themselves.
 */
 type FavoritesServiceClient interface {
-	// Retrieves the favorites list for the current user in the specified workspace.
+	/*
+	   Lists the caller's own favorites in one workspace: starred assets, runs, workbooks (notebooks in the
+	   API), workbook templates, checklists, saved views, procedures, and plans.
+
+	   Returns them in the order the caller last set them, optionally limited to some resource types. Other
+	   users cannot see them.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot view the workspace.
+	*/
 	GetFavoritesList(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid, resourceTypesArg []api.ResourceType) (api.FavoritesListResponse, error)
-	// Overwrites the favorites list for the current user in the specified workspace.
+	/*
+	   Replaces the caller's whole favorites list in one workspace with the given resources, in the given
+	   order. Returns the saved list.
+
+	   An empty list clears it. Favorites of every resource type are replaced. Each resource must exist, be
+	   accessible to the caller, and be in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot view the workspace.
+	   - INVALID_ARGUMENT (Favorites:DuplicateResourcesError): a resource appears twice.
+	   - NOT_FOUND (Favorites:ResourcesNotFoundError): a resource does not exist or the caller cannot access
+	     it.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a resource is in another workspace.
+	*/
 	SetFavoritesList(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid, requestArg api.SetFavoritesListRequest) (api.FavoritesListResponse, error)
 }
 
@@ -79,9 +101,31 @@ Creating favorites allows users to pin specific resources (i.e. assets, workbook
 quick access within search pages throughout the application for themselves.
 */
 type FavoritesServiceClientWithAuth interface {
-	// Retrieves the favorites list for the current user in the specified workspace.
+	/*
+	   Lists the caller's own favorites in one workspace: starred assets, runs, workbooks (notebooks in the
+	   API), workbook templates, checklists, saved views, procedures, and plans.
+
+	   Returns them in the order the caller last set them, optionally limited to some resource types. Other
+	   users cannot see them.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot view the workspace.
+	*/
 	GetFavoritesList(ctx context.Context, workspaceRidArg rids.WorkspaceRid, resourceTypesArg []api.ResourceType) (api.FavoritesListResponse, error)
-	// Overwrites the favorites list for the current user in the specified workspace.
+	/*
+	   Replaces the caller's whole favorites list in one workspace with the given resources, in the given
+	   order. Returns the saved list.
+
+	   An empty list clears it. Favorites of every resource type are replaced. Each resource must exist, be
+	   accessible to the caller, and be in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot view the workspace.
+	   - INVALID_ARGUMENT (Favorites:DuplicateResourcesError): a resource appears twice.
+	   - NOT_FOUND (Favorites:ResourcesNotFoundError): a resource does not exist or the caller cannot access
+	     it.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a resource is in another workspace.
+	*/
 	SetFavoritesList(ctx context.Context, workspaceRidArg rids.WorkspaceRid, requestArg api.SetFavoritesListRequest) (api.FavoritesListResponse, error)
 }
 

@@ -24,15 +24,12 @@ type SandboxWorkspaceServiceClient interface {
 	// Sets the list of demo workbook RIDs for the given sandbox workspace, replacing any existing entries.
 	SetDemoWorkbooks(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid, requestArg SetDemoWorkbooksRequest) error
 	/*
-	   Appends workbooks to the existing demo workbook list. If archiveOnLabelConflict is true,
-	   existing workbooks with an exact label-set match are archived along with all related
-	   resources instead of raising an error. The cascade performs a full graph traversal:
-	   starting from the workbook's data scope (asset RIDs or run RIDs), it alternates between
-	   discovering runs linked to assets and assets linked to runs until convergence. All
-	   discovered assets, runs, datasets (from both asset and run data scopes), and events
-	   (from snapshot refs and from all discovered assets) are then archived. This ensures no
-	   orphaned resources remain when demo workbooks are replaced. Partial (subset/superset)
-	   label conflicts always raise an error.
+	   Appends workbooks to the existing demo workbook list. If archiveOnLabelConflict is true, existing workbooks
+	   with an exact label-set match are archived along with all related resources instead of raising an error.
+	   This archives the connected assets, runs, datasets, and events, so no orphaned resources remain when demo
+	   workbooks are replaced.
+
+	   Partial (subset or superset) label conflicts always raise an error.
 	*/
 	AddDemoWorkbooks(ctx context.Context, authHeader bearertoken.Token, workspaceRidArg rids.WorkspaceRid, requestArg AddDemoWorkbooksRequest) error
 }
@@ -98,15 +95,12 @@ type SandboxWorkspaceServiceClientWithAuth interface {
 	// Sets the list of demo workbook RIDs for the given sandbox workspace, replacing any existing entries.
 	SetDemoWorkbooks(ctx context.Context, workspaceRidArg rids.WorkspaceRid, requestArg SetDemoWorkbooksRequest) error
 	/*
-	   Appends workbooks to the existing demo workbook list. If archiveOnLabelConflict is true,
-	   existing workbooks with an exact label-set match are archived along with all related
-	   resources instead of raising an error. The cascade performs a full graph traversal:
-	   starting from the workbook's data scope (asset RIDs or run RIDs), it alternates between
-	   discovering runs linked to assets and assets linked to runs until convergence. All
-	   discovered assets, runs, datasets (from both asset and run data scopes), and events
-	   (from snapshot refs and from all discovered assets) are then archived. This ensures no
-	   orphaned resources remain when demo workbooks are replaced. Partial (subset/superset)
-	   label conflicts always raise an error.
+	   Appends workbooks to the existing demo workbook list. If archiveOnLabelConflict is true, existing workbooks
+	   with an exact label-set match are archived along with all related resources instead of raising an error.
+	   This archives the connected assets, runs, datasets, and events, so no orphaned resources remain when demo
+	   workbooks are replaced.
+
+	   Partial (subset or superset) label conflicts always raise an error.
 	*/
 	AddDemoWorkbooks(ctx context.Context, workspaceRidArg rids.WorkspaceRid, requestArg AddDemoWorkbooksRequest) error
 }

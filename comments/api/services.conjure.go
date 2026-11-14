@@ -17,27 +17,121 @@ import (
 // Comments service manages conversations about resources.
 type CommentsServiceClient interface {
 	/*
-	   A conversation is a fully resolved comment tree. It includes all comments for the given resource
-	   and all the nested comments/replies to those comments.
+	   Gets the comments on a run or event as a conversation: every comment on the resource, oldest first, with
+	   each comment's replies nested under it.
+
+	   Replies are also oldest first. The conversation includes deleted comments, which have deletedAt set and empty
+	   content. The caller needs permission to view the run or event.
+
+	   Errors:
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot view the run or event.
 	*/
 	GetConversation(ctx context.Context, authHeader bearertoken.Token, resourceTypeArg ResourceType, resourceRidArg rid.ResourceIdentifier) (Conversation, error)
-	// Returns the number of comments in a conversation.
+	/*
+	   Counts the comments and replies on a run or event.
+
+	   Deleted comments are excluded unless includeDeleted is true. The caller needs permission to view the run or
+	   event.
+
+	   Errors:
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot view the run or event.
+	*/
 	GetConversationCount(ctx context.Context, authHeader bearertoken.Token, resourceTypeArg ResourceType, resourceRidArg rid.ResourceIdentifier, includeDeletedArg *bool) (int, error)
-	// Get a comment identified by its RID
+	/*
+	   Gets one comment or reply by RID, with its reactions and attachments.
+
+	   A deleted comment is still returned, with deletedAt set and empty content. The caller needs permission to view
+	   the run or event that the comment belongs to.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot view the run or event that the comment belongs
+	     to.
+	*/
 	GetComment(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid) (Comment, error)
-	// Create a comment on a resource
+	/*
+	   Creates a comment on a run or event, or a reply to an existing comment, authored by the caller. Returns the
+	   new comment.
+
+	   The server sets the RID, author, and creation time. Content is markdown and must be 1 to 65535 characters.
+	   Every attachment must exist and be visible to the caller. A reply can target only a comment that is not itself
+	   a reply. The caller needs access to the run or event, or to the one that the parent comment belongs to.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Comments:EmptyCommentContent): the content is empty.
+	   - INVALID_ARGUMENT (Comments:ContentTooLong): the content is longer than 65535 characters.
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): an attachment does not exist or the caller cannot view it.
+	   - NOT_FOUND (Comments:CommentNotFound): the comment to reply to does not exist.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot access the run or event.
+	   - INVALID_ARGUMENT (Comments:MaxNestingDepthExceeded): the comment to reply to is itself a reply.
+	*/
 	CreateComment(ctx context.Context, authHeader bearertoken.Token, requestArg CreateCommentRequest) (Comment, error)
-	// Edit an existing comment
+	/*
+	   Replaces the content and attachments of a comment. Only its author can edit it. Returns the updated comment.
+
+	   Content is markdown and must be 1 to 65535 characters. Attachments that the request omits are removed from
+	   the comment, and every attachment sent must exist and be visible to the caller. The server sets editedAt.
+	   The parent, author, and reactions do not change.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Comments:EmptyCommentContent): the content is empty.
+	   - INVALID_ARGUMENT (Comments:ContentTooLong): the content is longer than 65535 characters.
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): an attachment does not exist or the caller cannot view it.
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller is not the author of the comment.
+	*/
 	EditComment(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid, requestArg EditCommentRequest) (Comment, error)
-	// Delete an existing comment
+	/*
+	   Soft-deletes a comment. Only its author can delete it. Returns the deleted comment.
+
+	   The comment stays in conversations with deletedAt set, and its content is returned empty.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID, or the comment is already deleted.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller is not the author of the comment.
+	*/
 	DeleteComment(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid) (Comment, error)
-	// Pin a comment to the top of the conversation
+	/*
+	   Pins a comment on a run or event, recording who pinned it and when. Returns the comment.
+
+	   Any caller with access to the run or event can pin a comment, not only its author. Pinned comments keep
+	   their place in the conversation order.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID, or the comment is already pinned.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot access the run or event.
+	*/
 	PinComment(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid) (Comment, error)
-	// Unpin a comment from the top of the conversation
+	/*
+	   Clears the pin on a comment. Returns the comment.
+
+	   Succeeds when the comment is not pinned. Any caller with access to the run or event can unpin a comment.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot access the run or event.
+	*/
 	UnpinComment(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid) (Comment, error)
-	// Create a reaction on a comment
+	/*
+	   Adds the caller's reaction of the given type, such as like or heart, to a comment. Returns the comment.
+
+	   Each user can add each type once per comment.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID, or the caller already added this type of
+	     reaction to the comment.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot access the run or event.
+	*/
 	AddReaction(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid, typeArg ReactionType) (Comment, error)
-	// Create a reaction on a comment
+	/*
+	   Removes the caller's reaction of the given type from a comment. Returns the comment.
+
+	   Succeeds when the caller had not added that reaction. Reactions from other users stay.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot access the run or event.
+	*/
 	RemoveReaction(ctx context.Context, authHeader bearertoken.Token, commentRidArg CommentRid, typeArg ReactionType) (Comment, error)
 }
 
@@ -229,27 +323,121 @@ func (c *commentsServiceClient) RemoveReaction(ctx context.Context, authHeader b
 // Comments service manages conversations about resources.
 type CommentsServiceClientWithAuth interface {
 	/*
-	   A conversation is a fully resolved comment tree. It includes all comments for the given resource
-	   and all the nested comments/replies to those comments.
+	   Gets the comments on a run or event as a conversation: every comment on the resource, oldest first, with
+	   each comment's replies nested under it.
+
+	   Replies are also oldest first. The conversation includes deleted comments, which have deletedAt set and empty
+	   content. The caller needs permission to view the run or event.
+
+	   Errors:
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot view the run or event.
 	*/
 	GetConversation(ctx context.Context, resourceTypeArg ResourceType, resourceRidArg rid.ResourceIdentifier) (Conversation, error)
-	// Returns the number of comments in a conversation.
+	/*
+	   Counts the comments and replies on a run or event.
+
+	   Deleted comments are excluded unless includeDeleted is true. The caller needs permission to view the run or
+	   event.
+
+	   Errors:
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot view the run or event.
+	*/
 	GetConversationCount(ctx context.Context, resourceTypeArg ResourceType, resourceRidArg rid.ResourceIdentifier, includeDeletedArg *bool) (int, error)
-	// Get a comment identified by its RID
+	/*
+	   Gets one comment or reply by RID, with its reactions and attachments.
+
+	   A deleted comment is still returned, with deletedAt set and empty content. The caller needs permission to view
+	   the run or event that the comment belongs to.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot view the run or event that the comment belongs
+	     to.
+	*/
 	GetComment(ctx context.Context, commentRidArg CommentRid) (Comment, error)
-	// Create a comment on a resource
+	/*
+	   Creates a comment on a run or event, or a reply to an existing comment, authored by the caller. Returns the
+	   new comment.
+
+	   The server sets the RID, author, and creation time. Content is markdown and must be 1 to 65535 characters.
+	   Every attachment must exist and be visible to the caller. A reply can target only a comment that is not itself
+	   a reply. The caller needs access to the run or event, or to the one that the parent comment belongs to.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Comments:EmptyCommentContent): the content is empty.
+	   - INVALID_ARGUMENT (Comments:ContentTooLong): the content is longer than 65535 characters.
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): an attachment does not exist or the caller cannot view it.
+	   - NOT_FOUND (Comments:CommentNotFound): the comment to reply to does not exist.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot access the run or event.
+	   - INVALID_ARGUMENT (Comments:MaxNestingDepthExceeded): the comment to reply to is itself a reply.
+	*/
 	CreateComment(ctx context.Context, requestArg CreateCommentRequest) (Comment, error)
-	// Edit an existing comment
+	/*
+	   Replaces the content and attachments of a comment. Only its author can edit it. Returns the updated comment.
+
+	   Content is markdown and must be 1 to 65535 characters. Attachments that the request omits are removed from
+	   the comment, and every attachment sent must exist and be visible to the caller. The server sets editedAt.
+	   The parent, author, and reactions do not change.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Comments:EmptyCommentContent): the content is empty.
+	   - INVALID_ARGUMENT (Comments:ContentTooLong): the content is longer than 65535 characters.
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): an attachment does not exist or the caller cannot view it.
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller is not the author of the comment.
+	*/
 	EditComment(ctx context.Context, commentRidArg CommentRid, requestArg EditCommentRequest) (Comment, error)
-	// Delete an existing comment
+	/*
+	   Soft-deletes a comment. Only its author can delete it. Returns the deleted comment.
+
+	   The comment stays in conversations with deletedAt set, and its content is returned empty.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID, or the comment is already deleted.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller is not the author of the comment.
+	*/
 	DeleteComment(ctx context.Context, commentRidArg CommentRid) (Comment, error)
-	// Pin a comment to the top of the conversation
+	/*
+	   Pins a comment on a run or event, recording who pinned it and when. Returns the comment.
+
+	   Any caller with access to the run or event can pin a comment, not only its author. Pinned comments keep
+	   their place in the conversation order.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID, or the comment is already pinned.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot access the run or event.
+	*/
 	PinComment(ctx context.Context, commentRidArg CommentRid) (Comment, error)
-	// Unpin a comment from the top of the conversation
+	/*
+	   Clears the pin on a comment. Returns the comment.
+
+	   Succeeds when the comment is not pinned. Any caller with access to the run or event can unpin a comment.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot access the run or event.
+	*/
 	UnpinComment(ctx context.Context, commentRidArg CommentRid) (Comment, error)
-	// Create a reaction on a comment
+	/*
+	   Adds the caller's reaction of the given type, such as like or heart, to a comment. Returns the comment.
+
+	   Each user can add each type once per comment.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID, or the caller already added this type of
+	     reaction to the comment.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot access the run or event.
+	*/
 	AddReaction(ctx context.Context, commentRidArg CommentRid, typeArg ReactionType) (Comment, error)
-	// Create a reaction on a comment
+	/*
+	   Removes the caller's reaction of the given type from a comment. Returns the comment.
+
+	   Succeeds when the caller had not added that reaction. Reactions from other users stay.
+
+	   Errors:
+	   - NOT_FOUND (Comments:CommentNotFound): no comment has this RID.
+	   - PERMISSION_DENIED (Comments:Unauthorized): the caller cannot access the run or event.
+	*/
 	RemoveReaction(ctx context.Context, commentRidArg CommentRid, typeArg ReactionType) (Comment, error)
 }
 

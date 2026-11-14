@@ -339,6 +339,7 @@ type SearchQuery struct {
 	workspace              *rids.WorkspaceRid
 	lockStatus             *LockStatus
 	datasetRids            *[]rids.DatasetRid
+	assetTypes             *[]api.TypeRid
 }
 
 type searchQueryDeserializer struct {
@@ -374,10 +375,11 @@ type searchQueryDeserializer struct {
 	Workspace              *rids.WorkspaceRid                  `json:"workspace"`
 	LockStatus             *LockStatus                         `json:"lockStatus"`
 	DatasetRids            *[]rids.DatasetRid                  `json:"datasetRids"`
+	AssetTypes             *[]api.TypeRid                      `json:"assetTypes"`
 }
 
 func (u *searchQueryDeserializer) toStruct() SearchQuery {
-	return SearchQuery{typ: u.Type, startTimeInclusive: u.StartTimeInclusive, startTime: u.StartTime, endTimeInclusive: u.EndTimeInclusive, endTime: u.EndTime, timeRange: u.TimeRange, createdAt: u.CreatedAt, exactMatch: u.ExactMatch, searchText: u.SearchText, asset: u.Asset, assets: u.Assets, isSingleAsset: u.IsSingleAsset, label: u.Label, labels: u.Labels, property: u.Property, propertyKey: u.PropertyKey, properties: u.Properties, numericProperty: u.NumericProperty, numericPropertyRange: u.NumericPropertyRange, dataSourceSeriesTag: u.DataSourceSeriesTag, dataSourceRefName: u.DataSourceRefName, dataSource: u.DataSource, runNumber: u.RunNumber, runPrefix: u.RunPrefix, checkAlertStatesFilter: u.CheckAlertStatesFilter, archived: u.Archived, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, lockStatus: u.LockStatus, datasetRids: u.DatasetRids}
+	return SearchQuery{typ: u.Type, startTimeInclusive: u.StartTimeInclusive, startTime: u.StartTime, endTimeInclusive: u.EndTimeInclusive, endTime: u.EndTime, timeRange: u.TimeRange, createdAt: u.CreatedAt, exactMatch: u.ExactMatch, searchText: u.SearchText, asset: u.Asset, assets: u.Assets, isSingleAsset: u.IsSingleAsset, label: u.Label, labels: u.Labels, property: u.Property, propertyKey: u.PropertyKey, properties: u.Properties, numericProperty: u.NumericProperty, numericPropertyRange: u.NumericPropertyRange, dataSourceSeriesTag: u.DataSourceSeriesTag, dataSourceRefName: u.DataSourceRefName, dataSource: u.DataSource, runNumber: u.RunNumber, runPrefix: u.RunPrefix, checkAlertStatesFilter: u.CheckAlertStatesFilter, archived: u.Archived, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, lockStatus: u.LockStatus, datasetRids: u.DatasetRids, assetTypes: u.AssetTypes}
 }
 
 func (u *SearchQuery) toSerializer() (interface{}, error) {
@@ -632,6 +634,14 @@ func (u *SearchQuery) toSerializer() (interface{}, error) {
 			Type        string            `json:"type"`
 			DatasetRids []rids.DatasetRid `json:"datasetRids"`
 		}{Type: "datasetRids", DatasetRids: *u.datasetRids}, nil
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return nil, fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return struct {
+			Type       string        `json:"type"`
+			AssetTypes []api.TypeRid `json:"assetTypes"`
+		}{Type: "assetTypes", AssetTypes: *u.assetTypes}, nil
 	}
 }
 
@@ -774,6 +784,10 @@ func (u *SearchQuery) UnmarshalJSON(data []byte) error {
 		if u.datasetRids == nil {
 			return fmt.Errorf("field \"datasetRids\" is required")
 		}
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
 	}
 	return nil
 }
@@ -794,7 +808,7 @@ func (u *SearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) error, startTimeFunc func(TimeframeFilter) error, endTimeInclusiveFunc func(UtcTimestamp) error, endTimeFunc func(TimeframeFilter) error, timeRangeFunc func(TimeRangeFilter) error, createdAtFunc func(TimeframeFilter) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, assetFunc func(api.AssetRid) error, assetsFunc func(AssetsFilter) error, isSingleAssetFunc func(bool) error, labelFunc func(api1.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api1.Property) error, propertyKeyFunc func(api1.PropertyName) error, propertiesFunc func(api.PropertiesFilter) error, numericPropertyFunc func(api1.NumericPropertyPredicate) error, numericPropertyRangeFunc func(api1.NumericPropertyRangePredicate) error, dataSourceSeriesTagFunc func(DataSourceSeriesTag) error, dataSourceRefNameFunc func(api2.DataSourceRefName) error, dataSourceFunc func(DataSource) error, runNumberFunc func(safelong.SafeLong) error, runPrefixFunc func(string) error, checkAlertStatesFilterFunc func(CheckAlertStatesFilter) error, archivedFunc func(bool) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, lockStatusFunc func(LockStatus) error, datasetRidsFunc func([]rids.DatasetRid) error, unknownFunc func(string) error) error {
+func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) error, startTimeFunc func(TimeframeFilter) error, endTimeInclusiveFunc func(UtcTimestamp) error, endTimeFunc func(TimeframeFilter) error, timeRangeFunc func(TimeRangeFilter) error, createdAtFunc func(TimeframeFilter) error, exactMatchFunc func(string) error, searchTextFunc func(string) error, assetFunc func(api.AssetRid) error, assetsFunc func(AssetsFilter) error, isSingleAssetFunc func(bool) error, labelFunc func(api1.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api1.Property) error, propertyKeyFunc func(api1.PropertyName) error, propertiesFunc func(api.PropertiesFilter) error, numericPropertyFunc func(api1.NumericPropertyPredicate) error, numericPropertyRangeFunc func(api1.NumericPropertyRangePredicate) error, dataSourceSeriesTagFunc func(DataSourceSeriesTag) error, dataSourceRefNameFunc func(api2.DataSourceRefName) error, dataSourceFunc func(DataSource) error, runNumberFunc func(safelong.SafeLong) error, runPrefixFunc func(string) error, checkAlertStatesFilterFunc func(CheckAlertStatesFilter) error, archivedFunc func(bool) error, andFunc func([]SearchQuery) error, orFunc func([]SearchQuery) error, notFunc func(SearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, lockStatusFunc func(LockStatus) error, datasetRidsFunc func([]rids.DatasetRid) error, assetTypesFunc func([]api.TypeRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -956,6 +970,11 @@ func (u *SearchQuery) AcceptFuncs(startTimeInclusiveFunc func(UtcTimestamp) erro
 			return fmt.Errorf("field \"datasetRids\" is required")
 		}
 		return datasetRidsFunc(*u.datasetRids)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return assetTypesFunc(*u.assetTypes)
 	}
 }
 
@@ -1080,6 +1099,10 @@ func (u *SearchQuery) LockStatusNoopSuccess(_ LockStatus) error {
 }
 
 func (u *SearchQuery) DatasetRidsNoopSuccess(_ []rids.DatasetRid) error {
+	return nil
+}
+
+func (u *SearchQuery) AssetTypesNoopSuccess(_ []api.TypeRid) error {
 	return nil
 }
 
@@ -1249,6 +1272,11 @@ func (u *SearchQuery) Accept(v SearchQueryVisitor) error {
 			return fmt.Errorf("field \"datasetRids\" is required")
 		}
 		return v.VisitDatasetRids(*u.datasetRids)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return v.VisitAssetTypes(*u.assetTypes)
 	}
 }
 
@@ -1284,6 +1312,7 @@ type SearchQueryVisitor interface {
 	VisitWorkspace(v rids.WorkspaceRid) error
 	VisitLockStatus(v LockStatus) error
 	VisitDatasetRids(v []rids.DatasetRid) error
+	VisitAssetTypes(v []api.TypeRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1449,6 +1478,11 @@ func (u *SearchQuery) AcceptWithContext(ctx context.Context, v SearchQueryVisito
 			return fmt.Errorf("field \"datasetRids\" is required")
 		}
 		return v.VisitDatasetRidsWithContext(ctx, *u.datasetRids)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return v.VisitAssetTypesWithContext(ctx, *u.assetTypes)
 	}
 }
 
@@ -1484,6 +1518,7 @@ type SearchQueryVisitorWithContext interface {
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
 	VisitLockStatusWithContext(ctx context.Context, v LockStatus) error
 	VisitDatasetRidsWithContext(ctx context.Context, v []rids.DatasetRid) error
+	VisitAssetTypesWithContext(ctx context.Context, v []api.TypeRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1609,6 +1644,10 @@ func NewSearchQueryFromLockStatus(v LockStatus) SearchQuery {
 
 func NewSearchQueryFromDatasetRids(v []rids.DatasetRid) SearchQuery {
 	return SearchQuery{typ: "datasetRids", datasetRids: &v}
+}
+
+func NewSearchQueryFromAssetTypes(v []api.TypeRid) SearchQuery {
+	return SearchQuery{typ: "assetTypes", assetTypes: &v}
 }
 
 type SortKey struct {

@@ -21,18 +21,39 @@ Data sources are data input to runs, including databases, CSV, video, and stream
 The DataSource Service is responsible for indexing and searching channels across data sources.
 */
 type DataSourceServiceClient interface {
-	// Returns channels that match the search criteria. Results are sorted by similarity score.
+	/*
+	   Searches channels in datasets by fuzzy name text, optional required substrings, and data type. Returns one page of channels, sorted by similarity score, with each channel's data source, unit, and data type.
+
+	   Pass nextPageToken from the previous response to get the next page. Derived channels are included. A channel that is in several data sources is returned once for each. The caller needs permission to read data on every listed data source. To filter by tags or time, use searchFilteredChannels.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is over 1000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a previous response.
+	*/
 	SearchChannels(ctx context.Context, authHeader bearertoken.Token, queryArg api.SearchChannelsRequest) (api.SearchChannelsResponse, error)
 	/*
-	   Returns channels that match the search criteria. Results are sorted by similarity score.
-	   If neither minDataUpdatedTime nor maxDataStartTime is provided, the search is bounded to a
-	   default one-month lookback ending now rather than scanning the data source's full history.
+	   Searches channels in datasets by name substrings or one subsequence, with optional per-data-source tag filters and a data time window. Returns up to 200 channels in one unpaged list, ranked by relevance.
+
+	   If neither minDataUpdatedTime nor maxDataStartTime is set, the search covers only the last month of data. If only one is set, the range is used as given. A channel that is in several data sources is returned once for each. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): resultSize is over 200.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT: subsequences is set and does not hold exactly one string.
 	*/
 	SearchFilteredChannels(ctx context.Context, authHeader bearertoken.Token, queryArg api.SearchFilteredChannelsRequest) (api.SearchFilteredChannelsResponse, error)
 	/*
-	   Returns only channels that are direct children of the parent. Returns results sorted alphabetically.
-	   If dataScopeFilters is not provided, the search is bounded to a default one-month lookback ending
-	   now rather than scanning the data source's full history.
+	   Lists the direct children of one level of the channel name hierarchy in datasets: channels and name prefixes. Sorted alphabetically, case-insensitive.
+
+	   Without dataScopeFilters, the search covers only the last month of data. Prefixes come from the channel prefix tree set with indexChannelPrefixTree. Stored channels are capped at 200 per call, and there is no paging. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT (DataSource:NoPrefixTreeForDataSources): none of the data sources has an indexed prefix tree.
+	   - INVALID_ARGUMENT (DataSource:PrefixTreeTooLarge): the prefix tree of a data source has too many nodes to build.
+
+	   Deprecated: Use nominal.channelsearch.v1.ChannelSearchService/ListChannelChildren with a data_source scope.
 	*/
 	SearchHierarchicalChannels(ctx context.Context, authHeader bearertoken.Token, queryArg api.SearchHierarchicalChannelsRequest) (api.SearchHierarchicalChannelsResponse, error)
 	/*
@@ -47,58 +68,114 @@ type DataSourceServiceClient interface {
 	*/
 	ClearChannelPrefixTree(ctx context.Context, authHeader bearertoken.Token, requestArg api.ClearChannelPrefixTreeRequest) error
 	/*
-	   Returns the channel prefix tree for each of the specified data sources. If the tree for a data source has not
-	   been indexed, it will be omitted from the map.
+	   Returns the channel name hierarchy (prefix tree) of each listed data source, split by the delimiter set with indexChannelPrefixTree. Data sources with no indexed tree are omitted from the response map.
+
+	   When dataScopeFilters is set, it limits each tree to its tag filters and time window, and must have an entry in tags for every listed data source. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT (DataSource:MissingTagFilters): dataScopeFilters is set and has no tags entry for a listed data source.
+	   - INVALID_ARGUMENT (DataSource:PrefixTreeTooLarge): the prefix tree of a data source has too many nodes to build.
 	*/
 	BatchGetChannelPrefixTrees(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetChannelPrefixTreeRequest) (api.BatchGetChannelPrefixTreeResponse, error)
 	/*
-	   Returns the the set of all tag keys and their values that are available for the specified channel given an
-	   initial set of filters.
+	   Returns the tag keys, each with its values, that occur on one channel of a data source within a time range, given initial tag filters. The filter tags are included in the result with their values.
+
+	   Tags of derived channels are included. The caller needs permission to read data on the data source.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListChannelTagSets with a data_source scope.
 	*/
 	GetAvailableTagsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetAvailableTagsForChannelRequest) (api.GetAvailableTagsForChannelResponse, error)
 	/*
-	   Returns the maximum data timestamps for the specified data scopes. Responses are returned
-	   in the same order as requests.
+	   Returns the latest data timestamp for each data scope (a data source plus tag filters), in request order. At most 100 data scopes.
+
+	   The end time is absent when it is not known, such as for external databases. A scope with tag filters is checked only over the last month, so it has no end time when it has no recent data. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:BatchSizeTooLarge): the request lists more than 100 data scopes.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
 	*/
 	GetDataScopeBounds(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetDataScopeBoundsRequest) (api.BatchGetDataScopeBoundsResponse, error)
 	/*
-	   Returns the maximum data timestamp across all specified data scopes using aggregate storage queries.
-	   At most 100 data scopes may be requested.
+	   Returns the single latest data timestamp across all listed data scopes (a data source plus tag filters). At most 100 data scopes. For one timestamp per scope, use getDataScopeBounds.
+
+	   The end time is absent when none is known. A scope with tag filters is checked only over the last month. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:BatchSizeTooLarge): the request lists more than 100 data scopes.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
 	*/
 	GetLatestDataScopeEndTime(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetLatestDataScopeEndTimeRequest) (api.GetLatestDataScopeEndTimeResponse, error)
 	/*
-	   Returns available tag values for a given data source for a set of tag keys. For Nominal data sources, a time
-	   range can be provided to filter tag values to those present within the months spanned by the range. If no
-	   time range is provided, this defaults to the last month. For external data sources, the range must not be
-	   specified, as all tag values are returned.
+	   Returns a map from tag key to the set of values for tags on one data source's channels. Limited to the listed tag keys (at most 100; all keys if tagKeys is omitted) and to values within the months the range spans, by default the last month.
+
+	   The caller needs permission to read data on the data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:TooManyTagKeysRequested): tagKeys holds more than 100 keys.
+	   - INVALID_ARGUMENT: maxValuesPerKey is zero or negative.
+	   - INVALID_ARGUMENT (DataSource:TooManyTagValuesRequested): maxValuesPerKey is over 10000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT (Scout:InvalidRange): range starts after its end, for a data source that holds series.
 	*/
 	GetTagValuesForDataSource(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetTagValuesForDataSourceRequest) (map[api1.TagName][]api1.TagValue, error)
 	/*
-	   Paged endpoint returning the set of all tag keys that are available for the specified channel given an
-	   initial set of filters.
-	   If any tag filters are supplied, their tag keys are omitted from the result.
+	   Returns one page of the tag keys that occur on a data source's channels, optionally limited to one channel, a time range, and existing tag filters. Keys already used as a tag filter are omitted.
+
+	   Pass nextPageToken from the previous response to get the next page. Tags of derived channels are included on the first page. The caller needs permission to read data on the data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is over 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListTagKeys with a data_source scope.
 	*/
 	GetAvailableTagKeys(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error)
 	/*
-	   Paged endpoint returning the set of all tag values that are available for the specified tag and datasource
-	   given an initial set of filters.
+	   Returns one page of the values that one tag key takes on a data source's channels, optionally limited to one channel, a time range, and existing tag filters.
+
+	   Pass nextPageToken from the previous response to get the next page. Values from derived channels are included on the first page. The caller needs permission to read data on the data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is over 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListTagValues with a data_source scope.
 	*/
 	GetAvailableTagValues(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error)
 	/*
-	   Returns the set of all tag keys and their values for each specified channel given
-	   initial sets of filters. Each response corresponds positionally to the input request.
+	   Returns, for each listed channel of a data source, its tag keys with their values within a time range, given initial tag filters. At most 130 channels, answered in request order. Batch form of getAvailableTagsForChannel.
+
+	   Tags of derived channels are included. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:BatchSizeTooLarge): the request lists more than 130 channels.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
 	*/
 	BatchGetAvailableTagsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetAvailableTagsForChannelRequest) (api.BatchGetAvailableTagsForChannelResponse, error)
 	/*
-	   Returns the number of distinct series matching each request's datasource, channel, range,
-	   and tag filters. Each response corresponds positionally to the input request.
-	   Returns empty seriesCount for non-Nominal datasources.
+	   Counts the distinct series of a channel in a data source within a time range and tag filters, one count per request, in request order. The count is absent for data sources that do not support counts, such as external ones.
+
+	   For a data source built from several data sources, the count is the sum over its sources, so a series that is in more than one source is counted more than once. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT (Scout:InvalidRange): a request's range starts after its end, for a data source that supports counts.
 	*/
 	BatchGetSeriesCount(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchGetSeriesCountRequest) (api.BatchGetSeriesCountResponse, error)
 	/*
-	   Returns (channel, full-tag-map) entries for a specific channel in a dataset.
-	   If tags are provided, each entry must match all provided key/value pairs; extra tags may still be present.
-	   Only numeric-data series are returned; video series are excluded.
+	   Lists the series of one channel in a dataset as full tag maps, one page at a time. When tags are given, each returned series has all of them and may have more. Video series are excluded.
+
+	   Tag maps of derived series are added on the first page. The caller needs permission to read data on the dataset.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is over 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListChannelTagSets with a data_source scope filtered by the tags.
 	*/
 	GetMatchingChannelsWithTags(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error)
 }
@@ -381,18 +458,39 @@ Data sources are data input to runs, including databases, CSV, video, and stream
 The DataSource Service is responsible for indexing and searching channels across data sources.
 */
 type DataSourceServiceClientWithAuth interface {
-	// Returns channels that match the search criteria. Results are sorted by similarity score.
+	/*
+	   Searches channels in datasets by fuzzy name text, optional required substrings, and data type. Returns one page of channels, sorted by similarity score, with each channel's data source, unit, and data type.
+
+	   Pass nextPageToken from the previous response to get the next page. Derived channels are included. A channel that is in several data sources is returned once for each. The caller needs permission to read data on every listed data source. To filter by tags or time, use searchFilteredChannels.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is over 1000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a previous response.
+	*/
 	SearchChannels(ctx context.Context, queryArg api.SearchChannelsRequest) (api.SearchChannelsResponse, error)
 	/*
-	   Returns channels that match the search criteria. Results are sorted by similarity score.
-	   If neither minDataUpdatedTime nor maxDataStartTime is provided, the search is bounded to a
-	   default one-month lookback ending now rather than scanning the data source's full history.
+	   Searches channels in datasets by name substrings or one subsequence, with optional per-data-source tag filters and a data time window. Returns up to 200 channels in one unpaged list, ranked by relevance.
+
+	   If neither minDataUpdatedTime nor maxDataStartTime is set, the search covers only the last month of data. If only one is set, the range is used as given. A channel that is in several data sources is returned once for each. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): resultSize is over 200.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT: subsequences is set and does not hold exactly one string.
 	*/
 	SearchFilteredChannels(ctx context.Context, queryArg api.SearchFilteredChannelsRequest) (api.SearchFilteredChannelsResponse, error)
 	/*
-	   Returns only channels that are direct children of the parent. Returns results sorted alphabetically.
-	   If dataScopeFilters is not provided, the search is bounded to a default one-month lookback ending
-	   now rather than scanning the data source's full history.
+	   Lists the direct children of one level of the channel name hierarchy in datasets: channels and name prefixes. Sorted alphabetically, case-insensitive.
+
+	   Without dataScopeFilters, the search covers only the last month of data. Prefixes come from the channel prefix tree set with indexChannelPrefixTree. Stored channels are capped at 200 per call, and there is no paging. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT (DataSource:NoPrefixTreeForDataSources): none of the data sources has an indexed prefix tree.
+	   - INVALID_ARGUMENT (DataSource:PrefixTreeTooLarge): the prefix tree of a data source has too many nodes to build.
+
+	   Deprecated: Use nominal.channelsearch.v1.ChannelSearchService/ListChannelChildren with a data_source scope.
 	*/
 	SearchHierarchicalChannels(ctx context.Context, queryArg api.SearchHierarchicalChannelsRequest) (api.SearchHierarchicalChannelsResponse, error)
 	/*
@@ -407,58 +505,114 @@ type DataSourceServiceClientWithAuth interface {
 	*/
 	ClearChannelPrefixTree(ctx context.Context, requestArg api.ClearChannelPrefixTreeRequest) error
 	/*
-	   Returns the channel prefix tree for each of the specified data sources. If the tree for a data source has not
-	   been indexed, it will be omitted from the map.
+	   Returns the channel name hierarchy (prefix tree) of each listed data source, split by the delimiter set with indexChannelPrefixTree. Data sources with no indexed tree are omitted from the response map.
+
+	   When dataScopeFilters is set, it limits each tree to its tag filters and time window, and must have an entry in tags for every listed data source. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT (DataSource:MissingTagFilters): dataScopeFilters is set and has no tags entry for a listed data source.
+	   - INVALID_ARGUMENT (DataSource:PrefixTreeTooLarge): the prefix tree of a data source has too many nodes to build.
 	*/
 	BatchGetChannelPrefixTrees(ctx context.Context, requestArg api.BatchGetChannelPrefixTreeRequest) (api.BatchGetChannelPrefixTreeResponse, error)
 	/*
-	   Returns the the set of all tag keys and their values that are available for the specified channel given an
-	   initial set of filters.
+	   Returns the tag keys, each with its values, that occur on one channel of a data source within a time range, given initial tag filters. The filter tags are included in the result with their values.
+
+	   Tags of derived channels are included. The caller needs permission to read data on the data source.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListChannelTagSets with a data_source scope.
 	*/
 	GetAvailableTagsForChannel(ctx context.Context, requestArg api.GetAvailableTagsForChannelRequest) (api.GetAvailableTagsForChannelResponse, error)
 	/*
-	   Returns the maximum data timestamps for the specified data scopes. Responses are returned
-	   in the same order as requests.
+	   Returns the latest data timestamp for each data scope (a data source plus tag filters), in request order. At most 100 data scopes.
+
+	   The end time is absent when it is not known, such as for external databases. A scope with tag filters is checked only over the last month, so it has no end time when it has no recent data. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:BatchSizeTooLarge): the request lists more than 100 data scopes.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
 	*/
 	GetDataScopeBounds(ctx context.Context, requestArg api.BatchGetDataScopeBoundsRequest) (api.BatchGetDataScopeBoundsResponse, error)
 	/*
-	   Returns the maximum data timestamp across all specified data scopes using aggregate storage queries.
-	   At most 100 data scopes may be requested.
+	   Returns the single latest data timestamp across all listed data scopes (a data source plus tag filters). At most 100 data scopes. For one timestamp per scope, use getDataScopeBounds.
+
+	   The end time is absent when none is known. A scope with tag filters is checked only over the last month. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:BatchSizeTooLarge): the request lists more than 100 data scopes.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
 	*/
 	GetLatestDataScopeEndTime(ctx context.Context, requestArg api.GetLatestDataScopeEndTimeRequest) (api.GetLatestDataScopeEndTimeResponse, error)
 	/*
-	   Returns available tag values for a given data source for a set of tag keys. For Nominal data sources, a time
-	   range can be provided to filter tag values to those present within the months spanned by the range. If no
-	   time range is provided, this defaults to the last month. For external data sources, the range must not be
-	   specified, as all tag values are returned.
+	   Returns a map from tag key to the set of values for tags on one data source's channels. Limited to the listed tag keys (at most 100; all keys if tagKeys is omitted) and to values within the months the range spans, by default the last month.
+
+	   The caller needs permission to read data on the data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:TooManyTagKeysRequested): tagKeys holds more than 100 keys.
+	   - INVALID_ARGUMENT: maxValuesPerKey is zero or negative.
+	   - INVALID_ARGUMENT (DataSource:TooManyTagValuesRequested): maxValuesPerKey is over 10000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT (Scout:InvalidRange): range starts after its end, for a data source that holds series.
 	*/
 	GetTagValuesForDataSource(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetTagValuesForDataSourceRequest) (map[api1.TagName][]api1.TagValue, error)
 	/*
-	   Paged endpoint returning the set of all tag keys that are available for the specified channel given an
-	   initial set of filters.
-	   If any tag filters are supplied, their tag keys are omitted from the result.
+	   Returns one page of the tag keys that occur on a data source's channels, optionally limited to one channel, a time range, and existing tag filters. Keys already used as a tag filter are omitted.
+
+	   Pass nextPageToken from the previous response to get the next page. Tags of derived channels are included on the first page. The caller needs permission to read data on the data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is over 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListTagKeys with a data_source scope.
 	*/
 	GetAvailableTagKeys(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagKeysRequest) (api.GetAvailableTagKeysResponse, error)
 	/*
-	   Paged endpoint returning the set of all tag values that are available for the specified tag and datasource
-	   given an initial set of filters.
+	   Returns one page of the values that one tag key takes on a data source's channels, optionally limited to one channel, a time range, and existing tag filters.
+
+	   Pass nextPageToken from the previous response to get the next page. Values from derived channels are included on the first page. The caller needs permission to read data on the data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is over 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListTagValues with a data_source scope.
 	*/
 	GetAvailableTagValues(ctx context.Context, dataSourceRidArg rids.DataSourceRid, requestArg api.GetAvailableTagValuesRequest) (api.GetAvailableTagValuesResponse, error)
 	/*
-	   Returns the set of all tag keys and their values for each specified channel given
-	   initial sets of filters. Each response corresponds positionally to the input request.
+	   Returns, for each listed channel of a data source, its tag keys with their values within a time range, given initial tag filters. At most 130 channels, answered in request order. Batch form of getAvailableTagsForChannel.
+
+	   Tags of derived channels are included. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:BatchSizeTooLarge): the request lists more than 130 channels.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
 	*/
 	BatchGetAvailableTagsForChannel(ctx context.Context, requestArg api.BatchGetAvailableTagsForChannelRequest) (api.BatchGetAvailableTagsForChannelResponse, error)
 	/*
-	   Returns the number of distinct series matching each request's datasource, channel, range,
-	   and tag filters. Each response corresponds positionally to the input request.
-	   Returns empty seriesCount for non-Nominal datasources.
+	   Counts the distinct series of a channel in a data source within a time range and tag filters, one count per request, in request order. The count is absent for data sources that do not support counts, such as external ones.
+
+	   For a data source built from several data sources, the count is the sum over its sources, so a series that is in more than one source is counted more than once. The caller needs permission to read data on every listed data source.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+	   - INVALID_ARGUMENT (Scout:InvalidRange): a request's range starts after its end, for a data source that supports counts.
 	*/
 	BatchGetSeriesCount(ctx context.Context, requestArg api.BatchGetSeriesCountRequest) (api.BatchGetSeriesCountResponse, error)
 	/*
-	   Returns (channel, full-tag-map) entries for a specific channel in a dataset.
-	   If tags are provided, each entry must match all provided key/value pairs; extra tags may still be present.
-	   Only numeric-data series are returned; video series are excluded.
+	   Lists the series of one channel in a dataset as full tag maps, one page at a time. When tags are given, each returned series has all of them and may have more. Video series are excluded.
+
+	   Tag maps of derived series are added on the first page. The caller needs permission to read data on the dataset.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is over 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read a listed data source.
+
+	   Deprecated: Use nominal.tagsearch.v2.TagSearchService/ListChannelTagSets with a data_source scope filtered by the tags.
 	*/
 	GetMatchingChannelsWithTags(ctx context.Context, requestArg api.GetMatchingChannelsWithTagsRequest) (api.GetMatchingChannelsWithTagsResponse, error)
 }

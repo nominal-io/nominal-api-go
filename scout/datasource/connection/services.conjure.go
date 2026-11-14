@@ -25,7 +25,9 @@ type ConnectionBootstrapperServiceClient interface {
 	/*
 	   Populates the connection with series, by querying within the requested time range. If start or end are both omitted,
 	   will query the last 7 days by default. If one of start or end is omitted, will query a 7 day range from the provided
-	   start or end. Will throw if the requested range is larger than 30 days.
+	   start or end.
+
+	   Will throw if the requested range is larger than 30 days.
 	*/
 	PopulateSeries(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid, requestArg api.PopulateSeriesRequest) error
 }
@@ -60,7 +62,9 @@ type ConnectionBootstrapperServiceClientWithAuth interface {
 	/*
 	   Populates the connection with series, by querying within the requested time range. If start or end are both omitted,
 	   will query the last 7 days by default. If one of start or end is omitted, will query a 7 day range from the provided
-	   start or end. Will throw if the requested range is larger than 30 days.
+	   start or end.
+
+	   Will throw if the requested range is larger than 30 days.
 	*/
 	PopulateSeries(ctx context.Context, ridArg api.ConnectionRid, requestArg api.PopulateSeriesRequest) error
 }
@@ -101,43 +105,147 @@ The Connection Service is responsible for creating, updating, and retrieving dat
 */
 type ConnectionServiceClient interface {
 	/*
-	   Creates a new connection.
+	   Creates a connection, a legacy data source that links to an external time series database or to a
+	   nominal data source (dataset), in a workspace. Returns the connection.
+
+	   The workspace is the one in the request, or the caller's default workspace when none is given. The
+	   new connection is not archived and is marked connected. A connection to an external database also
+	   gets a dataset with the same ID, and the requested markings apply to both. Secrets that the
+	   connection details name must be ones the caller can edit. A secret or a nominal data source must be
+	   in the connection's workspace. A nominal connection cannot take availableTagValues, because its tags
+	   are indexed automatically. The caller needs permission to create data sources in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): the request names no workspace and the caller
+	     has no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - NOT_FOUND (Connection:SecretsNotFound): a named secret does not exist or the caller cannot edit
+	     it.
+	   - NOT_FOUND (Connection:DatasourceRidNotFound): a nominal connection names a data source that does
+	     not exist.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a named secret or data source is in
+	     another workspace.
+	   - INTERNAL (Connection:FailedToCreateConnection): a nominal connection sets availableTagValues.
 
 	   Deprecated: Use CatalogService#createDataset to create a dataset, then
-	   ConnectionService#registerExternalConnectionConfig to register external connection config on it.
+	   CatalogService#registerExternalConnectionConfig to register external connection config on it.
 	*/
 	CreateConnection(ctx context.Context, authHeader bearertoken.Token, createConnectionArg api.CreateConnection) (api.Connection, error)
-	// Updates an existing connection.
+	/*
+	   Updates the name, description, details, metadata, tags, scraping settings, scrape flag, or limits of
+	   a connection. Returns the updated connection.
+
+	   Only fields that are set change. A set field replaces the stored value, so metadata and
+	   availableTagValues are replaced as a whole. For a connection to an external database, the name,
+	   description, and metadata of its dataset change too. Secrets in new connection details must be ones
+	   the caller can edit, and must be in the connection's workspace. The caller needs permission to edit
+	   the connection's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot edit
+	     it.
+	   - NOT_FOUND (Connection:SecretsNotFound): a named secret does not exist or the caller cannot edit
+	     it.
+	   - NOT_FOUND (Connection:DatasourceRidNotFound): new details name a nominal data source that does not
+	     exist.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a named secret or data source is in
+	     another workspace.
+	   - INVALID_ARGUMENT (Connection:FailedToAddTagsToConnection): availableTagValues is set on a nominal
+	     connection, whose tags are indexed automatically.
+	*/
 	UpdateConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid, requestArg api.UpdateConnectionRequest) (api.Connection, error)
-	// Updates an existing connection status.
+	/*
+	   Sets whether a connection is marked as connected. Returns nothing.
+
+	   The periodic scrape of an external connection sets the status: connected after a successful scrape,
+	   not connected after a failed one. The caller needs permission to edit the connection's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot edit it.
+	*/
 	UpdateConnectionStatus(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid, requestArg api.ConnectionStatus) error
 	/*
-	   Adds available tag key/value pairs to the connection. If a tag name already exists, the values will be merged.
-	   This is primarily an internal endpoint to update tags for external connections as they are periodically
-	   scraped. This endpoint should only be called by clients for Visual crossing connections. Throws if called for
-	   Nominal connections which have their tags automatically indexed in the underlying Database.
+	   Adds tag names and values to the available tags of a connection. Returns the connection, which has
+	   no field for available tags.
+
+	   When a tag name already exists, the new values are merged with the stored values. The periodic
+	   scrape of an external connection records the tags it finds this way. Nominal connections do not
+	   accept this call, because their tags are indexed automatically. The caller needs permission to edit
+	   the connection's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot edit
+	     it.
+	   - INVALID_ARGUMENT (Connection:FailedToAddTagsToConnection): the connection is a nominal connection.
 	*/
 	AddAvailableTags(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid, tagsArg map[api1.TagName][]api1.TagValue) (api.Connection, error)
-	// Gets a connection by its RID.
+	/*
+	   Returns one connection with its details, scraping settings, required tag names, and archived state.
+	   An archived connection is returned.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot read
+	     it.
+	*/
 	GetConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid) (api.Connection, error)
-	// Gets a set of connections by their RIDs.
+	/*
+	   Returns the connections for the given RIDs, archived ones included. RIDs that do not exist or that
+	   the caller cannot read are omitted without an error. The result is unordered.
+	*/
 	GetConnections(ctx context.Context, authHeader bearertoken.Token, ridsArg []api.ConnectionRid) ([]api.Connection, error)
 	/*
-	   Lists all connections.
+	   Lists all connections in the workspaces the caller can view, or in the given workspaces, with no
+	   paging. Archived connections are excluded unless includeArchived is true. Connections the caller
+	   cannot read are omitted.
 
 	   Deprecated: Use listConnectionsV2 for paginated results.
 	*/
 	ListConnections(ctx context.Context, authHeader bearertoken.Token, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid) ([]api.Connection, error)
-	// Lists connections with pagination. Returns connections ordered by creation time descending.
+	/*
+	   Lists connections in the workspaces the caller can view, or in the given workspaces, one page at a
+	   time. Archived connections are excluded unless includeArchived is true. Connections the caller
+	   cannot read are omitted, so a page can hold fewer than pageSize.
+
+	   Ordered by connection ID descending, not by creation time. pageSize defaults to 100, and a value
+	   above 1000 is treated as 1000.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is zero or negative, or nextPageToken is not a token from this
+	     operation.
+	*/
 	ListConnectionsV2(ctx context.Context, authHeader bearertoken.Token, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error)
 	/*
-	   Lists connections that reference the specified Nominal data sources, with pagination.
-	   Only returns connections within the caller's organization.
+	   Lists connections that point at the given nominal data sources (datasets), one page at a time, in
+	   the workspaces the caller can view. Archived connections are included. Connections the caller cannot
+	   read are omitted.
+
+	   Ordered by connection ID descending. pageSize defaults to 100, and a value above 1000 is treated as
+	   1000.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is zero or negative, or nextPageToken is not a token from this
+	     operation.
 	*/
 	ListConnectionsByNominalDataSource(ctx context.Context, authHeader bearertoken.Token, nominalDataSourceRidsArg []rids.NominalDataSourceRid, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error)
-	// Archives a connection, which simply tags the connection for a client to filter.
+	/*
+	   Marks a connection as archived, which hides it from listConnections and listConnectionsV2 unless
+	   includeArchived is set. The connection and its data stay, and getConnection, getConnections, and
+	   listConnectionsByNominalDataSource still return it. Undo with unarchiveConnection. The caller needs
+	   permission to edit the connection's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot edit
+	     it.
+	*/
 	ArchiveConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid) error
-	// Undoes the archiving of a connection.
+	/*
+	   Restores an archived connection so listConnections and listConnectionsV2 include it again. The caller
+	   needs permission to edit the connection's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot edit
+	     it.
+	*/
 	UnarchiveConnection(ctx context.Context, authHeader bearertoken.Token, ridArg api.ConnectionRid) error
 }
 
@@ -368,43 +476,147 @@ The Connection Service is responsible for creating, updating, and retrieving dat
 */
 type ConnectionServiceClientWithAuth interface {
 	/*
-	   Creates a new connection.
+	   Creates a connection, a legacy data source that links to an external time series database or to a
+	   nominal data source (dataset), in a workspace. Returns the connection.
+
+	   The workspace is the one in the request, or the caller's default workspace when none is given. The
+	   new connection is not archived and is marked connected. A connection to an external database also
+	   gets a dataset with the same ID, and the requested markings apply to both. Secrets that the
+	   connection details name must be ones the caller can edit. A secret or a nominal data source must be
+	   in the connection's workspace. A nominal connection cannot take availableTagValues, because its tags
+	   are indexed automatically. The caller needs permission to create data sources in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): the request names no workspace and the caller
+	     has no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - NOT_FOUND (Connection:SecretsNotFound): a named secret does not exist or the caller cannot edit
+	     it.
+	   - NOT_FOUND (Connection:DatasourceRidNotFound): a nominal connection names a data source that does
+	     not exist.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a named secret or data source is in
+	     another workspace.
+	   - INTERNAL (Connection:FailedToCreateConnection): a nominal connection sets availableTagValues.
 
 	   Deprecated: Use CatalogService#createDataset to create a dataset, then
-	   ConnectionService#registerExternalConnectionConfig to register external connection config on it.
+	   CatalogService#registerExternalConnectionConfig to register external connection config on it.
 	*/
 	CreateConnection(ctx context.Context, createConnectionArg api.CreateConnection) (api.Connection, error)
-	// Updates an existing connection.
+	/*
+	   Updates the name, description, details, metadata, tags, scraping settings, scrape flag, or limits of
+	   a connection. Returns the updated connection.
+
+	   Only fields that are set change. A set field replaces the stored value, so metadata and
+	   availableTagValues are replaced as a whole. For a connection to an external database, the name,
+	   description, and metadata of its dataset change too. Secrets in new connection details must be ones
+	   the caller can edit, and must be in the connection's workspace. The caller needs permission to edit
+	   the connection's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot edit
+	     it.
+	   - NOT_FOUND (Connection:SecretsNotFound): a named secret does not exist or the caller cannot edit
+	     it.
+	   - NOT_FOUND (Connection:DatasourceRidNotFound): new details name a nominal data source that does not
+	     exist.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a named secret or data source is in
+	     another workspace.
+	   - INVALID_ARGUMENT (Connection:FailedToAddTagsToConnection): availableTagValues is set on a nominal
+	     connection, whose tags are indexed automatically.
+	*/
 	UpdateConnection(ctx context.Context, ridArg api.ConnectionRid, requestArg api.UpdateConnectionRequest) (api.Connection, error)
-	// Updates an existing connection status.
+	/*
+	   Sets whether a connection is marked as connected. Returns nothing.
+
+	   The periodic scrape of an external connection sets the status: connected after a successful scrape,
+	   not connected after a failed one. The caller needs permission to edit the connection's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot edit it.
+	*/
 	UpdateConnectionStatus(ctx context.Context, ridArg api.ConnectionRid, requestArg api.ConnectionStatus) error
 	/*
-	   Adds available tag key/value pairs to the connection. If a tag name already exists, the values will be merged.
-	   This is primarily an internal endpoint to update tags for external connections as they are periodically
-	   scraped. This endpoint should only be called by clients for Visual crossing connections. Throws if called for
-	   Nominal connections which have their tags automatically indexed in the underlying Database.
+	   Adds tag names and values to the available tags of a connection. Returns the connection, which has
+	   no field for available tags.
+
+	   When a tag name already exists, the new values are merged with the stored values. The periodic
+	   scrape of an external connection records the tags it finds this way. Nominal connections do not
+	   accept this call, because their tags are indexed automatically. The caller needs permission to edit
+	   the connection's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot edit
+	     it.
+	   - INVALID_ARGUMENT (Connection:FailedToAddTagsToConnection): the connection is a nominal connection.
 	*/
 	AddAvailableTags(ctx context.Context, ridArg api.ConnectionRid, tagsArg map[api1.TagName][]api1.TagValue) (api.Connection, error)
-	// Gets a connection by its RID.
+	/*
+	   Returns one connection with its details, scraping settings, required tag names, and archived state.
+	   An archived connection is returned.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot read
+	     it.
+	*/
 	GetConnection(ctx context.Context, ridArg api.ConnectionRid) (api.Connection, error)
-	// Gets a set of connections by their RIDs.
+	/*
+	   Returns the connections for the given RIDs, archived ones included. RIDs that do not exist or that
+	   the caller cannot read are omitted without an error. The result is unordered.
+	*/
 	GetConnections(ctx context.Context, ridsArg []api.ConnectionRid) ([]api.Connection, error)
 	/*
-	   Lists all connections.
+	   Lists all connections in the workspaces the caller can view, or in the given workspaces, with no
+	   paging. Archived connections are excluded unless includeArchived is true. Connections the caller
+	   cannot read are omitted.
 
 	   Deprecated: Use listConnectionsV2 for paginated results.
 	*/
 	ListConnections(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid) ([]api.Connection, error)
-	// Lists connections with pagination. Returns connections ordered by creation time descending.
+	/*
+	   Lists connections in the workspaces the caller can view, or in the given workspaces, one page at a
+	   time. Archived connections are excluded unless includeArchived is true. Connections the caller
+	   cannot read are omitted, so a page can hold fewer than pageSize.
+
+	   Ordered by connection ID descending, not by creation time. pageSize defaults to 100, and a value
+	   above 1000 is treated as 1000.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is zero or negative, or nextPageToken is not a token from this
+	     operation.
+	*/
 	ListConnectionsV2(ctx context.Context, includeArchivedArg *bool, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error)
 	/*
-	   Lists connections that reference the specified Nominal data sources, with pagination.
-	   Only returns connections within the caller's organization.
+	   Lists connections that point at the given nominal data sources (datasets), one page at a time, in
+	   the workspaces the caller can view. Archived connections are included. Connections the caller cannot
+	   read are omitted.
+
+	   Ordered by connection ID descending. pageSize defaults to 100, and a value above 1000 is treated as
+	   1000.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is zero or negative, or nextPageToken is not a token from this
+	     operation.
 	*/
 	ListConnectionsByNominalDataSource(ctx context.Context, nominalDataSourceRidsArg []rids.NominalDataSourceRid, workspacesArg []rids.WorkspaceRid, pageSizeArg *int, nextPageTokenArg *api1.Token) (api.ListConnectionsResponse, error)
-	// Archives a connection, which simply tags the connection for a client to filter.
+	/*
+	   Marks a connection as archived, which hides it from listConnections and listConnectionsV2 unless
+	   includeArchived is set. The connection and its data stay, and getConnection, getConnections, and
+	   listConnectionsByNominalDataSource still return it. Undo with unarchiveConnection. The caller needs
+	   permission to edit the connection's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot edit
+	     it.
+	*/
 	ArchiveConnection(ctx context.Context, ridArg api.ConnectionRid) error
-	// Undoes the archiving of a connection.
+	/*
+	   Restores an archived connection so listConnections and listConnectionsV2 include it again. The caller
+	   needs permission to edit the connection's metadata.
+
+	   Errors:
+	   - NOT_FOUND (Connection:ConnectionNotFound): the connection does not exist or the caller cannot edit
+	     it.
+	*/
 	UnarchiveConnection(ctx context.Context, ridArg api.ConnectionRid) error
 }
 

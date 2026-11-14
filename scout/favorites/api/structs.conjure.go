@@ -50,8 +50,8 @@ func (o *FavoritesListResponse) UnmarshalYAML(unmarshal func(interface{}) error)
 
 type SetFavoritesListRequest struct {
 	/*
-	   The resources to set as the user's favorites. Note that the provided list will overwrite
-	   all the user's previous favorites.
+	   The resources to set as the user's favorites in this workspace, in display order. Replaces all
+	   of the user's previous favorites in the workspace, of every resource type.
 	*/
 	Resources []FavoriteResource `json:"resources"`
 }

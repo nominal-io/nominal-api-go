@@ -15,45 +15,77 @@ import (
 // The Resource Metadata Service provides common metadata about resources.
 type ResourceMetadataServiceClient interface {
 	/*
-	   Returns all existing properties (key value pairs) and labels, which can be used to organize resources
-	   such as runs and videos.
-	   This legacy bulk-list surface returns string property values only. Use searchPropertyKeys for numeric keys.
+	   Lists the labels and the string property values in use on resources such as runs, assets, events,
+	   datasets, videos, procedures, and saved views, in the selected workspaces.
+
+	   Archived resources are not counted. Returns at most the 500 most-used labels, and for each property key
+	   the 500 most-used values. Numeric property values are not included; use searchPropertyKeys for numeric
+	   keys. Only workspaces the caller can view contribute; listed workspaces the caller cannot view are ignored.
 	*/
 	ListPropertiesAndLabels(ctx context.Context, authHeader bearertoken.Token, requestArg ListPropertiesAndLabelsRequest) (ListPropertiesAndLabelsResponse, error)
 	/*
-	   Returns the count of resources that use a given label or property. The query can
-	   match by label, property name (key only), or a full property key+value pair.
-	   Counts are scoped to the caller's accessible workspaces unless specific workspaces
-	   are provided.
+	   Counts the resources (runs, assets, events, datasets, and so on) that have one label, one property key,
+	   or one property key and value pair, in the selected workspaces and resource types. Returns a single
+	   number.
+
+	   Archived resources are not counted. A property key counts resources with either a string or a numeric
+	   value. Only workspaces the caller can view contribute; listed workspaces the caller cannot view are
+	   ignored.
 	*/
 	GetMetadataUsageCount(ctx context.Context, authHeader bearertoken.Token, requestArg GetMetadataUsageCountRequest) (GetMetadataUsageCountResponse, error)
 	/*
-	   Given a set of labels, finds similar labels across the specified workspaces and resource types.
-	   Includes document count. Useful for detecting unintentional duplicate labels.
+	   Finds labels that differ from each given label only in case, spacing, or punctuation, with the number of
+	   resources that use each. Use it to spot accidental duplicate labels.
+
+	   Returns a map from each given label to its near-duplicates, which never include the label itself.
+	   Labels with none are omitted. Archived resources are not counted. Only workspaces the caller can view
+	   contribute.
 	*/
 	FindSimilarLabelMatches(ctx context.Context, authHeader bearertoken.Token, requestArg FindSimilarLabelMatchesRequest) (FindSimilarLabelMatchesResponse, error)
 	/*
-	   Given a set of property keys, finds similar property keys across the specified workspaces and resource types.
-	   Includes document count. Useful for detecting unintentional duplicate property keys.
+	   Finds property keys that differ from each given key only in case, spacing, or punctuation, with the
+	   number of resources that use each. Use it to spot accidental duplicate property keys.
+
+	   Returns a map from each given key to its near-duplicates, which never include the key itself. Keys with
+	   none are omitted. String and numeric properties are both counted. Archived resources are not counted.
+	   Only workspaces the caller can view contribute.
 	*/
 	FindSimilarPropertyKeyMatches(ctx context.Context, authHeader bearertoken.Token, requestArg FindSimilarPropertyKeyMatchesRequest) (FindSimilarPropertyKeyMatchesResponse, error)
 	/*
-	   Returns a paginated list of labels with document usage counts, filterable by
-	   resource type, workspace, and search text.
+	   Searches the labels in use on resources, with the number of resources that have each, filtered by
+	   text, resource type, and workspace. Returns one page in the requested sort order.
+
+	   Archived resources are not counted. Sorting by count breaks ties by label. Only workspaces the caller
+	   can view contribute.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the sort is PROPERTY_VALUE_COUNT, the page size is outside the allowed range, or the
+	     page token cannot be read.
 	*/
 	SearchLabels(ctx context.Context, authHeader bearertoken.Token, requestArg SearchMetadataRequest) (SearchLabelsResponse, error)
 	/*
-	   Returns a paginated list of string and numeric property keys with typed statistics,
-	   filterable by resource type, workspace, and search text.
-	   ALPHABETICAL sort pages efficiently at any workspace size. USAGE_COUNT and PROPERTY_VALUE_COUNT
-	   rank every key in the workspace, so on large workspaces pass searchText or the request may fail
-	   with a 400 MetadataQueryTooBroad error.
+	   Searches the property keys in use on resources, with the number of resources and a summary of string or
+	   numeric values for each key, filtered by text, resource type, and workspace. Returns one page.
+
+	   Archived resources are not counted. ALPHABETICAL sort pages efficiently at any workspace size.
+	   USAGE_COUNT and PROPERTY_VALUE_COUNT sorts rank every key in the workspace, so on large workspaces pass
+	   searchText. Only workspaces the caller can view contribute.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the page size is outside the allowed range, or the page token cannot be read.
+	   - INVALID_ARGUMENT (MetadataQueryTooBroad): a count sort without searchText timed out.
 	*/
 	SearchPropertyKeys(ctx context.Context, authHeader bearertoken.Token, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error)
 	/*
-	   Returns a paginated list of string property values for a given property key with
-	   document usage counts, filterable by resource type, workspace, and search text.
-	   Numeric values are intentionally excluded; their summary is returned by searchPropertyKeys.
+	   Searches the string values of one property key, with the number of resources that have each value,
+	   filtered by text, resource type, and workspace. Returns one page.
+
+	   Numeric values are excluded; searchPropertyKeys summarizes them. Archived resources are not counted.
+	   Only workspaces the caller can view contribute.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the sort is PROPERTY_VALUE_COUNT, the page size is outside the allowed range, or the
+	     page token cannot be read.
 	*/
 	SearchPropertyValues(ctx context.Context, authHeader bearertoken.Token, requestArg SearchPropertyValuesRequest) (SearchPropertyValuesResponse, error)
 }
@@ -195,45 +227,77 @@ func (c *resourceMetadataServiceClient) SearchPropertyValues(ctx context.Context
 // The Resource Metadata Service provides common metadata about resources.
 type ResourceMetadataServiceClientWithAuth interface {
 	/*
-	   Returns all existing properties (key value pairs) and labels, which can be used to organize resources
-	   such as runs and videos.
-	   This legacy bulk-list surface returns string property values only. Use searchPropertyKeys for numeric keys.
+	   Lists the labels and the string property values in use on resources such as runs, assets, events,
+	   datasets, videos, procedures, and saved views, in the selected workspaces.
+
+	   Archived resources are not counted. Returns at most the 500 most-used labels, and for each property key
+	   the 500 most-used values. Numeric property values are not included; use searchPropertyKeys for numeric
+	   keys. Only workspaces the caller can view contribute; listed workspaces the caller cannot view are ignored.
 	*/
 	ListPropertiesAndLabels(ctx context.Context, requestArg ListPropertiesAndLabelsRequest) (ListPropertiesAndLabelsResponse, error)
 	/*
-	   Returns the count of resources that use a given label or property. The query can
-	   match by label, property name (key only), or a full property key+value pair.
-	   Counts are scoped to the caller's accessible workspaces unless specific workspaces
-	   are provided.
+	   Counts the resources (runs, assets, events, datasets, and so on) that have one label, one property key,
+	   or one property key and value pair, in the selected workspaces and resource types. Returns a single
+	   number.
+
+	   Archived resources are not counted. A property key counts resources with either a string or a numeric
+	   value. Only workspaces the caller can view contribute; listed workspaces the caller cannot view are
+	   ignored.
 	*/
 	GetMetadataUsageCount(ctx context.Context, requestArg GetMetadataUsageCountRequest) (GetMetadataUsageCountResponse, error)
 	/*
-	   Given a set of labels, finds similar labels across the specified workspaces and resource types.
-	   Includes document count. Useful for detecting unintentional duplicate labels.
+	   Finds labels that differ from each given label only in case, spacing, or punctuation, with the number of
+	   resources that use each. Use it to spot accidental duplicate labels.
+
+	   Returns a map from each given label to its near-duplicates, which never include the label itself.
+	   Labels with none are omitted. Archived resources are not counted. Only workspaces the caller can view
+	   contribute.
 	*/
 	FindSimilarLabelMatches(ctx context.Context, requestArg FindSimilarLabelMatchesRequest) (FindSimilarLabelMatchesResponse, error)
 	/*
-	   Given a set of property keys, finds similar property keys across the specified workspaces and resource types.
-	   Includes document count. Useful for detecting unintentional duplicate property keys.
+	   Finds property keys that differ from each given key only in case, spacing, or punctuation, with the
+	   number of resources that use each. Use it to spot accidental duplicate property keys.
+
+	   Returns a map from each given key to its near-duplicates, which never include the key itself. Keys with
+	   none are omitted. String and numeric properties are both counted. Archived resources are not counted.
+	   Only workspaces the caller can view contribute.
 	*/
 	FindSimilarPropertyKeyMatches(ctx context.Context, requestArg FindSimilarPropertyKeyMatchesRequest) (FindSimilarPropertyKeyMatchesResponse, error)
 	/*
-	   Returns a paginated list of labels with document usage counts, filterable by
-	   resource type, workspace, and search text.
+	   Searches the labels in use on resources, with the number of resources that have each, filtered by
+	   text, resource type, and workspace. Returns one page in the requested sort order.
+
+	   Archived resources are not counted. Sorting by count breaks ties by label. Only workspaces the caller
+	   can view contribute.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the sort is PROPERTY_VALUE_COUNT, the page size is outside the allowed range, or the
+	     page token cannot be read.
 	*/
 	SearchLabels(ctx context.Context, requestArg SearchMetadataRequest) (SearchLabelsResponse, error)
 	/*
-	   Returns a paginated list of string and numeric property keys with typed statistics,
-	   filterable by resource type, workspace, and search text.
-	   ALPHABETICAL sort pages efficiently at any workspace size. USAGE_COUNT and PROPERTY_VALUE_COUNT
-	   rank every key in the workspace, so on large workspaces pass searchText or the request may fail
-	   with a 400 MetadataQueryTooBroad error.
+	   Searches the property keys in use on resources, with the number of resources and a summary of string or
+	   numeric values for each key, filtered by text, resource type, and workspace. Returns one page.
+
+	   Archived resources are not counted. ALPHABETICAL sort pages efficiently at any workspace size.
+	   USAGE_COUNT and PROPERTY_VALUE_COUNT sorts rank every key in the workspace, so on large workspaces pass
+	   searchText. Only workspaces the caller can view contribute.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the page size is outside the allowed range, or the page token cannot be read.
+	   - INVALID_ARGUMENT (MetadataQueryTooBroad): a count sort without searchText timed out.
 	*/
 	SearchPropertyKeys(ctx context.Context, requestArg SearchMetadataRequest) (SearchPropertyKeysResponse, error)
 	/*
-	   Returns a paginated list of string property values for a given property key with
-	   document usage counts, filterable by resource type, workspace, and search text.
-	   Numeric values are intentionally excluded; their summary is returned by searchPropertyKeys.
+	   Searches the string values of one property key, with the number of resources that have each value,
+	   filtered by text, resource type, and workspace. Returns one page.
+
+	   Numeric values are excluded; searchPropertyKeys summarizes them. Archived resources are not counted.
+	   Only workspaces the caller can view contribute.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the sort is PROPERTY_VALUE_COUNT, the page size is outside the allowed range, or the
+	     page token cannot be read.
 	*/
 	SearchPropertyValues(ctx context.Context, requestArg SearchPropertyValuesRequest) (SearchPropertyValuesResponse, error)
 }

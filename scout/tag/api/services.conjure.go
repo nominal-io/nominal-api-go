@@ -14,17 +14,71 @@ import (
 
 // Tag search over a Dataset, which can expand to multiple locator contexts.
 type TagSearchServiceClient interface {
+	/*
+	   Lists the series of one channel in a dataset scope as tag sets (tag key and value pairs), optionally limited to
+	   series that have given tags. Returns one page of tag sets.
+
+	   pageSize defaults to 1000 and cannot exceed it. The tag sets are not limited to a time range. The first page
+	   also holds the tag sets of derived channels, so it can hold more than pageSize. The caller needs permission to
+	   read data from the data sources in the scope.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source in the scope.
+	*/
 	GetFullTagsForChannel(ctx context.Context, authHeader bearertoken.Token, requestArg GetFullTagsForChannelRequest) (GetFullTagsForChannelResponse, error)
-	// Paged endpoint returning the set of all tag keys available for the scope given an initial set of filters.
+	/*
+	   Lists the tag keys that occur in a dataset scope within a time range, optionally limited to one channel and to
+	   series that have given tags. Returns one page of keys.
+
+	   pageSize defaults to 1000 and cannot exceed it. Stored keys are in ascending order. Keys already used as a tag
+	   filter are omitted. The first page also ends with the tag keys that the scope adds itself and those of derived
+	   channels, so it can hold more than pageSize. The caller needs permission to read data from the data sources in
+	   the scope.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source in the scope.
+	*/
 	GetAvailableTagKeys(ctx context.Context, authHeader bearertoken.Token, requestArg GetAvailableTagKeysRequest) (GetAvailableTagKeysResponse, error)
-	// Batch variant of getAvailableTagKeys keyed by client provided request id.
+	/*
+	   Lists the tag keys that occur in each of up to 100 dataset scopes, applying the same channel, tag filters, and
+	   time range to every scope. Returns one page of keys per caller-chosen request id, and a next-page token only for
+	   ids that have more.
+
+	   Each page follows the rules of getAvailableTagKeys, including the page size and the permission to read data.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - INVALID_ARGUMENT (DataSource:BatchSizeTooLarge): more than 100 requests.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source in the scope.
+	*/
 	BatchGetAvailableTagKeys(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetAvailableTagKeysRequest) (BatchGetAvailableTagKeysResponse, error)
 	/*
-	   Paged endpoint returning the set of all tag values available for the specified tag and scope given an
-	   initial set of filters.
+	   Lists the values that one tag key takes in a dataset scope within a time range, optionally limited to one
+	   channel and to series that have given tags. Returns one page of values.
+
+	   pageSize defaults to 1000 and cannot exceed it. Stored values are in ascending order. The first page also ends
+	   with the values that the scope adds itself and those of derived channels, so it can hold more than pageSize.
+	   The caller needs permission to read data from the data sources in the scope.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source in the scope.
 	*/
 	GetAvailableTagValues(ctx context.Context, authHeader bearertoken.Token, requestArg GetAvailableTagValuesRequest) (GetAvailableTagValuesResponse, error)
-	// Batch variant of getAvailableTagValues keyed by client provided request id.
+	/*
+	   Lists the values that one tag key takes in each of up to 100 dataset scopes, applying the same channel, tag
+	   filters, and time range to every scope. Returns one page of values per caller-chosen request id, and a next-page
+	   token only for ids that have more.
+
+	   Each page follows the rules of getAvailableTagValues, including the page size and the permission to read data.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - INVALID_ARGUMENT (DataSource:BatchSizeTooLarge): more than 100 requests.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source in the scope.
+	*/
 	BatchGetAvailableTagValues(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetAvailableTagValuesRequest) (BatchGetAvailableTagValuesResponse, error)
 }
 
@@ -128,17 +182,71 @@ func (c *tagSearchServiceClient) BatchGetAvailableTagValues(ctx context.Context,
 
 // Tag search over a Dataset, which can expand to multiple locator contexts.
 type TagSearchServiceClientWithAuth interface {
+	/*
+	   Lists the series of one channel in a dataset scope as tag sets (tag key and value pairs), optionally limited to
+	   series that have given tags. Returns one page of tag sets.
+
+	   pageSize defaults to 1000 and cannot exceed it. The tag sets are not limited to a time range. The first page
+	   also holds the tag sets of derived channels, so it can hold more than pageSize. The caller needs permission to
+	   read data from the data sources in the scope.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source in the scope.
+	*/
 	GetFullTagsForChannel(ctx context.Context, requestArg GetFullTagsForChannelRequest) (GetFullTagsForChannelResponse, error)
-	// Paged endpoint returning the set of all tag keys available for the scope given an initial set of filters.
+	/*
+	   Lists the tag keys that occur in a dataset scope within a time range, optionally limited to one channel and to
+	   series that have given tags. Returns one page of keys.
+
+	   pageSize defaults to 1000 and cannot exceed it. Stored keys are in ascending order. Keys already used as a tag
+	   filter are omitted. The first page also ends with the tag keys that the scope adds itself and those of derived
+	   channels, so it can hold more than pageSize. The caller needs permission to read data from the data sources in
+	   the scope.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source in the scope.
+	*/
 	GetAvailableTagKeys(ctx context.Context, requestArg GetAvailableTagKeysRequest) (GetAvailableTagKeysResponse, error)
-	// Batch variant of getAvailableTagKeys keyed by client provided request id.
+	/*
+	   Lists the tag keys that occur in each of up to 100 dataset scopes, applying the same channel, tag filters, and
+	   time range to every scope. Returns one page of keys per caller-chosen request id, and a next-page token only for
+	   ids that have more.
+
+	   Each page follows the rules of getAvailableTagKeys, including the page size and the permission to read data.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - INVALID_ARGUMENT (DataSource:BatchSizeTooLarge): more than 100 requests.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source in the scope.
+	*/
 	BatchGetAvailableTagKeys(ctx context.Context, requestArg BatchGetAvailableTagKeysRequest) (BatchGetAvailableTagKeysResponse, error)
 	/*
-	   Paged endpoint returning the set of all tag values available for the specified tag and scope given an
-	   initial set of filters.
+	   Lists the values that one tag key takes in a dataset scope within a time range, optionally limited to one
+	   channel and to series that have given tags. Returns one page of values.
+
+	   pageSize defaults to 1000 and cannot exceed it. Stored values are in ascending order. The first page also ends
+	   with the values that the scope adds itself and those of derived channels, so it can hold more than pageSize.
+	   The caller needs permission to read data from the data sources in the scope.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source in the scope.
 	*/
 	GetAvailableTagValues(ctx context.Context, requestArg GetAvailableTagValuesRequest) (GetAvailableTagValuesResponse, error)
-	// Batch variant of getAvailableTagValues keyed by client provided request id.
+	/*
+	   Lists the values that one tag key takes in each of up to 100 dataset scopes, applying the same channel, tag
+	   filters, and time range to every scope. Returns one page of values per caller-chosen request id, and a next-page
+	   token only for ids that have more.
+
+	   Each page follows the rules of getAvailableTagValues, including the page size and the permission to read data.
+
+	   Errors:
+	   - INVALID_ARGUMENT (DataSource:RequestedPageSizeTooLarge): pageSize is above 1000.
+	   - INVALID_ARGUMENT (DataSource:BatchSizeTooLarge): more than 100 requests.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read data from a data source in the scope.
+	*/
 	BatchGetAvailableTagValues(ctx context.Context, requestArg BatchGetAvailableTagValuesRequest) (BatchGetAvailableTagValuesResponse, error)
 }
 

@@ -36,7 +36,10 @@ func (o *AllTimestampsForwardFillStrategy) UnmarshalYAML(unmarshal func(interfac
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Export settings for a stream of arrow-compatible data.
+/*
+Export settings for a stream of arrow-compatible data. exportChannelData takes exactly one channel in this
+format.
+*/
 type Arrow struct{}
 
 func (o Arrow) MarshalYAML() (interface{}, error) {
@@ -99,13 +102,16 @@ func (o *ExportChannelFailure) UnmarshalYAML(unmarshal func(interface{}) error) 
 }
 
 type ExportDataRequest struct {
-	Format      ExportFormat       `json:"format"`
+	Format ExportFormat `json:"format"`
+	// If omitted, the file is not compressed.
 	Compression *CompressionFormat `json:"compression,omitempty"`
-	StartTime   api1.Timestamp     `json:"startTime" safelogging:"@Safe"`
-	EndTime     api1.Timestamp     `json:"endTime" safelogging:"@Safe"`
-	Resolution  ResolutionOption   `json:"resolution"`
-	Channels    ExportChannels     `json:"channels"`
-	Context     api11.Context      `json:"context"`
+	// Start of the exported time range. Must not be after endTime.
+	StartTime api1.Timestamp `json:"startTime" safelogging:"@Safe"`
+	// End of the exported time range.
+	EndTime    api1.Timestamp   `json:"endTime" safelogging:"@Safe"`
+	Resolution ResolutionOption `json:"resolution"`
+	Channels   ExportChannels   `json:"channels"`
+	Context    api11.Context    `json:"context"`
 }
 
 func (o ExportDataRequest) MarshalYAML() (interface{}, error) {
@@ -124,6 +130,7 @@ func (o *ExportDataRequest) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Channels exported as columns that share one timestamp column.
 type ExportTimeDomainChannels struct {
 	OutputTimestampFormat  TimestampFormat        `json:"outputTimestampFormat"`
 	MergeTimestampStrategy MergeTimestampStrategy `json:"mergeTimestampStrategy"`
@@ -168,7 +175,8 @@ func (o *ExportTimeDomainChannels) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 type GeneratePresignedLinkResponse struct {
-	PresignedUrl  PresignedUrl      `json:"presignedUrl"`
+	PresignedUrl PresignedUrl `json:"presignedUrl"`
+	// Size of the exported file in bytes.
 	FileSizeBytes safelong.SafeLong `json:"fileSizeBytes"`
 }
 
@@ -266,6 +274,7 @@ func (o *NoneStrategy) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A time-limited link for downloading an exported file.
 type PresignedUrl struct {
 	Url string `json:"url"`
 }
@@ -309,6 +318,7 @@ func (o *RelativeTimestampFormat) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 type TimeDomainChannel struct {
+	// Name of this column in the exported file.
 	ColumnName  string       `json:"columnName"`
 	ComputeNode api11.Series `json:"computeNode"`
 }

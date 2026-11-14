@@ -19,17 +19,77 @@ import (
 
 // The Containerized Extractor service provides functionality for creating, updating, and archiving containerized extractors.
 type ContainerizedExtractorServiceClient interface {
-	// Registers a containerized extractor for a given set of containerized files.
+	/*
+	   Registers a file extractor (a containerized extractor in the API) in a workspace: a Docker image
+	   that parses files of a custom format when you upload them. Returns the new extractor's RID.
+
+	   Give either containerImageRid, a self-hosted image that must be ready in the workspace, or image, an
+	   external registry image. The image field is ignored when containerImageRid is set. The default tag
+	   in image must be one of its tags. The output format defaults to PARQUET and the description to
+	   empty. If timestampMetadata is omitted, it must be provided at ingest time. The caller needs
+	   permission to edit connectivity in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist or the caller cannot edit
+	     connectivity in it.
+	   - INVALID_ARGUMENT: neither image nor containerImageRid is set, or the container image is not found
+	     in the workspace or is not ready.
+	   - INVALID_ARGUMENT (ContainerizedExtractor:InvalidDefaultTag): the default tag in image is not one
+	     of its tags.
+	*/
 	RegisterContainerizedExtractor(ctx context.Context, authHeader bearertoken.Token, requestArg RegisterContainerizedExtractorRequest) (RegisterContainerizedExtractorResponse, error)
-	// Get a containerized extractor by its RID.
+	/*
+	   Gets a file extractor by RID. Returns public extractors and extractors in workspaces you can view,
+	   archived ones included.
+
+	   Errors:
+	   - NOT_FOUND (ContainerizedExtractor:ContainerizedExtractorNotFound): the extractor does not exist or
+	     the caller cannot view its workspace.
+	*/
 	GetContainerizedExtractor(ctx context.Context, authHeader bearertoken.Token, extractorRidArg rid.ResourceIdentifier) (ContainerizedExtractor, error)
-	// Search for containerized extractors based on query parameters.
+	/*
+	   Searches file extractors by text, label, property, or workspace, in the workspaces you can view.
+	   Returns up to 100 matching extractors, with no paging, plus every public extractor whatever the
+	   query.
+
+	   Archived extractors are excluded from the matches. The list is newest first.
+	*/
 	SearchContainerizedExtractors(ctx context.Context, authHeader bearertoken.Token, requestArg SearchContainerizedExtractorsRequest) ([]ContainerizedExtractor, error)
-	// Update a containerized extractor. Only the fields that are set in the request will be updated.
+	/*
+	   Updates the settings of a file extractor that runs in a container, and returns the updated
+	   extractor.
+
+	   Only the fields set in the request change. A list, set, or map that is set replaces the stored value
+	   as a whole. The default tag must be one of the tags, using the new tags when tags is also set. The
+	   caller needs permission to edit connectivity in the extractor's workspace.
+
+	   Errors:
+	   - NOT_FOUND (ContainerizedExtractor:ContainerizedExtractorNotFound): the extractor does not exist or
+	     the caller cannot edit connectivity in its workspace.
+	   - INVALID_ARGUMENT (ContainerizedExtractor:InvalidDefaultTag): the default tag is not among the
+	     tags.
+	*/
 	UpdateContainerizedExtractor(ctx context.Context, authHeader bearertoken.Token, extractorRidArg rid.ResourceIdentifier, requestArg UpdateContainerizedExtractorRequest) (ContainerizedExtractor, error)
-	// Archive a containerized extractor.
+	/*
+	   Archives a file extractor so that search excludes it. It can still be read by RID. Undo with
+	   unarchiveContainerizedExtractor.
+
+	   The caller needs permission to edit connectivity in the extractor's workspace.
+
+	   Errors:
+	   - NOT_FOUND (ContainerizedExtractor:ContainerizedExtractorNotFound): the extractor does not exist,
+	     is already archived, or the caller cannot edit connectivity in its workspace.
+	*/
 	ArchiveContainerizedExtractor(ctx context.Context, authHeader bearertoken.Token, extractorRidArg rid.ResourceIdentifier) error
-	// Unarchive a containerized extractor.
+	/*
+	   Restores an archived file extractor so that search includes it again.
+
+	   The caller needs permission to edit connectivity in the extractor's workspace.
+
+	   Errors:
+	   - NOT_FOUND (ContainerizedExtractor:ContainerizedExtractorNotFound): the extractor does not exist,
+	     is not archived, or the caller cannot edit connectivity in its workspace.
+	*/
 	UnarchiveContainerizedExtractor(ctx context.Context, authHeader bearertoken.Token, extractorRidArg rid.ResourceIdentifier) error
 }
 
@@ -138,17 +198,77 @@ func (c *containerizedExtractorServiceClient) UnarchiveContainerizedExtractor(ct
 
 // The Containerized Extractor service provides functionality for creating, updating, and archiving containerized extractors.
 type ContainerizedExtractorServiceClientWithAuth interface {
-	// Registers a containerized extractor for a given set of containerized files.
+	/*
+	   Registers a file extractor (a containerized extractor in the API) in a workspace: a Docker image
+	   that parses files of a custom format when you upload them. Returns the new extractor's RID.
+
+	   Give either containerImageRid, a self-hosted image that must be ready in the workspace, or image, an
+	   external registry image. The image field is ignored when containerImageRid is set. The default tag
+	   in image must be one of its tags. The output format defaults to PARQUET and the description to
+	   empty. If timestampMetadata is omitted, it must be provided at ingest time. The caller needs
+	   permission to edit connectivity in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist or the caller cannot edit
+	     connectivity in it.
+	   - INVALID_ARGUMENT: neither image nor containerImageRid is set, or the container image is not found
+	     in the workspace or is not ready.
+	   - INVALID_ARGUMENT (ContainerizedExtractor:InvalidDefaultTag): the default tag in image is not one
+	     of its tags.
+	*/
 	RegisterContainerizedExtractor(ctx context.Context, requestArg RegisterContainerizedExtractorRequest) (RegisterContainerizedExtractorResponse, error)
-	// Get a containerized extractor by its RID.
+	/*
+	   Gets a file extractor by RID. Returns public extractors and extractors in workspaces you can view,
+	   archived ones included.
+
+	   Errors:
+	   - NOT_FOUND (ContainerizedExtractor:ContainerizedExtractorNotFound): the extractor does not exist or
+	     the caller cannot view its workspace.
+	*/
 	GetContainerizedExtractor(ctx context.Context, extractorRidArg rid.ResourceIdentifier) (ContainerizedExtractor, error)
-	// Search for containerized extractors based on query parameters.
+	/*
+	   Searches file extractors by text, label, property, or workspace, in the workspaces you can view.
+	   Returns up to 100 matching extractors, with no paging, plus every public extractor whatever the
+	   query.
+
+	   Archived extractors are excluded from the matches. The list is newest first.
+	*/
 	SearchContainerizedExtractors(ctx context.Context, requestArg SearchContainerizedExtractorsRequest) ([]ContainerizedExtractor, error)
-	// Update a containerized extractor. Only the fields that are set in the request will be updated.
+	/*
+	   Updates the settings of a file extractor that runs in a container, and returns the updated
+	   extractor.
+
+	   Only the fields set in the request change. A list, set, or map that is set replaces the stored value
+	   as a whole. The default tag must be one of the tags, using the new tags when tags is also set. The
+	   caller needs permission to edit connectivity in the extractor's workspace.
+
+	   Errors:
+	   - NOT_FOUND (ContainerizedExtractor:ContainerizedExtractorNotFound): the extractor does not exist or
+	     the caller cannot edit connectivity in its workspace.
+	   - INVALID_ARGUMENT (ContainerizedExtractor:InvalidDefaultTag): the default tag is not among the
+	     tags.
+	*/
 	UpdateContainerizedExtractor(ctx context.Context, extractorRidArg rid.ResourceIdentifier, requestArg UpdateContainerizedExtractorRequest) (ContainerizedExtractor, error)
-	// Archive a containerized extractor.
+	/*
+	   Archives a file extractor so that search excludes it. It can still be read by RID. Undo with
+	   unarchiveContainerizedExtractor.
+
+	   The caller needs permission to edit connectivity in the extractor's workspace.
+
+	   Errors:
+	   - NOT_FOUND (ContainerizedExtractor:ContainerizedExtractorNotFound): the extractor does not exist,
+	     is already archived, or the caller cannot edit connectivity in its workspace.
+	*/
 	ArchiveContainerizedExtractor(ctx context.Context, extractorRidArg rid.ResourceIdentifier) error
-	// Unarchive a containerized extractor.
+	/*
+	   Restores an archived file extractor so that search includes it again.
+
+	   The caller needs permission to edit connectivity in the extractor's workspace.
+
+	   Errors:
+	   - NOT_FOUND (ContainerizedExtractor:ContainerizedExtractorNotFound): the extractor does not exist,
+	     is not archived, or the caller cannot edit connectivity in its workspace.
+	*/
 	UnarchiveContainerizedExtractor(ctx context.Context, extractorRidArg rid.ResourceIdentifier) error
 }
 
@@ -243,20 +363,40 @@ func (c *containerizedExtractorServiceClientWithTokenProvider) UnarchiveContaine
 }
 
 /*
-Creates and reports on ingest automations: server-side workflows that take an upload (one or
-more files) through asset/dataset/data-scope/run creation, ingest, and channel availability. Backs
-the upload wizard's "Quick look" mode; the frontend creates the accompanying workbook. All
-endpoints validate that the target workspace is the sandbox workspace while the feature is
-gated. Resources are created as the requesting user.
+Starts and reports on ingest automations: background workflows that take an upload of one or more
+files through asset, dataset, data scope, and run creation, ingest, and channel availability.
+Resources are created as the requesting user.
 */
 type IngestAutomationServiceClient interface {
 	/*
-	   Creates the automation and starts its workflow, returning immediately. Poll
-	   getIngestAutomation for progress. Throws WorkspaceNotSandbox outside the sandbox
-	   workspace while the feature is gated.
+	   Starts an ingest automation: a background workflow that creates an asset, dataset, data scope, and
+	   run, then ingests already-uploaded CSV or Parquet files into the dataset. Returns at once with the
+	   automation in CREATING_RESOURCES status.
+
+	   Poll getIngestAutomation for progress. The resources are created as the requesting user. Ingest
+	   automations run only in the sandbox workspace. The caller needs permission to create data sources in
+	   the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT: sources is empty, has more than 20 entries, or has an entry that is not an s3
+	     source; a title is longer than 500 characters; refName is longer than 100 characters; or fileType
+	     is not CSV or PARQUET.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist or the caller cannot create
+	     data sources in it.
+	   - INVALID_ARGUMENT (IngestAutomation:WorkspaceNotSandbox): the workspace is not the sandbox
+	     workspace.
 	*/
 	CreateIngestAutomation(ctx context.Context, authHeader bearertoken.Token, requestArg CreateIngestAutomationRequest) (IngestAutomation, error)
-	// Returns the automation's current status and the RIDs of every resource created so far.
+	/*
+	   Gets an ingest automation: its status and the RIDs of the asset, dataset, run, and ingest job
+	   created so far.
+
+	   Only the user who created the automation can read it.
+
+	   Errors:
+	   - NOT_FOUND (IngestAutomation:IngestAutomationNotFound): the RID is unknown, or the automation was
+	     created by another user.
+	*/
 	GetIngestAutomation(ctx context.Context, authHeader bearertoken.Token, ridArg IngestAutomationRid) (IngestAutomation, error)
 }
 
@@ -304,20 +444,40 @@ func (c *ingestAutomationServiceClient) GetIngestAutomation(ctx context.Context,
 }
 
 /*
-Creates and reports on ingest automations: server-side workflows that take an upload (one or
-more files) through asset/dataset/data-scope/run creation, ingest, and channel availability. Backs
-the upload wizard's "Quick look" mode; the frontend creates the accompanying workbook. All
-endpoints validate that the target workspace is the sandbox workspace while the feature is
-gated. Resources are created as the requesting user.
+Starts and reports on ingest automations: background workflows that take an upload of one or more
+files through asset, dataset, data scope, and run creation, ingest, and channel availability.
+Resources are created as the requesting user.
 */
 type IngestAutomationServiceClientWithAuth interface {
 	/*
-	   Creates the automation and starts its workflow, returning immediately. Poll
-	   getIngestAutomation for progress. Throws WorkspaceNotSandbox outside the sandbox
-	   workspace while the feature is gated.
+	   Starts an ingest automation: a background workflow that creates an asset, dataset, data scope, and
+	   run, then ingests already-uploaded CSV or Parquet files into the dataset. Returns at once with the
+	   automation in CREATING_RESOURCES status.
+
+	   Poll getIngestAutomation for progress. The resources are created as the requesting user. Ingest
+	   automations run only in the sandbox workspace. The caller needs permission to create data sources in
+	   the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT: sources is empty, has more than 20 entries, or has an entry that is not an s3
+	     source; a title is longer than 500 characters; refName is longer than 100 characters; or fileType
+	     is not CSV or PARQUET.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist or the caller cannot create
+	     data sources in it.
+	   - INVALID_ARGUMENT (IngestAutomation:WorkspaceNotSandbox): the workspace is not the sandbox
+	     workspace.
 	*/
 	CreateIngestAutomation(ctx context.Context, requestArg CreateIngestAutomationRequest) (IngestAutomation, error)
-	// Returns the automation's current status and the RIDs of every resource created so far.
+	/*
+	   Gets an ingest automation: its status and the RIDs of the asset, dataset, run, and ingest job
+	   created so far.
+
+	   Only the user who created the automation can read it.
+
+	   Errors:
+	   - NOT_FOUND (IngestAutomation:IngestAutomationNotFound): the RID is unknown, or the automation was
+	     created by another user.
+	*/
 	GetIngestAutomation(ctx context.Context, ridArg IngestAutomationRid) (IngestAutomation, error)
 }
 
@@ -365,61 +525,111 @@ func (c *ingestAutomationServiceClientWithTokenProvider) GetIngestAutomation(ctx
 
 // Public API for querying ingest jobs.
 type IngestJobServiceClient interface {
-	// Returns a single ingest job by RID. Does not include the full ingest request details.
+	/*
+	   Gets one ingest job (a file ingest into a dataset): its status, dataset, source files, creator, timing,
+	   and count of files produced. Does not include the ingest request.
+
+	   The caller needs permission to view the job's workspace and to read the metadata of the job's dataset.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestJobNotFound): the job does not exist, or the caller cannot view its
+	     workspace or read its dataset's metadata.
+	*/
 	GetIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (IngestJob, error)
 	/*
-	   Returns a single ingest transform by RID. The caller must be authorized to read the dataset
-	   produced by the transform's parent ingest job; a transform whose parent job is not visible to
-	   the caller is reported as IngestTransformNotFound rather than leaking its existence.
+	   Gets one ingest transform, a unit of extraction work within an ingest job, with its type, status, timing,
+	   and failure detail.
+
+	   The caller needs the same access as for getIngestJob on the transform's ingest job. A transform the caller
+	   cannot see is reported the same way as a missing one.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestTransformNotFound): the transform does not exist, or the caller cannot
+	     view its ingest job.
 	*/
 	GetIngestTransform(ctx context.Context, authHeader bearertoken.Token, ingestTransformRidArg IngestTransformRid) (IngestTransform, error)
 	/*
-	   Returns pre-signed download URIs for a transform's input file(s), keyed on the transform rather
-	   than on a produced dataset file, so the inputs of a transform that produced no file — one that is
-	   still running, or that failed — remain downloadable. Counterpart to the catalog's
-	   getOriginFileUris, which requires a dataset file to key on.
+	   Returns signed download URIs, valid for one minute, for the input files of an ingest transform, so the
+	   inputs of a running or failed transform stay downloadable. Unlike getOriginFileUris on the catalog, it
+	   needs no dataset file.
 
-	   The caller must be authorized to read data on the parent ingest job's dataset; a transform whose
-	   parent job is not visible to the caller is reported as IngestTransformNotFound.
+	   Only inputs stored in S3 are included, so the list can be shorter than the transform's `sourcePaths`. An
+	   input that is not stored in S3, such as a GCS object, a presigned URL, or a File Store file revision, is
+	   omitted. The list is empty when the stored transform cannot be interpreted. The caller needs permission to
+	   view the job's workspace and to read the data of the job's dataset.
 
-	   Only inputs residing in object storage this deployment can sign for are returned, so the result
-	   may be shorter than `sourcePaths` on the same transform: an input still awaiting its copy into
-	   the uploads bucket (a GCS object, a caller-supplied presigned URL, or a File Store revision) has
-	   no signable location yet and is omitted. An unrecognized stored payload yields an empty list.
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestTransformNotFound): the transform does not exist, or the caller cannot
+	     view its ingest job or read its dataset's data.
 	*/
 	GetIngestTransformOriginFileUris(ctx context.Context, authHeader bearertoken.Token, ingestTransformRidArg IngestTransformRid) ([]catalog.OriginFileUri, error)
 	/*
-	   Returns a paginated list of the transforms belonging to a single ingest job, oldest-first and
-	   optionally filtered by status. The caller must be authorized to read the parent job's dataset;
-	   a job that is not visible to the caller is reported as IngestJobNotFound.
+	   Lists the transforms of one ingest job, oldest first, optionally filtered by status. Returns a page.
+
+	   The caller needs the same access as for getIngestJob on the job.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestJobNotFound): the job does not exist, or the caller cannot view it.
+	   - INVALID_ARGUMENT: a status is not a known transform status.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a previous
+	     response.
 	*/
 	SearchIngestTransforms(ctx context.Context, authHeader bearertoken.Token, requestArg SearchIngestTransformsRequest) (SearchIngestTransformsResponse, error)
-	// Returns a paginated list of ingest jobs, optionally filtered by dataset.
+	/*
+	   Searches ingest jobs (file ingests into datasets) by dataset, creator, status, creation time, source file
+	   text, workspace, or triggering ingest rule, combined with and, or, and not. Returns a page, newest created
+	   first unless sorted.
+
+	   Jobs without a dataset are never returned. Jobs whose dataset's metadata the caller cannot read are removed
+	   after the page is read, so a page can be short.
+
+	   Errors:
+	   - INVALID_ARGUMENT: a time range has no bound.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the filter names a workspace the caller cannot view.
+	   - NOT_FOUND (IngestService:DatasetNotFound): the filter names a dataset whose metadata the caller cannot
+	     read.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a previous
+	     response.
+	   - INVALID_ARGUMENT: the search text contains a null character.
+	*/
 	SearchIngestJobs(ctx context.Context, authHeader bearertoken.Token, requestArg SearchIngestJobsRequest) (SearchIngestJobsResponse, error)
 	/*
-	   Returns the number of ingest jobs matching the filter, applying the same visibility rules as
-	   searchIngestJobs: jobs without a persisted dataset are excluded, and only jobs whose dataset
-	   the caller is authorized to read are counted. Intended for cheap polling (e.g. an active-job
-	   indicator) instead of paginating searchIngestJobs just to count results. Throws
-	   INVALID_ARGUMENT when the filter matches jobs across more distinct datasets than can be
-	   authorized in one request; narrow the filter in that case.
+	   Counts ingest jobs matching a filter, with the same visibility rules as searchIngestJobs: jobs without a
+	   dataset, and jobs whose dataset's metadata the caller cannot read, are not counted. Use it instead of paging
+	   searchIngestJobs when only the number is needed.
+
+	   Errors:
+	   - INVALID_ARGUMENT: a time range has no bound.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the filter names a workspace the caller cannot view.
+	   - NOT_FOUND (IngestService:DatasetNotFound): the filter names a dataset whose metadata the caller cannot
+	     read.
+	   - INVALID_ARGUMENT: the search text contains a null character, or the filter matches jobs on more than
+	     10,000 distinct datasets (narrow the filter).
 	*/
 	CountIngestJobs(ctx context.Context, authHeader bearertoken.Token, requestArg CountIngestJobsRequest) (CountIngestJobsResponse, error)
 	/*
-	   Cancels an ingest job. Jobs that have not yet started running (SUBMITTED, QUEUED) are
-	   transitioned directly to CANCELLED. Jobs that are IN_PROGRESS have their underlying
-	   Temporal workflow cancelled; the workflow is responsible for transitioning the job to
-	   CANCELLED and tearing down in-flight work. Cancelling a job that is already in a terminal
-	   state (COMPLETED, FAILED, CANCELLED) throws IngestJobNotCancellable.
+	   Cancels an ingest job and returns it. A job already CANCELLED is returned unchanged. A job that is
+	   running may be returned before its status reaches CANCELLED.
+
+	   Fails with IngestJobNotCancellable when the job is COMPLETED, FAILED, DELETION_IN_PROGRESS, or
+	   DELETED, and as not found when the job does not exist or the caller cannot cancel it.
 	*/
 	CancelIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (IngestJob, error)
 	/*
-	   Cancels multiple ingest jobs in a single call. Each job is processed independently and
-	   best-effort: a job that cannot be cancelled (already terminal, missing, or not authorized for
-	   the caller) yields a `failed` result rather than aborting the batch. Per-job cancellation
-	   semantics match cancelIngestJob. At most 100 jobs may be requested per call.
+	   Cancels up to 100 ingest jobs in one call, with the same rules as cancelIngestJob. Returns one result
+	   per requested job, in request order. A job that is missing, not cancellable by the caller, or in a
+	   final status gets a `failed` result and does not stop the others.
 	*/
 	BatchCancelIngestJobs(ctx context.Context, authHeader bearertoken.Token, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error)
+	/*
+	   Irreversibly deletes the data an ingest job wrote: every series in the job's dataset tagged with the
+	   job, then marks the job and its dataset files DELETED.
+
+	   Only a COMPLETED or CANCELLED job that wrote series, has no video files, and whose files have all
+	   finished ingesting can be deleted; a DELETION_IN_PROGRESS job resumes. Anything else fails with
+	   IngestJobNotDeletable.
+	*/
+	DeleteIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) error
 }
 
 type ingestJobServiceClient struct {
@@ -570,63 +780,125 @@ func (c *ingestJobServiceClient) BatchCancelIngestJobs(ctx context.Context, auth
 	return *returnVal, nil
 }
 
+func (c *ingestJobServiceClient) DeleteIngestJob(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) error {
+	var requestParams []httpclient.RequestParam
+	requestParams = append(requestParams, httpclient.WithRPCMethodName("DeleteIngestJob"))
+	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
+	requestParams = append(requestParams, httpclient.WithPathf("/ingest/v1/ingest-job/%s", url.PathEscape(fmt.Sprint(ingestJobRidArg))))
+	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
+	if _, err := c.client.Delete(ctx, requestParams...); err != nil {
+		return werror.WrapWithContextParams(ctx, err, "deleteIngestJob failed")
+	}
+	return nil
+}
+
 // Public API for querying ingest jobs.
 type IngestJobServiceClientWithAuth interface {
-	// Returns a single ingest job by RID. Does not include the full ingest request details.
+	/*
+	   Gets one ingest job (a file ingest into a dataset): its status, dataset, source files, creator, timing,
+	   and count of files produced. Does not include the ingest request.
+
+	   The caller needs permission to view the job's workspace and to read the metadata of the job's dataset.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestJobNotFound): the job does not exist, or the caller cannot view its
+	     workspace or read its dataset's metadata.
+	*/
 	GetIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error)
 	/*
-	   Returns a single ingest transform by RID. The caller must be authorized to read the dataset
-	   produced by the transform's parent ingest job; a transform whose parent job is not visible to
-	   the caller is reported as IngestTransformNotFound rather than leaking its existence.
+	   Gets one ingest transform, a unit of extraction work within an ingest job, with its type, status, timing,
+	   and failure detail.
+
+	   The caller needs the same access as for getIngestJob on the transform's ingest job. A transform the caller
+	   cannot see is reported the same way as a missing one.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestTransformNotFound): the transform does not exist, or the caller cannot
+	     view its ingest job.
 	*/
 	GetIngestTransform(ctx context.Context, ingestTransformRidArg IngestTransformRid) (IngestTransform, error)
 	/*
-	   Returns pre-signed download URIs for a transform's input file(s), keyed on the transform rather
-	   than on a produced dataset file, so the inputs of a transform that produced no file — one that is
-	   still running, or that failed — remain downloadable. Counterpart to the catalog's
-	   getOriginFileUris, which requires a dataset file to key on.
+	   Returns signed download URIs, valid for one minute, for the input files of an ingest transform, so the
+	   inputs of a running or failed transform stay downloadable. Unlike getOriginFileUris on the catalog, it
+	   needs no dataset file.
 
-	   The caller must be authorized to read data on the parent ingest job's dataset; a transform whose
-	   parent job is not visible to the caller is reported as IngestTransformNotFound.
+	   Only inputs stored in S3 are included, so the list can be shorter than the transform's `sourcePaths`. An
+	   input that is not stored in S3, such as a GCS object, a presigned URL, or a File Store file revision, is
+	   omitted. The list is empty when the stored transform cannot be interpreted. The caller needs permission to
+	   view the job's workspace and to read the data of the job's dataset.
 
-	   Only inputs residing in object storage this deployment can sign for are returned, so the result
-	   may be shorter than `sourcePaths` on the same transform: an input still awaiting its copy into
-	   the uploads bucket (a GCS object, a caller-supplied presigned URL, or a File Store revision) has
-	   no signable location yet and is omitted. An unrecognized stored payload yields an empty list.
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestTransformNotFound): the transform does not exist, or the caller cannot
+	     view its ingest job or read its dataset's data.
 	*/
 	GetIngestTransformOriginFileUris(ctx context.Context, ingestTransformRidArg IngestTransformRid) ([]catalog.OriginFileUri, error)
 	/*
-	   Returns a paginated list of the transforms belonging to a single ingest job, oldest-first and
-	   optionally filtered by status. The caller must be authorized to read the parent job's dataset;
-	   a job that is not visible to the caller is reported as IngestJobNotFound.
+	   Lists the transforms of one ingest job, oldest first, optionally filtered by status. Returns a page.
+
+	   The caller needs the same access as for getIngestJob on the job.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestJobNotFound): the job does not exist, or the caller cannot view it.
+	   - INVALID_ARGUMENT: a status is not a known transform status.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a previous
+	     response.
 	*/
 	SearchIngestTransforms(ctx context.Context, requestArg SearchIngestTransformsRequest) (SearchIngestTransformsResponse, error)
-	// Returns a paginated list of ingest jobs, optionally filtered by dataset.
+	/*
+	   Searches ingest jobs (file ingests into datasets) by dataset, creator, status, creation time, source file
+	   text, workspace, or triggering ingest rule, combined with and, or, and not. Returns a page, newest created
+	   first unless sorted.
+
+	   Jobs without a dataset are never returned. Jobs whose dataset's metadata the caller cannot read are removed
+	   after the page is read, so a page can be short.
+
+	   Errors:
+	   - INVALID_ARGUMENT: a time range has no bound.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the filter names a workspace the caller cannot view.
+	   - NOT_FOUND (IngestService:DatasetNotFound): the filter names a dataset whose metadata the caller cannot
+	     read.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a previous
+	     response.
+	   - INVALID_ARGUMENT: the search text contains a null character.
+	*/
 	SearchIngestJobs(ctx context.Context, requestArg SearchIngestJobsRequest) (SearchIngestJobsResponse, error)
 	/*
-	   Returns the number of ingest jobs matching the filter, applying the same visibility rules as
-	   searchIngestJobs: jobs without a persisted dataset are excluded, and only jobs whose dataset
-	   the caller is authorized to read are counted. Intended for cheap polling (e.g. an active-job
-	   indicator) instead of paginating searchIngestJobs just to count results. Throws
-	   INVALID_ARGUMENT when the filter matches jobs across more distinct datasets than can be
-	   authorized in one request; narrow the filter in that case.
+	   Counts ingest jobs matching a filter, with the same visibility rules as searchIngestJobs: jobs without a
+	   dataset, and jobs whose dataset's metadata the caller cannot read, are not counted. Use it instead of paging
+	   searchIngestJobs when only the number is needed.
+
+	   Errors:
+	   - INVALID_ARGUMENT: a time range has no bound.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the filter names a workspace the caller cannot view.
+	   - NOT_FOUND (IngestService:DatasetNotFound): the filter names a dataset whose metadata the caller cannot
+	     read.
+	   - INVALID_ARGUMENT: the search text contains a null character, or the filter matches jobs on more than
+	     10,000 distinct datasets (narrow the filter).
 	*/
 	CountIngestJobs(ctx context.Context, requestArg CountIngestJobsRequest) (CountIngestJobsResponse, error)
 	/*
-	   Cancels an ingest job. Jobs that have not yet started running (SUBMITTED, QUEUED) are
-	   transitioned directly to CANCELLED. Jobs that are IN_PROGRESS have their underlying
-	   Temporal workflow cancelled; the workflow is responsible for transitioning the job to
-	   CANCELLED and tearing down in-flight work. Cancelling a job that is already in a terminal
-	   state (COMPLETED, FAILED, CANCELLED) throws IngestJobNotCancellable.
+	   Cancels an ingest job and returns it. A job already CANCELLED is returned unchanged. A job that is
+	   running may be returned before its status reaches CANCELLED.
+
+	   Fails with IngestJobNotCancellable when the job is COMPLETED, FAILED, DELETION_IN_PROGRESS, or
+	   DELETED, and as not found when the job does not exist or the caller cannot cancel it.
 	*/
 	CancelIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) (IngestJob, error)
 	/*
-	   Cancels multiple ingest jobs in a single call. Each job is processed independently and
-	   best-effort: a job that cannot be cancelled (already terminal, missing, or not authorized for
-	   the caller) yields a `failed` result rather than aborting the batch. Per-job cancellation
-	   semantics match cancelIngestJob. At most 100 jobs may be requested per call.
+	   Cancels up to 100 ingest jobs in one call, with the same rules as cancelIngestJob. Returns one result
+	   per requested job, in request order. A job that is missing, not cancellable by the caller, or in a
+	   final status gets a `failed` result and does not stop the others.
 	*/
 	BatchCancelIngestJobs(ctx context.Context, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error)
+	/*
+	   Irreversibly deletes the data an ingest job wrote: every series in the job's dataset tagged with the
+	   job, then marks the job and its dataset files DELETED.
+
+	   Only a COMPLETED or CANCELLED job that wrote series, has no video files, and whose files have all
+	   finished ingesting can be deleted; a DELETION_IN_PROGRESS job resumes. Anything else fails with
+	   IngestJobNotDeletable.
+	*/
+	DeleteIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) error
 }
 
 func NewIngestJobServiceClientWithAuth(client IngestJobServiceClient, authHeader bearertoken.Token) IngestJobServiceClientWithAuth {
@@ -668,6 +940,10 @@ func (c *ingestJobServiceClientWithAuth) CancelIngestJob(ctx context.Context, in
 
 func (c *ingestJobServiceClientWithAuth) BatchCancelIngestJobs(ctx context.Context, requestArg BatchCancelIngestJobsRequest) (BatchCancelIngestJobsResponse, error) {
 	return c.client.BatchCancelIngestJobs(ctx, c.authHeader, requestArg)
+}
+
+func (c *ingestJobServiceClientWithAuth) DeleteIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) error {
+	return c.client.DeleteIngestJob(ctx, c.authHeader, ingestJobRidArg)
 }
 
 func NewIngestJobServiceClientWithTokenProvider(client IngestJobServiceClient, tokenProvider httpclient.TokenProvider) IngestJobServiceClientWithAuth {
@@ -743,43 +1019,146 @@ func (c *ingestJobServiceClientWithTokenProvider) BatchCancelIngestJobs(ctx cont
 	return c.client.BatchCancelIngestJobs(ctx, bearertoken.Token(token), requestArg)
 }
 
-// The Ingest Service handles the data ingestion into Nominal/Clickhouse.
+func (c *ingestJobServiceClientWithTokenProvider) DeleteIngestJob(ctx context.Context, ingestJobRidArg IngestJobRid) error {
+	token, err := c.tokenProvider(ctx)
+	if err != nil {
+		return err
+	}
+	return c.client.DeleteIngestJob(ctx, bearertoken.Token(token), ingestJobRidArg)
+}
+
+// The Ingest Service ingests files into datasets and runs, and deletes ingested files.
 type IngestServiceClient interface {
 	/*
-	   Triggers an ingest job, allowing either creating a new dataset or uploading to an
-	   existing one. This endpoint is meant to supersede all other ingestion endpoints as their functionality
-	   gets migrated to this one.
+	   Starts an ingest job that loads an uploaded file into a new or existing dataset or video, or into an
+	   existing point cloud. Returns the ingest job RID and the dataset file or point cloud it writes to;
+	   ingestion continues in the background.
+
+	   The options choose how the file is parsed (for example CSV, Parquet, MCAP, or a file extractor), where
+	   it is read from, and the destination. A new destination goes in the given or default workspace. The
+	   caller needs permission to create data sources there, or to write data to an existing destination.
+	   Timestamp settings are checked before the job is created. This endpoint replaces ingestVideo.
+
+	   Errors:
+	   - INVALID_ARGUMENT: a timestamp setting is invalid, the target is a new point cloud (create it first),
+	     or an existing target does not exist or is not visible to the caller.
+	   - INVALID_ARGUMENT (IngestService:IncompatibleInputs): a CSV or Parquet request sets
+	     tagKeysFromColumns and tagColumns.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): a new target names no workspace and the caller has
+	     no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - NOT_FOUND (IngestService:S3PathNotFound): an S3 source in the uploads bucket is outside the
+	     workspace's uploads.
+	   - INVALID_ARGUMENT (IngestService:InvalidBucket): an S3 source is in an external bucket that is not
+	     configured for the workspace.
+	   - NOT_FOUND (IngestService:DatasetNotFound): the caller cannot write to the existing dataset.
+	   - NOT_FOUND (Video:VideoNotFound): the caller cannot write to the existing video.
+	   - NOT_FOUND (Spatial:SpatialNotFound): the caller cannot write to the existing point cloud.
 	*/
 	Ingest(ctx context.Context, authHeader bearertoken.Token, triggerIngestArg IngestRequest) (IngestResponse, error)
 	/*
-	   Triggers an ingest job using an existing ingest job RID.
-	   Returns the same response format as the /ingest endpoint.
+	   Creates a new ingest job from the stored request of an existing ingest job. Returns the new job's RID
+	   with its dataset and dataset file.
 
-	   Only a job that has finished can be re-run: re-running one still in flight races or duplicates
-	   the run already in progress. Cancel it first.
+	   A job that is SUBMITTED, QUEUED, or IN_PROGRESS cannot be re-run; cancel it first. The caller needs
+	   permission to create data sources in the job's workspace, and to write data to the job's dataset.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestJobNotFound): the job does not exist, or the caller cannot create data
+	     sources in its workspace.
+	   - INVALID_ARGUMENT (IngestService:IngestJobNotCompatibleForRerun): the job is still SUBMITTED, QUEUED,
+	     or IN_PROGRESS, or its original request is not stored or is too old to re-run.
+	   - NOT_FOUND (IngestService:DatasetNotFound): the caller cannot write data to the job's dataset.
 	*/
 	RerunIngest(ctx context.Context, authHeader bearertoken.Token, requestArg RerunIngestRequest) (IngestResponse, error)
-	// Creates a run and ingests data sources to be added to the run.
+	/*
+	   Creates a run, or updates the run with the given RID, and sets its data sources by reference name. Each
+	   data source is an existing dataset or connection, or a new dataset ingested from a CSV file, with an
+	   optional time offset. Returns the run RID.
+
+	   The run goes in the given or default workspace; creating or updating needs permission to create runs
+	   there. Existing data sources must be readable and in that workspace. A new data source needs
+	   timeColumnSpec; its dataset is created and ingested before the run is saved, so a failed save leaves it behind.
+
+	   If no run has the RID, one is created with it. Otherwise the run is updated, which needs
+	   edit permission too. An update replaces title, description, start time, properties, labels, and data sources, clears links and attachments, and
+	   changes end time and run prefix only when set. gRPC clients can create each dataset, call
+	   nominal.ingest.v2.IngestService/Ingest, then nominal.run.v1.RunService/CreateOrUpdateRun.
+
+	   Errors:
+	   - INVALID_ARGUMENT: a property value is null or a new data source has no timeColumnSpec.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read an existing data source.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the data sources and run are in different
+	     workspaces.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no
+	     default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - INVALID_ARGUMENT (Scout:InvalidRunBounds): endTime is not after startTime.
+	   - PERMISSION_DENIED: the caller cannot create runs in the workspace.
+	   - NOT_FOUND (Scout:RunNotFound): the caller cannot edit the run to update.
+	*/
 	IngestRun(ctx context.Context, authHeader bearertoken.Token, requestArg IngestRunRequest) (IngestRunResponse, error)
 	/*
-	   Ingests video data from a S3 Nominal upload bucket.
+	   Creates a video from exactly one source file and ingests it, using a timestamp manifest to give each
+	   frame its time. Returns the new video RID and video file RID.
+
+	   The source can be a file in the Nominal upload bucket. The video is created in the given workspace, or
+	   in the caller's default workspace, and the caller needs permission to create data sources there.
+
+	   Errors:
+	   - INVALID_ARGUMENT: sources does not hold exactly one source, or a timestamp setting is invalid.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no
+	     default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
 
 	   Deprecated: Replaced by ingest.
 	*/
 	IngestVideo(ctx context.Context, authHeader bearertoken.Token, ingestVideoArg IngestVideoRequest) (IngestVideoResponse, error)
 	/*
-	   Re-ingests data from provided source datasets into either an existing target dataset, or a new one.
-	   Only supported for CSV and Parquet dataset files.
-	   Will only reingest dataset files and will drop streaming data from datasets.
+	   Re-ingests the successfully ingested files of source datasets, in source order, into a new or existing
+	   dataset. Returns, per source dataset, a map from source file ID to the new dataset and dataset file.
+
+	   Only CSV and Parquet files are supported. Streamed data is not copied. Each file is its own ingest job,
+	   submitted one after another; the first file creates a new target and later files go into it. A file's
+	   timestamp metadata comes from the file, or from ingestMetadata when the file has none. These checks run
+	   before the first file is submitted. The caller needs permission to read data from every source dataset,
+	   and to write to an existing target or to create data sources in the workspace of a new one. Also served
+	   as nominal.ingestmanagement.v1.IngestManagementService/ReingestDatasets.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetsNotFound): a source or target dataset does not exist, or the caller cannot
+	     read data from a source.
+	   - INVALID_ARGUMENT (IngestService:RecursiveReingest): the target is also a source.
+	   - INVALID_ARGUMENT (IngestService:BatchGranularityMismatch): the datasets have different granularities.
+	   - INVALID_ARGUMENT (IngestService:ReingestTooManyFiles): more than 1,000 files qualify.
+	   - INVALID_ARGUMENT (IngestService:MissingMetadataForReingest): a file has no timestamp metadata and
+	     ingestMetadata gives none.
+	   - NOT_FOUND (IngestService:DatasetNotFound): the caller cannot write data to the existing target.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): a new target names no workspace and the caller has
+	     no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace of a
+	     new target.
 	*/
 	ReingestFromDatasets(ctx context.Context, authHeader bearertoken.Token, requestArg ReingestDatasetsRequest) (ReingestDatasetsResponse, error)
 	/*
-	   This is a best effort deletion of the file's data based on the ingestedAt timestamp. This is an unreversible
-	   action. Only v2 dataset file deletion is supported.
-	   !!!WARNING!!!
-	   It's possible that the file has overwritten points, in which case, those older points will not be recovered.
-	   Only use this endpoint if this is acceptable, the data across files are disjoint, or you're willing to
-	   re-ingest files to manually recover older points.
+	   Deletes one ingested file of a dataset, together with the channel data that the file contributed, on a
+	   best-effort basis. Returns no content.
+
+	   Irreversible: points that the file overwrote are not restored, so re-ingest other files to recover
+	   them. When the file is the only file of its ingest job, its data is deleted by the job's ingest tag.
+	   Otherwise the file is marked as deletion in progress and a background workflow removes its data by
+	   ingestion time; that path rejects a file over 500,000,000 bytes or with no recorded size, except a video
+	   file. The caller needs permission to delete data from the dataset.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:DatasetNotFound): the dataset does not exist, or the caller cannot delete
+	     its data.
+	   - NOT_FOUND (IngestService:DatasetFileNotFound): the dataset has no file with this ID.
+	   - INVALID_ARGUMENT (IngestService:FileDeletionNotSupported): the file is one of several files of an
+	     ingest job on a dataset whose storage cannot delete one file; delete the ingest job instead.
+	   - INVALID_ARGUMENT: the file is over 500,000,000 bytes or has no recorded size.
+
+	   Deprecated: Use nominal.ingestmanagement.v1.IngestManagementService/DeleteDatasetFile.
 	*/
 	DeleteFile(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, fileIdArg uuid.UUID) error
 }
@@ -894,43 +1273,138 @@ func (c *ingestServiceClient) DeleteFile(ctx context.Context, authHeader bearert
 	return nil
 }
 
-// The Ingest Service handles the data ingestion into Nominal/Clickhouse.
+// The Ingest Service ingests files into datasets and runs, and deletes ingested files.
 type IngestServiceClientWithAuth interface {
 	/*
-	   Triggers an ingest job, allowing either creating a new dataset or uploading to an
-	   existing one. This endpoint is meant to supersede all other ingestion endpoints as their functionality
-	   gets migrated to this one.
+	   Starts an ingest job that loads an uploaded file into a new or existing dataset or video, or into an
+	   existing point cloud. Returns the ingest job RID and the dataset file or point cloud it writes to;
+	   ingestion continues in the background.
+
+	   The options choose how the file is parsed (for example CSV, Parquet, MCAP, or a file extractor), where
+	   it is read from, and the destination. A new destination goes in the given or default workspace. The
+	   caller needs permission to create data sources there, or to write data to an existing destination.
+	   Timestamp settings are checked before the job is created. This endpoint replaces ingestVideo.
+
+	   Errors:
+	   - INVALID_ARGUMENT: a timestamp setting is invalid, the target is a new point cloud (create it first),
+	     or an existing target does not exist or is not visible to the caller.
+	   - INVALID_ARGUMENT (IngestService:IncompatibleInputs): a CSV or Parquet request sets
+	     tagKeysFromColumns and tagColumns.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): a new target names no workspace and the caller has
+	     no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - NOT_FOUND (IngestService:S3PathNotFound): an S3 source in the uploads bucket is outside the
+	     workspace's uploads.
+	   - INVALID_ARGUMENT (IngestService:InvalidBucket): an S3 source is in an external bucket that is not
+	     configured for the workspace.
+	   - NOT_FOUND (IngestService:DatasetNotFound): the caller cannot write to the existing dataset.
+	   - NOT_FOUND (Video:VideoNotFound): the caller cannot write to the existing video.
+	   - NOT_FOUND (Spatial:SpatialNotFound): the caller cannot write to the existing point cloud.
 	*/
 	Ingest(ctx context.Context, triggerIngestArg IngestRequest) (IngestResponse, error)
 	/*
-	   Triggers an ingest job using an existing ingest job RID.
-	   Returns the same response format as the /ingest endpoint.
+	   Creates a new ingest job from the stored request of an existing ingest job. Returns the new job's RID
+	   with its dataset and dataset file.
 
-	   Only a job that has finished can be re-run: re-running one still in flight races or duplicates
-	   the run already in progress. Cancel it first.
+	   A job that is SUBMITTED, QUEUED, or IN_PROGRESS cannot be re-run; cancel it first. The caller needs
+	   permission to create data sources in the job's workspace, and to write data to the job's dataset.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestJobNotFound): the job does not exist, or the caller cannot create data
+	     sources in its workspace.
+	   - INVALID_ARGUMENT (IngestService:IngestJobNotCompatibleForRerun): the job is still SUBMITTED, QUEUED,
+	     or IN_PROGRESS, or its original request is not stored or is too old to re-run.
+	   - NOT_FOUND (IngestService:DatasetNotFound): the caller cannot write data to the job's dataset.
 	*/
 	RerunIngest(ctx context.Context, requestArg RerunIngestRequest) (IngestResponse, error)
-	// Creates a run and ingests data sources to be added to the run.
+	/*
+	   Creates a run, or updates the run with the given RID, and sets its data sources by reference name. Each
+	   data source is an existing dataset or connection, or a new dataset ingested from a CSV file, with an
+	   optional time offset. Returns the run RID.
+
+	   The run goes in the given or default workspace; creating or updating needs permission to create runs
+	   there. Existing data sources must be readable and in that workspace. A new data source needs
+	   timeColumnSpec; its dataset is created and ingested before the run is saved, so a failed save leaves it behind.
+
+	   If no run has the RID, one is created with it. Otherwise the run is updated, which needs
+	   edit permission too. An update replaces title, description, start time, properties, labels, and data sources, clears links and attachments, and
+	   changes end time and run prefix only when set. gRPC clients can create each dataset, call
+	   nominal.ingest.v2.IngestService/Ingest, then nominal.run.v1.RunService/CreateOrUpdateRun.
+
+	   Errors:
+	   - INVALID_ARGUMENT: a property value is null or a new data source has no timeColumnSpec.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the caller cannot read an existing data source.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the data sources and run are in different
+	     workspaces.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no
+	     default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - INVALID_ARGUMENT (Scout:InvalidRunBounds): endTime is not after startTime.
+	   - PERMISSION_DENIED: the caller cannot create runs in the workspace.
+	   - NOT_FOUND (Scout:RunNotFound): the caller cannot edit the run to update.
+	*/
 	IngestRun(ctx context.Context, requestArg IngestRunRequest) (IngestRunResponse, error)
 	/*
-	   Ingests video data from a S3 Nominal upload bucket.
+	   Creates a video from exactly one source file and ingests it, using a timestamp manifest to give each
+	   frame its time. Returns the new video RID and video file RID.
+
+	   The source can be a file in the Nominal upload bucket. The video is created in the given workspace, or
+	   in the caller's default workspace, and the caller needs permission to create data sources there.
+
+	   Errors:
+	   - INVALID_ARGUMENT: sources does not hold exactly one source, or a timestamp setting is invalid.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no
+	     default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
 
 	   Deprecated: Replaced by ingest.
 	*/
 	IngestVideo(ctx context.Context, ingestVideoArg IngestVideoRequest) (IngestVideoResponse, error)
 	/*
-	   Re-ingests data from provided source datasets into either an existing target dataset, or a new one.
-	   Only supported for CSV and Parquet dataset files.
-	   Will only reingest dataset files and will drop streaming data from datasets.
+	   Re-ingests the successfully ingested files of source datasets, in source order, into a new or existing
+	   dataset. Returns, per source dataset, a map from source file ID to the new dataset and dataset file.
+
+	   Only CSV and Parquet files are supported. Streamed data is not copied. Each file is its own ingest job,
+	   submitted one after another; the first file creates a new target and later files go into it. A file's
+	   timestamp metadata comes from the file, or from ingestMetadata when the file has none. These checks run
+	   before the first file is submitted. The caller needs permission to read data from every source dataset,
+	   and to write to an existing target or to create data sources in the workspace of a new one. Also served
+	   as nominal.ingestmanagement.v1.IngestManagementService/ReingestDatasets.
+
+	   Errors:
+	   - NOT_FOUND (Catalog:DatasetsNotFound): a source or target dataset does not exist, or the caller cannot
+	     read data from a source.
+	   - INVALID_ARGUMENT (IngestService:RecursiveReingest): the target is also a source.
+	   - INVALID_ARGUMENT (IngestService:BatchGranularityMismatch): the datasets have different granularities.
+	   - INVALID_ARGUMENT (IngestService:ReingestTooManyFiles): more than 1,000 files qualify.
+	   - INVALID_ARGUMENT (IngestService:MissingMetadataForReingest): a file has no timestamp metadata and
+	     ingestMetadata gives none.
+	   - NOT_FOUND (IngestService:DatasetNotFound): the caller cannot write data to the existing target.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): a new target names no workspace and the caller has
+	     no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace of a
+	     new target.
 	*/
 	ReingestFromDatasets(ctx context.Context, requestArg ReingestDatasetsRequest) (ReingestDatasetsResponse, error)
 	/*
-	   This is a best effort deletion of the file's data based on the ingestedAt timestamp. This is an unreversible
-	   action. Only v2 dataset file deletion is supported.
-	   !!!WARNING!!!
-	   It's possible that the file has overwritten points, in which case, those older points will not be recovered.
-	   Only use this endpoint if this is acceptable, the data across files are disjoint, or you're willing to
-	   re-ingest files to manually recover older points.
+	   Deletes one ingested file of a dataset, together with the channel data that the file contributed, on a
+	   best-effort basis. Returns no content.
+
+	   Irreversible: points that the file overwrote are not restored, so re-ingest other files to recover
+	   them. When the file is the only file of its ingest job, its data is deleted by the job's ingest tag.
+	   Otherwise the file is marked as deletion in progress and a background workflow removes its data by
+	   ingestion time; that path rejects a file over 500,000,000 bytes or with no recorded size, except a video
+	   file. The caller needs permission to delete data from the dataset.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:DatasetNotFound): the dataset does not exist, or the caller cannot delete
+	     its data.
+	   - NOT_FOUND (IngestService:DatasetFileNotFound): the dataset has no file with this ID.
+	   - INVALID_ARGUMENT (IngestService:FileDeletionNotSupported): the file is one of several files of an
+	     ingest job on a dataset whose storage cannot delete one file; delete the ingest job instead.
+	   - INVALID_ARGUMENT: the file is over 500,000,000 bytes or has no recorded size.
+
+	   Deprecated: Use nominal.ingestmanagement.v1.IngestManagementService/DeleteDatasetFile.
 	*/
 	DeleteFile(ctx context.Context, datasetRidArg rids.DatasetRid, fileIdArg uuid.UUID) error
 }
@@ -1027,11 +1501,33 @@ func (c *ingestServiceClientWithTokenProvider) DeleteFile(ctx context.Context, d
 
 // Internal API for managing ingest jobs. This service is filtered out from public documentation.
 type InternalIngestJobServiceClient interface {
-	// Creates an ingest job, returning a RID for the job.
+	/*
+	   Creates an ingest job that ingests files into a dataset, and returns the RID of the job.
+
+	   The job starts in the SUBMITTED status and records the caller as its creator. A new job is
+	   registered in the workspace named in the request. If idempotencyKey is set, a repeated create
+	   in the same workspace with the same key returns the RID of the existing job and creates nothing.
+	   The key is trimmed of surrounding whitespace before it is compared.
+
+	   Errors:
+	   - INVALID_ARGUMENT: idempotencyKey is shorter than 8 or longer than 512 characters after trimming.
+	*/
 	CreateIngestJob(ctx context.Context, authHeader bearertoken.Token, createIngestJobRequestArg CreateIngestJobRequest) (IngestJobRid, error)
 	// Returns a single ingest job by RID with full details including the ingest request.
 	GetIngestJobInternal(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid) (InternalIngestJob, error)
-	// Updates the status of an ingest job.
+	/*
+	   Sets the status of an ingest job and returns the status the job has afterward.
+
+	   The caller needs permission to create data sources in the workspace of the job. Setting the status the
+	   job already has changes nothing. A job that is CANCELLED or DELETED keeps its status, and the call
+	   returns that status. A change to COMPLETED, FAILED, or CANCELLED sets the end time of the job. Status
+	   changes out of the usual order are not rejected.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestJobNotFound): the job does not exist, or the caller cannot create
+	     data sources in its workspace.
+	   - INVALID_ARGUMENT: status is DELETION_IN_PROGRESS or DELETED. Delete the job to set these.
+	*/
 	UpdateIngestJobStatus(ctx context.Context, authHeader bearertoken.Token, ingestJobRidArg IngestJobRid, statusArg IngestJobStatus) (IngestJobStatus, error)
 }
 
@@ -1098,11 +1594,33 @@ func (c *internalIngestJobServiceClient) UpdateIngestJobStatus(ctx context.Conte
 
 // Internal API for managing ingest jobs. This service is filtered out from public documentation.
 type InternalIngestJobServiceClientWithAuth interface {
-	// Creates an ingest job, returning a RID for the job.
+	/*
+	   Creates an ingest job that ingests files into a dataset, and returns the RID of the job.
+
+	   The job starts in the SUBMITTED status and records the caller as its creator. A new job is
+	   registered in the workspace named in the request. If idempotencyKey is set, a repeated create
+	   in the same workspace with the same key returns the RID of the existing job and creates nothing.
+	   The key is trimmed of surrounding whitespace before it is compared.
+
+	   Errors:
+	   - INVALID_ARGUMENT: idempotencyKey is shorter than 8 or longer than 512 characters after trimming.
+	*/
 	CreateIngestJob(ctx context.Context, createIngestJobRequestArg CreateIngestJobRequest) (IngestJobRid, error)
 	// Returns a single ingest job by RID with full details including the ingest request.
 	GetIngestJobInternal(ctx context.Context, ingestJobRidArg IngestJobRid) (InternalIngestJob, error)
-	// Updates the status of an ingest job.
+	/*
+	   Sets the status of an ingest job and returns the status the job has afterward.
+
+	   The caller needs permission to create data sources in the workspace of the job. Setting the status the
+	   job already has changes nothing. A job that is CANCELLED or DELETED keeps its status, and the call
+	   returns that status. A change to COMPLETED, FAILED, or CANCELLED sets the end time of the job. Status
+	   changes out of the usual order are not rejected.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:IngestJobNotFound): the job does not exist, or the caller cannot create
+	     data sources in its workspace.
+	   - INVALID_ARGUMENT: status is DELETION_IN_PROGRESS or DELETED. Delete the job to set these.
+	*/
 	UpdateIngestJobStatus(ctx context.Context, ingestJobRidArg IngestJobRid, statusArg IngestJobStatus) (IngestJobStatus, error)
 }
 
@@ -1161,13 +1679,61 @@ func (c *internalIngestJobServiceClientWithTokenProvider) UpdateIngestJobStatus(
 }
 
 type StreamingSessionServiceClient interface {
+	/*
+	   Gets the in-progress streaming session (a record of data streamed into a dataset) for a dataset and an
+	   optional source, and creates it when none exists. Returns the session with its status, data bounds, and
+	   point count.
+
+	   Each source has its own in-progress session on a dataset, and a request with no source resolves the
+	   unattributed session. A new session starts with no data bounds and no points. Resolving a session
+	   also registers it in the dataset's workspace. The server can reuse a result for up to a minute, so
+	   the returned counts can lag the stored session. The caller needs permission to edit the dataset's metadata.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:DatasetNotFound): the dataset does not exist or the caller cannot edit its
+	     metadata.
+	*/
 	Resolve(ctx context.Context, authHeader bearertoken.Token, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error)
+	/*
+	   Records that a streaming session is still receiving data. Adds the points ingested since the last
+	   heartbeat to the session's point count, widens its data bounds to cover them, and sets its last seen time.
+
+	   The server holds an update briefly and combines it with the next heartbeats, writing a session at most about
+	   every 30 seconds, so a heartbeat can return before its points show in the session. Points that are added
+	   also update the time the dataset last received data. Only a session that is in progress takes heartbeats.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:StreamingSessionNotFound): the session does not exist or is completed. The
+	     error can come back on a later heartbeat, because updates are combined.
+	*/
 	Heartbeat(ctx context.Context, authHeader bearertoken.Token, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error
-	// Returns a paginated list of streaming sessions, optionally filtered by dataset.
+	/*
+	   Searches streaming sessions, the records of data streamed into a dataset, by dataset, source, the time range of
+	   their data, or workspace. Returns a page of sessions, newest created first by default.
+
+	   The sort is by creation time or by the start of the session's data. Sorting by the start of the data leaves out
+	   sessions that have no data yet. Only sessions on datasets the caller can read are returned, so a page can hold
+	   fewer sessions than pageSize. A page token works only with the sort that issued it.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): a workspace in the filter is not visible to the caller.
+	   - NOT_FOUND (IngestService:DatasetNotFound): a dataset named in the filter cannot be read by the caller.
+	   - INVALID_ARGUMENT (Scout:InvalidRange): a time range filter has a start after its end.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): the page token is malformed.
+	   - INVALID_ARGUMENT: the page token was issued for a different sort.
+	*/
 	SearchStreamingSessions(ctx context.Context, authHeader bearertoken.Token, requestArg SearchStreamingSessionsRequest) (SearchStreamingSessionsResponse, error)
 	/*
-	   Returns a paginated list of streaming sessions aggregated by (source, dataset) group,
-	   ordered by latest activity descending.
+	   Searches streaming sources: the streaming sessions grouped by dataset and source, each with its session count,
+	   total points, and latest activity. Returns a page of sources ordered by latest activity, newest first.
+
+	   Only sources on datasets the caller can read are returned, so a page can hold fewer sources than pageSize.
+	   activityAfter limits the aggregation to sessions last seen after that time.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): a workspace in the filter is not visible to the caller.
+	   - NOT_FOUND (IngestService:DatasetNotFound): a dataset named in the filter cannot be read by the caller.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): the page token is malformed.
 	*/
 	SearchStreamingSources(ctx context.Context, authHeader bearertoken.Token, requestArg SearchStreamingSourcesRequest) (SearchStreamingSourcesResponse, error)
 }
@@ -1248,13 +1814,61 @@ func (c *streamingSessionServiceClient) SearchStreamingSources(ctx context.Conte
 }
 
 type StreamingSessionServiceClientWithAuth interface {
+	/*
+	   Gets the in-progress streaming session (a record of data streamed into a dataset) for a dataset and an
+	   optional source, and creates it when none exists. Returns the session with its status, data bounds, and
+	   point count.
+
+	   Each source has its own in-progress session on a dataset, and a request with no source resolves the
+	   unattributed session. A new session starts with no data bounds and no points. Resolving a session
+	   also registers it in the dataset's workspace. The server can reuse a result for up to a minute, so
+	   the returned counts can lag the stored session. The caller needs permission to edit the dataset's metadata.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:DatasetNotFound): the dataset does not exist or the caller cannot edit its
+	     metadata.
+	*/
 	Resolve(ctx context.Context, datasetRidArg rids.DatasetRid, requestArg ResolveStreamingSessionRequest) (ResolveStreamingSessionResponse, error)
+	/*
+	   Records that a streaming session is still receiving data. Adds the points ingested since the last
+	   heartbeat to the session's point count, widens its data bounds to cover them, and sets its last seen time.
+
+	   The server holds an update briefly and combines it with the next heartbeats, writing a session at most about
+	   every 30 seconds, so a heartbeat can return before its points show in the session. Points that are added
+	   also update the time the dataset last received data. Only a session that is in progress takes heartbeats.
+
+	   Errors:
+	   - NOT_FOUND (IngestService:StreamingSessionNotFound): the session does not exist or is completed. The
+	     error can come back on a later heartbeat, because updates are combined.
+	*/
 	Heartbeat(ctx context.Context, sessionRidArg StreamingSessionRid, requestArg HeartbeatStreamingSessionRequest) error
-	// Returns a paginated list of streaming sessions, optionally filtered by dataset.
+	/*
+	   Searches streaming sessions, the records of data streamed into a dataset, by dataset, source, the time range of
+	   their data, or workspace. Returns a page of sessions, newest created first by default.
+
+	   The sort is by creation time or by the start of the session's data. Sorting by the start of the data leaves out
+	   sessions that have no data yet. Only sessions on datasets the caller can read are returned, so a page can hold
+	   fewer sessions than pageSize. A page token works only with the sort that issued it.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): a workspace in the filter is not visible to the caller.
+	   - NOT_FOUND (IngestService:DatasetNotFound): a dataset named in the filter cannot be read by the caller.
+	   - INVALID_ARGUMENT (Scout:InvalidRange): a time range filter has a start after its end.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): the page token is malformed.
+	   - INVALID_ARGUMENT: the page token was issued for a different sort.
+	*/
 	SearchStreamingSessions(ctx context.Context, requestArg SearchStreamingSessionsRequest) (SearchStreamingSessionsResponse, error)
 	/*
-	   Returns a paginated list of streaming sessions aggregated by (source, dataset) group,
-	   ordered by latest activity descending.
+	   Searches streaming sources: the streaming sessions grouped by dataset and source, each with its session count,
+	   total points, and latest activity. Returns a page of sources ordered by latest activity, newest first.
+
+	   Only sources on datasets the caller can read are returned, so a page can hold fewer sources than pageSize.
+	   activityAfter limits the aggregation to sessions last seen after that time.
+
+	   Errors:
+	   - NOT_FOUND (Security:WorkspaceNotFound): a workspace in the filter is not visible to the caller.
+	   - NOT_FOUND (IngestService:DatasetNotFound): a dataset named in the filter cannot be read by the caller.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): the page token is malformed.
 	*/
 	SearchStreamingSources(ctx context.Context, requestArg SearchStreamingSourcesRequest) (SearchStreamingSourcesResponse, error)
 }

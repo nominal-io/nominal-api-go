@@ -75,6 +75,7 @@ func (e *ReactionType) UnmarshalText(data []byte) error {
 	return nil
 }
 
+// The kinds of resource that can have comments: runs and events.
 type ResourceType struct {
 	val ResourceType_Value
 }

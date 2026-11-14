@@ -1133,7 +1133,10 @@ func WrapWithConverterOutputUnitNotFound(err error, inputUnitArg api1.UnitSymbol
 }
 
 // ConverterOutputUnitNotFound is an error type.
-// The output unit symbol could not be found in the unit system. The conversion could not be computed.
+/*
+The output unit symbol could not be found in the unit system. The conversion could not be computed.
+The inputUnit arg carries the output unit.
+*/
 type ConverterOutputUnitNotFound struct {
 	errorInstanceID uuid.UUID
 	converterOutputUnitNotFound

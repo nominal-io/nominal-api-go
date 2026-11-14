@@ -16,23 +16,82 @@ import (
 )
 
 /*
-The spatial asset service manages spatial assets (point clouds, etc.) and their metadata.
-Spatial asset data is stored in Dagger; Scout tracks metadata and references.
+Manages point clouds (spatial assets in the API), which a Geo 3D panel draws, and their metadata.
+The point cloud data itself is stored separately; this service tracks metadata and references.
 */
 type SpatialServiceClient interface {
-	// Returns spatial asset metadata associated with a spatial asset rid.
+	/*
+	   Returns a point cloud (spatial asset in the API) with its metadata, including an archived one.
+
+	   Errors:
+	   - NOT_FOUND (Spatial:SpatialNotFound): the point cloud does not exist or the caller cannot read its
+	     metadata.
+	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, spatialRidArg rids.SpatialRid) (api.Spatial, error)
-	// Returns spatial asset metadata for each given spatial asset rid.
+	/*
+	   Returns point clouds (spatial assets in the API) by RID, including archived ones, as an unordered set.
+	   RIDs that do not exist or that the caller cannot read the metadata of are omitted without error.
+	*/
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, requestArg api.GetSpatialsRequest) (api.GetSpatialsResponse, error)
-	// Returns metadata about spatial assets that match a given query.
+	/*
+	   Searches point clouds (spatial assets in the API) by text, label, property, workspace, or spatial type.
+	   Returns a page sorted by creation time in the requested direction, and a token for the next page.
+
+	   Only workspaces the caller can view in full are searched, and point clouds whose metadata the caller
+	   cannot read are removed from the page, so a page can hold fewer than pageSize results. Archived point
+	   clouds are excluded unless archivedStatuses includes them.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is less than 1 or over 1000, or token is not a token from a previous
+	     response.
+	*/
 	Search(ctx context.Context, authHeader bearertoken.Token, requestArg api.SearchSpatialsRequest) (api.SearchSpatialsResponse, error)
-	// Creates and persists a spatial asset entity with the given metadata.
+	/*
+	   Registers a point cloud (spatial asset in the API) in a workspace for a model already stored, with
+	   title, type metadata, labels, properties, and optional markings. Returns the new point cloud.
+
+	   The server assigns the RID and records the caller as the creator. The workspace is the one in the
+	   request, or the default workspace of the caller's organization. The server does not check that the
+	   stored model exists. The markings are applied to the point cloud after it is created. The caller needs
+	   permission to create data sources in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): the request names no workspace and the caller has
+	     no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - INVALID_ARGUMENT: startTimestamp or endTimestamp is outside the range that nanosecond times can
+	     represent.
+	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateSpatialRequest) (api.Spatial, error)
-	// Updates the metadata for a spatial asset associated with the given rid.
+	/*
+	   Updates the metadata of a point cloud (spatial asset in the API). Returns the updated point cloud.
+
+	   Only the fields provided change. A provided labels or properties value replaces the stored one as a
+	   whole. The caller needs permission to edit the metadata of the point cloud.
+
+	   Errors:
+	   - NOT_FOUND (Spatial:SpatialNotFound): the point cloud does not exist or the caller cannot edit its
+	     metadata.
+	   - INVALID_ARGUMENT: startTimestamp or endTimestamp is outside the range that nanosecond times can
+	     represent.
+	*/
 	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, spatialRidArg rids.SpatialRid, requestArg api.UpdateSpatialMetadataRequest) (api.Spatial, error)
-	// Archives a spatial asset, excluding it from search. Can be unarchived.
+	/*
+	   Archives a point cloud (spatial asset in the API) so default searches exclude it. The point cloud can
+	   still be read by RID. Reverse with unarchive.
+
+	   Errors:
+	   - NOT_FOUND (Spatial:SpatialNotFound): the point cloud does not exist or the caller cannot edit its
+	     metadata.
+	*/
 	Archive(ctx context.Context, authHeader bearertoken.Token, spatialRidArg rids.SpatialRid) error
-	// Unarchives a previously archived spatial asset.
+	/*
+	   Unarchives a point cloud (spatial asset in the API) so default searches include it again.
+
+	   Errors:
+	   - NOT_FOUND (Spatial:SpatialNotFound): the point cloud does not exist or the caller cannot edit its
+	     metadata.
+	*/
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, spatialRidArg rids.SpatialRid) error
 }
 
@@ -158,23 +217,82 @@ func (c *spatialServiceClient) Unarchive(ctx context.Context, authHeader bearert
 }
 
 /*
-The spatial asset service manages spatial assets (point clouds, etc.) and their metadata.
-Spatial asset data is stored in Dagger; Scout tracks metadata and references.
+Manages point clouds (spatial assets in the API), which a Geo 3D panel draws, and their metadata.
+The point cloud data itself is stored separately; this service tracks metadata and references.
 */
 type SpatialServiceClientWithAuth interface {
-	// Returns spatial asset metadata associated with a spatial asset rid.
+	/*
+	   Returns a point cloud (spatial asset in the API) with its metadata, including an archived one.
+
+	   Errors:
+	   - NOT_FOUND (Spatial:SpatialNotFound): the point cloud does not exist or the caller cannot read its
+	     metadata.
+	*/
 	Get(ctx context.Context, spatialRidArg rids.SpatialRid) (api.Spatial, error)
-	// Returns spatial asset metadata for each given spatial asset rid.
+	/*
+	   Returns point clouds (spatial assets in the API) by RID, including archived ones, as an unordered set.
+	   RIDs that do not exist or that the caller cannot read the metadata of are omitted without error.
+	*/
 	BatchGet(ctx context.Context, requestArg api.GetSpatialsRequest) (api.GetSpatialsResponse, error)
-	// Returns metadata about spatial assets that match a given query.
+	/*
+	   Searches point clouds (spatial assets in the API) by text, label, property, workspace, or spatial type.
+	   Returns a page sorted by creation time in the requested direction, and a token for the next page.
+
+	   Only workspaces the caller can view in full are searched, and point clouds whose metadata the caller
+	   cannot read are removed from the page, so a page can hold fewer than pageSize results. Archived point
+	   clouds are excluded unless archivedStatuses includes them.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is less than 1 or over 1000, or token is not a token from a previous
+	     response.
+	*/
 	Search(ctx context.Context, requestArg api.SearchSpatialsRequest) (api.SearchSpatialsResponse, error)
-	// Creates and persists a spatial asset entity with the given metadata.
+	/*
+	   Registers a point cloud (spatial asset in the API) in a workspace for a model already stored, with
+	   title, type metadata, labels, properties, and optional markings. Returns the new point cloud.
+
+	   The server assigns the RID and records the caller as the creator. The workspace is the one in the
+	   request, or the default workspace of the caller's organization. The server does not check that the
+	   stored model exists. The markings are applied to the point cloud after it is created. The caller needs
+	   permission to create data sources in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): the request names no workspace and the caller has
+	     no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot create data sources in the workspace.
+	   - INVALID_ARGUMENT: startTimestamp or endTimestamp is outside the range that nanosecond times can
+	     represent.
+	*/
 	Create(ctx context.Context, requestArg api.CreateSpatialRequest) (api.Spatial, error)
-	// Updates the metadata for a spatial asset associated with the given rid.
+	/*
+	   Updates the metadata of a point cloud (spatial asset in the API). Returns the updated point cloud.
+
+	   Only the fields provided change. A provided labels or properties value replaces the stored one as a
+	   whole. The caller needs permission to edit the metadata of the point cloud.
+
+	   Errors:
+	   - NOT_FOUND (Spatial:SpatialNotFound): the point cloud does not exist or the caller cannot edit its
+	     metadata.
+	   - INVALID_ARGUMENT: startTimestamp or endTimestamp is outside the range that nanosecond times can
+	     represent.
+	*/
 	UpdateMetadata(ctx context.Context, spatialRidArg rids.SpatialRid, requestArg api.UpdateSpatialMetadataRequest) (api.Spatial, error)
-	// Archives a spatial asset, excluding it from search. Can be unarchived.
+	/*
+	   Archives a point cloud (spatial asset in the API) so default searches exclude it. The point cloud can
+	   still be read by RID. Reverse with unarchive.
+
+	   Errors:
+	   - NOT_FOUND (Spatial:SpatialNotFound): the point cloud does not exist or the caller cannot edit its
+	     metadata.
+	*/
 	Archive(ctx context.Context, spatialRidArg rids.SpatialRid) error
-	// Unarchives a previously archived spatial asset.
+	/*
+	   Unarchives a point cloud (spatial asset in the API) so default searches include it again.
+
+	   Errors:
+	   - NOT_FOUND (Spatial:SpatialNotFound): the point cloud does not exist or the caller cannot edit its
+	     metadata.
+	*/
 	Unarchive(ctx context.Context, spatialRidArg rids.SpatialRid) error
 }
 

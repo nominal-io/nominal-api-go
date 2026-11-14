@@ -2106,6 +2106,7 @@ func NewCloseStrategyFromCloseAndDuplicatePreviouslyLinkedNotebook(v CloseAndDup
 	return CloseStrategy{typ: "closeAndDuplicatePreviouslyLinkedNotebook", closeAndDuplicatePreviouslyLinkedNotebook: &v}
 }
 
+// The run, asset, or data review whose check evaluations are counted.
 type DataReviewCheckMetricsScope struct {
 	typ           string
 	runRid        *api.RunRid

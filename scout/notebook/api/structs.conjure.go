@@ -16,7 +16,10 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
-// for an exact match, use the exactAssetRids filter
+/*
+Matches workbooks whose data scope includes the assets. Operator AND requires all of them, OR any one of
+them. For an exact match, use the exactAssetRids filter.
+*/
 type AssetsFilter struct {
 	Operator api.SetOperator `json:"operator"`
 	Assets   []api1.AssetRid `json:"assets" safelogging:"@Safe"`
@@ -213,12 +216,12 @@ type CreateNotebookRequest struct {
 	Charts *[]ChartWithOverlays `json:"charts,omitempty"`
 	// deprecated. Use dataScope instead
 	RunRid *api2.RunRid `json:"runRid,omitempty" safelogging:"@Safe"`
-	// Optional for back-compatibility.
+	// The runs or assets the workbook is built on. Required unless the deprecated runRid is set.
 	DataScope *NotebookDataScope  `json:"dataScope,omitempty"`
 	Layout    api3.WorkbookLayout `json:"layout"`
 	// Deprecated: use contentV2 instead
 	Content *api4.WorkbookContent `json:"content,omitempty"`
-	// Optional for backcompatibility
+	// The workbook content. Required unless the deprecated content is set.
 	ContentV2 *api4.UnifiedWorkbookContent `json:"contentV2,omitempty"`
 	// Field to pin events to a workbook on creation.
 	EventRefs []api4.EventReference `json:"eventRefs"`
@@ -336,6 +339,7 @@ func (o *DuplicateNotebookRequest) UnmarshalYAML(unmarshal func(interface{}) err
 
 // safelogging:@Unsafe
 type GetAllLabelsAndPropertiesResponse struct {
+	// Each property name with all the values used with it.
 	Properties map[api.PropertyName][]api.PropertyValue `json:"properties"`
 	Labels     []api.Label                              `json:"labels" safelogging:"@Unsafe"`
 }
@@ -473,6 +477,7 @@ func (o *Lock) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A workbook with its metadata and the content of one saved snapshot.
 // safelogging:@Unsafe
 type Notebook struct {
 	Rid               api1.NotebookRid  `json:"rid" safelogging:"@Safe"`
@@ -544,6 +549,7 @@ func (o *Notebook) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Title, description, labels, properties, data scope, and lock and draft state of a workbook, without its content.
 // safelogging:@Unsafe
 type NotebookMetadata struct {
 	// deprecated. Use dataScope instead
@@ -552,6 +558,7 @@ type NotebookMetadata struct {
 	NotebookType NotebookType      `json:"notebookType"`
 	Title        string            `json:"title"`
 	Description  string            `json:"description"`
+	// True for a draft workbook. Search hides drafts unless showDrafts is set.
 	IsDraft      bool              `json:"isDraft"`
 	IsArchived   bool              `json:"isArchived"`
 	Lock         Lock              `json:"lock"`
@@ -671,6 +678,7 @@ func (o *NotebookTypesFilter) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Matches workbooks whose data scope includes the runs. Operator AND requires all of them, OR any one of them.
 type RunsFilter struct {
 	Operator api.SetOperator `json:"operator"`
 	Runs     []api2.RunRid   `json:"runs" safelogging:"@Safe"`
@@ -716,9 +724,12 @@ func (o *RunsFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // safelogging:@Unsafe
 type SearchNotebooksRequest struct {
 	Query SearchNotebooksQuery `json:"query"`
-	// Soon to be deprecated. Compose a draftState filter within SearchNotebooksQuery instead
+	// Whether to include draft workbooks. When false, drafts are excluded even if the query asks for them.
 	ShowDrafts bool `json:"showDrafts"`
-	// Soon to be deprecated. Compose an archived filter within SearchNotebooksQuery instead
+	/*
+	   Whether to include archived workbooks. Defaults to false, which excludes archived workbooks even if
+	   the query asks for them.
+	*/
 	ShowArchived *bool `json:"showArchived,omitempty"`
 	// UPDATED_AT descending by default
 	SortBy        *SortBy    `json:"sortBy,omitempty"`
@@ -835,15 +846,19 @@ func (o *SortBy) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Fields that are not set stay unchanged.
 // safelogging:@Unsafe
 type UpdateNotebookMetadataRequest struct {
 	Title *string `json:"title,omitempty"`
-	// Optional for backcompatibility.
-	DataScope   *NotebookDataScope                      `json:"dataScope,omitempty"`
-	Description *string                                 `json:"description,omitempty"`
-	Properties  *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
-	Labels      *[]api.Label                            `json:"labels,omitempty" safelogging:"@Unsafe"`
-	IsDraft     *bool                                   `json:"isDraft,omitempty"`
+	// Replaces the runs or assets the workbook is built on.
+	DataScope   *NotebookDataScope `json:"dataScope,omitempty"`
+	Description *string            `json:"description,omitempty"`
+	// Replaces all properties of the workbook.
+	Properties *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
+	// Replaces all labels of the workbook.
+	Labels *[]api.Label `json:"labels,omitempty" safelogging:"@Unsafe"`
+	// True makes the workbook a draft. False publishes it.
+	IsDraft *bool `json:"isDraft,omitempty"`
 	// Theme-aware preview image for the workbook. When provided, replaces the existing preview image.
 	PreviewImage *api.ThemeAwareImage `json:"previewImage,omitempty"`
 	/*

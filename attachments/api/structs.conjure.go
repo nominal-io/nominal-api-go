@@ -11,11 +11,14 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// A file with a title, description, labels, and properties, kept in a workspace.
 // safelogging:@Unsafe
 type Attachment struct {
-	Rid         rids.AttachmentRid                     `json:"rid" safelogging:"@Safe"`
-	Title       string                                 `json:"title"`
-	S3Path      api.S3Path                             `json:"s3Path" safelogging:"@Unsafe"`
+	Rid   rids.AttachmentRid `json:"rid" safelogging:"@Safe"`
+	Title string             `json:"title"`
+	// Location of the stored file in Nominal's upload storage.
+	S3Path api.S3Path `json:"s3Path" safelogging:"@Unsafe"`
+	// The file extension taken from s3Path, without the dot. Empty when the path has none.
 	FileType    string                                 `json:"fileType"`
 	Description string                                 `json:"description"`
 	CreatedBy   rid.ResourceIdentifier                 `json:"createdBy"`
@@ -70,10 +73,15 @@ func (o *Attachment) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 /*
 Pre-signed URI that will download the attachment directly from S3.
-Expires if the download has not started in 1 minute.
+Expires if the download has not started by `expiresAt`.
 */
 type AttachmentUri struct {
 	Uri string `json:"uri"`
+	/*
+	   When the URI stops working. Read before signing, so the URI works at least until then. Refetch the URI
+	   rather than use it past this time.
+	*/
+	ExpiresAt datetime.DateTime `json:"expiresAt"`
 }
 
 func (o AttachmentUri) MarshalYAML() (interface{}, error) {
@@ -94,6 +102,10 @@ func (o *AttachmentUri) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // safelogging:@Unsafe
 type CreateAttachmentRequest struct {
+	/*
+	   Location of a file already uploaded to Nominal's upload storage. The file must be stored under the
+	   target workspace's upload prefix.
+	*/
 	S3Path      api.S3Path                             `json:"s3Path" safelogging:"@Unsafe"`
 	Title       string                                 `json:"title"`
 	Description string                                 `json:"description"`
@@ -233,6 +245,7 @@ func (o *GetAttachmentsResponse) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Fields that are not set stay unchanged. A set labels or properties value replaces the whole stored set or map.
 // safelogging:@Unsafe
 type UpdateAttachmentRequest struct {
 	Title       *string                                 `json:"title,omitempty"`

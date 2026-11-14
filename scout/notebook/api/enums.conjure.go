@@ -17,8 +17,9 @@ type NotebookType struct {
 type NotebookType_Value string
 
 const (
-	NotebookType_WORKBOOK                   NotebookType_Value = "WORKBOOK"
-	NotebookType_COMPARISON_WORKBOOK        NotebookType_Value = "COMPARISON_WORKBOOK"
+	NotebookType_WORKBOOK            NotebookType_Value = "WORKBOOK"
+	NotebookType_COMPARISON_WORKBOOK NotebookType_Value = "COMPARISON_WORKBOOK"
+	// Left out of search results unless the query filters for this type.
 	NotebookType_ANALYST_EPHEMERAL_WORKBOOK NotebookType_Value = "ANALYST_EPHEMERAL_WORKBOOK"
 	NotebookType_REPORT                     NotebookType_Value = "REPORT"
 	NotebookType_UNKNOWN                    NotebookType_Value = "UNKNOWN"

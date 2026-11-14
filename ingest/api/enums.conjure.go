@@ -8,7 +8,7 @@ import (
 
 /*
 NOT_FOUND: the job does not exist, or the caller is not authorized to cancel it.
-NOT_CANCELLABLE: the job is already in a terminal state (COMPLETED or FAILED).
+NOT_CANCELLABLE: the job is COMPLETED, FAILED, DELETION_IN_PROGRESS, or DELETED.
 */
 type CancelIngestJobFailureReason struct {
 	val CancelIngestJobFailureReason_Value
@@ -195,9 +195,8 @@ func (e *IngestAutomationFileType) UnmarshalText(data []byte) error {
 }
 
 /*
-Progress of an ingest automation, in execution order. Statuses map one-to-one onto the
-client's progress checklist. Resources created before a FAILED terminal state persist
-(the flow is intentionally non-atomic, matching the existing ingest flow).
+Progress of an ingest automation, in execution order. Resources created before a FAILED status
+are kept.
 */
 type IngestAutomationStatus struct {
 	val IngestAutomationStatus_Value
@@ -336,9 +335,14 @@ type IngestJobSortKey struct {
 type IngestJobSortKey_Value string
 
 const (
+	// Orders by the time the job was created.
 	IngestJobSortKey_CREATED_AT IngestJobSortKey_Value = "CREATED_AT"
-	IngestJobSortKey_STATUS     IngestJobSortKey_Value = "STATUS"
-	IngestJobSortKey_UNKNOWN    IngestJobSortKey_Value = "UNKNOWN"
+	/*
+	   Orders by status in the order SUBMITTED, QUEUED, IN_PROGRESS, FAILED, COMPLETED, CANCELLED,
+	   DELETION_IN_PROGRESS, DELETED, reversed when descending. Jobs with the same status come newest first.
+	*/
+	IngestJobSortKey_STATUS  IngestJobSortKey_Value = "STATUS"
+	IngestJobSortKey_UNKNOWN IngestJobSortKey_Value = "UNKNOWN"
 )
 
 // IngestJobSortKey_Values returns all known variants of IngestJobSortKey.
@@ -898,6 +902,77 @@ func (e *UploadDestination) UnmarshalText(data []byte) error {
 		*e = New_UploadDestination(UploadDestination_UPLOADS)
 	case "FILE_STORE":
 		*e = New_UploadDestination(UploadDestination_FILE_STORE)
+	}
+	return nil
+}
+
+/*
+A bound on the output frame size, named by the height of a 16:9 frame. The matching widths are
+640, 1280, 1920, 2560, and 3840. Output keeps the source aspect ratio and fits inside the bound,
+so a 16:9 source bounded to SD_480P comes out 640x360.
+*/
+type VideoResolutionPreset struct {
+	val VideoResolutionPreset_Value
+}
+
+type VideoResolutionPreset_Value string
+
+const (
+	VideoResolutionPreset_SD_480P        VideoResolutionPreset_Value = "SD_480P"
+	VideoResolutionPreset_HD_720P        VideoResolutionPreset_Value = "HD_720P"
+	VideoResolutionPreset_FULL_HD_1080P  VideoResolutionPreset_Value = "FULL_HD_1080P"
+	VideoResolutionPreset_QUAD_HD_1440P  VideoResolutionPreset_Value = "QUAD_HD_1440P"
+	VideoResolutionPreset_ULTRA_HD_2160P VideoResolutionPreset_Value = "ULTRA_HD_2160P"
+	VideoResolutionPreset_UNKNOWN        VideoResolutionPreset_Value = "UNKNOWN"
+)
+
+// VideoResolutionPreset_Values returns all known variants of VideoResolutionPreset.
+func VideoResolutionPreset_Values() []VideoResolutionPreset_Value {
+	return []VideoResolutionPreset_Value{VideoResolutionPreset_SD_480P, VideoResolutionPreset_HD_720P, VideoResolutionPreset_FULL_HD_1080P, VideoResolutionPreset_QUAD_HD_1440P, VideoResolutionPreset_ULTRA_HD_2160P}
+}
+
+func New_VideoResolutionPreset(value VideoResolutionPreset_Value) VideoResolutionPreset {
+	return VideoResolutionPreset{val: value}
+}
+
+// IsUnknown returns false for all known variants of VideoResolutionPreset and true otherwise.
+func (e VideoResolutionPreset) IsUnknown() bool {
+	switch e.val {
+	case VideoResolutionPreset_SD_480P, VideoResolutionPreset_HD_720P, VideoResolutionPreset_FULL_HD_1080P, VideoResolutionPreset_QUAD_HD_1440P, VideoResolutionPreset_ULTRA_HD_2160P:
+		return false
+	}
+	return true
+}
+
+func (e VideoResolutionPreset) Value() VideoResolutionPreset_Value {
+	if e.IsUnknown() {
+		return VideoResolutionPreset_UNKNOWN
+	}
+	return e.val
+}
+
+func (e VideoResolutionPreset) String() string {
+	return string(e.val)
+}
+
+func (e VideoResolutionPreset) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *VideoResolutionPreset) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_Value(v))
+	case "SD_480P":
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_SD_480P)
+	case "HD_720P":
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_HD_720P)
+	case "FULL_HD_1080P":
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_FULL_HD_1080P)
+	case "QUAD_HD_1440P":
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_QUAD_HD_1440P)
+	case "ULTRA_HD_2160P":
+		*e = New_VideoResolutionPreset(VideoResolutionPreset_ULTRA_HD_2160P)
 	}
 	return nil
 }

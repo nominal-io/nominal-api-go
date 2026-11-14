@@ -22,45 +22,280 @@ of some metadata about the data, as well as a set of data scopes that define the
 endpoints allow for CRUD operations on asset objects.
 */
 type AssetServiceClient interface {
+	/*
+	   Creates an asset with its title, properties, labels, links, attachments, asset types, and the data that
+	   backs it (a dataset or data scopes).
+
+	   The asset goes in the given workspace or the default workspace. Data scopes,
+	   attachments, asset types, and a given dataset must be in that workspace. Blank property keys and labels
+	   are dropped. The properties must pass each asset type's checks, and its primary-key value must be unused
+	   by other unarchived assets. The caller needs permission to create assets in the workspace and read each
+	   data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT: more than 10 asset types, or datasetRid with data scopes.
+	   - INVALID_ARGUMENT (Assets:DuplicateDataScopeNames): two data scopes share a name.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): a data source or dataset is missing or unreadable.
+	   - NOT_FOUND (Assets:TypeNotFound): an asset type is missing or unreadable.
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): an attachment is missing or unreadable.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given or defaulted.
+	   - PERMISSION_DENIED: the caller cannot create assets in the workspace.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a data scope, attachment, or asset type
+	     is in another workspace.
+	   - INVALID_ARGUMENT (Assets:DataRequirementsNotMet): the data lacks series that an asset type requires.
+	   - TIMEOUT (Assets:DataRequirementsCheckTimedOut): the series check timed out.
+	   - INVALID_ARGUMENT (Assets:TypeCheckFailed): the properties break the checks of an asset type.
+	   - INVALID_ARGUMENT (Assets:InvalidTypeDefinition): two asset types give a property different value types.
+	   - INVALID_ARGUMENT: the dataset is in another workspace or already backs an asset.
+	   - INVALID_ARGUMENT (Assets:TypeArchived): an asset type is archived.
+	   - INVALID_ARGUMENT (Assets:PrimaryKeyInUse): another unarchived asset has the primary-key value.
+	*/
 	CreateAsset(ctx context.Context, authHeader bearertoken.Token, detailsArg api.CreateAssetRequest) (api.Asset, error)
+	/*
+	   Updates an asset's title, description, properties, labels, links, data scopes, staged state, or asset
+	   types. Returns the updated asset.
+
+	   Only the fields that are set change, and a set, map, or list that is supplied replaces the old value.
+	   Blank property keys and labels are dropped. Replacing data scopes keeps the ones the caller cannot read
+	   and also updates the composition (dataset) that backs the asset. A newly attached asset type must be
+	   unarchived. The properties must pass each asset type's checks. The caller needs permission to edit the
+	   asset.
+
+	   Errors:
+	   - INVALID_ARGUMENT: more than 10 asset types.
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	   - NOT_FOUND (Assets:TypeNotFound): an asset type does not exist or cannot be read.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a data scope or asset type is in another
+	     workspace.
+	   - INVALID_ARGUMENT (Assets:DataRequirementsNotMet): the data lacks series that a newly attached asset
+	     type requires.
+	   - TIMEOUT (Assets:DataRequirementsCheckTimedOut): the series check timed out.
+	   - INVALID_ARGUMENT (Assets:DuplicateDataScopeNames): two data scopes share a name.
+	   - INVALID_ARGUMENT: data scopes are replaced on an asset that reads a dataset it does not own or whose
+	     composition was edited directly.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): a new data scope's data source cannot be read.
+	   - INVALID_ARGUMENT (Assets:TypeCheckFailed): the result breaks the checks of an asset type.
+	   - INVALID_ARGUMENT (Assets:InvalidTypeDefinition): two asset types give a property different value types.
+	   - INVALID_ARGUMENT (Assets:TypeArchived): a newly attached asset type is archived.
+	   - INVALID_ARGUMENT (Assets:PrimaryKeyInUse): another unarchived asset has this primary-key value.
+	*/
 	UpdateAsset(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, detailsArg api.UpdateAssetRequest) (api.Asset, error)
 	/*
-	   Adds data scopes to an asset.
+	   Adds data scopes (filtered views of data sources) to an asset and keeps its existing data scopes.
+	   Returns the updated asset.
 
-	   Throws if the asset already has data scopes with data scope names matching those in the request.
+	   The composition (dataset) that backs the asset is updated to include the new data scopes. The caller
+	   needs permission to edit the asset and to read each data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Assets:DuplicateDataScopeNames): two new data scopes share a name.
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): a data source does not exist or cannot be read.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a data source is in another workspace
+	     than the asset.
+	   - INVALID_ARGUMENT: the asset reads a dataset it does not own, or its composition was edited directly,
+	     so its data scopes cannot change.
+	   - INVALID_ARGUMENT (Assets:DuplicateDataScopeNames): a new data scope name is already on the asset.
 	*/
 	AddDataScopesToAsset(ctx context.Context, authHeader bearertoken.Token, assetRidArg api1.AssetRid, requestArg api.AddDataScopesToAssetRequest) (api.Asset, error)
+	/*
+	   Gets assets by RID. Returns a map from RID to asset, with the data scopes the caller can read.
+
+	   RIDs that do not exist or that the caller cannot view are left out, not reported as errors. Archived
+	   assets are included. To find assets by text, label, or property, use searchAssets.
+	*/
 	GetAssets(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.AssetRid) (map[api1.AssetRid]api.Asset, error)
-	// Returns all assets with given data source as a data scope.
+	/*
+	   Gets the assets that have a data source as a data scope, or that the data source backs. Returns only
+	   assets the caller can view.
+
+	   Searches the workspaces the caller can view in full. Archived assets are included, with the data scopes
+	   the caller can read.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the data source does not exist or the caller cannot read
+	     it.
+	*/
 	GetAssetsByDataSource(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.DataSourceRid) ([]api.Asset, error)
+	/*
+	   Archives an asset and its runs. With includeLinkedWorkbooks, also archives the workbooks linked to the
+	   asset or its runs.
+
+	   Runs and workbooks that are already archived keep their own archive state. Archived assets are left out
+	   of asset search unless the search includes them, and other assets can use their primary-key values. Undo
+	   with unarchive. The caller needs permission to edit the asset.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	*/
 	Archive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, includeLinkedWorkbooksArg *bool) error
+	/*
+	   Restores an archived asset and the runs that archiving it archived. With includeLinkedWorkbooks, also
+	   restores the workbooks that archiving the asset or its runs archived.
+
+	   Runs and workbooks that were archived on their own stay archived. The asset must still pass the checks
+	   of its asset types, and its primary-key values must be unused by other unarchived assets. The caller
+	   needs permission to edit the asset.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	   - INVALID_ARGUMENT (Assets:TypeCheckFailed): the asset no longer passes the checks of an asset type.
+	   - INVALID_ARGUMENT (Assets:PrimaryKeyInUse): another unarchived asset has the same primary-key value.
+	*/
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, includeLinkedWorkbooksArg *bool) error
+	/*
+	   Searches assets by text, labels, properties, asset types, or archived state. Returns a page of assets in
+	   the requested sort order, with the data scopes the caller can read.
+
+	   Filters combine with and, or, and not. Searches the workspaces the caller can view in full. Staged
+	   (auto-created) assets are never returned. Archived assets are excluded unless the query or
+	   archivedStatuses includes them.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the sort has neither sortKey nor field, or the search text contains a null
+	     character.
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is over 10,000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a valid token.
+	*/
 	SearchAssets(ctx context.Context, authHeader bearertoken.Token, searchAssetsRequestArg api.SearchAssetsRequest) (api.SearchAssetsResponse, error)
 	/*
-	   Batch edits metadata across multiple assets. Supports rename/merge for labels and properties.
-	   If more than 1000 assets are targeted, this endpoint will throw a 400.
+	   Renames labels, renames property keys, or merges property values on every asset that matches. Returns
+	   the RIDs of modified assets and of assets skipped because of a property key conflict.
+
+	   Targets are the assets, archived ones included, that carry a source label, key, or value of the change
+	   and that match assetSearchQuery, if given. Property changes re-check each modified asset against its
+	   asset types. The caller needs permission to edit every matching asset.
+
+	   Errors:
+	   - INVALID_ARGUMENT: more than 1000 assets match, or an overwrite priority does not list the source and
+	     target keys exactly once each.
+	   - NOT_FOUND (Assets:AssetNotFound): the caller cannot edit a matching asset.
+	   - INVALID_ARGUMENT (Assets:TypeCheckFailed): a property change breaks the checks of an asset type.
+	   - INVALID_ARGUMENT (Assets:PrimaryKeyInUse): a property change gives an asset a primary-key value that
+	     another unarchived asset has.
 	*/
 	BatchEditAssetMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg api.BatchEditAssetMetadataRequest) (api.BatchEditAssetMetadataResponse, error)
+	/*
+	   Searches asset types by text, property name, or workspace, in the workspaces the caller can view.
+	   Returns a page of asset types sorted by creation time.
+
+	   Archived asset types are excluded unless archivedStatuses includes them. To get asset types by RID, use
+	   getTypes.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is over 10,000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a valid token.
+	*/
 	SearchTypes(ctx context.Context, authHeader bearertoken.Token, searchTypesRequestArg api.SearchTypesRequest) (api.SearchTypesResponse, error)
-	// Update the attachments associated with an asset.
+	/*
+	   Adds attachments to an asset and removes attachments from it, in one request.
+
+	   Adding an attachment the asset already has, or removing one it does not have, changes nothing. Every
+	   attachment in either list must exist, be accessible to the caller, and be in the asset's workspace. The
+	   caller needs permission to edit the asset.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): an attachment does not exist or the caller cannot access
+	     it.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): an attachment is in another workspace
+	     than the asset.
+	   - INVALID_ARGUMENT: an attachment is in both lists.
+	*/
 	UpdateAssetAttachments(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, requestArg api.UpdateAttachmentsRequest) error
 	/*
-	   Update the ref names for the data scopes on the asset. This update will also be applied on all associated
-	   workbooks.
+	   Renames data scopes (their ref names) on an asset.
+
+	   Data scopes not named in the request keep their names. The new names must differ from each other. The
+	   composition (dataset) that backs the asset is updated with the new names. The caller needs permission to
+	   edit the asset.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	   - INVALID_ARGUMENT (Assets:DuplicateDataScopeNames): two new names are the same.
+	   - INVALID_ARGUMENT: the asset reads a dataset it does not own, or its composition was edited directly,
+	     so its data scopes cannot change.
 	*/
 	UpdateAssetRefNames(ctx context.Context, authHeader bearertoken.Token, ridArg api1.AssetRid, requestArg api.UpdateAssetRefNamesRequest) error
-	// Creates a new type.
+	/*
+	   Creates an asset type: a named set of properties with a primary key, for assets of one kind. Returns the
+	   new asset type.
+
+	   The asset type goes in the given workspace, or in the default workspace if none is given. Its name must
+	   be unique among the unarchived asset types in the workspace. The primary key is not listed in
+	   propertyConfigs. The caller needs permission to edit the workspace configuration.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Assets:InvalidTypeDefinition): the name, the primary key, or a property name is
+	     blank, the primary key is also in propertyConfigs, or the data requirements are invalid.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and there is no default.
+	   - PERMISSION_DENIED: the caller cannot edit the workspace configuration.
+	   - CONFLICT (Assets:TypeAlreadyExists): an unarchived asset type in the workspace has this name.
+	*/
 	CreateType(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateTypeRequest) (api.Type, error)
 	/*
-	   Updates a type. Will throw unless all assets that reference the type pass the updated type check.
-	   A property or primary-key change throws TooManyActiveTypeMembers when the type has more active members
-	   than that check can scan.
+	   Updates an asset type's name, description, icon, primary key, properties, or data requirements. Returns
+	   the updated asset type.
+
+	   Only the fields that are set change, and a set propertyConfigs replaces the whole property set. A
+	   property or primary-key change fails unless every unarchived asset with the asset type still passes its
+	   checks. The primary key cannot change once any asset has the asset type. The caller needs permission to
+	   edit the workspace configuration.
+
+	   Errors:
+	   - NOT_FOUND (Assets:TypeNotFound): the asset type does not exist or the caller cannot edit its workspace
+	     configuration.
+	   - INVALID_ARGUMENT (Assets:InvalidTypeDefinition): the definition is invalid, or the primary key changes
+	     after an asset has the asset type.
+	   - INVALID_ARGUMENT (Assets:TooManyActiveTypeMembers): a property or primary-key change was requested and
+	     more than 10,000 unarchived assets have the asset type.
+	   - INVALID_ARGUMENT (Assets:TypeUpdateRejected): unarchived assets would no longer pass the checks.
+	   - CONFLICT (Assets:TypeAlreadyExists): another unarchived asset type in the workspace has the new name.
 	*/
 	UpdateType(ctx context.Context, authHeader bearertoken.Token, typeRidArg api1.TypeRid, requestArg api.UpdateTypeRequest) (api.Type, error)
+	/*
+	   Gets asset types by RID. Returns a map from RID to asset type.
+
+	   RIDs that do not exist or that are in workspaces the caller cannot view are left out, not reported as
+	   errors. Archived asset types are included.
+	*/
 	GetTypes(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.TypeRid) (map[api1.TypeRid]api.Type, error)
-	// Deletes a type. The type must not be referenced by any assets.
+	/*
+	   Deletes an asset type that no asset or checklist uses.
+
+	   Any asset that has the asset type blocks the delete, archived assets included, and so does any checklist
+	   that references it. To hide an asset type without deleting it, use archiveType. The caller needs
+	   permission to edit the workspace configuration.
+
+	   Errors:
+	   - NOT_FOUND (Assets:TypeNotFound): the asset type does not exist or the caller cannot edit its workspace
+	     configuration.
+	   - PERMISSION_DENIED (Assets:TypeReferencedByAssets): an asset has the asset type.
+	   - FAILED_PRECONDITION (Assets:TypeReferencedByChecklists): a checklist references the asset type.
+	*/
 	DeleteType(ctx context.Context, authHeader bearertoken.Token, ridArg api1.TypeRid) error
+	/*
+	   Archives an asset type so that asset type search excludes it by default. Assets keep the asset type.
+
+	   An archived asset type cannot be newly attached to assets, and its name can be used by another
+	   unarchived asset type in the workspace. Undo with unarchiveType. The caller needs permission to edit the
+	   workspace configuration.
+
+	   Errors:
+	   - NOT_FOUND (Assets:TypeNotFound): the asset type does not exist or the caller cannot edit its workspace
+	     configuration.
+	*/
 	ArchiveType(ctx context.Context, authHeader bearertoken.Token, ridArg api1.TypeRid) error
+	/*
+	   Restores an archived asset type so that asset type search includes it by default.
+
+	   The caller needs permission to edit the workspace configuration.
+
+	   Errors:
+	   - NOT_FOUND (Assets:TypeNotFound): the asset type does not exist or the caller cannot edit its workspace
+	     configuration.
+	   - CONFLICT (Assets:TypeAlreadyExists): an unarchived asset type in the workspace has the same name.
+	*/
 	UnarchiveType(ctx context.Context, authHeader bearertoken.Token, ridArg api1.TypeRid) error
 }
 
@@ -371,45 +606,280 @@ of some metadata about the data, as well as a set of data scopes that define the
 endpoints allow for CRUD operations on asset objects.
 */
 type AssetServiceClientWithAuth interface {
+	/*
+	   Creates an asset with its title, properties, labels, links, attachments, asset types, and the data that
+	   backs it (a dataset or data scopes).
+
+	   The asset goes in the given workspace or the default workspace. Data scopes,
+	   attachments, asset types, and a given dataset must be in that workspace. Blank property keys and labels
+	   are dropped. The properties must pass each asset type's checks, and its primary-key value must be unused
+	   by other unarchived assets. The caller needs permission to create assets in the workspace and read each
+	   data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT: more than 10 asset types, or datasetRid with data scopes.
+	   - INVALID_ARGUMENT (Assets:DuplicateDataScopeNames): two data scopes share a name.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): a data source or dataset is missing or unreadable.
+	   - NOT_FOUND (Assets:TypeNotFound): an asset type is missing or unreadable.
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): an attachment is missing or unreadable.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given or defaulted.
+	   - PERMISSION_DENIED: the caller cannot create assets in the workspace.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a data scope, attachment, or asset type
+	     is in another workspace.
+	   - INVALID_ARGUMENT (Assets:DataRequirementsNotMet): the data lacks series that an asset type requires.
+	   - TIMEOUT (Assets:DataRequirementsCheckTimedOut): the series check timed out.
+	   - INVALID_ARGUMENT (Assets:TypeCheckFailed): the properties break the checks of an asset type.
+	   - INVALID_ARGUMENT (Assets:InvalidTypeDefinition): two asset types give a property different value types.
+	   - INVALID_ARGUMENT: the dataset is in another workspace or already backs an asset.
+	   - INVALID_ARGUMENT (Assets:TypeArchived): an asset type is archived.
+	   - INVALID_ARGUMENT (Assets:PrimaryKeyInUse): another unarchived asset has the primary-key value.
+	*/
 	CreateAsset(ctx context.Context, detailsArg api.CreateAssetRequest) (api.Asset, error)
+	/*
+	   Updates an asset's title, description, properties, labels, links, data scopes, staged state, or asset
+	   types. Returns the updated asset.
+
+	   Only the fields that are set change, and a set, map, or list that is supplied replaces the old value.
+	   Blank property keys and labels are dropped. Replacing data scopes keeps the ones the caller cannot read
+	   and also updates the composition (dataset) that backs the asset. A newly attached asset type must be
+	   unarchived. The properties must pass each asset type's checks. The caller needs permission to edit the
+	   asset.
+
+	   Errors:
+	   - INVALID_ARGUMENT: more than 10 asset types.
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	   - NOT_FOUND (Assets:TypeNotFound): an asset type does not exist or cannot be read.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a data scope or asset type is in another
+	     workspace.
+	   - INVALID_ARGUMENT (Assets:DataRequirementsNotMet): the data lacks series that a newly attached asset
+	     type requires.
+	   - TIMEOUT (Assets:DataRequirementsCheckTimedOut): the series check timed out.
+	   - INVALID_ARGUMENT (Assets:DuplicateDataScopeNames): two data scopes share a name.
+	   - INVALID_ARGUMENT: data scopes are replaced on an asset that reads a dataset it does not own or whose
+	     composition was edited directly.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): a new data scope's data source cannot be read.
+	   - INVALID_ARGUMENT (Assets:TypeCheckFailed): the result breaks the checks of an asset type.
+	   - INVALID_ARGUMENT (Assets:InvalidTypeDefinition): two asset types give a property different value types.
+	   - INVALID_ARGUMENT (Assets:TypeArchived): a newly attached asset type is archived.
+	   - INVALID_ARGUMENT (Assets:PrimaryKeyInUse): another unarchived asset has this primary-key value.
+	*/
 	UpdateAsset(ctx context.Context, ridArg api1.AssetRid, detailsArg api.UpdateAssetRequest) (api.Asset, error)
 	/*
-	   Adds data scopes to an asset.
+	   Adds data scopes (filtered views of data sources) to an asset and keeps its existing data scopes.
+	   Returns the updated asset.
 
-	   Throws if the asset already has data scopes with data scope names matching those in the request.
+	   The composition (dataset) that backs the asset is updated to include the new data scopes. The caller
+	   needs permission to edit the asset and to read each data source.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Assets:DuplicateDataScopeNames): two new data scopes share a name.
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): a data source does not exist or cannot be read.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): a data source is in another workspace
+	     than the asset.
+	   - INVALID_ARGUMENT: the asset reads a dataset it does not own, or its composition was edited directly,
+	     so its data scopes cannot change.
+	   - INVALID_ARGUMENT (Assets:DuplicateDataScopeNames): a new data scope name is already on the asset.
 	*/
 	AddDataScopesToAsset(ctx context.Context, assetRidArg api1.AssetRid, requestArg api.AddDataScopesToAssetRequest) (api.Asset, error)
+	/*
+	   Gets assets by RID. Returns a map from RID to asset, with the data scopes the caller can read.
+
+	   RIDs that do not exist or that the caller cannot view are left out, not reported as errors. Archived
+	   assets are included. To find assets by text, label, or property, use searchAssets.
+	*/
 	GetAssets(ctx context.Context, ridsArg []api1.AssetRid) (map[api1.AssetRid]api.Asset, error)
-	// Returns all assets with given data source as a data scope.
+	/*
+	   Gets the assets that have a data source as a data scope, or that the data source backs. Returns only
+	   assets the caller can view.
+
+	   Searches the workspaces the caller can view in full. Archived assets are included, with the data scopes
+	   the caller can read.
+
+	   Errors:
+	   - NOT_FOUND (DataSource:DataSourcesNotFound): the data source does not exist or the caller cannot read
+	     it.
+	*/
 	GetAssetsByDataSource(ctx context.Context, dataSourceRidArg rids.DataSourceRid) ([]api.Asset, error)
+	/*
+	   Archives an asset and its runs. With includeLinkedWorkbooks, also archives the workbooks linked to the
+	   asset or its runs.
+
+	   Runs and workbooks that are already archived keep their own archive state. Archived assets are left out
+	   of asset search unless the search includes them, and other assets can use their primary-key values. Undo
+	   with unarchive. The caller needs permission to edit the asset.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	*/
 	Archive(ctx context.Context, ridArg api1.AssetRid, includeLinkedWorkbooksArg *bool) error
+	/*
+	   Restores an archived asset and the runs that archiving it archived. With includeLinkedWorkbooks, also
+	   restores the workbooks that archiving the asset or its runs archived.
+
+	   Runs and workbooks that were archived on their own stay archived. The asset must still pass the checks
+	   of its asset types, and its primary-key values must be unused by other unarchived assets. The caller
+	   needs permission to edit the asset.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	   - INVALID_ARGUMENT (Assets:TypeCheckFailed): the asset no longer passes the checks of an asset type.
+	   - INVALID_ARGUMENT (Assets:PrimaryKeyInUse): another unarchived asset has the same primary-key value.
+	*/
 	Unarchive(ctx context.Context, ridArg api1.AssetRid, includeLinkedWorkbooksArg *bool) error
+	/*
+	   Searches assets by text, labels, properties, asset types, or archived state. Returns a page of assets in
+	   the requested sort order, with the data scopes the caller can read.
+
+	   Filters combine with and, or, and not. Searches the workspaces the caller can view in full. Staged
+	   (auto-created) assets are never returned. Archived assets are excluded unless the query or
+	   archivedStatuses includes them.
+
+	   Errors:
+	   - INVALID_ARGUMENT: the sort has neither sortKey nor field, or the search text contains a null
+	     character.
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is over 10,000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a valid token.
+	*/
 	SearchAssets(ctx context.Context, searchAssetsRequestArg api.SearchAssetsRequest) (api.SearchAssetsResponse, error)
 	/*
-	   Batch edits metadata across multiple assets. Supports rename/merge for labels and properties.
-	   If more than 1000 assets are targeted, this endpoint will throw a 400.
+	   Renames labels, renames property keys, or merges property values on every asset that matches. Returns
+	   the RIDs of modified assets and of assets skipped because of a property key conflict.
+
+	   Targets are the assets, archived ones included, that carry a source label, key, or value of the change
+	   and that match assetSearchQuery, if given. Property changes re-check each modified asset against its
+	   asset types. The caller needs permission to edit every matching asset.
+
+	   Errors:
+	   - INVALID_ARGUMENT: more than 1000 assets match, or an overwrite priority does not list the source and
+	     target keys exactly once each.
+	   - NOT_FOUND (Assets:AssetNotFound): the caller cannot edit a matching asset.
+	   - INVALID_ARGUMENT (Assets:TypeCheckFailed): a property change breaks the checks of an asset type.
+	   - INVALID_ARGUMENT (Assets:PrimaryKeyInUse): a property change gives an asset a primary-key value that
+	     another unarchived asset has.
 	*/
 	BatchEditAssetMetadata(ctx context.Context, requestArg api.BatchEditAssetMetadataRequest) (api.BatchEditAssetMetadataResponse, error)
+	/*
+	   Searches asset types by text, property name, or workspace, in the workspaces the caller can view.
+	   Returns a page of asset types sorted by creation time.
+
+	   Archived asset types are excluded unless archivedStatuses includes them. To get asset types by RID, use
+	   getTypes.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is over 10,000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a valid token.
+	*/
 	SearchTypes(ctx context.Context, searchTypesRequestArg api.SearchTypesRequest) (api.SearchTypesResponse, error)
-	// Update the attachments associated with an asset.
+	/*
+	   Adds attachments to an asset and removes attachments from it, in one request.
+
+	   Adding an attachment the asset already has, or removing one it does not have, changes nothing. Every
+	   attachment in either list must exist, be accessible to the caller, and be in the asset's workspace. The
+	   caller needs permission to edit the asset.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	   - NOT_FOUND (Attachment:AttachmentsNotFound): an attachment does not exist or the caller cannot access
+	     it.
+	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): an attachment is in another workspace
+	     than the asset.
+	   - INVALID_ARGUMENT: an attachment is in both lists.
+	*/
 	UpdateAssetAttachments(ctx context.Context, ridArg api1.AssetRid, requestArg api.UpdateAttachmentsRequest) error
 	/*
-	   Update the ref names for the data scopes on the asset. This update will also be applied on all associated
-	   workbooks.
+	   Renames data scopes (their ref names) on an asset.
+
+	   Data scopes not named in the request keep their names. The new names must differ from each other. The
+	   composition (dataset) that backs the asset is updated with the new names. The caller needs permission to
+	   edit the asset.
+
+	   Errors:
+	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
+	   - INVALID_ARGUMENT (Assets:DuplicateDataScopeNames): two new names are the same.
+	   - INVALID_ARGUMENT: the asset reads a dataset it does not own, or its composition was edited directly,
+	     so its data scopes cannot change.
 	*/
 	UpdateAssetRefNames(ctx context.Context, ridArg api1.AssetRid, requestArg api.UpdateAssetRefNamesRequest) error
-	// Creates a new type.
+	/*
+	   Creates an asset type: a named set of properties with a primary key, for assets of one kind. Returns the
+	   new asset type.
+
+	   The asset type goes in the given workspace, or in the default workspace if none is given. Its name must
+	   be unique among the unarchived asset types in the workspace. The primary key is not listed in
+	   propertyConfigs. The caller needs permission to edit the workspace configuration.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Assets:InvalidTypeDefinition): the name, the primary key, or a property name is
+	     blank, the primary key is also in propertyConfigs, or the data requirements are invalid.
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and there is no default.
+	   - PERMISSION_DENIED: the caller cannot edit the workspace configuration.
+	   - CONFLICT (Assets:TypeAlreadyExists): an unarchived asset type in the workspace has this name.
+	*/
 	CreateType(ctx context.Context, requestArg api.CreateTypeRequest) (api.Type, error)
 	/*
-	   Updates a type. Will throw unless all assets that reference the type pass the updated type check.
-	   A property or primary-key change throws TooManyActiveTypeMembers when the type has more active members
-	   than that check can scan.
+	   Updates an asset type's name, description, icon, primary key, properties, or data requirements. Returns
+	   the updated asset type.
+
+	   Only the fields that are set change, and a set propertyConfigs replaces the whole property set. A
+	   property or primary-key change fails unless every unarchived asset with the asset type still passes its
+	   checks. The primary key cannot change once any asset has the asset type. The caller needs permission to
+	   edit the workspace configuration.
+
+	   Errors:
+	   - NOT_FOUND (Assets:TypeNotFound): the asset type does not exist or the caller cannot edit its workspace
+	     configuration.
+	   - INVALID_ARGUMENT (Assets:InvalidTypeDefinition): the definition is invalid, or the primary key changes
+	     after an asset has the asset type.
+	   - INVALID_ARGUMENT (Assets:TooManyActiveTypeMembers): a property or primary-key change was requested and
+	     more than 10,000 unarchived assets have the asset type.
+	   - INVALID_ARGUMENT (Assets:TypeUpdateRejected): unarchived assets would no longer pass the checks.
+	   - CONFLICT (Assets:TypeAlreadyExists): another unarchived asset type in the workspace has the new name.
 	*/
 	UpdateType(ctx context.Context, typeRidArg api1.TypeRid, requestArg api.UpdateTypeRequest) (api.Type, error)
+	/*
+	   Gets asset types by RID. Returns a map from RID to asset type.
+
+	   RIDs that do not exist or that are in workspaces the caller cannot view are left out, not reported as
+	   errors. Archived asset types are included.
+	*/
 	GetTypes(ctx context.Context, ridsArg []api1.TypeRid) (map[api1.TypeRid]api.Type, error)
-	// Deletes a type. The type must not be referenced by any assets.
+	/*
+	   Deletes an asset type that no asset or checklist uses.
+
+	   Any asset that has the asset type blocks the delete, archived assets included, and so does any checklist
+	   that references it. To hide an asset type without deleting it, use archiveType. The caller needs
+	   permission to edit the workspace configuration.
+
+	   Errors:
+	   - NOT_FOUND (Assets:TypeNotFound): the asset type does not exist or the caller cannot edit its workspace
+	     configuration.
+	   - PERMISSION_DENIED (Assets:TypeReferencedByAssets): an asset has the asset type.
+	   - FAILED_PRECONDITION (Assets:TypeReferencedByChecklists): a checklist references the asset type.
+	*/
 	DeleteType(ctx context.Context, ridArg api1.TypeRid) error
+	/*
+	   Archives an asset type so that asset type search excludes it by default. Assets keep the asset type.
+
+	   An archived asset type cannot be newly attached to assets, and its name can be used by another
+	   unarchived asset type in the workspace. Undo with unarchiveType. The caller needs permission to edit the
+	   workspace configuration.
+
+	   Errors:
+	   - NOT_FOUND (Assets:TypeNotFound): the asset type does not exist or the caller cannot edit its workspace
+	     configuration.
+	*/
 	ArchiveType(ctx context.Context, ridArg api1.TypeRid) error
+	/*
+	   Restores an archived asset type so that asset type search includes it by default.
+
+	   The caller needs permission to edit the workspace configuration.
+
+	   Errors:
+	   - NOT_FOUND (Assets:TypeNotFound): the asset type does not exist or the caller cannot edit its workspace
+	     configuration.
+	   - CONFLICT (Assets:TypeAlreadyExists): an unarchived asset type in the workspace has the same name.
+	*/
 	UnarchiveType(ctx context.Context, ridArg api1.TypeRid) error
 }
 

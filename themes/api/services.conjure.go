@@ -16,15 +16,63 @@ import (
 
 // Themes service manages themes for exporting charts.
 type ThemesServiceClient interface {
-	// Get all chart themes saved to the requested workspaces.
+	/*
+	   Lists the export themes (chart themes in the API) saved in the given workspaces, or in every
+	   workspace the caller can view when none are given. Returns the whole list, not a page.
+
+	   Workspaces that the caller cannot view are left out, as are workspaces whose edition does not
+	   include workbooks. Deleted themes are not listed.
+	*/
 	ListChartThemes(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) ([]ChartTheme, error)
-	// Get a specific chart theme by RID.
+	/*
+	   Gets one export theme (chart theme in the API) by RID, with its title, caption, legend, background,
+	   and time series chart styling.
+
+	   Errors:
+	   - NOT_FOUND (Themes:ChartThemeNotFound): the theme does not exist, was deleted, or the caller cannot
+	     view its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include workbooks.
+	*/
 	GetChartTheme(ctx context.Context, authHeader bearertoken.Token, chartThemeRidArg ChartThemeRid) (ChartTheme, error)
-	// Create a new chart theme.
+	/*
+	   Creates an export theme (chart theme in the API): saved style settings for chart image exports.
+	   Returns the new theme.
+
+	   The server assigns the RID and records the caller as the creator. The theme is created in the given
+	   workspace, or in the default workspace when none is given. The caller needs permission to edit the
+	   configuration of that workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no
+	     default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist or the caller cannot edit its
+	     configuration.
+	   - PERMISSION_DENIED: the workspace edition does not include workbooks.
+	*/
 	CreateChartTheme(ctx context.Context, authHeader bearertoken.Token, requestArg CreateChartThemeRequest) (ChartTheme, error)
-	// Update an existing chart theme.
+	/*
+	   Replaces the name and all styling of an export theme (chart theme in the API) with the request
+	   values. Returns the updated theme.
+
+	   The theme keeps its RID, creator, and workspace. The update records the caller and the time. The
+	   caller needs permission to edit the configuration of the theme's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Themes:ChartThemeNotFound): the theme is missing, was deleted, or the caller cannot
+	     edit its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include workbooks.
+	*/
 	UpdateChartTheme(ctx context.Context, authHeader bearertoken.Token, chartThemeRidArg ChartThemeRid, requestArg UpdateChartThemeRequest) (ChartTheme, error)
-	// Delete an existing comment.
+	/*
+	   Deletes an export theme (chart theme in the API). The theme is no longer listed or returned.
+
+	   The caller needs permission to edit the configuration of the theme's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Themes:ChartThemeNotFound): the theme is missing, already deleted, or the caller cannot
+	     edit its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include workbooks.
+	*/
 	DeleteChartTheme(ctx context.Context, authHeader bearertoken.Token, chartThemeRidArg ChartThemeRid) error
 }
 
@@ -125,15 +173,63 @@ func (c *themesServiceClient) DeleteChartTheme(ctx context.Context, authHeader b
 
 // Themes service manages themes for exporting charts.
 type ThemesServiceClientWithAuth interface {
-	// Get all chart themes saved to the requested workspaces.
+	/*
+	   Lists the export themes (chart themes in the API) saved in the given workspaces, or in every
+	   workspace the caller can view when none are given. Returns the whole list, not a page.
+
+	   Workspaces that the caller cannot view are left out, as are workspaces whose edition does not
+	   include workbooks. Deleted themes are not listed.
+	*/
 	ListChartThemes(ctx context.Context, workspacesArg []rids.WorkspaceRid) ([]ChartTheme, error)
-	// Get a specific chart theme by RID.
+	/*
+	   Gets one export theme (chart theme in the API) by RID, with its title, caption, legend, background,
+	   and time series chart styling.
+
+	   Errors:
+	   - NOT_FOUND (Themes:ChartThemeNotFound): the theme does not exist, was deleted, or the caller cannot
+	     view its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include workbooks.
+	*/
 	GetChartTheme(ctx context.Context, chartThemeRidArg ChartThemeRid) (ChartTheme, error)
-	// Create a new chart theme.
+	/*
+	   Creates an export theme (chart theme in the API): saved style settings for chart image exports.
+	   Returns the new theme.
+
+	   The server assigns the RID and records the caller as the creator. The theme is created in the given
+	   workspace, or in the default workspace when none is given. The caller needs permission to edit the
+	   configuration of that workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no
+	     default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist or the caller cannot edit its
+	     configuration.
+	   - PERMISSION_DENIED: the workspace edition does not include workbooks.
+	*/
 	CreateChartTheme(ctx context.Context, requestArg CreateChartThemeRequest) (ChartTheme, error)
-	// Update an existing chart theme.
+	/*
+	   Replaces the name and all styling of an export theme (chart theme in the API) with the request
+	   values. Returns the updated theme.
+
+	   The theme keeps its RID, creator, and workspace. The update records the caller and the time. The
+	   caller needs permission to edit the configuration of the theme's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Themes:ChartThemeNotFound): the theme is missing, was deleted, or the caller cannot
+	     edit its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include workbooks.
+	*/
 	UpdateChartTheme(ctx context.Context, chartThemeRidArg ChartThemeRid, requestArg UpdateChartThemeRequest) (ChartTheme, error)
-	// Delete an existing comment.
+	/*
+	   Deletes an export theme (chart theme in the API). The theme is no longer listed or returned.
+
+	   The caller needs permission to edit the configuration of the theme's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Themes:ChartThemeNotFound): the theme is missing, already deleted, or the caller cannot
+	     edit its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include workbooks.
+	*/
 	DeleteChartTheme(ctx context.Context, chartThemeRidArg ChartThemeRid) error
 }
 

@@ -11,11 +11,13 @@ import (
 	"github.com/palantir/pkg/safeyaml"
 )
 
+// The result of a completed job. The member matches the kind of job.
 type JobResult struct {
 	typ                     string
 	checkJobResult          *CheckJobResult
 	computeJobResult        *api.ComputeJobResult
 	udfCompilationJobResult *api.UdfCompilationJobResult
+	exportJobResult         *api.ExportJobResult
 }
 
 type jobResultDeserializer struct {
@@ -23,10 +25,11 @@ type jobResultDeserializer struct {
 	CheckJobResult          *CheckJobResult              `json:"checkJobResult"`
 	ComputeJobResult        *api.ComputeJobResult        `json:"computeJobResult"`
 	UdfCompilationJobResult *api.UdfCompilationJobResult `json:"udfCompilationJobResult"`
+	ExportJobResult         *api.ExportJobResult         `json:"exportJobResult"`
 }
 
 func (u *jobResultDeserializer) toStruct() JobResult {
-	return JobResult{typ: u.Type, checkJobResult: u.CheckJobResult, computeJobResult: u.ComputeJobResult, udfCompilationJobResult: u.UdfCompilationJobResult}
+	return JobResult{typ: u.Type, checkJobResult: u.CheckJobResult, computeJobResult: u.ComputeJobResult, udfCompilationJobResult: u.UdfCompilationJobResult, exportJobResult: u.ExportJobResult}
 }
 
 func (u *JobResult) toSerializer() (interface{}, error) {
@@ -57,6 +60,14 @@ func (u *JobResult) toSerializer() (interface{}, error) {
 			Type                    string                      `json:"type"`
 			UdfCompilationJobResult api.UdfCompilationJobResult `json:"udfCompilationJobResult"`
 		}{Type: "udfCompilationJobResult", UdfCompilationJobResult: *u.udfCompilationJobResult}, nil
+	case "exportJobResult":
+		if u.exportJobResult == nil {
+			return nil, fmt.Errorf("field \"exportJobResult\" is required")
+		}
+		return struct {
+			Type            string              `json:"type"`
+			ExportJobResult api.ExportJobResult `json:"exportJobResult"`
+		}{Type: "exportJobResult", ExportJobResult: *u.exportJobResult}, nil
 	}
 }
 
@@ -87,6 +98,10 @@ func (u *JobResult) UnmarshalJSON(data []byte) error {
 		if u.udfCompilationJobResult == nil {
 			return fmt.Errorf("field \"udfCompilationJobResult\" is required")
 		}
+	case "exportJobResult":
+		if u.exportJobResult == nil {
+			return fmt.Errorf("field \"exportJobResult\" is required")
+		}
 	}
 	return nil
 }
@@ -107,7 +122,7 @@ func (u *JobResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *JobResult) AcceptFuncs(checkJobResultFunc func(CheckJobResult) error, computeJobResultFunc func(api.ComputeJobResult) error, udfCompilationJobResultFunc func(api.UdfCompilationJobResult) error, unknownFunc func(string) error) error {
+func (u *JobResult) AcceptFuncs(checkJobResultFunc func(CheckJobResult) error, computeJobResultFunc func(api.ComputeJobResult) error, udfCompilationJobResultFunc func(api.UdfCompilationJobResult) error, exportJobResultFunc func(api.ExportJobResult) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -129,6 +144,11 @@ func (u *JobResult) AcceptFuncs(checkJobResultFunc func(CheckJobResult) error, c
 			return fmt.Errorf("field \"udfCompilationJobResult\" is required")
 		}
 		return udfCompilationJobResultFunc(*u.udfCompilationJobResult)
+	case "exportJobResult":
+		if u.exportJobResult == nil {
+			return fmt.Errorf("field \"exportJobResult\" is required")
+		}
+		return exportJobResultFunc(*u.exportJobResult)
 	}
 }
 
@@ -141,6 +161,10 @@ func (u *JobResult) ComputeJobResultNoopSuccess(_ api.ComputeJobResult) error {
 }
 
 func (u *JobResult) UdfCompilationJobResultNoopSuccess(_ api.UdfCompilationJobResult) error {
+	return nil
+}
+
+func (u *JobResult) ExportJobResultNoopSuccess(_ api.ExportJobResult) error {
 	return nil
 }
 
@@ -170,6 +194,11 @@ func (u *JobResult) Accept(v JobResultVisitor) error {
 			return fmt.Errorf("field \"udfCompilationJobResult\" is required")
 		}
 		return v.VisitUdfCompilationJobResult(*u.udfCompilationJobResult)
+	case "exportJobResult":
+		if u.exportJobResult == nil {
+			return fmt.Errorf("field \"exportJobResult\" is required")
+		}
+		return v.VisitExportJobResult(*u.exportJobResult)
 	}
 }
 
@@ -177,6 +206,7 @@ type JobResultVisitor interface {
 	VisitCheckJobResult(v CheckJobResult) error
 	VisitComputeJobResult(v api.ComputeJobResult) error
 	VisitUdfCompilationJobResult(v api.UdfCompilationJobResult) error
+	VisitExportJobResult(v api.ExportJobResult) error
 	VisitUnknown(typeName string) error
 }
 
@@ -202,6 +232,11 @@ func (u *JobResult) AcceptWithContext(ctx context.Context, v JobResultVisitorWit
 			return fmt.Errorf("field \"udfCompilationJobResult\" is required")
 		}
 		return v.VisitUdfCompilationJobResultWithContext(ctx, *u.udfCompilationJobResult)
+	case "exportJobResult":
+		if u.exportJobResult == nil {
+			return fmt.Errorf("field \"exportJobResult\" is required")
+		}
+		return v.VisitExportJobResultWithContext(ctx, *u.exportJobResult)
 	}
 }
 
@@ -209,6 +244,7 @@ type JobResultVisitorWithContext interface {
 	VisitCheckJobResultWithContext(ctx context.Context, v CheckJobResult) error
 	VisitComputeJobResultWithContext(ctx context.Context, v api.ComputeJobResult) error
 	VisitUdfCompilationJobResultWithContext(ctx context.Context, v api.UdfCompilationJobResult) error
+	VisitExportJobResultWithContext(ctx context.Context, v api.ExportJobResult) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -224,6 +260,11 @@ func NewJobResultFromUdfCompilationJobResult(v api.UdfCompilationJobResult) JobR
 	return JobResult{typ: "udfCompilationJobResult", udfCompilationJobResult: &v}
 }
 
+func NewJobResultFromExportJobResult(v api.ExportJobResult) JobResult {
+	return JobResult{typ: "exportJobResult", exportJobResult: &v}
+}
+
+// The state of a job. A job is in progress until it completes, fails, or is cancelled.
 type JobStatus struct {
 	typ        string
 	inProgress *api.InProgress

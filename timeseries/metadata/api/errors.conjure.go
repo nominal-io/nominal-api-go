@@ -305,7 +305,7 @@ func (e *IncompatibleSeriesMetadataUpdate) Parameters() map[string]interface{} {
 
 // safeParams returns a set of named safe parameters detailing this particular error instance.
 func (e *IncompatibleSeriesMetadataUpdate) safeParams() map[string]interface{} {
-	return map[string]interface{}{"violationCount": e.ViolationCount, "violations": e.Violations, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+	return map[string]interface{}{"violationCount": e.ViolationCount, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
 }
 
 // SafeParams returns a set of named safe parameters detailing this particular error instance and
@@ -322,7 +322,7 @@ func (e *IncompatibleSeriesMetadataUpdate) SafeParams() map[string]interface{} {
 
 // unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
 func (e *IncompatibleSeriesMetadataUpdate) unsafeParams() map[string]interface{} {
-	return map[string]interface{}{}
+	return map[string]interface{}{"violations": e.Violations}
 }
 
 // UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and

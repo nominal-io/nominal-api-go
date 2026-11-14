@@ -146,6 +146,7 @@ func NewContextPropertyFromValue(v string) ContextProperty {
 	return ContextProperty{typ: "value", value: &v}
 }
 
+// Where the values of a series live in an external database. Each variant names one database system.
 type Locator struct {
 	typ                   string
 	timescaleDbLocator    *TimescaleDbLocator
@@ -728,7 +729,7 @@ func NewResolveSeriesResponseFromError(v ResolveSeriesError) ResolveSeriesRespon
 	return ResolveSeriesResponse{typ: "error", error: &v}
 }
 
-// UnitUpdate is used to either set a unit, or to clear an existing unit.
+// A change to the unit of a series, either a new unit to set or an instruction to clear the existing unit.
 type UnitUpdate struct {
 	typ       string
 	unit      *api.Unit

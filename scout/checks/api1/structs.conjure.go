@@ -52,10 +52,15 @@ func (o *BatchGetJobReportsResponse) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// The result of a check evaluation job.
 type CheckJobResult struct {
-	Status               api1.Status  `json:"status"`
-	Failures             []api2.Range `json:"failures"`
-	AreFailuresDecimated bool         `json:"areFailuresDecimated"`
+	Status   api1.Status  `json:"status"`
+	Failures []api2.Range `json:"failures"`
+	/*
+	   True when the check found too many failing ranges to list one by one. Each range in `failures`
+	   then spans several failing ranges.
+	*/
+	AreFailuresDecimated bool `json:"areFailuresDecimated"`
 }
 
 func (o CheckJobResult) MarshalJSON() ([]byte, error) {
@@ -121,6 +126,7 @@ func (o *Completed) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// The status of one job, with its RID and submission time.
 type JobReport struct {
 	JobStatus   JobStatus         `json:"jobStatus"`
 	JobRid      api.JobRid        `json:"jobRid" safelogging:"@Safe"`

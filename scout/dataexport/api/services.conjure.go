@@ -15,9 +15,48 @@ import (
 
 // Provides functionality for exporting data from Scout.
 type DataExportServiceClient interface {
-	// Required permissions matches those required to compute the channels via the compute API.
+	/*
+	   Exports channel values or computed series over a time range as one CSV, MAT, or Arrow file in the response
+	   body. An Arrow export takes exactly one channel.
+
+	   A CSV or MAT export uses the resolution, timestamp format, and gap filling of the request. In it, a channel
+	   that the compute groups by tags becomes one column for each tag combination, named by appending an
+	   underscore, the tag name, an underscore, and the tag value for each tag, in tag name order, to the column
+	   name. An Arrow export ignores the resolution, timestamp format, and gap filling and returns full-resolution
+	   data. The caller needs the same permissions as computing the channels.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:InvalidRange): startTime is after endTime.
+	   - INVALID_ARGUMENT (Export:ChannelsNotExportable): a requested column cannot be exported, such as an
+	     array-valued channel, more than one channel in an Arrow export, or a CSV or MAT channel that fails to
+	     compute with an invalid-argument error.
+	   - INVALID_ARGUMENT (Export:ExportDataTooBig): a CSV or MAT export is over the size limit.
+	   - INVALID_ARGUMENT (Export:MatExportExceedsMat5VariableLimit): a MAT export is over the 2GB limit of a MAT5
+	     variable.
+	   - INVALID_ARGUMENT: a MAT struct column name is not valid, an Arrow export has no channel, or a dataset has
+	     no ingested data yet.
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read data from a data source.
+	*/
 	ExportChannelData(ctx context.Context, authHeader bearertoken.Token, requestArg ExportDataRequest) (io.ReadCloser, error)
-	// Required permissions matches those required to compute the channels via the compute API.
+	/*
+	   Exports channel values or computed series over a time range to a CSV, MAT, or Arrow file in the environment's
+	   export storage. Returns a time-limited download link and the file size.
+
+	   Takes the same request as exportChannelData, and a channel grouped by tags becomes columns in the same way.
+	   The caller needs the same permissions as computing the channels.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:InvalidRange): startTime is after endTime.
+	   - NOT_FOUND (Export:ExportBucketNotConfigured): the environment has no export storage.
+	   - INVALID_ARGUMENT (Export:ChannelsNotExportable): a requested column cannot be exported, such as an
+	     array-valued channel or a channel that fails as invalid.
+	   - INVALID_ARGUMENT (Export:ExportDataTooBig): a CSV or MAT export is over the size limit.
+	   - INVALID_ARGUMENT (Export:MatExportExceedsMat5VariableLimit): a MAT export is over the 2GB limit of a MAT5
+	     variable.
+	   - INVALID_ARGUMENT: a MAT struct column name is not valid, the export has no columns to write, or a dataset
+	     has no ingested data yet.
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read data from a data source.
+	*/
 	GenerateExportChannelDataPresignedLink(ctx context.Context, authHeader bearertoken.Token, requestArg ExportDataRequest) (GeneratePresignedLinkResponse, error)
 }
 
@@ -64,9 +103,48 @@ func (c *dataExportServiceClient) GenerateExportChannelDataPresignedLink(ctx con
 
 // Provides functionality for exporting data from Scout.
 type DataExportServiceClientWithAuth interface {
-	// Required permissions matches those required to compute the channels via the compute API.
+	/*
+	   Exports channel values or computed series over a time range as one CSV, MAT, or Arrow file in the response
+	   body. An Arrow export takes exactly one channel.
+
+	   A CSV or MAT export uses the resolution, timestamp format, and gap filling of the request. In it, a channel
+	   that the compute groups by tags becomes one column for each tag combination, named by appending an
+	   underscore, the tag name, an underscore, and the tag value for each tag, in tag name order, to the column
+	   name. An Arrow export ignores the resolution, timestamp format, and gap filling and returns full-resolution
+	   data. The caller needs the same permissions as computing the channels.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:InvalidRange): startTime is after endTime.
+	   - INVALID_ARGUMENT (Export:ChannelsNotExportable): a requested column cannot be exported, such as an
+	     array-valued channel, more than one channel in an Arrow export, or a CSV or MAT channel that fails to
+	     compute with an invalid-argument error.
+	   - INVALID_ARGUMENT (Export:ExportDataTooBig): a CSV or MAT export is over the size limit.
+	   - INVALID_ARGUMENT (Export:MatExportExceedsMat5VariableLimit): a MAT export is over the 2GB limit of a MAT5
+	     variable.
+	   - INVALID_ARGUMENT: a MAT struct column name is not valid, an Arrow export has no channel, or a dataset has
+	     no ingested data yet.
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read data from a data source.
+	*/
 	ExportChannelData(ctx context.Context, requestArg ExportDataRequest) (io.ReadCloser, error)
-	// Required permissions matches those required to compute the channels via the compute API.
+	/*
+	   Exports channel values or computed series over a time range to a CSV, MAT, or Arrow file in the environment's
+	   export storage. Returns a time-limited download link and the file size.
+
+	   Takes the same request as exportChannelData, and a channel grouped by tags becomes columns in the same way.
+	   The caller needs the same permissions as computing the channels.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:InvalidRange): startTime is after endTime.
+	   - NOT_FOUND (Export:ExportBucketNotConfigured): the environment has no export storage.
+	   - INVALID_ARGUMENT (Export:ChannelsNotExportable): a requested column cannot be exported, such as an
+	     array-valued channel or a channel that fails as invalid.
+	   - INVALID_ARGUMENT (Export:ExportDataTooBig): a CSV or MAT export is over the size limit.
+	   - INVALID_ARGUMENT (Export:MatExportExceedsMat5VariableLimit): a MAT export is over the 2GB limit of a MAT5
+	     variable.
+	   - INVALID_ARGUMENT: a MAT struct column name is not valid, the export has no columns to write, or a dataset
+	     has no ingested data yet.
+	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read data from a data source.
+	*/
 	GenerateExportChannelDataPresignedLink(ctx context.Context, requestArg ExportDataRequest) (GeneratePresignedLinkResponse, error)
 }
 

@@ -217,11 +217,12 @@ func (o *ColumnPinningState) UnmarshalYAML(unmarshal func(interface{}) error) er
 }
 
 type CreateSavedViewRequest struct {
-	Title        string             `json:"title"`
-	Symbol       *api2.Symbol       `json:"symbol,omitempty"`
-	Color        *api2.Color        `json:"color,omitempty"`
-	SearchState  SearchState        `json:"searchState"`
-	DisplayState DisplayState       `json:"displayState"`
+	Title        string       `json:"title"`
+	Symbol       *api2.Symbol `json:"symbol,omitempty"`
+	Color        *api2.Color  `json:"color,omitempty"`
+	SearchState  SearchState  `json:"searchState"`
+	DisplayState DisplayState `json:"displayState"`
+	// The workspace to create the saved view in. Defaults to the user's default workspace.
 	WorkspaceRid *rids.WorkspaceRid `json:"workspaceRid,omitempty" safelogging:"@Safe"`
 }
 
@@ -633,7 +634,7 @@ type SearchSavedViewsRequest struct {
 	PageSize      *int                  `json:"pageSize,omitempty"`
 	NextPageToken *api5.Token           `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	Query         SearchSavedViewsQuery `json:"query"`
-	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived assets in search.
+	// Defaults to NOT_ARCHIVED when omitted. Include ARCHIVED to return archived saved views.
 	ArchivedStatuses *[]api5.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
 
@@ -722,7 +723,7 @@ func (o *TableState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type TemplateSearchState struct {
-	// Sort for templates view. Uses BE-supplied default if empty.
+	// Sort order of the workbook templates in this view.
 	Sort  *api6.SortBy              `json:"sort,omitempty"`
 	Query api6.SearchTemplatesQuery `json:"query"`
 }
@@ -744,12 +745,17 @@ func (o *TemplateSearchState) UnmarshalYAML(unmarshal func(interface{}) error) e
 }
 
 type UpdateSavedViewRequest struct {
-	Title        *string       `json:"title,omitempty"`
-	Symbol       *UpdateSymbol `json:"symbol,omitempty"`
-	Color        *UpdateColor  `json:"color,omitempty"`
+	Title  *string       `json:"title,omitempty"`
+	Symbol *UpdateSymbol `json:"symbol,omitempty"`
+	Color  *UpdateColor  `json:"color,omitempty"`
+	// Must be the same kind of search state as the current one; a saved view cannot change its resource type.
 	SearchState  *SearchState  `json:"searchState,omitempty"`
 	DisplayState *DisplayState `json:"displayState,omitempty"`
-	Index        *int          `json:"index,omitempty"`
+	/*
+	   Moves the saved view to this zero-based position in the user-defined order of the active saved views
+	   of the same workspace and resource type. Out-of-range values are rejected.
+	*/
+	Index *int `json:"index,omitempty"`
 }
 
 func (o UpdateSavedViewRequest) MarshalYAML() (interface{}, error) {

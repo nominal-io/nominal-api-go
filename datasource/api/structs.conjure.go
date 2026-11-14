@@ -375,9 +375,11 @@ func (o *ChannelMetadata) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// The channel names of one data source, split by a delimiter into a tree of name parts.
 type ChannelPrefixTree struct {
-	Roots     []ChannelPrefixTreeNode `json:"roots"`
-	Delimiter string                  `json:"delimiter"`
+	Roots []ChannelPrefixTreeNode `json:"roots"`
+	// The string that separates the parts of a channel name.
+	Delimiter string `json:"delimiter"`
 }
 
 func (o ChannelPrefixTree) MarshalJSON() ([]byte, error) {
@@ -648,7 +650,8 @@ func (o *DataSourcePrefixNode) UnmarshalYAML(unmarshal func(interface{}) error) 
 type GetAvailableTagKeysRequest struct {
 	Filters       TagSearchFilters `json:"filters" safelogging:"@Unsafe"`
 	NextPageToken *api1.TagName    `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
-	PageSize      *int             `json:"pageSize,omitempty"`
+	// Defaults to 1000. Will throw if larger than 1000.
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 func (o GetAvailableTagKeysRequest) MarshalYAML() (interface{}, error) {
@@ -715,7 +718,7 @@ type GetAvailableTagValuesRequest struct {
 	Filters       TagSearchFilters `json:"filters" safelogging:"@Unsafe"`
 	TagName       api1.TagName     `json:"tagName" safelogging:"@Unsafe"`
 	NextPageToken *api1.TagValue   `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
-	// Defaults to 1000. Will throw if larger than 10000.
+	// Defaults to 1000. Will throw if larger than 1000.
 	PageSize *int `json:"pageSize,omitempty"`
 }
 
@@ -781,8 +784,10 @@ func (o *GetAvailableTagValuesResponse) UnmarshalYAML(unmarshal func(interface{}
 // safelogging:@Unsafe
 type GetAvailableTagsForChannelRequest struct {
 	ChannelWithTagFilters ChannelWithTagFilters `json:"channelWithTagFilters" safelogging:"@Unsafe"`
-	StartTime             api.UtcTimestamp      `json:"startTime"`
-	EndTime               api.UtcTimestamp      `json:"endTime"`
+	// Start of the time window searched for tags.
+	StartTime api.UtcTimestamp `json:"startTime"`
+	// End of the time window searched for tags.
+	EndTime api.UtcTimestamp `json:"endTime"`
 }
 
 func (o GetAvailableTagsForChannelRequest) MarshalYAML() (interface{}, error) {
@@ -823,8 +828,9 @@ func (o *GetAvailableTagsForChannelResponse) UnmarshalYAML(unmarshal func(interf
 }
 
 type GetDataScopeBoundsRequest struct {
-	DataSourceRid rids.DataSourceRid             `json:"dataSourceRid" safelogging:"@Safe"`
-	Tags          map[api1.TagName]api1.TagValue `json:"tags"`
+	DataSourceRid rids.DataSourceRid `json:"dataSourceRid" safelogging:"@Safe"`
+	// Tag key and value pairs that narrow the data source to this data scope.
+	Tags map[api1.TagName]api1.TagValue `json:"tags"`
 }
 
 func (o GetDataScopeBoundsRequest) MarshalJSON() ([]byte, error) {
@@ -961,7 +967,7 @@ type GetMatchingChannelsWithTagsRequest struct {
 	Channel    api1.Channel    `json:"channel" safelogging:"@Unsafe"`
 	// Tag key/value filters to apply with exact-match semantics per key. Empty map means no tag filtering.
 	Tags map[api1.TagName]api1.TagValue `json:"tags"`
-	// Optional page size for paginated responses. If omitted with pageToken, defaults to 1000.
+	// Defaults to 1000. Will throw if larger than 1000.
 	PageSize *int `json:"pageSize,omitempty"`
 	/*
 	   Optional opaque token for fetching the next page. Use the `nextPageToken` returned from the prior
@@ -1105,15 +1111,11 @@ func (o *GetSeriesCountResponse) UnmarshalYAML(unmarshal func(interface{}) error
 
 // safelogging:@Unsafe
 type GetTagValuesForDataSourceRequest struct {
-	// If empty, returns all available tag keys.
+	// If omitted, returns all available tag keys.
 	TagKeys *[]api1.TagName `json:"tagKeys,omitempty" safelogging:"@Unsafe"`
-	/*
-	   For Nominal data sources, a time range can be provided to filter tag values to those present within the
-	   months spanned by the range. If left empty, this defaults to the last month. For external data sources,
-	   the range must not be specified, as all tag values are returned.
-	*/
+	// Limits tag values to those present within the months the range spans. Defaults to the last month.
 	Range *api1.Range `json:"range,omitempty"`
-	// If supplied, caps the number of values per key at the specified value.
+	// Caps the number of values per key. Defaults to 5000. Must be positive. Will throw if larger than 10000.
 	MaxValuesPerKey *int `json:"maxValuesPerKey,omitempty"`
 }
 
@@ -1200,6 +1202,10 @@ func (o *MatchingChannelWithTags) UnmarshalYAML(unmarshal func(interface{}) erro
 
 // safelogging:@Unsafe
 type SearchChannelsRequest struct {
+	/*
+	   Text that channel names are fuzzy matched against. Results rank by similarity. An empty string applies no
+	   minimum similarity.
+	*/
 	FuzzySearchText string `json:"fuzzySearchText"`
 	// Deprecated: Use `searchHierarchical` instead. Will be ignored.
 	Prefix *string `json:"prefix,omitempty"`

@@ -17,6 +17,7 @@ type DataSourceRefName string // safelogging:@Unsafe
 // Should be of the format Namespace:ErrorType
 type ErrorType string // safelogging:@Safe
 
+// A short text label on a resource. Labels group resources and filter searches.
 type Label string // safelogging:@Unsafe
 
 type LogicalSeriesRid rid.ResourceIdentifier // safelogging:@Safe
@@ -71,8 +72,10 @@ type McapChannelId int // safelogging:@Safe
 
 type McapChannelTopic string // safelogging:@Unsafe
 
+// The name of a property, the key of a key-value pair that describes a resource.
 type PropertyName string // safelogging:@Unsafe
 
+// The value of a property, the value of a key-value pair that describes a resource.
 type PropertyValue string // safelogging:@Unsafe
 
 type S3Path string // safelogging:@Unsafe
@@ -178,9 +181,8 @@ type TagName string // safelogging:@Unsafe
 type TagValue string // safelogging:@Unsafe
 
 /*
-Tokens are used with paginated requests to get the next "page" of results
-from an API, and typically are used as both part of the request and response
-schema of an endpoint to allow users to stream pages of results.
+An opaque page token. To get the next page of results, pass the nextPageToken from the previous response
+unchanged.
 */
 type Token string // safelogging:@Unsafe
 

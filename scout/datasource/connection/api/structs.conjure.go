@@ -251,10 +251,14 @@ func (o *ChannelBlockListConnectionsScrapingConfig) UnmarshalYAML(unmarshal func
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+A legacy data source that links to an external time series database or to a Nominal data source. Datasets
+replace connections.
+*/
 // safelogging:@Unsafe
 type Connection struct {
 	Rid ConnectionRid `json:"rid" safelogging:"@Safe"`
-	// The display name of the connection. For example: "Nominal production TimescaleDB"
+	// The display name of the connection. For example: "Flight telemetry database"
 	DisplayName       string            `json:"displayName"`
 	Description       *string           `json:"description,omitempty"`
 	ConnectionDetails ConnectionDetails `json:"connectionDetails"`
@@ -264,12 +268,14 @@ type Connection struct {
 	*/
 	RequiredTagNames []api.TagName     `json:"requiredTagNames" safelogging:"@Unsafe"`
 	Metadata         map[string]string `json:"metadata"`
-	Scraping         *ScrapingConfig   `json:"scraping,omitempty"`
+	// Which series Nominal scrapes from the external database. Absent when none is configured.
+	Scraping *ScrapingConfig `json:"scraping,omitempty"`
 	// The connection will be scraped iff this flag is set and scrapingConfig is present.
 	ShouldScrape     bool             `json:"shouldScrape"`
 	Limits           *LimitsConfig    `json:"limits,omitempty"`
 	ConnectionStatus ConnectionStatus `json:"connectionStatus"`
-	IsArchived       bool             `json:"isArchived"`
+	// Archived connections are left out of listConnections and listConnectionsV2 results unless includeArchived is true.
+	IsArchived bool `json:"isArchived"`
 }
 
 func (o Connection) MarshalJSON() ([]byte, error) {
@@ -371,13 +377,12 @@ type CreateConnection struct {
 	ConnectionDetails ConnectionDetails `json:"connectionDetails"`
 	// Metadata information about the connection which is not relevant to the DB connection itself.
 	Metadata map[string]string `json:"metadata"`
-	// Additional tag name that are required to construct a fully qualified series.
-	RequiredTagNames []api.TagName `json:"requiredTagNames" safelogging:"@Unsafe"`
 	/*
-	   In most cases, this does not to be set by the user. Throws if populated for Nominal connections, which
-	   have their tags automatically indexed in the underlying database. Tags for external connections are
-	   periodically scraped. Tags should only be updated  manually for Visual crossing connections.
+	   Additional tag names that should be supplied to construct a fully qualified series. These are suggested,
+	   rather than strictly required.
 	*/
+	RequiredTagNames []api.TagName `json:"requiredTagNames" safelogging:"@Unsafe"`
+	// Throws if populated for Nominal connections, which have their tags automatically indexed.
 	AvailableTagValues *map[api.TagName][]api.TagValue `json:"availableTagValues,omitempty"`
 	Scraping           *ScrapingConfig                 `json:"scraping,omitempty"`
 	ShouldScrape       bool                            `json:"shouldScrape"`
@@ -388,8 +393,8 @@ type CreateConnection struct {
 	*/
 	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 	/*
-	   The markings to apply to the created connection.
-	   If not provided, the connection will be visible to all users in the same workspace.
+	   The markings to apply to the created connection and, for a connection to an external database, to its
+	   dataset.
 	*/
 	MarkingRids []api1.MarkingRid `json:"markingRids" safelogging:"@Safe"`
 }
@@ -1017,7 +1022,7 @@ func (o *TimestreamScrapingConfig) UnmarshalYAML(unmarshal func(interface{}) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Fields that are empty will be treated as a no-op update.
+// Fields that are empty will be treated as a no-op update. A field that is set replaces the stored value.
 // safelogging:@Unsafe
 type UpdateConnectionRequest struct {
 	Name              *string            `json:"name,omitempty"`
@@ -1026,9 +1031,8 @@ type UpdateConnectionRequest struct {
 	ConnectionDetails *ConnectionDetails `json:"connectionDetails,omitempty"`
 	RequiredTagNames  *[]api.TagName     `json:"requiredTagNames,omitempty" safelogging:"@Unsafe"`
 	/*
-	   In most cases, this does not to be set by the user. Throws if populated for Nominal connections, which
-	   have their tags automatically indexed in the underlying database. Tags for external connections are
-	   periodically scraped. Tags should only be updated manually for Visual crossing connections.
+	   Replaces all available tag values. Throws if populated for Nominal connections, which have their tags
+	   automatically indexed.
 	*/
 	AvailableTagValues *map[api.TagName][]api.TagValue `json:"availableTagValues,omitempty"`
 	Scraping           *ScrapingConfig                 `json:"scraping,omitempty"`
@@ -1052,7 +1056,7 @@ func (o *UpdateConnectionRequest) UnmarshalYAML(unmarshal func(interface{}) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-// Deprecated and not used for anything anymore, see record VisualCrossingAvailableSeries instead.
+// Deprecated and not used for anything anymore.
 // safelogging:@Unsafe
 type VisualCrossingAvailableSeries struct {
 	Channel     api.Channel        `json:"channel" safelogging:"@Unsafe"`

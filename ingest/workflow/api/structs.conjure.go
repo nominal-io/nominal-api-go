@@ -89,7 +89,10 @@ func (o *EnsureExtractorJobCreatedRequest) UnmarshalYAML(unmarshal func(interfac
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-type EnsureExtractorJobCreatedResponse struct{}
+type EnsureExtractorJobCreatedResponse struct {
+	// Set when no Job was created because the extractor's image is missing from Nominal's own registry. The caller treats it as a FAILED job state carrying this error.
+	PreflightFailure *ExtractorError `json:"preflightFailure,omitempty"`
+}
 
 func (o EnsureExtractorJobCreatedResponse) MarshalYAML() (interface{}, error) {
 	jsonBytes, err := safejson.Marshal(o)

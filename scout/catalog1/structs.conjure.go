@@ -42,6 +42,7 @@ func (o *AddFileToDataset) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// One file stored in a dataset, with its ingest status and the time span its data covers.
 type DatasetFile struct {
 	Id         datasource.DatasetFileId `json:"id" safelogging:"@Safe"`
 	DatasetRid rids.DatasetRid          `json:"datasetRid" safelogging:"@Safe"`
@@ -49,7 +50,8 @@ type DatasetFile struct {
 	Handle     catalog.Handle           `json:"handle"`
 	// Size in bytes of the stored dataset file; for transforming ingests this is the produced output, not the original upload.
 	FileSizeBytes *safelong.SafeLong `json:"fileSizeBytes,omitempty"`
-	Bounds        *catalog.Bounds    `json:"bounds,omitempty"`
+	// Time span the file's data covers.
+	Bounds *catalog.Bounds `json:"bounds,omitempty"`
 	// Timestamp that the file was received and stored, but not processed or made available to consumers.
 	UploadedAt datetime.DateTime `json:"uploadedAt"`
 	/*
@@ -64,8 +66,9 @@ type DatasetFile struct {
 	IngestStatus      api1.IngestStatusV2        `json:"ingestStatus"`
 	TimestampMetadata *catalog.TimestampMetadata `json:"timestampMetadata,omitempty"`
 	IngestTagMetadata *catalog.IngestTagMetadata `json:"ingestTagMetadata,omitempty"`
-	OriginFilePaths   *[]string                  `json:"originFilePaths,omitempty"`
-	IngestJobRid      *api.IngestJobRid          `json:"ingestJobRid,omitempty" safelogging:"@Safe"`
+	// Storage paths of the original files this file was produced from. Download them with getOriginFileUris.
+	OriginFilePaths *[]string         `json:"originFilePaths,omitempty"`
+	IngestJobRid    *api.IngestJobRid `json:"ingestJobRid,omitempty" safelogging:"@Safe"`
 	/*
 	   The ingest transform within ingestJobRid that produced this file. An ingest job may fan out
 	   to many transforms, so this pins the file to the specific unit of work (and extractor) that
@@ -99,8 +102,9 @@ func (o *DatasetFile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // safelogging:@Unsafe
 type DatasetFilesPage struct {
-	Files    []DatasetFile `json:"files"`
-	NextPage *api1.Token   `json:"nextPage,omitempty" safelogging:"@Unsafe"`
+	Files []DatasetFile `json:"files"`
+	// Token for the next page. Absent on the last page.
+	NextPage *api1.Token `json:"nextPage,omitempty" safelogging:"@Unsafe"`
 }
 
 func (o DatasetFilesPage) MarshalJSON() ([]byte, error) {
