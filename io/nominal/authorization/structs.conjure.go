@@ -332,16 +332,11 @@ func (o *GetUserOrgsResponse) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
-/*
-Request a short-lived bearer token for one of the sandbox workspaces configured
-on the gatekeeper service. Intended for in-cluster integration test runners.
-*/
+// Request a short-lived bearer token for a sandbox workspace.
 type IssueSandboxTokenRequest struct {
 	/*
-	   Desired token lifetime in seconds. Capped server-side at 3600 (1h).
-	   Omit to use the server default (the cap). Non-positive values are
-	   rejected with SandboxTokenUnavailable rather than silently
-	   upgraded to the cap.
+	   Desired token lifetime in seconds. The service caps it at 3600 (1h). Omit it to get
+	   the cap. A non-positive value is rejected with SandboxTokenUnavailable.
 	*/
 	RequestedTtlSeconds *safelong.SafeLong `json:"requestedTtlSeconds,omitempty"`
 	// Which sandbox workspace to create a token for. The default is PRIMARY.

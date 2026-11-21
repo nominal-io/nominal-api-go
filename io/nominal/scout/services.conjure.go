@@ -38,7 +38,8 @@ type NotebookServiceClient interface {
 	   The content is required: set contentV2 or the deprecated content. Its visualization IDs must match the layout.
 	   The server assigns the RID and sets the caller as the author. The workbook goes in the given workspace, or in
 	   the default workspace of the caller's organization when none is given. Blank labels and property keys are
-	   dropped. The caller needs permission to create workbooks in that workspace.
+	   dropped. The caller needs permission to create workbooks in that workspace. An ANALYST_EPHEMERAL_WORKBOOK
+	   needs only permission to view the workspace, and must be created as a draft.
 
 	   Errors:
 	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default workspace.
@@ -46,6 +47,7 @@ type NotebookServiceClient interface {
 	   - INVALID_ARGUMENT: neither dataScope nor runRid is set.
 	   - NOT_FOUND (Scout:RunsNotFound): a run in the data scope does not exist or the caller cannot see it.
 	   - NOT_FOUND (Scout:AssetsNotFound): an asset in the data scope does not exist or the caller cannot see it.
+	   - INVALID_ARGUMENT: an ANALYST_EPHEMERAL_WORKBOOK is not created as a draft.
 	   - INVALID_ARGUMENT: the content is missing, or its visualization IDs do not match the layout.
 	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg api.CreateNotebookRequest) (api.Notebook, error)
@@ -93,9 +95,9 @@ type NotebookServiceClient interface {
 	/*
 	   Returns the metadata (title, description, labels, properties, data scope, lock and draft state) of the
 	   workbooks (notebooks in the API) with the given RIDs, without their content. Archived workbooks are returned.
+	   Omits workbooks that do not exist or that the caller cannot view.
 
 	   Errors:
-	   - NOT_FOUND (Scout:NotebooksNotFound): one or more workbooks do not exist or the caller cannot view them. No metadata is returned.
 	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.NotebookRid) ([]api.NotebookMetadataWithRid, error)
@@ -112,6 +114,7 @@ type NotebookServiceClient interface {
 	   Errors:
 	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
 	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT: the request sets isDraft to false on an Analyst workbook.
 	   - INVALID_ARGUMENT (Scout:DemoWorkbookCannotBeUnlocked): the request unlocks a demo workbook.
 	   - INVALID_ARGUMENT (Scout:DemoWorkbookCannotBeUnpublished): the request sets isDraft to true on a demo workbook.
 	*/
@@ -246,6 +249,7 @@ type NotebookServiceClient interface {
 	   - NOT_FOUND (Scout:NotebookNotFound): the source workbook does not exist or the caller cannot edit it.
 	   - NOT_FOUND (Scout:RunsNotFound): a run in the copied or overriding data scope does not exist or the caller cannot see it.
 	   - NOT_FOUND (Scout:AssetsNotFound): an asset in the copied or overriding data scope does not exist or the caller cannot see it.
+	   - INVALID_ARGUMENT: the source is an Analyst workbook and the copy would not be a draft.
 	*/
 	Duplicate(ctx context.Context, authHeader bearertoken.Token, ridArg api1.NotebookRid, requestArg api.DuplicateNotebookRequest) (api.Notebook, error)
 	/*
@@ -610,7 +614,8 @@ type NotebookServiceClientWithAuth interface {
 	   The content is required: set contentV2 or the deprecated content. Its visualization IDs must match the layout.
 	   The server assigns the RID and sets the caller as the author. The workbook goes in the given workspace, or in
 	   the default workspace of the caller's organization when none is given. Blank labels and property keys are
-	   dropped. The caller needs permission to create workbooks in that workspace.
+	   dropped. The caller needs permission to create workbooks in that workspace. An ANALYST_EPHEMERAL_WORKBOOK
+	   needs only permission to view the workspace, and must be created as a draft.
 
 	   Errors:
 	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default workspace.
@@ -618,6 +623,7 @@ type NotebookServiceClientWithAuth interface {
 	   - INVALID_ARGUMENT: neither dataScope nor runRid is set.
 	   - NOT_FOUND (Scout:RunsNotFound): a run in the data scope does not exist or the caller cannot see it.
 	   - NOT_FOUND (Scout:AssetsNotFound): an asset in the data scope does not exist or the caller cannot see it.
+	   - INVALID_ARGUMENT: an ANALYST_EPHEMERAL_WORKBOOK is not created as a draft.
 	   - INVALID_ARGUMENT: the content is missing, or its visualization IDs do not match the layout.
 	*/
 	Create(ctx context.Context, requestArg api.CreateNotebookRequest) (api.Notebook, error)
@@ -665,9 +671,9 @@ type NotebookServiceClientWithAuth interface {
 	/*
 	   Returns the metadata (title, description, labels, properties, data scope, lock and draft state) of the
 	   workbooks (notebooks in the API) with the given RIDs, without their content. Archived workbooks are returned.
+	   Omits workbooks that do not exist or that the caller cannot view.
 
 	   Errors:
-	   - NOT_FOUND (Scout:NotebooksNotFound): one or more workbooks do not exist or the caller cannot view them. No metadata is returned.
 	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
 	*/
 	BatchGetMetadata(ctx context.Context, ridsArg []api1.NotebookRid) ([]api.NotebookMetadataWithRid, error)
@@ -684,6 +690,7 @@ type NotebookServiceClientWithAuth interface {
 	   Errors:
 	   - NOT_FOUND (Scout:NotebookNotFound): the workbook does not exist or the caller cannot edit it.
 	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - INVALID_ARGUMENT: the request sets isDraft to false on an Analyst workbook.
 	   - INVALID_ARGUMENT (Scout:DemoWorkbookCannotBeUnlocked): the request unlocks a demo workbook.
 	   - INVALID_ARGUMENT (Scout:DemoWorkbookCannotBeUnpublished): the request sets isDraft to true on a demo workbook.
 	*/
@@ -818,6 +825,7 @@ type NotebookServiceClientWithAuth interface {
 	   - NOT_FOUND (Scout:NotebookNotFound): the source workbook does not exist or the caller cannot edit it.
 	   - NOT_FOUND (Scout:RunsNotFound): a run in the copied or overriding data scope does not exist or the caller cannot see it.
 	   - NOT_FOUND (Scout:AssetsNotFound): an asset in the copied or overriding data scope does not exist or the caller cannot see it.
+	   - INVALID_ARGUMENT: the source is an Analyst workbook and the copy would not be a draft.
 	*/
 	Duplicate(ctx context.Context, ridArg api1.NotebookRid, requestArg api.DuplicateNotebookRequest) (api.Notebook, error)
 	/*
@@ -2264,12 +2272,10 @@ type TemplateServiceClient interface {
 	   Gets the metadata of several workbook templates by RID, without layout or content. Returns a summary for
 	   each.
 
-	   The caller needs permission to view every template.
+	   Templates that do not exist or that the caller cannot view are omitted.
 
 	   Errors:
-	   - NOT_FOUND (Scout:TemplatesNotFound): a template does not exist or the caller cannot view it. The error
-	     lists those RIDs, and no summaries are returned.
-	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - PERMISSION_DENIED: a returned template's workspace edition does not include workbooks.
 	*/
 	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, ridsArg []api1.TemplateRid) ([]api4.TemplateSummary, error)
 	/*
@@ -2770,12 +2776,10 @@ type TemplateServiceClientWithAuth interface {
 	   Gets the metadata of several workbook templates by RID, without layout or content. Returns a summary for
 	   each.
 
-	   The caller needs permission to view every template.
+	   Templates that do not exist or that the caller cannot view are omitted.
 
 	   Errors:
-	   - NOT_FOUND (Scout:TemplatesNotFound): a template does not exist or the caller cannot view it. The error
-	     lists those RIDs, and no summaries are returned.
-	   - PERMISSION_DENIED: the workspace's edition does not include workbooks.
+	   - PERMISSION_DENIED: a returned template's workspace edition does not include workbooks.
 	*/
 	BatchGetMetadata(ctx context.Context, ridsArg []api1.TemplateRid) ([]api4.TemplateSummary, error)
 	/*

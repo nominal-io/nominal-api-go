@@ -44,11 +44,8 @@ type NominalDataSourceServiceClient interface {
 	*/
 	Update(ctx context.Context, authHeader bearertoken.Token, ridArg rids.NominalDataSourceRid, requestArg UpdateNominalDataSourceRequest) (NominalDataSource, error)
 	/*
-	   Gets Nominal data sources by RID. The caller must be able to read the data of every requested data source.
-
-	   Errors:
-	   - NOT_FOUND (NominalDataSource:DataSourcesNotFound): the caller cannot read the data of at least one
-	     requested data source. The error names them, and the call does not skip them.
+	   Gets Nominal data sources by RID. Data sources that do not exist or whose data the caller cannot read are
+	   omitted.
 	*/
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, ridsArg []rids.NominalDataSourceRid) ([]NominalDataSource, error)
 	// Sets the timestamp that the Nominal Data Source in question was last written to. Only needs to be called once per minute.
@@ -182,11 +179,8 @@ type NominalDataSourceServiceClientWithAuth interface {
 	*/
 	Update(ctx context.Context, ridArg rids.NominalDataSourceRid, requestArg UpdateNominalDataSourceRequest) (NominalDataSource, error)
 	/*
-	   Gets Nominal data sources by RID. The caller must be able to read the data of every requested data source.
-
-	   Errors:
-	   - NOT_FOUND (NominalDataSource:DataSourcesNotFound): the caller cannot read the data of at least one
-	     requested data source. The error names them, and the call does not skip them.
+	   Gets Nominal data sources by RID. Data sources that do not exist or whose data the caller cannot read are
+	   omitted.
 	*/
 	BatchGet(ctx context.Context, ridsArg []rids.NominalDataSourceRid) ([]NominalDataSource, error)
 	// Sets the timestamp that the Nominal Data Source in question was last written to. Only needs to be called once per minute.

@@ -3110,6 +3110,54 @@ func (o *FunctionVariables) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Computes the great-circle distance in meters between two positions pointwise, using the haversine
+formula on a sphere of the Earth's mean radius (6,371,008.8 m). Inputs align like other multi-input
+arithmetic.
+*/
+type GeoDistance struct {
+	From GeoPositionSeries `json:"from"`
+	To   GeoPositionSeries `json:"to"`
+}
+
+func (o GeoDistance) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeoDistance) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A position on the Earth as latitude and longitude series, in degrees.
+type GeoPositionSeries struct {
+	Latitude  NumericSeries `json:"latitude"`
+	Longitude NumericSeries `json:"longitude"`
+}
+
+func (o GeoPositionSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeoPositionSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Compares two numeric series point-wise, producing true where left >= right and false otherwise.
 type GreaterThanOrEqualToSeries struct {
 	Left  NumericSeries `json:"left"`
@@ -5529,6 +5577,49 @@ func (o RefpropSeriesV2) MarshalYAML() (interface{}, error) {
 }
 
 func (o *RefpropSeriesV2) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Matches a resource when any of its types is in types. Currently only supported for assets.
+// safelogging:@Safe
+type ResourceTypesFilter struct {
+	Types []api2.TypeRid `json:"types" safelogging:"@Safe"`
+}
+
+func (o ResourceTypesFilter) MarshalJSON() ([]byte, error) {
+	if o.Types == nil {
+		o.Types = make([]api2.TypeRid, 0)
+	}
+	type _tmpResourceTypesFilter ResourceTypesFilter
+	return safejson.Marshal(_tmpResourceTypesFilter(o))
+}
+
+func (o *ResourceTypesFilter) UnmarshalJSON(data []byte) error {
+	type _tmpResourceTypesFilter ResourceTypesFilter
+	var rawResourceTypesFilter _tmpResourceTypesFilter
+	if err := safejson.Unmarshal(data, &rawResourceTypesFilter); err != nil {
+		return err
+	}
+	if rawResourceTypesFilter.Types == nil {
+		rawResourceTypesFilter.Types = make([]api2.TypeRid, 0)
+	}
+	*o = ResourceTypesFilter(rawResourceTypesFilter)
+	return nil
+}
+
+func (o ResourceTypesFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ResourceTypesFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

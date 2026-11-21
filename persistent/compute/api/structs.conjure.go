@@ -485,6 +485,11 @@ type SubscriptionUpdateMessage struct {
 	   without synchronizing clocks. Only a sample of messages is timed; absent when none was drained.
 	*/
 	AcceptedToSendMillis *safelong.SafeLong `json:"acceptedToSendMillis,omitempty"`
+	/*
+	   The server's wall clock when it built the update, before writing it to the socket, from the same clock
+	   that stamps `Pong.sentAt`. `acceptedToSendMillis` ends at this instant. Absent from older servers.
+	*/
+	SentAt *datetime.DateTime `json:"sentAt,omitempty"`
 }
 
 func (o SubscriptionUpdateMessage) MarshalYAML() (interface{}, error) {

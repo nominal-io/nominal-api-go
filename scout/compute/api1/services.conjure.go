@@ -22,6 +22,7 @@ type ComputeServiceClient interface {
 
 	   Errors:
 	   - INVALID_ARGUMENT (Compute:SourceBlocked): queries from sourceRid are temporarily blocked.
+	   - INVALID_ARGUMENT (Compute:TooManyCombinedReadWindows): query exceeds limit of disjoint time windows after merging. Narrow the time range or select fewer runs.
 	   - INVALID_ARGUMENT: end is before start, or the graph cannot be evaluated, for example a variable has no value (Compute:MissingVariable), a ranges output sets maxRanges above the limit of 10,000 (Compute:TooManyRanges), or the query timed out (Compute:TimeoutExceeded).
 	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read the data of a data source the graph uses.
 	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the graph uses data sources from more than one workspace, or a data source that is not in a workspace.
@@ -275,6 +276,7 @@ type ComputeServiceClientWithAuth interface {
 
 	   Errors:
 	   - INVALID_ARGUMENT (Compute:SourceBlocked): queries from sourceRid are temporarily blocked.
+	   - INVALID_ARGUMENT (Compute:TooManyCombinedReadWindows): query exceeds limit of disjoint time windows after merging. Narrow the time range or select fewer runs.
 	   - INVALID_ARGUMENT: end is before start, or the graph cannot be evaluated, for example a variable has no value (Compute:MissingVariable), a ranges output sets maxRanges above the limit of 10,000 (Compute:TooManyRanges), or the query timed out (Compute:TimeoutExceeded).
 	   - PERMISSION_DENIED (Compute:NotAuthorized): the caller cannot read the data of a data source the graph uses.
 	   - INVALID_ARGUMENT (Security:ForbiddenCrossWorkspaceOperation): the graph uses data sources from more than one workspace, or a data source that is not in a workspace.

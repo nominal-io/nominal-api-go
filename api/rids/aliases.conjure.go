@@ -109,6 +109,104 @@ func (a *AiTurnRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
+// Unique resource identifier for a saved Analyst automation.
+type AnalystAutomationRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a AnalystAutomationRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a AnalystAutomationRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *AnalystAutomationRid) UnmarshalText(data []byte) error {
+	var rawAnalystAutomationRid rid.ResourceIdentifier
+	if err := rawAnalystAutomationRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = AnalystAutomationRid(rawAnalystAutomationRid)
+	return nil
+}
+
+func (a AnalystAutomationRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *AnalystAutomationRid) UnmarshalJSON(data []byte) error {
+	var rawAnalystAutomationRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawAnalystAutomationRid); err != nil {
+		return err
+	}
+	*a = AnalystAutomationRid(rawAnalystAutomationRid)
+	return nil
+}
+
+func (a AnalystAutomationRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *AnalystAutomationRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+// Unique resource identifier for one immutable automation execution.
+type AnalystAutomationRunRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a AnalystAutomationRunRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a AnalystAutomationRunRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *AnalystAutomationRunRid) UnmarshalText(data []byte) error {
+	var rawAnalystAutomationRunRid rid.ResourceIdentifier
+	if err := rawAnalystAutomationRunRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = AnalystAutomationRunRid(rawAnalystAutomationRunRid)
+	return nil
+}
+
+func (a AnalystAutomationRunRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *AnalystAutomationRunRid) UnmarshalJSON(data []byte) error {
+	var rawAnalystAutomationRunRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawAnalystAutomationRunRid); err != nil {
+		return err
+	}
+	*a = AnalystAutomationRunRid(rawAnalystAutomationRunRid)
+	return nil
+}
+
+func (a AnalystAutomationRunRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *AnalystAutomationRunRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
 // Unique resource identifier for an Attachment
 type AttachmentRid rid.ResourceIdentifier // safelogging:@Safe
 
@@ -203,6 +301,58 @@ func (a AutomaticCheckEvaluationRid) MarshalYAML() (interface{}, error) {
 }
 
 func (a *AutomaticCheckEvaluationRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+/*
+Unique resource identifier for a Nominal Systems blueprint: the design of a system's components.
+Canonical format: ri.systems.<instance>.blueprint.<uuid>.
+*/
+type BlueprintRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a BlueprintRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a BlueprintRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *BlueprintRid) UnmarshalText(data []byte) error {
+	var rawBlueprintRid rid.ResourceIdentifier
+	if err := rawBlueprintRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = BlueprintRid(rawBlueprintRid)
+	return nil
+}
+
+func (a BlueprintRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *BlueprintRid) UnmarshalJSON(data []byte) error {
+	var rawBlueprintRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawBlueprintRid); err != nil {
+		return err
+	}
+	*a = BlueprintRid(rawBlueprintRid)
+	return nil
+}
+
+func (a BlueprintRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *BlueprintRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err
@@ -557,6 +707,58 @@ func (a *DatasetRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&a)
 }
 
+/*
+Unique resource identifier for a Nominal Systems deployment: a blueprint version running on hosts.
+Canonical format: ri.systems.<instance>.deployment.<uuid>.
+*/
+type DeploymentRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a DeploymentRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a DeploymentRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *DeploymentRid) UnmarshalText(data []byte) error {
+	var rawDeploymentRid rid.ResourceIdentifier
+	if err := rawDeploymentRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = DeploymentRid(rawDeploymentRid)
+	return nil
+}
+
+func (a DeploymentRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *DeploymentRid) UnmarshalJSON(data []byte) error {
+	var rawDeploymentRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawDeploymentRid); err != nil {
+		return err
+	}
+	*a = DeploymentRid(rawDeploymentRid)
+	return nil
+}
+
+func (a DeploymentRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *DeploymentRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
 // Unique resource identifier for an immutable managed File Store file revision.
 type DriveFileRevisionRid rid.ResourceIdentifier // safelogging:@Safe
 
@@ -848,6 +1050,110 @@ func (a GlobalArtifactRid) MarshalYAML() (interface{}, error) {
 }
 
 func (a *GlobalArtifactRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+/*
+Unique resource identifier for a Nominal Systems host: a machine running the management daemon.
+Canonical format: ri.systems.<instance>.host.<uuid>.
+*/
+type HostRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a HostRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a HostRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *HostRid) UnmarshalText(data []byte) error {
+	var rawHostRid rid.ResourceIdentifier
+	if err := rawHostRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = HostRid(rawHostRid)
+	return nil
+}
+
+func (a HostRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *HostRid) UnmarshalJSON(data []byte) error {
+	var rawHostRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawHostRid); err != nil {
+		return err
+	}
+	*a = HostRid(rawHostRid)
+	return nil
+}
+
+func (a HostRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *HostRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&a)
+}
+
+/*
+Unique resource identifier for a Nominal Systems join token, which a new host uses to register.
+Canonical format: ri.systems.<instance>.join-token.<uuid>.
+*/
+type JoinTokenRid rid.ResourceIdentifier // safelogging:@Safe
+
+func (a JoinTokenRid) String() string {
+	return rid.ResourceIdentifier(a).String()
+}
+
+func (a JoinTokenRid) MarshalText() ([]byte, error) {
+	return rid.ResourceIdentifier(a).MarshalText()
+}
+
+func (a *JoinTokenRid) UnmarshalText(data []byte) error {
+	var rawJoinTokenRid rid.ResourceIdentifier
+	if err := rawJoinTokenRid.UnmarshalText(data); err != nil {
+		return err
+	}
+	*a = JoinTokenRid(rawJoinTokenRid)
+	return nil
+}
+
+func (a JoinTokenRid) MarshalJSON() ([]byte, error) {
+	return safejson.Marshal(rid.ResourceIdentifier(a))
+}
+
+func (a *JoinTokenRid) UnmarshalJSON(data []byte) error {
+	var rawJoinTokenRid rid.ResourceIdentifier
+	if err := safejson.Unmarshal(data, &rawJoinTokenRid); err != nil {
+		return err
+	}
+	*a = JoinTokenRid(rawJoinTokenRid)
+	return nil
+}
+
+func (a JoinTokenRid) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (a *JoinTokenRid) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

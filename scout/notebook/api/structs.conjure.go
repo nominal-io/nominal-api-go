@@ -857,7 +857,7 @@ type UpdateNotebookMetadataRequest struct {
 	Properties *map[api.PropertyName]api.PropertyValue `json:"properties,omitempty"`
 	// Replaces all labels of the workbook.
 	Labels *[]api.Label `json:"labels,omitempty" safelogging:"@Unsafe"`
-	// True makes the workbook a draft. False publishes it.
+	// True makes the workbook a draft. False publishes it, except on an Analyst workbook, which cannot be published.
 	IsDraft *bool `json:"isDraft,omitempty"`
 	// Theme-aware preview image for the workbook. When provided, replaces the existing preview image.
 	PreviewImage *api.ThemeAwareImage `json:"previewImage,omitempty"`
