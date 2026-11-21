@@ -737,6 +737,7 @@ type ChecklistSearchQuery struct {
 	authorIsCurrentUser *bool
 	authorRids          *[]api.UserRid
 	isArchived          *bool
+	assetTypes          *[]api.TypeRid
 }
 
 type checklistSearchQueryDeserializer struct {
@@ -756,10 +757,11 @@ type checklistSearchQueryDeserializer struct {
 	AuthorIsCurrentUser *bool                   `json:"authorIsCurrentUser"`
 	AuthorRids          *[]api.UserRid          `json:"authorRids"`
 	IsArchived          *bool                   `json:"isArchived"`
+	AssetTypes          *[]api.TypeRid          `json:"assetTypes"`
 }
 
 func (u *checklistSearchQueryDeserializer) toStruct() ChecklistSearchQuery {
-	return ChecklistSearchQuery{typ: u.Type, and: u.And, or: u.Or, searchText: u.SearchText, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, authorRid: u.AuthorRid, assigneeRid: u.AssigneeRid, isPublished: u.IsPublished, not: u.Not, workspace: u.Workspace, authorIsCurrentUser: u.AuthorIsCurrentUser, authorRids: u.AuthorRids, isArchived: u.IsArchived}
+	return ChecklistSearchQuery{typ: u.Type, and: u.And, or: u.Or, searchText: u.SearchText, label: u.Label, labels: u.Labels, property: u.Property, properties: u.Properties, authorRid: u.AuthorRid, assigneeRid: u.AssigneeRid, isPublished: u.IsPublished, not: u.Not, workspace: u.Workspace, authorIsCurrentUser: u.AuthorIsCurrentUser, authorRids: u.AuthorRids, isArchived: u.IsArchived, assetTypes: u.AssetTypes}
 }
 
 func (u *ChecklistSearchQuery) toSerializer() (interface{}, error) {
@@ -886,6 +888,14 @@ func (u *ChecklistSearchQuery) toSerializer() (interface{}, error) {
 			Type       string `json:"type"`
 			IsArchived bool   `json:"isArchived"`
 		}{Type: "isArchived", IsArchived: *u.isArchived}, nil
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return nil, fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return struct {
+			Type       string        `json:"type"`
+			AssetTypes []api.TypeRid `json:"assetTypes"`
+		}{Type: "assetTypes", AssetTypes: *u.assetTypes}, nil
 	}
 }
 
@@ -964,6 +974,10 @@ func (u *ChecklistSearchQuery) UnmarshalJSON(data []byte) error {
 		if u.isArchived == nil {
 			return fmt.Errorf("field \"isArchived\" is required")
 		}
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
 	}
 	return nil
 }
@@ -984,7 +998,7 @@ func (u *ChecklistSearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) 
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) error, orFunc func([]ChecklistSearchQuery) error, searchTextFunc func(string) error, labelFunc func(api1.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api1.Property) error, propertiesFunc func(api.PropertiesFilter) error, authorRidFunc func(api.UserRid) error, assigneeRidFunc func(api.UserRid) error, isPublishedFunc func(bool) error, notFunc func(ChecklistSearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, authorIsCurrentUserFunc func(bool) error, authorRidsFunc func([]api.UserRid) error, isArchivedFunc func(bool) error, unknownFunc func(string) error) error {
+func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) error, orFunc func([]ChecklistSearchQuery) error, searchTextFunc func(string) error, labelFunc func(api1.Label) error, labelsFunc func(api.LabelsFilter) error, propertyFunc func(api1.Property) error, propertiesFunc func(api.PropertiesFilter) error, authorRidFunc func(api.UserRid) error, assigneeRidFunc func(api.UserRid) error, isPublishedFunc func(bool) error, notFunc func(ChecklistSearchQuery) error, workspaceFunc func(rids.WorkspaceRid) error, authorIsCurrentUserFunc func(bool) error, authorRidsFunc func([]api.UserRid) error, isArchivedFunc func(bool) error, assetTypesFunc func([]api.TypeRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1066,6 +1080,11 @@ func (u *ChecklistSearchQuery) AcceptFuncs(andFunc func([]ChecklistSearchQuery) 
 			return fmt.Errorf("field \"isArchived\" is required")
 		}
 		return isArchivedFunc(*u.isArchived)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return assetTypesFunc(*u.assetTypes)
 	}
 }
 
@@ -1126,6 +1145,10 @@ func (u *ChecklistSearchQuery) AuthorRidsNoopSuccess(_ []api.UserRid) error {
 }
 
 func (u *ChecklistSearchQuery) IsArchivedNoopSuccess(_ bool) error {
+	return nil
+}
+
+func (u *ChecklistSearchQuery) AssetTypesNoopSuccess(_ []api.TypeRid) error {
 	return nil
 }
 
@@ -1215,6 +1238,11 @@ func (u *ChecklistSearchQuery) Accept(v ChecklistSearchQueryVisitor) error {
 			return fmt.Errorf("field \"isArchived\" is required")
 		}
 		return v.VisitIsArchived(*u.isArchived)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return v.VisitAssetTypes(*u.assetTypes)
 	}
 }
 
@@ -1234,6 +1262,7 @@ type ChecklistSearchQueryVisitor interface {
 	VisitAuthorIsCurrentUser(v bool) error
 	VisitAuthorRids(v []api.UserRid) error
 	VisitIsArchived(v bool) error
+	VisitAssetTypes(v []api.TypeRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1319,6 +1348,11 @@ func (u *ChecklistSearchQuery) AcceptWithContext(ctx context.Context, v Checklis
 			return fmt.Errorf("field \"isArchived\" is required")
 		}
 		return v.VisitIsArchivedWithContext(ctx, *u.isArchived)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return v.VisitAssetTypesWithContext(ctx, *u.assetTypes)
 	}
 }
 
@@ -1338,6 +1372,7 @@ type ChecklistSearchQueryVisitorWithContext interface {
 	VisitAuthorIsCurrentUserWithContext(ctx context.Context, v bool) error
 	VisitAuthorRidsWithContext(ctx context.Context, v []api.UserRid) error
 	VisitIsArchivedWithContext(ctx context.Context, v bool) error
+	VisitAssetTypesWithContext(ctx context.Context, v []api.TypeRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1399,6 +1434,10 @@ func NewChecklistSearchQueryFromAuthorRids(v []api.UserRid) ChecklistSearchQuery
 
 func NewChecklistSearchQueryFromIsArchived(v bool) ChecklistSearchQuery {
 	return ChecklistSearchQuery{typ: "isArchived", isArchived: &v}
+}
+
+func NewChecklistSearchQueryFromAssetTypes(v []api.TypeRid) ChecklistSearchQuery {
+	return ChecklistSearchQuery{typ: "assetTypes", assetTypes: &v}
 }
 
 type ComputeExpression struct {
@@ -2025,6 +2064,8 @@ type JobSpec struct {
 	compute           *ComputeJobSpec
 	compileUdfJobSpec *UdfCompilationJobSpec
 	sqlExport         *SqlExportJobSpec
+	computeExport     *ComputeExportJobSpec
+	zipExport         *ZipExportJobSpec
 }
 
 type jobSpecDeserializer struct {
@@ -2033,10 +2074,12 @@ type jobSpecDeserializer struct {
 	Compute           *ComputeJobSpec        `json:"compute"`
 	CompileUdfJobSpec *UdfCompilationJobSpec `json:"compileUdfJobSpec"`
 	SqlExport         *SqlExportJobSpec      `json:"sqlExport"`
+	ComputeExport     *ComputeExportJobSpec  `json:"computeExport"`
+	ZipExport         *ZipExportJobSpec      `json:"zipExport"`
 }
 
 func (u *jobSpecDeserializer) toStruct() JobSpec {
-	return JobSpec{typ: u.Type, checkV2: u.CheckV2, compute: u.Compute, compileUdfJobSpec: u.CompileUdfJobSpec, sqlExport: u.SqlExport}
+	return JobSpec{typ: u.Type, checkV2: u.CheckV2, compute: u.Compute, compileUdfJobSpec: u.CompileUdfJobSpec, sqlExport: u.SqlExport, computeExport: u.ComputeExport, zipExport: u.ZipExport}
 }
 
 func (u *JobSpec) toSerializer() (interface{}, error) {
@@ -2075,6 +2118,22 @@ func (u *JobSpec) toSerializer() (interface{}, error) {
 			Type      string           `json:"type"`
 			SqlExport SqlExportJobSpec `json:"sqlExport"`
 		}{Type: "sqlExport", SqlExport: *u.sqlExport}, nil
+	case "computeExport":
+		if u.computeExport == nil {
+			return nil, fmt.Errorf("field \"computeExport\" is required")
+		}
+		return struct {
+			Type          string               `json:"type"`
+			ComputeExport ComputeExportJobSpec `json:"computeExport"`
+		}{Type: "computeExport", ComputeExport: *u.computeExport}, nil
+	case "zipExport":
+		if u.zipExport == nil {
+			return nil, fmt.Errorf("field \"zipExport\" is required")
+		}
+		return struct {
+			Type      string           `json:"type"`
+			ZipExport ZipExportJobSpec `json:"zipExport"`
+		}{Type: "zipExport", ZipExport: *u.zipExport}, nil
 	}
 }
 
@@ -2109,6 +2168,14 @@ func (u *JobSpec) UnmarshalJSON(data []byte) error {
 		if u.sqlExport == nil {
 			return fmt.Errorf("field \"sqlExport\" is required")
 		}
+	case "computeExport":
+		if u.computeExport == nil {
+			return fmt.Errorf("field \"computeExport\" is required")
+		}
+	case "zipExport":
+		if u.zipExport == nil {
+			return fmt.Errorf("field \"zipExport\" is required")
+		}
 	}
 	return nil
 }
@@ -2129,7 +2196,7 @@ func (u *JobSpec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, computeFunc func(ComputeJobSpec) error, compileUdfJobSpecFunc func(UdfCompilationJobSpec) error, sqlExportFunc func(SqlExportJobSpec) error, unknownFunc func(string) error) error {
+func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, computeFunc func(ComputeJobSpec) error, compileUdfJobSpecFunc func(UdfCompilationJobSpec) error, sqlExportFunc func(SqlExportJobSpec) error, computeExportFunc func(ComputeExportJobSpec) error, zipExportFunc func(ZipExportJobSpec) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2156,6 +2223,16 @@ func (u *JobSpec) AcceptFuncs(checkV2Func func(CheckJobSpec) error, computeFunc 
 			return fmt.Errorf("field \"sqlExport\" is required")
 		}
 		return sqlExportFunc(*u.sqlExport)
+	case "computeExport":
+		if u.computeExport == nil {
+			return fmt.Errorf("field \"computeExport\" is required")
+		}
+		return computeExportFunc(*u.computeExport)
+	case "zipExport":
+		if u.zipExport == nil {
+			return fmt.Errorf("field \"zipExport\" is required")
+		}
+		return zipExportFunc(*u.zipExport)
 	}
 }
 
@@ -2172,6 +2249,14 @@ func (u *JobSpec) CompileUdfJobSpecNoopSuccess(_ UdfCompilationJobSpec) error {
 }
 
 func (u *JobSpec) SqlExportNoopSuccess(_ SqlExportJobSpec) error {
+	return nil
+}
+
+func (u *JobSpec) ComputeExportNoopSuccess(_ ComputeExportJobSpec) error {
+	return nil
+}
+
+func (u *JobSpec) ZipExportNoopSuccess(_ ZipExportJobSpec) error {
 	return nil
 }
 
@@ -2206,6 +2291,16 @@ func (u *JobSpec) Accept(v JobSpecVisitor) error {
 			return fmt.Errorf("field \"sqlExport\" is required")
 		}
 		return v.VisitSqlExport(*u.sqlExport)
+	case "computeExport":
+		if u.computeExport == nil {
+			return fmt.Errorf("field \"computeExport\" is required")
+		}
+		return v.VisitComputeExport(*u.computeExport)
+	case "zipExport":
+		if u.zipExport == nil {
+			return fmt.Errorf("field \"zipExport\" is required")
+		}
+		return v.VisitZipExport(*u.zipExport)
 	}
 }
 
@@ -2214,6 +2309,8 @@ type JobSpecVisitor interface {
 	VisitCompute(v ComputeJobSpec) error
 	VisitCompileUdfJobSpec(v UdfCompilationJobSpec) error
 	VisitSqlExport(v SqlExportJobSpec) error
+	VisitComputeExport(v ComputeExportJobSpec) error
+	VisitZipExport(v ZipExportJobSpec) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2244,6 +2341,16 @@ func (u *JobSpec) AcceptWithContext(ctx context.Context, v JobSpecVisitorWithCon
 			return fmt.Errorf("field \"sqlExport\" is required")
 		}
 		return v.VisitSqlExportWithContext(ctx, *u.sqlExport)
+	case "computeExport":
+		if u.computeExport == nil {
+			return fmt.Errorf("field \"computeExport\" is required")
+		}
+		return v.VisitComputeExportWithContext(ctx, *u.computeExport)
+	case "zipExport":
+		if u.zipExport == nil {
+			return fmt.Errorf("field \"zipExport\" is required")
+		}
+		return v.VisitZipExportWithContext(ctx, *u.zipExport)
 	}
 }
 
@@ -2252,6 +2359,8 @@ type JobSpecVisitorWithContext interface {
 	VisitComputeWithContext(ctx context.Context, v ComputeJobSpec) error
 	VisitCompileUdfJobSpecWithContext(ctx context.Context, v UdfCompilationJobSpec) error
 	VisitSqlExportWithContext(ctx context.Context, v SqlExportJobSpec) error
+	VisitComputeExportWithContext(ctx context.Context, v ComputeExportJobSpec) error
+	VisitZipExportWithContext(ctx context.Context, v ZipExportJobSpec) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -2269,6 +2378,14 @@ func NewJobSpecFromCompileUdfJobSpec(v UdfCompilationJobSpec) JobSpec {
 
 func NewJobSpecFromSqlExport(v SqlExportJobSpec) JobSpec {
 	return JobSpec{typ: "sqlExport", sqlExport: &v}
+}
+
+func NewJobSpecFromComputeExport(v ComputeExportJobSpec) JobSpec {
+	return JobSpec{typ: "computeExport", computeExport: &v}
+}
+
+func NewJobSpecFromZipExport(v ZipExportJobSpec) JobSpec {
+	return JobSpec{typ: "zipExport", zipExport: &v}
 }
 
 type PropertyType struct {
@@ -2404,6 +2521,141 @@ type PropertyTypeVisitorWithContext interface {
 
 func NewPropertyTypeFromNumeric(v NumericPropertyType) PropertyType {
 	return PropertyType{typ: "numeric", numeric: &v}
+}
+
+type SearchChecklistEntry struct {
+	typ   string
+	check *SearchCheck
+}
+
+type searchChecklistEntryDeserializer struct {
+	Type  string       `json:"type"`
+	Check *SearchCheck `json:"check"`
+}
+
+func (u *searchChecklistEntryDeserializer) toStruct() SearchChecklistEntry {
+	return SearchChecklistEntry{typ: u.Type, check: u.Check}
+}
+
+func (u *SearchChecklistEntry) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "check":
+		if u.check == nil {
+			return nil, fmt.Errorf("field \"check\" is required")
+		}
+		return struct {
+			Type  string      `json:"type"`
+			Check SearchCheck `json:"check"`
+		}{Type: "check", Check: *u.check}, nil
+	}
+}
+
+func (u SearchChecklistEntry) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *SearchChecklistEntry) UnmarshalJSON(data []byte) error {
+	var deser searchChecklistEntryDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "check":
+		if u.check == nil {
+			return fmt.Errorf("field \"check\" is required")
+		}
+	}
+	return nil
+}
+
+func (u SearchChecklistEntry) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *SearchChecklistEntry) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *SearchChecklistEntry) AcceptFuncs(checkFunc func(SearchCheck) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in SearchChecklistEntry type")
+		}
+		return unknownFunc(u.typ)
+	case "check":
+		if u.check == nil {
+			return fmt.Errorf("field \"check\" is required")
+		}
+		return checkFunc(*u.check)
+	}
+}
+
+func (u *SearchChecklistEntry) CheckNoopSuccess(_ SearchCheck) error {
+	return nil
+}
+
+func (u *SearchChecklistEntry) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *SearchChecklistEntry) Accept(v SearchChecklistEntryVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "check":
+		if u.check == nil {
+			return fmt.Errorf("field \"check\" is required")
+		}
+		return v.VisitCheck(*u.check)
+	}
+}
+
+type SearchChecklistEntryVisitor interface {
+	VisitCheck(v SearchCheck) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *SearchChecklistEntry) AcceptWithContext(ctx context.Context, v SearchChecklistEntryVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "check":
+		if u.check == nil {
+			return fmt.Errorf("field \"check\" is required")
+		}
+		return v.VisitCheckWithContext(ctx, *u.check)
+	}
+}
+
+type SearchChecklistEntryVisitorWithContext interface {
+	VisitCheckWithContext(ctx context.Context, v SearchCheck) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewSearchChecklistEntryFromCheck(v SearchCheck) SearchChecklistEntry {
+	return SearchChecklistEntry{typ: "check", check: &v}
 }
 
 type UnresolvedCheckCondition struct {

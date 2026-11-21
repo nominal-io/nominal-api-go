@@ -2931,6 +2931,7 @@ type Dataset struct {
 	dropSeries     *DropSeriesDataset
 	reference      *api.DatasetReference
 	withDimensions *DimensionsDataset
+	entitySet      *api.EntitySetDataset
 }
 
 type datasetDeserializer struct {
@@ -2948,10 +2949,11 @@ type datasetDeserializer struct {
 	DropSeries     *DropSeriesDataset    `json:"dropSeries"`
 	Reference      *api.DatasetReference `json:"reference"`
 	WithDimensions *DimensionsDataset    `json:"withDimensions"`
+	EntitySet      *api.EntitySetDataset `json:"entitySet"`
 }
 
 func (u *datasetDeserializer) toStruct() Dataset {
-	return Dataset{typ: u.Type, asset: u.Asset, run: u.Run, saved: u.Saved, search: u.Search, combine: u.Combine, tag: u.Tag, filter: u.Filter, timeShift: u.TimeShift, alignByAnchor: u.AlignByAnchor, withSeries: u.WithSeries, dropSeries: u.DropSeries, reference: u.Reference, withDimensions: u.WithDimensions}
+	return Dataset{typ: u.Type, asset: u.Asset, run: u.Run, saved: u.Saved, search: u.Search, combine: u.Combine, tag: u.Tag, filter: u.Filter, timeShift: u.TimeShift, alignByAnchor: u.AlignByAnchor, withSeries: u.WithSeries, dropSeries: u.DropSeries, reference: u.Reference, withDimensions: u.WithDimensions, entitySet: u.EntitySet}
 }
 
 func (u *Dataset) toSerializer() (interface{}, error) {
@@ -3062,6 +3064,14 @@ func (u *Dataset) toSerializer() (interface{}, error) {
 			Type           string            `json:"type"`
 			WithDimensions DimensionsDataset `json:"withDimensions"`
 		}{Type: "withDimensions", WithDimensions: *u.withDimensions}, nil
+	case "entitySet":
+		if u.entitySet == nil {
+			return nil, fmt.Errorf("field \"entitySet\" is required")
+		}
+		return struct {
+			Type      string               `json:"type"`
+			EntitySet api.EntitySetDataset `json:"entitySet"`
+		}{Type: "entitySet", EntitySet: *u.entitySet}, nil
 	}
 }
 
@@ -3132,6 +3142,10 @@ func (u *Dataset) UnmarshalJSON(data []byte) error {
 		if u.withDimensions == nil {
 			return fmt.Errorf("field \"withDimensions\" is required")
 		}
+	case "entitySet":
+		if u.entitySet == nil {
+			return fmt.Errorf("field \"entitySet\" is required")
+		}
 	}
 	return nil
 }
@@ -3152,7 +3166,7 @@ func (u *Dataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *Dataset) AcceptFuncs(assetFunc func(api.Asset) error, runFunc func(api.Run) error, savedFunc func(api.SavedDataset) error, searchFunc func(SearchDataset) error, combineFunc func(CombinedDataset) error, tagFunc func(TaggedDataset) error, filterFunc func(FilteredDataset) error, timeShiftFunc func(TimeShiftedDataset) error, alignByAnchorFunc func(AnchorAlignedDataset) error, withSeriesFunc func(WithSeriesDataset) error, dropSeriesFunc func(DropSeriesDataset) error, referenceFunc func(api.DatasetReference) error, withDimensionsFunc func(DimensionsDataset) error, unknownFunc func(string) error) error {
+func (u *Dataset) AcceptFuncs(assetFunc func(api.Asset) error, runFunc func(api.Run) error, savedFunc func(api.SavedDataset) error, searchFunc func(SearchDataset) error, combineFunc func(CombinedDataset) error, tagFunc func(TaggedDataset) error, filterFunc func(FilteredDataset) error, timeShiftFunc func(TimeShiftedDataset) error, alignByAnchorFunc func(AnchorAlignedDataset) error, withSeriesFunc func(WithSeriesDataset) error, dropSeriesFunc func(DropSeriesDataset) error, referenceFunc func(api.DatasetReference) error, withDimensionsFunc func(DimensionsDataset) error, entitySetFunc func(api.EntitySetDataset) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -3224,6 +3238,11 @@ func (u *Dataset) AcceptFuncs(assetFunc func(api.Asset) error, runFunc func(api.
 			return fmt.Errorf("field \"withDimensions\" is required")
 		}
 		return withDimensionsFunc(*u.withDimensions)
+	case "entitySet":
+		if u.entitySet == nil {
+			return fmt.Errorf("field \"entitySet\" is required")
+		}
+		return entitySetFunc(*u.entitySet)
 	}
 }
 
@@ -3276,6 +3295,10 @@ func (u *Dataset) ReferenceNoopSuccess(_ api.DatasetReference) error {
 }
 
 func (u *Dataset) WithDimensionsNoopSuccess(_ DimensionsDataset) error {
+	return nil
+}
+
+func (u *Dataset) EntitySetNoopSuccess(_ api.EntitySetDataset) error {
 	return nil
 }
 
@@ -3355,6 +3378,11 @@ func (u *Dataset) Accept(v DatasetVisitor) error {
 			return fmt.Errorf("field \"withDimensions\" is required")
 		}
 		return v.VisitWithDimensions(*u.withDimensions)
+	case "entitySet":
+		if u.entitySet == nil {
+			return fmt.Errorf("field \"entitySet\" is required")
+		}
+		return v.VisitEntitySet(*u.entitySet)
 	}
 }
 
@@ -3372,6 +3400,7 @@ type DatasetVisitor interface {
 	VisitDropSeries(v DropSeriesDataset) error
 	VisitReference(v api.DatasetReference) error
 	VisitWithDimensions(v DimensionsDataset) error
+	VisitEntitySet(v api.EntitySetDataset) error
 	VisitUnknown(typeName string) error
 }
 
@@ -3447,6 +3476,11 @@ func (u *Dataset) AcceptWithContext(ctx context.Context, v DatasetVisitorWithCon
 			return fmt.Errorf("field \"withDimensions\" is required")
 		}
 		return v.VisitWithDimensionsWithContext(ctx, *u.withDimensions)
+	case "entitySet":
+		if u.entitySet == nil {
+			return fmt.Errorf("field \"entitySet\" is required")
+		}
+		return v.VisitEntitySetWithContext(ctx, *u.entitySet)
 	}
 }
 
@@ -3464,6 +3498,7 @@ type DatasetVisitorWithContext interface {
 	VisitDropSeriesWithContext(ctx context.Context, v DropSeriesDataset) error
 	VisitReferenceWithContext(ctx context.Context, v api.DatasetReference) error
 	VisitWithDimensionsWithContext(ctx context.Context, v DimensionsDataset) error
+	VisitEntitySetWithContext(ctx context.Context, v api.EntitySetDataset) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -3517,6 +3552,10 @@ func NewDatasetFromReference(v api.DatasetReference) Dataset {
 
 func NewDatasetFromWithDimensions(v DimensionsDataset) Dataset {
 	return Dataset{typ: "withDimensions", withDimensions: &v}
+}
+
+func NewDatasetFromEntitySet(v api.EntitySetDataset) Dataset {
+	return Dataset{typ: "entitySet", entitySet: &v}
 }
 
 type DatasetAnchor struct {
@@ -8183,6 +8222,7 @@ type NumericSeries struct {
 	power                       *Power
 	modulo                      *Modulo
 	atan2                       *Atan2
+	geoDistance                 *GeoDistance
 	max                         *MaxSeries
 	mean                        *MeanSeries
 	min                         *MinSeries
@@ -8275,6 +8315,7 @@ type numericSeriesDeserializer struct {
 	Power                       *Power                                    `json:"power"`
 	Modulo                      *Modulo                                   `json:"modulo"`
 	Atan2                       *Atan2                                    `json:"atan2"`
+	GeoDistance                 *GeoDistance                              `json:"geoDistance"`
 	Max                         *MaxSeries                                `json:"max"`
 	Mean                        *MeanSeries                               `json:"mean"`
 	Min                         *MinSeries                                `json:"min"`
@@ -8348,7 +8389,7 @@ type numericSeriesDeserializer struct {
 }
 
 func (u *numericSeriesDeserializer) toStruct() NumericSeries {
-	return NumericSeries{typ: u.Type, abs: u.Abs, negate: u.Negate, cos: u.Cos, sin: u.Sin, tan: u.Tan, acos: u.Acos, asin: u.Asin, ln: u.Ln, log10: u.Log10, sqrt: u.Sqrt, add: u.Add, subtract: u.Subtract, multiply: u.Multiply, divide: u.Divide, floorDivide: u.FloorDivide, power: u.Power, modulo: u.Modulo, atan2: u.Atan2, max: u.Max, mean: u.Mean, min: u.Min, sum: u.Sum, union: u.Union, product: u.Product, constant: u.Constant, selectNewestPoints: u.SelectNewestPoints, selectNumeric: u.SelectNumeric, selectNumericProperty: u.SelectNumericProperty, selectOldestPoints: u.SelectOldestPoints, bitAnd: u.BitAnd, bitOr: u.BitOr, bitXor: u.BitXor, bitShiftRight: u.BitShiftRight, bitShiftLeft: u.BitShiftLeft, bitTest: u.BitTest, ifElse: u.IfElse, numericAggregation: u.NumericAggregation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, zScore: u.ZScore, raw: u.Raw, derived: u.Derived, resample: u.Resample, resampleV2: u.ResampleV2, nthPointDownsample: u.NthPointDownsample, largestTriangleThreeBuckets: u.LargestTriangleThreeBuckets, signalFilter: u.SignalFilter, timeDifference: u.TimeDifference, absoluteTimestamp: u.AbsoluteTimestamp, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, timeShiftV2: u.TimeShiftV2, unitConversion: u.UnitConversion, unitOverride: u.UnitOverride, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, filterWhere: u.FilterWhere, thresholdFilter: u.ThresholdFilter, approximateFilter: u.ApproximateFilter, dropNan: u.DropNan, select1dArrayIndex: u.Select1dArrayIndex, aggregateUnderRanges: u.AggregateUnderRanges, rangeDuration: u.RangeDuration, groupWithinRangesV2: u.GroupWithinRangesV2, filterByExpression: u.FilterByExpression, scalarUdf: u.ScalarUdf, enumToNumeric: u.EnumToNumeric, contains: u.Contains, refprop: u.Refprop, refpropV2: u.RefpropV2, extractFromStruct: u.ExtractFromStruct, tagByIntervals: u.TagByIntervals, filterByTag: u.FilterByTag, selectTags: u.SelectTags, pairByTag: u.PairByTag, toStartOfInterval: u.ToStartOfInterval, phaseUnwrap: u.PhaseUnwrap, aggregate: u.Aggregate, rollingOperation: u.RollingOperation, bitOperation: u.BitOperation, channel: u.Channel, offset: u.Offset, scale: u.Scale, arithmetic: u.Arithmetic, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic}
+	return NumericSeries{typ: u.Type, abs: u.Abs, negate: u.Negate, cos: u.Cos, sin: u.Sin, tan: u.Tan, acos: u.Acos, asin: u.Asin, ln: u.Ln, log10: u.Log10, sqrt: u.Sqrt, add: u.Add, subtract: u.Subtract, multiply: u.Multiply, divide: u.Divide, floorDivide: u.FloorDivide, power: u.Power, modulo: u.Modulo, atan2: u.Atan2, geoDistance: u.GeoDistance, max: u.Max, mean: u.Mean, min: u.Min, sum: u.Sum, union: u.Union, product: u.Product, constant: u.Constant, selectNewestPoints: u.SelectNewestPoints, selectNumeric: u.SelectNumeric, selectNumericProperty: u.SelectNumericProperty, selectOldestPoints: u.SelectOldestPoints, bitAnd: u.BitAnd, bitOr: u.BitOr, bitXor: u.BitXor, bitShiftRight: u.BitShiftRight, bitShiftLeft: u.BitShiftLeft, bitTest: u.BitTest, ifElse: u.IfElse, numericAggregation: u.NumericAggregation, countDuplicate: u.CountDuplicate, cumulativeSum: u.CumulativeSum, derivative: u.Derivative, integral: u.Integral, zScore: u.ZScore, raw: u.Raw, derived: u.Derived, resample: u.Resample, resampleV2: u.ResampleV2, nthPointDownsample: u.NthPointDownsample, largestTriangleThreeBuckets: u.LargestTriangleThreeBuckets, signalFilter: u.SignalFilter, timeDifference: u.TimeDifference, absoluteTimestamp: u.AbsoluteTimestamp, timeRangeFilter: u.TimeRangeFilter, timeShift: u.TimeShift, timeShiftV2: u.TimeShiftV2, unitConversion: u.UnitConversion, unitOverride: u.UnitOverride, valueDifference: u.ValueDifference, filterTransformation: u.FilterTransformation, filterWhere: u.FilterWhere, thresholdFilter: u.ThresholdFilter, approximateFilter: u.ApproximateFilter, dropNan: u.DropNan, select1dArrayIndex: u.Select1dArrayIndex, aggregateUnderRanges: u.AggregateUnderRanges, rangeDuration: u.RangeDuration, groupWithinRangesV2: u.GroupWithinRangesV2, filterByExpression: u.FilterByExpression, scalarUdf: u.ScalarUdf, enumToNumeric: u.EnumToNumeric, contains: u.Contains, refprop: u.Refprop, refpropV2: u.RefpropV2, extractFromStruct: u.ExtractFromStruct, tagByIntervals: u.TagByIntervals, filterByTag: u.FilterByTag, selectTags: u.SelectTags, pairByTag: u.PairByTag, toStartOfInterval: u.ToStartOfInterval, phaseUnwrap: u.PhaseUnwrap, aggregate: u.Aggregate, rollingOperation: u.RollingOperation, bitOperation: u.BitOperation, channel: u.Channel, offset: u.Offset, scale: u.Scale, arithmetic: u.Arithmetic, unaryArithmetic: u.UnaryArithmetic, binaryArithmetic: u.BinaryArithmetic}
 }
 
 func (u *NumericSeries) toSerializer() (interface{}, error) {
@@ -8499,6 +8540,14 @@ func (u *NumericSeries) toSerializer() (interface{}, error) {
 			Type  string `json:"type"`
 			Atan2 Atan2  `json:"atan2"`
 		}{Type: "atan2", Atan2: *u.atan2}, nil
+	case "geoDistance":
+		if u.geoDistance == nil {
+			return nil, fmt.Errorf("field \"geoDistance\" is required")
+		}
+		return struct {
+			Type        string      `json:"type"`
+			GeoDistance GeoDistance `json:"geoDistance"`
+		}{Type: "geoDistance", GeoDistance: *u.geoDistance}, nil
 	case "max":
 		if u.max == nil {
 			return nil, fmt.Errorf("field \"max\" is required")
@@ -9149,6 +9198,10 @@ func (u *NumericSeries) UnmarshalJSON(data []byte) error {
 		if u.atan2 == nil {
 			return fmt.Errorf("field \"atan2\" is required")
 		}
+	case "geoDistance":
+		if u.geoDistance == nil {
+			return fmt.Errorf("field \"geoDistance\" is required")
+		}
 	case "max":
 		if u.max == nil {
 			return fmt.Errorf("field \"max\" is required")
@@ -9449,7 +9502,7 @@ func (u *NumericSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Negate) error, cosFunc func(Cos) error, sinFunc func(Sin) error, tanFunc func(Tan) error, acosFunc func(Acos) error, asinFunc func(Asin) error, lnFunc func(Ln) error, log10Func func(Log10) error, sqrtFunc func(Sqrt) error, addFunc func(Add) error, subtractFunc func(Subtract) error, multiplyFunc func(Multiply) error, divideFunc func(Divide) error, floorDivideFunc func(FloorDivide) error, powerFunc func(Power) error, moduloFunc func(Modulo) error, atan2Func func(Atan2) error, maxFunc func(MaxSeries) error, meanFunc func(MeanSeries) error, minFunc func(MinSeries) error, sumFunc func(SumSeries) error, unionFunc func(NumericUnionSeries) error, productFunc func(ProductSeries) error, constantFunc func(api.ConstantNumericSeries) error, selectNewestPointsFunc func(SelectNewestPointsSeries) error, selectNumericFunc func(SelectSeries) error, selectNumericPropertyFunc func(SelectProperty) error, selectOldestPointsFunc func(SelectOldestPointsSeries) error, bitAndFunc func(BitAnd) error, bitOrFunc func(BitOr) error, bitXorFunc func(BitXor) error, bitShiftRightFunc func(BitShiftRight) error, bitShiftLeftFunc func(BitShiftLeft) error, bitTestFunc func(BitTest) error, ifElseFunc func(NumericIfElseSeries) error, numericAggregationFunc func(NumericAggregation) error, countDuplicateFunc func(EnumCountDuplicateSeries) error, cumulativeSumFunc func(CumulativeSumSeries) error, derivativeFunc func(DerivativeSeries) error, integralFunc func(IntegralSeries) error, zScoreFunc func(ZscoreSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, resampleFunc func(NumericResampleSeries) error, resampleV2Func func(NumericResampleSeriesV2) error, nthPointDownsampleFunc func(NumericNthPointDownsampleSeries) error, largestTriangleThreeBucketsFunc func(NumericLargestTriangleThreeBucketsSeries) error, signalFilterFunc func(SignalFilterSeries) error, timeDifferenceFunc func(TimeDifferenceSeries) error, absoluteTimestampFunc func(AbsoluteTimestampSeries) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeries) error, timeShiftFunc func(NumericTimeShiftSeries) error, timeShiftV2Func func(NumericTimeShiftSeriesV2) error, unitConversionFunc func(UnitConversionSeries) error, unitOverrideFunc func(UnitOverrideSeries) error, valueDifferenceFunc func(ValueDifferenceSeries) error, filterTransformationFunc func(NumericFilterTransformationSeries) error, filterWhereFunc func(NumericFilterWhereSeries) error, thresholdFilterFunc func(NumericThresholdFilterSeries) error, approximateFilterFunc func(NumericApproximateFilterSeries) error, dropNanFunc func(NumericNanFilter) error, select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) error, aggregateUnderRangesFunc func(AggregateUnderRangesSeries) error, rangeDurationFunc func(RangeDurationSeries) error, groupWithinRangesV2Func func(GroupWithinRangesSeriesV2) error, filterByExpressionFunc func(FilterByExpressionSeries) error, scalarUdfFunc func(ScalarUdfSeries) error, enumToNumericFunc func(EnumToNumericSeries) error, containsFunc func(ContainsSeries) error, refpropFunc func(RefpropSeries) error, refpropV2Func func(RefpropSeriesV2) error, extractFromStructFunc func(ExtractNumericFromStructSeries) error, tagByIntervalsFunc func(TagByIntervalsSeries) error, filterByTagFunc func(NumericTagFilterSeries) error, selectTagsFunc func(NumericSelectTagsSeries) error, pairByTagFunc func(NumericPairByTagSeries) error, toStartOfIntervalFunc func(NumericToStartOfIntervalSeries) error, phaseUnwrapFunc func(PhaseUnwrapSeries) error, aggregateFunc func(AggregateNumericSeries) error, rollingOperationFunc func(RollingOperationSeries) error, bitOperationFunc func(BitOperationSeries) error, channelFunc func(api.ChannelSeries) error, offsetFunc func(OffsetSeries) error, scaleFunc func(ScaleSeries) error, arithmeticFunc func(ArithmeticSeries) error, unaryArithmeticFunc func(UnaryArithmeticSeries) error, binaryArithmeticFunc func(BinaryArithmeticSeries) error, unknownFunc func(string) error) error {
+func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Negate) error, cosFunc func(Cos) error, sinFunc func(Sin) error, tanFunc func(Tan) error, acosFunc func(Acos) error, asinFunc func(Asin) error, lnFunc func(Ln) error, log10Func func(Log10) error, sqrtFunc func(Sqrt) error, addFunc func(Add) error, subtractFunc func(Subtract) error, multiplyFunc func(Multiply) error, divideFunc func(Divide) error, floorDivideFunc func(FloorDivide) error, powerFunc func(Power) error, moduloFunc func(Modulo) error, atan2Func func(Atan2) error, geoDistanceFunc func(GeoDistance) error, maxFunc func(MaxSeries) error, meanFunc func(MeanSeries) error, minFunc func(MinSeries) error, sumFunc func(SumSeries) error, unionFunc func(NumericUnionSeries) error, productFunc func(ProductSeries) error, constantFunc func(api.ConstantNumericSeries) error, selectNewestPointsFunc func(SelectNewestPointsSeries) error, selectNumericFunc func(SelectSeries) error, selectNumericPropertyFunc func(SelectProperty) error, selectOldestPointsFunc func(SelectOldestPointsSeries) error, bitAndFunc func(BitAnd) error, bitOrFunc func(BitOr) error, bitXorFunc func(BitXor) error, bitShiftRightFunc func(BitShiftRight) error, bitShiftLeftFunc func(BitShiftLeft) error, bitTestFunc func(BitTest) error, ifElseFunc func(NumericIfElseSeries) error, numericAggregationFunc func(NumericAggregation) error, countDuplicateFunc func(EnumCountDuplicateSeries) error, cumulativeSumFunc func(CumulativeSumSeries) error, derivativeFunc func(DerivativeSeries) error, integralFunc func(IntegralSeries) error, zScoreFunc func(ZscoreSeries) error, rawFunc func(api.Reference) error, derivedFunc func(DerivedSeries) error, resampleFunc func(NumericResampleSeries) error, resampleV2Func func(NumericResampleSeriesV2) error, nthPointDownsampleFunc func(NumericNthPointDownsampleSeries) error, largestTriangleThreeBucketsFunc func(NumericLargestTriangleThreeBucketsSeries) error, signalFilterFunc func(SignalFilterSeries) error, timeDifferenceFunc func(TimeDifferenceSeries) error, absoluteTimestampFunc func(AbsoluteTimestampSeries) error, timeRangeFilterFunc func(NumericTimeRangeFilterSeries) error, timeShiftFunc func(NumericTimeShiftSeries) error, timeShiftV2Func func(NumericTimeShiftSeriesV2) error, unitConversionFunc func(UnitConversionSeries) error, unitOverrideFunc func(UnitOverrideSeries) error, valueDifferenceFunc func(ValueDifferenceSeries) error, filterTransformationFunc func(NumericFilterTransformationSeries) error, filterWhereFunc func(NumericFilterWhereSeries) error, thresholdFilterFunc func(NumericThresholdFilterSeries) error, approximateFilterFunc func(NumericApproximateFilterSeries) error, dropNanFunc func(NumericNanFilter) error, select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) error, aggregateUnderRangesFunc func(AggregateUnderRangesSeries) error, rangeDurationFunc func(RangeDurationSeries) error, groupWithinRangesV2Func func(GroupWithinRangesSeriesV2) error, filterByExpressionFunc func(FilterByExpressionSeries) error, scalarUdfFunc func(ScalarUdfSeries) error, enumToNumericFunc func(EnumToNumericSeries) error, containsFunc func(ContainsSeries) error, refpropFunc func(RefpropSeries) error, refpropV2Func func(RefpropSeriesV2) error, extractFromStructFunc func(ExtractNumericFromStructSeries) error, tagByIntervalsFunc func(TagByIntervalsSeries) error, filterByTagFunc func(NumericTagFilterSeries) error, selectTagsFunc func(NumericSelectTagsSeries) error, pairByTagFunc func(NumericPairByTagSeries) error, toStartOfIntervalFunc func(NumericToStartOfIntervalSeries) error, phaseUnwrapFunc func(PhaseUnwrapSeries) error, aggregateFunc func(AggregateNumericSeries) error, rollingOperationFunc func(RollingOperationSeries) error, bitOperationFunc func(BitOperationSeries) error, channelFunc func(api.ChannelSeries) error, offsetFunc func(OffsetSeries) error, scaleFunc func(ScaleSeries) error, arithmeticFunc func(ArithmeticSeries) error, unaryArithmeticFunc func(UnaryArithmeticSeries) error, binaryArithmeticFunc func(BinaryArithmeticSeries) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -9546,6 +9599,11 @@ func (u *NumericSeries) AcceptFuncs(absFunc func(Abs) error, negateFunc func(Neg
 			return fmt.Errorf("field \"atan2\" is required")
 		}
 		return atan2Func(*u.atan2)
+	case "geoDistance":
+		if u.geoDistance == nil {
+			return fmt.Errorf("field \"geoDistance\" is required")
+		}
+		return geoDistanceFunc(*u.geoDistance)
 	case "max":
 		if u.max == nil {
 			return fmt.Errorf("field \"max\" is required")
@@ -9971,6 +10029,10 @@ func (u *NumericSeries) Atan2NoopSuccess(_ Atan2) error {
 	return nil
 }
 
+func (u *NumericSeries) GeoDistanceNoopSuccess(_ GeoDistance) error {
+	return nil
+}
+
 func (u *NumericSeries) MaxNoopSuccess(_ MaxSeries) error {
 	return nil
 }
@@ -10352,6 +10414,11 @@ func (u *NumericSeries) Accept(v NumericSeriesVisitor) error {
 			return fmt.Errorf("field \"atan2\" is required")
 		}
 		return v.VisitAtan2(*u.atan2)
+	case "geoDistance":
+		if u.geoDistance == nil {
+			return fmt.Errorf("field \"geoDistance\" is required")
+		}
+		return v.VisitGeoDistance(*u.geoDistance)
 	case "max":
 		if u.max == nil {
 			return fmt.Errorf("field \"max\" is required")
@@ -10724,6 +10791,7 @@ type NumericSeriesVisitor interface {
 	VisitPower(v Power) error
 	VisitModulo(v Modulo) error
 	VisitAtan2(v Atan2) error
+	VisitGeoDistance(v GeoDistance) error
 	VisitMax(v MaxSeries) error
 	VisitMean(v MeanSeries) error
 	VisitMin(v MinSeries) error
@@ -10894,6 +10962,11 @@ func (u *NumericSeries) AcceptWithContext(ctx context.Context, v NumericSeriesVi
 			return fmt.Errorf("field \"atan2\" is required")
 		}
 		return v.VisitAtan2WithContext(ctx, *u.atan2)
+	case "geoDistance":
+		if u.geoDistance == nil {
+			return fmt.Errorf("field \"geoDistance\" is required")
+		}
+		return v.VisitGeoDistanceWithContext(ctx, *u.geoDistance)
 	case "max":
 		if u.max == nil {
 			return fmt.Errorf("field \"max\" is required")
@@ -11266,6 +11339,7 @@ type NumericSeriesVisitorWithContext interface {
 	VisitPowerWithContext(ctx context.Context, v Power) error
 	VisitModuloWithContext(ctx context.Context, v Modulo) error
 	VisitAtan2WithContext(ctx context.Context, v Atan2) error
+	VisitGeoDistanceWithContext(ctx context.Context, v GeoDistance) error
 	VisitMaxWithContext(ctx context.Context, v MaxSeries) error
 	VisitMeanWithContext(ctx context.Context, v MeanSeries) error
 	VisitMinWithContext(ctx context.Context, v MinSeries) error
@@ -11409,6 +11483,10 @@ func NewNumericSeriesFromModulo(v Modulo) NumericSeries {
 
 func NewNumericSeriesFromAtan2(v Atan2) NumericSeries {
 	return NumericSeries{typ: "atan2", atan2: &v}
+}
+
+func NewNumericSeriesFromGeoDistance(v GeoDistance) NumericSeries {
+	return NumericSeries{typ: "geoDistance", geoDistance: &v}
 }
 
 func NewNumericSeriesFromMax(v MaxSeries) NumericSeries {
@@ -13081,6 +13159,7 @@ type ResourceSearchQuery struct {
 	numericProperty      *api3.NumericPropertyPredicate
 	numericPropertyRange *api3.NumericPropertyRangePredicate
 	labels               *api2.LabelsFilter
+	types                *ResourceTypesFilter
 	workspace            *api.StringConstant
 	and                  *[]ResourceSearchQuery
 	or                   *[]ResourceSearchQuery
@@ -13093,6 +13172,7 @@ type resourceSearchQueryDeserializer struct {
 	NumericProperty      *api3.NumericPropertyPredicate      `json:"numericProperty"`
 	NumericPropertyRange *api3.NumericPropertyRangePredicate `json:"numericPropertyRange"`
 	Labels               *api2.LabelsFilter                  `json:"labels"`
+	Types                *ResourceTypesFilter                `json:"types"`
 	Workspace            *api.StringConstant                 `json:"workspace"`
 	And                  *[]ResourceSearchQuery              `json:"and"`
 	Or                   *[]ResourceSearchQuery              `json:"or"`
@@ -13100,7 +13180,7 @@ type resourceSearchQueryDeserializer struct {
 }
 
 func (u *resourceSearchQueryDeserializer) toStruct() ResourceSearchQuery {
-	return ResourceSearchQuery{typ: u.Type, properties: u.Properties, numericProperty: u.NumericProperty, numericPropertyRange: u.NumericPropertyRange, labels: u.Labels, workspace: u.Workspace, and: u.And, or: u.Or, not: u.Not}
+	return ResourceSearchQuery{typ: u.Type, properties: u.Properties, numericProperty: u.NumericProperty, numericPropertyRange: u.NumericPropertyRange, labels: u.Labels, types: u.Types, workspace: u.Workspace, and: u.And, or: u.Or, not: u.Not}
 }
 
 func (u *ResourceSearchQuery) toSerializer() (interface{}, error) {
@@ -13139,6 +13219,14 @@ func (u *ResourceSearchQuery) toSerializer() (interface{}, error) {
 			Type   string            `json:"type"`
 			Labels api2.LabelsFilter `json:"labels"`
 		}{Type: "labels", Labels: *u.labels}, nil
+	case "types":
+		if u.types == nil {
+			return nil, fmt.Errorf("field \"types\" is required")
+		}
+		return struct {
+			Type  string              `json:"type"`
+			Types ResourceTypesFilter `json:"types"`
+		}{Type: "types", Types: *u.types}, nil
 	case "workspace":
 		if u.workspace == nil {
 			return nil, fmt.Errorf("field \"workspace\" is required")
@@ -13205,6 +13293,10 @@ func (u *ResourceSearchQuery) UnmarshalJSON(data []byte) error {
 		if u.labels == nil {
 			return fmt.Errorf("field \"labels\" is required")
 		}
+	case "types":
+		if u.types == nil {
+			return fmt.Errorf("field \"types\" is required")
+		}
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -13241,7 +13333,7 @@ func (u *ResourceSearchQuery) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *ResourceSearchQuery) AcceptFuncs(propertiesFunc func(api2.PropertiesFilter) error, numericPropertyFunc func(api3.NumericPropertyPredicate) error, numericPropertyRangeFunc func(api3.NumericPropertyRangePredicate) error, labelsFunc func(api2.LabelsFilter) error, workspaceFunc func(api.StringConstant) error, andFunc func([]ResourceSearchQuery) error, orFunc func([]ResourceSearchQuery) error, notFunc func(ResourceSearchQuery) error, unknownFunc func(string) error) error {
+func (u *ResourceSearchQuery) AcceptFuncs(propertiesFunc func(api2.PropertiesFilter) error, numericPropertyFunc func(api3.NumericPropertyPredicate) error, numericPropertyRangeFunc func(api3.NumericPropertyRangePredicate) error, labelsFunc func(api2.LabelsFilter) error, typesFunc func(ResourceTypesFilter) error, workspaceFunc func(api.StringConstant) error, andFunc func([]ResourceSearchQuery) error, orFunc func([]ResourceSearchQuery) error, notFunc func(ResourceSearchQuery) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -13268,6 +13360,11 @@ func (u *ResourceSearchQuery) AcceptFuncs(propertiesFunc func(api2.PropertiesFil
 			return fmt.Errorf("field \"labels\" is required")
 		}
 		return labelsFunc(*u.labels)
+	case "types":
+		if u.types == nil {
+			return fmt.Errorf("field \"types\" is required")
+		}
+		return typesFunc(*u.types)
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -13304,6 +13401,10 @@ func (u *ResourceSearchQuery) NumericPropertyRangeNoopSuccess(_ api3.NumericProp
 }
 
 func (u *ResourceSearchQuery) LabelsNoopSuccess(_ api2.LabelsFilter) error {
+	return nil
+}
+
+func (u *ResourceSearchQuery) TypesNoopSuccess(_ ResourceTypesFilter) error {
 	return nil
 }
 
@@ -13354,6 +13455,11 @@ func (u *ResourceSearchQuery) Accept(v ResourceSearchQueryVisitor) error {
 			return fmt.Errorf("field \"labels\" is required")
 		}
 		return v.VisitLabels(*u.labels)
+	case "types":
+		if u.types == nil {
+			return fmt.Errorf("field \"types\" is required")
+		}
+		return v.VisitTypes(*u.types)
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -13382,6 +13488,7 @@ type ResourceSearchQueryVisitor interface {
 	VisitNumericProperty(v api3.NumericPropertyPredicate) error
 	VisitNumericPropertyRange(v api3.NumericPropertyRangePredicate) error
 	VisitLabels(v api2.LabelsFilter) error
+	VisitTypes(v ResourceTypesFilter) error
 	VisitWorkspace(v api.StringConstant) error
 	VisitAnd(v []ResourceSearchQuery) error
 	VisitOr(v []ResourceSearchQuery) error
@@ -13416,6 +13523,11 @@ func (u *ResourceSearchQuery) AcceptWithContext(ctx context.Context, v ResourceS
 			return fmt.Errorf("field \"labels\" is required")
 		}
 		return v.VisitLabelsWithContext(ctx, *u.labels)
+	case "types":
+		if u.types == nil {
+			return fmt.Errorf("field \"types\" is required")
+		}
+		return v.VisitTypesWithContext(ctx, *u.types)
 	case "workspace":
 		if u.workspace == nil {
 			return fmt.Errorf("field \"workspace\" is required")
@@ -13444,6 +13556,7 @@ type ResourceSearchQueryVisitorWithContext interface {
 	VisitNumericPropertyWithContext(ctx context.Context, v api3.NumericPropertyPredicate) error
 	VisitNumericPropertyRangeWithContext(ctx context.Context, v api3.NumericPropertyRangePredicate) error
 	VisitLabelsWithContext(ctx context.Context, v api2.LabelsFilter) error
+	VisitTypesWithContext(ctx context.Context, v ResourceTypesFilter) error
 	VisitWorkspaceWithContext(ctx context.Context, v api.StringConstant) error
 	VisitAndWithContext(ctx context.Context, v []ResourceSearchQuery) error
 	VisitOrWithContext(ctx context.Context, v []ResourceSearchQuery) error
@@ -13465,6 +13578,10 @@ func NewResourceSearchQueryFromNumericPropertyRange(v api3.NumericPropertyRangeP
 
 func NewResourceSearchQueryFromLabels(v api2.LabelsFilter) ResourceSearchQuery {
 	return ResourceSearchQuery{typ: "labels", labels: &v}
+}
+
+func NewResourceSearchQueryFromTypes(v ResourceTypesFilter) ResourceSearchQuery {
+	return ResourceSearchQuery{typ: "types", types: &v}
 }
 
 func NewResourceSearchQueryFromWorkspace(v api.StringConstant) ResourceSearchQuery {

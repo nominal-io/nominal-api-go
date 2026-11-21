@@ -360,6 +360,7 @@ func (o *MediaMtxPermission) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Settings that apply to a whole org. Only org admins can change them.
 type OrgSettings struct {
 	DefaultTimeRangeType *DefaultTimeRangeTypeSetting `json:"defaultTimeRangeType,omitempty"`
 	// Whether newly created workbooks are visible in search by default.
@@ -411,7 +412,7 @@ func (o *OrgUserLoginActivity) UnmarshalYAML(unmarshal func(interface{}) error) 
 // safelogging:@Unsafe
 type SearchUsersRequest struct {
 	Query SearchUsersQuery `json:"query"`
-	// NAME ascending by default
+	// Defaults to NAME ascending.
 	SortBy        *SortBy     `json:"sortBy,omitempty"`
 	NextPageToken *api1.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Defaults to 100. Will throw if larger than 1_000.
@@ -478,8 +479,9 @@ func (o *SearchUsersResponseV2) UnmarshalYAML(unmarshal func(interface{}) error)
 }
 
 type SortBy struct {
-	IsDescending bool        `json:"isDescending"`
-	Field        SortByField `json:"field"`
+	IsDescending bool `json:"isDescending"`
+	// NAME sorts by display name.
+	Field SortByField `json:"field"`
 }
 
 func (o SortBy) MarshalYAML() (interface{}, error) {
@@ -499,6 +501,7 @@ func (o *SortBy) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type UpdateMyProfileRequest struct {
+	// New display name.
 	DisplayName string `json:"displayName"`
 }
 
@@ -518,6 +521,7 @@ func (o *UpdateMyProfileRequest) UnmarshalYAML(unmarshal func(interface{}) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Personal settings of one user, saved as a whole.
 type UserSettings struct {
 	DefaultTimeRangeType *DefaultTimeRangeTypeSetting `json:"defaultTimeRangeType,omitempty"`
 	Appearance           *AppearanceSetting           `json:"appearance,omitempty"`
@@ -555,6 +559,7 @@ func (o *UserSettings) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A user who is a member or guest of an org.
 // safelogging:@Unsafe
 type UserV2 struct {
 	Rid         UserRid `json:"rid" safelogging:"@Safe"`

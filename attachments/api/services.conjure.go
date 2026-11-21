@@ -48,14 +48,8 @@ type AttachmentServiceClient interface {
 	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, ridArg rids.AttachmentRid) (Attachment, error)
 	/*
-	   Returns the attachments with the given RIDs, in no particular order.
-
-	   Archived attachments are returned. The request is all or nothing: if any RID does not exist or is in
-	   a workspace the caller cannot view, no attachments are returned.
-
-	   Errors:
-	   - NOT_FOUND (Attachment:AttachmentsNotFound): one or more RIDs do not exist or are in a workspace
-	     the caller cannot view. The error names those RIDs.
+	   Returns the attachments with the given RIDs, in no particular order. Archived attachments are returned.
+	   RIDs that do not exist or are in a workspace the caller cannot view are omitted.
 	*/
 	GetBatch(ctx context.Context, authHeader bearertoken.Token, requestArg GetAttachmentsRequest) (GetAttachmentsResponse, error)
 	/*
@@ -284,14 +278,8 @@ type AttachmentServiceClientWithAuth interface {
 	*/
 	Get(ctx context.Context, ridArg rids.AttachmentRid) (Attachment, error)
 	/*
-	   Returns the attachments with the given RIDs, in no particular order.
-
-	   Archived attachments are returned. The request is all or nothing: if any RID does not exist or is in
-	   a workspace the caller cannot view, no attachments are returned.
-
-	   Errors:
-	   - NOT_FOUND (Attachment:AttachmentsNotFound): one or more RIDs do not exist or are in a workspace
-	     the caller cannot view. The error names those RIDs.
+	   Returns the attachments with the given RIDs, in no particular order. Archived attachments are returned.
+	   RIDs that do not exist or are in a workspace the caller cannot view are omitted.
 	*/
 	GetBatch(ctx context.Context, requestArg GetAttachmentsRequest) (GetAttachmentsResponse, error)
 	/*

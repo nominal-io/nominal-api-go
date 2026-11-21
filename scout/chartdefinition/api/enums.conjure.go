@@ -1404,6 +1404,70 @@ func (e *NumberInputSize) UnmarshalText(data []byte) error {
 	return nil
 }
 
+/*
+A preset size for the slider. Each size fixes the track thickness,
+thumb size and text size; it does not constrain the length.
+*/
+type NumberSliderSize struct {
+	val NumberSliderSize_Value
+}
+
+type NumberSliderSize_Value string
+
+const (
+	NumberSliderSize_SMALL   NumberSliderSize_Value = "SMALL"
+	NumberSliderSize_MEDIUM  NumberSliderSize_Value = "MEDIUM"
+	NumberSliderSize_LARGE   NumberSliderSize_Value = "LARGE"
+	NumberSliderSize_UNKNOWN NumberSliderSize_Value = "UNKNOWN"
+)
+
+// NumberSliderSize_Values returns all known variants of NumberSliderSize.
+func NumberSliderSize_Values() []NumberSliderSize_Value {
+	return []NumberSliderSize_Value{NumberSliderSize_SMALL, NumberSliderSize_MEDIUM, NumberSliderSize_LARGE}
+}
+
+func New_NumberSliderSize(value NumberSliderSize_Value) NumberSliderSize {
+	return NumberSliderSize{val: value}
+}
+
+// IsUnknown returns false for all known variants of NumberSliderSize and true otherwise.
+func (e NumberSliderSize) IsUnknown() bool {
+	switch e.val {
+	case NumberSliderSize_SMALL, NumberSliderSize_MEDIUM, NumberSliderSize_LARGE:
+		return false
+	}
+	return true
+}
+
+func (e NumberSliderSize) Value() NumberSliderSize_Value {
+	if e.IsUnknown() {
+		return NumberSliderSize_UNKNOWN
+	}
+	return e.val
+}
+
+func (e NumberSliderSize) String() string {
+	return string(e.val)
+}
+
+func (e NumberSliderSize) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *NumberSliderSize) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_NumberSliderSize(NumberSliderSize_Value(v))
+	case "SMALL":
+		*e = New_NumberSliderSize(NumberSliderSize_SMALL)
+	case "MEDIUM":
+		*e = New_NumberSliderSize(NumberSliderSize_MEDIUM)
+	case "LARGE":
+		*e = New_NumberSliderSize(NumberSliderSize_LARGE)
+	}
+	return nil
+}
+
 type OverlayScope struct {
 	val OverlayScope_Value
 }
@@ -1517,6 +1581,66 @@ func (e *PeakDetectionMode) UnmarshalText(data []byte) error {
 		*e = New_PeakDetectionMode(PeakDetectionMode_NEGATIVE)
 	case "MEAN":
 		*e = New_PeakDetectionMode(PeakDetectionMode_MEAN)
+	}
+	return nil
+}
+
+// The color scheme of a primary flight display.
+type PfdTheme struct {
+	val PfdTheme_Value
+}
+
+type PfdTheme_Value string
+
+const (
+	// A blue sky over a brown ground, as on a conventional attitude indicator.
+	PfdTheme_DEFAULT PfdTheme_Value = "DEFAULT"
+	// Neutral tones from the Nominal palette in place of the blue and brown.
+	PfdTheme_MONO    PfdTheme_Value = "MONO"
+	PfdTheme_UNKNOWN PfdTheme_Value = "UNKNOWN"
+)
+
+// PfdTheme_Values returns all known variants of PfdTheme.
+func PfdTheme_Values() []PfdTheme_Value {
+	return []PfdTheme_Value{PfdTheme_DEFAULT, PfdTheme_MONO}
+}
+
+func New_PfdTheme(value PfdTheme_Value) PfdTheme {
+	return PfdTheme{val: value}
+}
+
+// IsUnknown returns false for all known variants of PfdTheme and true otherwise.
+func (e PfdTheme) IsUnknown() bool {
+	switch e.val {
+	case PfdTheme_DEFAULT, PfdTheme_MONO:
+		return false
+	}
+	return true
+}
+
+func (e PfdTheme) Value() PfdTheme_Value {
+	if e.IsUnknown() {
+		return PfdTheme_UNKNOWN
+	}
+	return e.val
+}
+
+func (e PfdTheme) String() string {
+	return string(e.val)
+}
+
+func (e PfdTheme) MarshalText() ([]byte, error) {
+	return []byte(e.val), nil
+}
+
+func (e *PfdTheme) UnmarshalText(data []byte) error {
+	switch v := strings.ToUpper(string(data)); v {
+	default:
+		*e = New_PfdTheme(PfdTheme_Value(v))
+	case "DEFAULT":
+		*e = New_PfdTheme(PfdTheme_DEFAULT)
+	case "MONO":
+		*e = New_PfdTheme(PfdTheme_MONO)
 	}
 	return nil
 }
