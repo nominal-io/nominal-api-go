@@ -790,10 +790,15 @@ func (u *IngestJobSearchFilterWithT[T]) Accept(ctx context.Context, v IngestJobS
 			return result, fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
 		}
 		return v.VisitTriggeringIngestRuleRids(ctx, *u.triggeringIngestRuleRids)
+	case "fileRevisionRids":
+		if u.fileRevisionRids == nil {
+			return result, fmt.Errorf("field \"fileRevisionRids\" is required")
+		}
+		return v.VisitFileRevisionRids(ctx, *u.fileRevisionRids)
 	}
 }
 
-func (u *IngestJobSearchFilterWithT[T]) AcceptFuncs(datasetRidsFunc func([]rids.DatasetRid) (T, error), createdByRidsFunc func([]api.UserRid) (T, error), statusesFunc func([]IngestJobStatus) (T, error), searchTextFunc func(string) (T, error), startTimeRangeFunc func(IngestJobStartTimeRange) (T, error), andFunc func([]IngestJobSearchFilter) (T, error), orFunc func([]IngestJobSearchFilter) (T, error), notFunc func(IngestJobSearchFilter) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), triggeringIngestRuleRidsFunc func([]rids.DriveIngestRuleRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *IngestJobSearchFilterWithT[T]) AcceptFuncs(datasetRidsFunc func([]rids.DatasetRid) (T, error), createdByRidsFunc func([]api.UserRid) (T, error), statusesFunc func([]IngestJobStatus) (T, error), searchTextFunc func(string) (T, error), startTimeRangeFunc func(IngestJobStartTimeRange) (T, error), andFunc func([]IngestJobSearchFilter) (T, error), orFunc func([]IngestJobSearchFilter) (T, error), notFunc func(IngestJobSearchFilter) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), triggeringIngestRuleRidsFunc func([]rids.DriveIngestRuleRid) (T, error), fileRevisionRidsFunc func([]rids.DriveFileRevisionRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -851,6 +856,11 @@ func (u *IngestJobSearchFilterWithT[T]) AcceptFuncs(datasetRidsFunc func([]rids.
 			return result, fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
 		}
 		return triggeringIngestRuleRidsFunc(*u.triggeringIngestRuleRids)
+	case "fileRevisionRids":
+		if u.fileRevisionRids == nil {
+			return result, fmt.Errorf("field \"fileRevisionRids\" is required")
+		}
+		return fileRevisionRidsFunc(*u.fileRevisionRids)
 	}
 }
 
@@ -904,6 +914,11 @@ func (u *IngestJobSearchFilterWithT[T]) TriggeringIngestRuleRidsNoopSuccess([]ri
 	return result, nil
 }
 
+func (u *IngestJobSearchFilterWithT[T]) FileRevisionRidsNoopSuccess([]rids.DriveFileRevisionRid) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *IngestJobSearchFilterWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -920,6 +935,7 @@ type IngestJobSearchFilterVisitorWithT[T any] interface {
 	VisitNot(ctx context.Context, v IngestJobSearchFilter) (T, error)
 	VisitWorkspace(ctx context.Context, v rids.WorkspaceRid) (T, error)
 	VisitTriggeringIngestRuleRids(ctx context.Context, v []rids.DriveIngestRuleRid) (T, error)
+	VisitFileRevisionRids(ctx context.Context, v []rids.DriveFileRevisionRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

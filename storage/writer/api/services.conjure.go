@@ -114,7 +114,7 @@ type NominalChannelWriterServiceClient interface {
 	   Has the same functionality as writeBatches, but is compatible with the Telegraf output format.
 	   Assumes that the Telegraf batch format is used. Timestamp is assumed to be in nanoseconds.
 	   The URL in the Telegraf output plugin configuration should be the fully qualified URL,
-	   including the dataSourceRid query parameter.
+	   including the dataSourceRid path parameter.
 	*/
 	WriteTelegrafBatches(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg WriteTelegrafBatchesRequest) error
 	/*
@@ -136,177 +136,21 @@ type NominalChannelWriterServiceClient interface {
 	*/
 	PrometheusRemoteWriteHealthCheck(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.NominalDataSourceOrDatasetRid) (bool, error)
 	/*
-	   Synchronously writes a Nominal Write Request to a Nominal data source using the NominalWrite Protobuf schema.
-	   The request must be Protobuf-encoded and accompanied by the appropriate content encoding headers if compressed.
+	   Synchronously writes a Nominal Write Request to a Nominal data source. The request body is Protobuf-encoded
+	   in the row-oriented NominalWrite schema, with a content encoding header if compressed, and the Content-Type
+	   header must be "application/x-protobuf".
 
-	   The request should follow this Protobuf schema:
-	   ```proto
-	   message WriteRequestNominal {
-	     repeated Series series = 1;
-	   }
-
-	   message Series {
-	     Channel channel = 1;
-	     map<string, string> tags = 2;   // Key-value pairs for series tags
-	     Points points = 3;              // Contains double, string, integer, array, or struct points
-	   }
-
-	   message Channel {
-	     string name = 1;
-	   }
-
-	   message Points {
-	     oneof points_type {
-	       DoublePoints double_points = 1;
-	       StringPoints string_points = 2;
-	       IntegerPoints integer_points = 3;
-	       ArrayPoints array_points = 4;
-	       StructPoints struct_points = 5;
-	       Uint64Points uint64_points = 6;
-	     }
-	   }
-
-	   message DoublePoints {
-	     repeated DoublePoint points = 1;
-	   }
-
-	   message StringPoints {
-	     repeated StringPoint points = 1;
-	   }
-
-	   message IntegerPoints {
-	     repeated IntegerPoint points = 1;
-	   }
-
-	   message Uint64Points {
-	     repeated Uint64Point points = 1;
-	   }
-
-	   message ArrayPoints {
-	     oneof array_type {
-	       DoubleArrayPoints double_array_points = 1;
-	       StringArrayPoints string_array_points = 2;
-	     }
-	   }
-
-	   message DoubleArrayPoints {
-	     repeated DoubleArrayPoint points = 1;
-	   }
-
-	   message StringArrayPoints {
-	     repeated StringArrayPoint points = 1;
-	   }
-
-	   message StructPoints {
-	     repeated StructPoint points = 1;
-	   }
-
-	   message DoublePoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     double value = 2;
-	   }
-
-	   message StringPoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     string value = 2;
-	   }
-
-	   message IntegerPoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     int64 value = 2;
-	   }
-
-	   message Uint64Point {
-	     google.protobuf.Timestamp timestamp = 1;
-	     uint64 value = 2;
-	   }
-
-	   message DoubleArrayPoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     repeated double value = 2;
-	   }
-
-	   message StringArrayPoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     repeated string value = 2;
-	   }
-
-	   message StructPoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     string jsonString = 2;
-	   }
-	   ```
-
-	   Each request can contain multiple series, where each series consists of:
-	   - A channel name
-	   - A map of tags (key-value pairs)
-	   - A collection of points, which can be double, string, integer, array (double/string), or struct (json) values
-	   - Each point includes a timestamp (using google.protobuf.Timestamp) and its value
-	   - Array points contain repeated values (array<double> or array<string>)
-	   - Struct points are represented using strings that contain the JSON formatted blobs, with all keys being strings
-
-	   The endpoint requires the Content-Type header to be set to "application/x-protobuf".
-	   If the payload is compressed, the appropriate Content-Encoding header must be included.
+	   Each request holds multiple series, each with a channel name, tags, and timestamped points of double,
+	   string, integer, array, or struct (JSON string) values.
 	*/
 	WriteNominalBatches(ctx context.Context, authHeader bearertoken.Token, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg httpclient.RequestBody) error
 	/*
-	   Synchronously writes to a Nominal data source using the columnar WriteBatchesRequest Protobuf schema.
+	   Synchronously writes to a Nominal data source using the columnar WriteBatchesRequest Protobuf schema, the
+	   most efficient write format. Unlike writeNominalBatches, it stores timestamps and values as separate packed
+	   arrays per channel for better compression. The data_source_rid field in the body identifies the target data
+	   source or dataset.
 
-	   This is the most efficient write format. Unlike the row-oriented writeNominalBatches endpoint, this schema
-	   stores timestamps and values as separate packed arrays per channel, which enables protobuf packed encoding
-	   for value arrays and significantly better compression.
-
-	   The data_source_rid field in the protobuf body identifies the target data source or dataset.
-	   The request must be Protobuf-encoded and accompanied by the appropriate content encoding headers if compressed.
-
-	   The request should follow this Protobuf schema:
-	   ```proto
-	   message WriteBatchesRequest {
-	     repeated RecordsBatch batches = 1;
-	     string data_source_rid = 2;
-	   }
-
-	   message RecordsBatch {
-	     string channel = 1;
-	     map<string, string> tags = 2;
-	     Points points = 3;
-	   }
-
-	   message Points {
-	     repeated Timestamp timestamps = 1;
-	     oneof points {
-	       DoublePoints double_points = 2;
-	       StringPoints string_points = 3;
-	       IntPoints int_points = 5;
-	       ArrayPoints array_points = 6;
-	       StructPoints struct_points = 7;
-	       Uint64Points uint64_points = 8;
-	     }
-	   }
-
-	   // Nanosecond precision timestamp.
-	   message Timestamp {
-	     optional int64 seconds = 1;
-	     optional int64 nanos = 2;
-	   }
-
-	   message DoublePoints { repeated double points = 1; }
-	   message StringPoints { repeated string points = 1; }
-	   message IntPoints { repeated int64 points = 1; }
-	   message Uint64Points { repeated uint64 points = 1; }
-	   message StructPoints { repeated string points = 1; }
-
-	   message ArrayPoints {
-	     oneof array_type {
-	       DoubleArrayPoints double_array_points = 1;
-	       StringArrayPoints string_array_points = 2;
-	     }
-	   }
-	   message DoubleArrayPoints { repeated DoubleArrayPoint points = 1; }
-	   message DoubleArrayPoint { repeated double value = 2; }
-	   message StringArrayPoints { repeated StringArrayPoint points = 1; }
-	   message StringArrayPoint { repeated string value = 2; }
-	   ```
+	   The body is Protobuf-encoded, with a content encoding header if compressed.
 	*/
 	WriteNominalColumnarBatches(ctx context.Context, authHeader bearertoken.Token, requestArg httpclient.RequestBody) error
 	// Synchronously writes logs to a Nominal data source.
@@ -454,7 +298,7 @@ type NominalChannelWriterServiceClientWithAuth interface {
 	   Has the same functionality as writeBatches, but is compatible with the Telegraf output format.
 	   Assumes that the Telegraf batch format is used. Timestamp is assumed to be in nanoseconds.
 	   The URL in the Telegraf output plugin configuration should be the fully qualified URL,
-	   including the dataSourceRid query parameter.
+	   including the dataSourceRid path parameter.
 	*/
 	WriteTelegrafBatches(ctx context.Context, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg WriteTelegrafBatchesRequest) error
 	/*
@@ -476,177 +320,21 @@ type NominalChannelWriterServiceClientWithAuth interface {
 	*/
 	PrometheusRemoteWriteHealthCheck(ctx context.Context, dataSourceRidArg rids.NominalDataSourceOrDatasetRid) (bool, error)
 	/*
-	   Synchronously writes a Nominal Write Request to a Nominal data source using the NominalWrite Protobuf schema.
-	   The request must be Protobuf-encoded and accompanied by the appropriate content encoding headers if compressed.
+	   Synchronously writes a Nominal Write Request to a Nominal data source. The request body is Protobuf-encoded
+	   in the row-oriented NominalWrite schema, with a content encoding header if compressed, and the Content-Type
+	   header must be "application/x-protobuf".
 
-	   The request should follow this Protobuf schema:
-	   ```proto
-	   message WriteRequestNominal {
-	     repeated Series series = 1;
-	   }
-
-	   message Series {
-	     Channel channel = 1;
-	     map<string, string> tags = 2;   // Key-value pairs for series tags
-	     Points points = 3;              // Contains double, string, integer, array, or struct points
-	   }
-
-	   message Channel {
-	     string name = 1;
-	   }
-
-	   message Points {
-	     oneof points_type {
-	       DoublePoints double_points = 1;
-	       StringPoints string_points = 2;
-	       IntegerPoints integer_points = 3;
-	       ArrayPoints array_points = 4;
-	       StructPoints struct_points = 5;
-	       Uint64Points uint64_points = 6;
-	     }
-	   }
-
-	   message DoublePoints {
-	     repeated DoublePoint points = 1;
-	   }
-
-	   message StringPoints {
-	     repeated StringPoint points = 1;
-	   }
-
-	   message IntegerPoints {
-	     repeated IntegerPoint points = 1;
-	   }
-
-	   message Uint64Points {
-	     repeated Uint64Point points = 1;
-	   }
-
-	   message ArrayPoints {
-	     oneof array_type {
-	       DoubleArrayPoints double_array_points = 1;
-	       StringArrayPoints string_array_points = 2;
-	     }
-	   }
-
-	   message DoubleArrayPoints {
-	     repeated DoubleArrayPoint points = 1;
-	   }
-
-	   message StringArrayPoints {
-	     repeated StringArrayPoint points = 1;
-	   }
-
-	   message StructPoints {
-	     repeated StructPoint points = 1;
-	   }
-
-	   message DoublePoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     double value = 2;
-	   }
-
-	   message StringPoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     string value = 2;
-	   }
-
-	   message IntegerPoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     int64 value = 2;
-	   }
-
-	   message Uint64Point {
-	     google.protobuf.Timestamp timestamp = 1;
-	     uint64 value = 2;
-	   }
-
-	   message DoubleArrayPoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     repeated double value = 2;
-	   }
-
-	   message StringArrayPoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     repeated string value = 2;
-	   }
-
-	   message StructPoint {
-	     google.protobuf.Timestamp timestamp = 1;
-	     string jsonString = 2;
-	   }
-	   ```
-
-	   Each request can contain multiple series, where each series consists of:
-	   - A channel name
-	   - A map of tags (key-value pairs)
-	   - A collection of points, which can be double, string, integer, array (double/string), or struct (json) values
-	   - Each point includes a timestamp (using google.protobuf.Timestamp) and its value
-	   - Array points contain repeated values (array<double> or array<string>)
-	   - Struct points are represented using strings that contain the JSON formatted blobs, with all keys being strings
-
-	   The endpoint requires the Content-Type header to be set to "application/x-protobuf".
-	   If the payload is compressed, the appropriate Content-Encoding header must be included.
+	   Each request holds multiple series, each with a channel name, tags, and timestamped points of double,
+	   string, integer, array, or struct (JSON string) values.
 	*/
 	WriteNominalBatches(ctx context.Context, dataSourceRidArg rids.NominalDataSourceOrDatasetRid, requestArg httpclient.RequestBody) error
 	/*
-	   Synchronously writes to a Nominal data source using the columnar WriteBatchesRequest Protobuf schema.
+	   Synchronously writes to a Nominal data source using the columnar WriteBatchesRequest Protobuf schema, the
+	   most efficient write format. Unlike writeNominalBatches, it stores timestamps and values as separate packed
+	   arrays per channel for better compression. The data_source_rid field in the body identifies the target data
+	   source or dataset.
 
-	   This is the most efficient write format. Unlike the row-oriented writeNominalBatches endpoint, this schema
-	   stores timestamps and values as separate packed arrays per channel, which enables protobuf packed encoding
-	   for value arrays and significantly better compression.
-
-	   The data_source_rid field in the protobuf body identifies the target data source or dataset.
-	   The request must be Protobuf-encoded and accompanied by the appropriate content encoding headers if compressed.
-
-	   The request should follow this Protobuf schema:
-	   ```proto
-	   message WriteBatchesRequest {
-	     repeated RecordsBatch batches = 1;
-	     string data_source_rid = 2;
-	   }
-
-	   message RecordsBatch {
-	     string channel = 1;
-	     map<string, string> tags = 2;
-	     Points points = 3;
-	   }
-
-	   message Points {
-	     repeated Timestamp timestamps = 1;
-	     oneof points {
-	       DoublePoints double_points = 2;
-	       StringPoints string_points = 3;
-	       IntPoints int_points = 5;
-	       ArrayPoints array_points = 6;
-	       StructPoints struct_points = 7;
-	       Uint64Points uint64_points = 8;
-	     }
-	   }
-
-	   // Nanosecond precision timestamp.
-	   message Timestamp {
-	     optional int64 seconds = 1;
-	     optional int64 nanos = 2;
-	   }
-
-	   message DoublePoints { repeated double points = 1; }
-	   message StringPoints { repeated string points = 1; }
-	   message IntPoints { repeated int64 points = 1; }
-	   message Uint64Points { repeated uint64 points = 1; }
-	   message StructPoints { repeated string points = 1; }
-
-	   message ArrayPoints {
-	     oneof array_type {
-	       DoubleArrayPoints double_array_points = 1;
-	       StringArrayPoints string_array_points = 2;
-	     }
-	   }
-	   message DoubleArrayPoints { repeated DoubleArrayPoint points = 1; }
-	   message DoubleArrayPoint { repeated double value = 2; }
-	   message StringArrayPoints { repeated StringArrayPoint points = 1; }
-	   message StringArrayPoint { repeated string value = 2; }
-	   ```
+	   The body is Protobuf-encoded, with a content encoding header if compressed.
 	*/
 	WriteNominalColumnarBatches(ctx context.Context, requestArg httpclient.RequestBody) error
 	// Synchronously writes logs to a Nominal data source.

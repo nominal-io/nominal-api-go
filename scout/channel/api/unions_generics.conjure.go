@@ -74,6 +74,71 @@ type BatchedChannelChildEntryVisitorWithT[T any] interface {
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
+type BatchedChannelLocationWithT[T any] BatchedChannelLocation
+
+func (u *BatchedChannelLocationWithT[T]) Accept(ctx context.Context, v BatchedChannelLocationVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "located":
+		if u.located == nil {
+			return result, fmt.Errorf("field \"located\" is required")
+		}
+		return v.VisitLocated(ctx, *u.located)
+	case "unsaved":
+		if u.unsaved == nil {
+			return result, fmt.Errorf("field \"unsaved\" is required")
+		}
+		return v.VisitUnsaved(ctx, *u.unsaved)
+	}
+}
+
+func (u *BatchedChannelLocationWithT[T]) AcceptFuncs(locatedFunc func(BatchedLocator) (T, error), unsavedFunc func(UnsavedChannelLocation) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "located":
+		if u.located == nil {
+			return result, fmt.Errorf("field \"located\" is required")
+		}
+		return locatedFunc(*u.located)
+	case "unsaved":
+		if u.unsaved == nil {
+			return result, fmt.Errorf("field \"unsaved\" is required")
+		}
+		return unsavedFunc(*u.unsaved)
+	}
+}
+
+func (u *BatchedChannelLocationWithT[T]) LocatedNoopSuccess(BatchedLocator) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BatchedChannelLocationWithT[T]) UnsavedNoopSuccess(UnsavedChannelLocation) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *BatchedChannelLocationWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type BatchedChannelLocationVisitorWithT[T any] interface {
+	VisitLocated(ctx context.Context, v BatchedLocator) (T, error)
+	VisitUnsaved(ctx context.Context, v UnsavedChannelLocation) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
 type ChannelChildEntryWithT[T any] ChannelChildEntry
 
 func (u *ChannelChildEntryWithT[T]) Accept(ctx context.Context, v ChannelChildEntryVisitorWithT[T]) (T, error) {

@@ -1082,8 +1082,8 @@ type IngestServiceClient interface {
 
 	   If no run has the RID, one is created with it. Otherwise the run is updated, which needs
 	   edit permission too. An update replaces title, description, start time, properties, labels, and data sources, clears links and attachments, and
-	   changes end time and run prefix only when set. gRPC clients can create each dataset, call
-	   nominal.ingest.v2.IngestService/Ingest, then nominal.run.v1.RunService/CreateOrUpdateRun.
+	   changes end time and run prefix only when set. gRPC clients call
+	   `nominal.ingest.v2.IngestService/IngestRun`.
 
 	   Errors:
 	   - INVALID_ARGUMENT: a property value is null or a new data source has no timeColumnSpec.
@@ -1328,8 +1328,8 @@ type IngestServiceClientWithAuth interface {
 
 	   If no run has the RID, one is created with it. Otherwise the run is updated, which needs
 	   edit permission too. An update replaces title, description, start time, properties, labels, and data sources, clears links and attachments, and
-	   changes end time and run prefix only when set. gRPC clients can create each dataset, call
-	   nominal.ingest.v2.IngestService/Ingest, then nominal.run.v1.RunService/CreateOrUpdateRun.
+	   changes end time and run prefix only when set. gRPC clients call
+	   `nominal.ingest.v2.IngestService/IngestRun`.
 
 	   Errors:
 	   - INVALID_ARGUMENT: a property value is null or a new data source has no timeColumnSpec.

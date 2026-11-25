@@ -1204,10 +1204,15 @@ func (u *DatasetWithT[T]) Accept(ctx context.Context, v DatasetVisitorWithT[T]) 
 			return result, fmt.Errorf("field \"withDimensions\" is required")
 		}
 		return v.VisitWithDimensions(ctx, *u.withDimensions)
+	case "entitySet":
+		if u.entitySet == nil {
+			return result, fmt.Errorf("field \"entitySet\" is required")
+		}
+		return v.VisitEntitySet(ctx, *u.entitySet)
 	}
 }
 
-func (u *DatasetWithT[T]) AcceptFuncs(assetFunc func(api.Asset) (T, error), runFunc func(api.Run) (T, error), savedFunc func(api.SavedDataset) (T, error), searchFunc func(SearchDataset) (T, error), combineFunc func(CombinedDataset) (T, error), tagFunc func(TaggedDataset) (T, error), filterFunc func(FilteredDataset) (T, error), timeShiftFunc func(TimeShiftedDataset) (T, error), alignByAnchorFunc func(AnchorAlignedDataset) (T, error), withSeriesFunc func(WithSeriesDataset) (T, error), dropSeriesFunc func(DropSeriesDataset) (T, error), referenceFunc func(api.DatasetReference) (T, error), withDimensionsFunc func(DimensionsDataset) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *DatasetWithT[T]) AcceptFuncs(assetFunc func(api.Asset) (T, error), runFunc func(api.Run) (T, error), savedFunc func(api.SavedDataset) (T, error), searchFunc func(SearchDataset) (T, error), combineFunc func(CombinedDataset) (T, error), tagFunc func(TaggedDataset) (T, error), filterFunc func(FilteredDataset) (T, error), timeShiftFunc func(TimeShiftedDataset) (T, error), alignByAnchorFunc func(AnchorAlignedDataset) (T, error), withSeriesFunc func(WithSeriesDataset) (T, error), dropSeriesFunc func(DropSeriesDataset) (T, error), referenceFunc func(api.DatasetReference) (T, error), withDimensionsFunc func(DimensionsDataset) (T, error), entitySetFunc func(api.EntitySetDataset) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -1280,6 +1285,11 @@ func (u *DatasetWithT[T]) AcceptFuncs(assetFunc func(api.Asset) (T, error), runF
 			return result, fmt.Errorf("field \"withDimensions\" is required")
 		}
 		return withDimensionsFunc(*u.withDimensions)
+	case "entitySet":
+		if u.entitySet == nil {
+			return result, fmt.Errorf("field \"entitySet\" is required")
+		}
+		return entitySetFunc(*u.entitySet)
 	}
 }
 
@@ -1348,6 +1358,11 @@ func (u *DatasetWithT[T]) WithDimensionsNoopSuccess(DimensionsDataset) (T, error
 	return result, nil
 }
 
+func (u *DatasetWithT[T]) EntitySetNoopSuccess(api.EntitySetDataset) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *DatasetWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -1367,6 +1382,7 @@ type DatasetVisitorWithT[T any] interface {
 	VisitDropSeries(ctx context.Context, v DropSeriesDataset) (T, error)
 	VisitReference(ctx context.Context, v api.DatasetReference) (T, error)
 	VisitWithDimensions(ctx context.Context, v DimensionsDataset) (T, error)
+	VisitEntitySet(ctx context.Context, v api.EntitySetDataset) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -3263,6 +3279,11 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 			return result, fmt.Errorf("field \"atan2\" is required")
 		}
 		return v.VisitAtan2(ctx, *u.atan2)
+	case "geoDistance":
+		if u.geoDistance == nil {
+			return result, fmt.Errorf("field \"geoDistance\" is required")
+		}
+		return v.VisitGeoDistance(ctx, *u.geoDistance)
 	case "max":
 		if u.max == nil {
 			return result, fmt.Errorf("field \"max\" is required")
@@ -3298,6 +3319,11 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 			return result, fmt.Errorf("field \"constant\" is required")
 		}
 		return v.VisitConstant(ctx, *u.constant)
+	case "selectEntityDuration":
+		if u.selectEntityDuration == nil {
+			return result, fmt.Errorf("field \"selectEntityDuration\" is required")
+		}
+		return v.VisitSelectEntityDuration(ctx, *u.selectEntityDuration)
 	case "selectNewestPoints":
 		if u.selectNewestPoints == nil {
 			return result, fmt.Errorf("field \"selectNewestPoints\" is required")
@@ -3616,7 +3642,7 @@ func (u *NumericSeriesWithT[T]) Accept(ctx context.Context, v NumericSeriesVisit
 	}
 }
 
-func (u *NumericSeriesWithT[T]) AcceptFuncs(absFunc func(Abs) (T, error), negateFunc func(Negate) (T, error), cosFunc func(Cos) (T, error), sinFunc func(Sin) (T, error), tanFunc func(Tan) (T, error), acosFunc func(Acos) (T, error), asinFunc func(Asin) (T, error), lnFunc func(Ln) (T, error), log10Func func(Log10) (T, error), sqrtFunc func(Sqrt) (T, error), addFunc func(Add) (T, error), subtractFunc func(Subtract) (T, error), multiplyFunc func(Multiply) (T, error), divideFunc func(Divide) (T, error), floorDivideFunc func(FloorDivide) (T, error), powerFunc func(Power) (T, error), moduloFunc func(Modulo) (T, error), atan2Func func(Atan2) (T, error), maxFunc func(MaxSeries) (T, error), meanFunc func(MeanSeries) (T, error), minFunc func(MinSeries) (T, error), sumFunc func(SumSeries) (T, error), unionFunc func(NumericUnionSeries) (T, error), productFunc func(ProductSeries) (T, error), constantFunc func(api.ConstantNumericSeries) (T, error), selectNewestPointsFunc func(SelectNewestPointsSeries) (T, error), selectNumericFunc func(SelectSeries) (T, error), selectNumericPropertyFunc func(SelectProperty) (T, error), selectOldestPointsFunc func(SelectOldestPointsSeries) (T, error), bitAndFunc func(BitAnd) (T, error), bitOrFunc func(BitOr) (T, error), bitXorFunc func(BitXor) (T, error), bitShiftRightFunc func(BitShiftRight) (T, error), bitShiftLeftFunc func(BitShiftLeft) (T, error), bitTestFunc func(BitTest) (T, error), ifElseFunc func(NumericIfElseSeries) (T, error), numericAggregationFunc func(NumericAggregation) (T, error), countDuplicateFunc func(EnumCountDuplicateSeries) (T, error), cumulativeSumFunc func(CumulativeSumSeries) (T, error), derivativeFunc func(DerivativeSeries) (T, error), integralFunc func(IntegralSeries) (T, error), zScoreFunc func(ZscoreSeries) (T, error), rawFunc func(api.Reference) (T, error), derivedFunc func(DerivedSeries) (T, error), resampleFunc func(NumericResampleSeries) (T, error), resampleV2Func func(NumericResampleSeriesV2) (T, error), nthPointDownsampleFunc func(NumericNthPointDownsampleSeries) (T, error), largestTriangleThreeBucketsFunc func(NumericLargestTriangleThreeBucketsSeries) (T, error), signalFilterFunc func(SignalFilterSeries) (T, error), timeDifferenceFunc func(TimeDifferenceSeries) (T, error), absoluteTimestampFunc func(AbsoluteTimestampSeries) (T, error), timeRangeFilterFunc func(NumericTimeRangeFilterSeries) (T, error), timeShiftFunc func(NumericTimeShiftSeries) (T, error), timeShiftV2Func func(NumericTimeShiftSeriesV2) (T, error), unitConversionFunc func(UnitConversionSeries) (T, error), unitOverrideFunc func(UnitOverrideSeries) (T, error), valueDifferenceFunc func(ValueDifferenceSeries) (T, error), filterTransformationFunc func(NumericFilterTransformationSeries) (T, error), filterWhereFunc func(NumericFilterWhereSeries) (T, error), thresholdFilterFunc func(NumericThresholdFilterSeries) (T, error), approximateFilterFunc func(NumericApproximateFilterSeries) (T, error), dropNanFunc func(NumericNanFilter) (T, error), select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) (T, error), aggregateUnderRangesFunc func(AggregateUnderRangesSeries) (T, error), rangeDurationFunc func(RangeDurationSeries) (T, error), groupWithinRangesV2Func func(GroupWithinRangesSeriesV2) (T, error), filterByExpressionFunc func(FilterByExpressionSeries) (T, error), scalarUdfFunc func(ScalarUdfSeries) (T, error), enumToNumericFunc func(EnumToNumericSeries) (T, error), containsFunc func(ContainsSeries) (T, error), refpropFunc func(RefpropSeries) (T, error), refpropV2Func func(RefpropSeriesV2) (T, error), extractFromStructFunc func(ExtractNumericFromStructSeries) (T, error), tagByIntervalsFunc func(TagByIntervalsSeries) (T, error), filterByTagFunc func(NumericTagFilterSeries) (T, error), selectTagsFunc func(NumericSelectTagsSeries) (T, error), pairByTagFunc func(NumericPairByTagSeries) (T, error), toStartOfIntervalFunc func(NumericToStartOfIntervalSeries) (T, error), phaseUnwrapFunc func(PhaseUnwrapSeries) (T, error), aggregateFunc func(AggregateNumericSeries) (T, error), rollingOperationFunc func(RollingOperationSeries) (T, error), bitOperationFunc func(BitOperationSeries) (T, error), channelFunc func(api.ChannelSeries) (T, error), offsetFunc func(OffsetSeries) (T, error), scaleFunc func(ScaleSeries) (T, error), arithmeticFunc func(ArithmeticSeries) (T, error), unaryArithmeticFunc func(UnaryArithmeticSeries) (T, error), binaryArithmeticFunc func(BinaryArithmeticSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *NumericSeriesWithT[T]) AcceptFuncs(absFunc func(Abs) (T, error), negateFunc func(Negate) (T, error), cosFunc func(Cos) (T, error), sinFunc func(Sin) (T, error), tanFunc func(Tan) (T, error), acosFunc func(Acos) (T, error), asinFunc func(Asin) (T, error), lnFunc func(Ln) (T, error), log10Func func(Log10) (T, error), sqrtFunc func(Sqrt) (T, error), addFunc func(Add) (T, error), subtractFunc func(Subtract) (T, error), multiplyFunc func(Multiply) (T, error), divideFunc func(Divide) (T, error), floorDivideFunc func(FloorDivide) (T, error), powerFunc func(Power) (T, error), moduloFunc func(Modulo) (T, error), atan2Func func(Atan2) (T, error), geoDistanceFunc func(GeoDistance) (T, error), maxFunc func(MaxSeries) (T, error), meanFunc func(MeanSeries) (T, error), minFunc func(MinSeries) (T, error), sumFunc func(SumSeries) (T, error), unionFunc func(NumericUnionSeries) (T, error), productFunc func(ProductSeries) (T, error), constantFunc func(api.ConstantNumericSeries) (T, error), selectEntityDurationFunc func(SelectEntityDurationSeries) (T, error), selectNewestPointsFunc func(SelectNewestPointsSeries) (T, error), selectNumericFunc func(SelectSeries) (T, error), selectNumericPropertyFunc func(SelectProperty) (T, error), selectOldestPointsFunc func(SelectOldestPointsSeries) (T, error), bitAndFunc func(BitAnd) (T, error), bitOrFunc func(BitOr) (T, error), bitXorFunc func(BitXor) (T, error), bitShiftRightFunc func(BitShiftRight) (T, error), bitShiftLeftFunc func(BitShiftLeft) (T, error), bitTestFunc func(BitTest) (T, error), ifElseFunc func(NumericIfElseSeries) (T, error), numericAggregationFunc func(NumericAggregation) (T, error), countDuplicateFunc func(EnumCountDuplicateSeries) (T, error), cumulativeSumFunc func(CumulativeSumSeries) (T, error), derivativeFunc func(DerivativeSeries) (T, error), integralFunc func(IntegralSeries) (T, error), zScoreFunc func(ZscoreSeries) (T, error), rawFunc func(api.Reference) (T, error), derivedFunc func(DerivedSeries) (T, error), resampleFunc func(NumericResampleSeries) (T, error), resampleV2Func func(NumericResampleSeriesV2) (T, error), nthPointDownsampleFunc func(NumericNthPointDownsampleSeries) (T, error), largestTriangleThreeBucketsFunc func(NumericLargestTriangleThreeBucketsSeries) (T, error), signalFilterFunc func(SignalFilterSeries) (T, error), timeDifferenceFunc func(TimeDifferenceSeries) (T, error), absoluteTimestampFunc func(AbsoluteTimestampSeries) (T, error), timeRangeFilterFunc func(NumericTimeRangeFilterSeries) (T, error), timeShiftFunc func(NumericTimeShiftSeries) (T, error), timeShiftV2Func func(NumericTimeShiftSeriesV2) (T, error), unitConversionFunc func(UnitConversionSeries) (T, error), unitOverrideFunc func(UnitOverrideSeries) (T, error), valueDifferenceFunc func(ValueDifferenceSeries) (T, error), filterTransformationFunc func(NumericFilterTransformationSeries) (T, error), filterWhereFunc func(NumericFilterWhereSeries) (T, error), thresholdFilterFunc func(NumericThresholdFilterSeries) (T, error), approximateFilterFunc func(NumericApproximateFilterSeries) (T, error), dropNanFunc func(NumericNanFilter) (T, error), select1dArrayIndexFunc func(SelectIndexFrom1dNumericArraySeries) (T, error), aggregateUnderRangesFunc func(AggregateUnderRangesSeries) (T, error), rangeDurationFunc func(RangeDurationSeries) (T, error), groupWithinRangesV2Func func(GroupWithinRangesSeriesV2) (T, error), filterByExpressionFunc func(FilterByExpressionSeries) (T, error), scalarUdfFunc func(ScalarUdfSeries) (T, error), enumToNumericFunc func(EnumToNumericSeries) (T, error), containsFunc func(ContainsSeries) (T, error), refpropFunc func(RefpropSeries) (T, error), refpropV2Func func(RefpropSeriesV2) (T, error), extractFromStructFunc func(ExtractNumericFromStructSeries) (T, error), tagByIntervalsFunc func(TagByIntervalsSeries) (T, error), filterByTagFunc func(NumericTagFilterSeries) (T, error), selectTagsFunc func(NumericSelectTagsSeries) (T, error), pairByTagFunc func(NumericPairByTagSeries) (T, error), toStartOfIntervalFunc func(NumericToStartOfIntervalSeries) (T, error), phaseUnwrapFunc func(PhaseUnwrapSeries) (T, error), aggregateFunc func(AggregateNumericSeries) (T, error), rollingOperationFunc func(RollingOperationSeries) (T, error), bitOperationFunc func(BitOperationSeries) (T, error), channelFunc func(api.ChannelSeries) (T, error), offsetFunc func(OffsetSeries) (T, error), scaleFunc func(ScaleSeries) (T, error), arithmeticFunc func(ArithmeticSeries) (T, error), unaryArithmeticFunc func(UnaryArithmeticSeries) (T, error), binaryArithmeticFunc func(BinaryArithmeticSeries) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -3714,6 +3740,11 @@ func (u *NumericSeriesWithT[T]) AcceptFuncs(absFunc func(Abs) (T, error), negate
 			return result, fmt.Errorf("field \"atan2\" is required")
 		}
 		return atan2Func(*u.atan2)
+	case "geoDistance":
+		if u.geoDistance == nil {
+			return result, fmt.Errorf("field \"geoDistance\" is required")
+		}
+		return geoDistanceFunc(*u.geoDistance)
 	case "max":
 		if u.max == nil {
 			return result, fmt.Errorf("field \"max\" is required")
@@ -3749,6 +3780,11 @@ func (u *NumericSeriesWithT[T]) AcceptFuncs(absFunc func(Abs) (T, error), negate
 			return result, fmt.Errorf("field \"constant\" is required")
 		}
 		return constantFunc(*u.constant)
+	case "selectEntityDuration":
+		if u.selectEntityDuration == nil {
+			return result, fmt.Errorf("field \"selectEntityDuration\" is required")
+		}
+		return selectEntityDurationFunc(*u.selectEntityDuration)
 	case "selectNewestPoints":
 		if u.selectNewestPoints == nil {
 			return result, fmt.Errorf("field \"selectNewestPoints\" is required")
@@ -4157,6 +4193,11 @@ func (u *NumericSeriesWithT[T]) Atan2NoopSuccess(Atan2) (T, error) {
 	return result, nil
 }
 
+func (u *NumericSeriesWithT[T]) GeoDistanceNoopSuccess(GeoDistance) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *NumericSeriesWithT[T]) MaxNoopSuccess(MaxSeries) (T, error) {
 	var result T
 	return result, nil
@@ -4188,6 +4229,11 @@ func (u *NumericSeriesWithT[T]) ProductNoopSuccess(ProductSeries) (T, error) {
 }
 
 func (u *NumericSeriesWithT[T]) ConstantNoopSuccess(api.ConstantNumericSeries) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *NumericSeriesWithT[T]) SelectEntityDurationNoopSuccess(SelectEntityDurationSeries) (T, error) {
 	var result T
 	return result, nil
 }
@@ -4531,6 +4577,7 @@ type NumericSeriesVisitorWithT[T any] interface {
 	VisitPower(ctx context.Context, v Power) (T, error)
 	VisitModulo(ctx context.Context, v Modulo) (T, error)
 	VisitAtan2(ctx context.Context, v Atan2) (T, error)
+	VisitGeoDistance(ctx context.Context, v GeoDistance) (T, error)
 	VisitMax(ctx context.Context, v MaxSeries) (T, error)
 	VisitMean(ctx context.Context, v MeanSeries) (T, error)
 	VisitMin(ctx context.Context, v MinSeries) (T, error)
@@ -4538,6 +4585,7 @@ type NumericSeriesVisitorWithT[T any] interface {
 	VisitUnion(ctx context.Context, v NumericUnionSeries) (T, error)
 	VisitProduct(ctx context.Context, v ProductSeries) (T, error)
 	VisitConstant(ctx context.Context, v api.ConstantNumericSeries) (T, error)
+	VisitSelectEntityDuration(ctx context.Context, v SelectEntityDurationSeries) (T, error)
 	VisitSelectNewestPoints(ctx context.Context, v SelectNewestPointsSeries) (T, error)
 	VisitSelectNumeric(ctx context.Context, v SelectSeries) (T, error)
 	VisitSelectNumericProperty(ctx context.Context, v SelectProperty) (T, error)
@@ -5195,6 +5243,11 @@ func (u *ResourceSearchQueryWithT[T]) Accept(ctx context.Context, v ResourceSear
 			return result, fmt.Errorf("field \"labels\" is required")
 		}
 		return v.VisitLabels(ctx, *u.labels)
+	case "types":
+		if u.types == nil {
+			return result, fmt.Errorf("field \"types\" is required")
+		}
+		return v.VisitTypes(ctx, *u.types)
 	case "workspace":
 		if u.workspace == nil {
 			return result, fmt.Errorf("field \"workspace\" is required")
@@ -5218,7 +5271,7 @@ func (u *ResourceSearchQueryWithT[T]) Accept(ctx context.Context, v ResourceSear
 	}
 }
 
-func (u *ResourceSearchQueryWithT[T]) AcceptFuncs(propertiesFunc func(api2.PropertiesFilter) (T, error), numericPropertyFunc func(api3.NumericPropertyPredicate) (T, error), numericPropertyRangeFunc func(api3.NumericPropertyRangePredicate) (T, error), labelsFunc func(api2.LabelsFilter) (T, error), workspaceFunc func(api.StringConstant) (T, error), andFunc func([]ResourceSearchQuery) (T, error), orFunc func([]ResourceSearchQuery) (T, error), notFunc func(ResourceSearchQuery) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ResourceSearchQueryWithT[T]) AcceptFuncs(propertiesFunc func(api2.PropertiesFilter) (T, error), numericPropertyFunc func(api3.NumericPropertyPredicate) (T, error), numericPropertyRangeFunc func(api3.NumericPropertyRangePredicate) (T, error), labelsFunc func(api2.LabelsFilter) (T, error), typesFunc func(ResourceTypesFilter) (T, error), workspaceFunc func(api.StringConstant) (T, error), andFunc func([]ResourceSearchQuery) (T, error), orFunc func([]ResourceSearchQuery) (T, error), notFunc func(ResourceSearchQuery) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -5246,6 +5299,11 @@ func (u *ResourceSearchQueryWithT[T]) AcceptFuncs(propertiesFunc func(api2.Prope
 			return result, fmt.Errorf("field \"labels\" is required")
 		}
 		return labelsFunc(*u.labels)
+	case "types":
+		if u.types == nil {
+			return result, fmt.Errorf("field \"types\" is required")
+		}
+		return typesFunc(*u.types)
 	case "workspace":
 		if u.workspace == nil {
 			return result, fmt.Errorf("field \"workspace\" is required")
@@ -5289,6 +5347,11 @@ func (u *ResourceSearchQueryWithT[T]) LabelsNoopSuccess(api2.LabelsFilter) (T, e
 	return result, nil
 }
 
+func (u *ResourceSearchQueryWithT[T]) TypesNoopSuccess(ResourceTypesFilter) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ResourceSearchQueryWithT[T]) WorkspaceNoopSuccess(api.StringConstant) (T, error) {
 	var result T
 	return result, nil
@@ -5319,6 +5382,7 @@ type ResourceSearchQueryVisitorWithT[T any] interface {
 	VisitNumericProperty(ctx context.Context, v api3.NumericPropertyPredicate) (T, error)
 	VisitNumericPropertyRange(ctx context.Context, v api3.NumericPropertyRangePredicate) (T, error)
 	VisitLabels(ctx context.Context, v api2.LabelsFilter) (T, error)
+	VisitTypes(ctx context.Context, v ResourceTypesFilter) (T, error)
 	VisitWorkspace(ctx context.Context, v api.StringConstant) (T, error)
 	VisitAnd(ctx context.Context, v []ResourceSearchQuery) (T, error)
 	VisitOr(ctx context.Context, v []ResourceSearchQuery) (T, error)

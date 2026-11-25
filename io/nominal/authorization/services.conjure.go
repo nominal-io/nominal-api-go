@@ -26,33 +26,38 @@ type AuthorizationServiceClient interface {
 	*/
 	Authorize(ctx context.Context, authHeader bearertoken.Token, requestArg AuthorizationRequest) ([]rid.ResourceIdentifier, error)
 	/*
-	   Given a set of resources, returns the workspace that each resource belongs to. Omits any
-	   resource the caller cannot view: notebooks, runs, assets and data sources need their own
-	   view action, and every other resource needs `workspace:view` on its workspace. A returned
-	   entry is not authorization to change the resource.
-	   New callers should read the workspace from the resource's own record instead; this
-	   endpoint is slated for deprecation.
+	   Gets the workspace of each resource in a set of resource RIDs. Returns a map from each RID to its
+	   workspace RID.
+
+	   A resource that does not exist, or that the caller cannot view, is omitted from the map. Workbooks
+	   (notebooks in the API), runs, assets, drives, and data sources need their own view action; other
+	   resources need `workspace:view` on their workspace. A returned entry does not allow changing the
+	   resource. New callers should read the workspace from the resource's own record; this endpoint is slated
+	   for deprecation.
 	*/
 	BatchGetWorkspaceForResource(ctx context.Context, authHeader bearertoken.Token, requestArg []rid.ResourceIdentifier) (map[rid.ResourceIdentifier]rids.WorkspaceRid, error)
 	/*
-	   Marks a set of resources as belonging to a workspace. Either all resources are
-	   registered or none are.
-	   If the user is not in the workspace, this will throw.
-	   If a resource already belongs to a different workspace, this will throw.
+	   Marks a set of resources as belonging to a workspace. Either all resources are registered
+	   or none are. If the user is not in the workspace, this will throw. If a resource already
+	   belongs to a different workspace, this will throw.
+
 	   If a resource already belongs to this workspace, this is a no-op.
 	*/
 	RegisterInWorkspace(ctx context.Context, authHeader bearertoken.Token, requestArg RegisterInWorkspaceRequest) error
 	/*
-	   Given an authenticated session, this endpoint returns a HTTP 204 if the
-	   authenticated user is an admin and HTTP 403 otherwise.
+	   Checks whether the authenticated user is an administrator of the organization of the current session.
+	   Returns no content if so.
+
+	   Errors:
+	   - PERMISSION_DENIED (Authorization:NotAuthorizedAdmin): the caller is not an administrator of the
+	     organization of the current session.
 	*/
 	CheckAdmin(ctx context.Context, authHeader bearertoken.Token) error
 	// Checks if the email is allowed to register, following Okta "registration inline hook" API.
 	IsEmailAllowedOkta(ctx context.Context, authHeader bearertoken.Token, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
-	   Freemium variant of the Okta "registration inline hook" API: allows any email to register.
-	   Uses the same request/response shape as isEmailAllowedOkta so it can be wired up as an Okta
-	   inline hook, but always responds with ALLOW.
+	   Freemium variant of the Okta "registration inline hook" API. Uses the same request and
+	   response shape as isEmailAllowedOkta and always responds with ALLOW.
 	*/
 	IsEmailAllowedFreemiumOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
@@ -69,9 +74,8 @@ type AuthorizationServiceClient interface {
 	GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error)
 	/*
 	   Given an authenticated session, provide an OIDC access token to get a Nominal access token suitable
-	   for making API requests. Its expiry will match that of the input access token, capped at 24h. TODO(MGMT-933):
-	   reduce this duration. Throws NotAuthorized if the access token is invalid or if the OIDC provider is not
-	   known.
+	   for making API requests. Its expiry will match that of the input access token, capped at 24h.
+	   Throws NotAuthorized if the access token is invalid or if the OIDC provider is not known.
 	*/
 	RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error)
 	/*
@@ -89,13 +93,25 @@ type AuthorizationServiceClient interface {
 	   other members see only keys they created.
 	*/
 	ListApiKeysInOrg(ctx context.Context, authHeader bearertoken.Token, requestArg ListApiKeyRequest) (ListApiKeyResponse, error)
-	// List all API keys for the user.
+	/*
+	   Lists the API keys the caller created, in any organization. Returns a page of key
+	   metadata. Key values are not returned.
+
+	   Deleted keys and expired keys are left out unless includeDeleted or includeExpired is true. For the keys
+	   of the whole organization, use listApiKeysInOrg.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is not between 1 and 1000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a previous
+	     response.
+	*/
 	ListUserApiKeys(ctx context.Context, authHeader bearertoken.Token, requestArg ListApiKeyRequest) (ListApiKeyResponse, error)
 	/*
 	   Delete an API key. The caller may always revoke a key they created; revoking another
 	   user's key requires the caller to be an org admin of the session org. A non-admin caller
-	   revoking another user's key receives NotAuthorizedAdmin. A key in a different org than the
-	   session, or an unknown key, yields ApiKeyNotFound.
+	   revoking another user's key receives NotAuthorizedAdmin.
+
+	   A key in a different org than the session, or an unknown key, yields ApiKeyNotFound.
 	*/
 	RevokeApiKey(ctx context.Context, authHeader bearertoken.Token, ridArg ApiKeyRid) error
 }
@@ -367,33 +383,38 @@ type AuthorizationServiceClientWithAuth interface {
 	*/
 	Authorize(ctx context.Context, requestArg AuthorizationRequest) ([]rid.ResourceIdentifier, error)
 	/*
-	   Given a set of resources, returns the workspace that each resource belongs to. Omits any
-	   resource the caller cannot view: notebooks, runs, assets and data sources need their own
-	   view action, and every other resource needs `workspace:view` on its workspace. A returned
-	   entry is not authorization to change the resource.
-	   New callers should read the workspace from the resource's own record instead; this
-	   endpoint is slated for deprecation.
+	   Gets the workspace of each resource in a set of resource RIDs. Returns a map from each RID to its
+	   workspace RID.
+
+	   A resource that does not exist, or that the caller cannot view, is omitted from the map. Workbooks
+	   (notebooks in the API), runs, assets, drives, and data sources need their own view action; other
+	   resources need `workspace:view` on their workspace. A returned entry does not allow changing the
+	   resource. New callers should read the workspace from the resource's own record; this endpoint is slated
+	   for deprecation.
 	*/
 	BatchGetWorkspaceForResource(ctx context.Context, requestArg []rid.ResourceIdentifier) (map[rid.ResourceIdentifier]rids.WorkspaceRid, error)
 	/*
-	   Marks a set of resources as belonging to a workspace. Either all resources are
-	   registered or none are.
-	   If the user is not in the workspace, this will throw.
-	   If a resource already belongs to a different workspace, this will throw.
+	   Marks a set of resources as belonging to a workspace. Either all resources are registered
+	   or none are. If the user is not in the workspace, this will throw. If a resource already
+	   belongs to a different workspace, this will throw.
+
 	   If a resource already belongs to this workspace, this is a no-op.
 	*/
 	RegisterInWorkspace(ctx context.Context, requestArg RegisterInWorkspaceRequest) error
 	/*
-	   Given an authenticated session, this endpoint returns a HTTP 204 if the
-	   authenticated user is an admin and HTTP 403 otherwise.
+	   Checks whether the authenticated user is an administrator of the organization of the current session.
+	   Returns no content if so.
+
+	   Errors:
+	   - PERMISSION_DENIED (Authorization:NotAuthorizedAdmin): the caller is not an administrator of the
+	     organization of the current session.
 	*/
 	CheckAdmin(ctx context.Context) error
 	// Checks if the email is allowed to register, following Okta "registration inline hook" API.
 	IsEmailAllowedOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
-	   Freemium variant of the Okta "registration inline hook" API: allows any email to register.
-	   Uses the same request/response shape as isEmailAllowedOkta so it can be wired up as an Okta
-	   inline hook, but always responds with ALLOW.
+	   Freemium variant of the Okta "registration inline hook" API. Uses the same request and
+	   response shape as isEmailAllowedOkta and always responds with ALLOW.
 	*/
 	IsEmailAllowedFreemiumOkta(ctx context.Context, requestArg OktaRegistrationRequest) (OktaRegistrationResponse, error)
 	/*
@@ -410,9 +431,8 @@ type AuthorizationServiceClientWithAuth interface {
 	GetAccessToken(ctx context.Context, requestArg GetAccessTokenRequest) (GetAccessTokenResponse, error)
 	/*
 	   Given an authenticated session, provide an OIDC access token to get a Nominal access token suitable
-	   for making API requests. Its expiry will match that of the input access token, capped at 24h. TODO(MGMT-933):
-	   reduce this duration. Throws NotAuthorized if the access token is invalid or if the OIDC provider is not
-	   known.
+	   for making API requests. Its expiry will match that of the input access token, capped at 24h.
+	   Throws NotAuthorized if the access token is invalid or if the OIDC provider is not known.
 	*/
 	RefreshAccessToken(ctx context.Context, requestArg RefreshAccessTokenRequest) (RefreshAccessTokenResponse, error)
 	/*
@@ -430,13 +450,25 @@ type AuthorizationServiceClientWithAuth interface {
 	   other members see only keys they created.
 	*/
 	ListApiKeysInOrg(ctx context.Context, requestArg ListApiKeyRequest) (ListApiKeyResponse, error)
-	// List all API keys for the user.
+	/*
+	   Lists the API keys the caller created, in any organization. Returns a page of key
+	   metadata. Key values are not returned.
+
+	   Deleted keys and expired keys are left out unless includeDeleted or includeExpired is true. For the keys
+	   of the whole organization, use listApiKeysInOrg.
+
+	   Errors:
+	   - INVALID_ARGUMENT: pageSize is not between 1 and 1000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token from a previous
+	     response.
+	*/
 	ListUserApiKeys(ctx context.Context, requestArg ListApiKeyRequest) (ListApiKeyResponse, error)
 	/*
 	   Delete an API key. The caller may always revoke a key they created; revoking another
 	   user's key requires the caller to be an org admin of the session org. A non-admin caller
-	   revoking another user's key receives NotAuthorizedAdmin. A key in a different org than the
-	   session, or an unknown key, yields ApiKeyNotFound.
+	   revoking another user's key receives NotAuthorizedAdmin.
+
+	   A key in a different org than the session, or an unknown key, yields ApiKeyNotFound.
 	*/
 	RevokeApiKey(ctx context.Context, ridArg ApiKeyRid) error
 }
@@ -619,7 +651,7 @@ func (c *authorizationServiceClientWithTokenProvider) RevokeApiKey(ctx context.C
 	return c.client.RevokeApiKey(ctx, bearertoken.Token(token), ridArg)
 }
 
-// This internal-only service manages long lived api keys.e
+// Exchanges long-lived API keys for access tokens. For internal callers.
 type InternalApiKeyServiceClient interface {
 	/*
 	   Get a Nominal-issued access token from a long-lived API key. Callers should verify that
@@ -654,19 +686,13 @@ func (c *internalApiKeyServiceClient) GetAccessTokenFromApiKeyValue(ctx context.
 }
 
 /*
-Cluster-internal endpoint that mints short-lived access tokens for a
-preconfigured sandbox workspace + sandbox user. The intended caller is an
-in-cluster integration test Job; access is gated by a shared-secret header
-and a NetworkPolicy that restricts the source pods.
-
-This service must not be exposed via the public ingress.
+Issues short-lived access tokens for a sandbox workspace and its sandbox user. For automated
+tests; not for customer use.
 */
 type InternalSandboxTokenServiceClient interface {
 	/*
-	   Issue a Nominal-signed bearer token bound to the configured sandbox
-	   user + org. The TTL is capped at 1 hour server-side regardless of the
-	   requested value. The shared-secret header must match the value
-	   configured on gatekeeper or the call is rejected.
+	   Issues a bearer token bound to the sandbox user and org. The token lifetime is capped at
+	   1 hour regardless of the requested value.
 	*/
 	IssueSandboxToken(ctx context.Context, requestArg IssueSandboxTokenRequest, sharedSecretArg string) (IssueSandboxTokenResponse, error)
 }

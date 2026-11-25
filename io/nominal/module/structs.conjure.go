@@ -99,6 +99,7 @@ func (o *BatchArchiveModulesResponse) UnmarshalYAML(unmarshal func(interface{}) 
 }
 
 type BatchGetModulesRequest struct {
+	// Modules to return. The response lists them in this order.
 	Requests []RequestModuleRef `json:"requests"`
 }
 
@@ -229,7 +230,8 @@ type CreateModuleRequest struct {
 	Title       string                  `json:"title"`
 	Description string                  `json:"description"`
 	Definition  ModuleVersionDefinition `json:"definition"`
-	Workspace   *rids.WorkspaceRid      `json:"workspace,omitempty" safelogging:"@Safe"`
+	// The workspace to create the module in. Uses the default workspace if omitted.
+	Workspace *rids.WorkspaceRid `json:"workspace,omitempty" safelogging:"@Safe"`
 }
 
 func (o CreateModuleRequest) MarshalYAML() (interface{}, error) {
@@ -335,6 +337,7 @@ func (o *LatestVersionStrategy) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A module with its metadata, the metadata of one version, and that version's function definition.
 type Module struct {
 	Metadata        ModuleMetadata          `json:"metadata"`
 	VersionMetadata ModuleVersionMetadata   `json:"versionMetadata"`
@@ -410,6 +413,7 @@ func (o *ModuleRef) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// A module's metadata with the metadata of its latest version.
 type ModuleSummary struct {
 	Metadata ModuleMetadata        `json:"metadata"`
 	Latest   ModuleVersionMetadata `json:"latest"`
@@ -623,10 +627,12 @@ func (o *RequestModuleRidRef) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 // safelogging:@Unsafe
 type SearchModulesRequest struct {
-	Query         SearchModulesQuery        `json:"query"`
-	Sort          *SearchModulesSortOptions `json:"sort,omitempty"`
-	PageSize      int                       `json:"pageSize"`
-	NextPageToken *api2.Token               `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
+	Query SearchModulesQuery `json:"query"`
+	// Defaults to name, descending.
+	Sort *SearchModulesSortOptions `json:"sort,omitempty"`
+	// At most 1000.
+	PageSize      int         `json:"pageSize"`
+	NextPageToken *api2.Token `json:"nextPageToken,omitempty" safelogging:"@Unsafe"`
 	// Default search status is NOT_ARCHIVED if none are provided. Allows for including archived modules in search.
 	ArchivedStatuses *[]api2.ArchivedStatus `json:"archivedStatuses,omitempty"`
 }
@@ -712,10 +718,7 @@ func (o *SearchModulesSortOptions) UnmarshalYAML(unmarshal func(interface{}) err
 }
 
 type UdfArtifact struct {
-	/*
-	   Content-addressed key for the compiled artifacts, derived from the compiler image, target ABI, UDF
-	   kind, and source. It is also the ClickHouse function name the UDF registers under.
-	*/
+	// Content-addressed key for the compiled artifacts, derived from the UDF kind and source.
 	CompileKey     string        `json:"compileKey"`
 	WasmHandle     api3.S3Handle `json:"wasmHandle"`
 	ManifestHandle api3.S3Handle `json:"manifestHandle"`

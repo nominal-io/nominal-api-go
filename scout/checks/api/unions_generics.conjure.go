@@ -361,10 +361,15 @@ func (u *ChecklistSearchQueryWithT[T]) Accept(ctx context.Context, v ChecklistSe
 			return result, fmt.Errorf("field \"isArchived\" is required")
 		}
 		return v.VisitIsArchived(ctx, *u.isArchived)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return result, fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return v.VisitAssetTypes(ctx, *u.assetTypes)
 	}
 }
 
-func (u *ChecklistSearchQueryWithT[T]) AcceptFuncs(andFunc func([]ChecklistSearchQuery) (T, error), orFunc func([]ChecklistSearchQuery) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api1.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api1.Property) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), authorRidFunc func(api.UserRid) (T, error), assigneeRidFunc func(api.UserRid) (T, error), isPublishedFunc func(bool) (T, error), notFunc func(ChecklistSearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), authorIsCurrentUserFunc func(bool) (T, error), authorRidsFunc func([]api.UserRid) (T, error), isArchivedFunc func(bool) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *ChecklistSearchQueryWithT[T]) AcceptFuncs(andFunc func([]ChecklistSearchQuery) (T, error), orFunc func([]ChecklistSearchQuery) (T, error), searchTextFunc func(string) (T, error), labelFunc func(api1.Label) (T, error), labelsFunc func(api.LabelsFilter) (T, error), propertyFunc func(api1.Property) (T, error), propertiesFunc func(api.PropertiesFilter) (T, error), authorRidFunc func(api.UserRid) (T, error), assigneeRidFunc func(api.UserRid) (T, error), isPublishedFunc func(bool) (T, error), notFunc func(ChecklistSearchQuery) (T, error), workspaceFunc func(rids.WorkspaceRid) (T, error), authorIsCurrentUserFunc func(bool) (T, error), authorRidsFunc func([]api.UserRid) (T, error), isArchivedFunc func(bool) (T, error), assetTypesFunc func([]api.TypeRid) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -447,6 +452,11 @@ func (u *ChecklistSearchQueryWithT[T]) AcceptFuncs(andFunc func([]ChecklistSearc
 			return result, fmt.Errorf("field \"isArchived\" is required")
 		}
 		return isArchivedFunc(*u.isArchived)
+	case "assetTypes":
+		if u.assetTypes == nil {
+			return result, fmt.Errorf("field \"assetTypes\" is required")
+		}
+		return assetTypesFunc(*u.assetTypes)
 	}
 }
 
@@ -525,6 +535,11 @@ func (u *ChecklistSearchQueryWithT[T]) IsArchivedNoopSuccess(bool) (T, error) {
 	return result, nil
 }
 
+func (u *ChecklistSearchQueryWithT[T]) AssetTypesNoopSuccess([]api.TypeRid) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *ChecklistSearchQueryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -546,6 +561,7 @@ type ChecklistSearchQueryVisitorWithT[T any] interface {
 	VisitAuthorIsCurrentUser(ctx context.Context, v bool) (T, error)
 	VisitAuthorRids(ctx context.Context, v []api.UserRid) (T, error)
 	VisitIsArchived(ctx context.Context, v bool) (T, error)
+	VisitAssetTypes(ctx context.Context, v []api.TypeRid) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -807,10 +823,20 @@ func (u *JobSpecWithT[T]) Accept(ctx context.Context, v JobSpecVisitorWithT[T]) 
 			return result, fmt.Errorf("field \"sqlExport\" is required")
 		}
 		return v.VisitSqlExport(ctx, *u.sqlExport)
+	case "computeExport":
+		if u.computeExport == nil {
+			return result, fmt.Errorf("field \"computeExport\" is required")
+		}
+		return v.VisitComputeExport(ctx, *u.computeExport)
+	case "zipExport":
+		if u.zipExport == nil {
+			return result, fmt.Errorf("field \"zipExport\" is required")
+		}
+		return v.VisitZipExport(ctx, *u.zipExport)
 	}
 }
 
-func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error), computeFunc func(ComputeJobSpec) (T, error), compileUdfJobSpecFunc func(UdfCompilationJobSpec) (T, error), sqlExportFunc func(SqlExportJobSpec) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error), computeFunc func(ComputeJobSpec) (T, error), compileUdfJobSpecFunc func(UdfCompilationJobSpec) (T, error), sqlExportFunc func(SqlExportJobSpec) (T, error), computeExportFunc func(ComputeExportJobSpec) (T, error), zipExportFunc func(ZipExportJobSpec) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -838,6 +864,16 @@ func (u *JobSpecWithT[T]) AcceptFuncs(checkV2Func func(CheckJobSpec) (T, error),
 			return result, fmt.Errorf("field \"sqlExport\" is required")
 		}
 		return sqlExportFunc(*u.sqlExport)
+	case "computeExport":
+		if u.computeExport == nil {
+			return result, fmt.Errorf("field \"computeExport\" is required")
+		}
+		return computeExportFunc(*u.computeExport)
+	case "zipExport":
+		if u.zipExport == nil {
+			return result, fmt.Errorf("field \"zipExport\" is required")
+		}
+		return zipExportFunc(*u.zipExport)
 	}
 }
 
@@ -861,6 +897,16 @@ func (u *JobSpecWithT[T]) SqlExportNoopSuccess(SqlExportJobSpec) (T, error) {
 	return result, nil
 }
 
+func (u *JobSpecWithT[T]) ComputeExportNoopSuccess(ComputeExportJobSpec) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *JobSpecWithT[T]) ZipExportNoopSuccess(ZipExportJobSpec) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *JobSpecWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -871,6 +917,8 @@ type JobSpecVisitorWithT[T any] interface {
 	VisitCompute(ctx context.Context, v ComputeJobSpec) (T, error)
 	VisitCompileUdfJobSpec(ctx context.Context, v UdfCompilationJobSpec) (T, error)
 	VisitSqlExport(ctx context.Context, v SqlExportJobSpec) (T, error)
+	VisitComputeExport(ctx context.Context, v ComputeExportJobSpec) (T, error)
+	VisitZipExport(ctx context.Context, v ZipExportJobSpec) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 
@@ -920,6 +968,55 @@ func (u *PropertyTypeWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 
 type PropertyTypeVisitorWithT[T any] interface {
 	VisitNumeric(ctx context.Context, v NumericPropertyType) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type SearchChecklistEntryWithT[T any] SearchChecklistEntry
+
+func (u *SearchChecklistEntryWithT[T]) Accept(ctx context.Context, v SearchChecklistEntryVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "check":
+		if u.check == nil {
+			return result, fmt.Errorf("field \"check\" is required")
+		}
+		return v.VisitCheck(ctx, *u.check)
+	}
+}
+
+func (u *SearchChecklistEntryWithT[T]) AcceptFuncs(checkFunc func(SearchCheck) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "check":
+		if u.check == nil {
+			return result, fmt.Errorf("field \"check\" is required")
+		}
+		return checkFunc(*u.check)
+	}
+}
+
+func (u *SearchChecklistEntryWithT[T]) CheckNoopSuccess(SearchCheck) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *SearchChecklistEntryWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type SearchChecklistEntryVisitorWithT[T any] interface {
+	VisitCheck(ctx context.Context, v SearchCheck) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

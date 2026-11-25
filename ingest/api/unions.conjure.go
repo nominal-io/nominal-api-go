@@ -1955,24 +1955,26 @@ type IngestJobSearchFilter struct {
 	not                      *IngestJobSearchFilter
 	workspace                *rids.WorkspaceRid
 	triggeringIngestRuleRids *[]rids.DriveIngestRuleRid
+	fileRevisionRids         *[]rids.DriveFileRevisionRid
 }
 
 type ingestJobSearchFilterDeserializer struct {
-	Type                     string                     `json:"type"`
-	DatasetRids              *[]rids.DatasetRid         `json:"datasetRids"`
-	CreatedByRids            *[]api.UserRid             `json:"createdByRids"`
-	Statuses                 *[]IngestJobStatus         `json:"statuses"`
-	SearchText               *string                    `json:"searchText"`
-	StartTimeRange           *IngestJobStartTimeRange   `json:"startTimeRange"`
-	And                      *[]IngestJobSearchFilter   `json:"and"`
-	Or                       *[]IngestJobSearchFilter   `json:"or"`
-	Not                      *IngestJobSearchFilter     `json:"not"`
-	Workspace                *rids.WorkspaceRid         `json:"workspace"`
-	TriggeringIngestRuleRids *[]rids.DriveIngestRuleRid `json:"triggeringIngestRuleRids"`
+	Type                     string                       `json:"type"`
+	DatasetRids              *[]rids.DatasetRid           `json:"datasetRids"`
+	CreatedByRids            *[]api.UserRid               `json:"createdByRids"`
+	Statuses                 *[]IngestJobStatus           `json:"statuses"`
+	SearchText               *string                      `json:"searchText"`
+	StartTimeRange           *IngestJobStartTimeRange     `json:"startTimeRange"`
+	And                      *[]IngestJobSearchFilter     `json:"and"`
+	Or                       *[]IngestJobSearchFilter     `json:"or"`
+	Not                      *IngestJobSearchFilter       `json:"not"`
+	Workspace                *rids.WorkspaceRid           `json:"workspace"`
+	TriggeringIngestRuleRids *[]rids.DriveIngestRuleRid   `json:"triggeringIngestRuleRids"`
+	FileRevisionRids         *[]rids.DriveFileRevisionRid `json:"fileRevisionRids"`
 }
 
 func (u *ingestJobSearchFilterDeserializer) toStruct() IngestJobSearchFilter {
-	return IngestJobSearchFilter{typ: u.Type, datasetRids: u.DatasetRids, createdByRids: u.CreatedByRids, statuses: u.Statuses, searchText: u.SearchText, startTimeRange: u.StartTimeRange, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, triggeringIngestRuleRids: u.TriggeringIngestRuleRids}
+	return IngestJobSearchFilter{typ: u.Type, datasetRids: u.DatasetRids, createdByRids: u.CreatedByRids, statuses: u.Statuses, searchText: u.SearchText, startTimeRange: u.StartTimeRange, and: u.And, or: u.Or, not: u.Not, workspace: u.Workspace, triggeringIngestRuleRids: u.TriggeringIngestRuleRids, fileRevisionRids: u.FileRevisionRids}
 }
 
 func (u *IngestJobSearchFilter) toSerializer() (interface{}, error) {
@@ -2059,6 +2061,14 @@ func (u *IngestJobSearchFilter) toSerializer() (interface{}, error) {
 			Type                     string                    `json:"type"`
 			TriggeringIngestRuleRids []rids.DriveIngestRuleRid `json:"triggeringIngestRuleRids"`
 		}{Type: "triggeringIngestRuleRids", TriggeringIngestRuleRids: *u.triggeringIngestRuleRids}, nil
+	case "fileRevisionRids":
+		if u.fileRevisionRids == nil {
+			return nil, fmt.Errorf("field \"fileRevisionRids\" is required")
+		}
+		return struct {
+			Type             string                      `json:"type"`
+			FileRevisionRids []rids.DriveFileRevisionRid `json:"fileRevisionRids"`
+		}{Type: "fileRevisionRids", FileRevisionRids: *u.fileRevisionRids}, nil
 	}
 }
 
@@ -2117,6 +2127,10 @@ func (u *IngestJobSearchFilter) UnmarshalJSON(data []byte) error {
 		if u.triggeringIngestRuleRids == nil {
 			return fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
 		}
+	case "fileRevisionRids":
+		if u.fileRevisionRids == nil {
+			return fmt.Errorf("field \"fileRevisionRids\" is required")
+		}
 	}
 	return nil
 }
@@ -2137,7 +2151,7 @@ func (u *IngestJobSearchFilter) UnmarshalYAML(unmarshal func(interface{}) error)
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *IngestJobSearchFilter) AcceptFuncs(datasetRidsFunc func([]rids.DatasetRid) error, createdByRidsFunc func([]api.UserRid) error, statusesFunc func([]IngestJobStatus) error, searchTextFunc func(string) error, startTimeRangeFunc func(IngestJobStartTimeRange) error, andFunc func([]IngestJobSearchFilter) error, orFunc func([]IngestJobSearchFilter) error, notFunc func(IngestJobSearchFilter) error, workspaceFunc func(rids.WorkspaceRid) error, triggeringIngestRuleRidsFunc func([]rids.DriveIngestRuleRid) error, unknownFunc func(string) error) error {
+func (u *IngestJobSearchFilter) AcceptFuncs(datasetRidsFunc func([]rids.DatasetRid) error, createdByRidsFunc func([]api.UserRid) error, statusesFunc func([]IngestJobStatus) error, searchTextFunc func(string) error, startTimeRangeFunc func(IngestJobStartTimeRange) error, andFunc func([]IngestJobSearchFilter) error, orFunc func([]IngestJobSearchFilter) error, notFunc func(IngestJobSearchFilter) error, workspaceFunc func(rids.WorkspaceRid) error, triggeringIngestRuleRidsFunc func([]rids.DriveIngestRuleRid) error, fileRevisionRidsFunc func([]rids.DriveFileRevisionRid) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -2194,6 +2208,11 @@ func (u *IngestJobSearchFilter) AcceptFuncs(datasetRidsFunc func([]rids.DatasetR
 			return fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
 		}
 		return triggeringIngestRuleRidsFunc(*u.triggeringIngestRuleRids)
+	case "fileRevisionRids":
+		if u.fileRevisionRids == nil {
+			return fmt.Errorf("field \"fileRevisionRids\" is required")
+		}
+		return fileRevisionRidsFunc(*u.fileRevisionRids)
 	}
 }
 
@@ -2234,6 +2253,10 @@ func (u *IngestJobSearchFilter) WorkspaceNoopSuccess(_ rids.WorkspaceRid) error 
 }
 
 func (u *IngestJobSearchFilter) TriggeringIngestRuleRidsNoopSuccess(_ []rids.DriveIngestRuleRid) error {
+	return nil
+}
+
+func (u *IngestJobSearchFilter) FileRevisionRidsNoopSuccess(_ []rids.DriveFileRevisionRid) error {
 	return nil
 }
 
@@ -2298,6 +2321,11 @@ func (u *IngestJobSearchFilter) Accept(v IngestJobSearchFilterVisitor) error {
 			return fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
 		}
 		return v.VisitTriggeringIngestRuleRids(*u.triggeringIngestRuleRids)
+	case "fileRevisionRids":
+		if u.fileRevisionRids == nil {
+			return fmt.Errorf("field \"fileRevisionRids\" is required")
+		}
+		return v.VisitFileRevisionRids(*u.fileRevisionRids)
 	}
 }
 
@@ -2312,6 +2340,7 @@ type IngestJobSearchFilterVisitor interface {
 	VisitNot(v IngestJobSearchFilter) error
 	VisitWorkspace(v rids.WorkspaceRid) error
 	VisitTriggeringIngestRuleRids(v []rids.DriveIngestRuleRid) error
+	VisitFileRevisionRids(v []rids.DriveFileRevisionRid) error
 	VisitUnknown(typeName string) error
 }
 
@@ -2372,6 +2401,11 @@ func (u *IngestJobSearchFilter) AcceptWithContext(ctx context.Context, v IngestJ
 			return fmt.Errorf("field \"triggeringIngestRuleRids\" is required")
 		}
 		return v.VisitTriggeringIngestRuleRidsWithContext(ctx, *u.triggeringIngestRuleRids)
+	case "fileRevisionRids":
+		if u.fileRevisionRids == nil {
+			return fmt.Errorf("field \"fileRevisionRids\" is required")
+		}
+		return v.VisitFileRevisionRidsWithContext(ctx, *u.fileRevisionRids)
 	}
 }
 
@@ -2386,6 +2420,7 @@ type IngestJobSearchFilterVisitorWithContext interface {
 	VisitNotWithContext(ctx context.Context, v IngestJobSearchFilter) error
 	VisitWorkspaceWithContext(ctx context.Context, v rids.WorkspaceRid) error
 	VisitTriggeringIngestRuleRidsWithContext(ctx context.Context, v []rids.DriveIngestRuleRid) error
+	VisitFileRevisionRidsWithContext(ctx context.Context, v []rids.DriveFileRevisionRid) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -2427,6 +2462,10 @@ func NewIngestJobSearchFilterFromWorkspace(v rids.WorkspaceRid) IngestJobSearchF
 
 func NewIngestJobSearchFilterFromTriggeringIngestRuleRids(v []rids.DriveIngestRuleRid) IngestJobSearchFilter {
 	return IngestJobSearchFilter{typ: "triggeringIngestRuleRids", triggeringIngestRuleRids: &v}
+}
+
+func NewIngestJobSearchFilterFromFileRevisionRids(v []rids.DriveFileRevisionRid) IngestJobSearchFilter {
+	return IngestJobSearchFilter{typ: "fileRevisionRids", fileRevisionRids: &v}
 }
 
 type IngestOptions struct {

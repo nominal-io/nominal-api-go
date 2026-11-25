@@ -67,8 +67,8 @@ func (o *AllRunsPropertiesAndLabelsResponse) UnmarshalYAML(unmarshal func(interf
 type ArchiveRunsRequest struct {
 	Rids []RunRid `json:"rids" safelogging:"@Safe"`
 	/*
-	   If true, all workbooks that are linked to the runs will be archived as well.
-	   Defaults to false.
+	   If true, the workbooks linked to the runs are archived as well, except drafts, workbooks the caller cannot
+	   edit, and workbooks outside the workspaces the caller can view. Defaults to false.
 	*/
 	IncludeLinkedWorkbooks *bool `json:"includeLinkedWorkbooks,omitempty"`
 }
@@ -183,9 +183,9 @@ type BatchEditRunMetadataResponse struct {
 	// RIDs for runs that were modified by the batch edit.
 	ModifiedRunRids []RunRid `json:"modifiedRunRids" safelogging:"@Safe"`
 	/*
-	   RIDs for runs that matched the source filter but already had the target property key
-	   and were skipped (SkipOnConflict behavior). Empty for operations without conflict semantics
-	   or when using OverwriteOnConflict.
+	   RIDs for runs the caller can edit that matched the source filter but were skipped because
+	   they already had the target property key or more than one source key (SkipOnConflict).
+	   Empty for operations without conflict semantics or with OverwriteOnConflict.
 	*/
 	ConflictingRunRids []RunRid `json:"conflictingRunRids" safelogging:"@Safe"`
 }
@@ -1021,8 +1021,8 @@ func (o *TimeRangeFilter) UnmarshalYAML(unmarshal func(interface{}) error) error
 type UnarchiveRunsRequest struct {
 	Rids []RunRid `json:"rids" safelogging:"@Safe"`
 	/*
-	   If true, all auto-archived workbooks that are linked to run will be unarchived as well.
-	   Defaults to false.
+	   If true, the auto-archived workbooks linked to the runs are unarchived as well, except drafts, workbooks
+	   the caller cannot edit, and workbooks outside the workspaces the caller can view. Defaults to false.
 	*/
 	IncludeLinkedWorkbooks *bool `json:"includeLinkedWorkbooks,omitempty"`
 }

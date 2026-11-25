@@ -1041,16 +1041,18 @@ type HmiObject struct {
 	typ        string
 	widget     *HmiWidget
 	connection *CanvasConnection
+	section    *HmiSection
 }
 
 type hmiObjectDeserializer struct {
 	Type       string            `json:"type"`
 	Widget     *HmiWidget        `json:"widget"`
 	Connection *CanvasConnection `json:"connection"`
+	Section    *HmiSection       `json:"section"`
 }
 
 func (u *hmiObjectDeserializer) toStruct() HmiObject {
-	return HmiObject{typ: u.Type, widget: u.Widget, connection: u.Connection}
+	return HmiObject{typ: u.Type, widget: u.Widget, connection: u.Connection, section: u.Section}
 }
 
 func (u *HmiObject) toSerializer() (interface{}, error) {
@@ -1073,6 +1075,14 @@ func (u *HmiObject) toSerializer() (interface{}, error) {
 			Type       string           `json:"type"`
 			Connection CanvasConnection `json:"connection"`
 		}{Type: "connection", Connection: *u.connection}, nil
+	case "section":
+		if u.section == nil {
+			return nil, fmt.Errorf("field \"section\" is required")
+		}
+		return struct {
+			Type    string     `json:"type"`
+			Section HmiSection `json:"section"`
+		}{Type: "section", Section: *u.section}, nil
 	}
 }
 
@@ -1099,6 +1109,10 @@ func (u *HmiObject) UnmarshalJSON(data []byte) error {
 		if u.connection == nil {
 			return fmt.Errorf("field \"connection\" is required")
 		}
+	case "section":
+		if u.section == nil {
+			return fmt.Errorf("field \"section\" is required")
+		}
 	}
 	return nil
 }
@@ -1119,7 +1133,7 @@ func (u *HmiObject) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *HmiObject) AcceptFuncs(widgetFunc func(HmiWidget) error, connectionFunc func(CanvasConnection) error, unknownFunc func(string) error) error {
+func (u *HmiObject) AcceptFuncs(widgetFunc func(HmiWidget) error, connectionFunc func(CanvasConnection) error, sectionFunc func(HmiSection) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -1136,6 +1150,11 @@ func (u *HmiObject) AcceptFuncs(widgetFunc func(HmiWidget) error, connectionFunc
 			return fmt.Errorf("field \"connection\" is required")
 		}
 		return connectionFunc(*u.connection)
+	case "section":
+		if u.section == nil {
+			return fmt.Errorf("field \"section\" is required")
+		}
+		return sectionFunc(*u.section)
 	}
 }
 
@@ -1144,6 +1163,10 @@ func (u *HmiObject) WidgetNoopSuccess(_ HmiWidget) error {
 }
 
 func (u *HmiObject) ConnectionNoopSuccess(_ CanvasConnection) error {
+	return nil
+}
+
+func (u *HmiObject) SectionNoopSuccess(_ HmiSection) error {
 	return nil
 }
 
@@ -1168,12 +1191,18 @@ func (u *HmiObject) Accept(v HmiObjectVisitor) error {
 			return fmt.Errorf("field \"connection\" is required")
 		}
 		return v.VisitConnection(*u.connection)
+	case "section":
+		if u.section == nil {
+			return fmt.Errorf("field \"section\" is required")
+		}
+		return v.VisitSection(*u.section)
 	}
 }
 
 type HmiObjectVisitor interface {
 	VisitWidget(v HmiWidget) error
 	VisitConnection(v CanvasConnection) error
+	VisitSection(v HmiSection) error
 	VisitUnknown(typeName string) error
 }
 
@@ -1194,12 +1223,18 @@ func (u *HmiObject) AcceptWithContext(ctx context.Context, v HmiObjectVisitorWit
 			return fmt.Errorf("field \"connection\" is required")
 		}
 		return v.VisitConnectionWithContext(ctx, *u.connection)
+	case "section":
+		if u.section == nil {
+			return fmt.Errorf("field \"section\" is required")
+		}
+		return v.VisitSectionWithContext(ctx, *u.section)
 	}
 }
 
 type HmiObjectVisitorWithContext interface {
 	VisitWidgetWithContext(ctx context.Context, v HmiWidget) error
 	VisitConnectionWithContext(ctx context.Context, v CanvasConnection) error
+	VisitSectionWithContext(ctx context.Context, v HmiSection) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -1209,6 +1244,145 @@ func NewHmiObjectFromWidget(v HmiWidget) HmiObject {
 
 func NewHmiObjectFromConnection(v CanvasConnection) HmiObject {
 	return HmiObject{typ: "connection", connection: &v}
+}
+
+func NewHmiObjectFromSection(v HmiSection) HmiObject {
+	return HmiObject{typ: "section", section: &v}
+}
+
+type HmiSection struct {
+	typ string
+	v1  *HmiSectionV1
+}
+
+type hmiSectionDeserializer struct {
+	Type string        `json:"type"`
+	V1   *HmiSectionV1 `json:"v1"`
+}
+
+func (u *hmiSectionDeserializer) toStruct() HmiSection {
+	return HmiSection{typ: u.Type, v1: u.V1}
+}
+
+func (u *HmiSection) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return nil, fmt.Errorf("field \"v1\" is required")
+		}
+		return struct {
+			Type string       `json:"type"`
+			V1   HmiSectionV1 `json:"v1"`
+		}{Type: "v1", V1: *u.v1}, nil
+	}
+}
+
+func (u HmiSection) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *HmiSection) UnmarshalJSON(data []byte) error {
+	var deser hmiSectionDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+	}
+	return nil
+}
+
+func (u HmiSection) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *HmiSection) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *HmiSection) AcceptFuncs(v1Func func(HmiSectionV1) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in HmiSection type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *HmiSection) V1NoopSuccess(_ HmiSectionV1) error {
+	return nil
+}
+
+func (u *HmiSection) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *HmiSection) Accept(v HmiSectionVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(*u.v1)
+	}
+}
+
+type HmiSectionVisitor interface {
+	VisitV1(v HmiSectionV1) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *HmiSection) AcceptWithContext(ctx context.Context, v HmiSectionVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1WithContext(ctx, *u.v1)
+	}
+}
+
+type HmiSectionVisitorWithContext interface {
+	VisitV1WithContext(ctx context.Context, v HmiSectionV1) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewHmiSectionFromV1(v HmiSectionV1) HmiSection {
+	return HmiSection{typ: "v1", v1: &v}
 }
 
 type Panel struct {

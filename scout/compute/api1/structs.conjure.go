@@ -3110,6 +3110,54 @@ func (o *FunctionVariables) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Computes the great-circle distance in meters between two positions pointwise, using the haversine
+formula on a sphere of the Earth's mean radius (6,371,008.8 m). Inputs align like other multi-input
+arithmetic.
+*/
+type GeoDistance struct {
+	From GeoPositionSeries `json:"from"`
+	To   GeoPositionSeries `json:"to"`
+}
+
+func (o GeoDistance) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeoDistance) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A position on the Earth as latitude and longitude series, in degrees.
+type GeoPositionSeries struct {
+	Latitude  NumericSeries `json:"latitude"`
+	Longitude NumericSeries `json:"longitude"`
+}
+
+func (o GeoPositionSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *GeoPositionSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Compares two numeric series point-wise, producing true where left >= right and false otherwise.
 type GreaterThanOrEqualToSeries struct {
 	Left  NumericSeries `json:"left"`
@@ -3166,8 +3214,9 @@ type GroupByAggregationBuilder struct {
 	Tags api1.GroupByTags `json:"tags"`
 	/*
 	   Selects how timestamps participate in the grouping key: `GroupByTimestamp.Current()` groups on
-	   existing timestamps, and
-	   `GroupByTimestamp.Every(duration)` buckets points into fixed-size, epoch-aligned tumbling windows.
+	   existing timestamps,
+	   `GroupByTimestamp.Every(duration)` buckets points into fixed-size, epoch-aligned tumbling windows,
+	   and `GroupByTimestamp.Window()` reduces the whole query window to one point.
 	*/
 	Timestamp api1.GroupByTimestamp `json:"timestamp"`
 	/*
@@ -5536,6 +5585,49 @@ func (o *RefpropSeriesV2) UnmarshalYAML(unmarshal func(interface{}) error) error
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Matches a resource when any of its types is in types. Currently only supported for assets.
+// safelogging:@Safe
+type ResourceTypesFilter struct {
+	Types []api2.TypeRid `json:"types" safelogging:"@Safe"`
+}
+
+func (o ResourceTypesFilter) MarshalJSON() ([]byte, error) {
+	if o.Types == nil {
+		o.Types = make([]api2.TypeRid, 0)
+	}
+	type _tmpResourceTypesFilter ResourceTypesFilter
+	return safejson.Marshal(_tmpResourceTypesFilter(o))
+}
+
+func (o *ResourceTypesFilter) UnmarshalJSON(data []byte) error {
+	type _tmpResourceTypesFilter ResourceTypesFilter
+	var rawResourceTypesFilter _tmpResourceTypesFilter
+	if err := safejson.Unmarshal(data, &rawResourceTypesFilter); err != nil {
+		return err
+	}
+	if rawResourceTypesFilter.Types == nil {
+		rawResourceTypesFilter.Types = make([]api2.TypeRid, 0)
+	}
+	*o = ResourceTypesFilter(rawResourceTypesFilter)
+	return nil
+}
+
+func (o ResourceTypesFilter) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ResourceTypesFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // DEPRECATED. Use `numericAggregation` with `aggregation.RollingTimeAggregationBuilder` instead.
 type RollingOperationSeries struct {
 	Input    NumericSeries                   `json:"input"`
@@ -5800,6 +5892,36 @@ func (o SearchDataset) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SearchDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+Outputs each run's duration, from its start to its end, as a constant per run backing `dataset`. The
+constant carries the run's tags but not ASSET_RID or DATA_SCOPE, so it aligns with every series of that
+run, including pairByTag output, e.g. to compute the fraction of a run spent in a condition. The duration covers the whole run, not just the part inside the query window.
+Runs without an end time produce no output, and it is an error if no run backing `dataset` has one.
+Inside a `WithSeriesDataset` definition, `dataset` may be omitted to use that node's wrapping input; it is
+required everywhere else.
+*/
+type SelectEntityDurationSeries struct {
+	Dataset *Dataset `json:"dataset,omitempty"`
+	// The unit of the output values. Defaults to seconds.
+	TimeUnit *api.TimeUnit `json:"timeUnit,omitempty"`
+}
+
+func (o SelectEntityDurationSeries) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *SelectEntityDurationSeries) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

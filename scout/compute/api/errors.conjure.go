@@ -11857,6 +11857,161 @@ func (e *TooManyCategories) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type tooManyCombinedReadWindows struct {
+	WindowCount    int    `json:"windowCount"`
+	MaxWindowCount int    `json:"maxWindowCount"`
+	Message        string `json:"message"`
+}
+
+func (o tooManyCombinedReadWindows) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *tooManyCombinedReadWindows) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// NewTooManyCombinedReadWindows returns new instance of TooManyCombinedReadWindows error.
+func NewTooManyCombinedReadWindows(windowCountArg int, maxWindowCountArg int, messageArg string) *TooManyCombinedReadWindows {
+	return &TooManyCombinedReadWindows{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), tooManyCombinedReadWindows: tooManyCombinedReadWindows{WindowCount: windowCountArg, MaxWindowCount: maxWindowCountArg, Message: messageArg}}
+}
+
+// WrapWithTooManyCombinedReadWindows returns new instance of TooManyCombinedReadWindows error wrapping an existing error.
+func WrapWithTooManyCombinedReadWindows(err error, windowCountArg int, maxWindowCountArg int, messageArg string) *TooManyCombinedReadWindows {
+	return &TooManyCombinedReadWindows{errorInstanceID: uuid.NewUUID(), stack: werror.NewStackTrace(), cause: err, tooManyCombinedReadWindows: tooManyCombinedReadWindows{WindowCount: windowCountArg, MaxWindowCount: maxWindowCountArg, Message: messageArg}}
+}
+
+// TooManyCombinedReadWindows is an error type.
+/*
+Query exceeds limit of disjoint time windows after merging overlapping or adjacent windows.
+Narrow the time range or select fewer runs.
+*/
+type TooManyCombinedReadWindows struct {
+	errorInstanceID uuid.UUID
+	tooManyCombinedReadWindows
+	cause error
+	stack werror.StackTrace
+}
+
+// IsTooManyCombinedReadWindows returns true if err is an instance of TooManyCombinedReadWindows.
+func IsTooManyCombinedReadWindows(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := errors.GetConjureError(err).(*TooManyCombinedReadWindows)
+	return ok
+}
+
+func (e *TooManyCombinedReadWindows) Error() string {
+	return fmt.Sprintf("INVALID_ARGUMENT Compute:TooManyCombinedReadWindows (%s)", e.errorInstanceID)
+}
+
+// Cause returns the underlying cause of the error, or nil if none.
+// Note that cause is not serialized and sent over the wire.
+func (e *TooManyCombinedReadWindows) Cause() error {
+	return e.cause
+}
+
+// StackTrace returns the StackTrace for the error, or nil if none.
+// Note that stack traces are not serialized and sent over the wire.
+func (e *TooManyCombinedReadWindows) StackTrace() werror.StackTrace {
+	return e.stack
+}
+
+// Message returns the message body for the error.
+func (e *TooManyCombinedReadWindows) Message() string {
+	return "INVALID_ARGUMENT Compute:TooManyCombinedReadWindows"
+}
+
+// Format implements fmt.Formatter, a requirement of werror.Werror.
+func (e *TooManyCombinedReadWindows) Format(state fmt.State, verb rune) {
+	werror.Format(e, e.safeParams(), state, verb)
+}
+
+// Code returns an enum describing error category.
+func (e *TooManyCombinedReadWindows) Code() errors.ErrorCode {
+	return errors.InvalidArgument
+}
+
+// Name returns an error name identifying error type.
+func (e *TooManyCombinedReadWindows) Name() string {
+	return "Compute:TooManyCombinedReadWindows"
+}
+
+// InstanceID returns unique identifier of this particular error instance.
+func (e *TooManyCombinedReadWindows) InstanceID() uuid.UUID {
+	return e.errorInstanceID
+}
+
+// Parameters returns a set of named parameters detailing this particular error instance.
+func (e *TooManyCombinedReadWindows) Parameters() map[string]interface{} {
+	return map[string]interface{}{"windowCount": e.WindowCount, "maxWindowCount": e.MaxWindowCount, "message": e.Message}
+}
+
+// safeParams returns a set of named safe parameters detailing this particular error instance.
+func (e *TooManyCombinedReadWindows) safeParams() map[string]interface{} {
+	return map[string]interface{}{"windowCount": e.WindowCount, "maxWindowCount": e.MaxWindowCount, "message": e.Message, "errorInstanceId": e.errorInstanceID, "errorName": e.Name()}
+}
+
+// SafeParams returns a set of named safe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyCombinedReadWindows) SafeParams() map[string]interface{} {
+	safeParams, _ := werror.ParamsFromError(e.cause)
+	for k, v := range e.safeParams() {
+		if _, exists := safeParams[k]; !exists {
+			safeParams[k] = v
+		}
+	}
+	return safeParams
+}
+
+// unsafeParams returns a set of named unsafe parameters detailing this particular error instance.
+func (e *TooManyCombinedReadWindows) unsafeParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+// UnsafeParams returns a set of named unsafe parameters detailing this particular error instance and
+// any underlying causes.
+func (e *TooManyCombinedReadWindows) UnsafeParams() map[string]interface{} {
+	_, unsafeParams := werror.ParamsFromError(e.cause)
+	for k, v := range e.unsafeParams() {
+		if _, exists := unsafeParams[k]; !exists {
+			unsafeParams[k] = v
+		}
+	}
+	return unsafeParams
+}
+
+func (e TooManyCombinedReadWindows) MarshalJSON() ([]byte, error) {
+	parameters, err := safejson.Marshal(e.tooManyCombinedReadWindows)
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(errors.SerializableError{ErrorCode: errors.InvalidArgument, ErrorName: "Compute:TooManyCombinedReadWindows", ErrorInstanceID: e.errorInstanceID, Parameters: json.RawMessage(parameters)})
+}
+
+func (e *TooManyCombinedReadWindows) UnmarshalJSON(data []byte) error {
+	var serializableError errors.SerializableError
+	if err := safejson.Unmarshal(data, &serializableError); err != nil {
+		return err
+	}
+	var parameters tooManyCombinedReadWindows
+	if err := safejson.Unmarshal([]byte(serializableError.Parameters), &parameters); err != nil {
+		return err
+	}
+	e.errorInstanceID = serializableError.ErrorInstanceID
+	e.tooManyCombinedReadWindows = parameters
+	return nil
+}
+
 type tooManyEvents struct{}
 
 func (o tooManyEvents) MarshalYAML() (interface{}, error) {
@@ -15099,6 +15254,7 @@ func init() {
 	conjureerrors.RegisterErrorType("Compute:TooFewInputs", reflect.TypeOf(TooFewInputs{}))
 	conjureerrors.RegisterErrorType("Compute:TooManyBuckets", reflect.TypeOf(TooManyBuckets{}))
 	conjureerrors.RegisterErrorType("Compute:TooManyCategories", reflect.TypeOf(TooManyCategories{}))
+	conjureerrors.RegisterErrorType("Compute:TooManyCombinedReadWindows", reflect.TypeOf(TooManyCombinedReadWindows{}))
 	conjureerrors.RegisterErrorType("Compute:TooManyEvents", reflect.TypeOf(TooManyEvents{}))
 	conjureerrors.RegisterErrorType("Compute:TooManyFrequencyBins", reflect.TypeOf(TooManyFrequencyBins{}))
 	conjureerrors.RegisterErrorType("Compute:TooManyLiterals", reflect.TypeOf(TooManyLiterals{}))

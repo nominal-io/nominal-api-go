@@ -18,29 +18,82 @@ This service provides operations for managing user and org profiles/settings.
 Its name is a bit of a misnomer.
 */
 type AuthenticationServiceV2Client interface {
-	// Gets the profile of the authenticated user.
+	/*
+	   Gets the profile of the authenticated user: email, display name, avatar URL, org, and creation time.
+
+	   If the user has no avatar, the avatar URL is a default avatar built from the initials of the display
+	   name. Use getUser for another user.
+	*/
 	GetMyProfile(ctx context.Context, authHeader bearertoken.Token) (UserV2, error)
-	// Updates the profile of the authenticated user.
+	/*
+	   Changes the display name of the authenticated user, the only profile field that can be edited. Returns
+	   the updated profile.
+
+	   Errors:
+	   - NOT_FOUND (Authentication:UserNotFound): the authenticated user does not exist.
+	*/
 	UpdateMyProfile(ctx context.Context, authHeader bearertoken.Token, updateMyProfileRequestArg UpdateMyProfileRequest) (UserV2, error)
-	// Gets the settings of the authenticated user.
+	/*
+	   Gets the personal settings of the authenticated user, such as default time range type, appearance,
+	   timezone, chart tooltip mode, number formats, and vim mode. Use getMyOrgSettings for org settings.
+
+	   Errors:
+	   - NOT_FOUND (Authentication:UserNotFound): the authenticated user does not exist.
+	*/
 	GetMySettings(ctx context.Context, authHeader bearertoken.Token) (UserSettings, error)
-	// Updates the settings of the authenticated user.
+	/*
+	   Replaces all personal settings of the authenticated user. Fields left out reset to defaults, such as time
+	   range type DEFAULT, appearance LIGHT, timezone LOCAL, and vim mode off. Returns the stored settings.
+
+	   If chartHoverTooltipMode is left out, it is set from the deprecated timeSeriesHoverTooltipConcise:
+	   SINGLE when true, VERBOSE when false or left out. If defaultWorkbookVisibleInSearch is left out, the org
+	   setting applies.
+	*/
 	UpdateMySettings(ctx context.Context, authHeader bearertoken.Token, userSettingsArg UserSettings) (UserSettings, error)
-	// Gets the settings of the org of the authenticated user.
+	/*
+	   Gets the settings of the authenticated user's org: default time range type and whether newly created
+	   workbooks are visible in search by default. Any member of the org can read them.
+
+	   Errors:
+	   - NOT_FOUND (Authentication:OrgNotFound): the org of the authenticated user does not exist.
+	*/
 	GetMyOrgSettings(ctx context.Context, authHeader bearertoken.Token) (OrgSettings, error)
 	/*
-	   Updates the settings of the org of the authenticated user. The caller must be an admin of their
-	   organization.
+	   Replaces the settings of the authenticated user's org. Fields left out reset to time range type DEFAULT
+	   and workbook search visibility off. Returns the stored settings. The caller must be an admin of the org.
+
+	   Errors:
+	   - PERMISSION_DENIED (Authentication:NotAuthorizedAdmin): the caller is not an org admin.
 	*/
 	UpdateMyOrgSettings(ctx context.Context, authHeader bearertoken.Token, orgSettingsArg OrgSettings) (OrgSettings, error)
-	// Searches for users by email and displayName.
+	/*
+	   Searches the members of the caller's org by email and display name, with and/or combinations of text
+	   matches. Returns a page of users sorted by display name ascending unless sortBy is set. Includes
+	   deactivated members; guests are not searched.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Authentication:SearchUsersLimitExceeded): pageSize is larger than 1000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is empty or is not a token from a
+	     previous response.
+	*/
 	SearchUsersV2(ctx context.Context, authHeader bearertoken.Token, requestArg SearchUsersRequest) (SearchUsersResponseV2, error)
 	/*
-	   Get users by RID. Returns objects for any of the requested RIDs that are members or
-	   guests of the caller's org.
+	   Gets users by RID. Returns those requested users who are members or guests of the caller's org, including
+	   deactivated ones. Other RIDs, including RIDs that are not user RIDs, are omitted without an error.
+
+	   Each returned user's rid is a requested RID as sent, so callers can match by exact RID: a user requested
+	   under two spellings of its RID (another instance, or a differently cased UUID) is returned once under each.
 	*/
 	GetUsers(ctx context.Context, authHeader bearertoken.Token, userRidsArg []UserRid) ([]UserV2, error)
-	// Gets a user by RID. Throws if the requested RID is not a member or guest of the caller's org.
+	/*
+	   Gets one user by RID, including a deactivated user. Use getUsers for many RIDs. The returned user's rid is
+	   the requested RID as sent.
+
+	   Errors:
+	   - INVALID_ARGUMENT: no user has this RID.
+	   - NOT_FOUND (Authentication:UserNotFound): the RID is not a user RID, or the user is not a member or guest
+	     of the caller's org.
+	*/
 	GetUser(ctx context.Context, authHeader bearertoken.Token, userRidArg UserRid) (UserV2, error)
 	/*
 	   Returns JWKS (JSON Web Key Set) for MediaMTX JWT verification.
@@ -344,29 +397,82 @@ This service provides operations for managing user and org profiles/settings.
 Its name is a bit of a misnomer.
 */
 type AuthenticationServiceV2ClientWithAuth interface {
-	// Gets the profile of the authenticated user.
+	/*
+	   Gets the profile of the authenticated user: email, display name, avatar URL, org, and creation time.
+
+	   If the user has no avatar, the avatar URL is a default avatar built from the initials of the display
+	   name. Use getUser for another user.
+	*/
 	GetMyProfile(ctx context.Context) (UserV2, error)
-	// Updates the profile of the authenticated user.
+	/*
+	   Changes the display name of the authenticated user, the only profile field that can be edited. Returns
+	   the updated profile.
+
+	   Errors:
+	   - NOT_FOUND (Authentication:UserNotFound): the authenticated user does not exist.
+	*/
 	UpdateMyProfile(ctx context.Context, updateMyProfileRequestArg UpdateMyProfileRequest) (UserV2, error)
-	// Gets the settings of the authenticated user.
+	/*
+	   Gets the personal settings of the authenticated user, such as default time range type, appearance,
+	   timezone, chart tooltip mode, number formats, and vim mode. Use getMyOrgSettings for org settings.
+
+	   Errors:
+	   - NOT_FOUND (Authentication:UserNotFound): the authenticated user does not exist.
+	*/
 	GetMySettings(ctx context.Context) (UserSettings, error)
-	// Updates the settings of the authenticated user.
+	/*
+	   Replaces all personal settings of the authenticated user. Fields left out reset to defaults, such as time
+	   range type DEFAULT, appearance LIGHT, timezone LOCAL, and vim mode off. Returns the stored settings.
+
+	   If chartHoverTooltipMode is left out, it is set from the deprecated timeSeriesHoverTooltipConcise:
+	   SINGLE when true, VERBOSE when false or left out. If defaultWorkbookVisibleInSearch is left out, the org
+	   setting applies.
+	*/
 	UpdateMySettings(ctx context.Context, userSettingsArg UserSettings) (UserSettings, error)
-	// Gets the settings of the org of the authenticated user.
+	/*
+	   Gets the settings of the authenticated user's org: default time range type and whether newly created
+	   workbooks are visible in search by default. Any member of the org can read them.
+
+	   Errors:
+	   - NOT_FOUND (Authentication:OrgNotFound): the org of the authenticated user does not exist.
+	*/
 	GetMyOrgSettings(ctx context.Context) (OrgSettings, error)
 	/*
-	   Updates the settings of the org of the authenticated user. The caller must be an admin of their
-	   organization.
+	   Replaces the settings of the authenticated user's org. Fields left out reset to time range type DEFAULT
+	   and workbook search visibility off. Returns the stored settings. The caller must be an admin of the org.
+
+	   Errors:
+	   - PERMISSION_DENIED (Authentication:NotAuthorizedAdmin): the caller is not an org admin.
 	*/
 	UpdateMyOrgSettings(ctx context.Context, orgSettingsArg OrgSettings) (OrgSettings, error)
-	// Searches for users by email and displayName.
+	/*
+	   Searches the members of the caller's org by email and display name, with and/or combinations of text
+	   matches. Returns a page of users sorted by display name ascending unless sortBy is set. Includes
+	   deactivated members; guests are not searched.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Authentication:SearchUsersLimitExceeded): pageSize is larger than 1000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is empty or is not a token from a
+	     previous response.
+	*/
 	SearchUsersV2(ctx context.Context, requestArg SearchUsersRequest) (SearchUsersResponseV2, error)
 	/*
-	   Get users by RID. Returns objects for any of the requested RIDs that are members or
-	   guests of the caller's org.
+	   Gets users by RID. Returns those requested users who are members or guests of the caller's org, including
+	   deactivated ones. Other RIDs, including RIDs that are not user RIDs, are omitted without an error.
+
+	   Each returned user's rid is a requested RID as sent, so callers can match by exact RID: a user requested
+	   under two spellings of its RID (another instance, or a differently cased UUID) is returned once under each.
 	*/
 	GetUsers(ctx context.Context, userRidsArg []UserRid) ([]UserV2, error)
-	// Gets a user by RID. Throws if the requested RID is not a member or guest of the caller's org.
+	/*
+	   Gets one user by RID, including a deactivated user. Use getUsers for many RIDs. The returned user's rid is
+	   the requested RID as sent.
+
+	   Errors:
+	   - INVALID_ARGUMENT: no user has this RID.
+	   - NOT_FOUND (Authentication:UserNotFound): the RID is not a user RID, or the user is not a member or guest
+	     of the caller's org.
+	*/
 	GetUser(ctx context.Context, userRidArg UserRid) (UserV2, error)
 	/*
 	   Returns JWKS (JSON Web Key Set) for MediaMTX JWT verification.

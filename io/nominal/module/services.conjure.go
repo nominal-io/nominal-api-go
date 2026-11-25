@@ -19,17 +19,101 @@ Modules define collections of compute logic that can be shared and used across d
 The Modules Service provides the API for managing these collections of functions.
 */
 type ModuleServiceClient interface {
-	// Create a new module.
+	/*
+	   Creates a module, a shared collection of compute functions, in a workspace, and starts compiling any
+	   registered user-defined function (UDF) in it. Returns the module at its first version.
+
+	   The apiName must be unused in the organization and cannot change later. The workspace is the default
+	   workspace when omitted. The caller needs permission to edit the workspace configuration.
+
+	   The naming rule: module, function, and parameter names start with a letter and use only letters, numbers,
+	   and underscores. Function names are unique in the module, and parameter names in a function. A function can
+	   call only functions of the same module, by literal name, without cycles. A registered UDF declares inputs,
+	   not parameters.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): workspace is omitted and there is no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist, or the caller cannot edit its
+	     configuration.
+	   - INVALID_ARGUMENT (Module:InvalidModuleApiName): apiName breaks the naming rule.
+	   - INVALID_ARGUMENT (Module:InvalidFunctionNames): a function name breaks the naming rule.
+	   - INVALID_ARGUMENT (Module:InvalidParameterNames): a parameter name breaks the naming rule.
+	   - CONFLICT (Module:FunctionNameConflict): two functions share a name.
+	   - CONFLICT (Module:ParameterNameConflict): two parameters of a function share a name.
+	   - INVALID_ARGUMENT (Module:InvalidNestedFunctionReferences): a function calls a function of another module.
+	   - INVALID_ARGUMENT (Module:UndefinedModuleFunctionReference): a called function is not defined in the
+	     module.
+	   - INVALID_ARGUMENT (Module:CyclicModuleFunctionDefinitions): functions call each other in a cycle.
+	   - INVALID_ARGUMENT (Module:InvalidRegisteredUdf): a registered UDF has parameters or an invalid declaration.
+	   - CONFLICT (Module:ModuleNameConflict): the organization already has a module with this apiName.
+	*/
 	CreateModule(ctx context.Context, authHeader bearertoken.Token, requestArg CreateModuleRequest) (Module, error)
-	// Update an existing module.
+	/*
+	   Replaces the title, description, and functions of a module and saves the result as a new version. Returns
+	   the module at the new version.
+
+	   The apiName cannot change. Version numbers start at 0 and increase by one with each update, and earlier
+	   versions stay available to batchGetModules by pinned version. The functions are replaced as a whole, and
+	   each registered UDF is compiled again; its status in the response is pending. The definition follows the
+	   same rules as createModule. The caller needs permission to edit the workspace configuration.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Module:InvalidFunctionNames): a function name breaks the naming rule.
+	   - INVALID_ARGUMENT (Module:InvalidParameterNames): a parameter name breaks the naming rule.
+	   - CONFLICT (Module:FunctionNameConflict): two functions share a name.
+	   - CONFLICT (Module:ParameterNameConflict): two parameters of a function share a name.
+	   - INVALID_ARGUMENT (Module:InvalidNestedFunctionReferences): a function calls a function of another module.
+	   - INVALID_ARGUMENT (Module:UndefinedModuleFunctionReference): a called function is not defined in the
+	     module.
+	   - INVALID_ARGUMENT (Module:CyclicModuleFunctionDefinitions): functions call each other in a cycle.
+	   - INVALID_ARGUMENT (Module:InvalidRegisteredUdf): a registered UDF has parameters or an invalid declaration.
+	   - NOT_FOUND (Module:ModuleRidsNotFound): the module does not exist, or the caller cannot edit its workspace.
+	*/
 	UpdateModule(ctx context.Context, authHeader bearertoken.Token, moduleRidArg api.ModuleRid, requestArg UpdateModuleRequest) (Module, error)
-	// Get a list of modules by their RIDs and version specifiers if provided.
+	/*
+	   Returns modules by RID or API name, in request order, each at a pinned version or at its latest version.
+
+	   A name reference resolves within the caller's organization. Archived modules are included. The caller needs
+	   permission to view the workspace of each module.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Module:InvalidModuleVersionString): a pinned version is not numeric.
+	   - NOT_FOUND (Module:ModulesNotFound): a reference matches no module or no such version, or the caller cannot
+	     view the module's workspace.
+	*/
 	BatchGetModules(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetModulesRequest) ([]Module, error)
-	// Search for modules.
+	/*
+	   Searches modules by text, creator, last updater, or workspace, in workspaces the caller can fully view.
+	   Returns a page of module summaries.
+
+	   Results are sorted by name, descending, unless sort is set; the name sort orders by module title. Archived
+	   modules are excluded unless archivedStatuses includes them.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is more than 1000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token this operation issued.
+	*/
 	SearchModules(ctx context.Context, authHeader bearertoken.Token, requestArg SearchModulesRequest) (SearchModulesResponse, error)
-	// Archive a set of modules.
+	/*
+	   Archives the modules with the given RIDs and returns their RIDs.
+
+	   The caller needs permission to edit the configuration of each module's workspace. Use
+	   batchUnarchiveModules to restore modules.
+
+	   Errors:
+	   - NOT_FOUND (Module:ModuleRidsNotFound): a module does not exist, or the caller cannot edit its workspace.
+	   - INTERNAL: a module is already archived.
+	*/
 	BatchArchiveModules(ctx context.Context, authHeader bearertoken.Token, requestArg BatchArchiveModulesRequest) (BatchArchiveModulesResponse, error)
-	// Unarchive a set of modules.
+	/*
+	   Restores the archived modules with the given RIDs and returns their RIDs.
+
+	   The caller needs permission to edit the configuration of each module's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Module:ModuleRidsNotFound): a module does not exist, or the caller cannot edit its workspace.
+	   - INTERNAL: a module is not archived.
+	*/
 	BatchUnarchiveModules(ctx context.Context, authHeader bearertoken.Token, requestArg BatchUnarchiveModulesRequest) (BatchUnarchiveModulesResponse, error)
 }
 
@@ -154,17 +238,101 @@ Modules define collections of compute logic that can be shared and used across d
 The Modules Service provides the API for managing these collections of functions.
 */
 type ModuleServiceClientWithAuth interface {
-	// Create a new module.
+	/*
+	   Creates a module, a shared collection of compute functions, in a workspace, and starts compiling any
+	   registered user-defined function (UDF) in it. Returns the module at its first version.
+
+	   The apiName must be unused in the organization and cannot change later. The workspace is the default
+	   workspace when omitted. The caller needs permission to edit the workspace configuration.
+
+	   The naming rule: module, function, and parameter names start with a letter and use only letters, numbers,
+	   and underscores. Function names are unique in the module, and parameter names in a function. A function can
+	   call only functions of the same module, by literal name, without cycles. A registered UDF declares inputs,
+	   not parameters.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): workspace is omitted and there is no default workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the workspace does not exist, or the caller cannot edit its
+	     configuration.
+	   - INVALID_ARGUMENT (Module:InvalidModuleApiName): apiName breaks the naming rule.
+	   - INVALID_ARGUMENT (Module:InvalidFunctionNames): a function name breaks the naming rule.
+	   - INVALID_ARGUMENT (Module:InvalidParameterNames): a parameter name breaks the naming rule.
+	   - CONFLICT (Module:FunctionNameConflict): two functions share a name.
+	   - CONFLICT (Module:ParameterNameConflict): two parameters of a function share a name.
+	   - INVALID_ARGUMENT (Module:InvalidNestedFunctionReferences): a function calls a function of another module.
+	   - INVALID_ARGUMENT (Module:UndefinedModuleFunctionReference): a called function is not defined in the
+	     module.
+	   - INVALID_ARGUMENT (Module:CyclicModuleFunctionDefinitions): functions call each other in a cycle.
+	   - INVALID_ARGUMENT (Module:InvalidRegisteredUdf): a registered UDF has parameters or an invalid declaration.
+	   - CONFLICT (Module:ModuleNameConflict): the organization already has a module with this apiName.
+	*/
 	CreateModule(ctx context.Context, requestArg CreateModuleRequest) (Module, error)
-	// Update an existing module.
+	/*
+	   Replaces the title, description, and functions of a module and saves the result as a new version. Returns
+	   the module at the new version.
+
+	   The apiName cannot change. Version numbers start at 0 and increase by one with each update, and earlier
+	   versions stay available to batchGetModules by pinned version. The functions are replaced as a whole, and
+	   each registered UDF is compiled again; its status in the response is pending. The definition follows the
+	   same rules as createModule. The caller needs permission to edit the workspace configuration.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Module:InvalidFunctionNames): a function name breaks the naming rule.
+	   - INVALID_ARGUMENT (Module:InvalidParameterNames): a parameter name breaks the naming rule.
+	   - CONFLICT (Module:FunctionNameConflict): two functions share a name.
+	   - CONFLICT (Module:ParameterNameConflict): two parameters of a function share a name.
+	   - INVALID_ARGUMENT (Module:InvalidNestedFunctionReferences): a function calls a function of another module.
+	   - INVALID_ARGUMENT (Module:UndefinedModuleFunctionReference): a called function is not defined in the
+	     module.
+	   - INVALID_ARGUMENT (Module:CyclicModuleFunctionDefinitions): functions call each other in a cycle.
+	   - INVALID_ARGUMENT (Module:InvalidRegisteredUdf): a registered UDF has parameters or an invalid declaration.
+	   - NOT_FOUND (Module:ModuleRidsNotFound): the module does not exist, or the caller cannot edit its workspace.
+	*/
 	UpdateModule(ctx context.Context, moduleRidArg api.ModuleRid, requestArg UpdateModuleRequest) (Module, error)
-	// Get a list of modules by their RIDs and version specifiers if provided.
+	/*
+	   Returns modules by RID or API name, in request order, each at a pinned version or at its latest version.
+
+	   A name reference resolves within the caller's organization. Archived modules are included. The caller needs
+	   permission to view the workspace of each module.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Module:InvalidModuleVersionString): a pinned version is not numeric.
+	   - NOT_FOUND (Module:ModulesNotFound): a reference matches no module or no such version, or the caller cannot
+	     view the module's workspace.
+	*/
 	BatchGetModules(ctx context.Context, requestArg BatchGetModulesRequest) ([]Module, error)
-	// Search for modules.
+	/*
+	   Searches modules by text, creator, last updater, or workspace, in workspaces the caller can fully view.
+	   Returns a page of module summaries.
+
+	   Results are sorted by name, descending, unless sort is set; the name sort orders by module title. Archived
+	   modules are excluded unless archivedStatuses includes them.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is more than 1000.
+	   - INVALID_ARGUMENT (Scout:CannotDeserializeSearchToken): nextPageToken is not a token this operation issued.
+	*/
 	SearchModules(ctx context.Context, requestArg SearchModulesRequest) (SearchModulesResponse, error)
-	// Archive a set of modules.
+	/*
+	   Archives the modules with the given RIDs and returns their RIDs.
+
+	   The caller needs permission to edit the configuration of each module's workspace. Use
+	   batchUnarchiveModules to restore modules.
+
+	   Errors:
+	   - NOT_FOUND (Module:ModuleRidsNotFound): a module does not exist, or the caller cannot edit its workspace.
+	   - INTERNAL: a module is already archived.
+	*/
 	BatchArchiveModules(ctx context.Context, requestArg BatchArchiveModulesRequest) (BatchArchiveModulesResponse, error)
-	// Unarchive a set of modules.
+	/*
+	   Restores the archived modules with the given RIDs and returns their RIDs.
+
+	   The caller needs permission to edit the configuration of each module's workspace.
+
+	   Errors:
+	   - NOT_FOUND (Module:ModuleRidsNotFound): a module does not exist, or the caller cannot edit its workspace.
+	   - INTERNAL: a module is not archived.
+	*/
 	BatchUnarchiveModules(ctx context.Context, requestArg BatchUnarchiveModulesRequest) (BatchUnarchiveModulesResponse, error)
 }
 

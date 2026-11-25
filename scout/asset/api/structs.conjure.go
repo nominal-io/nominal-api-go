@@ -271,9 +271,9 @@ type BatchEditAssetMetadataResponse struct {
 	// RIDs for assets that were modified by the batch edit.
 	ModifiedAssetRids []api.AssetRid `json:"modifiedAssetRids" safelogging:"@Safe"`
 	/*
-	   RIDs for assets that matched the source filter but already had the target property key
-	   and were skipped (SkipOnConflict behavior). Empty for operations without conflict semantics
-	   or when using OverwriteOnConflict.
+	   RIDs for assets the caller can edit that matched the source filter but were skipped because
+	   they already had the target property key or more than one source key (SkipOnConflict).
+	   Empty for operations without conflict semantics or with OverwriteOnConflict.
 	*/
 	ConflictingAssetRids []api.AssetRid `json:"conflictingAssetRids" safelogging:"@Safe"`
 }

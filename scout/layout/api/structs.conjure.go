@@ -412,7 +412,8 @@ func (o *EmptyPanelV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 /*
 A diagram of widgets and the connections between them, freely placed on a canvas.
 Widget entries are keyed by the viz id of their chart in WorkbookContent.charts.
-Connection entries have no content definition.
+Connection and section entries are keyed by a fresh uuid and have no entry in
+WorkbookContent.charts.
 */
 type HmiLayout struct {
 	Id      uuid.UUID               `json:"id"`
@@ -449,6 +450,33 @@ func (o HmiLayout) MarshalYAML() (interface{}, error) {
 }
 
 func (o *HmiLayout) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A titled rectangular region on an HMI layout that groups widgets and other sections.
+Membership comes from the rects: a widget or section belongs to the smallest other
+section whose rect fully covers it, and is top level when no section covers it.
+*/
+type HmiSectionV1 struct {
+	Rect CanvasRect `json:"rect"`
+	// Display title. Absent or empty means untitled.
+	Title *string `json:"title,omitempty"`
+}
+
+func (o HmiSectionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *HmiSectionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

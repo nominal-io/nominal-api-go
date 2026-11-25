@@ -6619,16 +6619,18 @@ type GroupByTimestamp struct {
 	typ     string
 	current *api.Empty
 	every   *Duration
+	window  *api.Empty
 }
 
 type groupByTimestampDeserializer struct {
 	Type    string     `json:"type"`
 	Current *api.Empty `json:"current"`
 	Every   *Duration  `json:"every"`
+	Window  *api.Empty `json:"window"`
 }
 
 func (u *groupByTimestampDeserializer) toStruct() GroupByTimestamp {
-	return GroupByTimestamp{typ: u.Type, current: u.Current, every: u.Every}
+	return GroupByTimestamp{typ: u.Type, current: u.Current, every: u.Every, window: u.Window}
 }
 
 func (u *GroupByTimestamp) toSerializer() (interface{}, error) {
@@ -6651,6 +6653,14 @@ func (u *GroupByTimestamp) toSerializer() (interface{}, error) {
 			Type  string   `json:"type"`
 			Every Duration `json:"every"`
 		}{Type: "every", Every: *u.every}, nil
+	case "window":
+		if u.window == nil {
+			return nil, fmt.Errorf("field \"window\" is required")
+		}
+		return struct {
+			Type   string    `json:"type"`
+			Window api.Empty `json:"window"`
+		}{Type: "window", Window: *u.window}, nil
 	}
 }
 
@@ -6677,6 +6687,10 @@ func (u *GroupByTimestamp) UnmarshalJSON(data []byte) error {
 		if u.every == nil {
 			return fmt.Errorf("field \"every\" is required")
 		}
+	case "window":
+		if u.window == nil {
+			return fmt.Errorf("field \"window\" is required")
+		}
 	}
 	return nil
 }
@@ -6697,7 +6711,7 @@ func (u *GroupByTimestamp) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	return safejson.Unmarshal(jsonBytes, *&u)
 }
 
-func (u *GroupByTimestamp) AcceptFuncs(currentFunc func(api.Empty) error, everyFunc func(Duration) error, unknownFunc func(string) error) error {
+func (u *GroupByTimestamp) AcceptFuncs(currentFunc func(api.Empty) error, everyFunc func(Duration) error, windowFunc func(api.Empty) error, unknownFunc func(string) error) error {
 	switch u.typ {
 	default:
 		if u.typ == "" {
@@ -6714,6 +6728,11 @@ func (u *GroupByTimestamp) AcceptFuncs(currentFunc func(api.Empty) error, everyF
 			return fmt.Errorf("field \"every\" is required")
 		}
 		return everyFunc(*u.every)
+	case "window":
+		if u.window == nil {
+			return fmt.Errorf("field \"window\" is required")
+		}
+		return windowFunc(*u.window)
 	}
 }
 
@@ -6722,6 +6741,10 @@ func (u *GroupByTimestamp) CurrentNoopSuccess(_ api.Empty) error {
 }
 
 func (u *GroupByTimestamp) EveryNoopSuccess(_ Duration) error {
+	return nil
+}
+
+func (u *GroupByTimestamp) WindowNoopSuccess(_ api.Empty) error {
 	return nil
 }
 
@@ -6746,12 +6769,18 @@ func (u *GroupByTimestamp) Accept(v GroupByTimestampVisitor) error {
 			return fmt.Errorf("field \"every\" is required")
 		}
 		return v.VisitEvery(*u.every)
+	case "window":
+		if u.window == nil {
+			return fmt.Errorf("field \"window\" is required")
+		}
+		return v.VisitWindow(*u.window)
 	}
 }
 
 type GroupByTimestampVisitor interface {
 	VisitCurrent(v api.Empty) error
 	VisitEvery(v Duration) error
+	VisitWindow(v api.Empty) error
 	VisitUnknown(typeName string) error
 }
 
@@ -6772,12 +6801,18 @@ func (u *GroupByTimestamp) AcceptWithContext(ctx context.Context, v GroupByTimes
 			return fmt.Errorf("field \"every\" is required")
 		}
 		return v.VisitEveryWithContext(ctx, *u.every)
+	case "window":
+		if u.window == nil {
+			return fmt.Errorf("field \"window\" is required")
+		}
+		return v.VisitWindowWithContext(ctx, *u.window)
 	}
 }
 
 type GroupByTimestampVisitorWithContext interface {
 	VisitCurrentWithContext(ctx context.Context, v api.Empty) error
 	VisitEveryWithContext(ctx context.Context, v Duration) error
+	VisitWindowWithContext(ctx context.Context, v api.Empty) error
 	VisitUnknownWithContext(ctx context.Context, typeName string) error
 }
 
@@ -6787,6 +6822,10 @@ func NewGroupByTimestampFromCurrent(v api.Empty) GroupByTimestamp {
 
 func NewGroupByTimestampFromEvery(v Duration) GroupByTimestamp {
 	return GroupByTimestamp{typ: "every", every: &v}
+}
+
+func NewGroupByTimestampFromWindow(v api.Empty) GroupByTimestamp {
+	return GroupByTimestamp{typ: "window", window: &v}
 }
 
 type Grouping struct {

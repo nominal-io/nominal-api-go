@@ -2,6 +2,7 @@
 
 package module
 
+// A non-negative integer written as a string, such as "3".
 type ModuleVersion string // safelogging:@Safe
 
 type ParameterName string // safelogging:@Unsafe

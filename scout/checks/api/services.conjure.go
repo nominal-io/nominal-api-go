@@ -17,71 +17,242 @@ import (
 	werror "github.com/palantir/witchcraft-go-error"
 )
 
-/*
-The Checklist Service is responsible for managing checklists and checks.
-A checklist is a collection of checks that can be executed against a set of data sources.
-*/
+// Manages checklists and their checks. A checklist is a versioned set of checks that you apply to runs or assets.
 type ChecklistServiceClient interface {
-	// Creates a new checklist with the provided checks.
+	/*
+	   Creates a checklist, with its checks and checklist variables, in a workspace (the caller's default
+	   workspace when none is given). Returns the new checklist at its first commit.
+
+	   The caller becomes the author. The checklist is published unless isPublished is false. Each createCheck
+	   entry becomes a new check with a server-assigned RID, and generatedEventType defaults to ERROR. Blank
+	   labels and property keys are dropped, and the rest are trimmed. All checks must use the same default fill
+	   and alignment strategy. When assetTypeRids is not empty, the asset types must be in the workspace and not
+	   archived, and the checks and variables may reference only channels and properties that every asset type
+	   requires, with no inline references. The caller needs permission to edit checklists in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot edit checklists in the workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT: the checks use different default fill or alignment strategies, a checklist variable
+	     points to another checklist variable, a compute expression is over 25000 characters, or more than 10
+	     asset types are given.
+	   - NOT_FOUND (Checks:AssetTypesNotFound): an asset type is not in the workspace.
+	   - INVALID_ARGUMENT (Checks:AssetTypesArchived): an asset type is archived.
+	   - INVALID_ARGUMENT (Checks:ChannelsNotRequiredByAssetTypes, Checks:PropertiesNotRequiredByAssetTypes,
+	     Checks:InlineChannelNotAllowedWithAssetTypes, Checks:InlinePropertyNotAllowedWithAssetTypes): a check or
+	     variable references a channel or property that not every asset type requires, or references one inline.
+	*/
 	Create(ctx context.Context, authHeader bearertoken.Token, requestArg CreateChecklistRequest) (VersionedChecklist, error)
 	/*
-	   Creates a permanent commit with a commit message.
-	   Throws if the checklist or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you commit to an archived checklist.
+	   Saves the given checks and checklist variables as a new permanent commit on a checklist branch (main by
+	   default) and returns the checklist at that commit.
+
+	   They replace the previous ones: a check listed by RID keeps that RID, and each createCheck entry becomes a
+	   new check. If latestCommit is set, it must be the head of the branch. All checks must use the same default
+	   fill and alignment strategy. A commit to main also refreshes live checklist executions. Archived
+	   checklists reject commits. The caller needs permission to edit checklists in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot edit checklists
+	     in its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT (Checks:CommitToArchivedChecklist): the checklist is archived.
+	   - INVALID_ARGUMENT: the checks use different default fill or alignment strategies, a checklist variable
+	     points to another checklist variable, or a compute expression is over 25000 characters.
+	   - INVALID_ARGUMENT (Checks:ChannelsNotRequiredByAssetTypes, Checks:PropertiesNotRequiredByAssetTypes,
+	     Checks:InlineChannelNotAllowedWithAssetTypes, Checks:InlinePropertyNotAllowedWithAssetTypes): the
+	     checklist has asset types, and a check or variable references a channel or property that not every asset
+	     type requires, or references one inline.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - CONFLICT (Scout:CommitConflict): latestCommit is not the head of the branch.
 	*/
 	Commit(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, requestArg CommitChecklistRequest) (VersionedChecklist, error)
 	/*
-	   Creates a commit that may be compacted, e.g cleaned up and not exist anymore.
-	   Throws if the checklist or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you save to an archived checklist.
+	   Saves the given checks and checklist variables as a working-state commit on a checklist branch (main by
+	   default) and returns the checklist at that commit.
+
+	   A working-state commit is an automatic save that compaction may later remove; use commit for a permanent
+	   version. As in commit, the checks and variables replace the previous ones, and latestCommit, if set, must
+	   be the head of the branch. commitMessage defaults to "auto-save" when it is absent or blank. Archived
+	   checklists reject saves. The caller needs permission to edit checklists in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot edit checklists
+	     in its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT (Checks:CommitToArchivedChecklist): the checklist is archived.
+	   - INVALID_ARGUMENT: the checks use different default fill or alignment strategies, a checklist variable
+	     points to another checklist variable, a compute expression is over 25000 characters, or commitMessage is
+	     over 4096 characters.
+	   - INVALID_ARGUMENT (Checks:ChannelsNotRequiredByAssetTypes, Checks:PropertiesNotRequiredByAssetTypes,
+	     Checks:InlineChannelNotAllowedWithAssetTypes, Checks:InlinePropertyNotAllowedWithAssetTypes): the
+	     checklist has asset types, and a check or variable references a channel or property that not every asset
+	     type requires, or references one inline.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - CONFLICT (Scout:CommitConflict): latestCommit is not the head of the branch.
 	*/
 	SaveWorkingState(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, requestArg SaveChecklistRequest) (VersionedChecklist, error)
 	/*
-	   Merges the given branch to the "main" branch.
-	   Throws if the checklist or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you merge with an archived checklist.
+	   Merges a checklist branch into main, then deletes the branch. Returns the checklist at the merge commit.
+
+	   The new commit on main takes the checks and checklist variables from the head of the branch, and that head
+	   becomes a permanent commit. If latestCommitOnMain is set, it must be the head of main. The merge also
+	   refreshes live checklist executions. Archived checklists reject merges. The caller needs permission to
+	   edit checklists in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT: branchName is main.
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot edit checklists
+	     in its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT (Checks:CommitToArchivedChecklist): the checklist is archived.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - INVALID_ARGUMENT (Checks:ChannelsNotRequiredByAssetTypes, Checks:PropertiesNotRequiredByAssetTypes,
+	     Checks:InlineChannelNotAllowedWithAssetTypes, Checks:InlinePropertyNotAllowedWithAssetTypes): the branch
+	     state breaks the asset-type rules of the checklist.
+	   - CONFLICT (Scout:CommitConflict): latestCommitOnMain is not the head of main.
 	*/
 	MergeToMain(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid, requestArg MergeToMainRequest) (VersionedChecklist, error)
 	/*
-	   Updates the data source ref names for all checks within a checklist.
-	   Throws if the checklist doesn't exist.
+	   Renames data source ref names in the channel references of every check condition and checklist variable on
+	   a checklist branch (main by default), using the old-to-new map. Commits the result as "Update ref names"
+	   and returns the checklist at the new commit.
+
+	   Ref names that are not in the map stay unchanged. A check whose condition changes gets a new check RID,
+	   and the other checks keep theirs. The caller needs permission to edit checklists in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot edit checklists
+	     in its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT (Checks:CommitToArchivedChecklist): the checklist is archived.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
 	*/
 	UpdateDataSourceRefNames(ctx context.Context, authHeader bearertoken.Token, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, refNameUpdatesArg map[api2.DataSourceRefName]api2.DataSourceRefName) (VersionedChecklist, error)
-	// Updates the metadata of a checklist.
+	/*
+	   Updates the title, description, assignee, labels, properties, published state, or asset types of a
+	   checklist. Returns the updated checklist metadata.
+
+	   Omitted fields stay unchanged. Labels and properties replace the existing ones, with blank labels and
+	   property keys dropped and the rest trimmed. assetTypeRids replaces the asset types, and an empty set
+	   clears them. A new asset type must be in the workspace and not archived, and the latest commit on main may
+	   reference only channels and properties that every asset type requires, with no inline references. Creates
+	   no commit. Works on archived checklists. Live checklist executions pick up the change. The caller needs
+	   permission to edit checklists in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot edit checklists
+	     in its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT: more than 10 asset types are given.
+	   - NOT_FOUND (Checks:AssetTypesNotFound): an asset type is not in the workspace.
+	   - INVALID_ARGUMENT (Checks:AssetTypesArchived): an asset type being added is archived.
+	   - INVALID_ARGUMENT (Checks:ChannelsNotRequiredByAssetTypes, Checks:PropertiesNotRequiredByAssetTypes,
+	     Checks:InlineChannelNotAllowedWithAssetTypes, Checks:InlinePropertyNotAllowedWithAssetTypes): the latest
+	     commit on main breaks the asset-type rules.
+	*/
 	UpdateMetadata(ctx context.Context, authHeader bearertoken.Token, ridArg api.ChecklistRid, requestArg UpdateChecklistMetadataRequest) (ChecklistMetadata, error)
 	/*
-	   Specify at most one of (branch, commit).
-	   If neither is specified, branch = "main" is the default.
+	   Returns a checklist, with its metadata, checks, conditions, and checklist variables, at a branch head or a
+	   commit.
+
+	   Uses the head of main when neither branch nor commit is given. Archived checklists can be read. The caller
+	   needs permission to view the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT: both branch and commit are given.
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - NOT_FOUND (Scout:CommitNotFound): the checklist has no such commit.
 	*/
 	Get(ctx context.Context, authHeader bearertoken.Token, ridArg api.ChecklistRid, branchArg *api1.BranchName, commitArg *api1.CommitId) (VersionedChecklist, error)
-	// Returns the pinned commit for each provided checklist reference.
+	/*
+	   Returns checklists, with checks, conditions, and checklist variables, each at the commit its reference
+	   pins.
+
+	   Checklists that do not exist, that the caller cannot view, whose workspace edition does not include
+	   checklists, or whose pinned commit does not exist are omitted, not reported as errors. Use search to find
+	   checklist RIDs.
+	*/
 	BatchGet(ctx context.Context, authHeader bearertoken.Token, checklistRefsArg []PinnedChecklistRef) ([]VersionedChecklist, error)
-	// Returns the metadata for each provided checklist.
+	/*
+	   Returns the metadata of each checklist by RID: title, description, labels, properties, and archived and
+	   published state. Includes archived checklists.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a checklist does not exist or the caller cannot view it. The
+	     error names them.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	*/
 	BatchGetMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg BatchGetChecklistMetadataRequest) (BatchGetChecklistMetadataResponse, error)
 	/*
-	   Results will be the latest commit on main for each checklist.
-	   Check conditions and checklist variables are omitted to keep search results lightweight. An
-	   omitted condition in a search result does not indicate a manual check, and an empty
-	   checklistVariables list does not indicate a checklist without variables. Use get, getCheck,
-	   or batchGet for conditions and variables.
+	   Searches checklists by text, labels, properties, author, assignee, published state, or workspace in the
+	   workspaces the caller can view. Returns a page of checklists at the latest commit on main, most recently
+	   used first by default.
+
+	   pageSize defaults to 100. When sorted by last use, checklists that were never used come last. Archived checklists are excluded
+	   unless the query has an isArchived filter. Each result is a SearchVersionedChecklist. It does not include
+	   check conditions or checklist variables. Use get, getCheck, or batchGet for those.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is over 1000.
+	   - INVALID_ARGUMENT: a search text contains a null character.
 	*/
-	Search(ctx context.Context, authHeader bearertoken.Token, requestArg SearchChecklistsRequest) (VersionedChecklistPage, error)
-	// Archives the provided checklists.
+	Search(ctx context.Context, authHeader bearertoken.Token, requestArg SearchChecklistsRequest) (SearchVersionedChecklistPage, error)
+	/*
+	   Archives checklists by RID. Archived checklists drop out of search by default and reject new commits.
+	   Reverse with unarchive.
+
+	   Nothing is archived if any checklist is rejected. Checklists that are already archived are accepted.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a checklist does not exist or the caller cannot edit checklists
+	     in its workspace. The error names them.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	*/
 	Archive(ctx context.Context, authHeader bearertoken.Token, requestArg ArchiveChecklistsRequest) error
-	// Unarchives the provided checklists.
+	/*
+	   Restores archived checklists by RID, so search returns them again and they accept commits.
+
+	   Nothing is restored if any checklist is rejected.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a checklist does not exist or the caller cannot edit checklists
+	     in its workspace. The error names them.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	*/
 	Unarchive(ctx context.Context, authHeader bearertoken.Token, requestArg UnarchiveChecklistsRequest) error
-	// Returns the check with the given rid.
+	/*
+	   Returns one check, with its condition, by RID.
+
+	   Errors:
+	   - NOT_FOUND (Checks:CheckNotFound): the check does not exist, the caller cannot view the workspace it
+	     belongs to, or that workspace edition does not include checklists.
+	*/
 	GetCheck(ctx context.Context, authHeader bearertoken.Token, ridArg api.CheckRid) (Check, error)
-	// Returns the checks with the given rids.
+	/*
+	   Returns checks, with their conditions, by RID.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecksNotFound): a check does not exist, the caller cannot view the workspace it
+	     belongs to, or that workspace edition does not include checklists. The error names them, and no checks
+	     are returned.
+	*/
 	BatchGetChecks(ctx context.Context, authHeader bearertoken.Token, ridsArg []api.CheckRid) ([]Check, error)
-	// Returns all labels and properties.
+	/*
+	   Lists every label, and every property name with its values, used on checklists, including archived ones.
+	   Use it to find valid values for search filters.
+
+	   Covers the given workspaces, or all workspaces the caller can view when none are given. Given workspaces
+	   that the caller cannot view are ignored.
+	*/
 	GetAllLabelsAndProperties(ctx context.Context, authHeader bearertoken.Token, workspacesArg []rids.WorkspaceRid) (GetAllLabelsAndPropertiesResponse, error)
 	/*
-	   Batch edits metadata across multiple checklists. Supports rename/merge for labels and properties.
-	   If more than 1000 checklists are targeted, this endpoint will throw a 400.
+	   Fails on every call: bulk editing of labels and properties across checklists is not available. Use
+	   updateMetadata to change the labels and properties of one checklist.
 	*/
 	BatchEditChecklistMetadata(ctx context.Context, authHeader bearertoken.Token, requestArg BatchEditChecklistMetadataRequest) (BatchEditChecklistMetadataResponse, error)
 }
@@ -278,8 +449,8 @@ func (c *checklistServiceClient) BatchGetMetadata(ctx context.Context, authHeade
 	return *returnVal, nil
 }
 
-func (c *checklistServiceClient) Search(ctx context.Context, authHeader bearertoken.Token, requestArg SearchChecklistsRequest) (VersionedChecklistPage, error) {
-	var returnVal *VersionedChecklistPage
+func (c *checklistServiceClient) Search(ctx context.Context, authHeader bearertoken.Token, requestArg SearchChecklistsRequest) (SearchVersionedChecklistPage, error) {
+	var returnVal *SearchVersionedChecklistPage
 	var requestParams []httpclient.RequestParam
 	requestParams = append(requestParams, httpclient.WithRPCMethodName("Search"))
 	requestParams = append(requestParams, httpclient.WithHeader("Authorization", fmt.Sprint("Bearer ", authHeader)))
@@ -288,10 +459,10 @@ func (c *checklistServiceClient) Search(ctx context.Context, authHeader bearerto
 	requestParams = append(requestParams, httpclient.WithJSONResponse(&returnVal))
 	requestParams = append(requestParams, httpclient.WithRequestConjureErrorDecoder(conjureerrors.Decoder()))
 	if _, err := c.client.Post(ctx, requestParams...); err != nil {
-		return *new(VersionedChecklistPage), werror.WrapWithContextParams(ctx, err, "search failed")
+		return *new(SearchVersionedChecklistPage), werror.WrapWithContextParams(ctx, err, "search failed")
 	}
 	if returnVal == nil {
-		return *new(VersionedChecklistPage), werror.ErrorWithContextParams(ctx, "search response cannot be nil")
+		return *new(SearchVersionedChecklistPage), werror.ErrorWithContextParams(ctx, "search response cannot be nil")
 	}
 	return *returnVal, nil
 }
@@ -397,71 +568,242 @@ func (c *checklistServiceClient) BatchEditChecklistMetadata(ctx context.Context,
 	return *returnVal, nil
 }
 
-/*
-The Checklist Service is responsible for managing checklists and checks.
-A checklist is a collection of checks that can be executed against a set of data sources.
-*/
+// Manages checklists and their checks. A checklist is a versioned set of checks that you apply to runs or assets.
 type ChecklistServiceClientWithAuth interface {
-	// Creates a new checklist with the provided checks.
+	/*
+	   Creates a checklist, with its checks and checklist variables, in a workspace (the caller's default
+	   workspace when none is given). Returns the new checklist at its first commit.
+
+	   The caller becomes the author. The checklist is published unless isPublished is false. Each createCheck
+	   entry becomes a new check with a server-assigned RID, and generatedEventType defaults to ERROR. Blank
+	   labels and property keys are dropped, and the rest are trimmed. All checks must use the same default fill
+	   and alignment strategy. When assetTypeRids is not empty, the asset types must be in the workspace and not
+	   archived, and the checks and variables may reference only channels and properties that every asset type
+	   requires, with no inline references. The caller needs permission to edit checklists in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Security:WorkspaceNotSpecified): no workspace is given and the caller has no default
+	     workspace.
+	   - NOT_FOUND (Security:WorkspaceNotFound): the caller cannot edit checklists in the workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT: the checks use different default fill or alignment strategies, a checklist variable
+	     points to another checklist variable, a compute expression is over 25000 characters, or more than 10
+	     asset types are given.
+	   - NOT_FOUND (Checks:AssetTypesNotFound): an asset type is not in the workspace.
+	   - INVALID_ARGUMENT (Checks:AssetTypesArchived): an asset type is archived.
+	   - INVALID_ARGUMENT (Checks:ChannelsNotRequiredByAssetTypes, Checks:PropertiesNotRequiredByAssetTypes,
+	     Checks:InlineChannelNotAllowedWithAssetTypes, Checks:InlinePropertyNotAllowedWithAssetTypes): a check or
+	     variable references a channel or property that not every asset type requires, or references one inline.
+	*/
 	Create(ctx context.Context, requestArg CreateChecklistRequest) (VersionedChecklist, error)
 	/*
-	   Creates a permanent commit with a commit message.
-	   Throws if the checklist or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you commit to an archived checklist.
+	   Saves the given checks and checklist variables as a new permanent commit on a checklist branch (main by
+	   default) and returns the checklist at that commit.
+
+	   They replace the previous ones: a check listed by RID keeps that RID, and each createCheck entry becomes a
+	   new check. If latestCommit is set, it must be the head of the branch. All checks must use the same default
+	   fill and alignment strategy. A commit to main also refreshes live checklist executions. Archived
+	   checklists reject commits. The caller needs permission to edit checklists in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot edit checklists
+	     in its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT (Checks:CommitToArchivedChecklist): the checklist is archived.
+	   - INVALID_ARGUMENT: the checks use different default fill or alignment strategies, a checklist variable
+	     points to another checklist variable, or a compute expression is over 25000 characters.
+	   - INVALID_ARGUMENT (Checks:ChannelsNotRequiredByAssetTypes, Checks:PropertiesNotRequiredByAssetTypes,
+	     Checks:InlineChannelNotAllowedWithAssetTypes, Checks:InlinePropertyNotAllowedWithAssetTypes): the
+	     checklist has asset types, and a check or variable references a channel or property that not every asset
+	     type requires, or references one inline.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - CONFLICT (Scout:CommitConflict): latestCommit is not the head of the branch.
 	*/
 	Commit(ctx context.Context, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, requestArg CommitChecklistRequest) (VersionedChecklist, error)
 	/*
-	   Creates a commit that may be compacted, e.g cleaned up and not exist anymore.
-	   Throws if the checklist or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you save to an archived checklist.
+	   Saves the given checks and checklist variables as a working-state commit on a checklist branch (main by
+	   default) and returns the checklist at that commit.
+
+	   A working-state commit is an automatic save that compaction may later remove; use commit for a permanent
+	   version. As in commit, the checks and variables replace the previous ones, and latestCommit, if set, must
+	   be the head of the branch. commitMessage defaults to "auto-save" when it is absent or blank. Archived
+	   checklists reject saves. The caller needs permission to edit checklists in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot edit checklists
+	     in its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT (Checks:CommitToArchivedChecklist): the checklist is archived.
+	   - INVALID_ARGUMENT: the checks use different default fill or alignment strategies, a checklist variable
+	     points to another checklist variable, a compute expression is over 25000 characters, or commitMessage is
+	     over 4096 characters.
+	   - INVALID_ARGUMENT (Checks:ChannelsNotRequiredByAssetTypes, Checks:PropertiesNotRequiredByAssetTypes,
+	     Checks:InlineChannelNotAllowedWithAssetTypes, Checks:InlinePropertyNotAllowedWithAssetTypes): the
+	     checklist has asset types, and a check or variable references a channel or property that not every asset
+	     type requires, or references one inline.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - CONFLICT (Scout:CommitConflict): latestCommit is not the head of the branch.
 	*/
 	SaveWorkingState(ctx context.Context, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, requestArg SaveChecklistRequest) (VersionedChecklist, error)
 	/*
-	   Merges the given branch to the "main" branch.
-	   Throws if the checklist or branch doesn't exist.
-	   Throws if the latest commit doesn't match the provided id.
-	   Throws if you merge with an archived checklist.
+	   Merges a checklist branch into main, then deletes the branch. Returns the checklist at the merge commit.
+
+	   The new commit on main takes the checks and checklist variables from the head of the branch, and that head
+	   becomes a permanent commit. If latestCommitOnMain is set, it must be the head of main. The merge also
+	   refreshes live checklist executions. Archived checklists reject merges. The caller needs permission to
+	   edit checklists in the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT: branchName is main.
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot edit checklists
+	     in its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT (Checks:CommitToArchivedChecklist): the checklist is archived.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - INVALID_ARGUMENT (Checks:ChannelsNotRequiredByAssetTypes, Checks:PropertiesNotRequiredByAssetTypes,
+	     Checks:InlineChannelNotAllowedWithAssetTypes, Checks:InlinePropertyNotAllowedWithAssetTypes): the branch
+	     state breaks the asset-type rules of the checklist.
+	   - CONFLICT (Scout:CommitConflict): latestCommitOnMain is not the head of main.
 	*/
 	MergeToMain(ctx context.Context, checklistRidArg api.ChecklistRid, requestArg MergeToMainRequest) (VersionedChecklist, error)
 	/*
-	   Updates the data source ref names for all checks within a checklist.
-	   Throws if the checklist doesn't exist.
+	   Renames data source ref names in the channel references of every check condition and checklist variable on
+	   a checklist branch (main by default), using the old-to-new map. Commits the result as "Update ref names"
+	   and returns the checklist at the new commit.
+
+	   Ref names that are not in the map stay unchanged. A check whose condition changes gets a new check RID,
+	   and the other checks keep theirs. The caller needs permission to edit checklists in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot edit checklists
+	     in its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT (Checks:CommitToArchivedChecklist): the checklist is archived.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
 	*/
 	UpdateDataSourceRefNames(ctx context.Context, checklistRidArg api.ChecklistRid, branchArg *api1.BranchName, refNameUpdatesArg map[api2.DataSourceRefName]api2.DataSourceRefName) (VersionedChecklist, error)
-	// Updates the metadata of a checklist.
+	/*
+	   Updates the title, description, assignee, labels, properties, published state, or asset types of a
+	   checklist. Returns the updated checklist metadata.
+
+	   Omitted fields stay unchanged. Labels and properties replace the existing ones, with blank labels and
+	   property keys dropped and the rest trimmed. assetTypeRids replaces the asset types, and an empty set
+	   clears them. A new asset type must be in the workspace and not archived, and the latest commit on main may
+	   reference only channels and properties that every asset type requires, with no inline references. Creates
+	   no commit. Works on archived checklists. Live checklist executions pick up the change. The caller needs
+	   permission to edit checklists in the workspace.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot edit checklists
+	     in its workspace.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - INVALID_ARGUMENT: more than 10 asset types are given.
+	   - NOT_FOUND (Checks:AssetTypesNotFound): an asset type is not in the workspace.
+	   - INVALID_ARGUMENT (Checks:AssetTypesArchived): an asset type being added is archived.
+	   - INVALID_ARGUMENT (Checks:ChannelsNotRequiredByAssetTypes, Checks:PropertiesNotRequiredByAssetTypes,
+	     Checks:InlineChannelNotAllowedWithAssetTypes, Checks:InlinePropertyNotAllowedWithAssetTypes): the latest
+	     commit on main breaks the asset-type rules.
+	*/
 	UpdateMetadata(ctx context.Context, ridArg api.ChecklistRid, requestArg UpdateChecklistMetadataRequest) (ChecklistMetadata, error)
 	/*
-	   Specify at most one of (branch, commit).
-	   If neither is specified, branch = "main" is the default.
+	   Returns a checklist, with its metadata, checks, conditions, and checklist variables, at a branch head or a
+	   commit.
+
+	   Uses the head of main when neither branch nor commit is given. Archived checklists can be read. The caller
+	   needs permission to view the workspace.
+
+	   Errors:
+	   - INVALID_ARGUMENT: both branch and commit are given.
+	   - NOT_FOUND (Checks:ChecklistNotFound): the checklist does not exist or the caller cannot view it.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	   - NOT_FOUND (Scout:BranchNotFound): the branch does not exist.
+	   - NOT_FOUND (Scout:CommitNotFound): the checklist has no such commit.
 	*/
 	Get(ctx context.Context, ridArg api.ChecklistRid, branchArg *api1.BranchName, commitArg *api1.CommitId) (VersionedChecklist, error)
-	// Returns the pinned commit for each provided checklist reference.
+	/*
+	   Returns checklists, with checks, conditions, and checklist variables, each at the commit its reference
+	   pins.
+
+	   Checklists that do not exist, that the caller cannot view, whose workspace edition does not include
+	   checklists, or whose pinned commit does not exist are omitted, not reported as errors. Use search to find
+	   checklist RIDs.
+	*/
 	BatchGet(ctx context.Context, checklistRefsArg []PinnedChecklistRef) ([]VersionedChecklist, error)
-	// Returns the metadata for each provided checklist.
+	/*
+	   Returns the metadata of each checklist by RID: title, description, labels, properties, and archived and
+	   published state. Includes archived checklists.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a checklist does not exist or the caller cannot view it. The
+	     error names them.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	*/
 	BatchGetMetadata(ctx context.Context, requestArg BatchGetChecklistMetadataRequest) (BatchGetChecklistMetadataResponse, error)
 	/*
-	   Results will be the latest commit on main for each checklist.
-	   Check conditions and checklist variables are omitted to keep search results lightweight. An
-	   omitted condition in a search result does not indicate a manual check, and an empty
-	   checklistVariables list does not indicate a checklist without variables. Use get, getCheck,
-	   or batchGet for conditions and variables.
+	   Searches checklists by text, labels, properties, author, assignee, published state, or workspace in the
+	   workspaces the caller can view. Returns a page of checklists at the latest commit on main, most recently
+	   used first by default.
+
+	   pageSize defaults to 100. When sorted by last use, checklists that were never used come last. Archived checklists are excluded
+	   unless the query has an isArchived filter. Each result is a SearchVersionedChecklist. It does not include
+	   check conditions or checklist variables. Use get, getCheck, or batchGet for those.
+
+	   Errors:
+	   - INVALID_ARGUMENT (Scout:RequestedPageSizeTooLarge): pageSize is over 1000.
+	   - INVALID_ARGUMENT: a search text contains a null character.
 	*/
-	Search(ctx context.Context, requestArg SearchChecklistsRequest) (VersionedChecklistPage, error)
-	// Archives the provided checklists.
+	Search(ctx context.Context, requestArg SearchChecklistsRequest) (SearchVersionedChecklistPage, error)
+	/*
+	   Archives checklists by RID. Archived checklists drop out of search by default and reject new commits.
+	   Reverse with unarchive.
+
+	   Nothing is archived if any checklist is rejected. Checklists that are already archived are accepted.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a checklist does not exist or the caller cannot edit checklists
+	     in its workspace. The error names them.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	*/
 	Archive(ctx context.Context, requestArg ArchiveChecklistsRequest) error
-	// Unarchives the provided checklists.
+	/*
+	   Restores archived checklists by RID, so search returns them again and they accept commits.
+
+	   Nothing is restored if any checklist is rejected.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecklistsNotFound): a checklist does not exist or the caller cannot edit checklists
+	     in its workspace. The error names them.
+	   - PERMISSION_DENIED: the workspace edition does not include checklists.
+	*/
 	Unarchive(ctx context.Context, requestArg UnarchiveChecklistsRequest) error
-	// Returns the check with the given rid.
+	/*
+	   Returns one check, with its condition, by RID.
+
+	   Errors:
+	   - NOT_FOUND (Checks:CheckNotFound): the check does not exist, the caller cannot view the workspace it
+	     belongs to, or that workspace edition does not include checklists.
+	*/
 	GetCheck(ctx context.Context, ridArg api.CheckRid) (Check, error)
-	// Returns the checks with the given rids.
+	/*
+	   Returns checks, with their conditions, by RID.
+
+	   Errors:
+	   - NOT_FOUND (Checks:ChecksNotFound): a check does not exist, the caller cannot view the workspace it
+	     belongs to, or that workspace edition does not include checklists. The error names them, and no checks
+	     are returned.
+	*/
 	BatchGetChecks(ctx context.Context, ridsArg []api.CheckRid) ([]Check, error)
-	// Returns all labels and properties.
+	/*
+	   Lists every label, and every property name with its values, used on checklists, including archived ones.
+	   Use it to find valid values for search filters.
+
+	   Covers the given workspaces, or all workspaces the caller can view when none are given. Given workspaces
+	   that the caller cannot view are ignored.
+	*/
 	GetAllLabelsAndProperties(ctx context.Context, workspacesArg []rids.WorkspaceRid) (GetAllLabelsAndPropertiesResponse, error)
 	/*
-	   Batch edits metadata across multiple checklists. Supports rename/merge for labels and properties.
-	   If more than 1000 checklists are targeted, this endpoint will throw a 400.
+	   Fails on every call: bulk editing of labels and properties across checklists is not available. Use
+	   updateMetadata to change the labels and properties of one checklist.
 	*/
 	BatchEditChecklistMetadata(ctx context.Context, requestArg BatchEditChecklistMetadataRequest) (BatchEditChecklistMetadataResponse, error)
 }
@@ -511,7 +853,7 @@ func (c *checklistServiceClientWithAuth) BatchGetMetadata(ctx context.Context, r
 	return c.client.BatchGetMetadata(ctx, c.authHeader, requestArg)
 }
 
-func (c *checklistServiceClientWithAuth) Search(ctx context.Context, requestArg SearchChecklistsRequest) (VersionedChecklistPage, error) {
+func (c *checklistServiceClientWithAuth) Search(ctx context.Context, requestArg SearchChecklistsRequest) (SearchVersionedChecklistPage, error) {
 	return c.client.Search(ctx, c.authHeader, requestArg)
 }
 
@@ -620,10 +962,10 @@ func (c *checklistServiceClientWithTokenProvider) BatchGetMetadata(ctx context.C
 	return c.client.BatchGetMetadata(ctx, bearertoken.Token(token), requestArg)
 }
 
-func (c *checklistServiceClientWithTokenProvider) Search(ctx context.Context, requestArg SearchChecklistsRequest) (VersionedChecklistPage, error) {
+func (c *checklistServiceClientWithTokenProvider) Search(ctx context.Context, requestArg SearchChecklistsRequest) (SearchVersionedChecklistPage, error) {
 	token, err := c.tokenProvider(ctx)
 	if err != nil {
-		return *new(VersionedChecklistPage), err
+		return *new(SearchVersionedChecklistPage), err
 	}
 	return c.client.Search(ctx, bearertoken.Token(token), requestArg)
 }
