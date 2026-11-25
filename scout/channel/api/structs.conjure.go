@@ -422,7 +422,7 @@ func (o *BatchSearchChannelsResponse) UnmarshalYAML(unmarshal func(interface{}) 
 
 /*
 A channel or asset/run property (by name) found in one or more locators across the batch.
-`locatorMetadata` has one entry per locator the name exists in. For Kind.PROPERTY rows,
+`locatorMetadata` has one entry per place the name is found. For Kind.PROPERTY rows,
 `name` is the property name.
 */
 // safelogging:@Unsafe
@@ -516,14 +516,17 @@ func (o *BatchedLocator) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 /*
-Per-locator channel metadata for batched responses. Same shape as
-`LocatorChannelMetadata` but with the locator wrapped to carry request-id provenance.
+Batched channel metadata at one place: a locator, or the request scopes that define the channel
+without saving it. Each place carries the request ids that reach it.
 */
 // safelogging:@Unsafe
 type BatchedLocatorChannelMetadata struct {
+	// Always present from current servers. Older servers omit it, so fall back to `locator` when it is absent.
+	Location *BatchedChannelLocation `json:"location,omitempty"`
 	/*
-	   Absent for an ephemeral (compute-defined) channel that has no stored series to point at — an unsaved
-	   `withSeries` in the request scope. Present for stored and derived-dataset channels.
+	   The locator of a `located` row. Absent for an `unsaved` row.
+
+	   Deprecated: Use `location`, which also carries the request ids of an unsaved row.
 	*/
 	Locator     *BatchedLocator     `json:"locator,omitempty"`
 	Unit        *api.Unit           `json:"unit,omitempty" safelogging:"@Unsafe"`
@@ -1159,6 +1162,48 @@ func (o SearchChannelsResponse) MarshalYAML() (interface{}, error) {
 }
 
 func (o *SearchChannelsResponse) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// The request ids whose scope defines a channel that has no locator.
+type UnsavedChannelLocation struct {
+	RequestIds []string `json:"requestIds"`
+}
+
+func (o UnsavedChannelLocation) MarshalJSON() ([]byte, error) {
+	if o.RequestIds == nil {
+		o.RequestIds = make([]string, 0)
+	}
+	type _tmpUnsavedChannelLocation UnsavedChannelLocation
+	return safejson.Marshal(_tmpUnsavedChannelLocation(o))
+}
+
+func (o *UnsavedChannelLocation) UnmarshalJSON(data []byte) error {
+	type _tmpUnsavedChannelLocation UnsavedChannelLocation
+	var rawUnsavedChannelLocation _tmpUnsavedChannelLocation
+	if err := safejson.Unmarshal(data, &rawUnsavedChannelLocation); err != nil {
+		return err
+	}
+	if rawUnsavedChannelLocation.RequestIds == nil {
+		rawUnsavedChannelLocation.RequestIds = make([]string, 0)
+	}
+	*o = UnsavedChannelLocation(rawUnsavedChannelLocation)
+	return nil
+}
+
+func (o UnsavedChannelLocation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *UnsavedChannelLocation) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

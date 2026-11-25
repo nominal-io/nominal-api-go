@@ -19,7 +19,10 @@ type NotebookType_Value string
 const (
 	NotebookType_WORKBOOK            NotebookType_Value = "WORKBOOK"
 	NotebookType_COMPARISON_WORKBOOK NotebookType_Value = "COMPARISON_WORKBOOK"
-	// Left out of search results unless the query filters for this type.
+	/*
+	   Left out of search results unless the query filters for this type. It stays a draft and cannot be
+	   published. Its author has edit permission on it while they can view it.
+	*/
 	NotebookType_ANALYST_EPHEMERAL_WORKBOOK NotebookType_Value = "ANALYST_EPHEMERAL_WORKBOOK"
 	NotebookType_REPORT                     NotebookType_Value = "REPORT"
 	NotebookType_UNKNOWN                    NotebookType_Value = "UNKNOWN"

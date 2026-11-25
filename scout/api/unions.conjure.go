@@ -146,9 +146,12 @@ func NewColorFromHexCode(v string) Color {
 }
 
 /*
-A command payload. The variant must match the target channel's data
-type: floatValue for DOUBLE channels, intValue for INT channels, and
-enumValue for STRING channels.
+A command payload. DOUBLE and INT channels take either numeric
+variant, and the value is delivered in the channel's variant: floatValue
+for DOUBLE, intValue for INT. A numeric value is converted only when the
+conversion is exact: a floatValue for an INT channel must be a whole
+number within int64, and an intValue for a DOUBLE channel must be within
++/-2^53. STRING channels take only enumValue.
 */
 type CommandValue struct {
 	typ        string

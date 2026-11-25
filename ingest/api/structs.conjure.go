@@ -1333,6 +1333,13 @@ type IngestJob struct {
 	EndTime   *datetime.DateTime `json:"endTime,omitempty"`
 	// Count of dataset files produced by this ingest job.
 	ProducedFileCount *int `json:"producedFileCount,omitempty"`
+	/*
+	   The File Store file revision this job ingested. Absent for jobs that did not read from File Store,
+	   and for jobs that read more than one File Store revision.
+	*/
+	FileRevisionRid *rids.DriveFileRevisionRid `json:"fileRevisionRid,omitempty" safelogging:"@Safe"`
+	// The File Store ingest rule that triggered this job. Absent for jobs no ingest rule triggered.
+	TriggeringIngestRuleRid *rids.DriveIngestRuleRid `json:"triggeringIngestRuleRid,omitempty" safelogging:"@Safe"`
 }
 
 func (o IngestJob) MarshalYAML() (interface{}, error) {

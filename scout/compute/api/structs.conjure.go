@@ -1894,6 +1894,31 @@ func (o *EarliestAnchorReference) UnmarshalYAML(unmarshal func(interface{}) erro
 }
 
 /*
+Entity set reference for `Dataset.entitySet`. The `rid` field accepts either a literal entity set RID or a
+`StringConstant` reference resolved from `Context`.
+*/
+type EntitySetDataset struct {
+	// Resource identifier of an entity set
+	Rid StringConstant `json:"rid"`
+}
+
+func (o EntitySetDataset) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *EntitySetDataset) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
 A user-defined enum aggregation. The supported ABI is a Rust function with one vector input and a
 `String` return value. Numeric input series use `Vec<f64>` and enum input series use `Vec<String>`.
 */

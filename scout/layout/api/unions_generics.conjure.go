@@ -407,10 +407,15 @@ func (u *HmiObjectWithT[T]) Accept(ctx context.Context, v HmiObjectVisitorWithT[
 			return result, fmt.Errorf("field \"connection\" is required")
 		}
 		return v.VisitConnection(ctx, *u.connection)
+	case "section":
+		if u.section == nil {
+			return result, fmt.Errorf("field \"section\" is required")
+		}
+		return v.VisitSection(ctx, *u.section)
 	}
 }
 
-func (u *HmiObjectWithT[T]) AcceptFuncs(widgetFunc func(HmiWidget) (T, error), connectionFunc func(CanvasConnection) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *HmiObjectWithT[T]) AcceptFuncs(widgetFunc func(HmiWidget) (T, error), connectionFunc func(CanvasConnection) (T, error), sectionFunc func(HmiSection) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -428,6 +433,11 @@ func (u *HmiObjectWithT[T]) AcceptFuncs(widgetFunc func(HmiWidget) (T, error), c
 			return result, fmt.Errorf("field \"connection\" is required")
 		}
 		return connectionFunc(*u.connection)
+	case "section":
+		if u.section == nil {
+			return result, fmt.Errorf("field \"section\" is required")
+		}
+		return sectionFunc(*u.section)
 	}
 }
 
@@ -441,6 +451,11 @@ func (u *HmiObjectWithT[T]) ConnectionNoopSuccess(CanvasConnection) (T, error) {
 	return result, nil
 }
 
+func (u *HmiObjectWithT[T]) SectionNoopSuccess(HmiSection) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *HmiObjectWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -449,6 +464,56 @@ func (u *HmiObjectWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type HmiObjectVisitorWithT[T any] interface {
 	VisitWidget(ctx context.Context, v HmiWidget) (T, error)
 	VisitConnection(ctx context.Context, v CanvasConnection) (T, error)
+	VisitSection(ctx context.Context, v HmiSection) (T, error)
+	VisitUnknown(ctx context.Context, typ string) (T, error)
+}
+
+type HmiSectionWithT[T any] HmiSection
+
+func (u *HmiSectionWithT[T]) Accept(ctx context.Context, v HmiSectionVisitorWithT[T]) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(ctx, u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v.VisitV1(ctx, *u.v1)
+	}
+}
+
+func (u *HmiSectionWithT[T]) AcceptFuncs(v1Func func(HmiSectionV1) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+	var result T
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return result, fmt.Errorf("invalid value in union type")
+		}
+		return unknownFunc(u.typ)
+	case "v1":
+		if u.v1 == nil {
+			return result, fmt.Errorf("field \"v1\" is required")
+		}
+		return v1Func(*u.v1)
+	}
+}
+
+func (u *HmiSectionWithT[T]) V1NoopSuccess(HmiSectionV1) (T, error) {
+	var result T
+	return result, nil
+}
+
+func (u *HmiSectionWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
+	var result T
+	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+type HmiSectionVisitorWithT[T any] interface {
+	VisitV1(ctx context.Context, v HmiSectionV1) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

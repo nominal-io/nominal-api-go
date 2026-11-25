@@ -184,6 +184,181 @@ func NewBatchedChannelChildEntryFromPrefix(v BatchedPrefixEntry) BatchedChannelC
 	return BatchedChannelChildEntry{typ: "prefix", prefix: &v}
 }
 
+// Where a batched channel row is found: at a locator, or only in the request scope that defines it.
+type BatchedChannelLocation struct {
+	typ     string
+	located *BatchedLocator
+	unsaved *UnsavedChannelLocation
+}
+
+type batchedChannelLocationDeserializer struct {
+	Type    string                  `json:"type"`
+	Located *BatchedLocator         `json:"located"`
+	Unsaved *UnsavedChannelLocation `json:"unsaved"`
+}
+
+func (u *batchedChannelLocationDeserializer) toStruct() BatchedChannelLocation {
+	return BatchedChannelLocation{typ: u.Type, located: u.Located, unsaved: u.Unsaved}
+}
+
+func (u *BatchedChannelLocation) toSerializer() (interface{}, error) {
+	switch u.typ {
+	default:
+		return nil, fmt.Errorf("unknown type %q", u.typ)
+	case "located":
+		if u.located == nil {
+			return nil, fmt.Errorf("field \"located\" is required")
+		}
+		return struct {
+			Type    string         `json:"type"`
+			Located BatchedLocator `json:"located"`
+		}{Type: "located", Located: *u.located}, nil
+	case "unsaved":
+		if u.unsaved == nil {
+			return nil, fmt.Errorf("field \"unsaved\" is required")
+		}
+		return struct {
+			Type    string                 `json:"type"`
+			Unsaved UnsavedChannelLocation `json:"unsaved"`
+		}{Type: "unsaved", Unsaved: *u.unsaved}, nil
+	}
+}
+
+func (u BatchedChannelLocation) MarshalJSON() ([]byte, error) {
+	ser, err := u.toSerializer()
+	if err != nil {
+		return nil, err
+	}
+	return safejson.Marshal(ser)
+}
+
+func (u *BatchedChannelLocation) UnmarshalJSON(data []byte) error {
+	var deser batchedChannelLocationDeserializer
+	if err := safejson.Unmarshal(data, &deser); err != nil {
+		return err
+	}
+	*u = deser.toStruct()
+	switch u.typ {
+	case "located":
+		if u.located == nil {
+			return fmt.Errorf("field \"located\" is required")
+		}
+	case "unsaved":
+		if u.unsaved == nil {
+			return fmt.Errorf("field \"unsaved\" is required")
+		}
+	}
+	return nil
+}
+
+func (u BatchedChannelLocation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (u *BatchedChannelLocation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&u)
+}
+
+func (u *BatchedChannelLocation) AcceptFuncs(locatedFunc func(BatchedLocator) error, unsavedFunc func(UnsavedChannelLocation) error, unknownFunc func(string) error) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in BatchedChannelLocation type")
+		}
+		return unknownFunc(u.typ)
+	case "located":
+		if u.located == nil {
+			return fmt.Errorf("field \"located\" is required")
+		}
+		return locatedFunc(*u.located)
+	case "unsaved":
+		if u.unsaved == nil {
+			return fmt.Errorf("field \"unsaved\" is required")
+		}
+		return unsavedFunc(*u.unsaved)
+	}
+}
+
+func (u *BatchedChannelLocation) LocatedNoopSuccess(_ BatchedLocator) error {
+	return nil
+}
+
+func (u *BatchedChannelLocation) UnsavedNoopSuccess(_ UnsavedChannelLocation) error {
+	return nil
+}
+
+func (u *BatchedChannelLocation) ErrorOnUnknown(typeName string) error {
+	return fmt.Errorf("invalid value in union type. Type name: %s", typeName)
+}
+
+func (u *BatchedChannelLocation) Accept(v BatchedChannelLocationVisitor) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknown(u.typ)
+	case "located":
+		if u.located == nil {
+			return fmt.Errorf("field \"located\" is required")
+		}
+		return v.VisitLocated(*u.located)
+	case "unsaved":
+		if u.unsaved == nil {
+			return fmt.Errorf("field \"unsaved\" is required")
+		}
+		return v.VisitUnsaved(*u.unsaved)
+	}
+}
+
+type BatchedChannelLocationVisitor interface {
+	VisitLocated(v BatchedLocator) error
+	VisitUnsaved(v UnsavedChannelLocation) error
+	VisitUnknown(typeName string) error
+}
+
+func (u *BatchedChannelLocation) AcceptWithContext(ctx context.Context, v BatchedChannelLocationVisitorWithContext) error {
+	switch u.typ {
+	default:
+		if u.typ == "" {
+			return fmt.Errorf("invalid value in union type")
+		}
+		return v.VisitUnknownWithContext(ctx, u.typ)
+	case "located":
+		if u.located == nil {
+			return fmt.Errorf("field \"located\" is required")
+		}
+		return v.VisitLocatedWithContext(ctx, *u.located)
+	case "unsaved":
+		if u.unsaved == nil {
+			return fmt.Errorf("field \"unsaved\" is required")
+		}
+		return v.VisitUnsavedWithContext(ctx, *u.unsaved)
+	}
+}
+
+type BatchedChannelLocationVisitorWithContext interface {
+	VisitLocatedWithContext(ctx context.Context, v BatchedLocator) error
+	VisitUnsavedWithContext(ctx context.Context, v UnsavedChannelLocation) error
+	VisitUnknownWithContext(ctx context.Context, typeName string) error
+}
+
+func NewBatchedChannelLocationFromLocated(v BatchedLocator) BatchedChannelLocation {
+	return BatchedChannelLocation{typ: "located", located: &v}
+}
+
+func NewBatchedChannelLocationFromUnsaved(v UnsavedChannelLocation) BatchedChannelLocation {
+	return BatchedChannelLocation{typ: "unsaved", unsaved: &v}
+}
+
 type ChannelChildEntry struct {
 	typ     string
 	channel *ChannelEntry

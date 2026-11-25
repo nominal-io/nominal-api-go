@@ -121,9 +121,10 @@ type AssetServiceClient interface {
 	   Archives an asset and its runs. With includeLinkedWorkbooks, also archives the workbooks linked to the
 	   asset or its runs.
 
-	   Runs and workbooks that are already archived keep their own archive state. Archived assets are left out
-	   of asset search unless the search includes them, and other assets can use their primary-key values. Undo
-	   with unarchive. The caller needs permission to edit the asset.
+	   Runs and workbooks that are already archived keep their own archive state, and linked drafts, workbooks
+	   the caller cannot edit, and workbooks outside the workspaces the caller can view are left as they are.
+	   Archived assets are left out of asset search unless the search includes them, and other assets can use
+	   their primary-key values. Undo with unarchive. The caller needs permission to edit the asset.
 
 	   Errors:
 	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
@@ -133,9 +134,10 @@ type AssetServiceClient interface {
 	   Restores an archived asset and the runs that archiving it archived. With includeLinkedWorkbooks, also
 	   restores the workbooks that archiving the asset or its runs archived.
 
-	   Runs and workbooks that were archived on their own stay archived. The asset must still pass the checks
-	   of its asset types, and its primary-key values must be unused by other unarchived assets. The caller
-	   needs permission to edit the asset.
+	   Runs and workbooks that were archived on their own stay archived, and so do linked drafts, workbooks the
+	   caller cannot edit, and workbooks outside the workspaces the caller can view. The asset must still pass the
+	   checks of its asset types, and its primary-key values must be unused by other unarchived assets. The
+	   caller needs permission to edit the asset.
 
 	   Errors:
 	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
@@ -159,17 +161,20 @@ type AssetServiceClient interface {
 	*/
 	SearchAssets(ctx context.Context, authHeader bearertoken.Token, searchAssetsRequestArg api.SearchAssetsRequest) (api.SearchAssetsResponse, error)
 	/*
-	   Renames labels, renames property keys, or merges property values on every asset that matches. Returns
-	   the RIDs of modified assets and of assets skipped because of a property key conflict.
+	   Renames labels, renames property keys, or merges property values on every matching asset the caller can
+	   edit. Returns the RIDs of modified assets and of assets skipped because of a property key conflict.
 
-	   Targets are the assets, archived ones included, that carry a source label, key, or value of the change
-	   and that match assetSearchQuery, if given. Property changes re-check each modified asset against its
-	   asset types. The caller needs permission to edit every matching asset.
+	   Targets are the assets, archived ones included, in the workspaces the caller can view that carry a source
+	   label, key, or value of the change and that match assetSearchQuery, if given. Property changes re-check
+	   each modified asset against its asset types. Matching assets the caller cannot edit are skipped and are
+	   not listed in the response.
 
 	   Errors:
-	   - INVALID_ARGUMENT: more than 1000 assets match, or an overwrite priority does not list the source and
-	     target keys exactly once each.
-	   - NOT_FOUND (Assets:AssetNotFound): the caller cannot edit a matching asset.
+	   - INVALID_ARGUMENT: an overwrite priority does not list the source and target keys exactly once each;
+	     assetSearchQuery is invalid, for example a search text contains a null character; a source label, key, or
+	     value of the change contains a null character; more than 1000 assets match, counting assets the caller
+	     cannot edit; or an asset the caller can edit matches and the target of the change contains a null
+	     character.
 	   - INVALID_ARGUMENT (Assets:TypeCheckFailed): a property change breaks the checks of an asset type.
 	   - INVALID_ARGUMENT (Assets:PrimaryKeyInUse): a property change gives an asset a primary-key value that
 	     another unarchived asset has.
@@ -705,9 +710,10 @@ type AssetServiceClientWithAuth interface {
 	   Archives an asset and its runs. With includeLinkedWorkbooks, also archives the workbooks linked to the
 	   asset or its runs.
 
-	   Runs and workbooks that are already archived keep their own archive state. Archived assets are left out
-	   of asset search unless the search includes them, and other assets can use their primary-key values. Undo
-	   with unarchive. The caller needs permission to edit the asset.
+	   Runs and workbooks that are already archived keep their own archive state, and linked drafts, workbooks
+	   the caller cannot edit, and workbooks outside the workspaces the caller can view are left as they are.
+	   Archived assets are left out of asset search unless the search includes them, and other assets can use
+	   their primary-key values. Undo with unarchive. The caller needs permission to edit the asset.
 
 	   Errors:
 	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
@@ -717,9 +723,10 @@ type AssetServiceClientWithAuth interface {
 	   Restores an archived asset and the runs that archiving it archived. With includeLinkedWorkbooks, also
 	   restores the workbooks that archiving the asset or its runs archived.
 
-	   Runs and workbooks that were archived on their own stay archived. The asset must still pass the checks
-	   of its asset types, and its primary-key values must be unused by other unarchived assets. The caller
-	   needs permission to edit the asset.
+	   Runs and workbooks that were archived on their own stay archived, and so do linked drafts, workbooks the
+	   caller cannot edit, and workbooks outside the workspaces the caller can view. The asset must still pass the
+	   checks of its asset types, and its primary-key values must be unused by other unarchived assets. The
+	   caller needs permission to edit the asset.
 
 	   Errors:
 	   - NOT_FOUND (Assets:AssetNotFound): the asset does not exist or the caller cannot edit it.
@@ -743,17 +750,20 @@ type AssetServiceClientWithAuth interface {
 	*/
 	SearchAssets(ctx context.Context, searchAssetsRequestArg api.SearchAssetsRequest) (api.SearchAssetsResponse, error)
 	/*
-	   Renames labels, renames property keys, or merges property values on every asset that matches. Returns
-	   the RIDs of modified assets and of assets skipped because of a property key conflict.
+	   Renames labels, renames property keys, or merges property values on every matching asset the caller can
+	   edit. Returns the RIDs of modified assets and of assets skipped because of a property key conflict.
 
-	   Targets are the assets, archived ones included, that carry a source label, key, or value of the change
-	   and that match assetSearchQuery, if given. Property changes re-check each modified asset against its
-	   asset types. The caller needs permission to edit every matching asset.
+	   Targets are the assets, archived ones included, in the workspaces the caller can view that carry a source
+	   label, key, or value of the change and that match assetSearchQuery, if given. Property changes re-check
+	   each modified asset against its asset types. Matching assets the caller cannot edit are skipped and are
+	   not listed in the response.
 
 	   Errors:
-	   - INVALID_ARGUMENT: more than 1000 assets match, or an overwrite priority does not list the source and
-	     target keys exactly once each.
-	   - NOT_FOUND (Assets:AssetNotFound): the caller cannot edit a matching asset.
+	   - INVALID_ARGUMENT: an overwrite priority does not list the source and target keys exactly once each;
+	     assetSearchQuery is invalid, for example a search text contains a null character; a source label, key, or
+	     value of the change contains a null character; more than 1000 assets match, counting assets the caller
+	     cannot edit; or an asset the caller can edit matches and the target of the change contains a null
+	     character.
 	   - INVALID_ARGUMENT (Assets:TypeCheckFailed): a property change breaks the checks of an asset type.
 	   - INVALID_ARGUMENT (Assets:PrimaryKeyInUse): a property change gives an asset a primary-key value that
 	     another unarchived asset has.

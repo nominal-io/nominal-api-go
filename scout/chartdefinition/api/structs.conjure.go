@@ -683,6 +683,109 @@ func (o *DefaultFill) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// Fires when the user selects an option.
+type DropdownSelectTrigger struct{}
+
+func (o DropdownSelectTrigger) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DropdownSelectTrigger) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+When trigger fires, sends the selected value to every entry in targets
+as a single command service SendCommands request.
+*/
+type DropdownSendCommandsAction struct {
+	// Absent means select.
+	Trigger *DropdownTrigger `json:"trigger,omitempty"`
+	/*
+	   The channels that receive the value. Must be non-empty, contain at
+	   most 32 entries, and name each variable at most once. Every target
+	   receives the same value, so each target's data type must match
+	   the type of options.
+	*/
+	Targets []CommandTarget `json:"targets"`
+	/*
+	   If present, the frontend must show a confirmation dialog and
+	   receive an explicit confirmation before sending the value.
+	*/
+	Confirmation *CommandConfirmation `json:"confirmation,omitempty"`
+}
+
+func (o DropdownSendCommandsAction) MarshalJSON() ([]byte, error) {
+	if o.Targets == nil {
+		o.Targets = make([]CommandTarget, 0)
+	}
+	type _tmpDropdownSendCommandsAction DropdownSendCommandsAction
+	return safejson.Marshal(_tmpDropdownSendCommandsAction(o))
+}
+
+func (o *DropdownSendCommandsAction) UnmarshalJSON(data []byte) error {
+	type _tmpDropdownSendCommandsAction DropdownSendCommandsAction
+	var rawDropdownSendCommandsAction _tmpDropdownSendCommandsAction
+	if err := safejson.Unmarshal(data, &rawDropdownSendCommandsAction); err != nil {
+		return err
+	}
+	if rawDropdownSendCommandsAction.Targets == nil {
+		rawDropdownSendCommandsAction.Targets = make([]CommandTarget, 0)
+	}
+	*o = DropdownSendCommandsAction(rawDropdownSendCommandsAction)
+	return nil
+}
+
+func (o DropdownSendCommandsAction) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DropdownSendCommandsAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// A dropdown of fixed options whose selected value is applied by action.
+type DropdownVizDefinitionV1 struct {
+	// The label displayed with the dropdown.
+	Title   *string         `json:"title,omitempty"`
+	Options DropdownOptions `json:"options"`
+	// Absent means MEDIUM.
+	Size   *DropdownSize  `json:"size,omitempty"`
+	Action DropdownAction `json:"action"`
+}
+
+func (o DropdownVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *DropdownVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type EllipseShape struct{}
 
 func (o EllipseShape) MarshalYAML() (interface{}, error) {
@@ -3655,6 +3758,191 @@ func (o *NumberInputVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) e
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+/*
+Fires when the user commits a changed value: by releasing the thumb
+after a drag or track click, or by a keyboard step. Intermediate
+values during a drag are not applied.
+*/
+type NumberSliderCommitTrigger struct{}
+
+func (o NumberSliderCommitTrigger) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumberSliderCommitTrigger) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+The values the slider can select. All fields must be finite, and min
+must be less than max. An integer range is expressed with a whole min
+and a whole step.
+*/
+type NumberSliderRange struct {
+	// Inclusive lower bound of the track.
+	Min float64 `json:"min"`
+	// Inclusive upper bound of the track.
+	Max float64 `json:"max"`
+	/*
+	   Must be greater than zero. Valid values are min + k * step for an
+	   integer k, plus max. Also the increment for keyboard steps.
+	   Absent means any value in range is accepted, and the frontend
+	   chooses the keyboard increment.
+	*/
+	Step *float64 `json:"step,omitempty"`
+}
+
+func (o NumberSliderRange) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumberSliderRange) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+When trigger fires, sends the selected value as CommandValue.floatValue
+to every entry in targets, as a single command service SendCommands
+request.
+*/
+type NumberSliderSendCommandsAction struct {
+	// Absent means commit.
+	Trigger *NumberSliderTrigger `json:"trigger,omitempty"`
+	/*
+	   The channels that receive the value. Must be non-empty, contain at
+	   most 32 entries, and name each variable at most once. Each target
+	   must be a DOUBLE or INT channel. An INT channel accepts only whole
+	   values, so target one only when range has a whole min and a whole
+	   step.
+	*/
+	Targets []CommandTarget `json:"targets"`
+	/*
+	   If present, the frontend must show a confirmation dialog and
+	   receive an explicit confirmation before sending the value.
+	*/
+	Confirmation *CommandConfirmation `json:"confirmation,omitempty"`
+}
+
+func (o NumberSliderSendCommandsAction) MarshalJSON() ([]byte, error) {
+	if o.Targets == nil {
+		o.Targets = make([]CommandTarget, 0)
+	}
+	type _tmpNumberSliderSendCommandsAction NumberSliderSendCommandsAction
+	return safejson.Marshal(_tmpNumberSliderSendCommandsAction(o))
+}
+
+func (o *NumberSliderSendCommandsAction) UnmarshalJSON(data []byte) error {
+	type _tmpNumberSliderSendCommandsAction NumberSliderSendCommandsAction
+	var rawNumberSliderSendCommandsAction _tmpNumberSliderSendCommandsAction
+	if err := safejson.Unmarshal(data, &rawNumberSliderSendCommandsAction); err != nil {
+		return err
+	}
+	if rawNumberSliderSendCommandsAction.Targets == nil {
+		rawNumberSliderSendCommandsAction.Targets = make([]CommandTarget, 0)
+	}
+	*o = NumberSliderSendCommandsAction(rawNumberSliderSendCommandsAction)
+	return nil
+}
+
+func (o NumberSliderSendCommandsAction) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumberSliderSendCommandsAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+When trigger fires, edits a numeric constant compute variable instead
+of sending a command. The variable is not a regular series: its
+compute is a ConstantNumericSeries, and the selected value replaces
+that constant's DoubleConstant literal. The edit is saved with the
+variable, so it persists and every viewer sees the new value.
+*/
+// safelogging:@Unsafe
+type NumberSliderSetVariableConstantAction struct {
+	// Absent means commit.
+	Trigger *NumberSliderTrigger `json:"trigger,omitempty"`
+	/*
+	   Channel variable to edit, resolved by the document hosting this
+	   visualization. Must name a numeric constant compute variable (a
+	   ConstantNumericSeries with a literal value), not a physical series
+	   or any other compute.
+	*/
+	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
+}
+
+func (o NumberSliderSetVariableConstantAction) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumberSliderSetVariableConstantAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A slider over a bounded numeric range whose selected value is applied
+by action. A value outside range, or off its step, is never applied.
+*/
+type NumberSliderVizDefinitionV1 struct {
+	// The label displayed with the slider.
+	Title *string           `json:"title,omitempty"`
+	Range NumberSliderRange `json:"range"`
+	// Unit label rendered beside the selected value, such as "psi". Display only; the value is applied as selected.
+	Unit *string `json:"unit,omitempty"`
+	// Absent means MEDIUM.
+	Size   *NumberSliderSize  `json:"size,omitempty"`
+	Action NumberSliderAction `json:"action"`
+}
+
+func (o NumberSliderVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *NumberSliderVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 type NumericArrayCellConfig struct {
 	Visualisation *NumericArrayVisualisation `json:"visualisation,omitempty"`
 	NumberFormat  *NumberFormat              `json:"numberFormat,omitempty"`
@@ -4364,6 +4652,8 @@ type PrimaryFlightDisplayVizDefinitionV1 struct {
 	Heading *PfdHeading `json:"heading,omitempty"`
 	// How sections show that their inputs have stopped updating. Absent never shows failure flags.
 	Staleness *PfdStaleness `json:"staleness,omitempty"`
+	// The colors of the attitude indicator's sky and ground. Absent uses DEFAULT.
+	Theme *PfdTheme `json:"theme,omitempty"`
 }
 
 func (o PrimaryFlightDisplayVizDefinitionV1) MarshalYAML() (interface{}, error) {
@@ -5281,6 +5571,81 @@ func (o *StandardValve) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// One choice in a string dropdown.
+type StringDropdownOption struct {
+	/*
+	   The value sent when this option is selected. Must be non-empty and
+	   at most 256 characters.
+	*/
+	Value string `json:"value"`
+	/*
+	   The text displayed for this option. Absent means value is displayed.
+	   If present, must be non-empty and at most 256 characters.
+	*/
+	Label *string `json:"label,omitempty"`
+}
+
+func (o StringDropdownOption) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StringDropdownOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type StringDropdownOptions struct {
+	/*
+	   The options, listed in display order. Must be non-empty, contain at
+	   most 256 entries, and give each value at most once.
+	*/
+	Options []StringDropdownOption `json:"options"`
+}
+
+func (o StringDropdownOptions) MarshalJSON() ([]byte, error) {
+	if o.Options == nil {
+		o.Options = make([]StringDropdownOption, 0)
+	}
+	type _tmpStringDropdownOptions StringDropdownOptions
+	return safejson.Marshal(_tmpStringDropdownOptions(o))
+}
+
+func (o *StringDropdownOptions) UnmarshalJSON(data []byte) error {
+	type _tmpStringDropdownOptions StringDropdownOptions
+	var rawStringDropdownOptions _tmpStringDropdownOptions
+	if err := safejson.Unmarshal(data, &rawStringDropdownOptions); err != nil {
+		return err
+	}
+	if rawStringDropdownOptions.Options == nil {
+		rawStringDropdownOptions.Options = make([]StringDropdownOption, 0)
+	}
+	*o = StringDropdownOptions(rawStringDropdownOptions)
+	return nil
+}
+
+func (o StringDropdownOptions) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *StringDropdownOptions) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Diagonal stripes of the band's color, such as a barber pole.
 type StripedPfdBandFill struct{}
 
@@ -6066,6 +6431,138 @@ func (o *TimeSeriesTablePanelDefinitionV1) UnmarshalYAML(unmarshal func(interfac
 	return safejson.Unmarshal(jsonBytes, *&o)
 }
 
+// The channel the toggle commands and the value it sends for each position.
+// safelogging:@Unsafe
+type ToggleCommand struct {
+	/*
+	   Channel variable naming the commandable series, resolved by the
+	   document hosting this visualization. Must resolve to a physical
+	   series (VariableLocator.series).
+	*/
+	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
+	/*
+	   Sent when the user switches the toggle on. Must match the channel's
+	   data type, as for VizCommand.value, and must differ from off.
+	*/
+	On VizCommandValue `json:"on"`
+	/*
+	   Sent when the user switches the toggle off. Must match the channel's
+	   data type, as for VizCommand.value, and must differ from on.
+	*/
+	Off VizCommandValue `json:"off"`
+}
+
+func (o ToggleCommand) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ToggleCommand) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+// Confirmation dialogs shown before the toggle sends a command.
+type ToggleConfirmation struct {
+	// If present, switching on requires explicit confirmation before the command is sent.
+	On *CommandConfirmation `json:"on,omitempty"`
+	// If present, switching off requires explicit confirmation before the command is sent.
+	Off *CommandConfirmation `json:"off,omitempty"`
+}
+
+func (o ToggleConfirmation) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ToggleConfirmation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A status channel that reports the toggle's position, for rigs whose
+readback differs from the command channel. Missing, non-finite or
+stale values render unknown.
+*/
+// safelogging:@Unsafe
+type ToggleFeedback struct {
+	// Channel variable providing the toggle's position.
+	VariableName api2.ChannelVariableName `json:"variableName" safelogging:"@Unsafe"`
+	// The position is on when the latest value matches. Checked before off.
+	On ValuePredicate `json:"on"`
+	/*
+	   The position is off when the latest value matches and on does not.
+	   Absent means any value that does not match on is off.
+	*/
+	Off *ValuePredicate `json:"off,omitempty"`
+}
+
+func (o ToggleFeedback) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ToggleFeedback) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+/*
+A two-position switch that commands one channel. Switching it on or
+off sends that position's value to the command channel, and its
+displayed position comes from feedback.
+*/
+// safelogging:@Unsafe
+type ToggleVizDefinitionV1 struct {
+	// The label displayed with the toggle.
+	Title   *string       `json:"title,omitempty"`
+	Command ToggleCommand `json:"command" safelogging:"@Unsafe"`
+	/*
+	   Where the toggle reads its position from. Absent reads the command
+	   channel: its latest value shows on when it equals command.on, off
+	   when it equals command.off, and unknown otherwise. A
+	   constantVariable value is compared by its current value.
+	*/
+	Feedback *ToggleFeedback `json:"feedback,omitempty"`
+	// Absent sends both positions without confirmation.
+	Confirmation *ToggleConfirmation `json:"confirmation,omitempty"`
+}
+
+func (o ToggleVizDefinitionV1) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ToggleVizDefinitionV1) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
 // Display relative timestamps as a total number of seconds.
 type TotalSecondsRelativeTimestampFormat struct{}
 
@@ -6789,6 +7286,18 @@ type ValueVizDefinitionV1 struct {
 	Staleness ValueVizStaleness `json:"staleness"`
 	// How the value renders, by the channel's data type.
 	Display ValueVizDisplay `json:"display"`
+	/*
+	   The plate behind the value. Absent is the client's neutral plate, which
+	   follows the viewer's theme. A reached threshold's color replaces it.
+	*/
+	Fill *ValueVizFill `json:"fill,omitempty"`
+	/*
+	   Outlines the plate and colors its text. A reached threshold's color
+	   replaces the text color but keeps the outline. Absent draws no outline,
+	   unless the fill would vanish into the canvas, and the client picks a
+	   text color that reads on the fill.
+	*/
+	OutlineColor *api.HexColor `json:"outlineColor,omitempty" safelogging:"@Safe"`
 }
 
 func (o ValueVizDefinitionV1) MarshalYAML() (interface{}, error) {
@@ -6925,6 +7434,24 @@ func (o ValueVizThresholdLimits) MarshalYAML() (interface{}, error) {
 }
 
 func (o *ValueVizThresholdLimits) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
+	if err != nil {
+		return err
+	}
+	return safejson.Unmarshal(jsonBytes, *&o)
+}
+
+type ValueVizTransparentFill struct{}
+
+func (o ValueVizTransparentFill) MarshalYAML() (interface{}, error) {
+	jsonBytes, err := safejson.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	return safeyaml.JSONtoYAMLMapSlice(jsonBytes)
+}
+
+func (o *ValueVizTransparentFill) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	jsonBytes, err := safeyaml.UnmarshalerToJSONBytes(unmarshal)
 	if err != nil {
 		return err

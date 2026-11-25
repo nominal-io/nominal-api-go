@@ -2579,10 +2579,15 @@ func (u *GroupByTimestampWithT[T]) Accept(ctx context.Context, v GroupByTimestam
 			return result, fmt.Errorf("field \"every\" is required")
 		}
 		return v.VisitEvery(ctx, *u.every)
+	case "window":
+		if u.window == nil {
+			return result, fmt.Errorf("field \"window\" is required")
+		}
+		return v.VisitWindow(ctx, *u.window)
 	}
 }
 
-func (u *GroupByTimestampWithT[T]) AcceptFuncs(currentFunc func(api.Empty) (T, error), everyFunc func(Duration) (T, error), unknownFunc func(string) (T, error)) (T, error) {
+func (u *GroupByTimestampWithT[T]) AcceptFuncs(currentFunc func(api.Empty) (T, error), everyFunc func(Duration) (T, error), windowFunc func(api.Empty) (T, error), unknownFunc func(string) (T, error)) (T, error) {
 	var result T
 	switch u.typ {
 	default:
@@ -2600,6 +2605,11 @@ func (u *GroupByTimestampWithT[T]) AcceptFuncs(currentFunc func(api.Empty) (T, e
 			return result, fmt.Errorf("field \"every\" is required")
 		}
 		return everyFunc(*u.every)
+	case "window":
+		if u.window == nil {
+			return result, fmt.Errorf("field \"window\" is required")
+		}
+		return windowFunc(*u.window)
 	}
 }
 
@@ -2613,6 +2623,11 @@ func (u *GroupByTimestampWithT[T]) EveryNoopSuccess(Duration) (T, error) {
 	return result, nil
 }
 
+func (u *GroupByTimestampWithT[T]) WindowNoopSuccess(api.Empty) (T, error) {
+	var result T
+	return result, nil
+}
+
 func (u *GroupByTimestampWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 	var result T
 	return result, fmt.Errorf("invalid value in union type. Type name: %s", typeName)
@@ -2621,6 +2636,7 @@ func (u *GroupByTimestampWithT[T]) ErrorOnUnknown(typeName string) (T, error) {
 type GroupByTimestampVisitorWithT[T any] interface {
 	VisitCurrent(ctx context.Context, v api.Empty) (T, error)
 	VisitEvery(ctx context.Context, v Duration) (T, error)
+	VisitWindow(ctx context.Context, v api.Empty) (T, error)
 	VisitUnknown(ctx context.Context, typ string) (T, error)
 }
 

@@ -1549,13 +1549,7 @@ func WrapWithSandboxTokenUnavailable(err error) *SandboxTokenUnavailable {
 }
 
 // SandboxTokenUnavailable is an error type.
-/*
-Returned by InternalSandboxTokenService when the endpoint cannot mint a
-token — either because no sandbox configuration is present on this
-gatekeeper instance, or because the shared-secret header is missing or
-does not match. The two cases are intentionally indistinguishable to
-callers.
-*/
+// Returned when a sandbox token cannot be issued.
 type SandboxTokenUnavailable struct {
 	errorInstanceID uuid.UUID
 	sandboxTokenUnavailable
